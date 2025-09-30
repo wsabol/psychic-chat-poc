@@ -5,15 +5,10 @@ const client = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 });
 
-interface GenerateOpeningParams {
-    clientName: string;
-    recentMessages?: string[];
-}
-
 export async function generatePsychicOpening({
                                           clientName,
                                           recentMessages,
-                                      }: GenerateOpeningParams): Promise<string> {
+                                      }) {
 
     const systemPrompt = `
 You are a psychic giving warm, empathetic, and professional readings. 

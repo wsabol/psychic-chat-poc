@@ -1,6 +1,6 @@
-import { db } from './db.ts'
+import { db } from './db'
 
-export async function getRecentMessages(userId: string) {
+export async function getRecentMessages(userId) {
     const { rows: history } = await db.query(
         "SELECT content FROM messages WHERE user_id=$1 AND role='user' ORDER BY created_at DESC LIMIT 10",
         [userId]

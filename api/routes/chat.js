@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { enqueueMessage } from "../shared/queue.ts";
-import { generatePsychicOpening } from "../shared/opening.ts";
-import { getRecentMessages, insertMessage } from "../shared/user.ts";
-import { db } from "../shared/db.ts";
+import { enqueueMessage } from "../shared/queue";
+import { generatePsychicOpening } from "../shared/opening";
+import { getRecentMessages, insertMessage } from "../shared/user";
+import { db } from "../shared/db";
 
 const router = Router();
 

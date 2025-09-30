@@ -5,7 +5,5 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-# Useful tools inside container
-RUN npm install -g ts-node typescript
 EXPOSE 3000
 CMD ["npm", "run", "dev"]
