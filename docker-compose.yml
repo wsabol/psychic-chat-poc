@@ -13,7 +13,7 @@ services:
       - REDIS_URL=${REDIS_URL:-redis://redis:6379}
       - DATABASE_URL=${DATABASE_URL:-postgres://postgres:postgres@db:5432/chatbot}
       - PORT=${API_PORT}
-      - CORS_ORIGIN=${CLIENT_URL}
+      - CORS_ORIGIN=${CORS_ORIGIN}
     depends_on:
       - redis
       - db
