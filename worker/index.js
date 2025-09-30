@@ -1,4 +1,4 @@
-import { workerLoop } from "./processor.ts";
+import { workerLoop } from "./processor.js";
 
 console.log("Worker started...");
 workerLoop();

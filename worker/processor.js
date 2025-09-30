@@ -1,10 +1,10 @@
-import { getMessageFromQueue } from "./shared/queue.ts";
-import { db } from "./shared/db.ts";
+import { getMessageFromQueue } from "./shared/queue.js";
+import { db } from "./shared/db.js";
 import OpenAI from "openai";
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-async function handleChatJob(job: { userId: any; message: any; }) {
+async function handleChatJob(job) {
     const { userId, message } = job;
 
     // Get recent context
