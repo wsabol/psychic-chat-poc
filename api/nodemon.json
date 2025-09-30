@@ -1,0 +1,5 @@
+{
+  "watch": ["index.ts"],
+  "ext": "ts",
+  "exec": "node --import ts-node/register index.ts #ts-node --transpile-only index.ts"
+}
