@@ -50,7 +50,10 @@ services:
       - "5432:5432"
 
   client:
-    build: ./client
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      target: ${NODE_ENV:-development}
     command: npm start
     volumes:
       - ./client:/app
