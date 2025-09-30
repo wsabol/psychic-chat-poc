@@ -3,6 +3,7 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
+      target: ${NODE_ENV:-development}
     volumes:
       - ./api:/app
       - /app/node_modules
@@ -11,7 +12,8 @@ services:
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - REDIS_URL=redis://redis:6379
-      - DB_URL=postgres://postgres:postgres@db:5432/chatbot
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/chatbot
+      - PORT=${API_PORT}
     depends_on:
       - redis
       - db
@@ -20,13 +22,14 @@ services:
     build:
       context: ./worker
       dockerfile: Dockerfile
+      target: ${NODE_ENV:-development}
     volumes:
       - ./worker:/app
       - /app/node_modules
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - REDIS_URL=redis://redis:6379
-      - DB_URL=postgres://postgres:postgres@db:5432/chatbot
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/chatbot
     depends_on:
       - redis
       - db

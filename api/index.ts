@@ -6,7 +6,7 @@ const app = express();
 
 // Allow client at 3001. Adjust as needed or use an env var.
 app.use(cors({
-    origin: "http://localhost:3001",
+    origin: process.env.CORS_ORIGIN || "http://localhost:3001",
     credentials: true,
 }));
 
@@ -19,7 +19,7 @@ app.get('/', (req, res) => {
 
 app.use("/chat", chatRoutes);
 
-const PORT = 3000;
+const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 app.listen(PORT, () => {
     console.log(`API listening on port ${PORT}`);
 });
