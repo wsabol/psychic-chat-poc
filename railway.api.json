@@ -5,6 +5,7 @@
     "dockerfilePath": "api/Dockerfile"
   },
   "deploy": {
-    "startCommand": "cd api && npm run start"
+    "workingDirectory": "api",
+    "startCommand": "npm run start"
   }
 }
