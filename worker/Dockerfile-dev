@@ -1,6 +1,7 @@
 
 FROM node
 ENV NODE_ENV=development
+ENV OPENAI_API_KEY=${OPENAI_API_KEY}
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
