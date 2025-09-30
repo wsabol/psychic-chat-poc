@@ -2,7 +2,7 @@
 # 1) Base image with dependencies (including dev deps for building)
 FROM node AS deps
 WORKDIR /app
-COPY package*.json tsconfig.json ./
+COPY package*.json ./
 RUN npm ci
 
 # 2) Builder stage for production build (TypeScript -> JS)
