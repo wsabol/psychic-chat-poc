@@ -1,5 +1,8 @@
 import React, { useCallback, useState, useEffect } from "react";
 
+// Read API base URL from environment variable (Create React App expects REACT_APP_ prefix)
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
+
 function App() {
     const [userId, setUserId] = useState("user1");
     const [message, setMessage] = useState("");
@@ -8,7 +11,7 @@ function App() {
     const [gotOpening, setGotOpening] = useState(false);
 
     const fetchOpening = useCallback(async function() {
-        const res = await fetch(`http://localhost:3000/chat/opening/${userId}`);
+        const res = await fetch(`${API_URL}/chat/opening/${userId}`);
         const data = await res.json();
         setChat([...chat, { id: Date.now(), role: "assistant", content: data.message }]);
     }, [chat, userId]);
@@ -19,7 +22,7 @@ function App() {
         // Optimistically update UI
         setChat([...chat, { id: Date.now(), role: "user", content: message }]);
 
-        await fetch("http://localhost:3000/chat", {
+        await fetch(`${API_URL}/chat`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ userId, message }),
@@ -29,7 +32,7 @@ function App() {
     }
 
     const loadMessages = useCallback(async function() {
-        const res = await fetch(`http://localhost:3000/chat/history/${userId}`);
+        const res = await fetch(`${API_URL}/chat/history/${userId}`);
         const data = await res.json();
         setChat(data);
         setLoaded(true);
