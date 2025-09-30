@@ -50,8 +50,7 @@ services:
   client:
     build:
       context: ./client
-      dockerfile: Dockerfile
-      target: ${NODE_ENV:-development}
+      dockerfile: Dockerfile-dev
     command: npm start
     volumes:
       - ./client:/app
