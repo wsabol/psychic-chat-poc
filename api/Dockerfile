@@ -22,15 +22,3 @@ COPY --from=builder /app/dist ./dist
 # Default port for API
 EXPOSE 3000
 CMD ["npm", "run", "start"]
-
-# 4) Development runtime (nodemon watching TS)
-FROM node AS development
-ENV NODE_ENV=development
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-# Useful tools inside container
-RUN npm install -g ts-node typescript
-EXPOSE 3000
-CMD ["npm", "run", "dev"]

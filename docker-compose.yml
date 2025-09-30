@@ -2,8 +2,7 @@ services:
   api:
     build:
       context: ./api
-      dockerfile: Dockerfile
-      target: ${NODE_ENV:-development}
+      dockerfile: Dockerfile-dev
     volumes:
       - ./api:/app
       - /app/node_modules
@@ -22,8 +21,7 @@ services:
   worker:
     build:
       context: ./worker
-      dockerfile: Dockerfile
-      target: ${NODE_ENV:-development}
+      dockerfile: Dockerfile-dev
     volumes:
       - ./worker:/app
       - /app/node_modules
