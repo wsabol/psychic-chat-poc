@@ -1,4 +1,4 @@
-import { db } from './db'
+import { db } from './db.js'
 
 export async function getRecentMessages(userId) {
     const { rows: history } = await db.query(

@@ -1,5 +1,5 @@
 import express from "express";
-import chatRoutes from "./routes/chat";
+import chatRoutes from "./routes/chat.js";
 import cors from "cors";
 
 const app = express();
