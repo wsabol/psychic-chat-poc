@@ -7,10 +7,31 @@ const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 function App() {
     const [userId, setUserId] = useState("user1");
     const [message, setMessage] = useState("");
+    const [birthDate, setBirthDate] = useState("");
+    const [birthTime, setBirthTime] = useState("");
+    const [birthPlace, setBirthPlace] = useState("");
     const [chat, setChat] = useState([]);  // Expect chat to include structured data like { text: '', cards: [] }
     const [loaded, setLoaded] = useState(false);
     const [gotOpening, setGotOpening] = useState(false);
     const [error, setError] = useState(null);
+    
+    const sendAstrologyRequest = async () => {
+        if (!birthDate || !birthTime || !birthPlace) {
+            setError("Please provide all birth details");
+            return;
+        }
+        try {
+            await fetch(`${API_URL}/reading`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId, birthDate, birthTime, birthPlace }),
+            });
+            // Optionally, refresh chat or handle response
+            await loadMessages();
+        } catch (err) {
+            setError(err.message);
+        }
+    };
     
     const fetchOpening = useCallback(async function() {
         try {

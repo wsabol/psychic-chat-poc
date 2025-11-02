@@ -25,7 +25,30 @@ async function handleChatJob(job) {
     let completion;
     let structuredResponse = { text: '', cards: [] };
     
-    if (isTarotQuery) {
+    const isAstrologyQuery = lowerMessage.includes('astrology') || lowerMessage.includes('birth chart') || lowerMessage.includes('horoscope');
+    if (isAstrologyQuery) {
+        console.log('Astrology query detected. Message:', message);
+        const { birthDate, birthTime, birthPlace } = job;  // Assume birth data is in job object
+        completion = await client.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [
+                {
+                    role: "system",
+                    content: `You are The Oracle of Starship Psychics. Provide an astrological reading based on the user's birth details: date=${birthDate}, time=${birthTime}, place=${birthPlace}. Keep it inspirational and for entertainment only.`
+                },
+                ...history.reverse(),
+                { role: "user", content: message },
+            ],
+        });
+        structuredResponse = {
+            text: completion.choices[0]?.message?.content || "",
+        };
+        await db.query("INSERT INTO messages(user_id, role, content) VALUES($1, $2, $3)", [
+            userId,
+            "assistant",
+            JSON.stringify(structuredResponse)
+        ]);
+    } else if (isTarotQuery) {
         console.log('Tarot query detected. Message:', message, 'Num cards:', numCards);
         const selectedCards = selectTarotCards(numCards);
         console.log('Selected cards:', selectedCards);  // Log the cards array

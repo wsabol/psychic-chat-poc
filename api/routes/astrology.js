@@ -5,15 +5,10 @@ import { db } from '../shared/db.js';
 // Endpoint to get an astrology reading
 router.post('/reading', async (req, res) => {
     try {
-        const { userId, zodiacSign } = req.body;
-        // Placeholder logic for astrology reading
-        const reading = {
-            sign: zodiacSign || 'Aries',
-            horoscope: 'Today is a day for new opportunities and personal growth.'
-        };
-        // Store reading in database
-        await db.query('INSERT INTO astrology_readings (user_id, sign, horoscope) VALUES ($1, $2, $3)', [userId, reading.sign, reading.horoscope]);
-        res.json(reading);
+        const { userId, birthDate, birthTime, birthPlace } = req.body;  // Updated to include birth details
+        // Enqueue the job for the worker
+        await queue.enqueueJob({ userId, message: 'Astrology reading request', birthDate, birthTime, birthPlace });
+        res.json({ status: 'Job enqueued for astrology reading' });
     } catch (error) {
         console.error('Error in astrology reading:', error);
         res.status(500).json({ error: 'Internal server error' });
