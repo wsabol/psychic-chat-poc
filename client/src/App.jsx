@@ -10,10 +10,18 @@ function App() {
     const [birthDate, setBirthDate] = useState("");
     const [birthTime, setBirthTime] = useState("");
     const [birthPlace, setBirthPlace] = useState("");
+    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
+    const [twoFA, setTwoFA] = useState("");
     const [chat, setChat] = useState([]);  // Expect chat to include structured data like { text: '', cards: [] }
     const [loaded, setLoaded] = useState(false);
     const [gotOpening, setGotOpening] = useState(false);
     const [error, setError] = useState(null);
+    
+    const handleProfileEdit = () => {
+        // Placeholder for profile editing logic
+        console.log('Edit profile');
+    };
     
     const sendAstrologyRequest = async () => {
         if (!birthDate || !birthTime || !birthPlace) {
@@ -105,63 +113,68 @@ function App() {
     useEffect(() => {}, []);  // Placeholder for removed logs
     
     return (
-        <div style={{ maxWidth: 600, margin: "2rem auto", fontFamily: "sans-serif", textAlign: "center" }}>
-            {error && <p style={{ color: "red" }}>Error: {error}</p>}
-            {/* Display errors */}
-            <h2 style={{ textAlign: "center" }}>Chatbot Demo</h2>
-            <div>
-                <label>User ID: </label>
-                <input
-                    value={userId}
-                    onChange={(e) => setUserId(e.target.value)}
-                    style={{ marginBottom: "1rem" }}
-                />
+        <div style={{ position: "relative" }}>
+            <div style={{ position: "absolute", top: 0, left: 0 }}>
+                <button onClick={handleProfileEdit}>Edit Profile</button>
             </div>
-            <div
-                style={{
-                    border: "1px solid #ccc",
-                    borderRadius: "8px",
-                    padding: "1rem",
-                    height: "400px",
-                    overflowY: "auto",
-                    marginBottom: "1rem",
-                    background: "#f9f9f9",
-                    textAlign: "left",  // Add left alignment for text
-                }}
-            >
-                {chat.map((msg, index) => {
-                    const key = msg.id || `msg-${index}-${Date.now()}`;  // Fallback to a unique key if msg.id is missing
-                    if (typeof msg.content === 'string') {
-                        try {
-                            const parsed = JSON.parse(msg.content);
-                            return (
-                                <div key={key}>
-                                    <p>{parsed.text || msg.content}</p>
-                                    {parsed.cards && parsed.cards.length > 0 && <CardDisplay cards={parsed.cards} />}
-                                </div>
-                            );
-                        } catch (e) {
-                            return <div key={key}><p>{msg.content}</p></div>;  // Fall back to plain text
-                        }
-                    } else {
-                        return <div key={key}><p>{msg.content}</p></div>;
-                    }
-                })}
-            </div>
-            <div>
-                <input
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.code === 'Enter') {
-                            e.preventDefault();
-                            sendMessage();
-                        }
+            <div style={{ maxWidth: 600, margin: "2rem auto", fontFamily: "sans-serif", textAlign: "center" }}>
+                {error && <p style={{ color: "red" }}>Error: {error}</p>}
+                {/* Display errors */}
+                <h2 style={{ textAlign: "center" }}>Chatbot Demo</h2>
+                <div>
+                    <label>User ID: </label>
+                    <input
+                        value={userId}
+                        onChange={(e) => setUserId(e.target.value)}
+                        style={{ marginBottom: "1rem" }}
+                    />
+                </div>
+                <div
+                    style={{
+                        border: "1px solid #ccc",
+                        borderRadius: "8px",
+                        padding: "1rem",
+                        height: "400px",
+                        overflowY: "auto",
+                        marginBottom: "1rem",
+                        background: "#f9f9f9",
+                        textAlign: "left",
                     }}
-                    placeholder="Type a message..."
-                    style={{ width: "70%", marginRight: "0.5rem" }}
-                />
-                <button onClick={sendMessage}>Send</button>
+                >
+                    {chat.map((msg, index) => {
+                        const key = msg.id || `msg-${index}-${Date.now()}`;
+                        if (typeof msg.content === 'string') {
+                            try {
+                                const parsed = JSON.parse(msg.content);
+                                return (
+                                    <div key={key}>
+                                        <p>{parsed.text || msg.content}</p>
+                                        {parsed.cards && parsed.cards.length > 0 && <CardDisplay cards={parsed.cards} />}
+                                    </div>
+                                );
+                            } catch (e) {
+                                return <div key={key}><p>{msg.content}</p></div>;
+                            }
+                        } else {
+                            return <div key={key}><p>{msg.content}</p></div>;
+                        }
+                    })}
+                </div>
+                <div>
+                    <input
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.code === 'Enter') {
+                                e.preventDefault();
+                                sendMessage();
+                            }
+                        }}
+                        placeholder="Type a message..."
+                        style={{ width: "70%", marginRight: "0.5rem" }}
+                    />
+                    <button onClick={sendMessage}>Send</button>
+                </div>
             </div>
         </div>
     );

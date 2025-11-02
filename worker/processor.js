@@ -14,7 +14,6 @@ async function handleChatJob(job) {
     else if (lowerMessage.includes('7 cards') || lowerMessage.includes('seven cards') || lowerMessage.includes('7 card draw') || lowerMessage.includes('seven card draw')) numCards = 7;
     else if (lowerMessage.includes('10 cards') || lowerMessage.includes('ten cards') || lowerMessage.includes('10 card draw') || lowerMessage.includes('ten card draw')) numCards = 10;
     else if (lowerMessage.includes('single card') || lowerMessage.includes('1 card') || lowerMessage.includes('single card draw')) numCards = 1;
-    console.log('Final numCards for message:', message, 'is:', numCards, 'Is tarot query:', isTarotQuery);
     
     // Get recent context
     const { rows: history } = await db.query(
@@ -27,7 +26,6 @@ async function handleChatJob(job) {
     
     const isAstrologyQuery = lowerMessage.includes('astrology') || lowerMessage.includes('birth chart') || lowerMessage.includes('horoscope');
     if (isAstrologyQuery) {
-        console.log('Astrology query detected. Message:', message);
         const { birthDate, birthTime, birthPlace } = job;  // Assume birth data is in job object
         completion = await client.chat.completions.create({
             model: "gpt-4o-mini",
@@ -49,9 +47,7 @@ async function handleChatJob(job) {
             JSON.stringify(structuredResponse)
         ]);
     } else if (isTarotQuery) {
-        console.log('Tarot query detected. Message:', message, 'Num cards:', numCards);
         const selectedCards = selectTarotCards(numCards);
-        console.log('Selected cards:', selectedCards);  // Log the cards array
         completion = await client.chat.completions.create({
             model: "gpt-4o-mini",
             messages: [
@@ -75,7 +71,6 @@ async function handleChatJob(job) {
             JSON.stringify(structuredResponse)  // Stringify the full response
         ]);
     } else {
-        console.log('Not a tarot query. Message:', message);
         completion = await client.chat.completions.create({
             model: "gpt-4o-mini",
             messages: [
