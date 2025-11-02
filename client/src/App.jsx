@@ -54,7 +54,6 @@ function App() {
     useEffect(() => {
         const interval = setInterval(loadMessages, 2000);
         return () => {
-            console.log('Clearing interval');
             clearInterval(interval);  // Cleanup on unmount
         };
     }, [loadMessages]);
@@ -85,7 +84,7 @@ function App() {
     useEffect(() => {}, []);  // Placeholder for removed logs
     
     return (
-        <div style={{ maxWidth: 600, margin: "2rem auto", fontFamily: "sans-serif", textAlign: "center" }})>
+        <div style={{ maxWidth: 600, margin: "2rem auto", fontFamily: "sans-serif", textAlign: "center" }}>
             {error && <p style={{ color: "red" }}>Error: {error}</p>}
             {/* Display errors */}
             <h2 style={{ textAlign: "center" }}>Chatbot Demo</h2>
@@ -106,6 +105,7 @@ function App() {
                     overflowY: "auto",
                     marginBottom: "1rem",
                     background: "#f9f9f9",
+                    textAlign: "left",  // Add left alignment for text
                 }}
             >
                 {chat.map((msg, index) => {
@@ -113,7 +113,6 @@ function App() {
                     if (typeof msg.content === 'string') {
                         try {
                             const parsed = JSON.parse(msg.content);
-                            console.log('Parsed message:', parsed);  // Debug log for card data
                             return (
                                 <div key={key}>
                                     <p>{parsed.text || msg.content}</p>
