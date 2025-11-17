@@ -1,5 +1,7 @@
 import React, { useCallback, useState, useEffect } from "react";
 import CardDisplay from "./components/CardDisplay";
+import Menu from "./components/Menu";
+import StarField from "./components/StarField";
 
 // Define ErrorBoundary component
 class ErrorBoundary extends React.Component {
@@ -41,6 +43,7 @@ function App() {
     const [loaded, setLoaded] = useState(false);
     const [gotOpening, setGotOpening] = useState(false);
     const [error, setError] = useState(null);
+    const [menuOpen, setMenuOpen] = useState(false);
     
     const fetchOpening = useCallback(async function() {
         try {
@@ -115,19 +118,19 @@ function App() {
     
     return (
         <ErrorBoundary>
+            <StarField />
             <div style={{ position: "relative" }}>
-                <div style={{ position: "absolute", top: 0, left: 0 }}>
-                </div>
-                <div style={{ maxWidth: 600, margin: "2rem auto", fontFamily: "sans-serif", textAlign: "center" }}>
+                <Menu menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
+                <div style={{ maxWidth: 600, margin: "2rem auto", fontFamily: "sans-serif", textAlign: "center", position: "relative", zIndex: 10 }}>
                     {error && <p style={{ color: "red" }}>Error: {error}</p>}
                     {/* Display errors */}
-                    <h2 style={{ textAlign: "center" }}>Chatbot Demo</h2>
+                    <h2 style={{ textAlign: "center", color: "white", textShadow: "0 2px 4px rgba(0, 0, 0, 0.5)" }}>Chatbot Demo</h2>
                     <div>
-                        <label>User ID: </label>
+                        <label style={{ color: "white", textShadow: "0 2px 4px rgba(0, 0, 0, 0.5)" }}>User ID: </label>
                         <input
                             value={userId}
                             onChange={(e) => setUserId(e.target.value)}
-                            style={{ marginBottom: "1rem" }}
+                            style={{ marginBottom: "1rem", marginLeft: "0.5rem", padding: "0.5rem" }}
                         />
                     </div>
                     <div
@@ -138,8 +141,9 @@ function App() {
                             height: "400px",
                             overflowY: "auto",
                             marginBottom: "1rem",
-                            background: "#f9f9f9",
+                            background: "rgba(255, 255, 255, 0.95)",
                             textAlign: "left",
+                            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
                         }}
                     >
                         {chat.map((msg, index) => {
