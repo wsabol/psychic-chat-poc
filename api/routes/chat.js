@@ -27,23 +27,29 @@ router.get("/opening/:userId", async (req, res) => {
     });
 
     if (opening === '') {
-        opening = `Hi ${userId}, thank you for being here today. Before we begin, is there an area of your life you’re hoping to get clarity on?`;
+        opening = `Hi ${userId}, thank you for being here today. Before we begin, is there an area of your life you're hoping to get clarity on?`;
     }
 
     await insertMessage(userId, 'assistant', opening)
 
     res.json({
-        message: opening
+        role: 'assistant',
+        content: opening
     })
 });
 
 router.get("/history/:userId", async (req, res) => {
     const { userId } = req.params;
-    const { rows } = await db.query(
-        "SELECT id, role, content FROM messages WHERE user_id=$1 ORDER BY created_at ASC",
-        [userId]
-    );
-    res.json(rows);
+    try {
+        const { rows } = await db.query(
+            "SELECT id, role, content FROM messages WHERE user_id=$1 ORDER BY created_at ASC",
+            [userId]
+        );
+        res.json(rows);
+    } catch (err) {
+        console.error('Query error for messages table:', err);
+        res.status(500).json({ error: 'Database query error: ' + err.message });
+    }
 });
 
 export default router;
