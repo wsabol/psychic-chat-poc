@@ -59,7 +59,7 @@ export const tarotDeck = [
         element: "Water", astrology: "Cancer"
     },
     {
-        id: 8, name: "Strength", suit: "major", number: 8,
+        id: 8, name: "The Strength", suit: "major", number: 8,
         keywords: ["strength", "courage", "persuasion", "influence", "compassion"],
         upright: "Strength, courage, persuasion, influence, compassion. Inner strength, bravery, compassion, and focus. Gentle control and overcoming challenges through love rather than force.",
         reversed: "Self doubt, lack of confidence, lack of self-discipline. When reversed, indicates inner turmoil, self-doubt, or lack of confidence. Build inner strength and self-compassion.",
@@ -73,14 +73,14 @@ export const tarotDeck = [
         element: "Earth", astrology: "Virgo"
     },
     {
-        id: 10, name: "Wheel of Fortune", suit: "major", number: 10,
+        id: 10, name: "The Wheel of Fortune", suit: "major", number: 10,
         keywords: ["good luck", "karma", "life cycles", "destiny", "turning point"],
         upright: "Good luck, karma, life cycles, destiny, turning point. Positive change, good fortune, and karmic rewards. Life is cyclical - what goes around comes around.",
         reversed: "Bad luck, lack of control, clinging to control. When reversed, indicates temporary setbacks or feeling like you have no control. Trust that this phase will pass.",
         element: "Fire", astrology: "Jupiter"
     },
     {
-        id: 11, name: "Justice", suit: "major", number: 11,
+        id: 11, name: "The Justice", suit: "major", number: 11,
         keywords: ["justice", "fairness", "truth", "cause and effect", "law"],
         upright: "Justice, fairness, truth, cause and effect, law. Seek truth and fairness. Legal matters may be resolved in your favor. Take responsibility for your actions.",
         reversed: "Unfairness, lack of accountability, dishonesty. Reversed suggests injustice, corruption, or avoiding responsibility. Strive for fairness and honesty.",
