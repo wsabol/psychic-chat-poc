@@ -762,9 +762,20 @@ const CosmicAstrologyReading = () => {
   const [animationClass, setAnimationClass] = useState('');
 
     const getZodiacSign = (dateInput) => {
-    const date = new Date(dateInput);
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
+    // dateInput is expected to be YYYY-MM-DD (string); parse manually to avoid timezone effects
+    let month; let day;
+    if (typeof dateInput === 'string' && dateInput.includes('-')) {
+      const parts = dateInput.split('-');
+      if (parts.length === 3) {
+        month = parseInt(parts[1], 10);
+        day = parseInt(parts[2], 10);
+      }
+    }
+    else {
+      const date = new Date(dateInput);
+      month = date.getMonth() + 1;
+      day = date.getDate();
+    }
     
     // Aries: March 21 - April 19
     if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) return 'aries';

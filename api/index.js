@@ -1,5 +1,7 @@
 import express from "express";
 import chatRoutes from "./routes/chat.js";
+import userProfileRoutes from "./routes/user-profile.js";
+import astrologyRoutes from "./routes/astrology.js";
 import cors from "cors";
 
 const app = express();
@@ -18,6 +20,8 @@ app.get('/', (req, res) => {
 });
 
 app.use("/chat", chatRoutes);
+app.use("/user-profile", userProfileRoutes);
+app.use("/user-astrology", astrologyRoutes);
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 app.listen(PORT, () => {

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-function Menu({ menuOpen, setMenuOpen }) {
+function Menu({ menuOpen, setMenuOpen, onPersonalInfoClick, onAstrologyClick }) {
     const menuRef = useRef(null);
     const [expandedSubmenu, setExpandedSubmenu] = useState(null);
 
@@ -127,7 +127,7 @@ function Menu({ menuOpen, setMenuOpen }) {
                                 <button
                                     onClick={() =>
                                         handleMenuItemClick(() => {
-                                            alert("Personal Information clicked");
+                                            onPersonalInfoClick && onPersonalInfoClick();
                                         })
                                     }
                                     style={{
@@ -143,6 +143,26 @@ function Menu({ menuOpen, setMenuOpen }) {
                                     }}
                                 >
                                     Personal Information
+                                </button>
+                                <button
+                                    onClick={() =>
+                                        handleMenuItemClick(() => {
+                                            onAstrologyClick && onAstrologyClick();
+                                        })
+                                    }
+                                    style={{
+                                        display: "block",
+                                        width: "100%",
+                                        padding: "10px 32px",
+                                        border: "none",
+                                        background: "none",
+                                        textAlign: "left",
+                                        cursor: "pointer",
+                                        fontSize: "13px",
+                                        borderBottom: "1px solid #eee",
+                                    }}
+                                >
+                                    Astrology
                                 </button>
                                 <button
                                     onClick={() =>

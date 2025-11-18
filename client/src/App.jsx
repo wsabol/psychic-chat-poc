@@ -2,6 +2,8 @@ import React, { useCallback, useState, useEffect } from "react";
 import CardDisplay from "./components/CardDisplay";
 import Menu from "./components/Menu";
 import StarField from "./components/StarField";
+import PersonalInfoModal from "./components/PersonalInfoModal";
+import AstrologyModal from "./components/AstrologyModal";
 
 // Define ErrorBoundary component
 class ErrorBoundary extends React.Component {
@@ -44,6 +46,14 @@ function App() {
     const [gotOpening, setGotOpening] = useState(false);
     const [error, setError] = useState(null);
     const [menuOpen, setMenuOpen] = useState(false);
+    const [showPersonalInfoModal, setShowPersonalInfoModal] = useState(false);
+    const [showAstrologyModal, setShowAstrologyModal] = useState(false);
+    const [birthDate, setBirthDate] = useState(null);
+    const [birthTime, setBirthTime] = useState(null);
+    const [birthCity, setBirthCity] = useState(null);
+    const [birthState, setBirthState] = useState(null);
+    const [firstName, setFirstName] = useState(null);
+    const [lastName, setLastName] = useState(null);
     
     const fetchOpening = useCallback(async function() {
         try {
@@ -83,29 +93,51 @@ function App() {
             setError(err.message);
         }
     }, [userId]);
+
+    const fetchPersonalInfo = useCallback(async function() {
+        try {
+            const res = await fetch(`${API_URL}/user-profile/${userId}`);
+            if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+            const data = await res.json();
+            // Store name info
+            if (data.first_name) {
+                setFirstName(data.first_name);
+            }
+            if (data.last_name) {
+                setLastName(data.last_name);
+            }
+            // Store birth info
+            if (data.birth_date) {
+                setBirthDate(data.birth_date);
+            }
+            if (data.birth_time) {
+                setBirthTime(data.birth_time);
+            }
+            if (data.birth_city) {
+                setBirthCity(data.birth_city);
+            }
+            if (data.birth_state) {
+                setBirthState(data.birth_state);
+            }
+        } catch (err) {
+            console.error('Error fetching personal info:', err);
+        }
+        console.log('Fetched personal info:', { firstName, birthDate, birthTime, birthCity, birthState });  // Added debug log
+    }, [userId]);
     
+    // Load initial chat history and personal info on mount or userId change
     useEffect(() => {
-        const interval = setInterval(loadMessages, 2000);
+        loadMessages();
+        fetchPersonalInfo();
+    }, [userId, loadMessages, fetchPersonalInfo]);
+    
+    // Poll for new messages every 3 seconds (reduced rate to avoid 429 errors)
+    useEffect(() => {
+        const interval = setInterval(loadMessages, 3000);
         return () => {
             clearInterval(interval);  // Cleanup on unmount
         };
     }, [loadMessages]);
-    
-    useEffect(() => {
-        async function fetchMessages() {
-            try {
-                const response = await fetch(`${API_URL}/chat/history/${userId}`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-                const data = await response.json();
-                setChat(data);
-            } catch (error) {
-                setError(error.message);
-            }
-        }
-        fetchMessages();
-    }, [userId]);
     
     useEffect(() => {
         if (loaded && !gotOpening) {
@@ -119,8 +151,31 @@ function App() {
     return (
         <ErrorBoundary>
             <StarField />
+            <PersonalInfoModal 
+                userId={userId}
+                isOpen={showPersonalInfoModal}
+                onClose={() => setShowPersonalInfoModal(false)}
+                onSave={() => fetchPersonalInfo()}
+            />
             <div style={{ position: "relative" }}>
-                <Menu menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
+                <Menu 
+                    menuOpen={menuOpen} 
+                    setMenuOpen={setMenuOpen}
+                    onPersonalInfoClick={() => setShowPersonalInfoModal(true)}
+                    onAstrologyClick={() => setShowAstrologyModal(true)}
+                />
+                <AstrologyModal 
+                    userId={userId}
+                    isOpen={showAstrologyModal}
+                    onClose={() => {
+                        setShowAstrologyModal(false);
+                        fetchPersonalInfo();  // Refetch to get any new astrology data
+                    }}
+                    birthDate={birthDate}
+                    birthTime={birthTime}
+                    birthCity={birthCity}
+                    birthState={birthState}
+                />
                 <div style={{ maxWidth: 600, margin: "2rem auto", fontFamily: "sans-serif", textAlign: "center", position: "relative", zIndex: 10 }}>
                     {error && <p style={{ color: "red" }}>Error: {error}</p>}
                     {/* Display errors */}
