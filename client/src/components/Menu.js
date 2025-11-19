@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-function Menu({ menuOpen, setMenuOpen, onPersonalInfoClick, onAstrologyClick }) {
+function Menu({ menuOpen, setMenuOpen, onPersonalInfoClick, onMySignClick, onMoonPhaseClick, onHoroscopeClick }) {
     const menuRef = useRef(null);
     const [expandedSubmenu, setExpandedSubmenu] = useState(null);
 
@@ -250,27 +250,88 @@ function Menu({ menuOpen, setMenuOpen, onPersonalInfoClick, onAstrologyClick }) 
                         )}
                     </div>
 
-                    {/* Astrology - Top Level */}
-                    <button
-                        onClick={() =>
-                            handleMenuItemClick(() => {
-                                onAstrologyClick && onAstrologyClick();
-                            })
-                        }
-                        style={{
-                            display: "block",
-                            width: "100%",
-                            padding: "12px 16px",
-                            border: "none",
-                            background: "none",
-                            textAlign: "left",
-                            cursor: "pointer",
-                            fontSize: "14px",
-                            borderBottom: "1px solid #eee",
-                        }}
-                    >
-                        Astrology
-                    </button>
+                    {/* Astrology - Top Level with Submenu */}
+                    <div>
+                        <button
+                            onClick={() => toggleSubmenu("astrology")}
+                            style={{
+                                display: "block",
+                                width: "100%",
+                                padding: "12px 16px",
+                                border: "none",
+                                background: "none",
+                                textAlign: "left",
+                                cursor: "pointer",
+                                fontSize: "14px",
+                                borderBottom: "1px solid #eee",
+                            }}
+                        >
+                            Astrology {expandedSubmenu === "astrology" ? "▼" : "▶"}
+                        </button>
+                        {expandedSubmenu === "astrology" && (
+                            <div style={{ background: "#f9f9f9" }}>
+                                <button
+                                    onClick={() =>
+                                        handleMenuItemClick(() => {
+                                            onMySignClick && onMySignClick();
+                                        })
+                                    }
+                                    style={{
+                                        display: "block",
+                                        width: "100%",
+                                        padding: "10px 32px",
+                                        border: "none",
+                                        background: "none",
+                                        textAlign: "left",
+                                        cursor: "pointer",
+                                        fontSize: "13px",
+                                        borderBottom: "1px solid #eee",
+                                    }}
+                                >
+                                    My Sign
+                                </button>
+                                <button
+                                    onClick={() =>
+                                        handleMenuItemClick(() => {
+                                            onMoonPhaseClick && onMoonPhaseClick();
+                                        })
+                                    }
+                                    style={{
+                                        display: "block",
+                                        width: "100%",
+                                        padding: "10px 32px",
+                                        border: "none",
+                                        background: "none",
+                                        textAlign: "left",
+                                        cursor: "pointer",
+                                        fontSize: "13px",
+                                        borderBottom: "1px solid #eee",
+                                    }}
+                                >
+                                    Moon Phase
+                                </button>
+                                <button
+                                    onClick={() =>
+                                        handleMenuItemClick(() => {
+                                            onHoroscopeClick && onHoroscopeClick();
+                                        })
+                                    }
+                                    style={{
+                                        display: "block",
+                                        width: "100%",
+                                        padding: "10px 32px",
+                                        border: "none",
+                                        background: "none",
+                                        textAlign: "left",
+                                        cursor: "pointer",
+                                        fontSize: "13px",
+                                    }}
+                                >
+                                    Horoscope
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
         </div>

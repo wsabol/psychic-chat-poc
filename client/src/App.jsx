@@ -3,7 +3,9 @@ import CardDisplay from "./components/CardDisplay";
 import Menu from "./components/Menu";
 import StarField from "./components/StarField";
 import PersonalInfoModal from "./components/PersonalInfoModal";
-import AstrologyModal from "./components/AstrologyModal";
+import MySignModal from "./components/MySignModal";
+import MoonPhaseModal from "./components/MoonPhaseModal";
+import HoroscopeModal from "./components/HoroscopeModal";
 
 // Define ErrorBoundary component
 class ErrorBoundary extends React.Component {
@@ -47,7 +49,9 @@ function App() {
     const [error, setError] = useState(null);
     const [menuOpen, setMenuOpen] = useState(false);
     const [showPersonalInfoModal, setShowPersonalInfoModal] = useState(false);
-    const [showAstrologyModal, setShowAstrologyModal] = useState(false);
+    const [showMySignModal, setShowMySignModal] = useState(false);
+    const [showMoonPhaseModal, setShowMoonPhaseModal] = useState(false);
+    const [showHoroscopeModal, setShowHoroscopeModal] = useState(false);
     const [birthDate, setBirthDate] = useState(null);
     const [birthTime, setBirthTime] = useState(null);
     const [birthCity, setBirthCity] = useState(null);
@@ -157,24 +161,36 @@ function App() {
                 onClose={() => setShowPersonalInfoModal(false)}
                 onSave={() => fetchPersonalInfo()}
             />
+            <MySignModal 
+                userId={userId}
+                isOpen={showMySignModal}
+                onClose={() => {
+                    setShowMySignModal(false);
+                    fetchPersonalInfo();  // Refetch to get any new astrology data
+                }}
+                birthDate={birthDate}
+                birthTime={birthTime}
+                birthCity={birthCity}
+                birthState={birthState}
+            />
+            <MoonPhaseModal 
+                userId={userId}
+                isOpen={showMoonPhaseModal}
+                onClose={() => setShowMoonPhaseModal(false)}
+            />
+            <HoroscopeModal 
+                userId={userId}
+                isOpen={showHoroscopeModal}
+                onClose={() => setShowHoroscopeModal(false)}
+            />
             <div style={{ position: "relative" }}>
                 <Menu 
                     menuOpen={menuOpen} 
                     setMenuOpen={setMenuOpen}
                     onPersonalInfoClick={() => setShowPersonalInfoModal(true)}
-                    onAstrologyClick={() => setShowAstrologyModal(true)}
-                />
-                <AstrologyModal 
-                    userId={userId}
-                    isOpen={showAstrologyModal}
-                    onClose={() => {
-                        setShowAstrologyModal(false);
-                        fetchPersonalInfo();  // Refetch to get any new astrology data
-                    }}
-                    birthDate={birthDate}
-                    birthTime={birthTime}
-                    birthCity={birthCity}
-                    birthState={birthState}
+                    onMySignClick={() => setShowMySignModal(true)}
+                    onMoonPhaseClick={() => setShowMoonPhaseModal(true)}
+                    onHoroscopeClick={() => setShowHoroscopeModal(true)}
                 />
                 <div style={{ maxWidth: 600, margin: "2rem auto", fontFamily: "sans-serif", textAlign: "center", position: "relative", zIndex: 10 }}>
                     {error && <p style={{ color: "red" }}>Error: {error}</p>}
