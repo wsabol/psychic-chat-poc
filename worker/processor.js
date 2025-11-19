@@ -2,8 +2,56 @@ import { getMessageFromQueue } from "./shared/queue.js";
 import { db } from "./shared/db.js";
 import OpenAI from "openai";
 import { tarotDeck } from "./tarotDeck.js";
+import { spawn } from "child_process";
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+// Helper function to call Python astrology script
+function calculateBirthChartAsync(birthData) {
+    return new Promise((resolve, reject) => {
+        const python = spawn('/opt/venv/bin/python3', ['./astrology.py']);
+        
+        let outputData = '';
+        let errorData = '';
+        
+        python.stdout.on('data', (data) => {
+            outputData += data.toString();
+        });
+        
+        python.stderr.on('data', (data) => {
+            errorData += data.toString();
+        });
+        
+        python.on('close', (code) => {
+            if (code !== 0) {
+                console.error(`[WORKER] Python script exited with code ${code}`);
+                if (errorData) console.error(`[WORKER] Python stderr:`, errorData);
+                reject(new Error(`Python script failed: ${errorData}`));
+                return;
+            }
+            
+            try {
+                const result = JSON.parse(outputData);
+                if (result.error) {
+                    console.warn(`[WORKER] Astrology calculation warning: ${result.error}`);
+                }
+                resolve(result);
+            } catch (e) {
+                console.error(`[WORKER] Failed to parse astrology result:`, outputData);
+                reject(new Error(`Invalid JSON from astrology script: ${e.message}`));
+            }
+        });
+        
+        python.on('error', (err) => {
+            console.error(`[WORKER] Failed to spawn Python process:`, err);
+            reject(err);
+        });
+        
+        // Send birth data to Python script
+        python.stdin.write(JSON.stringify(birthData));
+        python.stdin.end();
+    });
+}
 
 // Helper function to extract card names from oracle's response in the order they appear
 function extractCardsFromResponse(responseText, deck) {
@@ -100,7 +148,7 @@ async function handleChatJob(job) {
     let astrologyInfo = {};
     try {
         const { rows: personalInfoRows } = await db.query(
-            "SELECT first_name, last_name, email, to_char(birth_date, 'YYYY-MM-DD') AS birth_date, birth_time, birth_city, birth_state, sex, address_preference FROM user_personal_info WHERE user_id = $1",
+            "SELECT first_name, last_name, email, to_char(birth_date, 'YYYY-MM-DD') AS birth_date, birth_time, birth_country, birth_province, birth_city, birth_timezone, sex, address_preference FROM user_personal_info WHERE user_id = $1",
             [userId]
         );
         console.log(`[WORKER] Personal info rows returned: ${personalInfoRows.length}`);
@@ -115,7 +163,57 @@ async function handleChatJob(job) {
         // Continue with just userId if personal info fetch fails
     }
     
-    // Fetch user's astrology information
+    // Calculate rising and moon signs if complete birth data available
+    if (userInfo.birth_date && userInfo.birth_time && userInfo.birth_country && userInfo.birth_province && userInfo.birth_city) {
+        try {
+            console.log(`[WORKER] Calculating astrology for ${userInfo.first_name} (${userInfo.birth_date} ${userInfo.birth_time} ${userInfo.birth_city}, ${userInfo.birth_province}, ${userInfo.birth_country})`);
+            
+            const calculatedChart = await calculateBirthChartAsync({
+                birth_date: userInfo.birth_date,
+                birth_time: userInfo.birth_time,
+                birth_country: userInfo.birth_country,
+                birth_province: userInfo.birth_province,
+                birth_city: userInfo.birth_city,
+                birth_timezone: userInfo.birth_timezone
+            });
+            
+            if (calculatedChart.success && calculatedChart.rising_sign && calculatedChart.moon_sign) {
+                console.log(`[WORKER] ✓ Calculated: Rising Sign = ${calculatedChart.rising_sign} (${calculatedChart.rising_degree}°), Moon Sign = ${calculatedChart.moon_sign} (${calculatedChart.moon_degree}°)`);
+                
+                // Store calculated astrology data
+                astrologyInfo.astrology_data = {
+                    rising_sign: calculatedChart.rising_sign,
+                    rising_degree: calculatedChart.rising_degree,
+                    moon_sign: calculatedChart.moon_sign,
+                    moon_degree: calculatedChart.moon_degree,
+                    sun_sign: calculatedChart.sun_sign,
+                    sun_degree: calculatedChart.sun_degree,
+                    latitude: calculatedChart.latitude,
+                    longitude: calculatedChart.longitude,
+                    timezone: calculatedChart.timezone,
+                    calculated_at: new Date().toISOString()
+                };
+                
+                // Store in database
+                await db.query(
+                    `INSERT INTO user_astrology (user_id, zodiac_sign, astrology_data)
+                     VALUES ($1, $2, $3)
+                     ON CONFLICT (user_id) DO UPDATE SET
+                     astrology_data = EXCLUDED.astrology_data,
+                     updated_at = CURRENT_TIMESTAMP`,
+                    [userId, calculatedChart.sun_sign, JSON.stringify(astrologyInfo.astrology_data)]
+                );
+                console.log(`[WORKER] ✓ Stored calculated astrology data to database`);
+            } else if (calculatedChart.error) {
+                console.warn(`[WORKER] ⚠ Astrology calculation skipped: ${calculatedChart.error}`);
+            }
+        } catch (err) {
+            console.error('[WORKER] Error calculating astrology:', err.message);
+            // Continue without astrology data
+        }
+    }
+    
+    // Fetch user's astrology information (may have been updated above)
     try {
         const { rows: astrologyRows } = await db.query(
             "SELECT zodiac_sign, astrology_data FROM user_astrology WHERE user_id = $1",
@@ -149,44 +247,41 @@ ${userInfo.sex ? `- Gender: ${userInfo.sex}` : ''}
     let astrologyContext = '';
     if (Object.keys(astrologyInfo).length > 0 && astrologyInfo.astrology_data) {
         const astro = astrologyInfo.astrology_data;
-        let risingSignInfo = '';
         
-        // Add Rising Sign info if available
-        if (astro.risingSign && astro.risingSignData) {
-            const risingData = astro.risingSignData;
-            risingSignInfo = `
-- Rising Sign (Ascendant): ${astro.risingSign} (${risingData.name || ''})
-  * How others perceive you; your outward personality
-  * Element: ${risingData.element || ''}
-  * Ruling Planet: ${risingData.rulingPlanet || risingData.planet || ''}`;
+        // Handle both old format (sun sign data with name, dates, etc.) and new format (calculated data)
+        let astrologyLines = [];
+        
+        if (astro.sun_sign) {
+            // New format: calculated astrology data
+            astrologyLines.push(`- Sun Sign (Core Identity): ${astro.sun_sign} (${astro.sun_degree}°)`);
+            astrologyLines.push(`- Rising Sign (Ascendant): ${astro.rising_sign} (${astro.rising_degree}°)`);
+            astrologyLines.push(`- Moon Sign (Emotional Nature): ${astro.moon_sign} (${astro.moon_degree}°)`);
+            astrologyLines.push(`- Birth Location: ${userInfo.birth_city}, ${userInfo.birth_province}, ${userInfo.birth_country}`);
+            astrologyLines.push(`- Birth Timezone: ${astro.timezone}`);
+            astrologyLines.push(`- Coordinates: ${astro.latitude}°N, ${astro.longitude}°W`);
+            astrologyLines.push(`- Calculated: ${astro.calculated_at || 'Swiss Ephemeris'}`);
+        } else if (astro.name) {
+            // Old format: zodiac sign data from database
+            astrologyLines.push(`- Sun Sign (Core Identity): ${astrologyInfo.zodiac_sign} (${astro.name || ''})`);
+            astrologyLines.push(`- Dates: ${astro.dates || ''}`);
+            astrologyLines.push(`- Element: ${astro.element || ''}`);
+            astrologyLines.push(`- Ruling Planet: ${astro.rulingPlanet || astro.planet || ''}`);
+            astrologyLines.push(`- Symbol: ${astro.symbol || ''}`);
+            if (astro.personality) astrologyLines.push(`- Personality Essence: ${astro.personality}`);
+            if (astro.strengths) astrologyLines.push(`- Strengths: ${Array.isArray(astro.strengths) ? astro.strengths.join(', ') : ''}`);
+            if (astro.weaknesses) astrologyLines.push(`- Challenges: ${Array.isArray(astro.weaknesses) ? astro.weaknesses.join(', ') : ''}`);
+            if (astro.lifePath) astrologyLines.push(`- Life Path: ${astro.lifePath}`);
+            if (astro.luckyElements?.stones) astrologyLines.push(`- Crystal Recommendations: ${astro.luckyElements.stones.join(', ')}`);
+            if (astro.luckyElements?.days) astrologyLines.push(`- Lucky Days: ${astro.luckyElements.days.join(', ')}`);
+            if (astro.luckyElements?.colors) astrologyLines.push(`- Lucky Colors: ${astro.luckyElements.colors.join(', ')}`);
         }
         
         astrologyContext = `
 ASTROLOGICAL PROFILE:
-- Sun Sign (Core Identity): ${astrologyInfo.zodiac_sign} (${astro.name || ''})
-- Dates: ${astro.dates || ''}
-- Element: ${astro.element || ''}
-- Ruling Planet: ${astro.rulingPlanet || astro.planet || ''}
-- Symbol: ${astro.symbol || ''}${risingSignInfo}
-- Personality Essence: ${astro.personality || ''}
-- Strengths: ${Array.isArray(astro.strengths) ? astro.strengths.join(', ') : ''}
-- Challenges: ${Array.isArray(astro.weaknesses) ? astro.weaknesses.join(', ') : ''}
-- Life Path: ${astro.lifePath || ''}
-- Seasonal Energy: ${astro.seasonal?.energy || ''}
-- Moon Phase Influences: New Moon = ${astro.moonPhases?.newMoon || 'new beginnings'}, Full Moon = ${astro.moonPhases?.fullMoon || 'culmination'}
-- Crystal Recommendations: ${astro.luckyElements?.stones ? astro.luckyElements.stones.join(', ') : ''}
-- Lucky Days: ${astro.luckyElements?.days ? astro.luckyElements.days.join(', ') : ''}
-- Lucky Colors: ${astro.luckyElements?.colors ? astro.luckyElements.colors.join(', ') : ''}
-- Compatible Signs: ${astro.compatibility?.mostCompatible ? astro.compatibility.mostCompatible.join(', ') : ''}
+${astrologyLines.join('\n')}
 
-IMPORTANT: Use the above astrological information to:
-- Reference the user's sun and rising signs naturally in conversation when appropriate
-- Weave astrological timing and lunar phase influences into your guidance
-- Suggest crystals that align with their signs and current needs
-- Connect tarot interpretations to their astrological profile
-- Personalize spiritual insights based on their cosmic blueprint
-- DO NOT CALCULATE RISING SIGN independently - use the provided rising sign if available
-
+IMPORTANT: These astrological calculations are based on Swiss Ephemeris using the user's precise birth data.
+Use these placements naturally in your guidance to create personalized, cosmic insights.
 `;
     }
     
@@ -204,21 +299,7 @@ IMPORTANT: Use the above personal and astrological information to:
         messages: [
             {
                 role: "system",
-                content: `CRITICAL INSTRUCTION - METADATA BLOCK REQUIRED:
-At the END of EVERY response, you MUST include a metadata block with astrological data in this exact format:
-
-~~~ASTRO_DATA_START~~~
-{
-  "risingSign": "zodiac sign name (lowercase) or null",
-  "moonSign": "zodiac sign name (lowercase) or null"
-}
-~~~ASTRO_DATA_END~~~
-
-DO NOT SKIP THIS. It must be in every single response, even if you cannot calculate the signs. This is critical for data storage.
-
----
-
-${combinedContext}
+                content: `${combinedContext}
 
 You are The Oracle of Starship Psychics — a mystical guide who seamlessly blends tarot, astrology, palmistry, and crystals into unified, holistic readings.
 
@@ -315,10 +396,8 @@ Goal:
 - Deepen understanding of their journey through integrated spiritual practice
 - Empower users to work with natural cycles and energetic support
 
-IMPORTANT NOTE ON ASTROLOGICAL ACCURACY:
-Rising signs (Ascendant) and Moon signs require precise birth time and location calculations using complex astronomical formulas. Different house systems (Placidus, Equal House, Whole Sign, etc.) can produce different results. These calculations are highly unreliable without professional software and exact birth data. 
-
-If you mention the user's birth time or location in the conversation, you may acknowledge that more precise rising/moon signs would require consultation with a professional astrologer. Focus instead on providing accurate sun sign insights, which are based solely on birth date.
+ASTROLOGICAL ACCURACY NOTE:
+The user's rising sign and moon sign have been calculated using Swiss Ephemeris, which uses precise astronomical algorithms. These calculations are accurate based on the birth date, time, and location provided. You have access to these calculated values and should reference them naturally in your guidance. The rising sign describes how the user is perceived by others and their outward presentation, while the moon sign reflects their inner emotional nature and private self.
                 `
             },
             ...history.reverse(),

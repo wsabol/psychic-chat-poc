@@ -147,26 +147,6 @@ function Menu({ menuOpen, setMenuOpen, onPersonalInfoClick, onAstrologyClick }) 
                                 <button
                                     onClick={() =>
                                         handleMenuItemClick(() => {
-                                            onAstrologyClick && onAstrologyClick();
-                                        })
-                                    }
-                                    style={{
-                                        display: "block",
-                                        width: "100%",
-                                        padding: "10px 32px",
-                                        border: "none",
-                                        background: "none",
-                                        textAlign: "left",
-                                        cursor: "pointer",
-                                        fontSize: "13px",
-                                        borderBottom: "1px solid #eee",
-                                    }}
-                                >
-                                    Astrology
-                                </button>
-                                <button
-                                    onClick={() =>
-                                        handleMenuItemClick(() => {
                                             alert("Subscriptions clicked");
                                         })
                                     }
@@ -269,6 +249,28 @@ function Menu({ menuOpen, setMenuOpen, onPersonalInfoClick, onAstrologyClick }) 
                             </div>
                         )}
                     </div>
+
+                    {/* Astrology - Top Level */}
+                    <button
+                        onClick={() =>
+                            handleMenuItemClick(() => {
+                                onAstrologyClick && onAstrologyClick();
+                            })
+                        }
+                        style={{
+                            display: "block",
+                            width: "100%",
+                            padding: "12px 16px",
+                            border: "none",
+                            background: "none",
+                            textAlign: "left",
+                            cursor: "pointer",
+                            fontSize: "14px",
+                            borderBottom: "1px solid #eee",
+                        }}
+                    >
+                        Astrology
+                    </button>
                 </div>
             )}
         </div>

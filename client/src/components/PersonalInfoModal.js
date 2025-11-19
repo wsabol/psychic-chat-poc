@@ -51,10 +51,12 @@ function PersonalInfoModal({ userId, isOpen, onClose, onSave }) {
         firstName: '',
         lastName: '',
         email: '',
+        birthCountry: '',
+        birthProvince: '',
+        birthCity: '',
         birthDate: '',
         birthTime: '',
-        birthCity: '',
-        birthState: '',
+        birthTimezone: '',
         sex: '',
         addressPreference: ''
     });
@@ -81,10 +83,12 @@ function PersonalInfoModal({ userId, isOpen, onClose, onSave }) {
                     firstName: data.first_name || '',
                     lastName: data.last_name || '',
                     email: data.email || '',
+                    birthCountry: data.birth_country || '',
+                    birthProvince: data.birth_province || '',
+                    birthCity: data.birth_city || '',
                     birthDate: formatDateForDisplay(data.birth_date) || '',
                     birthTime: data.birth_time || '',
-                    birthCity: data.birth_city || '',
-                    birthState: data.birth_state || '',
+                    birthTimezone: data.birth_timezone || '',
                     sex: data.sex || '',
                     addressPreference: data.address_preference || ''
                 });
@@ -160,6 +164,20 @@ function PersonalInfoModal({ userId, isOpen, onClose, onSave }) {
             });
 
             if (!response.ok) throw new Error('Failed to save personal information');
+            
+            // Trigger astrology calculation if birth data is complete
+            if (formData.birthCountry && formData.birthCity && formData.birthDate && formData.birthTime) {
+                try {
+                    await fetch(`${API_URL}/user-astrology/calculate/${userId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    console.log('[PersonalInfoModal] Triggered astrology calculation');
+                } catch (e) {
+                    console.warn('[PersonalInfoModal] Could not trigger astrology calculation:', e);
+                }
+            }
+            
             setSuccess(true);
             setTimeout(() => setSuccess(false), 3000);
             if (onSave) {
@@ -216,6 +234,7 @@ function PersonalInfoModal({ userId, isOpen, onClose, onSave }) {
                 {success && <p style={{ color: 'green', marginBottom: '1rem' }}>✓ Saved successfully!</p>}
 
                 <form onSubmit={handleSubmit}>
+                    {/* PERSONAL INFO SECTION - FIRST */}
                     <div style={{ marginBottom: '1rem' }}>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>First Name <span style={{ color: 'red' }}>*</span></label>
                         <input
@@ -252,50 +271,87 @@ function PersonalInfoModal({ userId, isOpen, onClose, onSave }) {
                         />
                     </div>
 
-                    <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Date of Birth <span style={{ color: 'red' }}>*</span></label>
-                        <input
-                            type="text"
-                            name="birthDate"
-                            value={formData.birthDate}
-                            onChange={handleChange}
-                            placeholder="dd-mmm-yyyy (e.g., 09-Feb-1956)"
-                            required
-                            style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
-                        />
+                    {/* LOCATION SECTION - AFTER EMAIL */}
+                    <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
+                        <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>📍 Place of Birth</h3>
+                        
+                        <div style={{ marginBottom: '1rem' }}>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Country <span style={{ color: '#999', fontSize: '12px' }}>(Optional)</span></label>
+                            <input
+                                type="text"
+                                name="birthCountry"
+                                value={formData.birthCountry}
+                                onChange={handleChange}
+                                placeholder="e.g., United States, Canada, Japan"
+                                style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
+                            />
+                        </div>
+
+                        <div style={{ marginBottom: '1rem' }}>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>State / Province <span style={{ color: '#999', fontSize: '12px' }}>(Optional)</span></label>
+                            <input
+                                type="text"
+                                name="birthProvince"
+                                value={formData.birthProvince}
+                                onChange={handleChange}
+                                placeholder="e.g., California, Ontario, Tokyo"
+                                style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
+                            />
+                        </div>
+
+                        <div style={{ marginBottom: '1rem' }}>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>City <span style={{ color: '#999', fontSize: '12px' }}>(Optional)</span></label>
+                            <input
+                                type="text"
+                                name="birthCity"
+                                value={formData.birthCity}
+                                onChange={handleChange}
+                                placeholder="e.g., New York, Toronto, Tokyo"
+                                style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
+                            />
+                        </div>
                     </div>
 
-                    <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Time of Birth <span style={{ color: '#999', fontSize: '12px' }}>(Optional)</span></label>
-                        <input
-                            type="time"
-                            name="birthTime"
-                            value={formData.birthTime}
-                            onChange={handleChange}
-                            style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
-                        />
-                    </div>
+                    {/* BIRTH TIME SECTION - AFTER LOCATION */}
+                    <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
+                        <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>⏰ Time & Date of Birth</h3>
+                        
+                        <div style={{ marginBottom: '1rem' }}>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Date of Birth <span style={{ color: 'red' }}>*</span></label>
+                            <input
+                                type="text"
+                                name="birthDate"
+                                value={formData.birthDate}
+                                onChange={handleChange}
+                                placeholder="dd-mmm-yyyy (e.g., 09-Feb-1956)"
+                                required
+                                style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
+                            />
+                        </div>
 
-                    <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>City of Birth <span style={{ color: '#999', fontSize: '12px' }}>(Optional)</span></label>
-                        <input
-                            type="text"
-                            name="birthCity"
-                            value={formData.birthCity}
-                            onChange={handleChange}
-                            style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
-                        />
-                    </div>
+                        <div style={{ marginBottom: '1rem' }}>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Time of Birth <span style={{ color: '#999', fontSize: '12px' }}>(Optional - for accurate rising/moon signs)</span></label>
+                            <input
+                                type="time"
+                                name="birthTime"
+                                value={formData.birthTime}
+                                onChange={handleChange}
+                                style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
+                            />
+                        </div>
 
-                    <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>State of Birth <span style={{ color: '#999', fontSize: '12px' }}>(Optional)</span></label>
-                        <input
-                            type="text"
-                            name="birthState"
-                            value={formData.birthState}
-                            onChange={handleChange}
-                            style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
-                        />
+                        <div style={{ marginBottom: '0' }}>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Timezone <span style={{ color: '#999', fontSize: '12px' }}>(Auto-detected from location, or override)</span></label>
+                            <input
+                                type="text"
+                                name="birthTimezone"
+                                value={formData.birthTimezone}
+                                onChange={handleChange}
+                                placeholder="e.g., America/New_York, Europe/London"
+                                style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box', fontSize: '12px' }}
+                            />
+                            <p style={{ marginTop: '0.25rem', fontSize: '11px', color: '#666' }}>Leave blank to auto-detect from country/city</p>
+                        </div>
                     </div>
 
                     <div style={{ marginBottom: '1rem' }}>

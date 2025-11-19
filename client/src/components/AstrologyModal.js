@@ -19,7 +19,45 @@ function AstrologyModal({ userId, isOpen, onClose, birthDate, birthTime, birthCi
         setLoading(true);
         setError(null);
         try {
-            // Use passed birthDate if available, otherwise fetch from personal info
+            // First, try to fetch calculated astrology data from database
+            try {
+                const astroResponse = await fetch(`${API_URL}/user-astrology/${userId}`);
+                if (astroResponse.ok) {
+                    const dbAstroData = await astroResponse.json();
+                    console.log('[AstrologyModal] Fetched from database:', dbAstroData);
+                    
+                    // Parse astrology_data if it's a string
+                    let astroDataObj = dbAstroData.astrology_data;
+                    if (typeof astroDataObj === 'string') {
+                        astroDataObj = JSON.parse(astroDataObj);
+                    }
+                    
+                    if (astroDataObj && astroDataObj.sun_sign) {
+                        // We have calculated Swiss Ephemeris data
+                        // Now fetch zodiac sign details to merge with calculated data
+                        const zodiacSignData = getAstrologyData(astroDataObj.sun_sign.toLowerCase());
+                        
+                        // Merge calculated data with zodiac sign personality/details
+                        const mergedData = {
+                            ...zodiacSignData,  // Get all the personality, strengths, etc. from ZodiacSigns.js
+                            ...astroDataObj     // Override with calculated signs and degrees
+                        };
+                        
+                        console.log('[AstrologyModal] Using merged astrology data:', mergedData);
+                        setAstroData({
+                            ...dbAstroData,
+                            astrology_data: mergedData
+                        });
+                        setLoading(false);
+                        return;
+                    }
+                }
+            } catch (e) {
+                // Fall through to local data if fetch fails
+                console.warn('Could not fetch astrology data from database:', e);
+            }
+
+            // Fall back to local zodiac sign data from ZodiacSigns.js
             let birthDateToUse = birthDate;
             
             if (!birthDateToUse) {
@@ -61,30 +99,11 @@ function AstrologyModal({ userId, isOpen, onClose, birthDate, birthTime, birthCi
                 return;
             }
 
-            // IMPORTANT: Do NOT overwrite astrology data in database - just retrieve existing data
-            // The worker processor stores rising/moon signs via the Oracle response
-            // Overwriting here would destroy that data
-            // Instead, fetch the complete astrology data from the database (which includes rising/moon signs)
-            try {
-                const astroResponse = await fetch(`${API_URL}/astrology/${userId}`);
-                if (astroResponse.ok) {
-                    const dbAstroData = await astroResponse.json();
-                    // Use database data which includes rising/moon signs from Oracle
-                    setAstroData(dbAstroData);
-                } else {
-                    // If no database record yet, use zodiac sign data from ZodiacSigns.js
-                    setAstroData({
-                        zodiac_sign: zodiacSign,
-                        astrology_data: astrologyData
-                    });
-                }
-            } catch (err) {
-                console.warn('Could not fetch astrology data from database, using local zodiac data:', err);
-                setAstroData({
-                    zodiac_sign: zodiacSign,
-                    astrology_data: astrologyData
-                });
-            }
+            // Use local zodiac sign data from ZodiacSigns.js
+            setAstroData({
+                zodiac_sign: zodiacSign,
+                astrology_data: astrologyData
+            });
             
         } catch (err) {
             console.error('Error loading astrology data:', err);
@@ -140,32 +159,72 @@ function AstrologyModal({ userId, isOpen, onClose, birthDate, birthTime, birthCi
                 {astroData && astroData.astrology_data && (
                     <div style={{ fontSize: '14px', lineHeight: '1.6', color: '#333' }}>
                         <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#f0f4ff', borderRadius: '8px', borderLeft: '4px solid #4a90e2' }}>
-                            <p style={{ margin: '0', fontSize: '13px', color: '#333' }}>
-                                <strong>📝 Note:</strong> This profile shows your <strong>Sun Sign</strong> based on your birth date. Rising signs (Ascendant) and Moon signs require precise birth time and location calculations using professional astrological software. For accurate rising and moon signs, consult a professional astrologer.
+                            <p style={{ margin: '0 0 0.5rem 0', fontSize: '13px', color: '#333' }}>
+                                <strong>📝 About Your Astrology:</strong> Your birth chart has been calculated using Swiss Ephemeris based on your birth date, time, and location. These precise astronomical calculations show your Sun, Moon, and Rising signs.
                             </p>
                         </div>
 
-                        <div style={{ marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid #eee' }}>
-                            <h3 style={{ marginTop: 0, color: '#1a1a1a' }}>
-                                {astroData.astrology_data.emoji} {astroData.astrology_data.name}
-                                <span style={{ fontSize: '12px', color: '#666', marginLeft: '0.5rem' }}>
-                                    {astroData.astrology_data.symbol}
-                                </span>
-                            </h3>
-                            <p><strong>Dates:</strong> {astroData.astrology_data.dates}</p>
-                            <p><strong>Element:</strong> {astroData.astrology_data.element}</p>
-                            <p><strong>Ruling Planet:</strong> {astroData.astrology_data.rulingPlanet}</p>
-                        </div>
+                        {/* CALCULATED SIGNS (if available) */}
+                        {astroData.astrology_data.sun_sign && (
+                            <div style={{ marginBottom: '1.5rem', padding: '1rem', borderRadius: '8px', border: '2px solid #ffc107' }}>
+                                <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>🔯 Your Birth Chart</h3>
+                                
+                                {/* Sun Sign */}
+                                <div style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#fff9e6', borderRadius: '6px', borderLeft: '3px solid #ffc107' }}>
+                                    <p style={{ margin: 0 }}><strong>☀️ Sun Sign:</strong> {astroData.astrology_data.sun_sign} {astroData.astrology_data.sun_degree}°</p>
+                                    <p style={{ margin: '0.25rem 0 0 0', fontSize: '12px', color: '#666' }}>Your core identity, ego, and fundamental essence</p>
+                                </div>
 
-                        <div style={{ marginBottom: '1.5rem' }}>
-                            <h4>Personality Essence</h4>
-                            <p style={{ fontStyle: 'italic', color: '#555' }}>{astroData.astrology_data.personality}</p>
-                        </div>
+                                {/* Rising Sign */}
+                                {astroData.astrology_data.rising_sign && (
+                                    <div style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#f0f7ff', borderRadius: '6px', borderLeft: '3px solid #2196f3' }}>
+                                        <p style={{ margin: 0 }}><strong>↗️ Rising Sign (Ascendant):</strong> {astroData.astrology_data.rising_sign} {astroData.astrology_data.rising_degree}°</p>
+                                        <p style={{ margin: '0.25rem 0 0 0', fontSize: '12px', color: '#666' }}>How others perceive you; your outward personality and first impression</p>
+                                    </div>
+                                )}
 
-                        <div style={{ marginBottom: '1.5rem' }}>
-                            <h4>Life Path</h4>
-                            <p>{astroData.astrology_data.lifePath}</p>
-                        </div>
+                                {/* Moon Sign */}
+                                {astroData.astrology_data.moon_sign && (
+                                    <div style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#f3e5f5', borderRadius: '6px', borderLeft: '3px solid #9c27b0' }}>
+                                        <p style={{ margin: 0 }}><strong>🌙 Moon Sign:</strong> {astroData.astrology_data.moon_sign} {astroData.astrology_data.moon_degree}°</p>
+                                        <p style={{ margin: '0.25rem 0 0 0', fontSize: '12px', color: '#666' }}>Your inner emotional world, subconscious needs, and private self</p>
+                                    </div>
+                                )}
+
+                                {/* Location & Timezone - REMOVED per user request */}
+                            </div>
+                        )}
+
+                        {/* ZODIAC SIGN INFO (traditional data) */}
+                        {!astroData.astrology_data.sun_sign && astroData.astrology_data.name && (
+                            <div style={{ marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid #eee' }}>
+                                <h3 style={{ marginTop: 0, color: '#1a1a1a' }}>
+                                    {astroData.astrology_data.emoji} {astroData.astrology_data.name}
+                                    <span style={{ fontSize: '12px', color: '#666', marginLeft: '0.5rem' }}>
+                                        {astroData.astrology_data.symbol}
+                                    </span>
+                                </h3>
+
+                                <p><strong>Dates:</strong> {astroData.astrology_data.dates}</p>
+                                <p><strong>Element:</strong> {astroData.astrology_data.element}</p>
+                                <p><strong>Ruling Planet:</strong> {astroData.astrology_data.rulingPlanet}</p>
+                            </div>
+                        )}
+
+                        {/* PERSONALITY DETAILS */}
+                        {astroData.astrology_data.personality && (
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <h4>Personality Essence</h4>
+                                <p style={{ fontStyle: 'italic', color: '#555' }}>{astroData.astrology_data.personality}</p>
+                            </div>
+                        )}
+
+                        {astroData.astrology_data.lifePath && (
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <h4>Life Path</h4>
+                                <p>{astroData.astrology_data.lifePath}</p>
+                            </div>
+                        )}
 
                         {astroData.astrology_data.strengths && (
                             <div style={{ marginBottom: '1.5rem' }}>

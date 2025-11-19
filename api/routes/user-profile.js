@@ -33,7 +33,7 @@ router.get("/:userId", async (req, res) => {
     const { userId } = req.params;
     try {
         const { rows } = await db.query(
-            "SELECT first_name, last_name, email, to_char(birth_date, 'YYYY-MM-DD') AS birth_date, birth_time, birth_city, birth_state, sex, address_preference FROM user_personal_info WHERE user_id = $1",
+            "SELECT first_name, last_name, email, to_char(birth_date, 'YYYY-MM-DD') AS birth_date, birth_time, birth_country, birth_province, birth_city, birth_timezone, sex, address_preference FROM user_personal_info WHERE user_id = $1",
             [userId]
         );
         if (rows.length === 0) {
@@ -49,7 +49,7 @@ router.get("/:userId", async (req, res) => {
 // Save or update user personal information
 router.post("/:userId", async (req, res) => {
     const { userId } = req.params;
-    const { firstName, lastName, email, birthDate, birthTime, birthCity, birthState, sex, addressPreference, zodiacSign, astrologyData } = req.body;
+    const { firstName, lastName, email, birthDate, birthTime, birthCountry, birthProvince, birthCity, birthTimezone, sex, addressPreference, zodiacSign, astrologyData } = req.body;
 
     try {
         // Validate required fields
@@ -66,25 +66,27 @@ router.post("/:userId", async (req, res) => {
             return res.status(400).json({ error: 'Invalid birth date format' });
         }
 
-        console.log(`[API] Saving personal info for user ${userId}:`, { firstName, lastName, email, birthDate: parsedBirthDate, birthTime, birthCity, birthState, sex });
+        console.log(`[API] Saving personal info for user ${userId}:`, { firstName, lastName, email, birthDate: parsedBirthDate, birthTime, birthCountry, birthProvince, birthCity, birthTimezone, sex });
 
         // Use UPSERT (INSERT ... ON CONFLICT ... DO UPDATE) to handle both insert and update cases
         await db.query(
             `INSERT INTO user_personal_info 
-             (user_id, first_name, last_name, email, birth_date, birth_time, birth_city, birth_state, sex, address_preference)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+             (user_id, first_name, last_name, email, birth_date, birth_time, birth_country, birth_province, birth_city, birth_timezone, sex, address_preference)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
              ON CONFLICT (user_id) DO UPDATE SET
              first_name = EXCLUDED.first_name,
              last_name = EXCLUDED.last_name,
              email = EXCLUDED.email,
              birth_date = EXCLUDED.birth_date,
              birth_time = EXCLUDED.birth_time,
+             birth_country = EXCLUDED.birth_country,
+             birth_province = EXCLUDED.birth_province,
              birth_city = EXCLUDED.birth_city,
-             birth_state = EXCLUDED.birth_state,
+             birth_timezone = EXCLUDED.birth_timezone,
              sex = EXCLUDED.sex,
              address_preference = EXCLUDED.address_preference,
              updated_at = CURRENT_TIMESTAMP`,
-            [userId, firstName, lastName, email, parsedBirthDate, birthTime, birthCity, birthState, sex, addressPreference]
+            [userId, firstName, lastName, email, parsedBirthDate, birthTime, birthCountry, birthProvince, birthCity, birthTimezone, sex, addressPreference]
         );
 
         console.log(`[API] Personal info saved successfully for user ${userId}`);
