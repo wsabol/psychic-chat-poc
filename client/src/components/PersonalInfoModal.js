@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getAstrologyFromBirthDate, getZodiacSignFromDate } from '../utils/astroUtils';
+import { COUNTRIES } from '../data/countries';
 
 // Helper function to format date from YYYY-MM-DD to dd-mmm-yyyy
 function formatDateForDisplay(dateString) {
@@ -277,14 +278,30 @@ function PersonalInfoModal({ userId, isOpen, onClose, onSave }) {
                         
                         <div style={{ marginBottom: '1rem' }}>
                             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Country <span style={{ color: '#999', fontSize: '12px' }}>(Optional)</span></label>
-                            <input
-                                type="text"
+                            <select
                                 name="birthCountry"
                                 value={formData.birthCountry}
                                 onChange={handleChange}
-                                placeholder="e.g., United States, Canada, Japan"
-                                style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
-                            />
+                                style={{
+                                    width: '100%',
+                                    padding: '0.5rem',
+                                    paddingRight: '2rem',
+                                    borderRadius: '4px',
+                                    border: '1px solid #ccc',
+                                    boxSizing: 'border-box',
+                                    appearance: 'none',
+                                    backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e")',
+                                    backgroundRepeat: 'no-repeat',
+                                    backgroundPosition: 'left 0.5rem center',
+                                    backgroundSize: '1.5em',
+                                    paddingLeft: '2.5rem'
+                                }}
+                            >
+                                <option value="">-- Select Country --</option>
+                                {COUNTRIES.map((country, idx) => (
+                                    <option key={idx} value={country}>{country}</option>
+                                ))}
+                            </select>
                         </div>
 
                         <div style={{ marginBottom: '1rem' }}>
