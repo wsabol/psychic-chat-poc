@@ -15,7 +15,7 @@ function AstrologyModal({ userId, isOpen, onClose, birthDate, birthTime, birthCi
         }
     }, [isOpen, userId]);
 
-    const loadAndStoreAstrologyData = async () => {
+        const loadAndStoreAstrologyData = async () => {
         setLoading(true);
         setError(null);
         try {
@@ -50,6 +50,23 @@ function AstrologyModal({ userId, isOpen, onClose, birthDate, birthTime, birthCi
                         });
                         setLoading(false);
                         return;
+                    } else {
+                        // No calculated data yet - trigger calculation
+                        console.log('[AstrologyModal] No calculated signs found, triggering calculation...');
+                        try {
+                            const calcResponse = await fetch(`${API_URL}/user-astrology/calculate/${userId}`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' }
+                            });
+                            if (calcResponse.ok) {
+                                console.log('[AstrologyModal] Calculation job enqueued, waiting for oracle to process...');
+                                // Wait a moment then try fetching again
+                                setTimeout(() => loadAndStoreAstrologyData(), 2000);
+                                return;
+                            }
+                        } catch (calcError) {
+                            console.warn('Could not trigger calculation:', calcError);
+                        }
                     }
                 }
             } catch (e) {

@@ -47,7 +47,7 @@ function parseDateForStorage(dateString) {
     }
 }
 
-function PersonalInfoModal({ userId, isOpen, onClose, onSave }) {
+function PersonalInfoModal({ userId, token, isOpen, onClose, onSave }) {
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -76,7 +76,11 @@ function PersonalInfoModal({ userId, isOpen, onClose, onSave }) {
 
     const fetchPersonalInfo = async () => {
         try {
-            const response = await fetch(`${API_URL}/user-profile/${userId}`);
+            const headers = {};
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            const response = await fetch(`${API_URL}/user-profile/${userId}`, { headers });
             if (!response.ok) throw new Error('Failed to fetch personal info');
             const data = await response.json();
             if (data && data.first_name) {
@@ -160,24 +164,21 @@ function PersonalInfoModal({ userId, isOpen, onClose, onSave }) {
 
             const response = await fetch(`${API_URL}/user-profile/${userId}`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    ...(token && { 'Authorization': `Bearer ${token}` })
+                },
                 body: JSON.stringify(dataToSend)
             });
 
             if (!response.ok) throw new Error('Failed to save personal information');
             
-            // Trigger astrology calculation if birth data is complete
-            if (formData.birthCountry && formData.birthCity && formData.birthDate && formData.birthTime) {
-                try {
-                    await fetch(`${API_URL}/user-astrology/calculate/${userId}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' }
-                    });
-                    console.log('[PersonalInfoModal] Triggered astrology calculation');
-                } catch (e) {
-                    console.warn('[PersonalInfoModal] Could not trigger astrology calculation:', e);
-                }
-            }
+            // Clear horoscope cache since birth date has changed
+            const today = new Date().toISOString().split('T')[0];
+            localStorage.removeItem(`horoscope_${userId}_daily_${today}`);
+            localStorage.removeItem(`horoscope_${userId}_weekly_${today}`);
+            localStorage.removeItem(`horoscope_${userId}_monthly_${today}`);
+            console.log('[PersonalInfoModal] Cleared horoscope cache');
             
             setSuccess(true);
             setTimeout(() => setSuccess(false), 3000);
@@ -441,3 +442,4 @@ function PersonalInfoModal({ userId, isOpen, onClose, onSave }) {
 }
 
 export default PersonalInfoModal;
+

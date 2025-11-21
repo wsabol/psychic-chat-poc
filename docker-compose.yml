@@ -14,11 +14,17 @@ services:
       - DATABASE_URL=${DATABASE_URL:-postgres://postgres:postgres@db:5432/chatbot}
       - PORT=${API_PORT}
       - CORS_ORIGIN=${CORS_ORIGIN}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - RESEND_FROM_EMAIL=${RESEND_FROM_EMAIL}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
     depends_on:
       redis:
         condition: service_started
       db:
-        condition: service_healthy
+                condition: service_healthy
 
   worker:
     build:
@@ -31,6 +37,7 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - REDIS_URL=redis://redis:6379
       - DATABASE_URL=postgres://postgres:postgres@db:5432/chatbot
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
     depends_on:
       redis:
         condition: service_started

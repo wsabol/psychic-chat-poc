@@ -223,10 +223,78 @@ def calculate_birth_chart(birth_data):
             "success": False
         }
 
-if __name__ == "__main__":
-    # Read birth data from stdin
+def calculate_current_moon_phase():
+    """
+    Calculate the current lunar phase based on the angle between sun and moon.
+    Returns the phase name and percentage through the lunar cycle.
+    
+    Phase angle ranges:
+    0-45°: New Moon (0%)
+    45-90°: Waxing Crescent (25%)
+    90-135°: First Quarter (50%)
+    135-180°: Waxing Gibbous (75%)
+    180-225°: Full Moon (100%)
+    225-270°: Waning Gibbous (75%)
+    270-315°: Last Quarter (50%)
+    315-360°: Waning Crescent (25%)
+    """
     try:
-        birth_data = json.loads(sys.stdin.read())
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+        
+        # Get current UTC time
+        now_utc = datetime.now(ZoneInfo("UTC"))
+        
+        # Calculate Julian Day Number
+        jd = swe.julday(now_utc.year, now_utc.month, now_utc.day,
+                       now_utc.hour + now_utc.minute / 60.0 + now_utc.second / 3600.0)
+        
+        # Calculate sun and moon positions
+        sun_pos = swe.calc_ut(jd, swe.SUN)
+        moon_pos = swe.calc_ut(jd, swe.MOON)
+        
+        # Get ecliptic longitudes
+        sun_lon = sun_pos[0][0]
+        moon_lon = moon_pos[0][0]
+        
+        # Calculate phase angle (0-360°)
+        phase_angle = (moon_lon - sun_lon) % 360
+        
+        # Map to 8 phases
+        phase_index = int((phase_angle / 360) * 8) % 8
+        phase_names = [
+            "newMoon",
+            "waxingCrescent",
+            "firstQuarter",
+            "waxingGibbous",
+            "fullMoon",
+            "waningGibbous",
+            "lastQuarter",
+            "waningCrescent"
+        ]
+        
+        # Calculate percentage through lunar cycle (0-100%)
+        cycle_percentage = round((phase_angle / 360) * 100, 1)
+        
+        return {
+            "phase": phase_names[phase_index],
+            "phase_angle": round(phase_angle, 2),
+            "cycle_percentage": cycle_percentage,
+            "timestamp": now_utc.isoformat(),
+            "success": True
+        }
+    except Exception as e:
+        print(f"Error calculating moon phase: {str(e)}", file=sys.stderr)
+        return {
+            "error": str(e),
+            "phase": None,
+            "success": False
+        }
+
+if __name__ == "__main__":
+    # Read input to determine what to calculate
+    try:
+        input_data = json.loads(sys.stdin.read())
     except json.JSONDecodeError as e:
         print(json.dumps({
             "error": f"Invalid JSON: {str(e)}",
@@ -235,6 +303,11 @@ if __name__ == "__main__":
         }), file=sys.stdout)
         sys.exit(1)
     
-    # Calculate and output result
-    result = calculate_birth_chart(birth_data)
+    # Check if this is a moon phase calculation request
+    if input_data.get("type") == "moon_phase":
+        result = calculate_current_moon_phase()
+    else:
+        # Default: calculate birth chart
+        result = calculate_birth_chart(input_data)
+    
     print(json.dumps(result), file=sys.stdout)

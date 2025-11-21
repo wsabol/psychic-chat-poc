@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getZodiacSignFromDate, getAstrologyData } from '../utils/astroUtils';
 import { zodiacSigns } from '../data/ZodiacSigns';
 
-function MySignModal({ userId, isOpen, onClose, birthDate, birthTime, birthCity, birthState }) {
+function MySignModal({ userId, token, isOpen, onClose, birthDate, birthTime, birthCity, birthState }) {
     const [astroData, setAstroData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -13,7 +13,7 @@ function MySignModal({ userId, isOpen, onClose, birthDate, birthTime, birthCity,
         if (isOpen) {
             loadAndStoreAstrologyData();
         }
-    }, [isOpen, userId]);
+    }, [isOpen, userId, token]);
 
     const loadAndStoreAstrologyData = async () => {
         setLoading(true);
@@ -21,10 +21,13 @@ function MySignModal({ userId, isOpen, onClose, birthDate, birthTime, birthCity,
         try {
             // First, try to fetch calculated astrology data from database
             try {
-                const astroResponse = await fetch(`${API_URL}/user-astrology/${userId}`);
+                const astroHeaders = {};
+                if (token) {
+                    astroHeaders['Authorization'] = `Bearer ${token}`;
+                }
+                                const astroResponse = await fetch(`${API_URL}/user-astrology/${userId}`, { headers: astroHeaders });
                 if (astroResponse.ok) {
                     const dbAstroData = await astroResponse.json();
-                    console.log('[MySignModal] Fetched from database:', dbAstroData);
                     
                     // Parse astrology_data if it's a string
                     let astroDataObj = dbAstroData.astrology_data;
@@ -32,7 +35,7 @@ function MySignModal({ userId, isOpen, onClose, birthDate, birthTime, birthCity,
                         astroDataObj = JSON.parse(astroDataObj);
                     }
                     
-                    if (astroDataObj && astroDataObj.sun_sign) {
+                                        if (astroDataObj && astroDataObj.sun_sign) {
                         // We have calculated Swiss Ephemeris data
                         // Now fetch zodiac sign details to merge with calculated data
                         const zodiacSignData = getAstrologyData(astroDataObj.sun_sign.toLowerCase());
@@ -43,13 +46,31 @@ function MySignModal({ userId, isOpen, onClose, birthDate, birthTime, birthCity,
                             ...astroDataObj     // Override with calculated signs and degrees
                         };
                         
-                        console.log('[MySignModal] Using merged astrology data:', mergedData);
                         setAstroData({
                             ...dbAstroData,
                             astrology_data: mergedData
                         });
                         setLoading(false);
                         return;
+                                        } else {
+                        // No calculated data yet - trigger calculation
+                        try {
+                            const calcHeaders = {};
+                            if (token) {
+                                calcHeaders['Authorization'] = `Bearer ${token}`;
+                            }
+                            const calcResponse = await fetch(`${API_URL}/user-astrology/calculate/${userId}`, {
+                                method: 'POST',
+                                headers: calcHeaders
+                            });
+                                                        if (calcResponse.ok) {
+                                // Wait a moment then try fetching again
+                                setTimeout(() => loadAndStoreAstrologyData(), 2000);
+                                return;
+                            }
+                        } catch (calcError) {
+                            console.warn('Could not trigger calculation:', calcError);
+                        }
                     }
                 }
             } catch (e) {
@@ -61,7 +82,11 @@ function MySignModal({ userId, isOpen, onClose, birthDate, birthTime, birthCity,
             let birthDateToUse = birthDate;
             
             if (!birthDateToUse) {
-                const personalInfoResponse = await fetch(`${API_URL}/user-profile/${userId}`);
+                const headers = {};
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+                const personalInfoResponse = await fetch(`${API_URL}/user-profile/${userId}`, { headers });
                 
                 if (!personalInfoResponse.ok) {
                     setError('Could not find your personal information. Please enter your birth date first.');

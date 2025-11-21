@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getAstrologyData } from '../utils/astroUtils';
 
-function MoonPhaseModal({ userId, isOpen, onClose }) {
+function MoonPhaseModal({ userId, token, isOpen, onClose }) {
     const [moonPhaseData, setMoonPhaseData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -27,33 +27,32 @@ function MoonPhaseModal({ userId, isOpen, onClose }) {
         if (isOpen) {
             loadMoonPhaseData();
         }
-    }, [isOpen, userId]);
+    }, [isOpen, userId, token]);
 
-    const getCurrentMoonPhase = () => {
-        // Calculate the current lunar phase based on date
-        // This is a simplified calculation
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth() + 1;
-        const date = now.getDate();
-        
-        // Known new moon date: January 29, 2025
-        const knownNewMoonDate = new Date(2025, 0, 29).getTime();
-        const currentDate = now.getTime();
-        const lunarCycle = 29.53059 * 24 * 60 * 60 * 1000; // milliseconds in lunar cycle
-        
-        const daysIntoPhase = ((currentDate - knownNewMoonDate) % lunarCycle) / (24 * 60 * 60 * 1000);
-        const phaseIndex = Math.floor((daysIntoPhase / 29.53059) * 8) % 8;
-        
-        return moonPhaseOrder[phaseIndex];
+                const fetchMoonPhaseFromAPI = async () => {
+        try {
+            const response = await fetch(`${API_URL}/user-astrology/moon-phase`);
+            if (!response.ok) {
+                return null;
+            }
+            const data = await response.json();
+            return data.phase;
+        } catch (err) {
+            console.error('Error fetching moon phase:', err);
+            return null;
+        }
     };
 
-    const loadMoonPhaseData = async () => {
+        const loadMoonPhaseData = async () => {
         setLoading(true);
         setError(null);
         try {
             // Fetch user's astrology data to get sun sign
-            const astroResponse = await fetch(`${API_URL}/user-astrology/${userId}`);
+            const astroHeaders = {};
+            if (token) {
+                astroHeaders['Authorization'] = `Bearer ${token}`;
+            }
+            const astroResponse = await fetch(`${API_URL}/user-astrology/${userId}`, { headers: astroHeaders });
             
             if (!astroResponse.ok) {
                 setError('Could not fetch your astrology data. Please ensure your birth information is complete.');
@@ -72,7 +71,11 @@ function MoonPhaseModal({ userId, isOpen, onClose }) {
             let sunSign = astroDataObj?.sun_sign;
             
             if (!sunSign) {
-                const profileResponse = await fetch(`${API_URL}/user-profile/${userId}`);
+                const profileHeaders = {};
+                if (token) {
+                    profileHeaders['Authorization'] = `Bearer ${token}`;
+                }
+                const profileResponse = await fetch(`${API_URL}/user-profile/${userId}`, { headers: profileHeaders });
                 if (profileResponse.ok) {
                     const profile = await profileResponse.json();
                     const { getZodiacSignFromDate } = await import('../utils/astroUtils');
@@ -88,8 +91,13 @@ function MoonPhaseModal({ userId, isOpen, onClose }) {
                 return;
             }
 
-            // Get current moon phase
-            const currentMoonPhase = getCurrentMoonPhase();
+            // Get current moon phase from API (Swiss Ephemeris calculation)
+            const currentMoonPhase = await fetchMoonPhaseFromAPI();
+            if (!currentMoonPhase) {
+                setError('Could not calculate current moon phase.');
+                setLoading(false);
+                return;
+            }
             
             // Get zodiac sign data including moon phases
             const zodiacData = getAstrologyData(sunSign.toLowerCase());

@@ -306,7 +306,7 @@ export const tarotDeck = [
         element: "Earth"
     },
     {
-        id: 43, name: "Eight of Pentacles", suit: "pentacles", number: 8,
+        id: 43, name: "The Eight of Pentacles", suit: "pentacles", number: 8,
         keywords: ["apprenticeship", "repetitive tasks", "mastery", "skill development"],
         upright: "Apprenticeship, repetitive tasks, mastery, skill development. Dedication to learning and mastering your craft. Practice makes perfect.",
         reversed: "Lack of focus, perfectionism, misdirected activity. Lack of focus on skill development or excessive perfectionism. Find balance.",

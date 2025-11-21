@@ -1,3 +1,6 @@
+﻿-- Enable pgcrypto extension for encryption
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 CREATE TABLE IF NOT EXISTS messages (
     id SERIAL PRIMARY KEY,
     role VARCHAR(50),
@@ -12,6 +15,10 @@ CREATE TABLE IF NOT EXISTS user_personal_info (
     first_name VARCHAR(100),
     last_name VARCHAR(100),
     email VARCHAR(255),
+    email_hash VARCHAR(64) UNIQUE,
+    password_hash VARCHAR(255),
+    email_verified BOOLEAN DEFAULT FALSE,
+    email_verified_at TIMESTAMP,
     birth_country VARCHAR(100),
     birth_province VARCHAR(100),
     birth_city VARCHAR(100),
@@ -24,6 +31,47 @@ CREATE TABLE IF NOT EXISTS user_personal_info (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name='user_personal_info' AND column_name='email_encrypted'
+    ) THEN
+        ALTER TABLE user_personal_info ADD COLUMN email_encrypted BYTEA;
+        ALTER TABLE user_personal_info ADD COLUMN first_name_encrypted BYTEA;
+        ALTER TABLE user_personal_info ADD COLUMN last_name_encrypted BYTEA;
+        ALTER TABLE user_personal_info ADD COLUMN birth_date_encrypted BYTEA;
+        ALTER TABLE user_personal_info ADD COLUMN birth_city_encrypted BYTEA;
+        ALTER TABLE user_personal_info ADD COLUMN birth_timezone_encrypted BYTEA;
+        ALTER TABLE user_personal_info ADD COLUMN birth_country_encrypted BYTEA;
+        ALTER TABLE user_personal_info ADD COLUMN birth_province_encrypted BYTEA;
+    END IF;
+END $$;
+
+CREATE OR REPLACE FUNCTION decrypt_email(encrypted BYTEA)
+RETURNS VARCHAR AS $$
+BEGIN
+    IF encrypted IS NULL THEN RETURN NULL; END IF;
+    RETURN pgp_sym_decrypt(encrypted, 'default_key');
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION decrypt_text(encrypted BYTEA)
+RETURNS VARCHAR AS $$
+BEGIN
+    IF encrypted IS NULL THEN RETURN NULL; END IF;
+    RETURN pgp_sym_decrypt(encrypted, 'default_key');
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION decrypt_birth_date(encrypted BYTEA)
+RETURNS DATE AS $$
+BEGIN
+    IF encrypted IS NULL THEN RETURN NULL; END IF;
+    RETURN CAST(pgp_sym_decrypt(encrypted, 'default_key') AS DATE);
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
 CREATE TABLE IF NOT EXISTS user_astrology (
     id SERIAL PRIMARY KEY,
     user_id VARCHAR(50) UNIQUE NOT NULL,
@@ -33,3 +81,37 @@ CREATE TABLE IF NOT EXISTS user_astrology (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS user_2fa_settings (
+    id SERIAL PRIMARY KEY,
+    user_id VARCHAR(50) UNIQUE NOT NULL,
+    enabled BOOLEAN DEFAULT true,
+    phone_number VARCHAR(20),
+    backup_phone_number VARCHAR(20),
+    method VARCHAR(20) DEFAULT 'sms',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS user_2fa_codes (
+    id SERIAL PRIMARY KEY,
+    user_id VARCHAR(50) NOT NULL,
+    code VARCHAR(10) NOT NULL,
+    code_type VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP,
+    used BOOLEAN DEFAULT false
+);
+
+CREATE TABLE IF NOT EXISTS audit_log (
+    id SERIAL PRIMARY KEY,
+    user_id VARCHAR(50),
+    action VARCHAR(100),
+    details JSONB,
+    ip_address INET,
+    user_agent TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_user_id ON audit_log(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_log(created_at);
+CREATE INDEX IF NOT EXISTS idx_user_email_hash ON user_personal_info(email_hash);

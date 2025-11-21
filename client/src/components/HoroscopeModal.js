@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getAstrologyData } from '../utils/astroUtils';
 
-function HoroscopeModal({ userId, isOpen, onClose }) {
+function HoroscopeModal({ userId, token, isOpen, onClose }) {
     const [horoscopeData, setHoroscopeData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -32,7 +32,11 @@ function HoroscopeModal({ userId, isOpen, onClose }) {
             }
 
             // Fetch user's astrology data to get sun sign
-            const astroResponse = await fetch(`${API_URL}/user-astrology/${userId}`);
+            const astroHeaders = {};
+            if (token) {
+                astroHeaders['Authorization'] = `Bearer ${token}`;
+            }
+            const astroResponse = await fetch(`${API_URL}/user-astrology/${userId}`, { headers: astroHeaders });
             
             if (!astroResponse.ok) {
                 setError('Could not fetch your astrology data. Please ensure your birth information is complete.');
@@ -51,7 +55,11 @@ function HoroscopeModal({ userId, isOpen, onClose }) {
             let sunSign = astroDataObj?.sun_sign;
             
             if (!sunSign) {
-                const profileResponse = await fetch(`${API_URL}/user-profile/${userId}`);
+                const profileHeaders = {};
+                if (token) {
+                    profileHeaders['Authorization'] = `Bearer ${token}`;
+                }
+                const profileResponse = await fetch(`${API_URL}/user-profile/${userId}`, { headers: profileHeaders });
                 if (profileResponse.ok) {
                     const profile = await profileResponse.json();
                     const { getZodiacSignFromDate } = await import('../utils/astroUtils');

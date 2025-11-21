@@ -1,9 +1,10 @@
 import express from 'express';
 const router = express.Router();
 import { db } from '../shared/db.js';
+import { authorizeUser } from '../middleware/auth.js';
 
 // Endpoint to get a tarot card reading
-router.post('/reading', async (req, res) => {
+router.post('/reading', authorizeUser, async (req, res) => {
     try {
         const { userId } = req.body;
         // Placeholder logic for tarot reading

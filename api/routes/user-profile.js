@@ -1,12 +1,19 @@
 import { Router } from "express";
 import { db } from "../shared/db.js";
+import { authorizeUser } from "../middleware/auth.js";
 
 const router = Router();
 
-// Helper function to parse date from dd-mmm-yyyy to YYYY-MM-DD
+// Helper function to parse date - handles both ISO format (YYYY-MM-DD) and dd-mmm-yyyy
 function parseDateForStorage(dateString) {
     if (!dateString) return null;
     try {
+        // If already in YYYY-MM-DD format (ISO), just return it
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateString.trim())) {
+            return dateString.trim();
+        }
+        
+        // Otherwise parse dd-mmm-yyyy format
         const months = { 'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '06',
                         'Jul': '07', 'Aug': '08', 'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12' };
         const parts = dateString.trim().split('-');
@@ -28,33 +35,46 @@ function parseDateForStorage(dateString) {
     }
 }
 
-// Get user personal information
-router.get("/:userId", async (req, res) => {
+// Get user personal information (with decryption)
+router.get("/:userId", authorizeUser, async (req, res) => {
     const { userId } = req.params;
+    const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
     try {
-        const { rows } = await db.query(
-            "SELECT first_name, last_name, email, to_char(birth_date, 'YYYY-MM-DD') AS birth_date, birth_time, birth_country, birth_province, birth_city, birth_timezone, sex, address_preference FROM user_personal_info WHERE user_id = $1",
-            [userId]
-        );
+                const { rows } = await db.query(`
+            SELECT 
+                CASE WHEN first_name_encrypted IS NOT NULL THEN pgp_sym_decrypt(first_name_encrypted, '${ENCRYPTION_KEY}') ELSE NULL END as first_name,
+                CASE WHEN last_name_encrypted IS NOT NULL THEN pgp_sym_decrypt(last_name_encrypted, '${ENCRYPTION_KEY}') ELSE NULL END as last_name,
+                CASE WHEN email_encrypted IS NOT NULL THEN pgp_sym_decrypt(email_encrypted, '${ENCRYPTION_KEY}') ELSE NULL END as email,
+                CASE WHEN birth_date_encrypted IS NOT NULL THEN SUBSTRING(pgp_sym_decrypt(birth_date_encrypted, '${ENCRYPTION_KEY}'), 1, 10) ELSE NULL END as birth_date,
+                birth_time,
+                CASE WHEN birth_country_encrypted IS NOT NULL THEN pgp_sym_decrypt(birth_country_encrypted, '${ENCRYPTION_KEY}') ELSE NULL END as birth_country,
+                CASE WHEN birth_province_encrypted IS NOT NULL THEN pgp_sym_decrypt(birth_province_encrypted, '${ENCRYPTION_KEY}') ELSE NULL END as birth_province,
+                CASE WHEN birth_city_encrypted IS NOT NULL THEN pgp_sym_decrypt(birth_city_encrypted, '${ENCRYPTION_KEY}') ELSE NULL END as birth_city,
+                CASE WHEN birth_timezone_encrypted IS NOT NULL THEN pgp_sym_decrypt(birth_timezone_encrypted, '${ENCRYPTION_KEY}') ELSE NULL END as birth_timezone,
+                sex,
+                address_preference 
+            FROM user_personal_info 
+            WHERE user_id = $1
+        `, [userId]);
         if (rows.length === 0) {
             return res.json({});
         }
         res.json(rows[0]);
     } catch (err) {
         console.error('Error fetching personal info:', err);
-        res.status(500).json({ error: 'Failed to fetch personal information' });
+        res.status(500).json({ error: 'Failed to fetch personal information', details: err.message });
     }
 });
 
-// Save or update user personal information
-router.post("/:userId", async (req, res) => {
+// Save or update user personal information (with encryption)
+router.post("/:userId", authorizeUser, async (req, res) => {
     const { userId } = req.params;
     const { firstName, lastName, email, birthDate, birthTime, birthCountry, birthProvince, birthCity, birthTimezone, sex, addressPreference, zodiacSign, astrologyData } = req.body;
+    const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
 
     try {
         // Validate required fields
-        if (!firstName || !lastName || !email || !birthDate || !sex) {
-            console.log(`[API] Validation failed for user ${userId}: Missing required fields`);
+                if (!firstName || !lastName || !email || !birthDate || !sex) {
             return res.status(400).json({ error: 'Missing required fields: firstName, lastName, email, birthDate, sex' });
         }
 
@@ -62,38 +82,47 @@ router.post("/:userId", async (req, res) => {
         const parsedBirthDate = parseDateForStorage(birthDate);
         
         if (!parsedBirthDate || parsedBirthDate === 'Invalid Date') {
-            console.log(`[API] Invalid date format for user ${userId}: ${birthDate}`);
             return res.status(400).json({ error: 'Invalid birth date format' });
         }
 
-        console.log(`[API] Saving personal info for user ${userId}:`, { firstName, lastName, email, birthDate: parsedBirthDate, birthTime, birthCountry, birthProvince, birthCity, birthTimezone, sex });
-
-        // Use UPSERT (INSERT ... ON CONFLICT ... DO UPDATE) to handle both insert and update cases
-        await db.query(
-            `INSERT INTO user_personal_info 
-             (user_id, first_name, last_name, email, birth_date, birth_time, birth_country, birth_province, birth_city, birth_timezone, sex, address_preference)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        // Use UPSERT with pgp_sym_encrypt for *_encrypted columns
+        // Store encrypted data in the _encrypted columns (BYTEA)
+        await db.query(`
+            INSERT INTO user_personal_info 
+             (user_id, first_name_encrypted, last_name_encrypted, email_encrypted, birth_date_encrypted, birth_time, birth_country_encrypted, birth_province_encrypted, birth_city_encrypted, birth_timezone_encrypted, sex, address_preference)
+             VALUES (
+                $1,
+                pgp_sym_encrypt($2, '${ENCRYPTION_KEY}'),
+                pgp_sym_encrypt($3, '${ENCRYPTION_KEY}'),
+                pgp_sym_encrypt($4, '${ENCRYPTION_KEY}'),
+                pgp_sym_encrypt($5, '${ENCRYPTION_KEY}'),
+                $6,
+                pgp_sym_encrypt($7, '${ENCRYPTION_KEY}'),
+                pgp_sym_encrypt($8, '${ENCRYPTION_KEY}'),
+                pgp_sym_encrypt($9, '${ENCRYPTION_KEY}'),
+                pgp_sym_encrypt($10, '${ENCRYPTION_KEY}'),
+                $11,
+                $12
+             )
              ON CONFLICT (user_id) DO UPDATE SET
-             first_name = EXCLUDED.first_name,
-             last_name = EXCLUDED.last_name,
-             email = EXCLUDED.email,
-             birth_date = EXCLUDED.birth_date,
-             birth_time = EXCLUDED.birth_time,
-             birth_country = EXCLUDED.birth_country,
-             birth_province = EXCLUDED.birth_province,
-             birth_city = EXCLUDED.birth_city,
-             birth_timezone = EXCLUDED.birth_timezone,
-             sex = EXCLUDED.sex,
-             address_preference = EXCLUDED.address_preference,
-             updated_at = CURRENT_TIMESTAMP`,
+             first_name_encrypted = pgp_sym_encrypt($2, '${ENCRYPTION_KEY}'),
+             last_name_encrypted = pgp_sym_encrypt($3, '${ENCRYPTION_KEY}'),
+             email_encrypted = pgp_sym_encrypt($4, '${ENCRYPTION_KEY}'),
+             birth_date_encrypted = pgp_sym_encrypt($5, '${ENCRYPTION_KEY}'),
+             birth_time = $6,
+             birth_country_encrypted = pgp_sym_encrypt($7, '${ENCRYPTION_KEY}'),
+             birth_province_encrypted = pgp_sym_encrypt($8, '${ENCRYPTION_KEY}'),
+             birth_city_encrypted = pgp_sym_encrypt($9, '${ENCRYPTION_KEY}'),
+             birth_timezone_encrypted = pgp_sym_encrypt($10, '${ENCRYPTION_KEY}'),
+             sex = $11,
+             address_preference = $12,
+             updated_at = CURRENT_TIMESTAMP
+        `,
             [userId, firstName, lastName, email, parsedBirthDate, birthTime, birthCountry, birthProvince, birthCity, birthTimezone, sex, addressPreference]
-        );
-
-        console.log(`[API] Personal info saved successfully for user ${userId}`);
+                );
 
         // Handle astrology data if provided
         if (zodiacSign && astrologyData) {
-            console.log(`[API] Saving astrology data for user ${userId}:`, { zodiacSign });
             
             // Use UPSERT for astrology data as well
             await db.query(
@@ -104,10 +133,8 @@ router.post("/:userId", async (req, res) => {
                  zodiac_sign = EXCLUDED.zodiac_sign,
                  astrology_data = EXCLUDED.astrology_data,
                  updated_at = CURRENT_TIMESTAMP`,
-                [userId, zodiacSign, JSON.stringify(astrologyData)]
+                                [userId, zodiacSign, JSON.stringify(astrologyData)]
             );
-            
-            console.log(`[API] Astrology data saved successfully for user ${userId}`);
         }
 
         res.json({ success: true, message: "Personal information saved successfully" });

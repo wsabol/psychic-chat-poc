@@ -53,6 +53,50 @@ function calculateBirthChartAsync(birthData) {
     });
 }
 
+// Helper function to get current moon phase
+function getCurrentMoonPhaseAsync() {
+    return new Promise((resolve, reject) => {
+        const python = spawn('/opt/venv/bin/python3', ['./astrology.py']);
+        
+        let outputData = '';
+        let errorData = '';
+        
+        python.stdout.on('data', (data) => {
+            outputData += data.toString();
+        });
+        
+        python.stderr.on('data', (data) => {
+            errorData += data.toString();
+        });
+        
+        python.on('close', (code) => {
+            if (code !== 0) {
+                console.error(`[WORKER] Python moon phase script exited with code ${code}`);
+                if (errorData) console.error(`[WORKER] Python stderr:`, errorData);
+                reject(new Error(`Python script failed: ${errorData}`));
+                return;
+            }
+            
+            try {
+                const result = JSON.parse(outputData);
+                resolve(result);
+            } catch (e) {
+                console.error(`[WORKER] Failed to parse moon phase result:`, outputData);
+                reject(new Error(`Invalid JSON from astrology script: ${e.message}`));
+            }
+        });
+        
+        python.on('error', (err) => {
+            console.error(`[WORKER] Failed to spawn Python process:`, err);
+            reject(err);
+        });
+        
+        // Send moon phase request to Python script
+        python.stdin.write(JSON.stringify({ type: 'moon_phase' }));
+        python.stdin.end();
+    });
+}
+
 // Helper function to extract card names from oracle's response in the order they appear
 function extractCardsFromResponse(responseText, deck) {
     const extractedCards = [];
@@ -64,18 +108,33 @@ function extractCardsFromResponse(responseText, deck) {
     const boldMatches = [];
     let match;
     
-    while ((match = boldCardPattern.exec(responseText)) !== null) {
+        while ((match = boldCardPattern.exec(responseText)) !== null) {
         const boldedText = match[1].trim();
+        
+        // Skip position labels (Past, Present, Future, etc.)
+        if (/^(past|present|future|position|spread|card\s*\d+)$/i.test(boldedText)) {
+            continue;
+        }
+        
+        // Strip (Reversed)/(Inverted) and "Card" suffix for matching
+        const cleanedText = boldedText
+            .replace(/\s*\([^)]*\)\s*$/g, '') // Remove (Reversed), (Inverted), etc.
+            .replace(/\s+card\s*$/i, '') // Remove " Card" suffix
+            .trim();
+        
+        if (!cleanedText) continue; // Skip if nothing left after cleaning
+        
         // Check if this bolded text is an actual card name
         for (const card of deck) {
             const cardNameLower = card.name.toLowerCase();
+            const cleanedLower = cleanedText.toLowerCase();
             const boldedLower = boldedText.toLowerCase();
             
             // Match exact card name or card name without "The"
-            if (cardNameLower === boldedLower || 
-                cardNameLower === boldedLower.replace(/^the\s+/, '') ||
-                cardNameLower.replace(/^the\s+/, '') === boldedLower ||
-                cardNameLower.replace(/^the\s+/, '') === boldedLower.replace(/^the\s+/, '')) {
+            if (cardNameLower === cleanedLower || 
+                cardNameLower === cleanedLower.replace(/^the\s+/, '') ||
+                cardNameLower.replace(/^the\s+/, '') === cleanedLower ||
+                cardNameLower.replace(/^the\s+/, '') === cleanedLower.replace(/^the\s+/, '')) {
                 boldMatches.push({
                     position: match.index,
                     cardName: boldedText,
@@ -93,23 +152,19 @@ function extractCardsFromResponse(responseText, deck) {
         
         for (const boldMatch of boldMatches) {
             if (!foundCardIds.has(boldMatch.card.id)) {
-                // Check if card is inverted by looking only immediately after the card name
-                // Look for inversion keywords within 150 chars after the card mention
-                const contextEnd = Math.min(responseText.length, boldMatch.position + 150);
+                                // Check if card is inverted by looking ONLY immediately after the card name
+                // IMPORTANT: Limit window to avoid picking up next card's inversion status
+                // Only look within 40 chars after card (e.g., " (Reversed)" or " reversed")
+                const contextEnd = Math.min(responseText.length, boldMatch.position + 40);
                 const contextAfter = responseText.substring(boldMatch.position, contextEnd).toLowerCase();
                 
-                // Also check immediately before for "reversed" modifiers
-                const contextStart = Math.max(0, boldMatch.position - 100);
-                const contextBefore = responseText.substring(contextStart, boldMatch.position).toLowerCase();
-                
-                // Look for explicit inversion patterns:
-                // - "**The Card Name**: Reversed" or "Inverted"
-                // - "The Card Name reversed" or "inverted"
-                // - "reversed The Card Name"
-                const hasReversedPattern = /reversed\s*–|inverted\s*–|upside\s*down\s*–/.test(contextAfter);
-                const hasReversedKeyword = /\b(?:reversed|inverted|upside.?down)\b/.test(contextAfter.substring(0, 50));
-                const hasReversedBefore = /(?:reversed|inverted|upside.?down)\s+the\s+\w+/.test(responseText.substring(contextStart, boldMatch.position));
-                const isInverted = hasReversedPattern || hasReversedKeyword || hasReversedBefore;
+                // Look for explicit inversion patterns ONLY in immediate context:
+                // - "**The Card Name** (Reversed)" - most common
+                // - "**The Card Name** reversed" - alternative
+                // - "**The Card Name** inverted" - alternative
+                // Pattern: must be close to card name, separated by space/punctuation only
+                const hasReversedPattern = /\b(?:reversed|inverted|upside[\s-]*down)\b/.test(contextAfter);
+                const isInverted = hasReversedPattern;
                 
                 extractedCards.push({
                     ...boldMatch.card,
@@ -142,32 +197,43 @@ async function handleChatJob(job) {
         [userId]
     );
     
-    // Fetch user's personal information
+                // Fetch user's personal information
     let userInfo = {};
     let userGreeting = userId;
     let astrologyInfo = {};
+    const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
     try {
-        const { rows: personalInfoRows } = await db.query(
-            "SELECT first_name, last_name, email, to_char(birth_date, 'YYYY-MM-DD') AS birth_date, birth_time, birth_country, birth_province, birth_city, birth_timezone, sex, address_preference FROM user_personal_info WHERE user_id = $1",
+        const { rows: personalInfoRows } = await db.query(`
+            SELECT 
+                CASE WHEN first_name_encrypted IS NOT NULL THEN pgp_sym_decrypt(first_name_encrypted, '${ENCRYPTION_KEY}') ELSE NULL END as first_name,
+                CASE WHEN last_name_encrypted IS NOT NULL THEN pgp_sym_decrypt(last_name_encrypted, '${ENCRYPTION_KEY}') ELSE NULL END as last_name,
+                CASE WHEN email_encrypted IS NOT NULL THEN pgp_sym_decrypt(email_encrypted, '${ENCRYPTION_KEY}') ELSE NULL END as email,
+                CASE WHEN birth_date_encrypted IS NOT NULL THEN SUBSTRING(pgp_sym_decrypt(birth_date_encrypted, '${ENCRYPTION_KEY}'), 1, 10) ELSE NULL END as birth_date,
+                birth_time,
+                CASE WHEN birth_country_encrypted IS NOT NULL THEN pgp_sym_decrypt(birth_country_encrypted, '${ENCRYPTION_KEY}') ELSE NULL END as birth_country,
+                CASE WHEN birth_province_encrypted IS NOT NULL THEN pgp_sym_decrypt(birth_province_encrypted, '${ENCRYPTION_KEY}') ELSE NULL END as birth_province,
+                CASE WHEN birth_city_encrypted IS NOT NULL THEN pgp_sym_decrypt(birth_city_encrypted, '${ENCRYPTION_KEY}') ELSE NULL END as birth_city,
+                CASE WHEN birth_timezone_encrypted IS NOT NULL THEN pgp_sym_decrypt(birth_timezone_encrypted, '${ENCRYPTION_KEY}') ELSE NULL END as birth_timezone,
+                sex,
+                address_preference 
+            FROM user_personal_info 
+            WHERE user_id = $1
+        `,
             [userId]
         );
-        console.log(`[WORKER] Personal info rows returned: ${personalInfoRows.length}`);
-        if (personalInfoRows.length > 0) {
+                if (personalInfoRows.length > 0) {
             userInfo = personalInfoRows[0];
             // Use address preference if available, otherwise use first name
             userGreeting = userInfo.address_preference || userInfo.first_name || userId;
-            console.log(`[WORKER] User greeting: ${userGreeting}, Birth date: ${userInfo.birth_date}`);
         }
     } catch (err) {
         console.error('Error fetching personal info:', err);
         // Continue with just userId if personal info fetch fails
     }
     
-    // Calculate rising and moon signs if complete birth data available
+        // Calculate rising and moon signs if complete birth data available
     if (userInfo.birth_date && userInfo.birth_time && userInfo.birth_country && userInfo.birth_province && userInfo.birth_city) {
         try {
-            console.log(`[WORKER] Calculating astrology for ${userInfo.first_name} (${userInfo.birth_date} ${userInfo.birth_time} ${userInfo.birth_city}, ${userInfo.birth_province}, ${userInfo.birth_country})`);
-            
             const calculatedChart = await calculateBirthChartAsync({
                 birth_date: userInfo.birth_date,
                 birth_time: userInfo.birth_time,
@@ -178,7 +244,6 @@ async function handleChatJob(job) {
             });
             
             if (calculatedChart.success && calculatedChart.rising_sign && calculatedChart.moon_sign) {
-                console.log(`[WORKER] ✓ Calculated: Rising Sign = ${calculatedChart.rising_sign} (${calculatedChart.rising_degree}°), Moon Sign = ${calculatedChart.moon_sign} (${calculatedChart.moon_degree}°)`);
                 
                 // Store calculated astrology data
                 astrologyInfo.astrology_data = {
@@ -194,7 +259,7 @@ async function handleChatJob(job) {
                     calculated_at: new Date().toISOString()
                 };
                 
-                // Store in database
+                                // Store in database
                 await db.query(
                     `INSERT INTO user_astrology (user_id, zodiac_sign, astrology_data)
                      VALUES ($1, $2, $3)
@@ -203,7 +268,6 @@ async function handleChatJob(job) {
                      updated_at = CURRENT_TIMESTAMP`,
                     [userId, calculatedChart.sun_sign, JSON.stringify(astrologyInfo.astrology_data)]
                 );
-                console.log(`[WORKER] ✓ Stored calculated astrology data to database`);
             } else if (calculatedChart.error) {
                 console.warn(`[WORKER] ⚠ Astrology calculation skipped: ${calculatedChart.error}`);
             }
@@ -219,12 +283,11 @@ async function handleChatJob(job) {
             "SELECT zodiac_sign, astrology_data FROM user_astrology WHERE user_id = $1",
             [userId]
         );
-        if (astrologyRows.length > 0) {
+                if (astrologyRows.length > 0) {
             astrologyInfo = astrologyRows[0];
             if (typeof astrologyInfo.astrology_data === 'string') {
                 astrologyInfo.astrology_data = JSON.parse(astrologyInfo.astrology_data);
             }
-            console.log(`[WORKER] Astrology info loaded for sign: ${astrologyInfo.zodiac_sign}`);
         }
     } catch (err) {
         console.error('Error fetching astrology info:', err);
@@ -431,9 +494,7 @@ The user's rising sign and moon sign have been calculated using Swiss Ephemeris,
         JSON.stringify(structuredResponse)
     ]);
     
-    // Note: Rising sign and moon sign calculation has been removed due to unreliability
-    // These signs require precise birth time and location calculations that vary by methodology
-    // Users are encouraged to consult a professional astrologer for accurate rising/moon signs
+    
 }
 
 export async function workerLoop() {

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-function Menu({ menuOpen, setMenuOpen, onPersonalInfoClick, onMySignClick, onMoonPhaseClick, onHoroscopeClick }) {
+function Menu({ menuOpen, setMenuOpen, isAuthenticated, onPersonalInfoClick, onMySignClick, onMoonPhaseClick, onHoroscopeClick, onSecurityClick, onLogoutClick }) {
     const menuRef = useRef(null);
     const [expandedSubmenu, setExpandedSubmenu] = useState(null);
 
@@ -63,31 +63,14 @@ function Menu({ menuOpen, setMenuOpen, onPersonalInfoClick, onMySignClick, onMoo
                         zIndex: 1001,
                     }}
                 >
-                    <button
-                        onClick={() =>
-                            handleMenuItemClick(() => {
-                                alert("Log In clicked");
-                            })
-                        }
-                        style={{
-                            display: "block",
-                            width: "100%",
-                            padding: "12px 16px",
-                            border: "none",
-                            background: "none",
-                            textAlign: "left",
-                            cursor: "pointer",
-                            fontSize: "14px",
-                            borderBottom: "1px solid #eee",
-                        }}
-                    >
-                        Log In
-                    </button>
-
-                    {/* My Account with Submenu */}
-                    <div>
+                    {/* Show Log In button only if not authenticated */}
+                    {!isAuthenticated && (
                         <button
-                            onClick={() => toggleSubmenu("account")}
+                            onClick={() =>
+                                handleMenuItemClick(() => {
+                                    // This button just closes menu - modal is shown by App.jsx
+                                })
+                            }
                             style={{
                                 display: "block",
                                 width: "100%",
@@ -100,157 +83,181 @@ function Menu({ menuOpen, setMenuOpen, onPersonalInfoClick, onMySignClick, onMoo
                                 borderBottom: "1px solid #eee",
                             }}
                         >
-                            My Account {expandedSubmenu === "account" ? "▼" : "▶"}
+                            Log In / Register
                         </button>
-                        {expandedSubmenu === "account" && (
-                            <div style={{ background: "#f9f9f9" }}>
-                                <button
-                                    onClick={() =>
-                                        handleMenuItemClick(() => {
-                                            alert("Security clicked");
-                                        })
-                                    }
-                                    style={{
-                                        display: "block",
-                                        width: "100%",
-                                        padding: "10px 32px",
-                                        border: "none",
-                                        background: "none",
-                                        textAlign: "left",
-                                        cursor: "pointer",
-                                        fontSize: "13px",
-                                        borderBottom: "1px solid #eee",
-                                    }}
-                                >
-                                    Security
-                                </button>
-                                <button
-                                    onClick={() =>
-                                        handleMenuItemClick(() => {
-                                            onPersonalInfoClick && onPersonalInfoClick();
-                                        })
-                                    }
-                                    style={{
-                                        display: "block",
-                                        width: "100%",
-                                        padding: "10px 32px",
-                                        border: "none",
-                                        background: "none",
-                                        textAlign: "left",
-                                        cursor: "pointer",
-                                        fontSize: "13px",
-                                        borderBottom: "1px solid #eee",
-                                    }}
-                                >
-                                    Personal Information
-                                </button>
-                                <button
-                                    onClick={() =>
-                                        handleMenuItemClick(() => {
-                                            alert("Subscriptions clicked");
-                                        })
-                                    }
-                                    style={{
-                                        display: "block",
-                                        width: "100%",
-                                        padding: "10px 32px",
-                                        border: "none",
-                                        background: "none",
-                                        textAlign: "left",
-                                        cursor: "pointer",
-                                        fontSize: "13px",
-                                    }}
-                                >
-                                    Subscriptions
-                                </button>
-                            </div>
-                        )}
-                    </div>
+                    )}
 
-                    {/* Billing & Payments with Submenu */}
-                    <div>
-                        <button
-                            onClick={() => toggleSubmenu("billing")}
-                            style={{
-                                display: "block",
-                                width: "100%",
-                                padding: "12px 16px",
-                                border: "none",
-                                background: "none",
-                                textAlign: "left",
-                                cursor: "pointer",
-                                fontSize: "14px",
-                                borderBottom: "1px solid #eee",
-                            }}
-                        >
-                            Billing & Payments {expandedSubmenu === "billing" ? "▼" : "▶"}
-                        </button>
-                        {expandedSubmenu === "billing" && (
-                            <div style={{ background: "#f9f9f9" }}>
+                    {/* Show My Account section only if authenticated */}
+                    {isAuthenticated && (
+                        <>
+                            <div>
                                 <button
-                                    onClick={() =>
-                                        handleMenuItemClick(() => {
-                                            alert("Manage Payment Methods clicked");
-                                        })
-                                    }
+                                    onClick={() => toggleSubmenu("account")}
                                     style={{
                                         display: "block",
                                         width: "100%",
-                                        padding: "10px 32px",
+                                        padding: "12px 16px",
                                         border: "none",
                                         background: "none",
                                         textAlign: "left",
                                         cursor: "pointer",
-                                        fontSize: "13px",
+                                        fontSize: "14px",
                                         borderBottom: "1px solid #eee",
                                     }}
                                 >
-                                    Manage Payment Methods
+                                    My Account {expandedSubmenu === "account" ? "▼" : "▶"}
                                 </button>
-                                <button
-                                    onClick={() =>
-                                        handleMenuItemClick(() => {
-                                            alert("Payments Info clicked");
-                                        })
-                                    }
-                                    style={{
-                                        display: "block",
-                                        width: "100%",
-                                        padding: "10px 32px",
-                                        border: "none",
-                                        background: "none",
-                                        textAlign: "left",
-                                        cursor: "pointer",
-                                        fontSize: "13px",
-                                        borderBottom: "1px solid #eee",
-                                    }}
-                                >
-                                    Payments Info
-                                </button>
-                                <button
-                                    onClick={() =>
-                                        handleMenuItemClick(() => {
-                                            alert("Current Bill clicked");
-                                        })
-                                    }
-                                    style={{
-                                        display: "block",
-                                        width: "100%",
-                                        padding: "10px 32px",
-                                        border: "none",
-                                        background: "none",
-                                        textAlign: "left",
-                                        cursor: "pointer",
-                                        fontSize: "13px",
-                                    }}
-                                >
-                                    Current Bill
-                                </button>
+                                {expandedSubmenu === "account" && (
+                                    <div style={{ background: "#f9f9f9" }}>
+                                        <button
+                                            onClick={() =>
+                                                handleMenuItemClick(() => {
+                                                    onSecurityClick && onSecurityClick();
+                                                })
+                                            }
+                                            style={{
+                                                display: "block",
+                                                width: "100%",
+                                                padding: "10px 32px",
+                                                border: "none",
+                                                background: "none",
+                                                textAlign: "left",
+                                                cursor: "pointer",
+                                                fontSize: "13px",
+                                                borderBottom: "1px solid #eee",
+                                            }}
+                                        >
+                                            Security
+                                        </button>
+                                        <button
+                                            onClick={() =>
+                                                handleMenuItemClick(() => {
+                                                    onPersonalInfoClick && onPersonalInfoClick();
+                                                })
+                                            }
+                                            style={{
+                                                display: "block",
+                                                width: "100%",
+                                                padding: "10px 32px",
+                                                border: "none",
+                                                background: "none",
+                                                textAlign: "left",
+                                                cursor: "pointer",
+                                                fontSize: "13px",
+                                                borderBottom: "1px solid #eee",
+                                            }}
+                                        >
+                                            Personal Information
+                                        </button>
+                                        <button
+                                            onClick={() =>
+                                                handleMenuItemClick(() => {
+                                                    alert("Subscriptions clicked");
+                                                })
+                                            }
+                                            style={{
+                                                display: "block",
+                                                width: "100%",
+                                                padding: "10px 32px",
+                                                border: "none",
+                                                background: "none",
+                                                textAlign: "left",
+                                                cursor: "pointer",
+                                                fontSize: "13px",
+                                            }}
+                                        >
+                                            Subscriptions
+                                        </button>
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
 
-                    {/* Astrology - Top Level with Submenu */}
+                            {/* Billing & Payments with Submenu */}
+                            <div>
+                                <button
+                                    onClick={() => toggleSubmenu("billing")}
+                                    style={{
+                                        display: "block",
+                                        width: "100%",
+                                        padding: "12px 16px",
+                                        border: "none",
+                                        background: "none",
+                                        textAlign: "left",
+                                        cursor: "pointer",
+                                        fontSize: "14px",
+                                        borderBottom: "1px solid #eee",
+                                    }}
+                                >
+                                    Billing & Payments {expandedSubmenu === "billing" ? "▼" : "▶"}
+                                </button>
+                                {expandedSubmenu === "billing" && (
+                                    <div style={{ background: "#f9f9f9" }}>
+                                        <button
+                                            onClick={() =>
+                                                handleMenuItemClick(() => {
+                                                    alert("Manage Payment Methods clicked");
+                                                })
+                                            }
+                                            style={{
+                                                display: "block",
+                                                width: "100%",
+                                                padding: "10px 32px",
+                                                border: "none",
+                                                background: "none",
+                                                textAlign: "left",
+                                                cursor: "pointer",
+                                                fontSize: "13px",
+                                                borderBottom: "1px solid #eee",
+                                            }}
+                                        >
+                                            Manage Payment Methods
+                                        </button>
+                                        <button
+                                            onClick={() =>
+                                                handleMenuItemClick(() => {
+                                                    alert("Payments Info clicked");
+                                                })
+                                            }
+                                            style={{
+                                                display: "block",
+                                                width: "100%",
+                                                padding: "10px 32px",
+                                                border: "none",
+                                                background: "none",
+                                                textAlign: "left",
+                                                cursor: "pointer",
+                                                fontSize: "13px",
+                                                borderBottom: "1px solid #eee",
+                                            }}
+                                        >
+                                            Payments Info
+                                        </button>
+                                        <button
+                                            onClick={() =>
+                                                handleMenuItemClick(() => {
+                                                    alert("Current Bill clicked");
+                                                })
+                                            }
+                                            style={{
+                                                display: "block",
+                                                width: "100%",
+                                                padding: "10px 32px",
+                                                border: "none",
+                                                background: "none",
+                                                textAlign: "left",
+                                                cursor: "pointer",
+                                                fontSize: "13px",
+                                            }}
+                                        >
+                                            Current Bill
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </>
+                    )}
+
+                    {/* Astrology - Top Level with Submenu (always available) */}
                     <div>
                         <button
                             onClick={() => toggleSubmenu("astrology")}
@@ -263,7 +270,7 @@ function Menu({ menuOpen, setMenuOpen, onPersonalInfoClick, onMySignClick, onMoo
                                 textAlign: "left",
                                 cursor: "pointer",
                                 fontSize: "14px",
-                                borderBottom: "1px solid #eee",
+                                borderBottom: isAuthenticated ? "1px solid #eee" : "none",
                             }}
                         >
                             Astrology {expandedSubmenu === "astrology" ? "▼" : "▶"}
@@ -332,6 +339,32 @@ function Menu({ menuOpen, setMenuOpen, onPersonalInfoClick, onMySignClick, onMoo
                             </div>
                         )}
                     </div>
+
+                    {/* Logout button - only show if authenticated */}
+                    {isAuthenticated && (
+                        <button
+                            onClick={() =>
+                                handleMenuItemClick(() => {
+                                    onLogoutClick && onLogoutClick();
+                                })
+                            }
+                            style={{
+                                display: "block",
+                                width: "100%",
+                                padding: "12px 16px",
+                                border: "none",
+                                background: "none",
+                                textAlign: "left",
+                                cursor: "pointer",
+                                fontSize: "14px",
+                                borderTop: "1px solid #eee",
+                                color: "#d32f2f",
+                                fontWeight: "600",
+                            }}
+                        >
+                            Log Out
+                        </button>
+                    )}
                 </div>
             )}
         </div>
