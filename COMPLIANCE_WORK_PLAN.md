@@ -1,32 +1,42 @@
 "# Compliance Work Plan - Psychic Chat POC
 ## Track Progress to Full GDPR/CCPA/PIPEDA/LGPD Compliance
 
-**Current Status**: 🟡 PARTIAL (50%)  
+**Current Status**: 🟡 PARTIAL (55%)  
 **Target Status**: 🟢 COMPLIANT (95%)  
 **Total Estimated Duration**: 4 weeks  
-**Last Updated**: [TODAY]
+**Last Updated**: November 21, 2025
+**Phase 1.1 Completion Date**: November 21, 2025 ✅
 
 ---
 
 ## PHASE 1: CRITICAL SECURITY (Week 1-2)
 **Goal**: Implement foundational security & legal documentation  
-**Status**: ⬜ NOT STARTED
+**Status**: 🟡 IN PROGRESS (1/7 tasks complete)
 
 ### 1.1 Database Encryption - Implement pgcrypto
-- [ ] Install PostgreSQL pgcrypto extension
-- [ ] Add encrypted columns to user_personal_info table
-- [ ] Migrate plaintext email to encrypted column
-- [ ] Migrate plaintext birth_date to encrypted column
-- [ ] Migrate plaintext birth_city to encrypted column
-- [ ] Migrate plaintext birth_timezone to encrypted column
-- [ ] Update API to decrypt data when needed
-- [ ] Test encryption/decryption flow
-- [ ] Backup and test recovery with encrypted data
-- [ ] Drop plaintext columns (after verification)
+- [x] Install PostgreSQL pgcrypto extension
+- [x] Add encrypted columns to user_personal_info table
+- [x] Migrate plaintext email to encrypted column
+- [x] Migrate plaintext birth_date to encrypted column
+- [x] Migrate plaintext birth_city to encrypted column
+- [x] Migrate plaintext birth_timezone to encrypted column
+- [x] Update API to decrypt data when needed
+- [x] Test encryption/decryption flow
+- [x] Backup and test recovery with encrypted data
+- [x] Drop plaintext columns (after verification)
 - **Estimated Time**: 2-3 days
 - **Dependencies**: None
-- **Status**: ⬜ Not Started
-- **Completion Notes**: _______________________
+- **Status**: ✅ DONE
+- **Completion Notes**: 
+  - Implemented full database encryption with pgcrypto (PGP symmetric encryption)
+  - All PII encrypted at rest: first_name, last_name, email, birth_date, birth_country, birth_province, birth_city, birth_timezone
+  - ENCRYPTION_KEY env var added to all containers (API, Worker)
+  - API decrypts data on-the-fly using pgp_sym_decrypt in SQL queries
+  - Worker properly decrypts for astrology calculations
+  - Plaintext columns removed after migration
+  - Tested full encryption/decryption workflow
+  - Birth chart calculations now work with encrypted personal data
+  - Moon phase endpoint functional and verified accurate (showing Waxing Crescent Nov 21, 2025)
 
 ### 1.2 Privacy Policy Creation
 - [ ] Create `/privacy.md` file in root
@@ -414,7 +424,7 @@
 - [ ] Authorization (users only access own data) - ✅ DONE
 - [ ] UUID IDs (non-sequential) - ✅ DONE
 - [ ] API structure - ✅ DONE
-- [ ] Encryption at rest - ⬜ PHASE 1.1
+- [x] Encryption at rest - ✅ PHASE 1.1 COMPLETE
 - [ ] Encryption in transit (HTTPS) - ⬜ CHECK (should already be done)
 - [ ] Consent management - ⬜ PHASE 1.4-1.6
 - [ ] Privacy policy - ⬜ PHASE 1.2
@@ -427,8 +437,18 @@
 - [ ] Sub-processor documentation - ⬜ PHASE 3.4
 - [ ] Incident response plan - ⬜ PHASE 3.5
 
-**Current Compliance**: 🟡 PARTIAL (50%)  
+**Current Compliance**: 🟡 PARTIAL (55%)  
 **Target Compliance**: 🟢 COMPLIANT (95%)
+
+### Phase 1.1 Completion Summary
+✅ **Database Encryption Complete** - All PII now encrypted at rest using PostgreSQL pgcrypto
+- Email, birth date, location data all encrypted
+- ENCRYPTION_KEY securely managed via environment variables
+- API and Worker containers can decrypt as needed
+- Birth chart calculations verified working with encrypted data
+- Moon phase calculations verified accurate (tested Nov 21, 2025)
+- Zero plaintext sensitive data in database
+- Ready for Phase 1.2 (Privacy Policy)
 
 ---
 
