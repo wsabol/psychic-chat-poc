@@ -3,62 +3,23 @@ const router = express.Router();
 import { db } from '../shared/db.js';
 import { enqueueMessage } from '../shared/queue.js';
 import { authorizeUser } from '../middleware/auth.js';
-import { spawn } from 'child_process';
+import redis from '../shared/redis.js';
 
-// Helper function to get current moon phase from Python
-function getCurrentMoonPhaseAsync() {
-    return new Promise((resolve, reject) => {
-        const python = spawn('/opt/venv/bin/python3', ['./astrology.py'], {
-            cwd: './worker'
-        });
-        
-        let outputData = '';
-        let errorData = '';
-        
-        python.stdout.on('data', (data) => {
-            outputData += data.toString();
-        });
-        
-        python.stderr.on('data', (data) => {
-            errorData += data.toString();
-        });
-        
-        python.on('close', (code) => {
-            if (code !== 0) {
-                console.error(`[API] Python moon phase script exited with code ${code}`);
-                if (errorData) console.error(`[API] Python stderr:`, errorData);
-                reject(new Error(`Python script failed: ${errorData}`));
-                return;
-            }
-            
-            try {
-                const result = JSON.parse(outputData);
-                resolve(result);
-            } catch (e) {
-                console.error(`[API] Failed to parse moon phase result:`, outputData);
-                reject(new Error(`Invalid JSON from astrology script: ${e.message}`));
-            }
-        });
-        
-        python.on('error', (err) => {
-            console.error(`[API] Failed to spawn Python process:`, err);
-            reject(err);
-        });
-        
-        // Send moon phase request
-        python.stdin.write(JSON.stringify({ type: 'moon_phase' }));
-        python.stdin.end();
-    });
-}
-
-// Endpoint to get current moon phase
+// Endpoint to get current moon phase (cached by worker)
 router.get('/moon-phase', async (req, res) => {
     try {
-        const moonPhaseData = await getCurrentMoonPhaseAsync();
-        res.json(moonPhaseData);
+        // Get cached moon phase from Redis (worker updates this periodically)
+        const cachedMoonPhase = await redis.get('current:moon-phase');
+        
+        if (cachedMoonPhase) {
+            res.json(JSON.parse(cachedMoonPhase));
+        } else {
+            // Fallback: return error asking worker to calculate
+            res.status(503).json({ error: 'Moon phase data not yet available', details: 'Worker is calculating...' });
+        }
     } catch (error) {
         console.error('Error getting moon phase:', error);
-        res.status(500).json({ error: 'Failed to calculate moon phase', details: error.message });
+        res.status(500).json({ error: 'Failed to get moon phase', details: error.message });
     }
 });
 

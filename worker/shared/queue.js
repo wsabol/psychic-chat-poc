@@ -7,3 +7,5 @@ export async function getMessageFromQueue() {
     const job = await client.lPop("chat-jobs");
     return job ? JSON.parse(job) : null;
 }
+
+export { client as redis };

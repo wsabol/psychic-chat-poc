@@ -1,4 +1,4 @@
-import { getMessageFromQueue } from "./shared/queue.js";
+import { getMessageFromQueue, redis } from "./shared/queue.js";
 import { db } from "./shared/db.js";
 import OpenAI from "openai";
 import { tarotDeck } from "./tarotDeck.js";
@@ -356,15 +356,8 @@ IMPORTANT: Use the above personal and astrological information to:
 
 `;
     
-    // Oracle responds without any pre-determination of what to do
-    const completion = await client.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-            {
-                role: "system",
-                content: `${combinedContext}
-
-You are The Oracle of Starship Psychics — a mystical guide who seamlessly blends tarot, astrology, palmistry, and crystals into unified, holistic readings.
+            // Static Oracle system prompt (cached for efficiency)
+    const oracleSystemPrompt = `You are The Oracle of Starship Psychics — a mystical guide who seamlessly blends tarot, astrology, palmistry, and crystals into unified, holistic readings.
 
 YOUR CORE APPROACH - INTEGRATED DIVINATION:
 The three primary disciplines work together as interconnected systems:
@@ -460,9 +453,25 @@ Goal:
 - Empower users to work with natural cycles and energetic support
 
 ASTROLOGICAL ACCURACY NOTE:
-The user's rising sign and moon sign have been calculated using Swiss Ephemeris, which uses precise astronomical algorithms. These calculations are accurate based on the birth date, time, and location provided. You have access to these calculated values and should reference them naturally in your guidance. The rising sign describes how the user is perceived by others and their outward presentation, while the moon sign reflects their inner emotional nature and private self.
-                `
+The user's rising sign and moon sign have been calculated using Swiss Ephemeris, which uses precise astronomical algorithms. These calculations are accurate based on the birth date, time, and location provided. You have access to these calculated values and should reference them naturally in your guidance. The rising sign describes how the user is perceived by others and their outward presentation, while the moon sign reflects their inner emotional nature and private self.`;
+
+    // Oracle responds with prompt caching for cost efficiency
+    const completion = await client.chat.completions.create({
+        model: "gpt-4o-mini",
+        system: [
+            // Cached static system prompt
+            {
+                type: "text",
+                text: oracleSystemPrompt,
+                cache_control: { type: "ephemeral" }
             },
+            // Dynamic user-specific context (not cached)
+            {
+                type: "text",
+                text: combinedContext
+            }
+        ],
+        messages: [
             ...history.reverse(),
             { role: "user", content: message },
         ],
@@ -495,9 +504,29 @@ The user's rising sign and moon sign have been calculated using Swiss Ephemeris,
     ]);
     
     
+
+
+}
+
+// Update moon phase cache in Redis every hour
+async function updateMoonPhaseCache() {
+    try {
+        const moonPhaseData = await getCurrentMoonPhaseAsync();
+        if (moonPhaseData.success) {
+            await redis.setEx('current:moon-phase', 3600, JSON.stringify(moonPhaseData));
+        }
+    } catch (err) {
+        console.error('[WORKER] Error updating moon phase cache:', err.message);
+    }
 }
 
 export async function workerLoop() {
+    // Calculate initial moon phase
+    await updateMoonPhaseCache();
+    
+    // Update moon phase cache every hour
+    setInterval(updateMoonPhaseCache, 3600000);
+    
     while (true) {
         const job = await getMessageFromQueue();
         if (!job) {

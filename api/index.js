@@ -5,6 +5,7 @@ import astrologyRoutes from "./routes/astrology.js";
 import authRoutes from "./routes/auth.js";
 import { authenticateToken } from "./middleware/auth.js";
 import cors from "cors";
+import redis from "./shared/redis.js";
 
 const app = express();
 
@@ -23,6 +24,21 @@ app.get('/', (req, res) => {
 
 // Public auth routes (no authentication required)
 app.use("/auth", authRoutes);
+
+// Public astrology routes (no authentication required for public endpoints)
+app.get("/user-astrology/moon-phase", async (req, res) => {
+    try {
+        const cachedMoonPhase = await redis.get('current:moon-phase');
+        if (cachedMoonPhase) {
+            res.json(JSON.parse(cachedMoonPhase));
+        } else {
+            res.status(503).json({ error: 'Moon phase data not yet available', details: 'Worker is calculating...' });
+        }
+    } catch (error) {
+        console.error('Error getting moon phase:', error);
+        res.status(500).json({ error: 'Failed to get moon phase', details: error.message });
+    }
+});
 
 // Protected routes (authentication required)
 app.use("/chat", authenticateToken, chatRoutes);
