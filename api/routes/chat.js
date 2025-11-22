@@ -58,10 +58,21 @@ router.get("/opening/:userId", authenticateToken, authorizeUser, verify2FA, asyn
 
 router.get("/history/:userId", authenticateToken, authorizeUser, verify2FA, async (req, res) => {
     const userId = req.userId;  // Use authenticated userId instead of URL param
+    const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
     try {
         const { rows } = await db.query(
-            "SELECT id, role, content FROM messages WHERE user_id=$1 ORDER BY created_at ASC",
-            [userId]
+            `SELECT 
+                id, 
+                role, 
+                CASE 
+                    WHEN content_encrypted IS NOT NULL 
+                    THEN pgp_sym_decrypt(content_encrypted, $2)::text
+                    ELSE content
+                END as content
+            FROM messages 
+            WHERE user_id=$1 
+            ORDER BY created_at ASC`,
+            [userId, ENCRYPTION_KEY]
         );
         res.json(rows);
     } catch (err) {
