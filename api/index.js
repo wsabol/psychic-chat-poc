@@ -4,6 +4,7 @@ import userProfileRoutes from "./routes/user-profile.js";
 import astrologyRoutes from "./routes/astrology.js";
 import authRoutes from "./routes/auth.js";
 import { authenticateToken } from "./middleware/auth.js";
+import { apiLimiter, chatLimiter } from "./middleware/rateLimiter.js";
 import cors from "cors";
 import redis from "./shared/redis.js";
 
@@ -16,6 +17,9 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// Apply general API rate limiting
+app.use(apiLimiter);
 
 // Welcome route
 app.get('/', (req, res) => {
@@ -41,7 +45,7 @@ app.get("/user-astrology/moon-phase", async (req, res) => {
 });
 
 // Protected routes (authentication required)
-app.use("/chat", authenticateToken, chatRoutes);
+app.use("/chat", authenticateToken, chatLimiter, chatRoutes);
 app.use("/user-profile", authenticateToken, userProfileRoutes);
 app.use("/user-astrology", authenticateToken, astrologyRoutes);
 
