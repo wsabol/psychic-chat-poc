@@ -627,8 +627,8 @@ export const zodiacSigns = {
     }
   },
   
+  name: "Aquarius",
   aquarius: {
-    name: "Aquarius",
     dates: "January 20 - February 18",
     element: "Air",
     planet: "Uranus",
@@ -755,65 +755,3 @@ export const zodiacSigns = {
   
 };
 
-const CosmicAstrologyReading = () => {
-  const [birthDate, setBirthDate] = useState('');
-  const [reading, setReading] = useState(null);
-  const [showReading, setShowReading] = useState(false);
-  const [animationClass, setAnimationClass] = useState('');
-
-    const getZodiacSign = (dateInput) => {
-    // dateInput is expected to be YYYY-MM-DD (string); parse manually to avoid timezone effects
-    let month; let day;
-    if (typeof dateInput === 'string' && dateInput.includes('-')) {
-      const parts = dateInput.split('-');
-      if (parts.length === 3) {
-        month = parseInt(parts[1], 10);
-        day = parseInt(parts[2], 10);
-      }
-    }
-    else {
-      const date = new Date(dateInput);
-      month = date.getMonth() + 1;
-      day = date.getDate();
-    }
-    
-    // Aries: March 21 - April 19
-    if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) return 'aries';
-    
-    // Taurus: April 20 - May 20
-    if ((month === 4 && day >= 20) || (month === 5 && day <= 20)) return 'taurus';
-    
-    // Gemini: May 21 - June 20
-    if ((month === 5 && day >= 21) || (month === 6 && day <= 20)) return 'gemini';
-    
-    // Cancer: June 21 - July 22
-    if ((month === 6 && day >= 21) || (month === 7 && day <= 22)) return 'cancer';
-    
-    // Leo: July 23 - August 22
-    if ((month === 7 && day >= 23) || (month === 8 && day <= 22)) return 'leo';
-    
-    // Virgo: August 23 - September 22
-    if ((month === 8 && day >= 23) || (month === 9 && day <= 22)) return 'virgo';
-    
-    // Libra: September 23 - October 22
-    if ((month === 9 && day >= 23) || (month === 10 && day <= 22)) return 'libra';
-    
-    // Scorpio: October 23 - November 21
-    if ((month === 10 && day >= 23) || (month === 11 && day <= 21)) return 'scorpio';
-    
-    // Sagittarius: November 22 - December 21
-    if ((month === 11 && day >= 22) || (month === 12 && day <= 21)) return 'sagittarius';
-    
-    // Capricorn: December 22 - January 19
-    if ((month === 12 && day >= 22) || (month === 1 && day <= 19)) return 'capricorn';
-    
-    // Aquarius: January 20 - February 18
-    if ((month === 1 && day >= 20) || (month === 2 && day <= 18)) return 'aquarius';
-    
-    // Pisces: February 19 - March 20
-    if ((month === 2 && day >= 19) || (month === 3 && day <= 20)) return 'pisces';
-    
-    // Fallback (should never reach here with valid dates)
-    return null;
-  };
-};
