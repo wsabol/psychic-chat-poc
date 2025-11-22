@@ -189,8 +189,6 @@ function escapeRegex(str) {
 async function handleChatJob(job) {
     const { userId, message } = job;
     
-    console.log(`[WORKER] Processing message from userId: ${userId}`);
-    
     // Get recent context
     const { rows: history } = await db.query(
         "SELECT role, content FROM messages WHERE user_id=$1 ORDER BY created_at DESC LIMIT 10",
@@ -455,23 +453,11 @@ Goal:
 ASTROLOGICAL ACCURACY NOTE:
 The user's rising sign and moon sign have been calculated using Swiss Ephemeris, which uses precise astronomical algorithms. These calculations are accurate based on the birth date, time, and location provided. You have access to these calculated values and should reference them naturally in your guidance. The rising sign describes how the user is perceived by others and their outward presentation, while the moon sign reflects their inner emotional nature and private self.`;
 
-    // Oracle responds with prompt caching for cost efficiency
+    // Oracle responds
     const completion = await client.chat.completions.create({
         model: "gpt-4o-mini",
-        system: [
-            // Cached static system prompt
-            {
-                type: "text",
-                text: oracleSystemPrompt,
-                cache_control: { type: "ephemeral" }
-            },
-            // Dynamic user-specific context (not cached)
-            {
-                type: "text",
-                text: combinedContext
-            }
-        ],
         messages: [
+            { role: "system", content: oracleSystemPrompt + "\n\n" + combinedContext },
             ...history.reverse(),
             { role: "user", content: message },
         ],
