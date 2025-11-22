@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { authenticateToken, authorizeUser, verify2FA } from "../middleware/auth.js";
 import { enqueueMessage } from "../shared/queue.js";
 import { generatePsychicOpening } from "../shared/opening.js";
 import { getRecentMessages, insertMessage } from "../shared/user.js";
@@ -6,8 +7,9 @@ import { db } from "../shared/db.js";
 
 const router = Router();
 
-router.post("/", async (req, res) => {
-    const { userId, message } = req.body;
+router.post("/", authenticateToken, verify2FA, async (req, res) => {
+    const { message } = req.body;
+    const userId = req.userId;  // Get userId from authenticated token
 
     await insertMessage(userId, 'user', message)
 
@@ -16,8 +18,8 @@ router.post("/", async (req, res) => {
     res.json({ status: "queued" });
 });
 
-router.get("/opening/:userId", async (req, res) => {
-    const { userId } = req.params;
+router.get("/opening/:userId", authenticateToken, authorizeUser, verify2FA, async (req, res) => {
+    const userId = req.userId;  // Use authenticated userId instead of URL param
 
     const recentMessages = await getRecentMessages(userId)
     
@@ -54,8 +56,8 @@ router.get("/opening/:userId", async (req, res) => {
     })
 });
 
-router.get("/history/:userId", async (req, res) => {
-    const { userId } = req.params;
+router.get("/history/:userId", authenticateToken, authorizeUser, verify2FA, async (req, res) => {
+    const userId = req.userId;  // Use authenticated userId instead of URL param
     try {
         const { rows } = await db.query(
             "SELECT id, role, content FROM messages WHERE user_id=$1 ORDER BY created_at ASC",
