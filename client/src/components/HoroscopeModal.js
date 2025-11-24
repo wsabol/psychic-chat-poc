@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getAstrologyData } from '../utils/astroUtils';
+import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
 
 function HoroscopeModal({ userId, token, isOpen, onClose }) {
     const [horoscopeData, setHoroscopeData] = useState(null);
@@ -24,8 +25,7 @@ function HoroscopeModal({ userId, token, isOpen, onClose }) {
             const cacheKey = `horoscope_${userId}_${horoscopeRange}_${today}`;
             const cachedData = localStorage.getItem(cacheKey);
             
-            if (cachedData) {
-                console.log('[HoroscopeModal] Using cached horoscope data');
+                        if (cachedData) {
                 setHoroscopeData(JSON.parse(cachedData));
                 setLoading(false);
                 return;
@@ -36,7 +36,7 @@ function HoroscopeModal({ userId, token, isOpen, onClose }) {
             if (token) {
                 astroHeaders['Authorization'] = `Bearer ${token}`;
             }
-            const astroResponse = await fetch(`${API_URL}/user-astrology/${userId}`, { headers: astroHeaders });
+            const astroResponse = await fetchWithTokenRefresh(`${API_URL}/user-astrology/${userId}`, { headers: astroHeaders });
             
             if (!astroResponse.ok) {
                 setError('Could not fetch your astrology data. Please ensure your birth information is complete.');
@@ -59,7 +59,7 @@ function HoroscopeModal({ userId, token, isOpen, onClose }) {
                 if (token) {
                     profileHeaders['Authorization'] = `Bearer ${token}`;
                 }
-                const profileResponse = await fetch(`${API_URL}/user-profile/${userId}`, { headers: profileHeaders });
+                const profileResponse = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}`, { headers: profileHeaders });
                 if (profileResponse.ok) {
                     const profile = await profileResponse.json();
                     const { getZodiacSignFromDate } = await import('../utils/astroUtils');
@@ -100,8 +100,7 @@ function HoroscopeModal({ userId, token, isOpen, onClose }) {
             localStorage.setItem(cacheKey, JSON.stringify(horoscopeDataObj));
             setHoroscopeData(horoscopeDataObj);
 
-        } catch (err) {
-            console.error('Error loading horoscope data:', err);
+                } catch (err) {
             setError(err.message);
         } finally {
             setLoading(false);

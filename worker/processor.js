@@ -189,6 +189,59 @@ function escapeRegex(str) {
 async function handleChatJob(job) {
     const { userId, message } = job;
     
+        // Check if this is a system astrology calculation request
+    if (message.includes('[SYSTEM]') && message.includes('birth chart')) {
+        try {
+                        const { rows: personalInfoRows } = await db.query(`
+                SELECT to_char(birth_date, 'YYYY-MM-DD') as birth_date, birth_time, birth_country, birth_province, birth_city, birth_timezone
+                FROM user_personal_info WHERE user_id = $1
+            `, [userId]);
+            
+            if (personalInfoRows.length > 0 && personalInfoRows[0].birth_date && personalInfoRows[0].birth_time && 
+                personalInfoRows[0].birth_country && personalInfoRows[0].birth_province && personalInfoRows[0].birth_city) {
+                
+                const info = personalInfoRows[0];
+                const calculatedChart = await calculateBirthChartAsync({
+                    birth_date: info.birth_date,
+                    birth_time: info.birth_time,
+                    birth_country: info.birth_country,
+                    birth_province: info.birth_province,
+                    birth_city: info.birth_city,
+                    birth_timezone: info.birth_timezone
+                });
+                
+                if (calculatedChart.success && calculatedChart.rising_sign && calculatedChart.moon_sign) {
+                    const astrologyData = {
+                        rising_sign: calculatedChart.rising_sign,
+                        rising_degree: calculatedChart.rising_degree,
+                        moon_sign: calculatedChart.moon_sign,
+                        moon_degree: calculatedChart.moon_degree,
+                        sun_sign: calculatedChart.sun_sign,
+                        sun_degree: calculatedChart.sun_degree,
+                        latitude: calculatedChart.latitude,
+                        longitude: calculatedChart.longitude,
+                        timezone: calculatedChart.timezone,
+                        calculated_at: new Date().toISOString()
+                    };
+                    
+                    await db.query(
+                        `INSERT INTO user_astrology (user_id, zodiac_sign, astrology_data)
+                         VALUES ($1, $2, $3)
+                         ON CONFLICT (user_id) DO UPDATE SET
+                         astrology_data = EXCLUDED.astrology_data,
+                         updated_at = CURRENT_TIMESTAMP`,
+                        [userId, calculatedChart.sun_sign, JSON.stringify(astrologyData)]
+                    );
+                    
+                    return;
+                }
+            }
+        } catch (err) {
+            console.error('[WORKER] Astrology error:', err.message);
+        }
+        return;
+    }
+    
     // Get recent context
     const { rows: history } = await db.query(
         "SELECT role, content FROM messages WHERE user_id=$1 ORDER BY created_at DESC LIMIT 10",

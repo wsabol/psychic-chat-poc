@@ -3,31 +3,132 @@ const router = express.Router();
 import { db } from '../shared/db.js';
 import { enqueueMessage } from '../shared/queue.js';
 import { authorizeUser } from '../middleware/auth.js';
-import redis from '../shared/redis.js';
+import { spawn } from 'child_process';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-// Endpoint to get current moon phase (cached by worker)
-router.get('/moon-phase', async (req, res) => {
-    try {
-        // Get cached moon phase from Redis (worker updates this periodically)
-        const cachedMoonPhase = await redis.get('current:moon-phase');
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Helper function to calculate birth chart synchronously via Python script
+function calculateBirthChartSync(birthData) {
+    return new Promise((resolve, reject) => {
+        const workerDir = path.join(__dirname, '../..', 'worker');
+        const python = spawn('python3', ['./astrology.py'], { cwd: workerDir });
+        let outputData = '';
+        let errorData = '';
         
-        if (cachedMoonPhase) {
-            res.json(JSON.parse(cachedMoonPhase));
-        } else {
-            // Fallback: return error asking worker to calculate
-            res.status(503).json({ error: 'Moon phase data not yet available', details: 'Worker is calculating...' });
+        python.stdout.on('data', (data) => {
+            outputData += data.toString();
+        });
+        
+        python.stderr.on('data', (data) => {
+            errorData += data.toString();
+        });
+        
+        python.on('close', (code) => {
+            if (code !== 0) {
+                console.error('[ASTROLOGY] Python script failed:', errorData);
+                reject(new Error(`Python script failed: ${errorData}`));
+                return;
+            }
+            try {
+                const result = JSON.parse(outputData);
+                resolve(result);
+            } catch (e) {
+                console.error('[ASTROLOGY] Failed to parse result:', outputData);
+                reject(new Error(`Invalid JSON from astrology script: ${e.message}`));
+            }
+        });
+        
+        python.on('error', (err) => {
+            console.error('[ASTROLOGY] Failed to spawn Python:', err);
+            reject(err);
+        });
+        
+        python.stdin.write(JSON.stringify(birthData));
+        python.stdin.end();
+    });
+}
+
+// POST endpoint to calculate astrology for user (synchronous)
+// Called when personal info is saved
+router.post('/sync-calculate/:userId', authorizeUser, async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        // Fetch user's personal information
+        const { rows: personalInfoRows } = await db.query(
+            `SELECT birth_date, birth_time, birth_country, birth_province, birth_city, birth_timezone
+             FROM user_personal_info 
+             WHERE user_id = $1`,
+            [userId]
+        );
+        
+        if (!personalInfoRows.length) {
+            return res.status(404).json({ error: 'Personal info not found' });
         }
-    } catch (error) {
-        console.error('Error getting moon phase:', error);
-        res.status(500).json({ error: 'Failed to get moon phase', details: error.message });
+        
+        const info = personalInfoRows[0];
+        
+        // Validate complete birth data
+        if (!info.birth_date || !info.birth_time || !info.birth_country || !info.birth_province || !info.birth_city) {
+            return res.status(400).json({ error: 'Incomplete birth information' });
+        }
+        
+        // Calculate birth chart
+        const calculatedChart = await calculateBirthChartSync({
+            birth_date: info.birth_date,
+            birth_time: info.birth_time,
+            birth_country: info.birth_country,
+            birth_province: info.birth_province,
+            birth_city: info.birth_city,
+            birth_timezone: info.birth_timezone
+        });
+        
+        if (!calculatedChart.success || !calculatedChart.rising_sign || !calculatedChart.moon_sign) {
+            return res.status(500).json({ error: calculatedChart.error || 'Calculation failed' });
+        }
+        
+        // Store in database
+        const astrologyData = {
+            rising_sign: calculatedChart.rising_sign,
+            rising_degree: calculatedChart.rising_degree,
+            moon_sign: calculatedChart.moon_sign,
+            moon_degree: calculatedChart.moon_degree,
+            sun_sign: calculatedChart.sun_sign,
+            sun_degree: calculatedChart.sun_degree,
+            latitude: calculatedChart.latitude,
+            longitude: calculatedChart.longitude,
+            timezone: calculatedChart.timezone,
+            calculated_at: new Date().toISOString()
+        };
+        
+        await db.query(
+            `INSERT INTO user_astrology (user_id, zodiac_sign, astrology_data)
+             VALUES ($1, $2, $3)
+             ON CONFLICT (user_id) DO UPDATE SET
+             astrology_data = EXCLUDED.astrology_data,
+             updated_at = CURRENT_TIMESTAMP`,
+            [userId, calculatedChart.sun_sign, JSON.stringify(astrologyData)]
+        );
+        
+        res.json({
+            success: true,
+            message: 'Astrology calculated and stored',
+            data: astrologyData
+        });
+    } catch (err) {
+        console.error('[ASTROLOGY] Error calculating:', err);
+        res.status(500).json({ error: 'Calculation failed', details: err.message });
     }
 });
 
 // Endpoint to trigger astrology calculation by enqueueing a worker job
 // MUST come before /:userId routes to match first
-router.post('/calculate/:userId', async (req, res) => {
+router.post('/calculate/:userId', authorizeUser, async (req, res) => {
     try {
         const { userId } = req.params;
+        console.log(`[API] Enqueueing astrology calculation job for user ${userId}`);
         
         // Enqueue a special message that triggers calculation
         await enqueueMessage({ 
@@ -55,7 +156,6 @@ router.get("/:userId", authorizeUser, async (req, res) => {
         }
         
         const result = rows[0];
-        // Parse astrology_data if it's a string (shouldn't be, but just in case)
         if (typeof result.astrology_data === 'string') {
             result.astrology_data = JSON.parse(result.astrology_data);
         }

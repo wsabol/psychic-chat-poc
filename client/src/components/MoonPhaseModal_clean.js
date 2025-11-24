@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getAstrologyData } from '../utils/astroUtils';
+import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
 
 function MoonPhaseModal({ userId, token, isOpen, onClose }) {
     const [moonPhaseData, setMoonPhaseData] = useState(null);
@@ -8,7 +9,6 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
 
     const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
-    // Moon phase emojis mapping
     const moonPhaseEmojis = {
         newMoon: '🌑',
         waxingCrescent: '🌒',
@@ -20,7 +20,6 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
         waningCrescent: '🌘'
     };
 
-    // Moon phase order for cycle display
     const moonPhaseOrder = ['newMoon', 'waxingCrescent', 'firstQuarter', 'waxingGibbous', 'fullMoon', 'waningGibbous', 'lastQuarter', 'waningCrescent'];
 
     useEffect(() => {
@@ -30,17 +29,10 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
     }, [isOpen, userId, token]);
 
     const getCurrentMoonPhase = () => {
-        // Calculate the current lunar phase based on date
-        // This is a simplified calculation
         const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth() + 1;
-        const date = now.getDate();
-        
-        // Known new moon date: January 29, 2025
         const knownNewMoonDate = new Date(2025, 0, 29).getTime();
         const currentDate = now.getTime();
-        const lunarCycle = 29.53059 * 24 * 60 * 60 * 1000; // milliseconds in lunar cycle
+        const lunarCycle = 29.53059 * 24 * 60 * 60 * 1000;
         
         const daysIntoPhase = ((currentDate - knownNewMoonDate) % lunarCycle) / (24 * 60 * 60 * 1000);
         const phaseIndex = Math.floor((daysIntoPhase / 29.53059) * 8) % 8;
@@ -52,12 +44,8 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
         setLoading(true);
         setError(null);
         try {
-            // Fetch user's astrology data to get sun sign
-            const astroHeaders = {};
-            if (token) {
-                astroHeaders['Authorization'] = `Bearer ${token}`;
-            }
-            const astroResponse = await fetch(`${API_URL}/user-astrology/${userId}`, { headers: astroHeaders });
+            const astroHeaders = token ? { 'Authorization': `Bearer ${token}` } : {};
+            const astroResponse = await fetchWithTokenRefresh(`${API_URL}/user-astrology/${userId}`, { headers: astroHeaders });
             
             if (!astroResponse.ok) {
                 setError('Could not fetch your astrology data. Please ensure your birth information is complete.');
@@ -72,15 +60,11 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
                 astroDataObj = JSON.parse(astroDataObj);
             }
 
-            // Get sun sign (use calculated sun_sign if available, otherwise fetch from profile)
             let sunSign = astroDataObj?.sun_sign;
             
             if (!sunSign) {
-                const profileHeaders = {};
-                if (token) {
-                    profileHeaders['Authorization'] = `Bearer ${token}`;
-                }
-                const profileResponse = await fetch(`${API_URL}/user-profile/${userId}`, { headers: profileHeaders });
+                const profileHeaders = token ? { 'Authorization': `Bearer ${token}` } : {};
+                const profileResponse = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}`, { headers: profileHeaders });
                 if (profileResponse.ok) {
                     const profile = await profileResponse.json();
                     const { getZodiacSignFromDate } = await import('../utils/astroUtils');
@@ -96,10 +80,7 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
                 return;
             }
 
-            // Get current moon phase
             const currentMoonPhase = getCurrentMoonPhase();
-            
-            // Get zodiac sign data including moon phases
             const zodiacData = getAstrologyData(sunSign.toLowerCase());
             
             if (!zodiacData || !zodiacData.moonPhases) {
@@ -108,7 +89,6 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
                 return;
             }
 
-            // Get the meaning of this moon phase for this sign
             const moonPhaseMeaning = zodiacData.moonPhases[currentMoonPhase];
 
             setMoonPhaseData({
@@ -120,7 +100,7 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
                 todayDate: new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
             });
 
-                } catch (err) {
+        } catch (err) {
             setError(err.message);
         } finally {
             setLoading(false);
@@ -154,17 +134,7 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
             }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                     <h2 style={{ margin: 0 }}>🌙 Moon Phase</h2>
-                    <button
-                        onClick={onClose}
-                        style={{
-                            background: 'none',
-                            border: 'none',
-                            fontSize: '24px',
-                            cursor: 'pointer'
-                        }}
-                    >
-                        ✕
-                    </button>
+                    <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer' }}>✕</button>
                 </div>
 
                 {loading && <p>Loading moon phase data...</p>}
@@ -174,9 +144,7 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
                     <div style={{ fontSize: '14px', lineHeight: '1.6', color: '#333' }}>
                         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
                             <p style={{ fontSize: '12px', color: '#666' }}>{moonPhaseData.todayDate}</p>
-                            <div style={{ fontSize: '72px', margin: '1rem 0' }}>
-                                {moonPhaseEmojis[moonPhaseData.currentMoonPhase]}
-                            </div>
+                            <div style={{ fontSize: '72px', margin: '1rem 0' }}>{moonPhaseEmojis[moonPhaseData.currentMoonPhase]}</div>
                             <h3 style={{ margin: '0.5rem 0', fontSize: '20px' }}>
                                 {moonPhaseData.currentMoonPhase.replace(/([A-Z])/g, ' $1').trim()}
                             </h3>
@@ -194,17 +162,14 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
                         <div style={{ marginBottom: '1.5rem' }}>
                             <h4 style={{ marginTop: 0, marginBottom: '1rem' }}>Lunar Cycle</h4>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem', textAlign: 'center' }}>
-                                {moonPhaseOrder.map((phase, idx) => (
-                                    <div
-                                        key={phase}
+                                {moonPhaseOrder.map((phase) => (
+                                    <div key={phase}
                                         style={{
                                             padding: '0.75rem',
                                             borderRadius: '8px',
                                             backgroundColor: phase === moonPhaseData.currentMoonPhase ? '#fff3e0' : '#f5f5f5',
                                             border: phase === moonPhaseData.currentMoonPhase ? '2px solid #ff9800' : '1px solid #e0e0e0',
-                                            cursor: 'default'
-                                        }}
-                                    >
+                                        }}>
                                         <div style={{ fontSize: '24px' }}>{moonPhaseEmojis[phase]}</div>
                                         <p style={{ margin: '0.25rem 0 0 0', fontSize: '11px', color: '#666' }}>
                                             {phase.replace(/([A-Z])/g, ' $1').trim()}

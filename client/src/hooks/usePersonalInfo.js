@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { fetchWithTokenRefresh } from "../utils/fetchWithTokenRefresh.js";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
@@ -16,7 +17,7 @@ export function usePersonalInfo(userId, token) {
             if (token) {
                 headers['Authorization'] = `Bearer ${token}`;
             }
-            const res = await fetch(`${API_URL}/user-profile/${userId}`, { headers });
+            const res = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}`, { headers });
             if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
             const data = await res.json();
             

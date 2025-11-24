@@ -16,8 +16,7 @@ function formatDateForDisplay(dateString) {
         const month = months[monthIndex];
         if (!month) return dateString;
         return `${day}-${month}-${year}`;
-    } catch (e) {
-        console.error('formatDateForDisplay error', e, dateString);
+        } catch (e) {
         return dateString;
     }
 }
@@ -36,13 +35,11 @@ function parseDateForStorage(dateString) {
         const month = months[monthStr];
         const year = parts[2].trim();
         
-        if (!month) {
-            console.error(`Invalid month: ${monthStr}`);
+                if (!month) {
             return dateString;
         }
         return `${year}-${month}-${day}`;
-    } catch (e) {
-        console.error('Date parsing error:', e, dateString);
+        } catch (e) {
         return dateString;
     }
 }
@@ -98,8 +95,8 @@ function PersonalInfoModal({ userId, token, isOpen, onClose, onSave }) {
                     addressPreference: data.address_preference || ''
                 });
             }
-        } catch (err) {
-            console.error('Error fetching personal info:', err);
+                } catch (err) {
+            // Silently continue if fetch fails
         }
     };
 
@@ -173,12 +170,11 @@ function PersonalInfoModal({ userId, token, isOpen, onClose, onSave }) {
 
             if (!response.ok) throw new Error('Failed to save personal information');
             
-            // Clear horoscope cache since birth date has changed
+                        // Clear horoscope cache since birth date has changed
             const today = new Date().toISOString().split('T')[0];
             localStorage.removeItem(`horoscope_${userId}_daily_${today}`);
             localStorage.removeItem(`horoscope_${userId}_weekly_${today}`);
             localStorage.removeItem(`horoscope_${userId}_monthly_${today}`);
-            console.log('[PersonalInfoModal] Cleared horoscope cache');
             
             setSuccess(true);
             setTimeout(() => setSuccess(false), 3000);

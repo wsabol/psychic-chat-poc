@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getZodiacSignFromDate, getAstrologyData } from '../utils/astroUtils';
 import { zodiacSigns } from '../data/ZodiacSigns';
+import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
 
 function MySignModal({ userId, token, isOpen, onClose, birthDate, birthTime, birthCity, birthState }) {
     const [astroData, setAstroData] = useState(null);
@@ -20,12 +21,12 @@ function MySignModal({ userId, token, isOpen, onClose, birthDate, birthTime, bir
         setError(null);
         try {
             // First, try to fetch calculated astrology data from database
-            try {
+                        try {
                 const astroHeaders = {};
                 if (token) {
                     astroHeaders['Authorization'] = `Bearer ${token}`;
                 }
-                                const astroResponse = await fetch(`${API_URL}/user-astrology/${userId}`, { headers: astroHeaders });
+                const astroResponse = await fetchWithTokenRefresh(`${API_URL}/user-astrology/${userId}`, { headers: astroHeaders });
                 if (astroResponse.ok) {
                     const dbAstroData = await astroResponse.json();
                     
@@ -35,47 +36,22 @@ function MySignModal({ userId, token, isOpen, onClose, birthDate, birthTime, bir
                         astroDataObj = JSON.parse(astroDataObj);
                     }
                     
-                                        if (astroDataObj && astroDataObj.sun_sign) {
-                        // We have calculated Swiss Ephemeris data
-                        // Now fetch zodiac sign details to merge with calculated data
+                                        if (astroDataObj && (astroDataObj.sun_sign || astroDataObj.rising_sign || astroDataObj.moon_sign)) {
                         const zodiacSignData = getAstrologyData(astroDataObj.sun_sign.toLowerCase());
-                        
-                        // Merge calculated data with zodiac sign personality/details
                         const mergedData = {
-                            ...zodiacSignData,  // Get all the personality, strengths, etc. from ZodiacSigns.js
-                            ...astroDataObj     // Override with calculated signs and degrees
+                            ...zodiacSignData,
+                            ...astroDataObj
                         };
-                        
                         setAstroData({
                             ...dbAstroData,
                             astrology_data: mergedData
                         });
                         setLoading(false);
                         return;
-                                        } else {
-                        // No calculated data yet - trigger calculation
-                        try {
-                            const calcHeaders = {};
-                            if (token) {
-                                calcHeaders['Authorization'] = `Bearer ${token}`;
-                            }
-                            const calcResponse = await fetch(`${API_URL}/user-astrology/calculate/${userId}`, {
-                                method: 'POST',
-                                headers: calcHeaders
-                            });
-                                                        if (calcResponse.ok) {
-                                // Wait a moment then try fetching again
-                                setTimeout(() => loadAndStoreAstrologyData(), 2000);
-                                return;
-                            }
-                        } catch (calcError) {
-                            console.warn('Could not trigger calculation:', calcError);
-                        }
                     }
                 }
-            } catch (e) {
+                        } catch (e) {
                 // Fall through to local data if fetch fails
-                console.warn('Could not fetch astrology data from database:', e);
             }
 
             // Fall back to local zodiac sign data from ZodiacSigns.js
@@ -86,7 +62,7 @@ function MySignModal({ userId, token, isOpen, onClose, birthDate, birthTime, bir
                 if (token) {
                     headers['Authorization'] = `Bearer ${token}`;
                 }
-                const personalInfoResponse = await fetch(`${API_URL}/user-profile/${userId}`, { headers });
+                const personalInfoResponse = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}`, { headers });
                 
                 if (!personalInfoResponse.ok) {
                     setError('Could not find your personal information. Please enter your birth date first.');

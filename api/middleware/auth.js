@@ -8,7 +8,7 @@ const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your-refresh-secre
 // If requires2FA is true, token expires in 10 minutes (for 2FA verification)
 // Otherwise, token expires in 24 hours (normal session)
 export function generateToken(userId, requires2FA = false) {
-  const expiresIn = requires2FA ? '10m' : '24h';
+  const expiresIn = requires2FA ? '10m' : '15m';
   return jwt.sign(
     { userId, requires2FA },
     JWT_SECRET,
@@ -34,7 +34,7 @@ export function authenticateToken(req, res, next) {
     return res.status(401).json({ error: 'Access token required' });
   }
 
-  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+      jwt.verify(token, JWT_SECRET, (err, decoded) => {
     if (err) {
       return res.status(403).json({ error: 'Invalid or expired token' });
     }

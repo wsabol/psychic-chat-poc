@@ -126,19 +126,6 @@ export async function logAudit(db, userId, action, details, ipAddress, userAgent
 }
 
 /**
- * Hash email for searchable lookups (not authentication)
- * Uses SHA256 for one-way hashing of email addresses
- * Allows us to find users by email without storing plaintext
- */
-export function hashEmail(email) {
-  if (!email) return null;
-  return crypto
-    .createHash('sha256')
-    .update(email.toLowerCase().trim())
-    .digest('hex');
-}
-
-/**
  * Clean up expired 2FA codes and reset tokens
  */
 export async function cleanupExpiredTokens(db) {

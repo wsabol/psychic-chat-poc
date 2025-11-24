@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useAuth } from "./hooks/useAuth";
 import { useChat } from "./hooks/useChat";
+import { useTokenRefresh } from "./hooks/useTokenRefresh";
 import { usePersonalInfo } from "./hooks/usePersonalInfo";
 import CardDisplay from "./components/CardDisplay";
 import Menu from "./components/Menu";
@@ -46,6 +47,9 @@ class ErrorBoundary extends React.Component {
 }
 
 function App() {
+    // Auto-refresh token to prevent session expiration
+    useTokenRefresh();
+    
     // Use custom hooks - cleaner and more maintainable
     const auth = useAuth();
     const chat = useChat(auth.authUserId, auth.token, auth.isAuthenticated, auth.authUserId);

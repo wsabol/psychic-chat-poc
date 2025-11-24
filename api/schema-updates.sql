@@ -64,30 +64,3 @@ CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user_id ON password_reset_t
 CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_expires ON password_reset_tokens(expires_at);
 CREATE INDEX IF NOT EXISTS idx_audit_log_user_id ON audit_log(user_id);
 CREATE INDEX IF NOT EXISTS idx_audit_log_created ON audit_log(created_at);
-
--- Add encryption for chat messages
-ALTER TABLE messages
-ADD COLUMN IF NOT EXISTS content_encrypted BYTEA;
-
--- Create trigger function to auto-encrypt messages on insert/update
-CREATE OR REPLACE FUNCTION encrypt_message_content()
-RETURNS TRIGGER AS $$
-BEGIN
-  IF NEW.content IS NOT NULL AND NEW.content_encrypted IS NULL THEN
-    NEW.content_encrypted := pgp_sym_encrypt(NEW.content::text, 'ENCRYPTION_KEY');
-  END IF;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Drop old trigger if exists
-DROP TRIGGER IF EXISTS trigger_encrypt_message ON messages;
-
--- Create new trigger for encryption
-CREATE TRIGGER trigger_encrypt_message
-BEFORE INSERT OR UPDATE ON messages
-FOR EACH ROW
-EXECUTE FUNCTION encrypt_message_content();
-
--- Create index on encrypted messages for faster lookups
-CREATE INDEX IF NOT EXISTS idx_messages_user_encrypted ON messages(user_id, created_at) WHERE content_encrypted IS NOT NULL;

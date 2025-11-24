@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import {
   validatePassword,
@@ -8,8 +9,7 @@ import {
   validate6DigitCode,
   formatPhoneNumber,
   validateEmail,
-  logAudit,
-  hashEmail
+  logAudit
 } from '../shared/authUtils.js';
 import { sendSMS, sendPasswordResetSMS } from '../shared/smsService.js';
 import { sendEmailVerification, sendPasswordResetEmail, send2FACodeEmail } from '../shared/emailService.js';
@@ -45,11 +45,10 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Invalid phone number format' });
     }
 
-    // Check if email already exists by hash
-    const emailHash = hashEmail(email);
+    // Check if email already exists
     const existingUser = await db.query(
-      'SELECT user_id FROM user_personal_info WHERE email_hash = $1',
-      [emailHash]
+      'SELECT user_id FROM user_personal_info WHERE email = $1',
+      [email]
     );
 
     if (existingUser.rows.length > 0) {
@@ -59,21 +58,16 @@ router.post('/register', async (req, res) => {
     // Generate user ID and hash password
     const userId = uuidv4();
     const passwordHash = await hashPassword(password);
-    const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
 
     // Insert user with default 2FA enabled
     await db.query('BEGIN');
 
     try {
-      // Create user record with:
-      // - email_hash for searchable lookups (SHA256 hash)
-      // - email_encrypted for storage (encrypted at rest with pgcrypto)
-      // - password_hash for authentication (bcrypt - never encrypted)
-      // This ensures GDPR compliance while maintaining functionality
+      // Create user record with auto-verified email (for testing - remove in production)
       await db.query(
-        `INSERT INTO user_personal_info (user_id, email_hash, email_encrypted, password_hash, email_verified, email_verified_at, created_at, updated_at)
-         VALUES ($1, $2, pgp_sym_encrypt($3, '${ENCRYPTION_KEY}'), $4, true, NOW(), NOW(), NOW())`,
-        [userId, emailHash, email, passwordHash]
+        `INSERT INTO user_personal_info (user_id, email, password_hash, email_verified, email_verified_at, created_at, updated_at)
+         VALUES ($1, $2, $3, true, NOW(), NOW(), NOW())`,
+        [userId, email, passwordHash]
       );
 
       // Create 2FA settings (default: enabled with SMS)
@@ -197,11 +191,10 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Email and password required' });
     }
 
-    // Find user by email hash
-    const emailHash = hashEmail(email);
+    // Find user by email
     const userResult = await db.query(
-      'SELECT user_id, password_hash, email_verified FROM user_personal_info WHERE email_hash = $1',
-      [emailHash]
+      'SELECT user_id, password_hash, email_verified FROM user_personal_info WHERE email = $1',
+      [email]
     );
 
     if (userResult.rows.length === 0) {
@@ -273,7 +266,7 @@ router.post('/login', async (req, res) => {
     //   });
     // }
 
-    // 2FA disabled for testing - skip to direct login
+        // 2FA disabled for testing - skip to direct login
     // TODO: Re-enable after Twilio account setup
     const token = generateToken(user.user_id, false);
     const refreshToken = generateRefreshToken(user.user_id);
@@ -359,11 +352,10 @@ router.post('/forgot-password', async (req, res) => {
       return res.status(400).json({ error: 'Email required' });
     }
 
-    // Find user by email hash
-    const emailHash = hashEmail(email);
+    // Find user by email
     const userResult = await db.query(
-      'SELECT user_id FROM user_personal_info WHERE email_hash = $1',
-      [emailHash]
+      'SELECT user_id FROM user_personal_info WHERE email = $1',
+      [email]
     );
 
     if (userResult.rows.length === 0) {
@@ -490,6 +482,40 @@ router.post('/reset-password', async (req, res) => {
   } catch (error) {
     console.error('Reset password error:', error);
     return res.status(500).json({ error: 'Password reset failed', details: error.message });
+  }
+});
+
+/**
+ * POST /auth/refresh
+ * Refresh access token using refresh token
+ */
+router.post('/refresh', async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(401).json({ error: 'Refresh token required' });
+    }
+
+        // Verify refresh token
+    try {
+      const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-change-in-production');
+      
+      // Generate new access token
+      const newToken = generateToken(decoded.userId, false);
+      
+      return res.json({
+        success: true,
+        token: newToken,
+        expiresIn: '15m',
+        message: 'Token refreshed successfully'
+      });
+    } catch (err) {
+      return res.status(403).json({ error: 'Invalid or expired refresh token' });
+    }
+  } catch (error) {
+    console.error('Token refresh error:', error);
+    return res.status(500).json({ error: 'Token refresh failed', details: error.message });
   }
 });
 

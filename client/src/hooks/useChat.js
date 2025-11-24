@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { fetchWithTokenRefresh } from "../utils/fetchWithTokenRefresh.js";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
@@ -10,33 +11,33 @@ export function useChat(userId, token, isAuthenticated, authUserId) {
     
     const loadMessages = useCallback(async () => {
         try {
-            const headers = token ? { "Authorization": `Bearer ${token}` } : {};
-            const res = await fetch(`${API_URL}/chat/history/${userId}`, { headers });
+            if (!token || !userId) return [];
+            const headers = { "Authorization": `Bearer ${token}` };
+            const url = `${API_URL}/chat/history/${userId}`;
+            const res = await fetchWithTokenRefresh(url, { headers });
             if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
             const data = await res.json();
-            setChat(data);
+            setChat(Array.isArray(data) ? data : []);
             setLoaded(true);
             setError(null);
             return data;
         } catch (err) {
-            console.error('Error loading messages:', err);
-            if (isAuthenticated && authUserId) {
-                setError(err.message);
-            }
+            setError(err.message);
             return [];
         }
-    }, [userId, token, isAuthenticated, authUserId]);
+    }, [userId, token]);
     
     const requestOpening = useCallback(async () => {
         try {
-            const headers = token ? { "Authorization": `Bearer ${token}` } : {};
-            const res = await fetch(`${API_URL}/chat/opening/${userId}`, { headers });
+            if (!token || !userId) return;
+            const headers = { "Authorization": `Bearer ${token}` };
+            const url = `${API_URL}/chat/opening/${userId}`;
+            const res = await fetchWithTokenRefresh(url, { headers });
             if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
             await res.json();
-            // Greeting is now saved, reload messages to display it
             await loadMessages();
         } catch (err) {
-            console.error('Error requesting opening:', err);
+            // Opening request failed, continue silently
         }
     }, [userId, token, loadMessages]);
     
@@ -44,17 +45,13 @@ export function useChat(userId, token, isAuthenticated, authUserId) {
         if (!message.trim()) return;
         setChat(prevChat => [...prevChat, { id: Date.now(), role: "user", content: message }]);
         try {
-            const headers = {
-                "Content-Type": "application/json",
-            };
-            if (token) {
-                headers["Authorization"] = `Bearer ${token}`;
-            }
-            await fetch(`${API_URL}/chat`, {
+            const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${token}` };
+            const res = await fetchWithTokenRefresh(`${API_URL}/chat`, {
                 method: "POST",
                 headers,
                 body: JSON.stringify({ userId, message }),
             });
+            if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
             await loadMessages();
         } catch (err) {
             setError(err.message);
@@ -64,20 +61,17 @@ export function useChat(userId, token, isAuthenticated, authUserId) {
 
     // Load messages on mount or userId change
     useEffect(() => {
-        if (isAuthenticated && authUserId) {
-            loadMessages().then(data => {
-                // Always request opening greeting on mount
-                    requestOpening();
-            });
+        if (isAuthenticated && authUserId && token) {
+            loadMessages().then(() => requestOpening());
         }
-    }, [authUserId, isAuthenticated, loadMessages, requestOpening]);
+    }, [authUserId, isAuthenticated, token, loadMessages, requestOpening]);
 
-    // Poll for new messages every 2 seconds (per project instructions)
+    // Poll for new messages every 2 seconds
     useEffect(() => {
-        if (!isAuthenticated || !authUserId) return;
+        if (!isAuthenticated || !authUserId || !token) return;
         const interval = setInterval(loadMessages, 2000);
         return () => clearInterval(interval);
-    }, [loadMessages, isAuthenticated, authUserId]);
+    }, [loadMessages, isAuthenticated, authUserId, token]);
 
     return {
         chat,
@@ -90,4 +84,3 @@ export function useChat(userId, token, isAuthenticated, authUserId) {
         loadMessages,
     };
 }
-
