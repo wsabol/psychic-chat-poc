@@ -10,6 +10,7 @@ import PersonalInfoModal from "./components/PersonalInfoModal";
 import MySignModal from "./components/MySignModal";
 import MoonPhaseModal from "./components/MoonPhaseModal";
 import HoroscopeModal from "./components/HoroscopeModal";
+import CosmicWeatherModal from "./components/CosmicWeatherModal";
 import LoginRegisterModal from "./components/LoginRegisterModal";
 import TwoFactorModal from "./components/TwoFactorModal";
 import ForgotPasswordModal from "./components/ForgotPasswordModal";
@@ -59,8 +60,9 @@ function App() {
     const [menuOpen, setMenuOpen] = useState(false);
     const [showPersonalInfoModal, setShowPersonalInfoModal] = useState(false);
     const [showMySignModal, setShowMySignModal] = useState(false);
-    const [showMoonPhaseModal, setShowMoonPhaseModal] = useState(false);
+        const [showMoonPhaseModal, setShowMoonPhaseModal] = useState(false);
     const [showHoroscopeModal, setShowHoroscopeModal] = useState(false);
+    const [showCosmicWeatherModal, setShowCosmicWeatherModal] = useState(false);
     const [showSecurityModal, setShowSecurityModal] = useState(false);
     
     return (
@@ -149,11 +151,17 @@ function App() {
                         isOpen={showMoonPhaseModal}
                         onClose={() => setShowMoonPhaseModal(false)}
                     />
-                    <HoroscopeModal 
+                                        <HoroscopeModal 
                         userId={auth.authUserId}
                         token={auth.token}
                         isOpen={showHoroscopeModal}
                         onClose={() => setShowHoroscopeModal(false)}
+                    />
+                    <CosmicWeatherModal 
+                        userId={auth.authUserId}
+                        token={auth.token}
+                        isOpen={showCosmicWeatherModal}
+                        onClose={() => setShowCosmicWeatherModal(false)}
                     />
                     <div style={{ position: "relative" }}>
                         <Menu 
@@ -161,9 +169,10 @@ function App() {
                             setMenuOpen={setMenuOpen}
                             isAuthenticated={auth.isAuthenticated}
                             onPersonalInfoClick={() => setShowPersonalInfoModal(true)}
-                            onMySignClick={() => setShowMySignModal(true)}
+                                                        onMySignClick={() => setShowMySignModal(true)}
                             onMoonPhaseClick={() => setShowMoonPhaseModal(true)}
                             onHoroscopeClick={() => setShowHoroscopeModal(true)}
+                            onCosmicWeatherClick={() => setShowCosmicWeatherModal(true)}
                             onSecurityClick={() => setShowSecurityModal(true)}
                             onLogoutClick={auth.handleLogout}
                         />

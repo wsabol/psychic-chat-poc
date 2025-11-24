@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { getZodiacSignFromDate, getAstrologyData } from '../utils/astroUtils';
 import { zodiacSigns } from '../data/ZodiacSigns';
+import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
 
-function AstrologyModal({ userId, isOpen, onClose, birthDate, birthTime, birthCity, birthState }) {
+function AstrologyModal({ userId, token, isOpen, onClose, birthDate, birthTime, birthCity, birthState }) {
     const [astroData, setAstroData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -13,36 +14,32 @@ function AstrologyModal({ userId, isOpen, onClose, birthDate, birthTime, birthCi
         if (isOpen) {
             loadAndStoreAstrologyData();
         }
-    }, [isOpen, userId]);
+    }, [isOpen, userId, token]);
 
-        const loadAndStoreAstrologyData = async () => {
+    const loadAndStoreAstrologyData = async () => {
         setLoading(true);
         setError(null);
         try {
-            // First, try to fetch calculated astrology data from database
+            const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+            
+            // Fetch calculated astrology data from database
             try {
-                const astroResponse = await fetch(`${API_URL}/user-astrology/${userId}`);
+                const astroResponse = await fetchWithTokenRefresh(`${API_URL}/user-astrology/${userId}`, { headers });
                 if (astroResponse.ok) {
                     const dbAstroData = await astroResponse.json();
                     console.log('[AstrologyModal] Fetched from database:', dbAstroData);
                     
-                    // Parse astrology_data if it's a string
                     let astroDataObj = dbAstroData.astrology_data;
                     if (typeof astroDataObj === 'string') {
                         astroDataObj = JSON.parse(astroDataObj);
                     }
                     
                     if (astroDataObj && astroDataObj.sun_sign) {
-                        // We have calculated Swiss Ephemeris data
-                        // Now fetch zodiac sign details to merge with calculated data
                         const zodiacSignData = getAstrologyData(astroDataObj.sun_sign.toLowerCase());
-                        
-                        // Merge calculated data with zodiac sign personality/details
                         const mergedData = {
-                            ...zodiacSignData,  // Get all the personality, strengths, etc. from ZodiacSigns.js
-                            ...astroDataObj     // Override with calculated signs and degrees
+                            ...zodiacSignData,
+                            ...astroDataObj
                         };
-                        
                         console.log('[AstrologyModal] Using merged astrology data:', mergedData);
                         setAstroData({
                             ...dbAstroData,
@@ -51,34 +48,21 @@ function AstrologyModal({ userId, isOpen, onClose, birthDate, birthTime, birthCi
                         setLoading(false);
                         return;
                     } else {
-                        // No calculated data yet - trigger calculation
-                        console.log('[AstrologyModal] No calculated signs found, triggering calculation...');
-                        try {
-                            const calcResponse = await fetch(`${API_URL}/user-astrology/calculate/${userId}`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' }
-                            });
-                            if (calcResponse.ok) {
-                                console.log('[AstrologyModal] Calculation job enqueued, waiting for oracle to process...');
-                                // Wait a moment then try fetching again
-                                setTimeout(() => loadAndStoreAstrologyData(), 2000);
-                                return;
-                            }
-                        } catch (calcError) {
-                            console.warn('Could not trigger calculation:', calcError);
-                        }
+                        console.log('[AstrologyModal] No calculated signs yet, will retry...');
+                        // Retry after 3 seconds
+                        setTimeout(() => loadAndStoreAstrologyData(), 3000);
+                        return;
                     }
                 }
             } catch (e) {
-                // Fall through to local data if fetch fails
                 console.warn('Could not fetch astrology data from database:', e);
             }
-
-            // Fall back to local zodiac sign data from ZodiacSigns.js
+            
+            // Fallback to local zodiac data
             let birthDateToUse = birthDate;
             
             if (!birthDateToUse) {
-                const personalInfoResponse = await fetch(`${API_URL}/user-profile/${userId}`);
+                const personalInfoResponse = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}`, { headers });
                 
                 if (!personalInfoResponse.ok) {
                     setError('Could not find your personal information. Please enter your birth date first.');
@@ -86,7 +70,7 @@ function AstrologyModal({ userId, isOpen, onClose, birthDate, birthTime, birthCi
                     setLoading(false);
                     return;
                 }
-
+                
                 const personalInfo = await personalInfoResponse.json();
                 
                 if (!personalInfo.birth_date) {
@@ -98,8 +82,7 @@ function AstrologyModal({ userId, isOpen, onClose, birthDate, birthTime, birthCi
                 
                 birthDateToUse = personalInfo.birth_date;
             }
-
-            // Calculate zodiac sign and get astrology data from ZodiacSigns.js
+            
             const zodiacSign = getZodiacSignFromDate(birthDateToUse);
             if (!zodiacSign) {
                 setError('Invalid birth date. Please check your Personal Information.');
@@ -107,7 +90,7 @@ function AstrologyModal({ userId, isOpen, onClose, birthDate, birthTime, birthCi
                 setLoading(false);
                 return;
             }
-
+            
             const astrologyData = getAstrologyData(zodiacSign);
             if (!astrologyData) {
                 setError('Could not retrieve astrology data for your sign.');
@@ -115,8 +98,7 @@ function AstrologyModal({ userId, isOpen, onClose, birthDate, birthTime, birthCi
                 setLoading(false);
                 return;
             }
-
-            // Use local zodiac sign data from ZodiacSigns.js
+            
             setAstroData({
                 zodiac_sign: zodiacSign,
                 astrology_data: astrologyData
@@ -181,18 +163,16 @@ function AstrologyModal({ userId, isOpen, onClose, birthDate, birthTime, birthCi
                             </p>
                         </div>
 
-                        {/* CALCULATED SIGNS (if available) */}
+                        {/* CALCULATED SIGNS */}
                         {astroData.astrology_data.sun_sign && (
                             <div style={{ marginBottom: '1.5rem', padding: '1rem', borderRadius: '8px', border: '2px solid #ffc107' }}>
                                 <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>🔯 Your Birth Chart</h3>
                                 
-                                {/* Sun Sign */}
                                 <div style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#fff9e6', borderRadius: '6px', borderLeft: '3px solid #ffc107' }}>
                                     <p style={{ margin: 0 }}><strong>☀️ Sun Sign:</strong> {astroData.astrology_data.sun_sign} {astroData.astrology_data.sun_degree}°</p>
                                     <p style={{ margin: '0.25rem 0 0 0', fontSize: '12px', color: '#666' }}>Your core identity, ego, and fundamental essence</p>
                                 </div>
 
-                                {/* Rising Sign */}
                                 {astroData.astrology_data.rising_sign && (
                                     <div style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#f0f7ff', borderRadius: '6px', borderLeft: '3px solid #2196f3' }}>
                                         <p style={{ margin: 0 }}><strong>↗️ Rising Sign (Ascendant):</strong> {astroData.astrology_data.rising_sign} {astroData.astrology_data.rising_degree}°</p>
@@ -200,19 +180,16 @@ function AstrologyModal({ userId, isOpen, onClose, birthDate, birthTime, birthCi
                                     </div>
                                 )}
 
-                                {/* Moon Sign */}
                                 {astroData.astrology_data.moon_sign && (
                                     <div style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#f3e5f5', borderRadius: '6px', borderLeft: '3px solid #9c27b0' }}>
                                         <p style={{ margin: 0 }}><strong>🌙 Moon Sign:</strong> {astroData.astrology_data.moon_sign} {astroData.astrology_data.moon_degree}°</p>
                                         <p style={{ margin: '0.25rem 0 0 0', fontSize: '12px', color: '#666' }}>Your inner emotional world, subconscious needs, and private self</p>
                                     </div>
                                 )}
-
-                                {/* Location & Timezone - REMOVED per user request */}
                             </div>
                         )}
 
-                        {/* ZODIAC SIGN INFO (traditional data) */}
+                        {/* ZODIAC SIGN INFO (if no calculated data yet) */}
                         {!astroData.astrology_data.sun_sign && astroData.astrology_data.name && (
                             <div style={{ marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid #eee' }}>
                                 <h3 style={{ marginTop: 0, color: '#1a1a1a' }}>
@@ -228,7 +205,7 @@ function AstrologyModal({ userId, isOpen, onClose, birthDate, birthTime, birthCi
                             </div>
                         )}
 
-                        {/* PERSONALITY DETAILS */}
+                        {/* PERSONALITY & OTHER DATA */}
                         {astroData.astrology_data.personality && (
                             <div style={{ marginBottom: '1.5rem' }}>
                                 <h4>Personality Essence</h4>
@@ -295,24 +272,6 @@ function AstrologyModal({ userId, isOpen, onClose, birthDate, birthTime, birthCi
                                 {astroData.astrology_data.compatibility.description && (
                                     <p style={{ fontStyle: 'italic', color: '#555' }}>{astroData.astrology_data.compatibility.description}</p>
                                 )}
-                            </div>
-                        )}
-
-                        {astroData.astrology_data.seasonal && (
-                            <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#fafafa', borderRadius: '8px' }}>
-                                <h4 style={{ marginTop: 0 }}>Seasonal Influence</h4>
-                                <p><strong>Season:</strong> {astroData.astrology_data.seasonal.season}</p>
-                                <p><strong>Energy:</strong> {astroData.astrology_data.seasonal.energy}</p>
-                                <p><strong>Connection:</strong> {astroData.astrology_data.seasonal.connection}</p>
-                            </div>
-                        )}
-
-                        {astroData.astrology_data.mythology && (
-                            <div style={{ marginBottom: '1.5rem' }}>
-                                <h4>Mythology</h4>
-                                <p><strong>Archetype:</strong> {astroData.astrology_data.mythology.archetype}</p>
-                                <p><strong>Deity:</strong> {astroData.astrology_data.mythology.deity}</p>
-                                <p><strong>Story:</strong> {astroData.astrology_data.mythology.story}</p>
                             </div>
                         )}
                     </div>

@@ -82,14 +82,16 @@ router.post("/:userId", authorizeUser, async (req, res) => {
             [userId, firstName, lastName, email, parsedBirthDate, birthTime, birthCountry, birthProvince, birthCity, birthTimezone, sex, addressPreference]
         );
 
-        // Clear cached horoscopes since birth data changed
+        // Clear cached horoscopes and astrology insights since birth data changed
         try {
             await db.query(
-                `DELETE FROM messages WHERE user_id = $1 AND role = 'horoscope'`,
+                `DELETE FROM messages 
+                 WHERE user_id = $1 
+                 AND role IN ('horoscope', 'moon_phase', 'cosmic_weather', 'void_of_course', 'lunar_nodes')`,
                 [userId]
             );
         } catch (err) {
-            console.warn(`Failed to clear horoscopes for user ${userId}`);
+            console.warn(`Failed to clear cached insights for user ${userId}:`, err.message);
         }
         
         // Trigger astrology calculation via worker if complete birth data

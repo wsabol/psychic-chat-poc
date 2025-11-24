@@ -48,6 +48,49 @@ export async function calculateBirthChart(birthData) {
 }
 
 /**
+ * Get current transits (simplified)
+ */
+export async function getCurrentTransits(birthData) {
+    return new Promise((resolve, reject) => {
+        const python = spawn('/opt/venv/bin/python3', ['./astrology.py']);
+        let outputData = '';
+        let errorData = '';
+        
+        python.stdout.on('data', (data) => {
+            outputData += data.toString();
+        });
+        
+        python.stderr.on('data', (data) => {
+            errorData += data.toString();
+        });
+        
+        python.on('close', (code) => {
+            if (code !== 0) {
+                console.error(`[ASTROLOGY] Transits script exited with code ${code}`);
+                reject(new Error(`Transits calculation failed: ${errorData}`));
+                return;
+            }
+            
+            try {
+                const result = JSON.parse(outputData);
+                resolve(result);
+            } catch (e) {
+                console.error(`[ASTROLOGY] Failed to parse transits:`, outputData);
+                reject(new Error(`Invalid JSON from transits script: ${e.message}`));
+            }
+        });
+        
+        python.on('error', (err) => {
+            console.error(`[ASTROLOGY] Failed to spawn Python process:`, err);
+            reject(err);
+        });
+        
+        python.stdin.write(JSON.stringify({ type: 'transits', ...birthData }));
+        python.stdin.end();
+    });
+}
+
+/**
  * Get current moon phase
  */
 export async function getCurrentMoonPhase() {

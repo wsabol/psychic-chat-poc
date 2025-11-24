@@ -42,7 +42,7 @@ export async function handleAstrologyCalculation(userId) {
             return;
         }
         
-        // Format astrology data
+        // Format astrology data with lunar nodes
         const astrologyData = {
             rising_sign: calculatedChart.rising_sign,
             rising_degree: calculatedChart.rising_degree,
@@ -50,6 +50,10 @@ export async function handleAstrologyCalculation(userId) {
             moon_degree: calculatedChart.moon_degree,
             sun_sign: calculatedChart.sun_sign,
             sun_degree: calculatedChart.sun_degree,
+            north_node_sign: calculatedChart.north_node_sign,
+            north_node_degree: calculatedChart.north_node_degree,
+            south_node_sign: calculatedChart.south_node_sign,
+            south_node_degree: calculatedChart.south_node_degree,
             latitude: calculatedChart.latitude,
             longitude: calculatedChart.longitude,
             timezone: calculatedChart.timezone,

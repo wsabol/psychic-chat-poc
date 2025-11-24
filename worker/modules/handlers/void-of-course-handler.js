@@ -1,0 +1,59 @@
+import { getCurrentMoonPhase } from '../astrology.js';
+import { fetchUserAstrology, getOracleSystemPrompt, callOracle, getUserGreeting, fetchUserPersonalInfo } from '../oracle.js';
+import { storeMessage } from '../messages.js';
+
+export async function generateVoidOfCourseMoonAlert(userId) {
+    try {
+        const userInfo = await fetchUserPersonalInfo(userId);
+        const astrologyInfo = await fetchUserAstrology(userId);
+        
+        const moonPhaseData = await getCurrentMoonPhase();
+        
+        if (!moonPhaseData.success) {
+            throw new Error('Failed to calculate moon phase');
+        }
+        
+        if (!moonPhaseData.void_of_course) {
+            // Not void of course, store as normal
+            await storeMessage(userId, 'void_of_course', {
+                is_void: false,
+                phase: moonPhaseData.phase,
+                generated_at: new Date().toISOString(),
+                message: 'Moon is well-aspected today. Good time for new endeavors.'
+            });
+            return;
+        }
+        
+        const userGreeting = getUserGreeting(userInfo, userId);
+        const systemPrompt = getOracleSystemPrompt() + `
+
+SPECIAL REQUEST - VOID OF COURSE MOON ALERT:
+The Moon is currently Void of Course (transitioning between signs, not aspecting planets).
+Generate a brief practical alert for ${userGreeting}.
+1-2 sentences only.
+Suggest what NOT to start, and what IS good to do.
+Do NOT include tarot cards.
+`;
+        
+        const prompt = `The Moon is Void of Course right now for ${userGreeting}.
+What should they know? What should they avoid starting? What reflective activities would be good?`;
+        
+        const oracleResponse = await callOracle(systemPrompt, [], prompt);
+        
+        await storeMessage(userId, 'void_of_course', {
+            is_void: true,
+            phase: moonPhaseData.phase,
+            text: oracleResponse,
+            generated_at: new Date().toISOString(),
+            timestamp: moonPhaseData.timestamp
+        });
+        
+    } catch (err) {
+        console.error('[VOID-OF-COURSE-HANDLER] Error:', err.message);
+        throw err;
+    }
+}
+
+export function isVoidOfCourseRequest(message) {
+    return message.includes('[SYSTEM]') && message.includes('void of course');
+}

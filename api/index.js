@@ -6,6 +6,7 @@ import userProfileRoutes from "./routes/user-profile.js";
 import astrologyRoutes from "./routes/astrology.js";
 import horoscopeRoutes from "./routes/horoscope.js";
 import moonPhaseRoutes from "./routes/moon-phase.js";
+import astrologyInsightsRoutes from "./routes/astrology-insights.js";
 import authRoutes from "./routes/auth.js";
 import { authenticateToken } from "./middleware/auth.js";
 import cors from "cors";
@@ -35,6 +36,7 @@ app.use("/user-profile", authenticateToken, userProfileRoutes);
 app.use("/user-astrology", authenticateToken, astrologyRoutes);
 app.use("/horoscope", authenticateToken, horoscopeRoutes);
 app.use("/moon-phase", authenticateToken, moonPhaseRoutes);
+app.use("/astrology-insights", authenticateToken, astrologyInsightsRoutes);
 
 let server;
 if (fs.existsSync('./certificates/key.pem') && fs.existsSync('./certificates/cert.pem')) {

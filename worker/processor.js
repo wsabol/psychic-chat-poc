@@ -3,6 +3,9 @@ import { getCurrentMoonPhase } from "./modules/astrology.js";
 import { isAstrologyRequest, handleAstrologyCalculation } from "./modules/handlers/astrology-handler.js";
 import { isHoroscopeRequest, extractHoroscopeRange, generateHoroscope } from "./modules/handlers/horoscope-handler.js";
 import { isMoonPhaseRequest, extractMoonPhase, generateMoonPhaseCommentary } from "./modules/handlers/moon-phase-handler.js";
+import { isLunarNodesRequest, generateLunarNodesInsight } from "./modules/handlers/lunar-nodes-handler.js";
+import { isCosmicWeatherRequest, generateCosmicWeather } from "./modules/handlers/cosmic-weather-handler.js";
+import { isVoidOfCourseRequest, generateVoidOfCourseMoonAlert } from "./modules/handlers/void-of-course-handler.js";
 import { handleChatMessage } from "./modules/handlers/chat-handler.js";
 
 /**
@@ -20,6 +23,12 @@ async function routeJob(job) {
         } else if (isMoonPhaseRequest(message)) {
             const phase = extractMoonPhase(message);
             await generateMoonPhaseCommentary(userId, phase);
+        } else if (isLunarNodesRequest(message)) {
+            await generateLunarNodesInsight(userId);
+        } else if (isCosmicWeatherRequest(message)) {
+            await generateCosmicWeather(userId);
+        } else if (isVoidOfCourseRequest(message)) {
+            await generateVoidOfCourseMoonAlert(userId);
         } else {
             await handleChatMessage(userId, message);
         }

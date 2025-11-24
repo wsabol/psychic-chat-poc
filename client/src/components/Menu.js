@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-function Menu({ menuOpen, setMenuOpen, isAuthenticated, onPersonalInfoClick, onMySignClick, onMoonPhaseClick, onHoroscopeClick, onSecurityClick, onLogoutClick }) {
+function Menu({ menuOpen, setMenuOpen, isAuthenticated, onPersonalInfoClick, onMySignClick, onMoonPhaseClick, onHoroscopeClick, onCosmicWeatherClick, onSecurityClick, onLogoutClick }) {
     const menuRef = useRef(null);
     const [expandedSubmenu, setExpandedSubmenu] = useState(null);
 
@@ -333,8 +333,27 @@ function Menu({ menuOpen, setMenuOpen, isAuthenticated, onPersonalInfoClick, onM
                                         cursor: "pointer",
                                         fontSize: "13px",
                                     }}
-                                >
+                                                                >
                                     Horoscope
+                                </button>
+                                <button
+                                    onClick={() =>
+                                        handleMenuItemClick(() => {
+                                            onCosmicWeatherClick && onCosmicWeatherClick();
+                                        })
+                                    }
+                                    style={{
+                                        display: "block",
+                                        width: "100%",
+                                        padding: "10px 32px",
+                                        border: "none",
+                                        background: "none",
+                                        textAlign: "left",
+                                        cursor: "pointer",
+                                        fontSize: "13px",
+                                    }}
+                                >
+                                    Cosmic Weather
                                 </button>
                             </div>
                         )}
