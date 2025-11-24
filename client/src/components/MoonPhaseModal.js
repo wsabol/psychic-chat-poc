@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getAstrologyData } from '../utils/astroUtils';
+import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
 
 function MoonPhaseModal({ userId, token, isOpen, onClose }) {
     const [moonPhaseData, setMoonPhaseData] = useState(null);
@@ -57,7 +58,7 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
             if (token) {
                 astroHeaders['Authorization'] = `Bearer ${token}`;
             }
-            const astroResponse = await fetch(`${API_URL}/user-astrology/${userId}`, { headers: astroHeaders });
+            const astroResponse = await fetchWithTokenRefresh(`${API_URL}/user-astrology/${userId}`, { headers: astroHeaders });
             
             if (!astroResponse.ok) {
                 setError('Could not fetch your astrology data. Please ensure your birth information is complete.');
@@ -80,7 +81,7 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
                 if (token) {
                     profileHeaders['Authorization'] = `Bearer ${token}`;
                 }
-                const profileResponse = await fetch(`${API_URL}/user-profile/${userId}`, { headers: profileHeaders });
+                const profileResponse = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}`, { headers: profileHeaders });
                 if (profileResponse.ok) {
                     const profile = await profileResponse.json();
                     const { getZodiacSignFromDate } = await import('../utils/astroUtils');
