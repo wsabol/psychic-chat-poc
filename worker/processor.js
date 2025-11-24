@@ -2,6 +2,7 @@ import { getMessageFromQueue, redis } from "./shared/queue.js";
 import { getCurrentMoonPhase } from "./modules/astrology.js";
 import { isAstrologyRequest, handleAstrologyCalculation } from "./modules/handlers/astrology-handler.js";
 import { isHoroscopeRequest, extractHoroscopeRange, generateHoroscope } from "./modules/handlers/horoscope-handler.js";
+import { isMoonPhaseRequest, extractMoonPhase, generateMoonPhaseCommentary } from "./modules/handlers/moon-phase-handler.js";
 import { handleChatMessage } from "./modules/handlers/chat-handler.js";
 
 /**
@@ -16,6 +17,9 @@ async function routeJob(job) {
         } else if (isHoroscopeRequest(message)) {
             const range = extractHoroscopeRange(message);
             await generateHoroscope(userId, range);
+        } else if (isMoonPhaseRequest(message)) {
+            const phase = extractMoonPhase(message);
+            await generateMoonPhaseCommentary(userId, phase);
         } else {
             await handleChatMessage(userId, message);
         }

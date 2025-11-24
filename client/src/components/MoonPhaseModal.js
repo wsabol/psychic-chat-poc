@@ -31,17 +31,12 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
     }, [isOpen, userId, token]);
 
     const getCurrentMoonPhase = () => {
-        // Calculate the current lunar phase based on date
-        // This is a simplified calculation
         const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth() + 1;
-        const date = now.getDate();
         
         // Known new moon date: January 29, 2025
         const knownNewMoonDate = new Date(2025, 0, 29).getTime();
         const currentDate = now.getTime();
-        const lunarCycle = 29.53059 * 24 * 60 * 60 * 1000; // milliseconds in lunar cycle
+        const lunarCycle = 29.53059 * 24 * 60 * 60 * 1000;
         
         const daysIntoPhase = ((currentDate - knownNewMoonDate) % lunarCycle) / (24 * 60 * 60 * 1000);
         const phaseIndex = Math.floor((daysIntoPhase / 29.53059) * 8) % 8;
@@ -53,11 +48,10 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
         setLoading(true);
         setError(null);
         try {
-            // Fetch user's astrology data to get sun sign
-            const astroHeaders = {};
-            if (token) {
-                astroHeaders['Authorization'] = `Bearer ${token}`;
-            }
+            const currentMoonPhase = getCurrentMoonPhase();
+            const astroHeaders = token ? { 'Authorization': `Bearer ${token}` } : {};
+            
+            // Fetch user's astrology data
             const astroResponse = await fetchWithTokenRefresh(`${API_URL}/user-astrology/${userId}`, { headers: astroHeaders });
             
             if (!astroResponse.ok) {
@@ -73,14 +67,10 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
                 astroDataObj = JSON.parse(astroDataObj);
             }
 
-            // Get sun sign (use calculated sun_sign if available, otherwise fetch from profile)
             let sunSign = astroDataObj?.sun_sign;
             
             if (!sunSign) {
-                const profileHeaders = {};
-                if (token) {
-                    profileHeaders['Authorization'] = `Bearer ${token}`;
-                }
+                const profileHeaders = token ? { 'Authorization': `Bearer ${token}` } : {};
                 const profileResponse = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}`, { headers: profileHeaders });
                 if (profileResponse.ok) {
                     const profile = await profileResponse.json();
@@ -96,35 +86,76 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
                 setLoading(false);
                 return;
             }
-
-            // Get current moon phase
-            const currentMoonPhase = getCurrentMoonPhase();
             
-            // Get zodiac sign data including moon phases
+            // Get zodiac data for display
             const zodiacData = getAstrologyData(sunSign.toLowerCase());
             
-            if (!zodiacData || !zodiacData.moonPhases) {
-                setError('Moon phase data not available for your sign.');
+            // Try to fetch Oracle-generated moon phase commentary
+            const commentaryResponse = await fetchWithTokenRefresh(
+                `${API_URL}/moon-phase/${userId}?phase=${currentMoonPhase}`,
+                { headers: astroHeaders }
+            );
+            
+            if (commentaryResponse.ok) {
+                const data = await commentaryResponse.json();
+                setMoonPhaseData({
+                    currentMoonPhase,
+                    moonPhaseMeaning: data.commentary,
+                    zodiacEmoji: zodiacData?.emoji || '✨',
+                    zodiacName: zodiacData?.name || 'Your Reading',
+                    todayDate: new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+                });
                 setLoading(false);
-                return;
+            } else {
+                // Request generation from Oracle
+                const generateResponse = await fetchWithTokenRefresh(`${API_URL}/moon-phase/${userId}`, {
+                    method: 'POST',
+                    headers: { ...astroHeaders, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phase: currentMoonPhase })
+                });
+                
+                if (!generateResponse.ok) {
+                    throw new Error('Failed to queue moon phase commentary');
+                }
+                
+                // Show generating message
+                setMoonPhaseData({
+                    currentMoonPhase,
+                    moonPhaseMeaning: '✨ The Oracle is generating personalized insight for you based on your birth chart...',
+                    zodiacEmoji: zodiacData?.emoji || '✨',
+                    zodiacName: zodiacData?.name || 'Your Reading',
+                    todayDate: new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+                });
+                
+                // Poll for commentary after 2 seconds
+                setTimeout(() => pollForCommentary(currentMoonPhase, astroHeaders, zodiacData), 2000);
+                setLoading(false);
             }
-
-            // Get the meaning of this moon phase for this sign
-            const moonPhaseMeaning = zodiacData.moonPhases[currentMoonPhase];
-
-            setMoonPhaseData({
-                sunSign,
-                currentMoonPhase,
-                moonPhaseMeaning,
-                zodiacEmoji: zodiacData.emoji,
-                zodiacName: zodiacData.name,
-                todayDate: new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
-            });
-
-                } catch (err) {
+            
+        } catch (err) {
             setError(err.message);
-        } finally {
             setLoading(false);
+        }
+    };
+    
+    const pollForCommentary = async (phase, headers, zodiacData) => {
+        try {
+            const response = await fetchWithTokenRefresh(
+                `${API_URL}/moon-phase/${userId}?phase=${phase}`,
+                { headers }
+            );
+            
+            if (response.ok) {
+                const data = await response.json();
+                setMoonPhaseData(prev => (prev ? {
+                    ...prev,
+                    moonPhaseMeaning: data.commentary
+                } : null));
+                // Refresh page to show fresh Oracle response
+                setTimeout(() => window.location.reload(), 1000);
+            }
+        } catch (err) {
+            console.warn('Moon phase polling failed:', err);
         }
     };
 
@@ -168,7 +199,7 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
                     </button>
                 </div>
 
-                {loading && <p>Loading moon phase data...</p>}
+                {loading && <p style={{ textAlign: 'center', color: '#999' }}>🔮 Loading moon phase insight...</p>}
                 {error && <p style={{ color: '#d32f2f', marginBottom: '1rem' }}>⚠️ {error}</p>}
 
                 {moonPhaseData && (
@@ -184,10 +215,7 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
                         </div>
 
                         <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#f0f4ff', borderRadius: '8px', borderLeft: '4px solid #4a90e2' }}>
-                            <p style={{ margin: '0 0 0.5rem 0', fontSize: '13px' }}>
-                                <strong>For {moonPhaseData.zodiacEmoji} {moonPhaseData.zodiacName}:</strong>
-                            </p>
-                            <p style={{ margin: 0, fontSize: '13px', color: '#555' }}>
+                            <p style={{ margin: 0, fontSize: '13px', color: '#555', lineHeight: '1.7' }}>
                                 {moonPhaseData.moonPhaseMeaning}
                             </p>
                         </div>
@@ -195,7 +223,7 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
                         <div style={{ marginBottom: '1.5rem' }}>
                             <h4 style={{ marginTop: 0, marginBottom: '1rem' }}>Lunar Cycle</h4>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem', textAlign: 'center' }}>
-                                {moonPhaseOrder.map((phase, idx) => (
+                                {moonPhaseOrder.map((phase) => (
                                     <div
                                         key={phase}
                                         style={{
@@ -216,8 +244,8 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
                         </div>
 
                         <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #eee' }}>
-                            <p style={{ fontSize: '12px', color: '#666', fontStyle: 'italic' }}>
-                                💡 The moon completes a full cycle approximately every 29.5 days. Each phase carries unique energy that influences all zodiac signs differently.
+                            <p style={{ fontSize: '12px', color: '#666', fontStyle: 'italic', margin: 0 }}>
+                                💡 The moon completes a full cycle approximately every 29.5 days. Each phase carries unique energy that influences all zodiac signs differently based on your personal birth chart.
                             </p>
                         </div>
                     </div>

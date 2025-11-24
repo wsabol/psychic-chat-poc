@@ -116,6 +116,8 @@ function HoroscopeModal({ userId, token, isOpen, onClose }) {
                     horoscopeMessage: data.horoscope,
                     rangeDate: new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
                 });
+                // Refresh page to show fresh Oracle response
+                setTimeout(() => window.location.reload(), 1000);
             }
         } catch (err) {
             console.warn('Polling failed:', err);
