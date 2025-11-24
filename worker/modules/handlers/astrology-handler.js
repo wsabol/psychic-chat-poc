@@ -1,0 +1,80 @@
+import { db } from '../../shared/db.js';
+import { calculateBirthChart } from '../astrology.js';
+
+/**
+ * Handle system astrology calculation requests
+ * Triggered by [SYSTEM] messages containing "birth chart"
+ */
+export async function handleAstrologyCalculation(userId) {
+    try {
+        // Fetch user's personal information
+        const { rows: personalInfoRows } = await db.query(`
+            SELECT to_char(birth_date, 'YYYY-MM-DD') as birth_date, birth_time, birth_country, birth_province, birth_city, birth_timezone
+            FROM user_personal_info WHERE user_id = $1
+        `, [userId]);
+        
+        if (personalInfoRows.length === 0) {
+            console.warn('[ASTROLOGY-HANDLER] No personal info found for user', userId);
+            return;
+        }
+        
+        const info = personalInfoRows[0];
+        
+        // Check if we have complete birth data
+        if (!info.birth_date || !info.birth_time || !info.birth_country || !info.birth_province || !info.birth_city) {
+            console.warn('[ASTROLOGY-HANDLER] Incomplete birth data for user', userId);
+            return;
+        }
+        
+        // Calculate birth chart
+        const calculatedChart = await calculateBirthChart({
+            birth_date: info.birth_date,
+            birth_time: info.birth_time,
+            birth_country: info.birth_country,
+            birth_province: info.birth_province,
+            birth_city: info.birth_city,
+            birth_timezone: info.birth_timezone
+        });
+        
+        // Verify calculation was successful
+        if (!calculatedChart.success || !calculatedChart.rising_sign || !calculatedChart.moon_sign) {
+            console.warn('[ASTROLOGY-HANDLER] Birth chart calculation failed:', calculatedChart.error);
+            return;
+        }
+        
+        // Format astrology data
+        const astrologyData = {
+            rising_sign: calculatedChart.rising_sign,
+            rising_degree: calculatedChart.rising_degree,
+            moon_sign: calculatedChart.moon_sign,
+            moon_degree: calculatedChart.moon_degree,
+            sun_sign: calculatedChart.sun_sign,
+            sun_degree: calculatedChart.sun_degree,
+            latitude: calculatedChart.latitude,
+            longitude: calculatedChart.longitude,
+            timezone: calculatedChart.timezone,
+            calculated_at: new Date().toISOString()
+        };
+        
+        // Store in database
+        await db.query(
+            `INSERT INTO user_astrology (user_id, zodiac_sign, astrology_data)
+             VALUES ($1, $2, $3)
+             ON CONFLICT (user_id) DO UPDATE SET
+             astrology_data = EXCLUDED.astrology_data,
+             updated_at = CURRENT_TIMESTAMP`,
+            [userId, calculatedChart.sun_sign, JSON.stringify(astrologyData)]
+        );
+        
+        console.log('[ASTROLOGY-HANDLER] Birth chart calculated and saved for user:', userId);
+    } catch (err) {
+        console.error('[ASTROLOGY-HANDLER] Error:', err.message);
+    }
+}
+
+/**
+ * Check if message is an astrology calculation request
+ */
+export function isAstrologyRequest(message) {
+    return message.includes('[SYSTEM]') && message.includes('birth chart');
+}

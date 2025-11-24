@@ -6,7 +6,7 @@ function HoroscopeModal({ userId, token, isOpen, onClose }) {
     const [horoscopeData, setHoroscopeData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [horoscopeRange, setHoroscopeRange] = useState('daily'); // 'daily', 'weekly', 'monthly'
+    const [horoscopeRange, setHoroscopeRange] = useState('daily'); // daily or weekly only
 
     const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
@@ -20,143 +20,107 @@ function HoroscopeModal({ userId, token, isOpen, onClose }) {
         setLoading(true);
         setError(null);
         try {
-            // Check localStorage for cached horoscope (cache by date)
-            const today = new Date().toISOString().split('T')[0];
-            const cacheKey = `horoscope_${userId}_${horoscopeRange}_${today}`;
-            const cachedData = localStorage.getItem(cacheKey);
+            const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
             
-                        if (cachedData) {
-                setHoroscopeData(JSON.parse(cachedData));
+            // Try to fetch existing horoscope
+            const fetchResponse = await fetchWithTokenRefresh(
+                `${API_URL}/horoscope/${userId}/${horoscopeRange}`,
+                { headers }
+            );
+            
+            if (fetchResponse.ok) {
+                const data = await fetchResponse.json();
+                const zodiacInfo = await fetchZodiacInfo(headers);
+                
+                setHoroscopeData({
+                    ...zodiacInfo,
+                    horoscopeRange,
+                    horoscopeMessage: data.horoscope,
+                    rangeDate: new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+                });
                 setLoading(false);
                 return;
             }
-
-            // Fetch user's astrology data to get sun sign
-            const astroHeaders = {};
-            if (token) {
-                astroHeaders['Authorization'] = `Bearer ${token}`;
-            }
-            const astroResponse = await fetchWithTokenRefresh(`${API_URL}/user-astrology/${userId}`, { headers: astroHeaders });
             
-            if (!astroResponse.ok) {
-                setError('Could not fetch your astrology data. Please ensure your birth information is complete.');
+            // If no cached horoscope, request generation
+            const generateResponse = await fetchWithTokenRefresh(
+                `${API_URL}/horoscope/${userId}/${horoscopeRange}`,
+                { method: 'POST', headers }
+            );
+            
+            if (!generateResponse.ok) {
+                const errorData = await generateResponse.json();
+                setError(errorData.error || 'Could not generate horoscope');
                 setLoading(false);
                 return;
             }
-
-            const astroDataResponse = await astroResponse.json();
-            let astroDataObj = astroDataResponse.astrology_data;
             
-            if (typeof astroDataObj === 'string') {
-                astroDataObj = JSON.parse(astroDataObj);
-            }
-
-            // Get sun sign
-            let sunSign = astroDataObj?.sun_sign;
-            
-            if (!sunSign) {
-                const profileHeaders = {};
-                if (token) {
-                    profileHeaders['Authorization'] = `Bearer ${token}`;
-                }
-                const profileResponse = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}`, { headers: profileHeaders });
-                if (profileResponse.ok) {
-                    const profile = await profileResponse.json();
-                    const { getZodiacSignFromDate } = await import('../utils/astroUtils');
-                    if (profile.birth_date) {
-                        sunSign = getZodiacSignFromDate(profile.birth_date);
-                    }
-                }
-            }
-
-            if (!sunSign) {
-                setError('Could not determine your sun sign. Please enter your birth date first.');
-                setLoading(false);
-                return;
-            }
-
-            // Get zodiac sign data
-            const zodiacData = getAstrologyData(sunSign.toLowerCase());
-            
-            if (!zodiacData) {
-                setError('Horoscope data not available for your sign.');
-                setLoading(false);
-                return;
-            }
-
-            // Generate horoscope message (in a real app, this would come from an API)
-            const horoscopeMessage = generateHoroscope(zodiacData, horoscopeRange);
-
-            const horoscopeDataObj = {
-                sunSign,
-                zodiacEmoji: zodiacData.emoji,
-                zodiacName: zodiacData.name,
+            // Show generating message and wait for worker to process
+            const zodiacInfo = await fetchZodiacInfo(headers);
+            setHoroscopeData({
+                ...zodiacInfo,
                 horoscopeRange,
-                horoscopeMessage,
+                horoscopeMessage: '✨ Your personalized horoscope is being crafted by The Oracle. Please wait a moment...',
                 rangeDate: new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
-            };
-
-            // Cache the horoscope
-            localStorage.setItem(cacheKey, JSON.stringify(horoscopeDataObj));
-            setHoroscopeData(horoscopeDataObj);
-
-                } catch (err) {
+            });
+            
+            // Poll for the generated horoscope
+            setTimeout(() => pollForHoroscope(headers, zodiacInfo), 2000);
+            
+        } catch (err) {
             setError(err.message);
-        } finally {
             setLoading(false);
         }
     };
 
-    const generateHoroscope = (zodiacData, range) => {
-        // Generate a contextual horoscope based on the zodiac sign and range
-        // In production, this would fetch from an actual horoscope API
-        
-        const horoscopes = {
-            daily: {
-                Aries: "Your dynamic energy is particularly strong today. This is an excellent time to pursue new projects and take calculated risks. Your natural leadership will inspire those around you.",
-                Taurus: "Take time today to appreciate the good things in your life. A practical decision made now will pay dividends later. Trust your instincts when it comes to money matters.",
-                Gemini: "Your communication skills are heightened today. This is a great time for important conversations and networking. Don't shy away from expressing your ideas and opinions.",
-                Cancer: "Focus on home and family matters today. A quiet moment of reflection will bring clarity to a recent situation. Your emotional intuition is particularly strong right now.",
-                Leo: "Your creativity is flowing beautifully today. This is an excellent time to showcase your talents and express yourself. Romance and social interactions are particularly favorable.",
-                Virgo: "Pay attention to practical details and organization today. A small effort now can bring significant improvements. Your analytical skills are at their peak.",
-                Libra: "Financial matters deserve your attention today. A good opportunity may present itself – trust your judgment. Social harmony is within reach with a little effort.",
-                Scorpio: "Your personal power is strong today. This is an excellent time to take action on something important to you. Trust your intuition and your ability to manifest your desires.",
-                Sagittarius: "A quiet day for reflection and planning is on the horizon. Use this time to recharge and think about your next moves. Meditation or time in nature will be especially beneficial.",
-                Capricorn: "Social connections bring joy and opportunity today. Reach out to friends and enjoy collaborative efforts. Your influence and authority are particularly strong.",
-                Aquarius: "Professional matters or your public image are highlighted today. This is a good time to advance your career goals. Your unique perspective is valued and appreciated.",
-                Pisces: "Adventure and learning call to you today. Expand your horizons through travel, education, or new experiences. Your intuition is a valuable guide – follow it."
-            },
-            weekly: {
-                Aries: "This week brings exciting opportunities for growth and advancement. Your confidence is high, making it an ideal time to pursue goals and meet new people. Mid-week may bring a pleasant surprise.",
-                Taurus: "Stability and progress go hand-in-hand this week. Focus on building solid foundations in all areas of your life. Financial matters show promise toward the weekend.",
-                Gemini: "Communication takes center stage this week. Important conversations may lead to breakthroughs. Keep your mind open to new ideas and perspectives from others.",
-                Cancer: "Home and heart matters come into focus this week. Family connections strengthen, and your emotional awareness deepens. Trust your feelings as a guide.",
-                Leo: "This week shines brightly for creativity and self-expression. Share your talents with the world. Romantic connections deepen, and social life flourishes.",
-                Virgo: "Organization and attention to detail serve you well this week. Small improvements lead to big results. Health and wellness are particularly favored.",
-                Libra: "Social and romantic energies peak this week. Relationships deepen, and new connections form naturally. Enjoy the harmony and balance this period brings.",
-                Scorpio: "Focus on foundations – home, family, and security matter most this week. A sense of peace and stability grows. Reflect on what truly matters to you.",
-                Sagittarius: "Communication and learning are highlighted this week. Important information comes your way. Short journeys or local activities bring joy and discovery.",
-                Capricorn: "Financial opportunities and personal resources come into play this week. Be wise with money, but don't be afraid to invest in yourself. Self-care is important.",
-                Aquarius: "This week is about you and your personal goals. Stand up for what you believe in. Your natural magnetism draws positive people and opportunities your way.",
-                Pisces: "Reflection and spiritual growth are themes for this week. Behind-the-scenes work pays off. Trust the process and release what no longer serves you."
-            },
-            monthly: {
-                Aries: "This month is full of dynamic energy and opportunity. Major projects can move forward successfully. Focus on leadership and taking initiative. Relationships benefit from honest communication.",
-                Taurus: "Stability and growth go hand-in-hand this month. Financial matters improve gradually. Relationships deepen through trust and reliability. Health matters improve with consistent effort.",
-                Gemini: "Communication and connection dominate this month. Important conversations and agreements are favored. Travel and learning opportunities present themselves. Social life is active.",
-                Cancer: "Family and home take priority this month. Emotional bonds strengthen. A sense of security and belonging grows. Trust your instincts – they're especially reliable now.",
-                Leo: "Creativity and self-expression flourish this month. Romantic life sparkles. Social invitations abound. This is an excellent time to showcase your talents and unique qualities.",
-                Virgo: "Home and personal matters deserve attention this month. Organization efforts pay off. Health improves through practical lifestyle changes. Relationships become more authentic.",
-                Libra: "Communication, learning, and short journeys feature prominently this month. Mental clarity increases. Social connections strengthen. This is a good time for important decisions.",
-                Scorpio: "Focus on finances and personal resources this month. Careful planning leads to positive results. Self-worth and self-care become increasingly important. Value your own needs.",
-                Sagittarius: "This month highlights your personal power and self-expression. It's time to pursue your goals actively. Confidence is high. New beginnings are very favorable.",
-                Capricorn: "Reflection and strategic planning are emphasized this month. Behind-the-scenes work produces valuable results. Trust your instincts. Release old patterns and beliefs.",
-                Aquarius: "Social life and friendships are especially highlighted this month. Community and shared goals matter. Networking and collaboration bring opportunities. Enjoy the connections.",
-                Pisces: "Career and public image receive attention this month. Professional growth is possible. Your unique talents are recognized and appreciated. Public recognition may come."
+    const fetchZodiacInfo = async (headers) => {
+        try {
+            const astroResponse = await fetchWithTokenRefresh(
+                `${API_URL}/user-astrology/${userId}`,
+                { headers }
+            );
+            
+            if (astroResponse.ok) {
+                const astroData = await astroResponse.json();
+                const zodiacData = getAstrologyData(astroData.zodiac_sign?.toLowerCase());
+                
+                if (zodiacData) {
+                    return {
+                        zodiacEmoji: zodiacData.emoji,
+                        zodiacName: zodiacData.name
+                    };
+                }
             }
+        } catch (err) {
+            console.warn('Failed to fetch zodiac info:', err);
+        }
+        
+        return {
+            zodiacEmoji: '✨',
+            zodiacName: 'Your Reading'
         };
+    };
 
-        return horoscopes[range][zodiacData.name] || "A time of balance and growth awaits you. Trust in the natural flow of life and your ability to navigate challenges with grace.";
+    const pollForHoroscope = async (headers, zodiacInfo) => {
+        try {
+            const retryResponse = await fetchWithTokenRefresh(
+                `${API_URL}/horoscope/${userId}/${horoscopeRange}`,
+                { headers }
+            );
+            
+            if (retryResponse.ok) {
+                const data = await retryResponse.json();
+                setHoroscopeData({
+                    ...zodiacInfo,
+                    horoscopeRange,
+                    horoscopeMessage: data.horoscope,
+                    rangeDate: new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+                });
+            }
+        } catch (err) {
+            console.warn('Polling failed:', err);
+        }
+        setLoading(false);
     };
 
     if (!isOpen) return null;
@@ -201,19 +165,21 @@ function HoroscopeModal({ userId, token, isOpen, onClose }) {
 
                 {/* Range selector buttons */}
                 <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '0.5rem' }}>
-                    {['daily', 'weekly', 'monthly'].map((range) => (
+                    {['daily', 'weekly'].map((range) => (
                         <button
                             key={range}
                             onClick={() => setHoroscopeRange(range)}
+                            disabled={loading}
                             style={{
                                 padding: '0.5rem 1rem',
                                 borderRadius: '6px',
                                 border: horoscopeRange === range ? '2px solid #ff6b9d' : '1px solid #ccc',
                                 backgroundColor: horoscopeRange === range ? '#ffe0f0' : '#f5f5f5',
-                                cursor: 'pointer',
+                                cursor: loading ? 'not-allowed' : 'pointer',
                                 fontSize: '12px',
                                 fontWeight: horoscopeRange === range ? 'bold' : 'normal',
-                                textTransform: 'capitalize'
+                                textTransform: 'capitalize',
+                                opacity: loading ? 0.6 : 1
                             }}
                         >
                             {range}
@@ -221,7 +187,7 @@ function HoroscopeModal({ userId, token, isOpen, onClose }) {
                     ))}
                 </div>
 
-                {loading && <p>Loading horoscope...</p>}
+                {loading && <p style={{ textAlign: 'center', color: '#999' }}>🔮 Loading your horoscope...</p>}
                 {error && <p style={{ color: '#d32f2f', marginBottom: '1rem' }}>⚠️ {error}</p>}
 
                 {horoscopeData && (
