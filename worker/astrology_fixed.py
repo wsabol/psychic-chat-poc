@@ -136,7 +136,7 @@ def calculate_current_planets():
         planet_data = []
         for planet_id, planet_name in planets:
             planet_pos = swe.calc_ut(jd, planet_id)
-            longitude = planet_pos[0][0]
+            longitude = planet_pos[0]
             sign, degree = degrees_to_zodiac(longitude)
             planet_data.append({"name": planet_name, "sign": sign, "degree": round(degree, 2), "retrograde": False, "displayName": planet_name})
         return {"planets": planet_data, "timestamp": now_utc.isoformat(), "success": True}

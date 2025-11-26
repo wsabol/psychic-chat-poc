@@ -26,8 +26,6 @@ export function extractCardsFromResponse(responseText, deck) {
             .replace(/\s+card\s*$/i, '')        // Remove "Card" suffix
             .trim();
         
-        console.log('Processing bolded text:', boldedText, '-> cleaned:', cleanedText);
-
         if (!cleanedText) continue;
         
         for (const card of deck) {
@@ -108,10 +106,6 @@ function cardNameMatches(cardName, text) {
     
     // Test if text contains cardName
     const matches = textLower.includes(cardNameLower) || cardNameLower.includes(textLower);
-    
-    if (matches) {
-        console.log('[CARDS] Match found: "' + cardName + '" contained in "' + text + '"');
-    }
     
     return matches;
 }

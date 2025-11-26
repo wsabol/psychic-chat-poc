@@ -1,7 +1,6 @@
 import { Router } from "express";
-
 import { enqueueMessage } from "../shared/queue.js";
-import { authorizeUser } from "../middleware/auth.js";
+import { authenticateToken, authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
 
 const router = Router();
@@ -39,7 +38,7 @@ router.post("/lunar-nodes/:userId", authorizeUser, async (req, res) => {
 });
 
 // Cosmic Weather Endpoint
-router.get("/cosmic-weather/:userId", authorizeUser, async (req, res) => {
+router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (req, res) => {
     const { userId } = req.params;
     const today = new Date().toISOString().split('T')[0];
     try {

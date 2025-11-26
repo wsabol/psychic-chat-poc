@@ -1,7 +1,6 @@
 import { fetchUserAstrology, getOracleSystemPrompt, callOracle, getUserGreeting, fetchUserPersonalInfo } from '../oracle.js';
 import { storeMessage } from '../messages.js';
 import { getCurrentMoonPhase, getCurrentPlanets } from '../astrology.js';
-import { db } from '../../shared/db.js';
 
 export async function generateCosmicWeather(userId) {
     try {
@@ -17,7 +16,6 @@ export async function generateCosmicWeather(userId) {
         
         let moonPhase = 'Unknown Phase';
         let planets = [];
-        const today = new Date().toISOString().split('T')[0];
         
         try {
             const moonData = await getCurrentMoonPhase();
@@ -25,33 +23,17 @@ export async function generateCosmicWeather(userId) {
                 moonPhase = moonData.phase;
             }
             
-            // Check if planets are cached for today
-            console.log('[COSMIC-WEATHER] Checking cached planets for today...');
-            const cachedResult = await db.query(
-                'SELECT current_planets, planets_date FROM user_astrology WHERE user_id = $1',
-                [userId]
-            );
-            
-            if (cachedResult.rows.length > 0) {
-                const { current_planets, planets_date } = cachedResult.rows[0];
-                if (planets_date === today && current_planets && current_planets.length > 0) {
-                    planets = current_planets;
-                    console.log('[COSMIC-WEATHER] Using cached planets for today');
-                } else {
-                    // Need fresh calculation
-                    const planetsData = await getCurrentPlanets();
-                    if (planetsData && planetsData.success && planetsData.planets && planetsData.planets.length > 0) {
-                        planets = planetsData.planets;
-                        await db.query(
-                            'UPDATE user_astrology SET current_planets = $1, planets_date = $2 WHERE user_id = $3',
-                            [JSON.stringify(planets), today, userId]
-                        );
-                        console.log('[COSMIC-WEATHER] Planets cached for today');
-                    }
-                }
+            console.log('[COSMIC-WEATHER] Calling getCurrentPlanets()...');
+            const planetsData = await getCurrentPlanets();
+            console.log('[COSMIC-WEATHER] getCurrentPlanets returned:', JSON.stringify(planetsData));
+            if (planetsData && planetsData.success && planetsData.planets && planetsData.planets.length > 0) {
+                planets = planetsData.planets;
+                console.log('[COSMIC-WEATHER] ✓ Planets set, count:', planets.length);
+            } else {
+                console.warn('[COSMIC-WEATHER] ✗ Planets empty or failed:', planetsData);
             }
         } catch (err) {
-            console.error('[COSMIC-WEATHER] Astro fetch error:', err.message);
+            console.error('[COSMIC-WEATHER] Astro fetch EXCEPTION:', err.message, err);
         }
         
         const currentPlanets = planets
