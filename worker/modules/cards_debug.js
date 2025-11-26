@@ -6,16 +6,20 @@ export function extractCardsFromResponse(responseText, deck) {
     const extractedCards = [];
     const foundCardIds = new Set();
     
+    console.log('[CARDS] Starting extraction...');
+    console.log('[CARDS] Deck has', deck.length, 'cards');
+    
     // Step 1: Find bolded card patterns
     const boldCardPattern = /\*\*([^*]+)\*\*/g;
     const boldMatches = [];
     let match;
-
     
     while ((match = boldCardPattern.exec(responseText)) !== null) {
         const boldedText = match[1].trim();
+        console.log('[CARDS] Found bolded text:', boldedText);
         
         if (/^(past|present|future|position|spread|card\s*\d+)$/i.test(boldedText)) {
+            console.log('[CARDS] Skipping position label:', boldedText);
             continue;
         }
         
@@ -26,12 +30,18 @@ export function extractCardsFromResponse(responseText, deck) {
             .replace(/\s+card\s*$/i, '')        // Remove "Card" suffix
             .trim();
         
-        console.log('Processing bolded text:', boldedText, '-> cleaned:', cleanedText);
-
-        if (!cleanedText) continue;
+        console.log('[CARDS] After cleaning:', cleanedText);
         
+        if (!cleanedText) {
+            console.log('[CARDS] Cleaned text is empty, skipping');
+            continue;
+        }
+        
+        let foundCard = null;
         for (const card of deck) {
             if (cardNameMatches(card.name, cleanedText)) {
+                console.log('[CARDS] ✓ MATCHED! Cleaned text "' + cleanedText + '" matches deck card "' + card.name + '"');
+                foundCard = card;
                 boldMatches.push({
                     position: match.index,
                     cardName: boldedText,
@@ -41,24 +51,28 @@ export function extractCardsFromResponse(responseText, deck) {
                 break;
             }
         }
+        
+        if (!foundCard) {
+            console.log('[CARDS] ✗ NO MATCH for cleaned text:', cleanedText);
+            console.log('[CARDS] First 10 deck cards:', deck.slice(0, 10).map(c => c.name));
+        }
     }
     
     // Step 2: Find plain text card names (for cards not found in bold)
     for (const card of deck) {
         if (foundCardIds.has(card.id)) continue;
         
-        // Create a pattern to find the card name in the text
         const cardPattern = new RegExp(`\\b${escapeRegex(card.name)}\\b`, 'gi');
         let plainMatch;
         
         while ((plainMatch = cardPattern.exec(responseText)) !== null) {
-            // Skip if this is part of a bold match we already found
             const isBoldMatch = boldMatches.some(bm => 
                 plainMatch.index >= bm.position && plainMatch.index < bm.position + 60
             );
             
             if (!isBoldMatch && !foundCardIds.has(card.id)) {
-                // Check context for reversal indicator
+                console.log('[CARDS] Found plain text match:', card.name);
+                
                 const contextStart = Math.max(0, plainMatch.index - 30);
                 const contextEnd = Math.min(responseText.length, plainMatch.index + 60);
                 const context = responseText.substring(contextStart, contextEnd).toLowerCase();
@@ -80,11 +94,15 @@ export function extractCardsFromResponse(responseText, deck) {
     // Step 3: Process and sort all matches
     boldMatches.sort((a, b) => a.position - b.position);
     
+    console.log('[CARDS] Total matched cards:', boldMatches.length);
+    
     for (const boldMatch of boldMatches) {
         if (!foundCardIds.has(boldMatch.card.id) || boldMatch.source === 'bold') {
             const contextEnd = Math.min(responseText.length, boldMatch.position + 60);
             const contextAfter = responseText.substring(boldMatch.position, contextEnd).toLowerCase();
             const hasReversedPattern = /\b(?:reversed|inverted|upside[\s-]*down|\(r\)|\(reversed\))\b/.test(contextAfter);
+            
+            console.log('[CARDS] Adding card:', boldMatch.card.name, 'Reversed:', boldMatch.inverted || hasReversedPattern);
             
             extractedCards.push({
                 ...boldMatch.card,
@@ -94,23 +112,24 @@ export function extractCardsFromResponse(responseText, deck) {
         }
     }
     
+    console.log('[CARDS] Final extracted cards:', extractedCards.map(c => c.name));
     return extractedCards;
 }
 
 /**
  * Check if a card name matches (accounting for "The" prefix)
- * text is from the oracle
- * cardName is the saved card name (display version of the file name) ex: "The Fool"
- * */
+ */
 function cardNameMatches(cardName, text) {
     const cardNameLower = cardName.toLowerCase();
     const textLower = text.toLowerCase();
     
-    // Test if text contains cardName
-    const matches = textLower.includes(cardNameLower) || cardNameLower.includes(textLower);
+    const matches = cardNameLower === textLower || 
+           cardNameLower === textLower.replace(/^the\s+/, '') ||
+           cardNameLower.replace(/^the\s+/, '') === textLower ||
+           cardNameLower.replace(/^the\s+/, '') === textLower.replace(/^the\s+/, '');
     
     if (matches) {
-        console.log('[CARDS] Match found: "' + cardName + '" contained in "' + text + '"');
+        console.log('[CARDS] Match found: "' + cardName + '" === "' + text + '"');
     }
     
     return matches;
@@ -127,6 +146,7 @@ function escapeRegex(str) {
  * Format cards for storage - keep only essential metadata
  */
 export function formatCardsForStorage(cards) {
+    console.log('[CARDS] Formatting for storage:', cards.length, 'cards');
     return cards.map(card => ({
         id: card.id,
         name: card.name,
