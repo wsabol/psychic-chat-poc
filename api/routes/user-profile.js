@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "../shared/db.js";
 import { enqueueMessage } from "../shared/queue.js";
-import { authorizeUser } from "../middleware/auth.js";
+import { authenticateToken, authorizeUser } from "../middleware/auth.js";
 
 const router = Router();
 
@@ -28,7 +28,7 @@ function parseDateForStorage(dateString) {
     }
 }
 
-router.get("/:userId", authorizeUser, async (req, res) => {
+router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
     const { userId } = req.params;
     try {
         const { rows } = await db.query(
@@ -45,7 +45,7 @@ router.get("/:userId", authorizeUser, async (req, res) => {
     }
 });
 
-router.post("/:userId", authorizeUser, async (req, res) => {
+router.post("/:userId", authenticateToken, authorizeUser, async (req, res) => {
     const { userId } = req.params;
     const { firstName, lastName, email, birthDate, birthTime, birthCountry, birthProvince, birthCity, birthTimezone, sex, addressPreference, zodiacSign, astrologyData } = req.body;
 

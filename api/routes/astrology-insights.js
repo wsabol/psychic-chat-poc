@@ -1,4 +1,5 @@
 import { Router } from "express";
+
 import { enqueueMessage } from "../shared/queue.js";
 import { authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
@@ -60,7 +61,7 @@ router.get("/cosmic-weather/:userId", authorizeUser, async (req, res) => {
             return res.status(404).json({ error: 'Generating today\'s cosmic weather...' });
         }
         
-        res.json({ weather: todaysWeather.text, transits: todaysWeather.transits });
+        res.json({ weather: todaysWeather.text, transits: todaysWeather.transits, prompt: todaysWeather.prompt, birthChart: todaysWeather.birthChart, currentPlanets: todaysWeather.currentPlanets, moonPhase: todaysWeather.moonPhase });
     } catch (err) {
         console.error('[ASTROLOGY-INSIGHTS] Error fetching cosmic weather:', err);
         res.status(500).json({ error: 'Failed to fetch cosmic weather' });

@@ -35,6 +35,10 @@ function CosmicWeatherModal({ userId, token, isOpen, onClose }) {
                     ...zodiacInfo,
                     weather: data.weather,
                     transits: data.transits,
+                    prompt: data.prompt,
+                    birthChart: data.birthChart,
+                    currentPlanets: data.currentPlanets,
+                    moonPhase: data.moonPhase,
                     generated_at: new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
                 });
                 setLoading(false);
@@ -56,7 +60,7 @@ function CosmicWeatherModal({ userId, token, isOpen, onClose }) {
             const zodiacInfo = await fetchZodiacInfo(headers);
             setWeatherData({
                 ...zodiacInfo,
-                weather: '🌍 The Oracle is reading today\'s cosmic weather patterns. Please wait a moment...',
+                weather: 'The Oracle is reading today\'s cosmic weather patterns. Please wait a moment...',
                 transits: [],
                 generated_at: new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
             });
@@ -115,6 +119,10 @@ function CosmicWeatherModal({ userId, token, isOpen, onClose }) {
                     ...zodiacInfo,
                     weather: data.weather,
                     transits: data.transits,
+                    prompt: data.prompt,
+                    birthChart: data.birthChart,
+                    currentPlanets: data.currentPlanets,
+                    moonPhase: data.moonPhase,
                     generated_at: new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
                 });
                 setLoading(false);
@@ -127,6 +135,16 @@ function CosmicWeatherModal({ userId, token, isOpen, onClose }) {
     };
 
     if (!isOpen) return null;
+
+    const planetIcons = {
+        'Sun': '☀️',
+        'Moon': '🌙',
+        'Mercury': '☿️',
+        'Venus': '♀',
+        'Mars': '♂',
+        'Jupiter': '♃',
+        'Saturn': '♄'
+    };
 
     return (
         <div style={{
@@ -145,14 +163,14 @@ function CosmicWeatherModal({ userId, token, isOpen, onClose }) {
                 backgroundColor: 'white',
                 borderRadius: '12px',
                 padding: '2rem',
-                maxWidth: '700px',
+                maxWidth: '750px',
                 width: '90%',
                 maxHeight: '90vh',
                 overflowY: 'auto',
                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
             }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                    <h2 style={{ margin: 0 }}>Today\'s Cosmic Weather</h2>
+                    <h2 style={{ margin: 0 }}>Today's Cosmic Weather</h2>
                     <button
                         onClick={onClose}
                         style={{
@@ -166,7 +184,7 @@ function CosmicWeatherModal({ userId, token, isOpen, onClose }) {
                     </button>
                 </div>
 
-                {loading && <p style={{ textAlign: 'center', color: '#999' }}>🔮 Loading cosmic weather...</p>}
+                {loading && <p style={{ textAlign: 'center', color: '#999' }}>Loading cosmic weather...</p>}
                 {error && <p style={{ color: '#d32f2f', marginBottom: '1rem' }}>⚠️ {error}</p>}
 
                 {weatherData && (
@@ -184,41 +202,34 @@ function CosmicWeatherModal({ userId, token, isOpen, onClose }) {
                             </p>
                         </div>
 
-                        {weatherData.transits && weatherData.transits.length > 0 && (
-                            <div style={{ marginBottom: '1.5rem' }}>
-                                <h4 style={{ marginTop: 0, marginBottom: '1rem' }}>Current Planetary Positions</h4>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
-                                    {weatherData.transits.slice(0, 7).map((transit, idx) => (
-                                        <div
-                                            key={idx}
-                                            style={{
-                                                padding: '1rem',
-                                                backgroundColor: '#fafafa',
-                                                borderRadius: '6px',
-                                                borderLeft: '3px solid #9c27b0'
-                                            }}
-                                        >
-                                            <p style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold', fontSize: '13px' }}>
-                                                {transit.planet}
-                                            </p>
-                                            <p style={{ margin: 0, fontSize: '12px', color: '#666' }}>
-                                                {transit.sign} {transit.degree}°
-                                            </p>
-                                            {transit.aspects && transit.aspects.length > 0 && (
-                                                <p style={{ margin: '0.5rem 0 0 0', fontSize: '11px', color: '#9c27b0', fontStyle: 'italic' }}>
-                                                    {transit.aspects[0]}
-                                                </p>
-                                            )}
-                                        </div>
-                                    ))}
+                        <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '2px solid #ddd' }}>
+                            <h4 style={{ marginTop: 0, marginBottom: '1rem' }}>Oracle Inputs</h4>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                                <div style={{ backgroundColor: '#f9f9f9', padding: '1rem', borderRadius: '6px', fontSize: '12px', border: '1px solid #eee' }}>
+                                    <p style={{ margin: '0 0 0.75rem 0', fontWeight: 'bold', fontSize: '13px' }}>Natal Birth Chart</p>
+                                    <p style={{ margin: 0, color: '#555' }}>☀️ Sun: {weatherData.birthChart?.sunSign} {weatherData.birthChart?.sunDegree}°</p>
+                                    <p style={{ margin: '0.25rem 0 0 0', color: '#555' }}>🌙 Moon: {weatherData.birthChart?.moonSign} {weatherData.birthChart?.moonDegree}°</p>
+                                    <p style={{ margin: '0.25rem 0 0 0', color: '#555' }}>↗️ Rising: {weatherData.birthChart?.risingSign} {weatherData.birthChart?.risingDegree}°</p>
+                                    {weatherData.moonPhase && (
+                                        <p style={{ margin: '0.75rem 0 0 0', color: '#666', fontSize: '11px' }}>Phase: {weatherData.moonPhase}</p>
+                                    )}
                                 </div>
-                            </div>
-                        )}
 
-                        <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #eee' }}>
-                            <p style={{ fontSize: '12px', color: '#666', fontStyle: 'italic', margin: 0 }}>
-                                🌍 Cosmic Weather shows the current planetary energies affecting your day.
-                            </p>
+                                {weatherData.currentPlanets && weatherData.currentPlanets.length > 0 && (
+                                    <div style={{ backgroundColor: '#f9f9f9', padding: '1rem', borderRadius: '6px', fontSize: '11px', border: '1px solid #eee' }}>
+                                        <p style={{ margin: '0 0 0.75rem 0', fontWeight: 'bold', fontSize: '13px' }}>Current Positions</p>
+                                        {weatherData.currentPlanets.map((planet, idx) => {
+                                            const icon = planetIcons[planet.name] || '●';
+                                            const retroText = planet.retrograde ? ' (R)' : '';
+                                            return (
+                                                <p key={idx} style={{ margin: '0.25rem 0', color: '#555' }}>
+                                                    {icon} {planet.name}{retroText}: {planet.sign}
+                                                </p>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 )}
