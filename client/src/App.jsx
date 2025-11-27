@@ -11,12 +11,10 @@ import MySignModal from "./components/MySignModal";
 import MoonPhaseModal from "./components/MoonPhaseModal";
 import HoroscopeModal from "./components/HoroscopeModal";
 import CosmicWeatherModal from "./components/CosmicWeatherModal";
-import LoginRegisterModal from "./components/LoginRegisterModal";
-import TwoFactorModal from "./components/TwoFactorModal";
-import ForgotPasswordModal from "./components/ForgotPasswordModal";
-import EmailVerificationModal from "./components/EmailVerificationModal";
+
 import SecurityModal from "./components/SecurityModal";
 import "./styles/AuthModals.css";
+import { Login } from './components/Login';
 
 // ErrorBoundary component
 class ErrorBoundary extends React.Component {
@@ -70,49 +68,11 @@ function App() {
             <StarField />
             
             {/* Authentication Modals */}
-            {auth.showLoginRegister && (
-                <LoginRegisterModal 
-                    onLoginSuccess={auth.handleLoginSuccess}
-                    onForgotPasswordClick={() => {
-                        auth.setShowLoginRegister(false);
-                        auth.setShowForgotPassword(true);
-                    }}
-                />
+            {!auth.isAuthenticated && (
+                <Login />
             )}
             
-            {auth.showTwoFactor && (
-                <TwoFactorModal 
-                    userId={auth.tempUserId}
-                    tempToken={auth.tempToken}
-                    method={auth.twoFactorMethod}
-                    onVerifySuccess={auth.handle2FASuccess}
-                    onBackClick={() => {
-                        auth.setShowTwoFactor(false);
-                        auth.setShowLoginRegister(true);
-                    }}
-                />
-            )}
-            
-            {auth.showForgotPassword && (
-                <ForgotPasswordModal 
-                    onResetSuccess={auth.handlePasswordResetSuccess}
-                    onCancelClick={() => {
-                        auth.setShowForgotPassword(false);
-                        auth.setShowLoginRegister(true);
-                    }}
-                />
-            )}
-            
-            {auth.showEmailVerification && (
-                <EmailVerificationModal 
-                    userId={auth.tempUserId}
-                    onVerifySuccess={auth.handleEmailVerificationSuccess}
-                    onBackClick={() => {
-                        auth.setShowEmailVerification(false);
-                        auth.setShowLoginRegister(true);
-                    }}
-                />
-            )}
+                        
             
             {showSecurityModal && auth.isAuthenticated && (
                 <SecurityModal 

@@ -817,11 +817,11 @@ export function App() {
 }
 ```
 
-**Time**: 10 minutes
+**Time**: 10 minutes Done 27 nov 2025
 
 ---
 
-### ✅ PHASE 3 COMPLETE
+### ✅ PHASE 3 COMPLETE Done 27 Nov 2025
 **Checklist**:
 - [x] Firebase SDK installed
 - [x] Firebase config created
@@ -846,7 +846,7 @@ Since Firebase handles passwords, we don't need:
 -- - 2FA columns (Firebase has built-in 2FA)
 -- - user_2fa_settings table
 -- - user_2fa_codes table
--- - password_reset_tokens table (if exists)
+-- - password_reset_tokens table (if exists) 
 
 -- We DO still need:
 -- - user_id (Firebase UID)
@@ -862,7 +862,7 @@ But for now: **KEEP all columns** - just don't use password_hash column anymore.
 
 ---
 
-### 4.2 Disable Old Auth Routes
+### 4.2 Disable Old Auth Routes Done 27 Nov 2015
 Update API router to NOT include old auth routes:
 
 ```javascript
