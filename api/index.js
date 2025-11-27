@@ -7,7 +7,7 @@ import astrologyRoutes from "./routes/astrology.js";
 import horoscopeRoutes from "./routes/horoscope.js";
 import moonPhaseRoutes from "./routes/moon-phase.js";
 import astrologyInsightsRoutes from "./routes/astrology-insights.js";
-import authRoutes from "./routes/auth.js";
+import authRoutes from "./routes/auth-firebase.js";
 import { authenticateToken } from "./middleware/auth.js";
 import cors from "cors";
 
