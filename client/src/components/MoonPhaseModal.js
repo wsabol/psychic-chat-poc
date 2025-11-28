@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { getAstrologyData } from '../utils/astroUtils';
 import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
 
@@ -215,9 +216,9 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
                         </div>
 
                         <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#f0f4ff', borderRadius: '8px', borderLeft: '4px solid #4a90e2' }}>
-                            <p style={{ margin: 0, fontSize: '13px', color: '#555', lineHeight: '1.7' }}>
+                            <ReactMarkdown style={{ margin: 0, fontSize: '13px', color: '#555', lineHeight: '1.7' }}>
                                 {moonPhaseData.moonPhaseMeaning}
-                            </p>
+                            </ReactMarkdown>
                         </div>
 
                         <div style={{ marginBottom: '1.5rem' }}>

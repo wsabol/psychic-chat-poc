@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { getAstrologyData } from '../utils/astroUtils';
 import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
 
@@ -205,9 +206,9 @@ function HoroscopeModal({ userId, token, isOpen, onClose }) {
                         </div>
 
                         <div style={{ marginBottom: '1.5rem', padding: '1.5rem', backgroundColor: '#f8f3ff', borderRadius: '8px', borderLeft: '4px solid #9c27b0' }}>
-                            <p style={{ margin: 0, fontSize: '15px', lineHeight: '1.8', color: '#333' }}>
+                            <ReactMarkdown style={{ margin: 0, fontSize: '15px', lineHeight: '1.8', color: '#333' }}>
                                 {horoscopeData.horoscopeMessage}
-                            </p>
+                            </ReactMarkdown>
                         </div>
 
                         <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #eee' }}>

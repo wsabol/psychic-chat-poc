@@ -1,5 +1,6 @@
 import React from 'react';
 import CardDisplay from './CardDisplay';
+import ReactMarkdown from 'react-markdown';
 
 function ChatHistory({ chat }) {
     return (
@@ -11,7 +12,7 @@ function ChatHistory({ chat }) {
                         const parsed = JSON.parse(msg.content);
                         return (
                             <div key={key}>
-                                <p>{parsed.text || msg.content}</p>
+                                <ReactMarkdown>{parsed.text || msg.content}</ReactMarkdown>
                                 {parsed.cards && parsed.cards.length > 0 && <CardDisplay cards={parsed.cards} />}
                                 {parsed.chart && parsed.chart.url && <img src={parsed.chart.url} alt="Astrological Chart" style={{ maxWidth: '100%', marginTop: '10px' }} />}
                             </div>

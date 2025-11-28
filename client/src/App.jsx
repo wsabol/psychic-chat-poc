@@ -15,6 +15,7 @@ import SecurityModal from "./components/SecurityModal";
 import "./styles/AuthModals.css";
 import { Login } from './components/Login';
 import { Landing } from './components/Landing';
+import ReactMarkdown from 'react-markdown';
 
 class ErrorBoundary extends React.Component {
     constructor(props) {
@@ -466,7 +467,7 @@ function App() {
                                         const parsed = JSON.parse(msg.content);
                                         return (
                                             <div key={key}>
-                                                <p>{parsed.text || msg.content}</p>
+                                                <ReactMarkdown>{parsed.text || msg.content}</ReactMarkdown>
                                                 {parsed.cards && parsed.cards.length > 0 && <CardDisplay cards={parsed.cards} />}
                                             </div>
                                         );
