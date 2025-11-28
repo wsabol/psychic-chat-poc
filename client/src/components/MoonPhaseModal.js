@@ -128,8 +128,13 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
                     todayDate: new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
                 });
                 
-                // Poll for commentary after 2 seconds
-                setTimeout(() => pollForCommentary(currentMoonPhase, astroHeaders, zodiacData), 2000);
+                // Poll for commentary with retries
+                let pollCount = 0;
+                const pollInterval = setInterval(async () => {
+                    pollCount++;
+                    const found = await pollForCommentary(currentMoonPhase, astroHeaders, zodiacData);
+                    if (found || pollCount > 30) clearInterval(pollInterval);
+                }, 1000);
                 setLoading(false);
             }
             
@@ -152,12 +157,12 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
                     ...prev,
                     moonPhaseMeaning: data.commentary
                 } : null));
-                // Refresh page to show fresh Oracle response
-                setTimeout(() => window.location.reload(), 1000);
+                return true;
             }
         } catch (err) {
             console.warn('Moon phase polling failed:', err);
         }
+        return false;
     };
 
     if (!isOpen) return null;

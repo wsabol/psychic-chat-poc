@@ -435,6 +435,9 @@ function App() {
                             >
                                 🔄 Reset (Test)
                             </button>
+                            <button onClick={async () => { if(window.confirm('Clear astrology data?')) { try { const r = await fetch(`http://localhost:3000/user-profile/${auth.authUserId}/astrology-cache`, {method:'DELETE', headers:{'Authorization':`Bearer ${auth.token}`}}); const d = await r.json(); alert(d.success ? `Cleared (${d.deletedRows})` : 'Failed'); } catch(e) { alert('Error') } } }} style={{padding:'0.5rem 1rem', fontSize:'0.85rem', borderRadius:'4px', border:'1px solid #999', backgroundColor:'rgba(100,100,0,0.7)', color:'#ffff00', cursor:'pointer', whiteSpace:'nowrap', marginLeft:'0.5rem'}}>
+                                🧹 Clear Astro
+                            </button>
                         </div>
                         
                         <div>
@@ -460,7 +463,7 @@ function App() {
                                 zIndex: 1,
                             }}
                         >
-                            {chat.chat.map((msg, index) => {
+                            {chat.chat.filter(msg => !['horoscope','moon_phase','cosmic_weather','void_of_course','lunar_nodes'].includes(msg.role)).map((msg, index) => {
                                 const key = msg.id || `msg-${index}-${Date.now()}`;
                                 if (typeof msg.content === 'string') {
                                     try {

@@ -140,5 +140,20 @@ router.post("/:userId", authorizeUser, async (req, res) => {
     }
 });
 
+// DEVELOPMENT ONLY - Clear astrology cache (horoscope, moon phase, cosmic weather)
+router.delete("/:userId/astrology-cache", authorizeUser, async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const result = await db.query(
+            `DELETE FROM messages WHERE user_id = $1 AND role IN ('horoscope', 'moon_phase', 'cosmic_weather', 'void_of_course', 'lunar_nodes')`,
+            [userId]
+        );
+        res.json({ success: true, message: `Cleared astrology cache`, deletedRows: result.rowCount });
+    } catch (err) {
+        console.error('Error clearing astrology cache:', err);
+        res.status(500).json({ error: 'Failed to clear astrology cache', details: err.message });
+    }
+});
+
 export default router;
 

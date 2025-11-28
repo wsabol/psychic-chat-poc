@@ -65,8 +65,13 @@ function HoroscopeModal({ userId, token, isOpen, onClose }) {
                 rangeDate: new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
             });
             
-            // Poll for the generated horoscope
-            setTimeout(() => pollForHoroscope(headers, zodiacInfo), 2000);
+            // Poll for the generated horoscope with retries
+            let pollCount = 0;
+            const pollInterval = setInterval(async () => {
+                pollCount++;
+                const found = await pollForHoroscope(headers, zodiacInfo);
+                if (found || pollCount > 30) clearInterval(pollInterval);
+            }, 1000);
             
         } catch (err) {
             setError(err.message);
@@ -117,13 +122,13 @@ function HoroscopeModal({ userId, token, isOpen, onClose }) {
                     horoscopeMessage: data.horoscope,
                     rangeDate: new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
                 });
-                // Refresh page to show fresh Oracle response
-                setTimeout(() => window.location.reload(), 1000);
+                setLoading(false);
+                return true;
             }
         } catch (err) {
             console.warn('Polling failed:', err);
         }
-        setLoading(false);
+        return false;
     };
 
     if (!isOpen) return null;

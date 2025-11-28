@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 
 function ChatHistory({ chat }) {
     return (
-        chat.map((msg, index) => {
+        chat.filter(msg => !['horoscope','moon_phase','cosmic_weather','void_of_course','lunar_nodes'].includes(msg.role)).map((msg, index) => {
             const key = msg.id || `msg-${index}-${Date.now()}`;
             if (typeof msg.content === 'string') {
                 if (typeof msg.content === 'string' && msg.content.trim().startsWith('{') && msg.content.trim().endsWith('}')) {

@@ -204,7 +204,7 @@ function CosmicWeatherModal({ userId, token, isOpen, onClose }) {
                         </div>
 
                         <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '2px solid #ddd' }}>
-                            <h4 style={{ marginTop: 0, marginBottom: '1rem' }}>Oracle Inputs</h4>
+
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                                 <div style={{ backgroundColor: '#f9f9f9', padding: '1rem', borderRadius: '6px', fontSize: '12px', border: '1px solid #eee' }}>
                                     <p style={{ margin: '0 0 0.75rem 0', fontWeight: 'bold', fontSize: '13px' }}>Natal Birth Chart</p>
