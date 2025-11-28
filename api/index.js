@@ -56,3 +56,11 @@ if (fs.existsSync('./certificates/key.pem') && fs.existsSync('./certificates/cer
         console.log(`API listening on HTTP port ${PORT}`);
     });
 }
+
+// Daily cleanup of old temp accounts
+setInterval(async () => {
+    try {
+        const res = await fetch(`http://localhost:${PORT}/cleanup/cleanup-old-temp-accounts`, { method: 'DELETE' });
+        if (res.ok) { const d = await res.json(); console.log('[CLEANUP]', d.message); }
+    } catch (e) { console.error('[CLEANUP] Error:', e.message); }
+}, 24 * 60 * 60 * 1000);

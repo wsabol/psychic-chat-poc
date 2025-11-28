@@ -15,29 +15,23 @@ export function useAuth() {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             try {
                 if (firebaseUser) {
-                    // Check if this is a temporary account
                     const isTemp = firebaseUser.email.startsWith('temp_');
-                    
                     const idToken = await firebaseUser.getIdToken();
                     setAuthUserId(firebaseUser.uid);
                     setAuthEmail(firebaseUser.email);
                     setToken(idToken);
                     setIsAuthenticated(true);
                     setIsTemporaryAccount(isTemp);
-                    // Only mark as not first-time if they have a REAL account (not temp)
                     if (!isTemp) {
                         setIsFirstTime(false);
                         localStorage.setItem('psychic_app_registered', 'true');
                     }
                 } else {
-                    // Not authenticated
                     setIsAuthenticated(false);
                     setAuthUserId(null);
                     setAuthEmail(null);
                     setToken(null);
                     setIsTemporaryAccount(false);
-                    
-                    // Check if they've registered before
                     const hasRegistered = localStorage.getItem('psychic_app_registered');
                     if (hasRegistered) {
                         setIsFirstTime(false);
@@ -57,20 +51,14 @@ export function useAuth() {
     const createTemporaryAccount = async () => {
         try {
             setLoading(true);
-            // Generate unique temp email and password
             const uuid = crypto.randomUUID?.() || Math.random().toString(36).substring(2, 15);
             const tempEmail = `temp_${uuid}@psychic.local`;
             const tempPassword = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
             
-            // Create Firebase user
             const userCredential = await createUserWithEmailAndPassword(auth, tempEmail, tempPassword);
             
-            // Store temp credentials in localStorage for later deletion
             localStorage.setItem('temp_account_uid', userCredential.user.uid);
             localStorage.setItem('temp_account_email', tempEmail);
-            
-            // Auth state listener will pick up the new temp user and handle isFirstTime
-            // Don't set it here - let the auth listener handle it
         } catch (err) {
             console.error('Failed to create temporary account:', err);
             throw err;
@@ -82,24 +70,57 @@ export function useAuth() {
     const deleteTemporaryAccount = async () => {
         try {
             if (isTemporaryAccount && auth.currentUser) {
-                // Delete Firebase user
-                await auth.currentUser.delete();
+                const uid = auth.currentUser.uid;
+                let userToken = null;
+                
+                try {
+                    userToken = await auth.currentUser.getIdToken();
+                } catch (err) {
+                    console.warn('Could not get ID token:', err.message);
+                }
+                
+                // Call backend to delete from database and Firebase
+                if (userToken) {
+                    try {
+                        const response = await fetch('http://localhost:3000/cleanup/delete-temp-account/' + uid, {
+                            method: 'DELETE',
+                            headers: { 'Authorization': `Bearer ${userToken}` }
+                        });
+                        if (response.ok) {
+                            console.log('Backend deletion successful');
+                        } else {
+                            console.error('Backend deletion failed:', response.status);
+                        }
+                    } catch (err) {
+                        console.warn('Backend cleanup failed:', err.message);
+                    }
+                }
+                
+                // Also try to delete from Firebase client-side
+                try {
+                    const currentUser = auth.currentUser;
+                    if (currentUser) {
+                        await currentUser.delete();
+                        console.log('Firebase user deleted from client');
+                    }
+                } catch (err) {
+                    console.warn('Firebase client-side deletion note:', err.message);
+                }
                 
                 // Clean up localStorage
                 localStorage.removeItem('temp_account_uid');
                 localStorage.removeItem('temp_account_email');
-                localStorage.removeItem('psychic_app_registered');
+                // DO NOT remove 'psychic_app_registered' - let auth listener handle it
                 
+                // Clear state
                 setIsAuthenticated(false);
                 setAuthUserId(null);
                 setAuthEmail(null);
                 setToken(null);
                 setIsTemporaryAccount(false);
-                setIsFirstTime(true);
             }
         } catch (err) {
             console.error('Failed to delete temporary account:', err);
-            // If user deleted on Firebase console, just clear state
             setIsAuthenticated(false);
             setAuthUserId(null);
             setAuthEmail(null);
@@ -122,7 +143,6 @@ export function useAuth() {
     };
 
     const exitApp = async () => {
-        // If temporary account, delete it
         if (isTemporaryAccount) {
             await deleteTemporaryAccount();
         } else {
@@ -142,7 +162,6 @@ export function useAuth() {
         createTemporaryAccount,
         deleteTemporaryAccount,
         exitApp,
-        // Add dummy properties for backward compatibility
         showLoginRegister: false,
         setShowLoginRegister: () => {},
         showTwoFactor: false,
