@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -13,3 +13,10 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+
+// Enable persistent authentication storage (survives browser close/refresh)
+// This ensures temporary accounts continue from where they left off
+setPersistence(auth, browserLocalPersistence)
+  .catch((error) => {
+    console.warn('Failed to set auth persistence:', error);
+  });

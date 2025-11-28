@@ -5,23 +5,35 @@ function CardDisplay({ cards }) {
         return null;
     }
 
+    // Deduplicate cards - keep only first occurrence of each card
+    const seenCards = new Map();
+    const uniqueCards = [];
+    
+    for (const card of cards) {
+        const cardKey = `${card.name}-${card.inverted ? 'inverted' : 'upright'}`;
+        if (!seenCards.has(cardKey)) {
+            seenCards.set(cardKey, true);
+            uniqueCards.push(card);
+        }
+    }
+
     let layoutStyle = {};
     let cardsPerRow = 1;
 
-    // Determine grid layout based on number of cards
-    if (cards.length === 3) {
+    // Determine grid layout based on number of unique cards
+    if (uniqueCards.length === 3) {
         layoutStyle = { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', justifyContent: 'center' };
         cardsPerRow = 3;
-    } else if (cards.length === 5) {
+    } else if (uniqueCards.length === 5) {
         layoutStyle = { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', justifyContent: 'center' };
         cardsPerRow = 3;
-    } else if (cards.length === 7) {
+    } else if (uniqueCards.length === 7) {
         layoutStyle = { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px', justifyContent: 'center' };
         cardsPerRow = 4;
-    } else if (cards.length === 10) {
+    } else if (uniqueCards.length === 10) {
         layoutStyle = { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px', justifyContent: 'center' };
         cardsPerRow = 4;
-    } else if (cards.length === 1) {
+    } else if (uniqueCards.length === 1) {
         layoutStyle = { display: 'flex', justifyContent: 'center' };
     } else {
         layoutStyle = { display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '15px' };
@@ -29,7 +41,7 @@ function CardDisplay({ cards }) {
 
     return (
         <div style={{ ...layoutStyle, maxWidth: '100%', margin: '1rem 0' }}>
-            {cards.map((card, idx) => (
+            {uniqueCards.map((card, idx) => (
                 <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '80px' }}>
                     <img
                         src={`/images/${card.name.toLowerCase().replace(/\s+/g, '').replace(/^the\s+/, '')}.jpeg`}

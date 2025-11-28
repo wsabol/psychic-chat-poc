@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getAstrologyFromBirthDate, getZodiacSignFromDate } from '../utils/astroUtils';
 import { COUNTRIES } from '../data/countries';
 
-// Helper function to format date from YYYY-MM-DD to dd-mmm-yyyy
 function formatDateForDisplay(dateString) {
-    // dateString expected to be YYYY-MM-DD — parse manually to avoid timezone shifts
     if (!dateString) return '';
     try {
         const parts = dateString.split('-');
@@ -16,12 +14,11 @@ function formatDateForDisplay(dateString) {
         const month = months[monthIndex];
         if (!month) return dateString;
         return `${day}-${month}-${year}`;
-        } catch (e) {
+    } catch (e) {
         return dateString;
     }
 }
 
-// Helper function to parse date from dd-mmm-yyyy to YYYY-MM-DD
 function parseDateForStorage(dateString) {
     if (!dateString) return '';
     try {
@@ -35,16 +32,16 @@ function parseDateForStorage(dateString) {
         const month = months[monthStr];
         const year = parts[2].trim();
         
-                if (!month) {
+        if (!month) {
             return dateString;
         }
         return `${year}-${month}-${day}`;
-        } catch (e) {
+    } catch (e) {
         return dateString;
     }
 }
 
-function PersonalInfoModal({ userId, token, isOpen, onClose, onSave }) {
+function PersonalInfoModal({ userId, token, isOpen, isTemporaryAccount, onClose, onSave }) {
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -69,7 +66,7 @@ function PersonalInfoModal({ userId, token, isOpen, onClose, onSave }) {
             fetchPersonalInfo();
             setSuccess(false);
         }
-    }, [isOpen, userId]);
+    }, [isOpen, userId, isTemporaryAccount]);
 
     const fetchPersonalInfo = async () => {
         try {
@@ -84,7 +81,7 @@ function PersonalInfoModal({ userId, token, isOpen, onClose, onSave }) {
                 setFormData({
                     firstName: data.first_name || '',
                     lastName: data.last_name || '',
-                    email: data.email || '',
+                    email: data.email || (isTemporaryAccount ? 'tempuser@example.com' : ''),
                     birthCountry: data.birth_country || '',
                     birthProvince: data.birth_province || '',
                     birthCity: data.birth_city || '',
@@ -94,9 +91,19 @@ function PersonalInfoModal({ userId, token, isOpen, onClose, onSave }) {
                     sex: data.sex || '',
                     addressPreference: data.address_preference || ''
                 });
+            } else if (isTemporaryAccount) {
+                setFormData(prev => ({
+                    ...prev,
+                    email: 'tempuser@example.com'
+                }));
             }
-                } catch (err) {
-            // Silently continue if fetch fails
+        } catch (err) {
+            if (isTemporaryAccount) {
+                setFormData(prev => ({
+                    ...prev,
+                    email: 'tempuser@example.com'
+                }));
+            }
         }
     };
 
@@ -113,17 +120,33 @@ function PersonalInfoModal({ userId, token, isOpen, onClose, onSave }) {
         setLoading(true);
         setError(null);
 
-        // Validate required fields
-        if (!formData.firstName.trim()) {
-            setError('First name is required');
-            setLoading(false);
-            return;
+        if (!isTemporaryAccount) {
+            if (!formData.firstName.trim()) {
+                setError('First name is required');
+                setLoading(false);
+                return;
+            }
+            if (!formData.lastName.trim()) {
+                setError('Last name is required');
+                setLoading(false);
+                return;
+            }
+            if (!formData.sex) {
+                setError('Sex is required');
+                setLoading(false);
+                return;
+            }
+        } else {
+            // For temporary accounts, sex is optional during onboarding
+            if (!formData.sex) {
+                // Auto-fill with Unspecified if not provided
+                setFormData(prev => ({
+                    ...prev,
+                    sex: 'Unspecified'
+                }));
+            }
         }
-        if (!formData.lastName.trim()) {
-            setError('Last name is required');
-            setLoading(false);
-            return;
-        }
+        
         if (!formData.email.trim()) {
             setError('Email is required');
             setLoading(false);
@@ -134,17 +157,10 @@ function PersonalInfoModal({ userId, token, isOpen, onClose, onSave }) {
             setLoading(false);
             return;
         }
-        if (!formData.sex) {
-            setError('Sex is required');
-            setLoading(false);
-            return;
-        }
 
         try {
-            // Convert date format from display format to storage format
             const storageBirthDate = parseDateForStorage(formData.birthDate);
             
-            // Get astrology data if birth date is provided
             let astrologyData = null;
             let zodiacSign = null;
             if (storageBirthDate) {
@@ -152,12 +168,19 @@ function PersonalInfoModal({ userId, token, isOpen, onClose, onSave }) {
                 astrologyData = getAstrologyFromBirthDate(storageBirthDate);
             }
 
-            const dataToSend = {
+            let dataToSend = {
                 ...formData,
                 birthDate: storageBirthDate,
                 zodiacSign: zodiacSign,
                 astrologyData: astrologyData
             };
+
+            // Auto-fill hidden fields for temporary accounts
+            if (isTemporaryAccount) {
+                dataToSend.firstName = dataToSend.firstName || 'Seeker';
+                dataToSend.lastName = dataToSend.lastName || 'Soul';
+                dataToSend.sex = dataToSend.sex || 'Unspecified';
+            }
 
             const response = await fetch(`${API_URL}/user-profile/${userId}`, {
                 method: 'POST',
@@ -168,9 +191,11 @@ function PersonalInfoModal({ userId, token, isOpen, onClose, onSave }) {
                 body: JSON.stringify(dataToSend)
             });
 
-            if (!response.ok) throw new Error('Failed to save personal information');
+            if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(errData.error || 'Failed to save personal information');
+            }
             
-                        // Clear horoscope cache since birth date has changed
             const today = new Date().toISOString().split('T')[0];
             localStorage.removeItem(`horoscope_${userId}_daily_${today}`);
             localStorage.removeItem(`horoscope_${userId}_weekly_${today}`);
@@ -232,30 +257,33 @@ function PersonalInfoModal({ userId, token, isOpen, onClose, onSave }) {
                 {success && <p style={{ color: 'green', marginBottom: '1rem' }}>✓ Saved successfully!</p>}
 
                 <form onSubmit={handleSubmit}>
-                    {/* PERSONAL INFO SECTION - FIRST */}
-                    <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>First Name <span style={{ color: 'red' }}>*</span></label>
-                        <input
-                            type="text"
-                            name="firstName"
-                            value={formData.firstName}
-                            onChange={handleChange}
-                            required
-                            style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
-                        />
-                    </div>
+                    {!isTemporaryAccount && (
+                        <>
+                            <div style={{ marginBottom: '1rem' }}>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>First Name <span style={{ color: 'red' }}>*</span></label>
+                                <input
+                                    type="text"
+                                    name="firstName"
+                                    value={formData.firstName}
+                                    onChange={handleChange}
+                                    required
+                                    style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
+                                />
+                            </div>
 
-                    <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Last Name <span style={{ color: 'red' }}>*</span></label>
-                        <input
-                            type="text"
-                            name="lastName"
-                            value={formData.lastName}
-                            onChange={handleChange}
-                            required
-                            style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
-                        />
-                    </div>
+                            <div style={{ marginBottom: '1rem' }}>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Last Name <span style={{ color: 'red' }}>*</span></label>
+                                <input
+                                    type="text"
+                                    name="lastName"
+                                    value={formData.lastName}
+                                    onChange={handleChange}
+                                    required
+                                    style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
+                                />
+                            </div>
+                        </>
+                    )}
 
                     <div style={{ marginBottom: '1rem' }}>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Email <span style={{ color: 'red' }}>*</span></label>
@@ -267,9 +295,11 @@ function PersonalInfoModal({ userId, token, isOpen, onClose, onSave }) {
                             required
                             style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
                         />
+                        {isTemporaryAccount && (
+                            <p style={{ marginTop: '0.25rem', fontSize: '12px', color: '#666' }}>This temporary email can be changed when you create an account</p>
+                        )}
                     </div>
 
-                    {/* LOCATION SECTION - AFTER EMAIL */}
                     <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
                         <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>📍 Place of Birth</h3>
                         
@@ -326,7 +356,6 @@ function PersonalInfoModal({ userId, token, isOpen, onClose, onSave }) {
                         </div>
                     </div>
 
-                    {/* BIRTH TIME SECTION - AFTER LOCATION */}
                     <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
                         <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>⏰ Time & Date of Birth</h3>
                         
@@ -344,7 +373,7 @@ function PersonalInfoModal({ userId, token, isOpen, onClose, onSave }) {
                         </div>
 
                         <div style={{ marginBottom: '1rem' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Time of Birth <span style={{ color: '#999', fontSize: '12px' }}>(Optional - for accurate rising/moon signs)</span></label>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Time of Birth <span style={{ color: '#999', fontSize: '12px' }}>(Optional)</span></label>
                             <input
                                 type="time"
                                 name="birthTime"
@@ -355,7 +384,7 @@ function PersonalInfoModal({ userId, token, isOpen, onClose, onSave }) {
                         </div>
 
                         <div style={{ marginBottom: '0' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Timezone <span style={{ color: '#999', fontSize: '12px' }}>(Auto-detected from location, or override)</span></label>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Timezone <span style={{ color: '#999', fontSize: '12px' }}>(Optional)</span></label>
                             <input
                                 type="text"
                                 name="birthTimezone"
@@ -364,17 +393,18 @@ function PersonalInfoModal({ userId, token, isOpen, onClose, onSave }) {
                                 placeholder="e.g., America/New_York, Europe/London"
                                 style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box', fontSize: '12px' }}
                             />
-                            <p style={{ marginTop: '0.25rem', fontSize: '11px', color: '#666' }}>Leave blank to auto-detect from country/city</p>
                         </div>
                     </div>
 
                     <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Sex <span style={{ color: 'red' }}>*</span></label>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                            Sex {!isTemporaryAccount && <span style={{ color: 'red' }}>*</span>} {isTemporaryAccount && <span style={{ color: '#999', fontSize: '12px' }}>(Optional)</span>}
+                        </label>
                         <select
                             name="sex"
                             value={formData.sex}
                             onChange={handleChange}
-                            required
+                            required={!isTemporaryAccount}
                             style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
                         >
                             <option value="">Select...</option>
@@ -382,6 +412,7 @@ function PersonalInfoModal({ userId, token, isOpen, onClose, onSave }) {
                             <option value="Female">Female</option>
                             <option value="Non-binary">Non-binary</option>
                             <option value="Prefer not to say">Prefer not to say</option>
+                            <option value="Unspecified">Unspecified</option>
                         </select>
                     </div>
 
@@ -438,4 +469,5 @@ function PersonalInfoModal({ userId, token, isOpen, onClose, onSave }) {
 }
 
 export default PersonalInfoModal;
+
 

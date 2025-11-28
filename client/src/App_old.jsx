@@ -16,6 +16,7 @@ import "./styles/AuthModals.css";
 import { Login } from './components/Login';
 import { Landing } from './components/Landing';
 
+// ErrorBoundary component
 class ErrorBoundary extends React.Component {
     constructor(props) {
         super(props);
@@ -45,8 +46,10 @@ class ErrorBoundary extends React.Component {
 }
 
 function App() {
+    // Auto-refresh token to prevent session expiration
     useTokenRefresh();
     
+    // Use custom hooks
     const auth = useAuth();
     const chat = useChat(auth.authUserId, auth.token, auth.isAuthenticated, auth.authUserId);
     const personalInfo = usePersonalInfo(auth.authUserId, auth.token);
@@ -60,11 +63,11 @@ function App() {
     const [showCosmicWeatherModal, setShowCosmicWeatherModal] = useState(false);
     const [showSecurityModal, setShowSecurityModal] = useState(false);
     const [showAstrologyPrompt, setShowAstrologyPrompt] = useState(false);
-    const [showFinalModal, setShowFinalModal] = useState(false);
-    
-    // Tracking
+    const [showFinalModal, setshowFinalModal] = useState(false);
+    const [showFinalModal, setshowFinalModal] = useState(false);
     const [greetingShown, setGreetingShown] = useState(false);
     const [firstResponseReceived, setFirstResponseReceived] = useState(false);
+    const [showFinalModal, setshowFinalModal] = useState(false);
 
     // Show oracle greeting for temp account users
     useEffect(() => {
@@ -78,7 +81,7 @@ function App() {
         }
     }, [auth.isTemporaryAccount, greetingShown, chat]);
 
-    // Check for first oracle response and show astrology prompt after 45 seconds
+    // Check for first oracle response and show astrology prompt
     useEffect(() => {
         if (auth.isTemporaryAccount && !firstResponseReceived && chat.chat.length > 1) {
             const nonGreetingMessages = chat.chat.filter(msg => msg.id !== 'oracle-greeting');
@@ -90,6 +93,17 @@ function App() {
             }
         }
     }, [auth.isTemporaryAccount, firstResponseReceived, chat.chat]);
+
+    // Check for second oracle response (after astrological sign revealed)
+    useEffect(() => {
+        if (auth.isTemporaryAccount && firstResponseReceived && showFinalModal && !showFinalModal && chat.chat.length > 3) {
+            const nonGreetingMessages = chat.chat.filter(msg => msg.id !== 'oracle-greeting');
+            if (nonGreetingMessages.length >= 4) {
+                setshowFinalModal(true);
+                setshowFinalModal(true);
+            }
+        }
+    }, [auth.isTemporaryAccount, firstResponseReceived, showFinalModal, chat.chat]);
 
     const handleTryFree = async () => {
         try {
@@ -117,13 +131,18 @@ function App() {
         auth.exitApp();
     };
 
-    const handleSetupAccount = () => {
-        setShowFinalModal(false);
+    const handlePostSignSetupAccount = () => {
+        setshowFinalModal(false);
         auth.handleLogout();
     };
 
-    const handleExit = async () => {
-        setShowFinalModal(false);
+            const handlePostSignContinue = () => {
+        setshowFinalModal(false);
+        setshowFinalModal(true);
+    };
+
+    const handlePostSignExit = async () => {
+        setshowFinalModal(false);
         await auth.deleteTemporaryAccount();
     };
 
@@ -154,6 +173,7 @@ function App() {
         );
     }
 
+    // FIRST-TIME USER - Show landing page
     if (auth.isFirstTime && !auth.isAuthenticated) {
         return (
             <ErrorBoundary>
@@ -167,6 +187,7 @@ function App() {
         );
     }
 
+    // NOT LOGGED IN - Show login
     if (!auth.isAuthenticated) {
         return (
             <ErrorBoundary>
@@ -176,11 +197,12 @@ function App() {
         );
     }
 
+    // AUTHENTICATED (including temp accounts) - Show chatbox + modals
     return (
         <ErrorBoundary>
             <StarField />
             
-            {/* Final Onboarding Modal - Set Up Account or Exit */}
+            {/* Post Sign Options Modal (for temp account users after second response) */}
             {showFinalModal && auth.isTemporaryAccount && (
                 <div style={{
                     position: 'fixed',
@@ -205,16 +227,14 @@ function App() {
                         border: '1px solid rgba(100, 150, 255, 0.3)'
                     }}>
                         <h2 style={{ marginBottom: '1rem' }}>✨ Complete Your Onboarding</h2>
-                        <p style={{ marginBottom: '2rem', lineHeight: '1.6', color: '#d0d0ff', fontSize: '0.95rem' }}>
-                            Thank you for exploring with our oracle. To save your readings and continue your spiritual journey, please complete your onboarding.
-                        </p>
+                        <p style={{ marginBottom: '2rem', lineHeight: '1.6', color: '#d0d0ff', fontSize: '0.95rem' }}>Thank you for exploring with our oracle. To save your readings and continue your spiritual journey, please complete your onboarding.</p>
                         <div style={{
                             display: 'flex',
                             gap: '1rem',
                             flexDirection: 'column'
                         }}>
                             <button
-                                onClick={handleSetupAccount}
+                                onClick={handlePostSignSetupAccount}
                                 style={{
                                     padding: '0.75rem',
                                     borderRadius: '5px',
@@ -229,7 +249,22 @@ function App() {
                                 📝 Set Up an Account
                             </button>
                             <button
-                                onClick={handleExit}
+                                onClick={handlePostSignContinue}
+                                style={{
+                                    padding: '0.75rem',
+                                    borderRadius: '5px',
+                                    border: '1px solid #7c63d8',
+                                    backgroundColor: 'transparent',
+                                    color: '#7c63d8',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold',
+                                    fontSize: '1rem'
+                                }}
+                            >
+                                🔮 Continue Exploring
+                            </button>
+                            <button
+                                onClick={handlePostSignExit}
                                 style={{
                                     padding: '0.75rem',
                                     borderRadius: '5px',
@@ -248,7 +283,7 @@ function App() {
                 </div>
             )}
 
-            {/* Astrology Enhancement Prompt */}
+            {/* Astrology Enhancement Prompt (for temp account users after first response) */}
             {showAstrologyPrompt && auth.isTemporaryAccount && (
                 <div style={{
                     position: 'fixed',
@@ -322,6 +357,7 @@ function App() {
                 />
             )}
             
+            {/* Main Dashboard */}
             <>
                 <>
                     <PersonalInfoModal 
@@ -347,7 +383,7 @@ function App() {
                             personalInfo.fetchPersonalInfo();
                             if (auth.isTemporaryAccount) {
                                 setTimeout(() => {
-                                    setShowFinalModal(true);
+                                    setshowFinalModal(true);
                                 }, 500);
                             }
                         }}
@@ -470,11 +506,11 @@ function App() {
                                 }}
                                 placeholder="Type a message..."
                                 style={{ width: "70%", marginRight: "0.5rem" }}
-                                disabled={auth.isTemporaryAccount && showFinalModal}
+                                disabled={auth.isTemporaryAccount && firstResponseReceived && !showAstrologyPrompt && !showFinalModal}
                             />
                             <button 
                                 onClick={chat.sendMessage}
-                                disabled={auth.isTemporaryAccount && showFinalModal}
+                                disabled={auth.isTemporaryAccount && firstResponseReceived && !showAstrologyPrompt && !showFinalModal}
                             >
                                 Send
                             </button>
@@ -487,3 +523,4 @@ function App() {
 }
 
 export default App;
+

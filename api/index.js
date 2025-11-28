@@ -11,7 +11,7 @@ import authRoutes from "./routes/auth-firebase.js";
 import { authenticateToken } from "./middleware/auth.js";
 import cors from "cors";
 
-const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;  // Added definition
+const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 const app = express();
 
 // Allow client at 3001. Adjust as needed or use an env var.

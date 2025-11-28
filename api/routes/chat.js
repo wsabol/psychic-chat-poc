@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticateToken, authorizeUser, verify2FA } from "../middleware/auth.js";
+import { authorizeUser, verify2FA } from "../middleware/auth.js";
 import { enqueueMessage } from "../shared/queue.js";
 import { generatePsychicOpening } from "../shared/opening.js";
 import { getRecentMessages, insertMessage } from "../shared/user.js";
@@ -7,7 +7,7 @@ import { db } from "../shared/db.js";
 
 const router = Router();
 
-router.post("/", authenticateToken, verify2FA, async (req, res) => {
+router.post("/", verify2FA, async (req, res) => {
     const { message } = req.body;
     const userId = req.userId;  // Get userId from authenticated token
 
@@ -18,7 +18,7 @@ router.post("/", authenticateToken, verify2FA, async (req, res) => {
     res.json({ status: "queued" });
 });
 
-router.get("/opening/:userId", authenticateToken, authorizeUser, verify2FA, async (req, res) => {
+router.get("/opening/:userId", authorizeUser, verify2FA, async (req, res) => {
     const userId = req.userId;  // Use authenticated userId instead of URL param
 
     const recentMessages = await getRecentMessages(userId)
@@ -56,7 +56,7 @@ router.get("/opening/:userId", authenticateToken, authorizeUser, verify2FA, asyn
     })
 });
 
-router.get("/history/:userId", authenticateToken, authorizeUser, verify2FA, async (req, res) => {
+router.get("/history/:userId", authorizeUser, verify2FA, async (req, res) => {
     const userId = req.userId;  // Use authenticated userId instead of URL param
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
     try {

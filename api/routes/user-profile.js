@@ -1,7 +1,7 @@
 import { Router } from "express";
+import { authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
 import { enqueueMessage } from "../shared/queue.js";
-import { authenticateToken, authorizeUser } from "../middleware/auth.js";
 
 const router = Router();
 
@@ -28,7 +28,7 @@ function parseDateForStorage(dateString) {
     }
 }
 
-router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
+router.get("/:userId", authorizeUser, async (req, res) => {
     const { userId } = req.params;
     try {
         const { rows } = await db.query(
@@ -45,22 +45,35 @@ router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
     }
 });
 
-router.post("/:userId", authenticateToken, authorizeUser, async (req, res) => {
+router.post("/:userId", authorizeUser, async (req, res) => {
     const { userId } = req.params;
     const { firstName, lastName, email, birthDate, birthTime, birthCountry, birthProvince, birthCity, birthTimezone, sex, addressPreference, zodiacSign, astrologyData } = req.body;
 
     try {
-        if (!firstName || !lastName || !email || !birthDate || !sex) {
-    
+        // For temporary accounts, make firstName/lastName optional
+        const isTemporary = email && email.startsWith('tempuser');
+        
+        if (!isTemporary && (!firstName || !lastName || !email || !birthDate || !sex)) {
             return res.status(400).json({ error: 'Missing required fields: firstName, lastName, email, birthDate, sex' });
+        }
+
+        if (!email || !birthDate) {
+            return res.status(400).json({ error: 'Missing required fields: email, birthDate' });
         }
 
         const parsedBirthDate = parseDateForStorage(birthDate);
         
         if (!parsedBirthDate || parsedBirthDate === 'Invalid Date') {
-    
             return res.status(400).json({ error: 'Invalid birth date format' });
         }
+
+        // Convert empty strings to NULL for optional fields that can't accept empty strings
+        const safeTime = birthTime && birthTime.trim() ? birthTime : null;
+        const safeCountry = birthCountry && birthCountry.trim() ? birthCountry : null;
+        const safeProvince = birthProvince && birthProvince.trim() ? birthProvince : null;
+        const safeCity = birthCity && birthCity.trim() ? birthCity : null;
+        const safeTimezone = birthTimezone && birthTimezone.trim() ? birthTimezone : null;
+        const safeAddressPreference = addressPreference && addressPreference.trim() ? addressPreference : null;
 
         await db.query(
             `INSERT INTO user_personal_info 
@@ -79,7 +92,7 @@ router.post("/:userId", authenticateToken, authorizeUser, async (req, res) => {
              sex = EXCLUDED.sex,
              address_preference = EXCLUDED.address_preference,
              updated_at = CURRENT_TIMESTAMP`,
-            [userId, firstName, lastName, email, parsedBirthDate, birthTime, birthCountry, birthProvince, birthCity, birthTimezone, sex, addressPreference]
+            [userId, firstName || 'Temporary', lastName || 'User', email, parsedBirthDate, safeTime, safeCountry, safeProvince, safeCity, safeTimezone, sex || 'Unspecified', safeAddressPreference]
         );
 
         // Clear cached horoscopes and astrology insights since birth data changed
@@ -95,7 +108,7 @@ router.post("/:userId", authenticateToken, authorizeUser, async (req, res) => {
         }
         
         // Trigger astrology calculation via worker if complete birth data
-        if (birthTime && birthCountry && birthProvince && birthCity && parsedBirthDate) {
+        if (safeTime && safeCountry && safeProvince && safeCity && parsedBirthDate) {
             try {
                 await enqueueMessage({
                     userId,
@@ -128,3 +141,4 @@ router.post("/:userId", authenticateToken, authorizeUser, async (req, res) => {
 });
 
 export default router;
+
