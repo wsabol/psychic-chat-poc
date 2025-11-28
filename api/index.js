@@ -8,6 +8,7 @@ import horoscopeRoutes from "./routes/horoscope.js";
 import moonPhaseRoutes from "./routes/moon-phase.js";
 import astrologyInsightsRoutes from "./routes/astrology-insights.js";
 import authRoutes from "./routes/auth-firebase.js";
+import cleanupRoutes from "./routes/cleanup.js";
 import { authenticateToken } from "./middleware/auth.js";
 import cors from "cors";
 
@@ -29,6 +30,7 @@ app.get('/', (req, res) => {
 
 // Public auth routes (no authentication required)
 app.use("/auth", authRoutes);
+app.use("/cleanup", cleanupRoutes);
 
 // Protected routes (authentication required)
 app.use("/chat", authenticateToken, chatRoutes);

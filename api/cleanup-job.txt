@@ -1,0 +1,16 @@
+
+// Schedule cleanup job every 30 minutes
+setInterval(async () => {
+    try {
+        const response = await fetch(`http://localhost:${PORT}/cleanup/cleanup-temp-accounts`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        if (response.ok) {
+            const data = await response.json();
+            console.log('[CLEANUP]', data.message);
+        }
+    } catch (err) {
+        console.error('[CLEANUP] Error running cleanup job:', err.message);
+    }
+}, 30 * 60 * 1000);

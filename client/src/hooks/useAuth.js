@@ -24,8 +24,11 @@ export function useAuth() {
                     setToken(idToken);
                     setIsAuthenticated(true);
                     setIsTemporaryAccount(isTemp);
-                    setIsFirstTime(false);
-                    localStorage.setItem('psychic_app_registered', 'true');
+                    // Only mark as not first-time if they have a REAL account (not temp)
+                    if (!isTemp) {
+                        setIsFirstTime(false);
+                        localStorage.setItem('psychic_app_registered', 'true');
+                    }
                 } else {
                     // Not authenticated
                     setIsAuthenticated(false);
@@ -66,8 +69,8 @@ export function useAuth() {
             localStorage.setItem('temp_account_uid', userCredential.user.uid);
             localStorage.setItem('temp_account_email', tempEmail);
             
-            setIsFirstTime(false);
-            // Auth state listener will pick up the new user
+            // Auth state listener will pick up the new temp user and handle isFirstTime
+            // Don't set it here - let the auth listener handle it
         } catch (err) {
             console.error('Failed to create temporary account:', err);
             throw err;
