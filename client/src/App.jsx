@@ -90,7 +90,14 @@ function App() {
                 }, 45000);
             }
         }
-    }, [auth.isTemporaryAccount, firstResponseReceived, chat.chat]);
+        }, [auth.isTemporaryAccount, firstResponseReceived, chat.chat]);
+
+    // Reset register mode when user successfully logs in as real account
+    useEffect(() => {
+        if (auth.isAuthenticated && !auth.isTemporaryAccount) {
+            setShowRegisterMode(false);
+        }
+    }, [auth.isAuthenticated, auth.isTemporaryAccount]);
 
     const handleTryFree = async () => {
         try {
@@ -100,7 +107,10 @@ function App() {
         }
         };
 
-    const handleCreateAccount = () => {
+        const handleCreateAccount = () => {
+        // Coming from Landing (first-time user), just go directly to Firebase login
+        // Landing doesn't have auth, so we go to unauthenticated Login screen
+        // This happens naturally when isAuthenticated is false
         setShowRegisterMode(true);
     };
 
@@ -118,9 +128,10 @@ function App() {
         auth.exitApp();
         };
 
-    const handleSetupAccount = () => {
+            const handleSetupAccount = () => {
         setShowFinalModal(false);
-        auth.handleLogout();
+        // Go directly to Firebase login to create account
+        setShowRegisterMode(true);
     };
 
     const handleExit = async () => {
@@ -152,6 +163,15 @@ function App() {
             }}>
                 Loading oracle wisdom...
             </div>
+                );
+    }
+
+    if (showRegisterMode) {
+        return (
+            <ErrorBoundary>
+                <StarField />
+                <Login />
+            </ErrorBoundary>
         );
     }
 
@@ -338,7 +358,7 @@ function App() {
                             }, 500);
                         }}
                     />
-                    <MySignModal 
+                                        <MySignModal 
                         userId={auth.authUserId}
                         token={auth.token}
                         isOpen={showMySignModal}
@@ -349,7 +369,7 @@ function App() {
                             if (auth.isTemporaryAccount) {
                                 setTimeout(() => {
                                     setShowFinalModal(true);
-                                }, 500);
+                                }, 300);
                             }
                         }}
                         birthDate={personalInfo.birthDate}
@@ -427,7 +447,7 @@ function App() {
                         <div
                             style={{
                                 border: "1px solid #ccc",
-                                borderRadius: "8px",
+                                boptionrderRadius: "8px",
                                 padding: "1rem",
                                 height: "400px",
                                 overflowY: "auto",
@@ -471,11 +491,11 @@ function App() {
                                 }}
                                 placeholder="Type a message..."
                                 style={{ width: "70%", marginRight: "0.5rem" }}
-                                disabled={auth.isTemporaryAccount && showFinalModal}
+                                                                disabled={auth.isTemporaryAccount && firstResponseReceived && !showAstrologyPrompt}
                             />
                             <button 
                                 onClick={chat.sendMessage}
-                                disabled={auth.isTemporaryAccount && showFinalModal}
+                                disabled={auth.isTemporaryAccount && firstResponseReceived && !showAstrologyPrompt}
                             >
                                 Send
                             </button>
