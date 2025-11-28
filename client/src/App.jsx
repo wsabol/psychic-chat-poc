@@ -61,6 +61,7 @@ function App() {
     const [showSecurityModal, setShowSecurityModal] = useState(false);
     const [showAstrologyPrompt, setShowAstrologyPrompt] = useState(false);
     const [showFinalModal, setShowFinalModal] = useState(false);
+    const [showRegisterMode, setShowRegisterMode] = useState(false);
     
     // Tracking
     const [greetingShown, setGreetingShown] = useState(false);
@@ -97,14 +98,14 @@ function App() {
         } catch (err) {
             console.error('Failed to create temporary account:', err);
         }
-    };
+        };
 
     const handleCreateAccount = () => {
-        // Show login page for account creation
+        setShowRegisterMode(true);
     };
 
     const handleSignIn = () => {
-        // Show login page for existing users
+        // Navigate to login (show login page)
     };
 
     const handleAstrologyPromptYes = () => {
@@ -115,7 +116,7 @@ function App() {
     const handleAstrologyPromptNo = () => {
         setShowAstrologyPrompt(false);
         auth.exitApp();
-    };
+        };
 
     const handleSetupAccount = () => {
         setShowFinalModal(false);
