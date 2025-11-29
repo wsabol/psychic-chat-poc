@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { auth } from '../firebase';
 
 export function Login() {
@@ -45,12 +45,37 @@ export function Login() {
     }
     
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      setSuccessMessage('Registration successful! You are now logged in.');
-      setEmail('');
-      setPassword('');
-      setConfirmPassword('');
+      console.log('[AUTH] Creating user with email:', email);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      console.log('[AUTH] User created successfully:', userCredential.user.uid);
+      
+      // Try to send verification email with actionCodeSettings
+      console.log('[EMAIL-VERIFY] Attempting to send verification email...');
+      try {
+        const actionCodeSettings = {
+          url: window.location.origin,
+          handleCodeInApp: false
+        };
+        console.log('[EMAIL-VERIFY] Action code settings:', actionCodeSettings);
+        console.log('[EMAIL-VERIFY] Window location origin:', window.location.origin);
+        
+        await sendEmailVerification(userCredential.user, actionCodeSettings);
+        console.log('[EMAIL-VERIFY] ✓ Verification email sent');
+        setSuccessMessage('Account created! Check your email to verify your account.');
+      } catch (verifyErr) {
+        console.error('[EMAIL-VERIFY] ✗ Failed to send verification email');
+        console.error('[EMAIL-VERIFY] Error code:', verifyErr.code);
+        console.error('[EMAIL-VERIFY] Error message:', verifyErr.message);
+        console.error('[EMAIL-VERIFY] Full error:', verifyErr);
+        
+        // Still show success - user will go to verification screen
+        setSuccessMessage('Account created! Proceeding to verification screen...');
+        console.log('[EMAIL-VERIFY] Note: User will go to verification screen regardless');
+      }
+      
+      // Don't clear form - let auth listener handle the routing
     } catch (err) {
+      console.error('[AUTH] Registration failed:', err.code, err.message);
       setError(err.message);
     } finally {
       setLoading(false);

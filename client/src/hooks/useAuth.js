@@ -10,11 +10,17 @@ export function useAuth() {
     const [authEmail, setAuthEmail] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isFirstTime, setIsFirstTime] = useState(true);
+    const [emailVerified, setEmailVerified] = useState(false);
+    const [isEmailUser, setIsEmailUser] = useState(false);
 
     useEffect(() => {
+        console.log('[AUTH-LISTENER] Setting up auth state listener...');
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            console.log('[AUTH-LISTENER] Auth state changed. User:', firebaseUser ? firebaseUser.email : 'NONE');
             try {
                 if (firebaseUser) {
+                    console.log('[AUTH-LISTENER] User authenticated:', firebaseUser.uid, firebaseUser.email);
+                    console.log('[AUTH-LISTENER] emailVerified:', firebaseUser.emailVerified);
                     const isTemp = firebaseUser.email.startsWith('temp_');
                     const idToken = await firebaseUser.getIdToken();
                     setAuthUserId(firebaseUser.uid);
@@ -22,11 +28,16 @@ export function useAuth() {
                     setToken(idToken);
                     setIsAuthenticated(true);
                     setIsTemporaryAccount(isTemp);
+                    setEmailVerified(firebaseUser.emailVerified);
+                    const isEmail = firebaseUser.providerData.some(p => p.providerId === 'password');
+                    setIsEmailUser(isEmail);
+                    console.log('[AUTH-LISTENER] isEmailUser:', isEmail, 'providerData:', firebaseUser.providerData);
                     if (!isTemp) {
                         setIsFirstTime(false);
                         localStorage.setItem('psychic_app_registered', 'true');
                     }
                 } else {
+                    console.log('[AUTH-LISTENER] User logged out');
                     setIsAuthenticated(false);
                     setAuthUserId(null);
                     setAuthEmail(null);
@@ -38,10 +49,11 @@ export function useAuth() {
                     }
                 }
             } catch (err) {
-                console.error('Auth error:', err);
+                console.error('[AUTH-LISTENER] Error:', err);
                 setIsAuthenticated(false);
             } finally {
                 setLoading(false);
+                console.log('[AUTH-LISTENER] Loading set to false');
             }
         });
 
@@ -110,7 +122,6 @@ export function useAuth() {
                 // Clean up localStorage
                 localStorage.removeItem('temp_account_uid');
                 localStorage.removeItem('temp_account_email');
-                // DO NOT remove 'psychic_app_registered' - let auth listener handle it
                 
                 // Clear state
                 setIsAuthenticated(false);
@@ -158,6 +169,8 @@ export function useAuth() {
         authEmail,
         loading,
         isFirstTime,
+        emailVerified,
+        isEmailUser,
         handleLogout,
         createTemporaryAccount,
         deleteTemporaryAccount,

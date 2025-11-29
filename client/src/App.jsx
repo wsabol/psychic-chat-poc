@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "./hooks/useAuth";
 import { useChat } from "./hooks/useChat";
 import { useTokenRefresh } from "./hooks/useTokenRefresh";
@@ -7,41 +7,82 @@ import { useModalState } from "./hooks/useModalState";
 import { useTempAccountFlow } from "./hooks/useTempAccountFlow";
 import { useAuthHandlers } from "./hooks/useAuthHandlers";
 import { useAppRouting } from "./hooks/useAppRouting";
+import { useEmailVerification } from "./hooks/useEmailVerification";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { LoadingScreen } from "./screens/LoadingScreen";
 import { ThankYouScreen } from "./screens/ThankYouScreen";
 import { LandingScreenWrapper } from "./screens/LandingScreenWrapper";
 import { LoginScreenWrapper } from "./screens/LoginScreenWrapper";
 import { ChatScreen } from "./screens/ChatScreen";
+import { VerificationScreen } from "./screens/VerificationScreen";
+import { auth } from "./firebase";
 
 /**
- * Main App Component - Modularized
- * Coordinates routing, state, and handlers
- * ~50 lines instead of 900+
+ * Main App Component - Modularized with Email Verification + 3 Strikes
+ * Handles routing, state management, and email verification flow
+ * ~95 lines instead of 900+
  */
 function App() {
     useTokenRefresh();
 
-    const auth = useAuth();
-    const chat = useChat(auth.authUserId, auth.token, auth.isAuthenticated, auth.authUserId);
-    const personalInfo = usePersonalInfo(auth.authUserId, auth.token);
+    const authState = useAuth();
+    const chat = useChat(authState.authUserId, authState.token, authState.isAuthenticated, authState.authUserId);
+    const personalInfo = usePersonalInfo(authState.authUserId, authState.token);
     const modals = useModalState();
-    const tempFlow = useTempAccountFlow(auth);
-    const handlers = useAuthHandlers(auth, modals, tempFlow);
-    const { isLoading, isThankyou, isRegister, isLanding, isLogin, isChat } = useAppRouting(auth, tempFlow.appExited);
+    const tempFlow = useTempAccountFlow(authState);
+    const handlers = useAuthHandlers(authState, modals, tempFlow);
+    const { isLoading, isThankyou, isRegister, isVerification, isLanding, isLogin, isChat } = useAppRouting(authState, tempFlow.appExited, modals.showRegisterMode);
+    const emailVerification = useEmailVerification();
+    const [verificationFailed, setVerificationFailed] = useState(false);
+
+    // Start email verification polling when on verification screen
+    useEffect(() => {
+        if (isVerification && auth.currentUser) {
+            emailVerification.startVerificationPolling(auth.currentUser);
+        }
+    }, [isVerification]);
+
+    // Handle email verification completion
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    useEffect(() => {
+        if (emailVerification.isVerified && isVerification) {
+            console.log('[EMAIL-VERIFY] Email verified! Redirecting to chat...');
+        }
+    }, [emailVerification.isVerified, isVerification])
+
+    // Handle verification failure - go to thank you screen
+    const handleVerificationFailed = () => {
+        console.log('[EMAIL-VERIFY] Verification failed - three strikes. Redirecting to exit screen...');
+        setVerificationFailed(true);
+        tempFlow.setAppExited(true);
+    };
+
+    const handleResendEmail = async () => {
+        if (auth.currentUser) {
+            return await emailVerification.resendVerificationEmail(auth.currentUser);
+        }
+        return false;
+    };
+
+    // Handle sign out from verification screen
+    const handleSignOutFromVerification = async () => {
+        console.log('[AUTH] Signing out from verification screen...');
+        await authState.handleLogout();
+    };
 
     // Loading
     if (isLoading) {
         return <ErrorBoundary><LoadingScreen /></ErrorBoundary>;
     }
 
-    // Thank you screen (after exit)
-    if (isThankyou) {
+    // Thank you screen (after exit or verification failure)
+    if (isThankyou || verificationFailed) {
         return (
             <ErrorBoundary>
                 <ThankYouScreen
                     onCreateAccount={() => {
                         tempFlow.setAppExited(false);
+                        setVerificationFailed(false);
                         modals.setShowRegisterMode(true);
                     }}
                 />
@@ -49,7 +90,26 @@ function App() {
         );
     }
 
-    // Register mode
+    // Email verification screen
+    if (isVerification) {
+        return (
+            <ErrorBoundary>
+                <VerificationScreen
+                    userEmail={authState.authEmail}
+                    onVerified={() => emailVerification.setIsVerified(true)}
+                    onResendEmail={handleResendEmail}
+                    isLoading={emailVerification.loading}
+                    error={emailVerification.error}
+                    resendLoading={emailVerification.loading}
+                    checkCount={emailVerification.checkCount || 0}
+                    onVerificationFailed={handleVerificationFailed}
+                    onSignOut={handleSignOutFromVerification}
+                />
+            </ErrorBoundary>
+        );
+    }
+
+    // Register mode (Firebase login screen)
     if (isRegister) {
         return <ErrorBoundary><LoginScreenWrapper /></ErrorBoundary>;
     }
@@ -72,12 +132,12 @@ function App() {
         return <ErrorBoundary><LoginScreenWrapper /></ErrorBoundary>;
     }
 
-    // Chat screen (authenticated)
+    // Chat screen (authenticated and verified)
     if (isChat) {
         return (
             <ErrorBoundary>
                 <ChatScreen
-                    auth={auth}
+                    auth={authState}
                     chat={chat}
                     personalInfo={personalInfo}
                     modals={modals}
