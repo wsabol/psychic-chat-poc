@@ -106,7 +106,7 @@ export function Landing({ onTryFree, onCreateAccount, onSignIn }) {
                 e.target.style.backgroundColor = 'transparent';
               }}
             >
-              📝 Create Account
+              📝 Create Account/Login
             </button>
           </div>
         </div>
