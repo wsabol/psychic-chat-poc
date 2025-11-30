@@ -1,4 +1,4 @@
-﻿-- Enable pgcrypto extension for encryption
+-- Enable pgcrypto extension for encryption
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE IF NOT EXISTS messages (
@@ -116,3 +116,16 @@ CREATE TABLE IF NOT EXISTS audit_log (
 CREATE INDEX IF NOT EXISTS idx_audit_user_id ON audit_log(user_id);
 CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_log(created_at);
 CREATE INDEX IF NOT EXISTS idx_user_email_hash ON user_personal_info(email_hash);
+
+-- Pending migrations table - stores temp user ID with email for later retrieval
+CREATE TABLE IF NOT EXISTS pending_migrations (
+    id SERIAL PRIMARY KEY,
+    temp_user_id VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    migrated BOOLEAN DEFAULT false,
+    migrated_at TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_pending_migrations_email ON pending_migrations(email);
+CREATE INDEX IF NOT EXISTS idx_pending_migrations_temp_id ON pending_migrations(temp_user_id);

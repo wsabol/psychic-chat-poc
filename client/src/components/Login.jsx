@@ -3,7 +3,7 @@ import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, create
 import { auth } from '../firebase';
 
 export function Login() {
-  const [mode, setMode] = useState('login'); // 'login', 'register', 'forgot'
+  const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -49,7 +49,7 @@ export function Login() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       console.log('[AUTH] User created successfully:', userCredential.user.uid);
       
-      // Try to send verification email with actionCodeSettings
+      // Send verification email with actionCodeSettings
       console.log('[EMAIL-VERIFY] Attempting to send verification email...');
       try {
         const actionCodeSettings = {
@@ -66,14 +66,11 @@ export function Login() {
         console.error('[EMAIL-VERIFY] ✗ Failed to send verification email');
         console.error('[EMAIL-VERIFY] Error code:', verifyErr.code);
         console.error('[EMAIL-VERIFY] Error message:', verifyErr.message);
-        console.error('[EMAIL-VERIFY] Full error:', verifyErr);
         
-        // Still show success - user will go to verification screen
         setSuccessMessage('Account created! Proceeding to verification screen...');
         console.log('[EMAIL-VERIFY] Note: User will go to verification screen regardless');
       }
       
-      // Don't clear form - let auth listener handle the routing
     } catch (err) {
       console.error('[AUTH] Registration failed:', err.code, err.message);
       setError(err.message);

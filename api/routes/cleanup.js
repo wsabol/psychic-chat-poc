@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "../shared/db.js";
-import admin from "firebase-admin";
+import { auth as firebaseAuth } from "../shared/firebase-admin.js";
 
 const router = Router();
 
@@ -34,12 +34,14 @@ router.delete("/delete-temp-account/:tempUserId", async (req, res) => {
         let firebaseDeleted = false;
         console.log(`[CLEANUP] *** CRITICAL: Attempting Firebase deletion for ${tempUserId} ***`);
         try {
-            console.log(`[CLEANUP] Calling admin.auth().deleteUser(${tempUserId})`);
-            await admin.auth().deleteUser(tempUserId);
+            console.log(`[CLEANUP] Calling firebaseAuth.deleteUser(${tempUserId})`);
+            await firebaseAuth.deleteUser(tempUserId);
             firebaseDeleted = true;
             console.log(`[CLEANUP] ✓ SUCCESS: Firebase user ${tempUserId} DELETED`);
         } catch (fbErr) {
-            console.error(`[CLEANUP] ✗ FAILED: Firebase deletion error:`, fbErr.code, fbErr.message);
+            console.error(`[CLEANUP] ✗ FAILED: Firebase deletion error`);
+            console.error(`[CLEANUP] Error code:`, fbErr.code);
+            console.error(`[CLEANUP] Error message:`, fbErr.message);
         }
 
         console.log(`[CLEANUP] === Temp account deletion complete ===`);
@@ -82,15 +84,17 @@ router.delete("/cleanup-old-temp-accounts", async (req, res) => {
             
             for (const uid of uids) {
                 try { 
-                    await admin.auth().deleteUser(uid); 
+                    console.log(`[CLEANUP] Deleting Firebase user: ${uid}`);
+                    await firebaseAuth.deleteUser(uid); 
                     deletedCount++; 
+                    console.log(`[CLEANUP] ✓ Deleted Firebase user: ${uid}`);
                 } catch (err) { 
-                    console.warn(`[CLEANUP] Firebase batch delete warning for ${uid}:`, err.message); 
+                    console.error(`[CLEANUP] ✗ Failed to delete Firebase user ${uid}:`, err.code, err.message); 
                 }
             }
         }
         
-        console.log(`[CLEANUP] Batch cleanup complete: ${deletedCount}/${uids.length} old temp accounts deleted`);
+        console.log(`[CLEANUP] Batch cleanup complete: ${deletedCount}/${uids.length} old temp accounts deleted from Firebase`);
         res.json({ success: true, message: `Cleaned up ${deletedCount} old temp accounts`, deletedCount });
     } catch (err) {
         console.error('[CLEANUP] Batch cleanup error:', err);

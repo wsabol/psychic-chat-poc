@@ -18,9 +18,9 @@ import { VerificationScreen } from "./screens/VerificationScreen";
 import { auth } from "./firebase";
 
 /**
- * Main App Component - Modularized with Email Verification + 3 Strikes
- * Handles routing, state management, and email verification flow
- * ~95 lines instead of 900+
+ * Main App Component - Clean & Simple
+ * Email verification works. Temp accounts properly deleted.
+ * Chat starts fresh when upgrading from temp to real account.
  */
 function App() {
     useTokenRefresh();
@@ -33,26 +33,20 @@ function App() {
     const handlers = useAuthHandlers(authState, modals, tempFlow);
     const { isLoading, isThankyou, isRegister, isVerification, isLanding, isLogin, isChat } = useAppRouting(authState, tempFlow.appExited, modals.showRegisterMode);
     const emailVerification = useEmailVerification();
+    
     const [verificationFailed, setVerificationFailed] = useState(false);
 
     // Start email verification polling when on verification screen
     useEffect(() => {
         if (isVerification && auth.currentUser) {
+            console.log('[VERIFICATION] Starting verification polling for:', auth.currentUser.email);
             emailVerification.startVerificationPolling(auth.currentUser);
         }
-    }, [isVerification]);
+    }, [isVerification, emailVerification]);
 
-    // Handle email verification completion
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    useEffect(() => {
-        if (emailVerification.isVerified && isVerification) {
-            console.log('[EMAIL-VERIFY] Email verified! Redirecting to chat...');
-        }
-    }, [emailVerification.isVerified, isVerification])
-
-    // Handle verification failure - go to thank you screen
+    // Handle verification failure
     const handleVerificationFailed = () => {
-        console.log('[EMAIL-VERIFY] Verification failed - three strikes. Redirecting to exit screen...');
+        console.log('[EMAIL-VERIFY] Verification failed - three strikes');
         setVerificationFailed(true);
         tempFlow.setAppExited(true);
     };
@@ -64,9 +58,8 @@ function App() {
         return false;
     };
 
-    // Handle sign out from verification screen
     const handleSignOutFromVerification = async () => {
-        console.log('[AUTH] Signing out from verification screen...');
+        console.log('[AUTH] Signing out from verification screen');
         await authState.handleLogout();
     };
 
@@ -75,7 +68,7 @@ function App() {
         return <ErrorBoundary><LoadingScreen /></ErrorBoundary>;
     }
 
-    // Thank you screen (after exit or verification failure)
+    // Thank you screen
     if (isThankyou || verificationFailed) {
         return (
             <ErrorBoundary>
@@ -109,7 +102,7 @@ function App() {
         );
     }
 
-    // Register mode (Firebase login screen)
+    // Register mode
     if (isRegister) {
         return <ErrorBoundary><LoginScreenWrapper /></ErrorBoundary>;
     }
@@ -132,7 +125,7 @@ function App() {
         return <ErrorBoundary><LoginScreenWrapper /></ErrorBoundary>;
     }
 
-    // Chat screen (authenticated and verified)
+    // Chat screen
     if (isChat) {
         return (
             <ErrorBoundary>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { fetchWithTokenRefresh } from "../utils/fetchWithTokenRefresh.js";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
@@ -8,6 +8,7 @@ export function useChat(userId, token, isAuthenticated, authUserId) {
     const [message, setMessage] = useState("");
     const [loaded, setLoaded] = useState(false);
     const [error, setError] = useState(null);
+    const hasInitialized = useRef(false);
     
     const loadMessages = useCallback(async () => {
         try {
@@ -35,11 +36,11 @@ export function useChat(userId, token, isAuthenticated, authUserId) {
             const res = await fetchWithTokenRefresh(url, { headers });
             if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
             await res.json();
-            await loadMessages();
+            // Don't call loadMessages here - let the polling handle it
         } catch (err) {
             // Opening request failed, continue silently
         }
-    }, [userId, token, loadMessages]);
+    }, [userId, token]);
     
     const sendMessage = useCallback(async () => {
         if (!message.trim()) return;
@@ -59,12 +60,14 @@ export function useChat(userId, token, isAuthenticated, authUserId) {
         setMessage("");
     }, [message, userId, token, loadMessages]);
 
-    // Load messages on mount or userId change
+    // Load messages and request opening on mount or userId change (only once per user)
     useEffect(() => {
-        if (isAuthenticated && authUserId && token) {
-            loadMessages().then(() => requestOpening());
+        if (isAuthenticated && authUserId && token && !hasInitialized.current) {
+            hasInitialized.current = true;
+            loadMessages();
+            requestOpening();
         }
-    }, [authUserId, isAuthenticated, token, loadMessages, requestOpening]);
+    }, [authUserId, isAuthenticated, token]);
 
     // Poll for new messages every 2 seconds
     useEffect(() => {
