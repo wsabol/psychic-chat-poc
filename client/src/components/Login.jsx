@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, sendEmailVerification, signOut } from 'firebase/auth';
 import { auth } from '../firebase';
 
 export function Login() {
@@ -46,10 +46,51 @@ export function Login() {
     
     try {
       console.log('[AUTH] Creating user with email:', email);
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      console.log('[AUTH] User created successfully:', userCredential.user.uid);
       
-      // Send verification email with actionCodeSettings
+      // Step 1: Delete temp account if it exists (upgrade from free trial)
+      const currentUser = auth.currentUser;
+      if (currentUser && currentUser.email && currentUser.email.startsWith('temp_')) {
+        console.log('[AUTH-CLEANUP] Current user is temp account, cleaning up before creating real account...');
+        console.log('[AUTH-CLEANUP] Temp UID to delete:', currentUser.uid);
+        console.log('[AUTH-CLEANUP] Temp Email:', currentUser.email);
+        
+        const tempUid = currentUser.uid;
+        const tempToken = await currentUser.getIdToken();
+        
+        // Call backend to delete temp user from database and Firebase
+        try {
+          const deleteUrl = 'http://localhost:3000/cleanup/delete-temp-account/' + tempUid;
+          console.log('[AUTH-CLEANUP] Calling backend cleanup...');
+          const response = await fetch(deleteUrl, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${tempToken}` }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            console.log('[AUTH-CLEANUP] ✓ Backend cleanup successful:', data);
+          } else {
+            console.error('[AUTH-CLEANUP] ✗ Backend cleanup failed:', response.status);
+          }
+        } catch (err) {
+          console.warn('[AUTH-CLEANUP] Backend cleanup error (continuing anyway):', err.message);
+        }
+        
+        // Sign out from temp account
+        try {
+          console.log('[AUTH-CLEANUP] Signing out from temp account...');
+          await signOut(auth);
+          console.log('[AUTH-CLEANUP] ✓ Signed out from temp account');
+        } catch (signOutErr) {
+          console.error('[AUTH-CLEANUP] Sign out error:', signOutErr);
+        }
+      }
+      
+      // Step 2: Create the real account
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      console.log('[AUTH] ✓ User created successfully:', userCredential.user.uid);
+      
+      // Step 3: Send verification email
       console.log('[EMAIL-VERIFY] Attempting to send verification email...');
       try {
         const actionCodeSettings = {
@@ -57,7 +98,6 @@ export function Login() {
           handleCodeInApp: false
         };
         console.log('[EMAIL-VERIFY] Action code settings:', actionCodeSettings);
-        console.log('[EMAIL-VERIFY] Window location origin:', window.location.origin);
         
         await sendEmailVerification(userCredential.user, actionCodeSettings);
         console.log('[EMAIL-VERIFY] ✓ Verification email sent');

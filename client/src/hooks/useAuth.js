@@ -16,11 +16,9 @@ export function useAuth() {
     useEffect(() => {
         console.log('[AUTH-LISTENER] Setting up auth state listener...');
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            console.log('[AUTH-LISTENER] Auth state changed. User:', firebaseUser ? firebaseUser.email : 'NONE');
             try {
                 if (firebaseUser) {
                     console.log('[AUTH-LISTENER] User authenticated:', firebaseUser.uid, firebaseUser.email);
-                    console.log('[AUTH-LISTENER] emailVerified:', firebaseUser.emailVerified);
                     const isTemp = firebaseUser.email.startsWith('temp_');
                     const idToken = await firebaseUser.getIdToken();
                     setAuthUserId(firebaseUser.uid);
@@ -31,7 +29,6 @@ export function useAuth() {
                     setEmailVerified(firebaseUser.emailVerified);
                     const isEmail = firebaseUser.providerData.some(p => p.providerId === 'password');
                     setIsEmailUser(isEmail);
-                    console.log('[AUTH-LISTENER] isEmailUser:', isEmail, 'providerData:', firebaseUser.providerData);
                     if (!isTemp) {
                         setIsFirstTime(false);
                         localStorage.setItem('psychic_app_registered', 'true');
@@ -53,7 +50,6 @@ export function useAuth() {
                 setIsAuthenticated(false);
             } finally {
                 setLoading(false);
-                console.log('[AUTH-LISTENER] Loading set to false');
             }
         });
 
@@ -71,8 +67,9 @@ export function useAuth() {
             
             localStorage.setItem('temp_account_uid', userCredential.user.uid);
             localStorage.setItem('temp_account_email', tempEmail);
+            console.log('[TEMP-ACCOUNT] Temp account created:', tempEmail);
         } catch (err) {
-            console.error('Failed to create temporary account:', err);
+            console.error('[TEMP-ACCOUNT] Failed to create temporary account:', err);
             throw err;
         } finally {
             setLoading(false);
@@ -83,28 +80,35 @@ export function useAuth() {
         try {
             if (isTemporaryAccount && auth.currentUser) {
                 const uid = auth.currentUser.uid;
+                const email = auth.currentUser.email;
+                
+                console.log('[TEMP-ACCOUNT] Deleting temp account:', uid, email);
+                
                 let userToken = null;
                 
                 try {
                     userToken = await auth.currentUser.getIdToken();
                 } catch (err) {
-                    console.warn('Could not get ID token:', err.message);
+                    console.warn('[TEMP-ACCOUNT] Could not get ID token:', err.message);
                 }
                 
                 // Call backend to delete from database and Firebase
                 if (userToken) {
                     try {
-                        const response = await fetch('http://localhost:3000/cleanup/delete-temp-account/' + uid, {
+                        const deleteUrl = 'http://localhost:3000/cleanup/delete-temp-account/' + uid;
+                        const response = await fetch(deleteUrl, {
                             method: 'DELETE',
                             headers: { 'Authorization': `Bearer ${userToken}` }
                         });
+                        
                         if (response.ok) {
-                            console.log('Backend deletion successful');
+                            const data = await response.json();
+                            console.log('[TEMP-ACCOUNT] Backend deletion successful');
                         } else {
-                            console.error('Backend deletion failed:', response.status);
+                            console.error('[TEMP-ACCOUNT] Backend deletion failed:', response.status);
                         }
                     } catch (err) {
-                        console.warn('Backend cleanup failed:', err.message);
+                        console.warn('[TEMP-ACCOUNT] Backend cleanup failed:', err.message);
                     }
                 }
                 
@@ -113,10 +117,10 @@ export function useAuth() {
                     const currentUser = auth.currentUser;
                     if (currentUser) {
                         await currentUser.delete();
-                        console.log('Firebase user deleted from client');
+                        console.log('[TEMP-ACCOUNT] Firebase user deleted from client');
                     }
                 } catch (err) {
-                    console.warn('Firebase client-side deletion note:', err.message);
+                    console.warn('[TEMP-ACCOUNT] Firebase client-side deletion note:', err.message);
                 }
                 
                 // Clean up localStorage
@@ -131,7 +135,7 @@ export function useAuth() {
                 setIsTemporaryAccount(false);
             }
         } catch (err) {
-            console.error('Failed to delete temporary account:', err);
+            console.error('[TEMP-ACCOUNT] Failed to delete temporary account:', err);
             setIsAuthenticated(false);
             setAuthUserId(null);
             setAuthEmail(null);
