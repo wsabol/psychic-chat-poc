@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, sendEmailVerification, signOut } from 'firebase/auth';
 import { auth } from '../firebase';
+import { PasswordInput } from './PasswordInput';
 
 export function Login() {
   const [mode, setMode] = useState('login');
@@ -199,19 +200,11 @@ export function Login() {
                 fontSize: '1rem'
               }}
             />
-            <input
-              type="password"
-              placeholder="Password"
+            <PasswordInput
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
+              placeholder="Password"
               autoComplete="current-password"
-              style={{
-                padding: '0.75rem',
-                borderRadius: '5px',
-                border: 'none',
-                fontSize: '1rem'
-              }}
             />
             <button 
               type="submit" 
@@ -248,33 +241,17 @@ export function Login() {
                 fontSize: '1rem'
               }}
             />
-            <input
-              type="password"
-              placeholder="Password (min 6 characters)"
+            <PasswordInput
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
+              placeholder="Password (min 6 characters)"
               autoComplete="new-password"
-              style={{
-                padding: '0.75rem',
-                borderRadius: '5px',
-                border: 'none',
-                fontSize: '1rem'
-              }}
             />
-            <input
-              type="password"
-              placeholder="Confirm Password"
+            <PasswordInput
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              required
+              placeholder="Confirm Password"
               autoComplete="new-password"
-              style={{
-                padding: '0.75rem',
-                borderRadius: '5px',
-                border: 'none',
-                fontSize: '1rem'
-              }}
             />
             <button 
               type="submit" 

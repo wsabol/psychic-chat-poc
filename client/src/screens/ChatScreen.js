@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import StarField from '../components/StarField';
 import Menu from '../components/Menu';
 import CardDisplay from '../components/CardDisplay';
 import ReactMarkdown from 'react-markdown';
+import { CountdownTimer } from '../components/CountdownTimer';
 import PersonalInfoModal from '../components/PersonalInfoModal';
 import MySignModal from '../components/MySignModal';
 import MoonPhaseModal from '../components/MoonPhaseModal';
@@ -12,8 +13,12 @@ import SecurityModal from '../components/SecurityModal';
 import OnboardingModal from '../modals/OnboardingModal';
 import AstrologyPromptModal from '../modals/AstrologyPromptModal';
 
+const ORACLE_RESPONSE_TIMEOUT = 60000; // 60 seconds
+
 /**
- * Main authenticated chat screen
+ * Main authenticated chat screen with countdown timer
+ * Onboarding Flow: First response → 60s timer → AstrologyPrompt (Yes/No) 
+ *                  → PersonalInfo (get birth date) → Horoscope (ONLY during onboarding) → Final Modal
  */
 export function ChatScreen({
     auth,
@@ -28,6 +33,10 @@ export function ChatScreen({
         firstResponseReceived,
     } = tempFlow;
 
+    const [timerActive, setTimerActive] = useState(false);
+    const [timeRemaining, setTimeRemaining] = useState(60);
+    const [isOnboardingFlow, setIsOnboardingFlow] = useState(false); // Track if we're in onboarding flow
+
     // Show oracle greeting for temp accounts
     useEffect(() => {
         if (auth.isTemporaryAccount && !greetingShown && chat.chat.length === 0) {
@@ -40,18 +49,40 @@ export function ChatScreen({
         }
     }, [auth.isTemporaryAccount, greetingShown, chat, tempFlow]);
 
-    // Check for first response and show astrology prompt
+    // Check for first response and start timer
     useEffect(() => {
         if (auth.isTemporaryAccount && !firstResponseReceived && chat.chat.length > 1) {
             const nonGreetingMessages = chat.chat.filter(msg => msg.id !== 'oracle-greeting');
             if (nonGreetingMessages.length >= 2) {
                 tempFlow.setFirstResponseReceived(true);
+                setTimerActive(true);
+                setTimeRemaining(60);
+                
+                // After 60 seconds, show AstrologyPromptModal
                 setTimeout(() => {
+                    setTimerActive(false);
                     modals.setShowAstrologyPrompt(true);
-                }, 45000);
+                }, ORACLE_RESPONSE_TIMEOUT);
             }
         }
     }, [auth.isTemporaryAccount, firstResponseReceived, chat.chat, modals, tempFlow]);
+
+    // Countdown timer effect
+    useEffect(() => {
+        if (!timerActive) return;
+
+        const interval = setInterval(() => {
+            setTimeRemaining(prev => {
+                if (prev <= 1) {
+                    setTimerActive(false);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [timerActive]);
 
     return (
         <div style={{ position: 'relative' }}>
@@ -65,13 +96,24 @@ export function ChatScreen({
                 onExit={handlers.handleExit}
             />
 
+            {/* AstrologyPrompt - Shows after timer, asks Yes/No to continue */}
             <AstrologyPromptModal
                 show={modals.showAstrologyPrompt}
                 isTemporary={auth.isTemporaryAccount}
-                onYes={handlers.handleAstrologyPromptYes}
-                onNo={handlers.handleAstrologyPromptNo}
+                onYes={() => {
+                    modals.setShowAstrologyPrompt(false);
+                    setIsOnboardingFlow(true); // Set flag that we're in onboarding flow
+                    // If YES, show PersonalInfo to collect birth date
+                    modals.setShowPersonalInfoModal(true);
+                }}
+                onNo={() => {
+                    modals.setShowAstrologyPrompt(false);
+                    // If NO, show final modal (exit flow)
+                    modals.setShowFinalModal(true);
+                }}
             />
 
+            {/* PersonalInfo Modal - Collect birth date for horoscope */}
             <PersonalInfoModal
                 userId={auth.authUserId}
                 token={auth.token}
@@ -81,7 +123,12 @@ export function ChatScreen({
                 onSave={() => {
                     personalInfo.fetchPersonalInfo();
                     setTimeout(() => {
-                        modals.setShowMySignModal(true);
+                        modals.setShowPersonalInfoModal(false);
+                        
+                        // Only auto-show horoscope during onboarding flow
+                        if (isOnboardingFlow && auth.isTemporaryAccount) {
+                            modals.setShowHoroscopeModal(true);
+                        }
                     }, 500);
                 }}
             />
@@ -113,11 +160,21 @@ export function ChatScreen({
                 onClose={() => modals.setShowMoonPhaseModal(false)}
             />
 
+            {/* Horoscope Modal - Shows after PersonalInfo during onboarding, or from menu for real accounts */}
             <HoroscopeModal
                 userId={auth.authUserId}
                 token={auth.token}
                 isOpen={modals.showHoroscopeModal}
-                onClose={() => modals.setShowHoroscopeModal(false)}
+                onClose={() => {
+                    modals.setShowHoroscopeModal(false);
+                    
+                    // During onboarding: skip MySign, go straight to Final Modal
+                    if (isOnboardingFlow && auth.isTemporaryAccount) {
+                        setIsOnboardingFlow(false); // Reset flag
+                        modals.setShowFinalModal(true);
+                    }
+                    // For real accounts: just close (don't auto-navigate)
+                }}
             />
 
             <CosmicWeatherModal
@@ -151,14 +208,15 @@ export function ChatScreen({
                 />
             )}
 
-            {/* Chat Area */}
-            <div style={{ maxWidth: 600, margin: "2rem auto", fontFamily: "sans-serif", textAlign: "center", position: "relative", zIndex: 10 }}>
+            {/* Chat Area - Container with relative positioning for timer */}
+            <div style={{ maxWidth: 700, margin: "2rem auto", fontFamily: "sans-serif", textAlign: "center", position: "relative", zIndex: 10, paddingRight: '120px' }}>
                 {chat.error && <p style={{ color: "red" }}>Error: {chat.error}</p>}
 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', gap: '1rem' }}>
                     <h2 style={{ textAlign: "center", color: "white", textShadow: "0 2px 4px rgba(0, 0, 0, 0.5)", flex: 1, margin: 0 }}>
                         {auth.isTemporaryAccount ? '🔮 Oracle Chat (Free Trial)' : 'Chatbot Demo'}
                     </h2>
+                    
                     <button
                         onClick={handlers.handleReset}
                         style={{
@@ -188,39 +246,57 @@ export function ChatScreen({
                     />
                 </div>
 
-                <div
-                    style={{
-                        border: "1px solid #ccc",
-                        borderRadius: "8px",
-                        padding: "1rem",
-                        height: "400px",
-                        overflowY: "auto",
-                        marginBottom: "1rem",
-                        background: "rgba(255, 255, 255, 0.95)",
-                        textAlign: "left",
-                        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
-                        position: "relative",
-                        zIndex: 1,
-                    }}
-                >
-                    {chat.chat.filter(msg => !['horoscope','moon_phase','cosmic_weather','void_of_course','lunar_nodes'].includes(msg.role)).map((msg, index) => {
-                        const key = msg.id || `msg-${index}-${Date.now()}`;
-                        if (typeof msg.content === 'string') {
-                            try {
-                                const parsed = JSON.parse(msg.content);
-                                return (
-                                    <div key={key}>
-                                        <ReactMarkdown>{parsed.text || msg.content}</ReactMarkdown>
-                                        {parsed.cards && parsed.cards.length > 0 && <CardDisplay cards={parsed.cards} />}
-                                    </div>
-                                );
-                            } catch (e) {
+                {/* Chat box with absolute timer positioning */}
+                <div style={{ position: 'relative' }}>
+                    <div
+                        style={{
+                            border: "1px solid #ccc",
+                            borderRadius: "8px",
+                            padding: "1rem",
+                            height: "400px",
+                            overflowY: "auto",
+                            marginBottom: "1rem",
+                            background: "rgba(255, 255, 255, 0.95)",
+                            textAlign: "left",
+                            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
+                            position: "relative",
+                            zIndex: 1,
+                        }}
+                    >
+                        {chat.chat.filter(msg => !['horoscope','moon_phase','cosmic_weather','void_of_course','lunar_nodes'].includes(msg.role)).map((msg, index) => {
+                            const key = msg.id || `msg-${index}-${Date.now()}`;
+                            if (typeof msg.content === 'string') {
+                                try {
+                                    const parsed = JSON.parse(msg.content);
+                                    return (
+                                        <div key={key}>
+                                            <ReactMarkdown>{parsed.text || msg.content}</ReactMarkdown>
+                                            {parsed.cards && parsed.cards.length > 0 && <CardDisplay cards={parsed.cards} />}
+                                        </div>
+                                    );
+                                } catch (e) {
+                                    return <div key={key}><p>{msg.content}</p></div>;
+                                }
+                            } else {
                                 return <div key={key}><p>{msg.content}</p></div>;
                             }
-                        } else {
-                            return <div key={key}><p>{msg.content}</p></div>;
-                        }
-                    })}
+                        })}
+                    </div>
+
+                    {/* Countdown Timer - Positioned to the right of chatbox */}
+                    {timerActive && (
+                        <div style={{
+                            position: 'absolute',
+                            right: '-120px',
+                            top: '0px',
+                            width: '110px'
+                        }}>
+                            <CountdownTimer 
+                                secondsRemaining={timeRemaining}
+                                isVisible={timerActive}
+                            />
+                        </div>
+                    )}
                 </div>
 
                 <div style={{ opacity: (auth.isTemporaryAccount && modals.showAstrologyPrompt) ? 0.5 : 1, pointerEvents: (auth.isTemporaryAccount && modals.showAstrologyPrompt) ? 'none' : 'auto' }}>

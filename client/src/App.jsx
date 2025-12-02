@@ -18,9 +18,7 @@ import { VerificationScreen } from "./screens/VerificationScreen";
 import { auth } from "./firebase";
 
 /**
- * Main App Component - Clean & Simple
- * Email verification works. Temp accounts properly deleted.
- * Chat starts fresh when upgrading from temp to real account.
+ * Main App Component - With Auto-Navigation After Login
  */
 function App() {
     useTokenRefresh();
@@ -35,6 +33,16 @@ function App() {
     const emailVerification = useEmailVerification();
     
     const [verificationFailed, setVerificationFailed] = useState(false);
+    const [previousAuthState, setPreviousAuthState] = useState(null);
+
+    // Auto-close register mode when user successfully authenticates
+    useEffect(() => {
+        if (authState.isAuthenticated && previousAuthState !== authState.isAuthenticated) {
+            console.log('[AUTO-NAV] User authenticated, closing register mode');
+            modals.setShowRegisterMode(false);
+        }
+        setPreviousAuthState(authState.isAuthenticated);
+    }, [authState.isAuthenticated, previousAuthState, modals]);
 
     // Start email verification polling when on verification screen
     useEffect(() => {
