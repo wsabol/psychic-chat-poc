@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "./hooks/useAuth";
-import { useChat } from "./hooks/useChat";
+
+
 import { useTokenRefresh } from "./hooks/useTokenRefresh";
-import { usePersonalInfo } from "./hooks/usePersonalInfo";
+
+
 import { useModalState } from "./hooks/useModalState";
 import { useTempAccountFlow } from "./hooks/useTempAccountFlow";
 import { useAuthHandlers } from "./hooks/useAuthHandlers";
@@ -13,9 +15,10 @@ import { LoadingScreen } from "./screens/LoadingScreen";
 import { ThankYouScreen } from "./screens/ThankYouScreen";
 import { LandingScreenWrapper } from "./screens/LandingScreenWrapper";
 import { LoginScreenWrapper } from "./screens/LoginScreenWrapper";
-import { ChatScreen } from "./screens/ChatScreen";
+
 import { VerificationScreen } from "./screens/VerificationScreen";
 import { auth } from "./firebase";
+import MainContainer from "./layouts/MainContainer";
 
 /**
  * Main App Component - With Auto-Navigation After Login
@@ -135,19 +138,16 @@ function App() {
 
     // Chat screen
     if (isChat) {
-        return (
-            <ErrorBoundary>
-                <ChatScreen
-                    auth={authState}
-                    chat={chat}
-                    personalInfo={personalInfo}
-                    modals={modals}
-                    handlers={handlers}
-                    tempFlow={tempFlow}
-                />
-            </ErrorBoundary>
-        );
-    }
+    return (
+        <ErrorBoundary>
+            <MainContainer 
+                auth={authState}
+                token={authState.token}
+                userId={authState.authUserId}
+            />
+        </ErrorBoundary>
+    );
+}
 
     return null;
 }

@@ -11,9 +11,11 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "framer-motion": "^12.23.25",
     "grok-sdk": "^0.0.1-security",
     "openai": "^5.23.2",
     "pg": "^8.16.3",
+    "react-swipeable": "^7.0.2",
     "redis": "^5.9.0"
   }
 }
