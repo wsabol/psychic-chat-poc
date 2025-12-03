@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "./hooks/useAuth";
 
-
 import { useTokenRefresh } from "./hooks/useTokenRefresh";
-
 
 import { useModalState } from "./hooks/useModalState";
 import { useTempAccountFlow } from "./hooks/useTempAccountFlow";
@@ -27,8 +25,6 @@ function App() {
     useTokenRefresh();
 
     const authState = useAuth();
-    const chat = useChat(authState.authUserId, authState.token, authState.isAuthenticated, authState.authUserId);
-    const personalInfo = usePersonalInfo(authState.authUserId, authState.token);
     const modals = useModalState();
     const tempFlow = useTempAccountFlow(authState);
     const handlers = useAuthHandlers(authState, modals, tempFlow);
