@@ -50,12 +50,10 @@ if (fs.existsSync('./certificates/key.pem') && fs.existsSync('./certificates/cer
     };
     server = https.createServer(options, app);
     server.listen(PORT, () => {
-        console.log(`API listening securely on port ${PORT}`);
     });
 } else {
     console.warn('Certificates not found; starting HTTP server for development. This is not secure for production!');
     server = app.listen(PORT, () => {
-        console.log(`API listening on HTTP port ${PORT}`);
     });
 }
 
@@ -63,6 +61,5 @@ if (fs.existsSync('./certificates/key.pem') && fs.existsSync('./certificates/cer
 setInterval(async () => {
     try {
         const res = await fetch(`http://localhost:${PORT}/cleanup/cleanup-old-temp-accounts`, { method: 'DELETE' });
-        if (res.ok) { const d = await res.json(); console.log('[CLEANUP]', d.message); }
     } catch (e) { console.error('[CLEANUP] Error:', e.message); }
 }, 24 * 60 * 60 * 1000);

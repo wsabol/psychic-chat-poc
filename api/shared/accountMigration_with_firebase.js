@@ -51,7 +51,6 @@ export async function migrateOnboardingData(options) {
 
   try {
     // Step 0: Fetch temp user's personal info (birth date, location, etc.)
-    console.log(`[MIGRATION] Step 0: Fetching temp user personal info`);
     let tempUserInfo = {};
     try {
       const tempResult = await db.query(
@@ -62,14 +61,12 @@ export async function migrateOnboardingData(options) {
       );
       if (tempResult.rows.length > 0) {
         tempUserInfo = tempResult.rows[0];
-        console.log(`[MIGRATION] ✓ Found temp user personal info`);
       }
     } catch (err) {
       console.warn(`[MIGRATION] Could not fetch temp user info:`, err.message);
     }
     
     // Step 1: Create user_personal_info for permanent user with migrated data
-    console.log(`[MIGRATION] Step 1: Creating user_personal_info for ${newUserId}`);
     await db.query(
       `INSERT INTO user_personal_info (user_id, email, first_name, last_name, birth_date, 
                                        birth_time, birth_country, birth_province, birth_city,
@@ -106,7 +103,6 @@ export async function migrateOnboardingData(options) {
 
     // Step 2: Migrate oracle's first message
     if (onboarding_first_message && onboarding_first_message.content) {
-      console.log(`[MIGRATION] Step 2: Migrating first oracle message`);
       await db.query(
         `INSERT INTO messages (user_id, role, content, created_at)
          VALUES ($1, $2, $3, $4)`,
@@ -117,14 +113,12 @@ export async function migrateOnboardingData(options) {
         status: 'success',
         content_length: onboarding_first_message.content.length
       });
-      console.log(`[MIGRATION] ✓ First message migrated (${onboarding_first_message.content.length} chars)`);
     } else {
       migrationLog.steps.push({ step: 'migrate_first_message', status: 'skipped', reason: 'no_message_provided' });
     }
 
     // Step 3: Migrate horoscope data
     if (onboarding_horoscope && onboarding_horoscope.data) {
-      console.log(`[MIGRATION] Step 3: Migrating horoscope data`);
       
       const horoscopeData = onboarding_horoscope.data;
       const horoscopeContent = JSON.stringify(horoscopeData);
@@ -140,13 +134,11 @@ export async function migrateOnboardingData(options) {
         status: 'success',
         data_size: horoscopeContent.length
       });
-      console.log(`[MIGRATION] ✓ Horoscope data migrated (${horoscopeContent.length} chars)`);
     } else {
       migrationLog.steps.push({ step: 'migrate_horoscope', status: 'skipped', reason: 'no_horoscope_provided' });
     }
 
     // Step 4: Migrate astrology data if it exists
-    console.log(`[MIGRATION] Step 4: Migrating astrology data`);
     try {
       const astroResult = await db.query(
         `SELECT zodiac_sign, astrology_data FROM user_astrology WHERE user_id = $1`,
@@ -167,7 +159,6 @@ export async function migrateOnboardingData(options) {
           step: 'migrate_astrology', 
           status: 'success'
         });
-        console.log(`[MIGRATION] ✓ Astrology data migrated`);
       } else {
         migrationLog.steps.push({ 
           step: 'migrate_astrology', 
@@ -185,10 +176,8 @@ export async function migrateOnboardingData(options) {
     }
     
     // Step 5: Delete temporary user from Firebase
-    console.log(`[MIGRATION] Step 5: Deleting temp user from Firebase: ${temp_user_id}`);
     try {
       await auth.deleteUser(temp_user_id);
-      console.log(`[MIGRATION] ✓ Firebase temp user deleted`);
       migrationLog.steps.push({ 
         step: 'delete_firebase_temp_user', 
         status: 'success'
@@ -203,7 +192,6 @@ export async function migrateOnboardingData(options) {
     }
     
     // Step 6: Delete temporary user from database (cascade deletes messages)
-    console.log(`[MIGRATION] Step 6: Deleting temporary user from database: ${temp_user_id}`);
     const deleteResult = await db.query(
       `DELETE FROM user_personal_info WHERE user_id = $1`,
       [temp_user_id]
@@ -213,8 +201,6 @@ export async function migrateOnboardingData(options) {
       status: 'success',
       rows_deleted: deleteResult.rowCount
     });
-    console.log(`[MIGRATION] ✓ Temporary user database record deleted (${deleteResult.rowCount} rows affected)`);
-
     migrationLog.endTime = new Date().toISOString();
     migrationLog.status = 'success';
     migrationLog.message = 'All onboarding data migrated successfully';
@@ -261,13 +247,10 @@ export async function verifyMigration(newUserId) {
  */
 export async function rollbackMigration(newUserId) {
   try {
-    console.log(`[MIGRATION] Rolling back migration for ${newUserId}`);
     
     // Delete all data associated with new user
     await db.query('DELETE FROM messages WHERE user_id = $1', [newUserId]);
     await db.query('DELETE FROM user_personal_info WHERE user_id = $1', [newUserId]);
-    
-    console.log(`[MIGRATION] ✓ Rollback complete`);
     return { success: true };
   } catch (err) {
     console.error('[MIGRATION] Rollback failed:', err);

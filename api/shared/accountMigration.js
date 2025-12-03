@@ -32,7 +32,6 @@ export async function migrateOnboardingData(options) {
 
   try {
     // Step 1: Create user_personal_info for permanent user (minimal data)
-    console.log(`[MIGRATION] Step 1: Creating user_personal_info for ${newUserId}`);
     await db.query(
       `INSERT INTO user_personal_info (user_id, email, first_name, last_name, created_at, updated_at)
        VALUES ($1, $2, $3, $4, NOW(), NOW())
@@ -47,10 +46,8 @@ export async function migrateOnboardingData(options) {
       step: 'create_user_profile', 
       status: 'success'
     });
-    console.log(`[MIGRATION] ✓ User profile created`);
 
     // Step 2: Migrate ALL chat messages from temp user to new user
-    console.log(`[MIGRATION] Step 2: Migrating ALL chat messages`);
     try {
       const messageResult = await db.query(
         `SELECT user_id, role, content, created_at FROM messages WHERE user_id = $1 ORDER BY created_at ASC`,
@@ -71,7 +68,6 @@ export async function migrateOnboardingData(options) {
           status: 'success',
           messages_count: messageResult.rows.length
         });
-        console.log(`[MIGRATION] ✓ Migrated ${messageResult.rows.length} messages`);
       } else {
         migrationLog.steps.push({
           step: 'migrate_messages',
@@ -89,7 +85,6 @@ export async function migrateOnboardingData(options) {
     }
 
     // Step 3: Migrate astrology data if it exists
-    console.log(`[MIGRATION] Step 3: Migrating astrology data`);
     try {
       const astroResult = await db.query(
         `SELECT zodiac_sign, astrology_data FROM user_astrology WHERE user_id = $1`,
@@ -110,7 +105,6 @@ export async function migrateOnboardingData(options) {
           step: 'migrate_astrology', 
           status: 'success'
         });
-        console.log(`[MIGRATION] ✓ Astrology data migrated`);
       } else {
         migrationLog.steps.push({ 
           step: 'migrate_astrology', 
@@ -128,10 +122,8 @@ export async function migrateOnboardingData(options) {
     }
     
     // Step 4: Delete temporary user from Firebase
-    console.log(`[MIGRATION] Step 4: Deleting temp user from Firebase: ${temp_user_id}`);
     try {
       await auth.deleteUser(temp_user_id);
-      console.log(`[MIGRATION] ✓ Firebase temp user deleted`);
       migrationLog.steps.push({ 
         step: 'delete_firebase_temp_user', 
         status: 'success'
@@ -146,7 +138,6 @@ export async function migrateOnboardingData(options) {
     }
     
     // Step 5: Delete temporary user from database
-    console.log(`[MIGRATION] Step 5: Deleting temporary user from database: ${temp_user_id}`);
     const deleteResult = await db.query(
       `DELETE FROM user_personal_info WHERE user_id = $1`,
       [temp_user_id]
@@ -156,7 +147,6 @@ export async function migrateOnboardingData(options) {
       status: 'success',
       rows_deleted: deleteResult.rowCount
     });
-    console.log(`[MIGRATION] ✓ Temporary user database record deleted`);
 
     migrationLog.endTime = new Date().toISOString();
     migrationLog.status = 'success';
@@ -201,12 +191,10 @@ export async function verifyMigration(newUserId) {
  */
 export async function rollbackMigration(newUserId) {
   try {
-    console.log(`[MIGRATION] Rolling back migration for ${newUserId}`);
     
     await db.query('DELETE FROM messages WHERE user_id = $1', [newUserId]);
     await db.query('DELETE FROM user_personal_info WHERE user_id = $1', [newUserId]);
     
-    console.log(`[MIGRATION] ✓ Rollback complete`);
     return { success: true };
   } catch (err) {
     console.error('[MIGRATION] Rollback failed:', err);

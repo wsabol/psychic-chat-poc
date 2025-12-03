@@ -78,21 +78,15 @@ router.post('/register-and-migrate', async (req, res) => {
       return res.status(400).json({ 
         error: 'Email, password, and temp_user_id required' 
       });
-    }
-    
-    console.log(`[MIGRATION] Starting account migration for temp user: ${temp_user_id}`);
-    
+    }    
     // Step 1: Create permanent Firebase user
-    console.log(`[MIGRATION] Creating Firebase user for ${email}`);
     const userRecord = await auth.createUser({
       email,
       password,
       displayName: `${firstName || ''} ${lastName || ''}`.trim()
     });
     
-    const newUserId = userRecord.uid;
-    console.log(`[MIGRATION] Firebase user created: ${newUserId}`);
-    
+    const newUserId = userRecord.uid;   
     try {
       // Step 2: Migrate onboarding data
       const migrationResult = await migrateOnboardingData({
@@ -104,8 +98,6 @@ router.post('/register-and-migrate', async (req, res) => {
         onboarding_first_message,
         onboarding_horoscope
       });
-      
-      console.log(`[MIGRATION] ✓ Migration complete: ${JSON.stringify(migrationResult)}`);
       
       return res.status(201).json({
         success: true,

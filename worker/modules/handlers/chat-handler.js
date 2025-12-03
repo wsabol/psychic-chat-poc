@@ -119,7 +119,14 @@ export async function handleChatMessage(userId, message) {
         }
         
         // Get message history
-        const history = await getMessageHistory(userId);
+        let history = await getMessageHistory(userId);
+        
+        // FILTER: Only include messages with valid OpenAI roles
+        // Filter out special roles like 'moon_phase', 'horoscope', 'cosmic_weather', etc.
+        const validRoles = ['system', 'assistant', 'user', 'function', 'tool', 'developer'];
+
+        history = history.filter(msg => validRoles.includes(msg.role));
+
         
         // Build context
         const personalContext = buildPersonalInfoContext(userInfo);
