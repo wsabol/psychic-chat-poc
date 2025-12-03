@@ -48,46 +48,105 @@ export function Login() {
     try {
       console.log('[AUTH] Creating user with email:', email);
       
-      // Step 1: Delete temp account if it exists (upgrade from free trial)
-      const currentUser = auth.currentUser;
-      if (currentUser && currentUser.email && currentUser.email.startsWith('temp_')) {
-        console.log('[AUTH-CLEANUP] Current user is temp account, cleaning up before creating real account...');
-        console.log('[AUTH-CLEANUP] Temp UID to delete:', currentUser.uid);
-        console.log('[AUTH-CLEANUP] Temp Email:', currentUser.email);
+      // PHASE 4: Retrieve onboarding data from sessionStorage
+      let onboarding_first_message = null;
+      let onboarding_horoscope = null;
+      let temp_user_id = null;
+      
+      try {
+        const storedMessage = sessionStorage.getItem('onboarding_first_message');
+        const storedHoroscope = sessionStorage.getItem('onboarding_horoscope');
         
-        const tempUid = currentUser.uid;
-        const tempToken = await currentUser.getIdToken();
-        
-        // Call backend to delete temp user from database and Firebase
-        try {
-          const deleteUrl = 'http://localhost:3000/cleanup/delete-temp-account/' + tempUid;
-          console.log('[AUTH-CLEANUP] Calling backend cleanup...');
-          const response = await fetch(deleteUrl, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${tempToken}` }
-          });
-          
-          if (response.ok) {
-            const data = await response.json();
-            console.log('[AUTH-CLEANUP] ✓ Backend cleanup successful:', data);
-          } else {
-            console.error('[AUTH-CLEANUP] ✗ Backend cleanup failed:', response.status);
-          }
-        } catch (err) {
-          console.warn('[AUTH-CLEANUP] Backend cleanup error (continuing anyway):', err.message);
+        if (storedMessage) {
+          onboarding_first_message = JSON.parse(storedMessage);
+          console.log('[MIGRATION] ✓ Retrieved first message from sessionStorage');
         }
         
-        // Sign out from temp account
+        if (storedHoroscope) {
+          onboarding_horoscope = JSON.parse(storedHoroscope);
+          console.log('[MIGRATION] ✓ Retrieved horoscope from sessionStorage');
+        }
+        
+        const currentUser = auth.currentUser;
+        if (currentUser && currentUser.email && currentUser.email.startsWith('temp_')) {
+          temp_user_id = currentUser.uid;
+          console.log('[MIGRATION] ✓ Retrieved temp user ID:', temp_user_id);
+        }
+      } catch (storageErr) {
+        console.warn('[MIGRATION] Could not retrieve onboarding data from sessionStorage:', storageErr);
+      }
+      
+      // Step 1: Check if user is upgrading from temp account
+      const currentUser = auth.currentUser;
+      if (currentUser && currentUser.email && currentUser.email.startsWith('temp_')) {
+        console.log('[AUTH-MIGRATION] User upgrading from temp account');
+        const tempUid = currentUser.uid;
+        
+        // Try the new register-and-migrate endpoint
         try {
-          console.log('[AUTH-CLEANUP] Signing out from temp account...');
-          await signOut(auth);
-          console.log('[AUTH-CLEANUP] ✓ Signed out from temp account');
-        } catch (signOutErr) {
-          console.error('[AUTH-CLEANUP] Sign out error:', signOutErr);
+          console.log('[AUTH-MIGRATION] Calling /auth/register-and-migrate endpoint...');
+          const migrationResponse = await fetch('http://localhost:3000/auth/register-and-migrate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email,
+              password,
+              temp_user_id: tempUid,
+              onboarding_first_message,
+              onboarding_horoscope
+            })
+          });
+          
+          if (migrationResponse.ok) {
+            const migrationData = await migrationResponse.json();
+            console.log('[AUTH-MIGRATION] ✓ Register-and-migrate successful:', migrationData);
+            
+            // IMPORTANT: DO NOT sign out - stay logged in as new user
+            // The app routing will detect the new user and take them to verification screen
+            console.log('[AUTH-MIGRATION] Staying logged in as new user (will be redirected to email verification)');
+            
+            // Sign out temp account but DON'T sign out completely
+            try {
+              // Get the password reset link to re-authenticate
+              console.log('[AUTH-MIGRATION] Re-authenticating as new user...');
+              
+              // Use the credentials to sign back in as the new user
+              await signOut(auth);
+              const newUserCred = await signInWithEmailAndPassword(auth, email, password);
+              console.log('[AUTH-MIGRATION] ✓ Signed in as new user:', newUserCred.user.uid);
+              
+              // Now send verification email
+              console.log('[EMAIL-VERIFY] Sending verification email...');
+              const actionCodeSettings = {
+                url: window.location.origin,
+                handleCodeInApp: false
+              };
+              await sendEmailVerification(newUserCred.user, actionCodeSettings);
+              console.log('[EMAIL-VERIFY] ✓ Verification email sent');
+              
+            } catch (reAuthErr) {
+              console.warn('[AUTH-MIGRATION] Re-authentication error:', reAuthErr.message);
+              console.log('[EMAIL-VERIFY] Will attempt to send verification email when user arrives at verification screen');
+            }
+            
+            setLoading(false);
+            // App routing will detect authenticated user without email verification and show VerificationScreen
+            return;
+          } else {
+            const errorData = await migrationResponse.json();
+            console.error('[AUTH-MIGRATION] ✗ Register-and-migrate failed:', errorData);
+            throw new Error(errorData.error || 'Migration failed');
+          }
+        } catch (migrationErr) {
+          console.error('[AUTH-MIGRATION] Error calling migrate endpoint:', migrationErr.message);
+          setError('Account upgrade failed: ' + migrationErr.message);
+          setLoading(false);
+          return;
         }
       }
       
-      // Step 2: Create the real account
+      // Step 2: Create regular account (not upgrading from temp)
+      console.log('[AUTH] Creating new user account...');
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       console.log('[AUTH] ✓ User created successfully:', userCredential.user.uid);
       

@@ -11,25 +11,13 @@ import { storeMessage } from '../messages.js';
 
 /**
  * Generate a personalized horoscope for the user
- * WITH DETAILED DEBUG LOGGING
+ * NOW: Works with just birth date OR full astrology data
  */
 export async function generateHoroscope(userId, range = 'daily') {
-    console.log(`[HOROSCOPE-HANDLER] ===== STARTING HOROSCOPE GENERATION =====`);
-    console.log(`[HOROSCOPE-HANDLER] User: ${userId}, Range: ${range}`);
-    
     try {
         // Fetch user context
-        console.log(`[HOROSCOPE-HANDLER] Fetching user info...`);
         const userInfo = await fetchUserPersonalInfo(userId);
-        console.log(`[HOROSCOPE-HANDLER] User info:`, {
-            first_name: userInfo?.first_name,
-            birth_date: userInfo?.birth_date,
-            birth_time: userInfo?.birth_time,
-            birth_city: userInfo?.birth_city
-        });
-        
         let astrologyInfo = await fetchUserAstrology(userId);
-        console.log(`[HOROSCOPE-HANDLER] Astrology info available:`, !!astrologyInfo?.astrology_data);
         
         if (!userInfo) {
             throw new Error('User personal info not found');
@@ -41,12 +29,11 @@ export async function generateHoroscope(userId, range = 'daily') {
         
         // If no astrology data, try to calculate it
         if (!astrologyInfo?.astrology_data) {
-            console.log(`[HOROSCOPE-HANDLER] No astrology data found, attempting to calculate...`);
+            console.log('[HOROSCOPE-HANDLER] No astrology data found, attempting to calculate...');
             
             // Only calculate if we have sufficient birth data
             if (userInfo.birth_time && userInfo.birth_country && userInfo.birth_province && userInfo.birth_city) {
                 try {
-                    console.log(`[HOROSCOPE-HANDLER] Calculating birth chart with full data...`);
                     const calculatedChart = await calculateBirthChart({
                         birth_date: userInfo.birth_date,
                         birth_time: userInfo.birth_time,
@@ -54,13 +41,6 @@ export async function generateHoroscope(userId, range = 'daily') {
                         birth_province: userInfo.birth_province,
                         birth_city: userInfo.birth_city,
                         birth_timezone: userInfo.birth_timezone
-                    });
-                    
-                    console.log(`[HOROSCOPE-HANDLER] Birth chart calculation result:`, {
-                        success: calculatedChart.success,
-                        sun_sign: calculatedChart.sun_sign,
-                        moon_sign: calculatedChart.moon_sign,
-                        rising_sign: calculatedChart.rising_sign
                     });
                     
                     if (calculatedChart.success) {
@@ -78,7 +58,6 @@ export async function generateHoroscope(userId, range = 'daily') {
                         };
                         
                         // Store calculated astrology
-                        console.log(`[HOROSCOPE-HANDLER] Storing astrology data...`);
                         await db.query(
                             `INSERT INTO user_astrology (user_id, zodiac_sign, astrology_data, created_at, updated_at)
                              VALUES ($1, $2, $3, NOW(), NOW())
@@ -93,20 +72,17 @@ export async function generateHoroscope(userId, range = 'daily') {
                             zodiac_sign: calculatedChart.sun_sign,
                             astrology_data: astrologyData
                         };
-                        console.log(`[HOROSCOPE-HANDLER] ✓ Birth chart calculated and stored`);
+                        console.log('[HOROSCOPE-HANDLER] ✓ Birth chart calculated successfully');
                     }
                 } catch (calcErr) {
-                    console.warn(`[HOROSCOPE-HANDLER] Birth chart calculation failed:`, calcErr.message);
+                    console.warn('[HOROSCOPE-HANDLER] Birth chart calculation failed:', calcErr.message);
+                    // Continue with basic horoscope using just birth date
                 }
-            } else {
-                console.log(`[HOROSCOPE-HANDLER] Insufficient birth data for full chart calculation`);
             }
         }
         
-        // Build horoscope prompt
-        console.log(`[HOROSCOPE-HANDLER] Building horoscope prompt...`);
+        // Build horoscope prompt (with astrology data if available, or just birth date)
         const horoscopePrompt = buildHoroscopePrompt(userInfo, astrologyInfo, range);
-        console.log(`[HOROSCOPE-HANDLER] Prompt:`, horoscopePrompt.substring(0, 200) + '...');
         
         // Get oracle base prompt
         const baseSystemPrompt = getOracleSystemPrompt();
@@ -121,11 +97,8 @@ Keep it concise but meaningful (2-3 paragraphs).
 Do NOT include tarot cards in this response - this is purely astrological guidance with crystal recommendations.
 `;
         
-        // Call Oracle
-        console.log(`[HOROSCOPE-HANDLER] Calling oracle API...`);
+        // Call Oracle with just the user's birth data (no chat history for horoscopes)
         const oracleResponse = await callOracle(systemPrompt, [], horoscopePrompt);
-        console.log(`[HOROSCOPE-HANDLER] Oracle response received (${oracleResponse.length} chars)`);
-        console.log(`[HOROSCOPE-HANDLER] Response preview:`, oracleResponse.substring(0, 150) + '...');
         
         // Store horoscope in database with metadata
         const horoscopeData = {
@@ -135,30 +108,21 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
             zodiac_sign: astrologyInfo?.zodiac_sign || 'Unknown'
         };
         
-        console.log(`[HOROSCOPE-HANDLER] Storing horoscope...`);
-        console.log(`[HOROSCOPE-HANDLER] Horoscope data to store:`, {
-            range: horoscopeData.range,
-            generated_at: horoscopeData.generated_at,
-            zodiac_sign: horoscopeData.zodiac_sign,
-            text_length: horoscopeData.text.length
-        });
-        
         // Store as a system message for record-keeping
         await storeMessage(userId, 'horoscope', horoscopeData);
         
-        console.log(`[HOROSCOPE-HANDLER] ✓ Horoscope stored successfully`);
-        console.log(`[HOROSCOPE-HANDLER] ===== HOROSCOPE GENERATION COMPLETE =====`);
+        console.log('[HOROSCOPE-HANDLER] ✓ Horoscope generated successfully');
         return oracleResponse;
         
     } catch (err) {
-        console.error(`[HOROSCOPE-HANDLER] ✗✗✗ ERROR: ${err.message}`);
-        console.error(`[HOROSCOPE-HANDLER] Stack:`, err.stack);
+        console.error('[HOROSCOPE-HANDLER] Error generating horoscope:', err.message);
         throw err;
     }
 }
 
 /**
  * Build horoscope prompt with user context
+ * Works with full astrology data OR just birth date
  */
 function buildHoroscopePrompt(userInfo, astrologyInfo, range) {
     let prompt = `Generate a personalized ${range} horoscope for ${userInfo.first_name || 'this person'}:\n\n`;
@@ -167,22 +131,51 @@ function buildHoroscopePrompt(userInfo, astrologyInfo, range) {
         const astro = astrologyInfo.astrology_data;
         
         if (astro.sun_sign) {
+            // Calculated birth chart (full data)
             prompt += `Birth Chart Information:\n`;
-            prompt += `- Sun Sign: ${astro.sun_sign} (${astro.sun_degree}°)\n`;
-            prompt += `- Moon Sign: ${astro.moon_sign} (${astro.moon_degree}°)\n`;
-            prompt += `- Rising Sign: ${astro.rising_sign} (${astro.rising_degree}°)\n`;
+            prompt += `- Sun Sign: ${astro.sun_sign} (${astro.sun_degree}°) - Core Identity\n`;
+            prompt += `- Moon Sign: ${astro.moon_sign} (${astro.moon_degree}°) - Emotional Nature\n`;
+            prompt += `- Rising Sign: ${astro.rising_sign} (${astro.rising_degree}°) - Outward Presentation\n`;
+            if (userInfo.birth_city) {
+                prompt += `- Birth Location: ${userInfo.birth_city}, ${userInfo.birth_province}, ${userInfo.birth_country}\n`;
+            }
+            prompt += `\n`;
+        } else if (astro.name) {
+            // Traditional zodiac data
+            prompt += `Zodiac Sign: ${astro.name}\n`;
+            if (astro.dates) prompt += `Dates: ${astro.dates}\n`;
+            prompt += `\n`;
         }
+    } else {
+        // Just birth date available
+        prompt += `Birth Date: ${userInfo.birth_date}\n`;
+        if (userInfo.birth_city) {
+            prompt += `Birth Location: ${userInfo.birth_city}${userInfo.birth_province ? ', ' + userInfo.birth_province : ''}, ${userInfo.birth_country}\n`;
+        }
+        prompt += `\n`;
     }
     
-    prompt += `Birth Date: ${userInfo.birth_date}\n`;
-    if (userInfo.birth_city) {
-        prompt += `Birth Location: ${userInfo.birth_city}${userInfo.birth_province ? ', ' + userInfo.birth_province : ''}\n`;
+    prompt += `For the ${range}, consider:\n`;
+    
+    switch (range.toLowerCase()) {
+        case 'daily':
+            prompt += `- What energies are prominent TODAY for this person?\n`;
+            prompt += `- What actions or reflections would be most valuable right now?\n`;
+            prompt += `- What crystals or practices would support them today?\n`;
+            break;
+        case 'weekly':
+            prompt += `- What themes are emerging THIS WEEK?\n`;
+            prompt += `- How do current planetary positions affect their trajectory?\n`;
+            prompt += `- What should they focus on or prepare for?\n`;
+            break;
+        case 'monthly':
+            prompt += `- What is the overarching energy for THIS MONTH?\n`;
+            prompt += `- What major themes or opportunities are present?\n`;
+            prompt += `- What areas of life need attention or growth?\n`;
+            break;
     }
     
-    prompt += `\nFor the ${range}:\n`;
-    prompt += `- What energies are prominent for this person?\n`;
-    prompt += `- What guidance and crystal support would help?\n`;
-    prompt += `Provide practical, personalized guidance.`;
+    prompt += `\nProvide practical, personalized guidance.`;
     
     return prompt;
 }
@@ -191,9 +184,7 @@ function buildHoroscopePrompt(userInfo, astrologyInfo, range) {
  * Check if message is a horoscope request
  */
 export function isHoroscopeRequest(message) {
-    const isRequest = message.includes('[SYSTEM]') && message.includes('horoscope');
-    console.log(`[HOROSCOPE-HANDLER] isHoroscopeRequest("${message}") = ${isRequest}`);
-    return isRequest;
+    return message.includes('[SYSTEM]') && message.includes('horoscope');
 }
 
 /**
@@ -201,9 +192,11 @@ export function isHoroscopeRequest(message) {
  */
 export function extractHoroscopeRange(message) {
     const match = message.match(/horoscope for (\w+)/i);
-    const range = (match && match[1] && ['daily', 'weekly', 'monthly'].includes(match[1].toLowerCase())) 
-        ? match[1].toLowerCase() 
-        : 'daily';
-    console.log(`[HOROSCOPE-HANDLER] extractHoroscopeRange("${message}") = ${range}`);
-    return range;
+    if (match && match[1]) {
+        const range = match[1].toLowerCase();
+        if (['daily', 'weekly', 'monthly'].includes(range)) {
+            return range;
+        }
+    }
+    return 'daily'; // default
 }

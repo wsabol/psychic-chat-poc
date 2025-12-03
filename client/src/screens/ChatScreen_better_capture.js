@@ -21,7 +21,7 @@ const ORACLE_RESPONSE_TIMEOUT = 60000; // 60 seconds
  *                  → PersonalInfo (get birth date) → Horoscope (ONLY during onboarding) → Final Modal
  * 
  * ONBOARDING DATA CAPTURE:
- * - Captures oracle's first response for preservation during account migration
+ * - Captures oracle's BEST response (with cards) for preservation during account migration
  * - Captures horoscope data for persistence after account upgrade
  */
 export function ChatScreen({
@@ -62,22 +62,50 @@ export function ChatScreen({
         if (auth.isTemporaryAccount && !firstResponseReceived && chat.chat.length > 1) {
             const nonGreetingMessages = chat.chat.filter(msg => msg.id !== 'oracle-greeting');
             if (nonGreetingMessages.length >= 2) {
-                // CAPTURE: Store the oracle's first actual response (not the greeting)
-                const firstOracleResponse = nonGreetingMessages[0];
-                if (firstOracleResponse && firstOracleResponse.role === 'assistant') {
+                // IMPROVED CAPTURE: Find the oracle response with tarot cards
+                // Look for messages that have JSON content with cards
+                let bestOracleResponse = null;
+                
+                for (const msg of nonGreetingMessages) {
+                    if (msg.role === 'assistant') {
+                        try {
+                            const parsed = JSON.parse(msg.content);
+                            // If this message has cards, it's probably the good one
+                            if (parsed.cards && parsed.cards.length > 0) {
+                                bestOracleResponse = msg;
+                                console.log('[ONBOARDING] ✓ Found oracle response with cards');
+                                break;
+                            }
+                        } catch (e) {
+                            // Not JSON, might be plain text
+                            if (msg.content && msg.content.length > 200) {
+                                // Longer message, might be better than generic welcome
+                                bestOracleResponse = msg;
+                            }
+                        }
+                    }
+                }
+                
+                // Fall back to first oracle response if we didn't find one with cards
+                if (!bestOracleResponse) {
+                    bestOracleResponse = nonGreetingMessages.find(msg => msg.role === 'assistant');
+                }
+                
+                if (bestOracleResponse && bestOracleResponse.role === 'assistant') {
                     setOnboardingFirstMessage({
-                        content: firstOracleResponse.content,
+                        content: bestOracleResponse.content,
                         timestamp: new Date().toISOString()
                     });
                     
                     // Save to sessionStorage as backup
                     try {
                         sessionStorage.setItem('onboarding_first_message', JSON.stringify({
-                            content: firstOracleResponse.content,
+                            content: bestOracleResponse.content,
                             timestamp: new Date().toISOString()
                         }));
+                        console.log('[ONBOARDING] ✓ Saved first message to sessionStorage');
                     } catch (e) {
-                        console.warn('Could not save to sessionStorage:', e);
+                        console.warn('[ONBOARDING] Could not save to sessionStorage:', e);
                     }
                 }
                 
@@ -125,8 +153,9 @@ export function ChatScreen({
                     data: personalInfo.horoscope,
                     timestamp: new Date().toISOString()
                 }));
+                console.log('[ONBOARDING] ✓ Saved horoscope to sessionStorage');
             } catch (e) {
-                console.warn('Could not save to sessionStorage:', e);
+                console.warn('[ONBOARDING] Could not save horoscope to sessionStorage:', e);
             }
         }
     }, [personalInfo.horoscope, isOnboardingFlow, auth.isTemporaryAccount]);

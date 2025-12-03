@@ -11,15 +11,15 @@ export async function fetchUserPersonalInfo(userId) {
     try {
         const { rows } = await db.query(`
             SELECT 
-                CASE WHEN first_name_encrypted IS NOT NULL THEN pgp_sym_decrypt(first_name_encrypted, '${ENCRYPTION_KEY}') ELSE NULL END as first_name,
-                CASE WHEN last_name_encrypted IS NOT NULL THEN pgp_sym_decrypt(last_name_encrypted, '${ENCRYPTION_KEY}') ELSE NULL END as last_name,
-                CASE WHEN email_encrypted IS NOT NULL THEN pgp_sym_decrypt(email_encrypted, '${ENCRYPTION_KEY}') ELSE NULL END as email,
-                CASE WHEN birth_date_encrypted IS NOT NULL THEN SUBSTRING(pgp_sym_decrypt(birth_date_encrypted, '${ENCRYPTION_KEY}'), 1, 10) ELSE NULL END as birth_date,
+                first_name,
+                last_name,
+                email,
+                birth_date,
                 birth_time,
-                CASE WHEN birth_country_encrypted IS NOT NULL THEN pgp_sym_decrypt(birth_country_encrypted, '${ENCRYPTION_KEY}') ELSE NULL END as birth_country,
-                CASE WHEN birth_province_encrypted IS NOT NULL THEN pgp_sym_decrypt(birth_province_encrypted, '${ENCRYPTION_KEY}') ELSE NULL END as birth_province,
-                CASE WHEN birth_city_encrypted IS NOT NULL THEN pgp_sym_decrypt(birth_city_encrypted, '${ENCRYPTION_KEY}') ELSE NULL END as birth_city,
-                CASE WHEN birth_timezone_encrypted IS NOT NULL THEN pgp_sym_decrypt(birth_timezone_encrypted, '${ENCRYPTION_KEY}') ELSE NULL END as birth_timezone,
+                birth_country,
+                birth_province,
+                birth_city,
+                birth_timezone,
                 sex,
                 address_preference 
             FROM user_personal_info 
@@ -63,17 +63,12 @@ export async function fetchUserAstrology(userId) {
 export async function isTemporaryUser(userId) {
     try {
         const { rows } = await db.query(
-            "SELECT email_encrypted FROM user_personal_info WHERE user_id = $1",
+            "SELECT email FROM user_personal_info WHERE user_id = $1",
             [userId]
         );
         
-        if (rows.length > 0 && rows[0].email_encrypted) {
-            const email = await db.query(
-                `SELECT pgp_sym_decrypt(email_encrypted, '${ENCRYPTION_KEY}') as email FROM user_personal_info WHERE user_id = $1`,
-                [userId]
-            );
-            const emailValue = email.rows[0]?.email || '';
-            return emailValue.includes('temp_');
+        if (rows.length > 0 && rows[0].email) {
+            return rows[0].email.includes('temp_');
         }
         return false;
     } catch (err) {
