@@ -35,7 +35,7 @@ export default function ChatPage({ userId, token, auth }) {
     };
 
     loadChat();
-  }, [userId, token, API_URL]);
+  }, [userId, token]);
 
   const scrollToBottom = () => {
     setTimeout(() => {

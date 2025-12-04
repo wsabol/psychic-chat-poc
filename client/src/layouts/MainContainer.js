@@ -6,6 +6,7 @@ import PageIndicator from './PageIndicator';
 import ChatPage from '../pages/ChatPage';
 import PersonalInfoPage from '../pages/PersonalInfoPage';
 import MySignPage from '../pages/MySignPage';
+import HoroscopePage from '../pages/HoroscopePage';
 import './MainContainer.css';
 
 // Placeholder for pages not yet built
@@ -22,7 +23,7 @@ const PAGES = [
   { id: 'personal', label: 'Personal Info', component: PersonalInfoPage },
   { id: 'sign', label: 'My Sign', component: MySignPage },
   { id: 'moon', label: 'Moon Phase', component: () => <PlaceholderPage pageId="Moon Phase" /> },
-  { id: 'horoscope', label: 'Horoscope', component: () => <PlaceholderPage pageId="Horoscope" /> },
+  { id: 'horoscope', label: 'Horoscope', component: HoroscopePage },
   { id: 'cosmic', label: 'Cosmic Weather', component: () => <PlaceholderPage pageId="Cosmic Weather" /> },
   { id: 'security', label: 'Security', component: () => <PlaceholderPage pageId="Security" /> },
   { id: 'billing', label: 'Billing', component: () => <PlaceholderPage pageId="Billing" /> },
