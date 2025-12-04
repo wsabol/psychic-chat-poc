@@ -4,13 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Navigation from './Navigation';
 import PageIndicator from './PageIndicator';
 import ChatPage from '../pages/ChatPage';
+import PersonalInfoPage from '../pages/PersonalInfoPage';
 import './MainContainer.css';
 
 // Define all pages in order (matches menu order)
 const PAGES = [
   { id: 'chat', label: 'Chat', component: ChatPage },
-  // Placeholder for future pages - will be updated as we create them
-  // { id: 'personal', label: 'Personal Info', component: PersonalInfoPage },
+  { id: 'personal', label: 'Personal Info', component: PersonalInfoPage },
   // { id: 'sign', label: 'My Sign', component: MySignPage },
   // { id: 'moon', label: 'Moon Phase', component: MoonPhasePage },
   // { id: 'horoscope', label: 'Horoscope', component: HoroscopePage },

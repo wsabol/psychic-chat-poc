@@ -7,7 +7,7 @@
    ============================================ */
 
 .nav-desktop-sidebar {
-  display: none;
+  display: flex;
   flex-direction: column;
   position: fixed;
   left: 0;
@@ -22,9 +22,9 @@
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
 }
 
-@media (min-width: 768px) {
+@media (max-width: 767px) {
   .nav-desktop-sidebar {
-    display: flex;
+    display: none !important;
   }
 }
 
