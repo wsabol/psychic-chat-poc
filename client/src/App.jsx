@@ -140,6 +140,7 @@ function App() {
                 auth={authState}
                 token={authState.token}
                 userId={authState.authUserId}
+                onLogout={authState.handleLogout}
             />
         </ErrorBoundary>
     );

@@ -8,7 +8,7 @@ import PersonalInfoPage from '../pages/PersonalInfoPage';
 import MySignPage from '../pages/MySignPage';
 import './MainContainer.css';
 
-// Placeholder for pages not yet built
+// Define all pages in order (matches menu order)
 const PlaceholderPage = ({ pageId }) => (
   <div style={{ padding: '2rem', textAlign: 'center' }}>
     <h2>{pageId}</h2>
@@ -16,7 +16,6 @@ const PlaceholderPage = ({ pageId }) => (
   </div>
 );
 
-// Define all pages in order (matches menu order)
 const PAGES = [
   { id: 'chat', label: 'Chat', component: ChatPage },
   { id: 'personal', label: 'Personal Info', component: PersonalInfoPage },

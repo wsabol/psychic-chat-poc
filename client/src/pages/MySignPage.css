@@ -1,0 +1,445 @@
+/* ============================================
+   MY SIGN PAGE STYLES
+   ============================================ */
+
+.sign-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  padding-bottom: var(--spacing-xl);
+}
+
+.sign-header {
+  margin-bottom: var(--spacing-md);
+}
+
+.sign-header h2 {
+  margin-bottom: var(--spacing-xs);
+}
+
+.sign-subtitle {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--color-text-light);
+}
+
+/* ============================================
+   LOADING & ERROR STATES
+   ============================================ */
+
+.loading-container,
+.error-container {
+  padding: var(--spacing-lg);
+  text-align: center;
+  background: white;
+  border-radius: 8px;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.error-message {
+  color: #d32f2f;
+  font-weight: 500;
+  margin-bottom: var(--spacing-md);
+}
+
+.btn-secondary {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: #f0f4ff;
+  color: #4a90e2;
+  border: 2px solid #4a90e2;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  min-height: var(--touch-target);
+}
+
+.btn-secondary:hover {
+  background: #4a90e2;
+  color: white;
+}
+
+/* ============================================
+   SIGN CARDS SECTION - THREE SIGNS AT TOP
+   ============================================ */
+
+.sign-cards-section {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.sign-card {
+  padding: var(--spacing-md);
+  border-radius: 8px;
+  text-align: center;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.sign-card-icon {
+  font-size: 2.5rem;
+  margin-bottom: var(--spacing-sm);
+}
+
+.sign-card-title {
+  margin: 0 0 var(--spacing-xs) 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sign-card-value {
+  margin: 0 0 var(--spacing-xs) 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.sign-card-degree {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #9370db;
+}
+
+.sign-card-meaning {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-light);
+  font-style: italic;
+}
+
+/* Sun Sign Card */
+.sun-sign-card {
+  border-left: 4px solid #ffc107;
+  background: #fffbf0;
+}
+
+.sun-sign-card:hover {
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Moon Sign Card */
+.moon-sign-card {
+  border-left: 4px solid #9c27b0;
+  background: #f3e5f5;
+}
+
+.moon-sign-card:hover {
+  box-shadow: 0 4px 12px rgba(156, 39, 176, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Rising Sign Card */
+.rising-sign-card {
+  border-left: 4px solid #2196f3;
+  background: #f0f7ff;
+}
+
+.rising-sign-card:hover {
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+  transform: translateY(-2px);
+}
+
+/* ============================================
+   SECTION DIVIDER
+   ============================================ */
+
+.section-divider {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #9370db, transparent);
+  margin: var(--spacing-lg) 0;
+}
+
+/* ============================================
+   ZODIAC DETAILS SECTION
+   ============================================ */
+
+.zodiac-details-section {
+  background: white;
+  border-radius: 8px;
+  padding: var(--spacing-lg);
+  border-left: 4px solid #9370db;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.zodiac-header {
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid #eee;
+}
+
+.zodiac-header h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.zodiac-symbol {
+  font-size: 1.2rem;
+  color: #9370db;
+  margin-left: auto;
+}
+
+/* ============================================
+   INFO GRID
+   ============================================ */
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background: #f8f8f8;
+  border-radius: 6px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.info-item strong {
+  font-size: 0.85rem;
+  color: var(--color-text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-item span {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* ============================================
+   DETAIL SECTIONS
+   ============================================ */
+
+.detail-section {
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid #eee;
+}
+
+.detail-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.detail-section h4 {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: 1.1rem;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.detail-section p {
+  margin: var(--spacing-sm) 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--color-text);
+}
+
+.italic-text {
+  font-style: italic;
+  color: var(--color-text-light);
+}
+
+.detail-section ul {
+  margin: var(--spacing-sm) 0;
+  padding-left: 1.5rem;
+  list-style: none;
+}
+
+.detail-section li {
+  margin: var(--spacing-xs) 0;
+  font-size: 0.95rem;
+  color: var(--color-text);
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.detail-section li::before {
+  content: '✨';
+  position: absolute;
+  left: 0;
+  color: #9370db;
+}
+
+.strength-list li::before {
+  content: '✓';
+  color: #4caf50;
+}
+
+.challenge-list li::before {
+  content: '◆';
+  color: #ff9800;
+}
+
+/* ============================================
+   LUCKY ELEMENTS GRID
+   ============================================ */
+
+.lucky-section {
+  background: #f8f8f8;
+  padding: var(--spacing-md);
+  border-radius: 6px;
+  border: 1px solid #eee;
+}
+
+.lucky-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-sm);
+}
+
+.lucky-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm);
+  background: white;
+  border-radius: 4px;
+  border-left: 3px solid #9370db;
+}
+
+.lucky-item strong {
+  font-size: 0.85rem;
+  color: var(--color-text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lucky-item span {
+  font-size: 0.95rem;
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+/* ============================================
+   SPECIAL SECTIONS
+   ============================================ */
+
+.mythology-section {
+  background: #fafafa;
+  padding: var(--spacing-md);
+  border-radius: 6px;
+  border-left: 3px solid #9370db;
+}
+
+.seasonal-section {
+  background: #f8f8f8;
+  padding: var(--spacing-md);
+  border-radius: 6px;
+  border-left: 3px solid #9370db;
+}
+
+/* ============================================
+   MOBILE ADJUSTMENTS
+   ============================================ */
+
+@media (max-width: 767px) {
+  .sign-page {
+    padding-bottom: var(--spacing-lg);
+  }
+
+  /* Stack sign cards vertically on mobile */
+  .sign-cards-section {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+  }
+
+  .sign-card {
+    padding: var(--spacing-md);
+  }
+
+  .sign-card-icon {
+    font-size: 2rem;
+  }
+
+  .sign-card-value {
+    font-size: 1.3rem;
+  }
+
+  /* Stack info grid */
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+  }
+
+  /* Stack lucky elements grid */
+  .lucky-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+  }
+
+  .zodiac-details-section {
+    padding: var(--spacing-md);
+  }
+
+  .zodiac-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .detail-section {
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+  }
+}
+
+/* ============================================
+   TABLET ADJUSTMENTS
+   ============================================ */
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .sign-cards-section {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+  }
+
+  .info-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .lucky-grid {
+    grid-template-columns: 2;
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+.btn-secondary:focus {
+  outline: 2px solid #9370db;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sign-card,
+  .btn-secondary {
+    transition: none;
+  }
+}

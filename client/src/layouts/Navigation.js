@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import './Navigation.css';
 
-export default function Navigation({ pages, currentPageIndex, onNavigate, isVisible }) {
+export default function Navigation({ pages, currentPageIndex, onNavigate, isVisible, onLogout }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [expandedSubmenu, setExpandedSubmenu] = useState(null);
 
@@ -139,6 +139,17 @@ export default function Navigation({ pages, currentPageIndex, onNavigate, isVisi
         </ul>
 
         <div className="nav-footer">
+          <button
+            className="nav-logout-btn"
+            onClick={() => {
+              setMobileMenuOpen(false);
+              setExpandedSubmenu(null);
+              onLogout && onLogout();
+            }}
+            aria-label="Log out"
+          >
+            🚪 Log Out
+          </button>
           <p className="nav-version">v1.0</p>
         </div>
       </nav>
@@ -205,6 +216,19 @@ export default function Navigation({ pages, currentPageIndex, onNavigate, isVisi
                 </li>
               ))}
             </ul>
+
+            {/* Mobile Logout Button */}
+            <button
+              className="nav-mobile-logout-btn"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                setExpandedSubmenu(null);
+                onLogout && onLogout();
+              }}
+              aria-label="Log out"
+            >
+              🚪 Log Out
+            </button>
           </nav>
         </>
       )}
