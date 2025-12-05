@@ -12,39 +12,23 @@ const router = Router();
 router.delete("/delete-temp-account/:tempUserId", async (req, res) => {
     try {
         const { tempUserId } = req.params;
-        console.log(`[CLEANUP] === Starting temp account deletion for ${tempUserId} ===`);
-
+        
         // Delete database records
-        console.log(`[CLEANUP] Deleting from user_personal_info...`);
         const r1 = await db.query(`DELETE FROM user_personal_info WHERE user_id = $1`, [tempUserId]);
-        console.log(`[CLEANUP] Deleted ${r1.rowCount} rows from user_personal_info`);
-
-        console.log(`[CLEANUP] Deleting from user_astrology...`);
         const r2 = await db.query(`DELETE FROM user_astrology WHERE user_id = $1`, [tempUserId]);
-        console.log(`[CLEANUP] Deleted ${r2.rowCount} rows from user_astrology`);
-
-        console.log(`[CLEANUP] Deleting from messages...`);
         const r3 = await db.query(`DELETE FROM messages WHERE user_id = $1`, [tempUserId]);
-        console.log(`[CLEANUP] Deleted ${r3.rowCount} rows from messages`);
 
         await db.query(`DELETE FROM user_2fa_settings WHERE user_id = $1`, [tempUserId]);
         await db.query(`DELETE FROM user_2fa_codes WHERE user_id = $1`, [tempUserId]);
 
         // Delete from Firebase - THIS IS CRITICAL
         let firebaseDeleted = false;
-        console.log(`[CLEANUP] *** CRITICAL: Attempting Firebase deletion for ${tempUserId} ***`);
         try {
-            console.log(`[CLEANUP] Calling firebaseAuth.deleteUser(${tempUserId})`);
             await firebaseAuth.deleteUser(tempUserId);
             firebaseDeleted = true;
-            console.log(`[CLEANUP] ✓ SUCCESS: Firebase user ${tempUserId} DELETED`);
         } catch (fbErr) {
-            console.error(`[CLEANUP] ✗ FAILED: Firebase deletion error`);
-            console.error(`[CLEANUP] Error code:`, fbErr.code);
-            console.error(`[CLEANUP] Error message:`, fbErr.message);
         }
 
-        console.log(`[CLEANUP] === Temp account deletion complete ===`);
         res.json({ 
             success: true, 
             message: "Temporary account deleted",
@@ -75,7 +59,6 @@ router.delete("/cleanup-old-temp-accounts", async (req, res) => {
         const uids = oldTempUsers.map(u => u.user_id);
         
         if (uids.length > 0) {
-            console.log(`[CLEANUP] Batch deleting ${uids.length} old temp accounts...`);
             await db.query(`DELETE FROM user_personal_info WHERE user_id = ANY($1)`, [uids]);
             await db.query(`DELETE FROM user_astrology WHERE user_id = ANY($1)`, [uids]);
             await db.query(`DELETE FROM messages WHERE user_id = ANY($1)`, [uids]);
@@ -84,17 +67,14 @@ router.delete("/cleanup-old-temp-accounts", async (req, res) => {
             
             for (const uid of uids) {
                 try { 
-                    console.log(`[CLEANUP] Deleting Firebase user: ${uid}`);
                     await firebaseAuth.deleteUser(uid); 
                     deletedCount++; 
-                    console.log(`[CLEANUP] ✓ Deleted Firebase user: ${uid}`);
                 } catch (err) { 
                     console.error(`[CLEANUP] ✗ Failed to delete Firebase user ${uid}:`, err.code, err.message); 
                 }
             }
         }
         
-        console.log(`[CLEANUP] Batch cleanup complete: ${deletedCount}/${uids.length} old temp accounts deleted from Firebase`);
         res.json({ success: true, message: `Cleaned up ${deletedCount} old temp accounts`, deletedCount });
     } catch (err) {
         console.error('[CLEANUP] Batch cleanup error:', err);

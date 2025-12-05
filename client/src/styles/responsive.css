@@ -1,0 +1,444 @@
+/* ============================================
+   RESPONSIVE CSS PATTERNS - Mobile First
+   ============================================ */
+
+/* CSS Variables - Breakpoints & Spacing */
+:root {
+  --breakpoint-mobile: 320px;
+  --breakpoint-tablet: 768px;
+  --breakpoint-desktop: 1024px;
+  --breakpoint-large: 1440px;
+  
+  /* Touch targets */
+  --touch-target: 44px;
+  --touch-target-large: 56px;
+  
+  /* Spacing scale */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+  
+  /* Colors */
+  --color-primary: #667eea;
+  --color-secondary: #764ba2;
+  --color-accent: #ff6b9d;
+  --color-success: #4caf50;
+  --color-warning: #ff9800;
+  --color-danger: #f44336;
+  --color-text: #333;
+  --color-text-light: #666;
+  --color-bg-light: #f8f3ff;
+  --color-border: #eee;
+}
+
+/* ============================================
+   LAYOUT PATTERNS
+   ============================================ */
+
+/* Pattern 1: Single Column (Mobile) → Multiple Columns (Tablet/Desktop) */
+.grid-responsive {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-lg);
+}
+
+@media (min-width: 768px) {
+  .grid-responsive {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-responsive {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Pattern 2: Two Column Grid (most common) */
+.grid-2col {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-lg);
+}
+
+@media (min-width: 768px) {
+  .grid-2col {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Pattern 3: Flexible Stack */
+.flex-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+@media (min-width: 768px) {
+  .flex-stack {
+    flex-direction: row;
+    gap: var(--spacing-lg);
+  }
+}
+
+/* Pattern 4: Container with safe padding */
+.container-safe {
+  max-width: 100%;
+  padding: var(--spacing-md);
+}
+
+@media (min-width: 768px) {
+  .container-safe {
+    max-width: 90%;
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-safe {
+    max-width: 1200px;
+  }
+}
+
+/* Pattern 5: Full width with safe areas (notch support) */
+.page-safe-area {
+  padding: var(--spacing-md);
+  padding-top: max(var(--spacing-md), env(safe-area-inset-top));
+  padding-bottom: max(var(--spacing-md), env(safe-area-inset-bottom));
+  padding-left: max(var(--spacing-md), env(safe-area-inset-left));
+  padding-right: max(var(--spacing-md), env(safe-area-inset-right));
+}
+
+/* ============================================
+   TYPOGRAPHY PATTERNS
+   ============================================ */
+
+/* Responsive heading sizes */
+.heading-primary {
+  font-size: 1.5rem;
+  line-height: 1.3;
+  margin: 0 0 var(--spacing-lg) 0;
+}
+
+@media (min-width: 768px) {
+  .heading-primary {
+    font-size: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .heading-primary {
+    font-size: 2.5rem;
+  }
+}
+
+.heading-secondary {
+  font-size: 1.25rem;
+  line-height: 1.4;
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+@media (min-width: 768px) {
+  .heading-secondary {
+    font-size: 1.5rem;
+  }
+}
+
+.heading-tertiary {
+  font-size: 1rem;
+  line-height: 1.4;
+  margin: 0 0 var(--spacing-sm) 0;
+  font-weight: 600;
+}
+
+.body-text {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-text);
+}
+
+@media (min-width: 768px) {
+  .body-text {
+    font-size: 1rem;
+  }
+}
+
+.body-small {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--color-text-light);
+}
+
+/* ============================================
+   TOUCH-FRIENDLY PATTERNS
+   ============================================ */
+
+/* Button sizing - minimum 44x44px touch target */
+.btn-primary,
+.btn-secondary,
+.btn-outline {
+  min-height: var(--touch-target);
+  min-width: var(--touch-target);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+}
+
+.btn-primary:hover,
+.btn-primary:active {
+  background: var(--color-secondary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+  background: var(--color-accent);
+  color: white;
+}
+
+.btn-secondary:hover,
+.btn-secondary:active {
+  background: #ff5281;
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+}
+
+.btn-outline:hover {
+  background: var(--color-primary);
+  color: white;
+}
+
+/* Increase padding on mobile for easier tapping */
+@media (max-width: 767px) {
+  .btn-primary,
+  .btn-secondary,
+  .btn-outline {
+    padding: var(--spacing-lg) var(--spacing-xl);
+    font-size: 0.95rem;
+  }
+}
+
+/* Input fields - touch-friendly */
+input,
+textarea,
+select {
+  min-height: var(--touch-target);
+  font-size: 1rem; /* Prevents zoom on iOS */
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+@media (max-width: 767px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px; /* Critical: prevents auto-zoom on iOS */
+  }
+}
+
+/* ============================================
+   CARD PATTERNS (2 Col → 1 Col)
+   ============================================ */
+
+.card-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-lg);
+}
+
+@media (min-width: 768px) {
+  .card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .card-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.card {
+  padding: var(--spacing-lg);
+  background: white;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+/* ============================================
+   SECTION PATTERNS
+   ============================================ */
+
+.section {
+  padding: var(--spacing-lg);
+  background: white;
+  border-radius: 8px;
+  border-left: 4px solid var(--color-primary);
+  margin-bottom: var(--spacing-lg);
+}
+
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 var(--spacing-md) 0;
+  color: var(--color-text);
+}
+
+/* ============================================
+   FORM PATTERNS
+   ============================================ */
+
+.form-group {
+  margin-bottom: var(--spacing-lg);
+}
+
+.form-label {
+  display: block;
+  margin-bottom: var(--spacing-sm);
+  font-weight: 500;
+  color: var(--color-text);
+  font-size: 0.95rem;
+}
+
+.form-input-wrapper {
+  position: relative;
+}
+
+.form-error {
+  color: var(--color-danger);
+  font-size: 0.85rem;
+  margin-top: var(--spacing-xs);
+}
+
+.form-success {
+  color: var(--color-success);
+  font-size: 0.85rem;
+  margin-top: var(--spacing-xs);
+}
+
+/* ============================================
+   ORIENTATION HANDLING
+   ============================================ */
+
+@media (orientation: landscape) and (max-height: 600px) {
+  .hide-on-landscape {
+    display: none;
+  }
+  
+  .container-safe {
+    padding: var(--spacing-sm);
+  }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.hidden-mobile {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .hidden-mobile {
+    display: block;
+  }
+}
+
+.hidden-desktop {
+  display: block;
+}
+
+@media (min-width: 768px) {
+  .hidden-desktop {
+    display: none;
+  }
+}
+
+.text-center-mobile {
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .text-center-mobile {
+    text-align: left;
+  }
+}
+
+.mt-0 { margin-top: 0; }
+.mt-xs { margin-top: var(--spacing-xs); }
+.mt-sm { margin-top: var(--spacing-sm); }
+.mt-md { margin-top: var(--spacing-md); }
+.mt-lg { margin-top: var(--spacing-lg); }
+
+.mb-0 { margin-bottom: 0; }
+.mb-xs { margin-bottom: var(--spacing-xs); }
+.mb-sm { margin-bottom: var(--spacing-sm); }
+.mb-md { margin-bottom: var(--spacing-md); }
+.mb-lg { margin-bottom: var(--spacing-lg); }
+
+.p-md { padding: var(--spacing-md); }
+.p-lg { padding: var(--spacing-lg); }
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-text: #e0e0e0;
+    --color-text-light: #b0b0b0;
+    --color-bg-light: #2a2a3e;
+    --color-border: #444;
+  }
+  
+  body {
+    background: #1a1a2e;
+    color: var(--color-text);
+  }
+}

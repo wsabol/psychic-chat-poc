@@ -9,9 +9,15 @@ Dockerfile
 .gitignore
 .env
 .env.*
+.env.*.local
+.DS_Store
+.continue
+.idea
 build
 dist
 .tmp
 tmp
 .vscode
 .idea
+client/.env.local
+.md

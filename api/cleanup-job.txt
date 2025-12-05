@@ -8,9 +8,7 @@ setInterval(async () => {
         });
         if (response.ok) {
             const data = await response.json();
-            console.log('[CLEANUP]', data.message);
         }
     } catch (err) {
-        console.error('[CLEANUP] Error running cleanup job:', err.message);
     }
 }, 30 * 60 * 1000);

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "./hooks/useAuth";
-import { useChat } from "./hooks/useChat";
+
 import { useTokenRefresh } from "./hooks/useTokenRefresh";
-import { usePersonalInfo } from "./hooks/usePersonalInfo";
+
 import { useModalState } from "./hooks/useModalState";
 import { useTempAccountFlow } from "./hooks/useTempAccountFlow";
 import { useAuthHandlers } from "./hooks/useAuthHandlers";
@@ -13,21 +13,18 @@ import { LoadingScreen } from "./screens/LoadingScreen";
 import { ThankYouScreen } from "./screens/ThankYouScreen";
 import { LandingScreenWrapper } from "./screens/LandingScreenWrapper";
 import { LoginScreenWrapper } from "./screens/LoginScreenWrapper";
-import { ChatScreen } from "./screens/ChatScreen";
+
 import { VerificationScreen } from "./screens/VerificationScreen";
 import { auth } from "./firebase";
+import MainContainer from "./layouts/MainContainer";
 
 /**
- * Main App Component - Clean & Simple
- * Email verification works. Temp accounts properly deleted.
- * Chat starts fresh when upgrading from temp to real account.
+ * Main App Component - With Auto-Navigation After Login
  */
 function App() {
     useTokenRefresh();
 
     const authState = useAuth();
-    const chat = useChat(authState.authUserId, authState.token, authState.isAuthenticated, authState.authUserId);
-    const personalInfo = usePersonalInfo(authState.authUserId, authState.token);
     const modals = useModalState();
     const tempFlow = useTempAccountFlow(authState);
     const handlers = useAuthHandlers(authState, modals, tempFlow);
@@ -35,6 +32,16 @@ function App() {
     const emailVerification = useEmailVerification();
     
     const [verificationFailed, setVerificationFailed] = useState(false);
+    const [previousAuthState, setPreviousAuthState] = useState(null);
+
+    // Auto-close register mode when user successfully authenticates
+    useEffect(() => {
+        if (authState.isAuthenticated && previousAuthState !== authState.isAuthenticated) {
+            console.log('[AUTO-NAV] User authenticated, closing register mode');
+            modals.setShowRegisterMode(false);
+        }
+        setPreviousAuthState(authState.isAuthenticated);
+    }, [authState.isAuthenticated, previousAuthState, modals]);
 
     // Start email verification polling when on verification screen
     useEffect(() => {
@@ -127,19 +134,17 @@ function App() {
 
     // Chat screen
     if (isChat) {
-        return (
-            <ErrorBoundary>
-                <ChatScreen
-                    auth={authState}
-                    chat={chat}
-                    personalInfo={personalInfo}
-                    modals={modals}
-                    handlers={handlers}
-                    tempFlow={tempFlow}
-                />
-            </ErrorBoundary>
-        );
-    }
+    return (
+        <ErrorBoundary>
+            <MainContainer 
+                auth={authState}
+                token={authState.token}
+                userId={authState.authUserId}
+                onLogout={authState.handleLogout}
+            />
+        </ErrorBoundary>
+    );
+}
 
     return null;
 }

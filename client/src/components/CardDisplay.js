@@ -5,14 +5,18 @@ function CardDisplay({ cards }) {
         return null;
     }
 
-    // Deduplicate cards - keep only first occurrence of each card
-    const seenCards = new Map();
+    // Deduplicate cards using normalized card names (Option B)
+    // Uses Set to track seen card names (case-insensitive, trimmed)
+    const seenCardNames = new Set();
     const uniqueCards = [];
     
     for (const card of cards) {
-        const cardKey = `${card.name}-${card.inverted ? 'inverted' : 'upright'}`;
-        if (!seenCards.has(cardKey)) {
-            seenCards.set(cardKey, true);
+        // Normalize: lowercase, trim, remove extra spaces
+        const normalizedName = card.name.toLowerCase().trim();
+        const cardKey = `${normalizedName}-${card.inverted ? 'inverted' : 'upright'}`;
+        
+        if (!seenCardNames.has(cardKey)) {
+            seenCardNames.add(cardKey);
             uniqueCards.push(card);
         }
     }

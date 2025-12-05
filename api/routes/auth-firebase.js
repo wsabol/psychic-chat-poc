@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { auth } from '../shared/firebase-admin.js';
 import { db } from '../shared/db.js';
 import { authenticateToken, authorizeUser } from '../middleware/auth.js';
+import { migrateOnboardingData } from '../shared/accountMigration.js';
 
 const router = Router();
 
@@ -43,6 +44,91 @@ router.post('/register', async (req, res) => {
       return res.status(409).json({ error: 'Email already registered' });
     }
     return res.status(500).json({ error: 'Registration failed', details: err.message });
+  }
+});
+
+/**
+ * POST /auth/register-and-migrate
+ * PHASE 2 ENDPOINT: Register account and migrate onboarding data from temp account
+ * 
+ * Request body:
+ * {
+ *   email: string,
+ *   password: string,
+ *   firstName?: string,
+ *   lastName?: string,
+ *   temp_user_id: string (the temporary user's Firebase UID),
+ *   onboarding_first_message?: { content: string, timestamp: string },
+ *   onboarding_horoscope?: { data: object, timestamp: string }
+ * }
+ */
+router.post('/register-and-migrate', async (req, res) => {
+  try {
+    const { 
+      email, 
+      password, 
+      firstName, 
+      lastName,
+      temp_user_id,
+      onboarding_first_message,
+      onboarding_horoscope
+    } = req.body;
+    
+    if (!email || !password || !temp_user_id) {
+      return res.status(400).json({ 
+        error: 'Email, password, and temp_user_id required' 
+      });
+    }    
+    // Step 1: Create permanent Firebase user
+    const userRecord = await auth.createUser({
+      email,
+      password,
+      displayName: `${firstName || ''} ${lastName || ''}`.trim()
+    });
+    
+    const newUserId = userRecord.uid;   
+    try {
+      // Step 2: Migrate onboarding data
+      const migrationResult = await migrateOnboardingData({
+        newUserId,
+        temp_user_id,
+        firstName: firstName || '',
+        lastName: lastName || '',
+        email,
+        onboarding_first_message,
+        onboarding_horoscope
+      });
+      
+      return res.status(201).json({
+        success: true,
+        uid: newUserId,
+        email: userRecord.email,
+        message: 'Account created and onboarding data migrated successfully',
+        migration: migrationResult
+      });
+      
+    } catch (migrationErr) {
+      // If migration fails, still return success for account creation
+      // but log the migration error
+      console.error(`[MIGRATION] Migration failed after account creation:`, migrationErr);
+      return res.status(201).json({
+        success: true,
+        uid: newUserId,
+        email: userRecord.email,
+        message: 'Account created but data migration encountered issues',
+        warning: migrationErr.message
+      });
+    }
+    
+  } catch (err) {
+    console.error('[MIGRATION] Registration with migration error:', err);
+    if (err.code === 'auth/email-already-exists') {
+      return res.status(409).json({ error: 'Email already registered' });
+    }
+    return res.status(500).json({ 
+      error: 'Registration with migration failed', 
+      details: err.message 
+    });
   }
 });
 

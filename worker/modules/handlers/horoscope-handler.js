@@ -6,10 +6,11 @@ import {
     callOracle,
     getUserGreeting
 } from '../oracle.js';
-import { storeMessage, formatMessageContent } from '../messages.js';
+import { storeMessage } from '../messages.js';
 
 /**
- * Generate a personalized horoscope for the user
+ * Generate daily and weekly horoscopes for the user at once
+ * This way, switching between ranges doesn't require regeneration
  */
 export async function generateHoroscope(userId, range = 'daily') {
     try {
@@ -25,40 +26,49 @@ export async function generateHoroscope(userId, range = 'daily') {
             throw new Error('User astrology data not found');
         }
         
-        // Build horoscope prompt
-        const horoscopePrompt = buildHoroscopePrompt(userInfo, astrologyInfo, range);
-        
-        // Get oracle base prompt
+        // Get oracle base prompt and user greeting
         const baseSystemPrompt = getOracleSystemPrompt();
         const userGreeting = getUserGreeting(userInfo, userId);
+        const generatedAt = new Date().toISOString();
         
-        const systemPrompt = baseSystemPrompt + `
+        // Generate daily and weekly horoscopes (monthly kept in DB but removed from UI for now)
+        const ranges = ['daily', 'weekly'];
+        
+        for (const currentRange of ranges) {
+            try {
+                const horoscopePrompt = buildHoroscopePrompt(userInfo, astrologyInfo, currentRange);
+                
+                const systemPrompt = baseSystemPrompt + `
 
 SPECIAL REQUEST - HOROSCOPE GENERATION:
-Generate a personalized ${range} horoscope for ${userGreeting} based on their birth chart and current cosmic energy.
+Generate a personalized ${currentRange} horoscope for ${userGreeting} based on their birth chart and current cosmic energy.
 Focus on practical guidance blended with cosmic timing.
 Keep it concise but meaningful (2-3 paragraphs).
 Do NOT include tarot cards in this response - this is purely astrological guidance with crystal recommendations.
 `;
-        
-        // Call Oracle with just the user's birth data (no chat history for horoscopes)
-        const oracleResponse = await callOracle(systemPrompt, [], horoscopePrompt);
-        
-        // Store horoscope in database with metadata
-        const horoscopeData = {
-            text: oracleResponse,
-            range: range,
-            generated_at: new Date().toISOString(),
-            zodiac_sign: astrologyInfo.zodiac_sign
-        };
-        
-        // Store as a system message for record-keeping
-        await storeMessage(userId, 'horoscope', horoscopeData);
-        
-        return oracleResponse;
+                
+                // Call Oracle with just the user's birth data (no chat history for horoscopes)
+                const oracleResponse = await callOracle(systemPrompt, [], horoscopePrompt);
+                
+                // Store horoscope in database with metadata
+                const horoscopeData = {
+                    text: oracleResponse,
+                    range: currentRange,
+                    generated_at: generatedAt,
+                    zodiac_sign: astrologyInfo.zodiac_sign
+                };
+                
+                // Store as a system message for record-keeping
+                await storeMessage(userId, 'horoscope', horoscopeData);
+                
+            } catch (err) {
+                console.error(`[HOROSCOPE-HANDLER] Error generating ${currentRange} horoscope:`, err.message);
+                // Continue with next range even if one fails
+            }
+        }
         
     } catch (err) {
-        console.error('[HOROSCOPE-HANDLER] Error generating horoscope:', err.message);
+        console.error('[HOROSCOPE-HANDLER] Error generating horoscopes:', err.message);
         throw err;
     }
 }
@@ -96,11 +106,6 @@ function buildHoroscopePrompt(userInfo, astrologyInfo, range) {
             prompt += `- How do current planetary positions affect their trajectory?\n`;
             prompt += `- What should they focus on or prepare for?\n`;
             break;
-        case 'monthly':
-            prompt += `- What is the overarching energy for THIS MONTH?\n`;
-            prompt += `- What major themes or opportunities are present?\n`;
-            prompt += `- What areas of life need attention or growth?\n`;
-            break;
     }
     
     prompt += `\nProvide practical, personalized guidance that honors their unique birth chart.`;
@@ -122,7 +127,7 @@ export function extractHoroscopeRange(message) {
     const match = message.match(/horoscope for (\w+)/i);
     if (match && match[1]) {
         const range = match[1].toLowerCase();
-        if (['daily', 'weekly', 'monthly'].includes(range)) {
+        if (['daily', 'weekly'].includes(range)) {
             return range;
         }
     }

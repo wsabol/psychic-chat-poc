@@ -5,7 +5,7 @@
 FROM node AS deps
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --force
 
 # 2) Build stage
 FROM node AS builder

@@ -1,0 +1,63 @@
+/* ============================================
+   PAGE INDICATOR - Dots
+   ============================================ */
+
+.page-indicator {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 500;
+}
+
+@media (max-width: 767px) {
+  .page-indicator {
+    bottom: 1rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .page-indicator {
+    bottom: 2rem;
+    left: auto;
+    right: 2rem;
+    transform: none;
+  }
+}
+
+.indicator-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #9370db;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.indicator-dot:hover {
+  transform: scale(1.2);
+  background: #e6d9f7;
+}
+
+.indicator-dot.active {
+  background: #9370db;
+  box-shadow: 0 0 8px rgba(147, 112, 219, 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .indicator-dot {
+    transition: none;
+  }
+
+  .indicator-dot:hover {
+    transform: none;
+  }
+}

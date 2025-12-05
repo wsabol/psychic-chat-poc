@@ -1,7 +1,14 @@
 import React from 'react';
 
-export default function OnboardingModal({ show, isTemporary, onSetupAccount, onExit }) {
+export default function OnboardingModal({ show, isTemporary, onSetupAccount, onExit, onboardingData = {} }) {
     if (!show || !isTemporary) return null;
+
+    const handleSetupClick = () => {
+        // Pass onboarding data to the setup handler
+        if (onSetupAccount) {
+            onSetupAccount(onboardingData);
+        }
+    };
 
     return (
         <div style={{
@@ -36,7 +43,7 @@ export default function OnboardingModal({ show, isTemporary, onSetupAccount, onE
                     flexDirection: 'column'
                 }}>
                     <button
-                        onClick={onSetupAccount}
+                        onClick={handleSetupClick}
                         style={{
                             padding: '0.75rem',
                             borderRadius: '5px',

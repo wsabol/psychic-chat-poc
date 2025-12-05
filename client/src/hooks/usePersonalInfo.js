@@ -8,18 +8,29 @@ export function usePersonalInfo(userId, token) {
     const [birthTime, setBirthTime] = useState(null);
     const [birthCity, setBirthCity] = useState(null);
     const [birthState, setBirthState] = useState(null);
+    const [birthCountry, setBirthCountry] = useState(null);
     const [firstName, setFirstName] = useState(null);
     const [lastName, setLastName] = useState(null);
+    const [horoscope, setHoroscope] = useState(null);
     
     const fetchPersonalInfo = useCallback(async () => {
         try {
-            const headers = {};
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
+            if (!userId || !token) {
+                console.warn('[PERSONAL-INFO] Missing userId or token');
+                return;
             }
+            console.log('[PERSONAL-INFO] Fetching for user:', userId);
+            const headers = { 'Authorization': `Bearer ${token}` };
             const res = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}`, { headers });
             if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
             const data = await res.json();
+            
+            console.log('[PERSONAL-INFO] ✓ Received data:', {
+                first_name: data.first_name,
+                birth_date: data.birth_date,
+                birth_city: data.birth_city,
+                birth_country: data.birth_country
+            });
             
             if (data.first_name) setFirstName(data.first_name);
             if (data.last_name) setLastName(data.last_name);
@@ -27,14 +38,17 @@ export function usePersonalInfo(userId, token) {
             if (data.birth_time) setBirthTime(data.birth_time);
             if (data.birth_city) setBirthCity(data.birth_city);
             if (data.birth_state) setBirthState(data.birth_state);
+            if (data.birth_country) setBirthCountry(data.birth_country);
+            if (data.horoscope) setHoroscope(data.horoscope);
         } catch (err) {
-            console.error('Error fetching personal info:', err);
+            console.error('[PERSONAL-INFO] Error fetching:', err);
         }
     }, [userId, token]);
     
     // Load on mount or userId change
     useEffect(() => {
         if (userId && token) {
+            console.log('[PERSONAL-INFO] useEffect triggered - userId:', userId);
             fetchPersonalInfo();
         }
     }, [userId, token, fetchPersonalInfo]);
@@ -44,8 +58,10 @@ export function usePersonalInfo(userId, token) {
         birthTime,
         birthCity,
         birthState,
+        birthCountry,
         firstName,
         lastName,
+        horoscope,
         fetchPersonalInfo,
     };
 }

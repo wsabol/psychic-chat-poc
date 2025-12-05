@@ -2,7 +2,8 @@ import { tarotDeck } from '../../tarotDeck.js';
 import { extractCardsFromResponse, formatCardsForStorage } from '../cards.js';
 import { 
     fetchUserPersonalInfo, 
-    fetchUserAstrology, 
+    fetchUserAstrology,
+    isTemporaryUser,
     buildPersonalInfoContext, 
     buildAstrologyContext,
     getOracleSystemPrompt,
@@ -11,6 +12,13 @@ import {
 } from '../oracle.js';
 import { getMessageHistory, storeMessage, formatMessageContent } from '../messages.js';
 import { calculateBirthChart } from '../astrology.js';
+import {
+    detectViolation,
+    recordViolationAndGetAction,
+    isAccountSuspended,
+    isAccountDisabled,
+    getSelfHarmHotlineResponse
+} from '../violationEnforcement.js';
 
 /**
  * Handle regular chat messages from users
@@ -20,6 +28,58 @@ export async function handleChatMessage(userId, message) {
         // Fetch user context
         const userInfo = await fetchUserPersonalInfo(userId);
         let astrologyInfo = await fetchUserAstrology(userId);
+        
+        // Check if user is temporary
+        const tempUser = await isTemporaryUser(userId);
+        
+        // CHECK ACCOUNT STATUS: Disabled or Suspended
+        if (!tempUser) {
+            const disabled = await isAccountDisabled(userId);
+            if (disabled) {
+                console.log(`[VIOLATION] User ${userId} has disabled account - blocking message`);
+                const response = `Your account has been permanently disabled due to repeated violations of our community guidelines. If you wish to appeal, please contact support.`;
+                await storeMessage(userId, 'assistant', response);
+                return;
+            }
+            
+            const suspended = await isAccountSuspended(userId);
+            if (suspended) {
+                console.log(`[VIOLATION] User ${userId} has suspended account - blocking message`);
+                const response = `Your account is currently suspended. Please try again after the suspension period ends.`;
+                await storeMessage(userId, 'assistant', response);
+                return;
+            }
+        }
+        
+        // CHECK FOR VIOLATIONS IN USER MESSAGE
+        const violation = detectViolation(message);
+        
+        if (violation) {
+            console.log(`[VIOLATION] Violation detected: ${violation.type} (keyword: ${violation.keyword})`);
+            
+            // Record violation and get enforcement action
+            const enforcement = await recordViolationAndGetAction(userId, violation.type, message, tempUser);
+            
+            console.log(`[VIOLATION] Enforcement action: ${enforcement.action}`);
+            
+            // Get response (includes self-harm hotline if needed)
+            let responseToUser = enforcement.response;
+            if (violation.type === 'self_harm') {
+                responseToUser = getSelfHarmHotlineResponse() + '\n\n' + enforcement.response;
+            }
+            
+            // Store response
+            await storeMessage(userId, 'assistant', responseToUser);
+            
+            // For temp accounts, we should signal that they're deleted
+            if (enforcement.action === 'TEMP_ACCOUNT_DELETED') {
+                console.log(`[VIOLATION] Temp account ${userId} has been deleted and should not process further messages`);
+            }
+            
+            return;
+        }
+        
+        // NO VIOLATIONS - Continue with normal chat processing
         
         // Calculate astrology if not present and we have birth data
         if (!astrologyInfo && userInfo?.birth_date && userInfo?.birth_time && userInfo?.birth_country && userInfo?.birth_province && userInfo?.birth_city) {
@@ -59,7 +119,14 @@ export async function handleChatMessage(userId, message) {
         }
         
         // Get message history
-        const history = await getMessageHistory(userId);
+        let history = await getMessageHistory(userId);
+        
+        // FILTER: Only include messages with valid OpenAI roles
+        // Filter out special roles like 'moon_phase', 'horoscope', 'cosmic_weather', etc.
+        const validRoles = ['system', 'assistant', 'user', 'function', 'tool', 'developer'];
+
+        history = history.filter(msg => validRoles.includes(msg.role));
+
         
         // Build context
         const personalContext = buildPersonalInfoContext(userInfo);
@@ -74,8 +141,8 @@ IMPORTANT: Use the above personal and astrological information to:
 
 `;
         
-        // Get oracle prompt
-        const systemPrompt = getOracleSystemPrompt() + "\n\n" + combinedContext;
+        // Get oracle prompt - MODIFIED to pass isTemporaryUser flag
+        const systemPrompt = getOracleSystemPrompt(tempUser) + "\n\n" + combinedContext;
         
         // Call Oracle
         const oracleResponse = await callOracle(systemPrompt, history, message);

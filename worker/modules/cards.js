@@ -1,125 +1,83 @@
 /**
- * Extract tarot cards from Oracle response
- * Looks for both bolded (**Card Name**) and plain text card names
+ * Card Extraction - Clean version without debug logs
  */
 export function extractCardsFromResponse(responseText, deck) {
-    const extractedCards = [];
-    const foundCardIds = new Set();
+    let searchText = responseText;
+    const insightIndex = responseText.toLowerCase().indexOf('astrological insight');
+    const interpretationIndex = responseText.toLowerCase().indexOf('interpretation:');
     
-    // Step 1: Find bolded card patterns
-    const boldCardPattern = /\*\*([^*]+)\*\*/g;
-    const boldMatches = [];
-    let match;
-
+    let cutoffIndex = -1;
+    if (insightIndex !== -1 && interpretationIndex !== -1) {
+        cutoffIndex = Math.min(insightIndex, interpretationIndex);
+    } else if (insightIndex !== -1) {
+        cutoffIndex = insightIndex;
+    } else if (interpretationIndex !== -1) {
+        cutoffIndex = interpretationIndex;
+    }
     
-    while ((match = boldCardPattern.exec(responseText)) !== null) {
-        const boldedText = match[1].trim();
+    if (cutoffIndex !== -1) {
+        searchText = responseText.substring(0, cutoffIndex);
+    }
+    
+    const allMatches = [];
+    
+    for (const card of deck) {
+        const baseName = card.name.replace(/^The\s+/i, '');
         
-        if (/^(past|present|future|position|spread|card\s*\d+)$/i.test(boldedText)) {
+        const reversePattern = new RegExp(
+            `\\b(The\\s+)?${escapeRegex(baseName)}\\s*\\((?:Reversed|Inverted|reversed|inverted)\\)`,
+            'gi'
+        );
+        
+        let match = reversePattern.exec(searchText);
+        if (match) {
+            allMatches.push({
+                position: match.index,
+                card: card,
+                inverted: true
+            });
             continue;
         }
         
-        // Clean: remove (Upright)/(Reversed), colons, "Card" suffix
-        const cleanedText = boldedText
-            .replace(/\s*\([^)]*\)\s*$/g, '')  // Remove (Upright), (Reversed), etc.
-            .replace(/:\s*$/g, '')              // Remove trailing colon
-            .replace(/\s+card\s*$/i, '')        // Remove "Card" suffix
-            .trim();
+        const cardPattern = new RegExp(
+            `(?:Card\\s*\\d+\\s*:|^)\\s*(?:The\\s+)?${escapeRegex(baseName)}\\b`,
+            'gim'
+        );
         
-        if (!cleanedText) continue;
-        
-        for (const card of deck) {
-            if (cardNameMatches(card.name, cleanedText)) {
-                boldMatches.push({
-                    position: match.index,
-                    cardName: boldedText,
-                    card: card,
-                    source: 'bold'
-                });
-                break;
-            }
-        }
-    }
-    
-    // Step 2: Find plain text card names (for cards not found in bold)
-    for (const card of deck) {
-        if (foundCardIds.has(card.id)) continue;
-        
-        // Create a pattern to find the card name in the text
-        const cardPattern = new RegExp(`\\b${escapeRegex(card.name)}\\b`, 'gi');
-        let plainMatch;
-        
-        while ((plainMatch = cardPattern.exec(responseText)) !== null) {
-            // Skip if this is part of a bold match we already found
-            const isBoldMatch = boldMatches.some(bm => 
-                plainMatch.index >= bm.position && plainMatch.index < bm.position + 60
-            );
-            
-            if (!isBoldMatch && !foundCardIds.has(card.id)) {
-                // Check context for reversal indicator
-                const contextStart = Math.max(0, plainMatch.index - 30);
-                const contextEnd = Math.min(responseText.length, plainMatch.index + 60);
-                const context = responseText.substring(contextStart, contextEnd).toLowerCase();
-                const hasReversedPattern = /\b(?:reversed|inverted|upside[\s-]*down|\(r\))\b/.test(context);
-                
-                boldMatches.push({
-                    position: plainMatch.index,
-                    cardName: card.name,
-                    card: card,
-                    source: 'plain',
-                    inverted: hasReversedPattern
-                });
-                foundCardIds.add(card.id);
-                break;
-            }
-        }
-    }
-    
-    // Step 3: Process and sort all matches
-    boldMatches.sort((a, b) => a.position - b.position);
-    
-    for (const boldMatch of boldMatches) {
-        if (!foundCardIds.has(boldMatch.card.id) || boldMatch.source === 'bold') {
-            const contextEnd = Math.min(responseText.length, boldMatch.position + 60);
-            const contextAfter = responseText.substring(boldMatch.position, contextEnd).toLowerCase();
-            const hasReversedPattern = /\b(?:reversed|inverted|upside[\s-]*down|\(r\)|\(reversed\))\b/.test(contextAfter);
-            
-            extractedCards.push({
-                ...boldMatch.card,
-                inverted: boldMatch.inverted || hasReversedPattern
+        match = cardPattern.exec(searchText);
+        if (match) {
+            allMatches.push({
+                position: match.index,
+                card: card,
+                inverted: false
             });
-            foundCardIds.add(boldMatch.card.id);
+        }
+    }
+    
+    allMatches.sort((a, b) => a.position - b.position);
+    
+    const extractedCards = [];
+    const foundCardIds = new Set();
+    
+    for (const match of allMatches) {
+        if (!foundCardIds.has(match.card.id)) {
+            extractedCards.push({
+                id: match.card.id,
+                name: match.card.name,
+                suit: match.card.suit,
+                inverted: match.inverted
+            });
+            foundCardIds.add(match.card.id);
         }
     }
     
     return extractedCards;
 }
 
-/**
- * Check if a card name matches (accounting for "The" prefix)
- * text is from the oracle
- * cardName is the saved card name (display version of the file name) ex: "The Fool"
- * */
-function cardNameMatches(cardName, text) {
-    const cardNameLower = cardName.toLowerCase();
-    const textLower = text.toLowerCase();
-    
-    // Test if text contains cardName
-    const matches = textLower.includes(cardNameLower) || cardNameLower.includes(textLower);
-    
-    return matches;
-}
-
-/**
- * Escape special regex characters
- */
 function escapeRegex(str) {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/**
- * Format cards for storage - keep only essential metadata
- */
 export function formatCardsForStorage(cards) {
     return cards.map(card => ({
         id: card.id,

@@ -36,7 +36,6 @@ export async function generateCosmicWeather(userId) {
                 const { current_planets, planets_date } = cachedResult.rows[0];
                 if (planets_date === today && current_planets && current_planets.length > 0) {
                     planets = current_planets;
-                    console.log('[COSMIC-WEATHER] Using cached planets for today');
                 } else {
                     // Need fresh calculation
                     const planetsData = await getCurrentPlanets();

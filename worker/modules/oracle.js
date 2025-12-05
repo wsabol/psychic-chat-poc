@@ -11,15 +11,15 @@ export async function fetchUserPersonalInfo(userId) {
     try {
         const { rows } = await db.query(`
             SELECT 
-                CASE WHEN first_name_encrypted IS NOT NULL THEN pgp_sym_decrypt(first_name_encrypted, '${ENCRYPTION_KEY}') ELSE NULL END as first_name,
-                CASE WHEN last_name_encrypted IS NOT NULL THEN pgp_sym_decrypt(last_name_encrypted, '${ENCRYPTION_KEY}') ELSE NULL END as last_name,
-                CASE WHEN email_encrypted IS NOT NULL THEN pgp_sym_decrypt(email_encrypted, '${ENCRYPTION_KEY}') ELSE NULL END as email,
-                CASE WHEN birth_date_encrypted IS NOT NULL THEN SUBSTRING(pgp_sym_decrypt(birth_date_encrypted, '${ENCRYPTION_KEY}'), 1, 10) ELSE NULL END as birth_date,
+                first_name,
+                last_name,
+                email,
+                birth_date,
                 birth_time,
-                CASE WHEN birth_country_encrypted IS NOT NULL THEN pgp_sym_decrypt(birth_country_encrypted, '${ENCRYPTION_KEY}') ELSE NULL END as birth_country,
-                CASE WHEN birth_province_encrypted IS NOT NULL THEN pgp_sym_decrypt(birth_province_encrypted, '${ENCRYPTION_KEY}') ELSE NULL END as birth_province,
-                CASE WHEN birth_city_encrypted IS NOT NULL THEN pgp_sym_decrypt(birth_city_encrypted, '${ENCRYPTION_KEY}') ELSE NULL END as birth_city,
-                CASE WHEN birth_timezone_encrypted IS NOT NULL THEN pgp_sym_decrypt(birth_timezone_encrypted, '${ENCRYPTION_KEY}') ELSE NULL END as birth_timezone,
+                birth_country,
+                birth_province,
+                birth_city,
+                birth_timezone,
                 sex,
                 address_preference 
             FROM user_personal_info 
@@ -54,6 +54,26 @@ export async function fetchUserAstrology(userId) {
     } catch (err) {
         console.error('[ORACLE] Error fetching astrology info:', err);
         return null;
+    }
+}
+
+/**
+ * Check if user is a temporary account
+ */
+export async function isTemporaryUser(userId) {
+    try {
+        const { rows } = await db.query(
+            "SELECT email FROM user_personal_info WHERE user_id = $1",
+            [userId]
+        );
+        
+        if (rows.length > 0 && rows[0].email) {
+            return rows[0].email.includes('temp_');
+        }
+        return false;
+    } catch (err) {
+        console.error('[ORACLE] Error checking if user is temporary:', err);
+        return false;
     }
 }
 
@@ -120,10 +140,10 @@ Use these placements naturally in your guidance to create personalized, cosmic i
 }
 
 /**
- * Get system prompt for Oracle
+ * Get system prompt for Oracle - modified for temp vs established accounts
  */
-export function getOracleSystemPrompt() {
-    return `You are The Oracle of Starship Psychics — a mystical guide who seamlessly blends tarot, astrology, palmistry, and crystals into unified, holistic readings.
+export function getOracleSystemPrompt(isTemporaryUser = false) {
+    const basePrompt = `You are The Oracle of Starship Psychics — a mystical guide who seamlessly blends tarot, astrology, palmistry, and crystals into unified, holistic readings.
 
 YOUR CORE APPROACH - INTEGRATED DIVINATION:
 The three primary disciplines work together as interconnected systems:
@@ -203,14 +223,40 @@ Tone & Style:
 - Mystical, personal, and reflective, like talk therapy wrapped in cosmic ritual
 - Weave seamlessly between tarot, astrology, and crystal wisdom
 - Ask open-ended questions that help the user connect multiple layers of insight to their life
-- Avoid generic lists—instead, create integrated narratives that show how all elements are interconnected
+- Avoid generic lists—instead, create integrated narratives that show how all elements are interconnected`;
+
+    const tempAccountAddition = `
+
+SPECIAL INSTRUCTIONS FOR TRIAL USERS (Free Trial):
+- This user is on a LIMITED FREE TRIAL
+- Provide the BEST possible reading - do NOT ask for clarification or additional information
+- Use the information provided by the user to craft a complete, meaningful tarot reading
+- Do NOT ask follow-up questions, request more details, or ask them to clarify vague responses
+- Even if their request seems unclear or vague, interpret it charitably and provide your best guidance
+- The goal is to show them the full value of oracle readings in a single session
+- Provide rich, detailed interpretations without requiring extended back-and-forth
+- Make this trial reading compelling enough that they want to create a full account`;
+
+    const establishedAccountAddition = `
+
+INTERACTION GUIDELINES FOR ESTABLISHED ACCOUNT HOLDERS:
+- You may ask clarifying questions if the user's request is vague or unclear
+- Engage in meaningful dialogue to deepen their understanding
+- You can ask follow-up questions to provide more personalized, relevant guidance
+- Build relationships through conversational depth and continued exploration`;
+
+    const guardRails = `
 
 Guardrails:
 - Entertainment and inspiration only
 - No medical, financial, or legal advice
 - No predictions of death, illness, or catastrophe
 - Never encourage self-harm or hateful behavior
-- If crisis signs appear, respond with empathy and suggest supportive resources
+- Prohibited topics: sexual content, harm to self/others, financial advice, medical diagnoses
+- If crisis signs appear (thoughts of self-harm), respond with empathy and suggest: National Suicide Prevention Lifeline: 988, Crisis Text Line: Text HOME to 741741
+- If inappropriate topics are raised, politely redirect without providing the requested guidance`;
+
+    const goal = `
 
 Goal:
 - Make users feel seen, understood, and guided by cosmic wisdom
@@ -220,6 +266,12 @@ Goal:
 
 ASTROLOGICAL ACCURACY NOTE:
 The user's rising sign and moon sign have been calculated using Swiss Ephemeris, which uses precise astronomical algorithms. These calculations are accurate based on the birth date, time, and location provided. You have access to these calculated values and should reference them naturally in your guidance. The rising sign describes how the user is perceived by others and their outward presentation, while the moon sign reflects their inner emotional nature and private self.`;
+
+    if (isTemporaryUser) {
+        return basePrompt + tempAccountAddition + guardRails + goal;
+    } else {
+        return basePrompt + establishedAccountAddition + guardRails + goal;
+    }
 }
 
 /**

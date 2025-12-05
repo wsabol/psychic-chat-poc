@@ -128,7 +128,6 @@ router.post('/sync-calculate/:userId', authorizeUser, async (req, res) => {
 router.post('/calculate/:userId', authorizeUser, async (req, res) => {
     try {
         const { userId } = req.params;
-        console.log(`[API] Enqueueing astrology calculation job for user ${userId}`);
         
         // Enqueue a special message that triggers calculation
         await enqueueMessage({ 

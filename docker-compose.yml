@@ -75,6 +75,7 @@ services:
     command: npm start
     volumes:
       - ./client:/app
+      - /app/node_modules
     ports:
       - "3001:3000"
     environment:

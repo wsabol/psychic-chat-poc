@@ -8,21 +8,24 @@ export function useChat(userId, token, isAuthenticated, authUserId) {
     const [message, setMessage] = useState("");
     const [loaded, setLoaded] = useState(false);
     const [error, setError] = useState(null);
-    const hasInitialized = useRef(false);
+    const previousUserIdRef = useRef(null);
     
     const loadMessages = useCallback(async () => {
         try {
             if (!token || !userId) return [];
             const headers = { "Authorization": `Bearer ${token}` };
             const url = `${API_URL}/chat/history/${userId}`;
+            console.log('[CHAT] Loading messages for user:', userId);
             const res = await fetchWithTokenRefresh(url, { headers });
             if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
             const data = await res.json();
+            console.log('[CHAT] ✓ Loaded', data.length, 'messages');
             setChat(Array.isArray(data) ? data : []);
             setLoaded(true);
             setError(null);
             return data;
         } catch (err) {
+            console.error('[CHAT] Error loading messages:', err.message);
             setError(err.message);
             return [];
         }
@@ -60,14 +63,26 @@ export function useChat(userId, token, isAuthenticated, authUserId) {
         setMessage("");
     }, [message, userId, token, loadMessages]);
 
-    // Load messages and request opening on mount or userId change (only once per user)
+    // Load messages and request opening when user changes (important for account migration!)
     useEffect(() => {
-        if (isAuthenticated && authUserId && token && !hasInitialized.current) {
-            hasInitialized.current = true;
-            loadMessages();
-            requestOpening();
+        if (isAuthenticated && authUserId && token) {
+            // Check if this is a NEW user (different from before)
+            if (previousUserIdRef.current !== authUserId) {
+                console.log('[CHAT] User changed from', previousUserIdRef.current, 'to', authUserId, '- refetching messages');
+                previousUserIdRef.current = authUserId;
+                
+                // Clear old chat and load new
+                setChat([]);
+                setLoaded(false);
+                
+                // Wait a moment for auth to settle, then load
+                setTimeout(() => {
+                    loadMessages();
+                    requestOpening();
+                }, 500);
+            }
         }
-    }, [authUserId, isAuthenticated, token]);
+    }, [authUserId, isAuthenticated, token, loadMessages, requestOpening]);
 
     // Poll for new messages every 2 seconds
     useEffect(() => {
