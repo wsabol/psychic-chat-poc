@@ -4,13 +4,47 @@ import '../styles/responsive.css';
 import './ChatPage.css';
 
 /**
+ * Convert loose markdown to HTML (defensive cleanup layer)
+ * Handles any markdown that slipped through from backend
+ */
+function cleanMarkdownToHTML(text) {
+  if (!text || typeof text !== 'string') return text;
+  
+  // If already HTML, return as-is
+  if (text.includes('<') && text.includes('>')) {
+    return text;
+  }
+  
+  let html = text;
+  
+  // Replace escaped newlines
+  html = html.replace(/\\n/g, '\n');
+  
+  // Convert markdown bold to HTML
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  
+  // Convert markdown headers to HTML
+  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^# (.+)$/gm, '<h3>$1</h3>');
+  
+  // Wrap paragraphs in <p> tags
+  const paragraphs = html.split(/\n\n+/).map(para => {
+    para = para.trim();
+    // Don't wrap already-wrapped elements
+    if (para.match(/^<[hou]/)) return para;
+    return para ? `<p>${para}</p>` : '';
+  }).join('');
+  
+  return paragraphs;
+}
+
+/**
  * TarotCard - Display a single tarot card with image and label
  */
 function TarotCard({ card }) {
-  // Try ID-based lookup first (most reliable, matches backend extraction)
   let imageFilename = card.id !== undefined ? getCardImageByID(card.id) : null;
   
-  // Fallback to name-based lookup if ID not available
   if (!imageFilename && card.name) {
     imageFilename = getCardImageByName(card.name);
   }
@@ -73,7 +107,6 @@ function ChatMessage({ msg }) {
         messageText = msg.content;
       }
     } catch {
-      // Not JSON or not text+cards format, treat as plain text
       messageText = msg.content;
     }
   } else if (typeof msg.content === 'object' && msg.content !== null) {
@@ -88,7 +121,7 @@ function ChatMessage({ msg }) {
       <div className="message-content">
         {msg.role === 'assistant' ? (
           <>
-            <div dangerouslySetInnerHTML={{ __html: messageText }} />
+            <div dangerouslySetInnerHTML={{ __html: cleanMarkdownToHTML(messageText) }} />
             {cards && <CardsDisplay cards={cards} />}
           </>
         ) : (
@@ -101,7 +134,6 @@ function ChatMessage({ msg }) {
 
 /**
  * ChatPage - Full page version of ChatScreen
- * Displays chat messages and input for oracle interaction
  */
 export default function ChatPage({ userId, token, auth }) {
   const messagesEndRef = useRef(null);
@@ -113,7 +145,6 @@ export default function ChatPage({ userId, token, auth }) {
 
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
-  // Fetch latest messages
   const fetchMessages = useCallback(async () => {
     if (!userId || !token) return 0;
     try {
@@ -122,13 +153,9 @@ export default function ChatPage({ userId, token, auth }) {
       });
       if (response.ok) {
         const rawData = await response.json();
-        
-        // Filter to only show user and assistant messages
-        // Hide special roles: cosmic_weather, horoscope, moon_phase, lunar_nodes, void_of_course
         const filtered = rawData.filter(msg => 
           msg.role === 'user' || msg.role === 'assistant'
         );
-        
         setMessages(filtered);
         scrollToBottom();
         return filtered.length;
@@ -139,37 +166,32 @@ export default function ChatPage({ userId, token, auth }) {
     return 0;
   }, [userId, token, API_URL]);
 
-  // Start polling for new messages (for async processing)
   const startPolling = () => {
-    if (pollIntervalRef.current) return; // Already polling
+    if (pollIntervalRef.current) return;
     
     let pollCount = 0;
-    const maxPolls = 120; // Max 1 minute of polling (500ms * 120)
+    const maxPolls = 120;
     
     pollIntervalRef.current = setInterval(async () => {
       pollCount++;
       const messageCount = await fetchMessages();
       
-      // Stop polling if we got new messages or hit max polls
       if (messageCount > lastMessageCountRef.current || pollCount >= maxPolls) {
         clearInterval(pollIntervalRef.current);
         pollIntervalRef.current = null;
         lastMessageCountRef.current = messageCount;
       }
-    }, 500); // Poll every 500ms
+    }, 500);
   };
 
-  // Load chat history on mount
   useEffect(() => {
     const loadChat = async () => {
       const count = await fetchMessages();
       lastMessageCountRef.current = count;
     };
-
     loadChat();
   }, [fetchMessages]);
 
-  // Cleanup polling on unmount
   useEffect(() => {
     return () => {
       if (pollIntervalRef.current) {
@@ -205,12 +227,8 @@ export default function ChatPage({ userId, token, auth }) {
 
       if (response.ok) {
         setInputMessage('');
-        
-        // Fetch messages immediately
         const count = await fetchMessages();
         lastMessageCountRef.current = count;
-        
-        // Start polling for async responses (horoscope, moon phase, etc.)
         startPolling();
       }
     } catch (err) {

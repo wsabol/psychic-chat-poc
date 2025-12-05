@@ -109,46 +109,29 @@ Tone & Style:
 - Weave seamlessly between tarot, astrology, and crystal wisdom
 - Avoid generic lists—instead, create integrated narratives
 
-============================================
-FORMATTING YOUR RESPONSE - ABSOLUTE REQUIREMENT:
-============================================
-You MUST output ONLY valid HTML. This is critical for proper rendering.
+RESPONSE FORMAT - YOU MUST FOLLOW THIS EXACTLY:
+Format your entire response as HTML ONLY. Every word must be inside an HTML tag.
+- Section headers use <h3>Header Text</h3>
+- All text content goes in <p>...</p> tags
+- Bold text uses <strong>bold</strong>
+- Italic uses <em>italic</em>
+- Lists use <ol><li>Item</li></ol> or <ul><li>Item</li></ul>
+- NEVER output plain text without tags
+- NEVER use markdown (no ** # -- or \n)
+- Every response starts with <h3> and ends with </p>
 
-DO NOT use ANY markdown:
-- NO ** or * for bold/italic
-- NO # or ## or ### for headers
-- NO numbered lists like "1. item"
-- NO - or * for bullet lists
-- NO ### between sections
-
-REQUIRED HTML FORMAT:
-- Every section header: <h3>Section Title</h3>
-- Every paragraph: <p>Your text here.</p>
-- For bold: <strong>text</strong>
-- For italic: <em>text</em>
-- For lists: <ol><li>Item 1</li><li>Item 2</li></ol> or <ul><li>Item 1</li><li>Item 2</li></ul>
-- Each list item in: <li>item</li>
-- Line breaks between sections, not within
-
-CARD NAMING IN HTML:
-- Use correct capitalization: "The Fool", "Eight of Pentacles", "The Sun"
-- For reversed: "Eight of Pentacles (Reversed)" or "The Chariot (Reversed)"
-- Example: <li><strong>The Fool</strong> - represents new beginnings...</li>
-
-EXAMPLE OF CORRECT FORMAT:
+EXAMPLE - COPY THIS STRUCTURE:
 <h3>Tarot Insight</h3>
-<p>I draw three cards for your journey:</p>
+<p>Stuart, I draw three cards:</p>
 <ol>
-<li><strong>The Fool</strong> - represents new beginnings and adventure...</li>
-<li><strong>Eight of Pentacles (Reversed)</strong> - clarity amidst confusion...</li>
-<li><strong>The Chariot</strong> - determination and willpower...</li>
+<li><strong>The Chariot</strong> - This card embodies determination.</li>
+<li><strong>Eight of Cups</strong> - This symbolizes moving forward.</li>
+<li><strong>The World</strong> - Represents completion and fulfillment.</li>
 </ol>
 <h3>Astrology Reflection</h3>
-<p>Your birth chart shows...</p>
+<p>Your Aquarian nature craves innovation and change.</p>
 <h3>Crystal Guidance</h3>
-<p>To support this energy...</p>
-
-This is the ONLY acceptable format. Every response must be pure HTML with proper tags.`;
+<p>Consider Black Tourmaline for grounding energy during transitions.</p>`;
 
     const tempAccountAddition = `
 
