@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import '../styles/responsive.css';
 import './ChatPage.css';
 
@@ -17,23 +17,30 @@ export default function ChatPage({ userId, token, auth }) {
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
   // Fetch latest messages
-  const fetchMessages = async () => {
+  const fetchMessages = useCallback(async () => {
     if (!userId || !token) return 0;
     try {
       const response = await fetch(`${API_URL}/chat/history/${userId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
-        const data = await response.json();
-        setMessages(data);
+        const rawData = await response.json();
+        
+        // Filter to only show user and assistant messages
+        // Hide special roles: cosmic_weather, horoscope, moon_phase, lunar_nodes, void_of_course
+        const filtered = rawData.filter(msg => 
+          msg.role === 'user' || msg.role === 'assistant'
+        );
+        
+        setMessages(filtered);
         scrollToBottom();
-        return data.length;
+        return filtered.length;
       }
     } catch (err) {
       console.error('[CHAT] Error fetching messages:', err);
     }
     return 0;
-  };
+  }, [userId, token, API_URL]);
 
   // Start polling for new messages (for async processing)
   const startPolling = () => {
@@ -63,7 +70,7 @@ export default function ChatPage({ userId, token, auth }) {
     };
 
     loadChat();
-  }, [userId, token, API_URL]);
+  }, [fetchMessages]);
 
   // Cleanup polling on unmount
   useEffect(() => {

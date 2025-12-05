@@ -5,6 +5,59 @@ import { db } from "../shared/db.js";
 
 const router = Router();
 
+// Cosmic Weather Endpoint - GET
+router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (req, res) => {
+    const { userId } = req.params;
+    const today = new Date().toISOString().split('T')[0];
+    try {
+        const { rows } = await db.query(
+            `SELECT content FROM messages WHERE user_id = $1 AND role = 'cosmic_weather' ORDER BY created_at DESC LIMIT 5`,
+            [userId]
+        );
+        
+        let todaysWeather = null;
+        for (const row of rows) {
+            const data = typeof row.content === 'string' ? JSON.parse(row.content) : row.content;
+            if (data.date === today) {
+                todaysWeather = data;
+                break;
+            }
+        }
+        
+        if (!todaysWeather) {
+            return res.status(404).json({ error: 'Generating today\'s cosmic weather...' });
+        }
+        
+        console.log('[API-COSMIC-WEATHER] Returning:', {
+            hasText: !!todaysWeather.text,
+            hasBirthChart: !!todaysWeather.birth_chart,
+            hasPlanets: !!todaysWeather.planets,
+            planetsCount: todaysWeather.planets?.length
+        });
+        
+        res.json({
+            weather: todaysWeather.text,
+            birthChart: todaysWeather.birth_chart,
+            currentPlanets: todaysWeather.planets
+        });
+    } catch (err) {
+        console.error('[ASTROLOGY-INSIGHTS] Error fetching cosmic weather:', err);
+        res.status(500).json({ error: 'Failed to fetch cosmic weather' });
+    }
+});
+
+// Cosmic Weather Endpoint - POST (trigger generation)
+router.post("/cosmic-weather/:userId", authorizeUser, async (req, res) => {
+    const { userId } = req.params;
+    try {
+        await enqueueMessage({ userId, message: '[SYSTEM] Generate cosmic weather' });
+        res.json({ status: 'Generating today\'s cosmic weather...' });
+    } catch (err) {
+        console.error('[ASTROLOGY-INSIGHTS] Error queuing cosmic weather:', err);
+        res.status(500).json({ error: 'Failed to queue cosmic weather' });
+    }
+});
+
 // Lunar Nodes Endpoint
 router.get("/lunar-nodes/:userId", authorizeUser, async (req, res) => {
     const { userId } = req.params;
@@ -34,47 +87,6 @@ router.post("/lunar-nodes/:userId", authorizeUser, async (req, res) => {
     } catch (err) {
         console.error('[ASTROLOGY-INSIGHTS] Error queuing lunar nodes:', err);
         res.status(500).json({ error: 'Failed to queue lunar nodes' });
-    }
-});
-
-// Cosmic Weather Endpoint
-router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (req, res) => {
-    const { userId } = req.params;
-    const today = new Date().toISOString().split('T')[0];
-    try {
-        const { rows } = await db.query(
-            `SELECT content FROM messages WHERE user_id = $1 AND role = 'cosmic_weather' ORDER BY created_at DESC LIMIT 5`,
-            [userId]
-        );
-        
-        let todaysWeather = null;
-        for (const row of rows) {
-            const data = typeof row.content === 'string' ? JSON.parse(row.content) : row.content;
-            if (data.date === today) {
-                todaysWeather = data;
-                break;
-            }
-        }
-        
-        if (!todaysWeather) {
-            return res.status(404).json({ error: 'Generating today\'s cosmic weather...' });
-        }
-        
-        res.json({ weather: todaysWeather.text, transits: todaysWeather.transits, prompt: todaysWeather.prompt, birthChart: todaysWeather.birthChart, currentPlanets: todaysWeather.currentPlanets, moonPhase: todaysWeather.moonPhase });
-    } catch (err) {
-        console.error('[ASTROLOGY-INSIGHTS] Error fetching cosmic weather:', err);
-        res.status(500).json({ error: 'Failed to fetch cosmic weather' });
-    }
-});
-
-router.post("/cosmic-weather/:userId", authorizeUser, async (req, res) => {
-    const { userId } = req.params;
-    try {
-        await enqueueMessage({ userId, message: '[SYSTEM] Generate cosmic weather' });
-        res.json({ status: 'Generating today\'s cosmic weather...' });
-    } catch (err) {
-        console.error('[ASTROLOGY-INSIGHTS] Error queuing cosmic weather:', err);
-        res.status(500).json({ error: 'Failed to queue cosmic weather' });
     }
 });
 
@@ -124,7 +136,7 @@ router.post("/void-of-course/:userId", authorizeUser, async (req, res) => {
     }
 });
 
-// Retrogrades Calendar (static data for now)
+// Retrogrades Calendar (static data)
 router.get("/retrogrades", (req, res) => {
     const retrogrades = [
         { planet: "Mercury", start: "2025-01-15", end: "2025-02-03", icon: "☿️" },

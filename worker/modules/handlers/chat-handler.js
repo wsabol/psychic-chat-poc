@@ -88,10 +88,16 @@ export async function handleChatMessage(userId, message) {
             return;
         }
         
-        // CHECK FOR MOON PHASE REQUEST IN CHAT
+                // CHECK FOR MOON PHASE REQUEST IN CHAT
         if (isMoonPhaseRequestInChat(message)) {
             const phase = extractMoonPhaseFromChat(message);
             await handleMoonPhaseInChat(userId, userInfo, astrologyInfo, phase);
+            return;
+        }
+        
+        // CHECK FOR COSMIC WEATHER REQUEST IN CHAT
+        if (isCosmicWeatherRequestInChat(message)) {
+            await handleCosmicWeatherInChat(userId, userInfo);
             return;
         }
         
@@ -189,6 +195,14 @@ function isHoroscopeRequestInChat(message) {
 function isMoonPhaseRequestInChat(message) {
     const moonKeywords = ['moon phase', 'lunar phase', 'what\'s the moon phase', 'current moon', 'lunar energy'];
     return moonKeywords.some(keyword => message.toLowerCase().includes(keyword));
+}
+
+/**
+ * Detect if user is asking for cosmic weather in chat
+ */
+function isCosmicWeatherRequestInChat(message) {
+    const cosmicKeywords = ['cosmic weather', 'today\'s cosmic', 'planetary energy', 'planet positions'];
+    return cosmicKeywords.some(keyword => message.toLowerCase().includes(keyword));
 }
 
 /**
@@ -322,6 +336,47 @@ async function handleMoonPhaseInChat(userId, userInfo, astrologyInfo, phase) {
     } catch (err) {
         console.error('[CHAT-HANDLER] Error handling moon phase in chat:', err.message);
         const response = `I encountered an error retrieving the lunar insight. Please try again in a moment.`;
+        await storeMessage(userId, 'assistant', response);
+    }
+}
+
+/**
+ * Store astrology data in database
+ */
+/**
+ * Handle cosmic weather request in chat
+ */
+async function handleCosmicWeatherInChat(userId, userInfo) {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        const userGreeting = getUserGreeting(userInfo, userId);
+        const { rows } = await db.query(
+            `SELECT content FROM messages WHERE user_id = $1 AND role = 'cosmic_weather' ORDER BY created_at DESC LIMIT 5`,
+            [userId]
+        );
+        let validWeather = null;
+        for (const row of rows) {
+            const weather = typeof row.content === 'string' ? JSON.parse(row.content) : row.content;
+            const generatedDate = weather.generated_at?.split('T')[0] || weather.date?.split('T')[0];
+            if (generatedDate === today) {
+                validWeather = weather;
+                break;
+            }
+        }
+        if (validWeather) {
+            const response = `✨ Today's cosmic weather is available in the Cosmic Weather page. Would you like me to help with something else?`;
+            await storeMessage(userId, 'assistant', response);
+            console.log('[CHAT-HANDLER] Cosmic weather available on Cosmic Weather page');
+        } else {
+            const response = `✨ I'm reading today's planetary energies. Please visit the Cosmic Weather page to see them when ready.`;
+            await storeMessage(userId, 'assistant', response);
+            const { generateCosmicWeather } = await import('./cosmic-weather-handler.js');
+            generateCosmicWeather(userId).catch(err => console.error('[CHAT-HANDLER] Error triggering cosmic weather:', err.message));
+            console.log('[CHAT-HANDLER] Queued cosmic weather generation');
+        }
+    } catch (err) {
+        console.error('[CHAT-HANDLER] Error handling cosmic weather in chat:', err.message);
+        const response = `I encountered an error reading the cosmic energy. Please try again in a moment.`;
         await storeMessage(userId, 'assistant', response);
     }
 }
