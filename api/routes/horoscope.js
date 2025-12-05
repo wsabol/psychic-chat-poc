@@ -69,6 +69,7 @@ router.get("/:userId/:range", authorizeUser, async (req, res) => {
             return res.status(404).json({ error: `No ${range} horoscope found. Generating now...` });
         }
         
+        console.log(`[HOROSCOPE API] Retrieved ${range} horoscope from database for user ${userId}`);
         res.json({ horoscope: validHoroscope.text, generated_at: validHoroscope.generated_at });
         
     } catch (err) {
@@ -80,6 +81,13 @@ router.get("/:userId/:range", authorizeUser, async (req, res) => {
 /**
  * POST /horoscope/:userId/:range
  * Generate new horoscopes by enqueueing a worker job
+ * 
+ * IMPORTANT: This generates ONE horoscope per day per range.
+ * The worker handler generates BOTH daily and weekly horoscopes at once.
+ * This prevents duplicate generations and maintains consistency:
+ * - Same horoscope shown in HoroscopePage
+ * - Same horoscope shown in Chat when user asks
+ * - No conflicting guidance within a 24-hour period
  */
 router.post("/:userId/:range", authorizeUser, async (req, res) => {
     const { userId, range } = req.params;

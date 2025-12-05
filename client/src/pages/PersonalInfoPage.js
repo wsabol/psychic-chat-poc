@@ -68,7 +68,7 @@ export default function PersonalInfoPage({ userId, token, auth }) {
     // Load personal info on mount
     useEffect(() => {
         fetchPersonalInfo();
-    }, [userId, token]);
+    }, [userId, token]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const fetchPersonalInfo = async () => {
         try {

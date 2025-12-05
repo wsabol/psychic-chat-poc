@@ -6,6 +6,7 @@ import PageIndicator from './PageIndicator';
 import ChatPage from '../pages/ChatPage';
 import PersonalInfoPage from '../pages/PersonalInfoPage';
 import MySignPage from '../pages/MySignPage';
+import MoonPhasePage from '../pages/MoonPhasePage';
 import HoroscopePage from '../pages/HoroscopePage';
 import './MainContainer.css';
 
@@ -22,7 +23,7 @@ const PAGES = [
   { id: 'chat', label: 'Chat', component: ChatPage },
   { id: 'personal', label: 'Personal Info', component: PersonalInfoPage },
   { id: 'sign', label: 'My Sign', component: MySignPage },
-  { id: 'moon', label: 'Moon Phase', component: () => <PlaceholderPage pageId="Moon Phase" /> },
+  { id: 'moon', label: 'Moon Phase', component: MoonPhasePage },
   { id: 'horoscope', label: 'Horoscope', component: HoroscopePage },
   { id: 'cosmic', label: 'Cosmic Weather', component: () => <PlaceholderPage pageId="Cosmic Weather" /> },
   { id: 'security', label: 'Security', component: () => <PlaceholderPage pageId="Security" /> },

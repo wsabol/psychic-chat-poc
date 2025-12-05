@@ -12,7 +12,7 @@ export default function MySignPage({ userId, token, auth }) {
 
   useEffect(() => {
     fetchAstrologyData();
-  }, [userId, token]);
+  }, [userId, token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchAstrologyData = async () => {
     setLoading(true);

@@ -2,23 +2,51 @@ import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { getAstrologyData } from '../utils/astroUtils';
 import '../styles/responsive.css';
-import './HoroscopePage.css';
+import './MoonPhasePage.css';
 
-export default function HoroscopePage({ userId, token, auth }) {
-  const [horoscopeRange, setHoroscopeRange] = useState('daily');
-  const [horoscopeData, setHoroscopeData] = useState(null);
+export default function MoonPhasePage({ userId, token, auth }) {
+  const [moonPhaseData, setMoonPhaseData] = useState(null);
+  const [currentPhase, setCurrentPhase] = useState(null);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState(null);
   const [astroInfo, setAstroInfo] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
   const pollIntervalRef = useRef(null);
 
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
-  // Load horoscope when range changes
+  // Moon phase emojis and display info
+  const moonPhaseEmojis = {
+    newMoon: '🌑',
+    waxingCrescent: '🌒',
+    firstQuarter: '🌓',
+    waxingGibbous: '🌔',
+    fullMoon: '🌕',
+    waningGibbous: '🌖',
+    lastQuarter: '🌗',
+    waningCrescent: '🌘'
+  };
+
+  const moonPhaseOrder = ['newMoon', 'waxingCrescent', 'firstQuarter', 'waxingGibbous', 'fullMoon', 'waningGibbous', 'lastQuarter', 'waningCrescent'];
+
+  // Calculate current moon phase (client-side as fallback)
+  const calculateMoonPhase = () => {
+    const now = new Date();
+    const knownNewMoonDate = new Date(2025, 0, 29).getTime();
+    const currentDate = now.getTime();
+    const lunarCycle = 29.53059 * 24 * 60 * 60 * 1000;
+    
+    const daysIntoPhase = ((currentDate - knownNewMoonDate) % lunarCycle) / (24 * 60 * 60 * 1000);
+    const phaseIndex = Math.floor((daysIntoPhase / 29.53059) * 8) % 8;
+    
+    return moonPhaseOrder[phaseIndex];
+  };
+
+  // Load moon phase data on mount
   useEffect(() => {
-    loadHoroscope();
-  }, [horoscopeRange]); // eslint-disable-line react-hooks/exhaustive-deps
+    loadMoonPhaseData();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Cleanup polling on unmount
   useEffect(() => {
@@ -45,15 +73,15 @@ export default function HoroscopePage({ userId, token, auth }) {
         return astroDataObj;
       }
     } catch (err) {
-      console.error('[HOROSCOPE] Error fetching astro info:', err);
+      console.error('[MOON-PHASE] Error fetching astro info:', err);
     }
     return null;
   };
 
-  const loadHoroscope = async () => {
+  const loadMoonPhaseData = async () => {
     setLoading(true);
     setError(null);
-    setHoroscopeData(null);
+    setMoonPhaseData(null);
     setGenerating(false);
 
     try {
@@ -64,35 +92,41 @@ export default function HoroscopePage({ userId, token, auth }) {
         await fetchAstroInfo(headers);
       }
 
-      // Try to fetch cached horoscope
-      const response = await fetch(`${API_URL}/horoscope/${userId}/${horoscopeRange}`, { headers });
+      // Determine current moon phase (use Python calculation if available)
+      const calculatedPhase = calculateMoonPhase();
+      setCurrentPhase(calculatedPhase);
+
+      // Try to fetch cached moon phase commentary
+      const response = await fetch(`${API_URL}/moon-phase/${userId}?phase=${calculatedPhase}`, { headers });
 
       if (response.ok) {
         const data = await response.json();
-        setHoroscopeData({
-          text: data.horoscope,
+        setMoonPhaseData({
+          text: data.commentary,
           generatedAt: data.generated_at,
-          range: horoscopeRange
+          phase: calculatedPhase
         });
+        setLastUpdated(new Date(data.generated_at).toLocaleString());
         setLoading(false);
         return;
       }
 
-      // No cached horoscope - trigger generation
+      // No cached commentary - trigger generation
       setGenerating(true);
-      const generateResponse = await fetch(`${API_URL}/horoscope/${userId}/${horoscopeRange}`, {
+      const generateResponse = await fetch(`${API_URL}/moon-phase/${userId}`, {
         method: 'POST',
-        headers
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phase: calculatedPhase })
       });
 
       if (!generateResponse.ok) {
         const errorData = await generateResponse.json();
-        setError(errorData.error || 'Could not generate horoscope');
+        setError(errorData.error || 'Could not generate moon phase commentary');
         setLoading(false);
         return;
       }
 
-      // Start polling for generated horoscope
+      // Start polling for generated commentary
       let pollCount = 0;
       const maxPolls = 30;
 
@@ -104,34 +138,35 @@ export default function HoroscopePage({ userId, token, auth }) {
         pollCount++;
 
         try {
-          const pollResponse = await fetch(`${API_URL}/horoscope/${userId}/${horoscopeRange}`, { headers });
+          const pollResponse = await fetch(`${API_URL}/moon-phase/${userId}?phase=${calculatedPhase}`, { headers });
 
           if (pollResponse.ok) {
             const data = await pollResponse.json();
-            setHoroscopeData({
-              text: data.horoscope,
+            setMoonPhaseData({
+              text: data.commentary,
               generatedAt: data.generated_at,
-              range: horoscopeRange
+              phase: calculatedPhase
             });
+            setLastUpdated(new Date(data.generated_at).toLocaleString());
             setGenerating(false);
             setLoading(false);
             clearInterval(pollIntervalRef.current);
             return;
           }
         } catch (err) {
-          console.error('[HOROSCOPE] Polling error:', err);
+          console.error('[MOON-PHASE] Polling error:', err);
         }
 
         if (pollCount >= maxPolls) {
-          setError('Horoscope generation is taking longer than expected. Please try again.');
+          setError('Moon phase commentary generation is taking longer than expected. Please try again.');
           setGenerating(false);
           setLoading(false);
           clearInterval(pollIntervalRef.current);
         }
       }, 1000);
     } catch (err) {
-      console.error('[HOROSCOPE] Error loading horoscope:', err);
-      setError('Unable to load your horoscope. Please try again.');
+      console.error('[MOON-PHASE] Error loading moon phase:', err);
+      setError('Unable to load moon phase data. Please try again.');
       setLoading(false);
     }
   };
@@ -146,30 +181,31 @@ export default function HoroscopePage({ userId, token, auth }) {
   const astro = astroInfo?.astrology_data || {};
 
   return (
-    <div className="page-safe-area horoscope-page">
+    <div className="page-safe-area moon-phase-page">
       {/* Header */}
-      <div className="horoscope-header">
-        <h2 className="heading-primary">🔮 Your Horoscope</h2>
-        <p className="horoscope-subtitle">Personalized cosmic guidance for you</p>
+      <div className="moon-phase-header">
+        <h2 className="heading-primary">🌙 Moon Phase Insight</h2>
+        <p className="moon-phase-subtitle">Current lunar energy and its effect on you</p>
       </div>
 
-      {/* Range Toggle */}
-      <div className="horoscope-toggle">
-        {['daily', 'weekly'].map((range) => (
-          <button
-            key={range}
-            className={`toggle-btn ${horoscopeRange === range ? 'active' : ''}`}
-            onClick={() => setHoroscopeRange(range)}
-            disabled={loading || generating}
-          >
-            {range.charAt(0).toUpperCase() + range.slice(1)}
-          </button>
-        ))}
-      </div>
+      {/* Current Moon Phase Display */}
+      {currentPhase && (
+        <section className="moon-phase-display">
+          <div className="moon-phase-emoji">
+            {moonPhaseEmojis[currentPhase]}
+          </div>
+          <h3 className="moon-phase-name">
+            {currentPhase.replace(/([A-Z])/g, ' $1').trim()}
+          </h3>
+          <p className="moon-phase-date">
+            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+          </p>
+        </section>
+      )}
 
       {/* Birth Chart Info */}
       {astro.sun_sign && (
-        <section className="horoscope-birth-chart">
+        <section className="moon-phase-birth-chart">
           <div className="birth-chart-cards">
             {astro.sun_sign && (
               <div className="chart-card sun-card">
@@ -198,37 +234,28 @@ export default function HoroscopePage({ userId, token, auth }) {
 
       {/* Loading State */}
       {loading && (
-        <div className="horoscope-content loading">
-          <div className="spinner">🔮</div>
+        <div className="moon-phase-content loading">
+          <div className="spinner">🌙</div>
           <p>
-            {generating ? 'Your cosmic guidance is being woven by The Oracle...' : 'Loading your horoscope...'}
+            {generating ? 'The Oracle is sensing the lunar energy for you...' : 'Loading moon phase insight...'}
           </p>
         </div>
       )}
 
       {/* Error State */}
       {error && (
-        <div className="horoscope-content error">
+        <div className="moon-phase-content error">
           <p className="error-message">⚠️ {error}</p>
-          <button onClick={loadHoroscope} className="btn-secondary">
+          <button onClick={loadMoonPhaseData} className="btn-secondary">
             Try Again
           </button>
         </div>
       )}
 
-      {/* Horoscope Content */}
-      {horoscopeData && !loading && (
-        <section className="horoscope-content">
-          <div className="horoscope-metadata">
-            <p className="horoscope-range">
-              {horoscopeData.range.charAt(0).toUpperCase() + horoscopeData.range.slice(1)} Reading
-            </p>
-            <p className="horoscope-date">
-              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-            </p>
-          </div>
-
-          <div className="horoscope-text">
+      {/* Moon Phase Content */}
+      {moonPhaseData && !loading && (
+        <section className="moon-phase-content">
+          <div className="moon-phase-insight">
             <ReactMarkdown
               components={{
                 p: ({ node, ...props }) => <p className="markdown-p" {...props} />,
@@ -239,11 +266,35 @@ export default function HoroscopePage({ userId, token, auth }) {
                 li: ({ node, ...props }) => <li className="markdown-li" {...props} />,
               }}
             >
-              {horoscopeData.text}
+              {moonPhaseData.text}
             </ReactMarkdown>
           </div>
 
-          {/* Sun Sign Info Below Horoscope */}
+          {lastUpdated && (
+            <div className="moon-phase-timestamp">
+              <p className="text-muted">Generated: {lastUpdated}</p>
+            </div>
+          )}
+
+          {/* Lunar Cycle Visualization */}
+          <section className="lunar-cycle">
+            <h3>Lunar Cycle</h3>
+            <div className="moon-phases-grid">
+              {moonPhaseOrder.map((phase) => (
+                <div
+                  key={phase}
+                  className={`moon-phase-item ${phase === currentPhase ? 'active' : ''}`}
+                >
+                  <div className="moon-emoji">{moonPhaseEmojis[phase]}</div>
+                  <p className="phase-name">
+                    {phase.replace(/([A-Z])/g, ' $1').trim()}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Sun Sign Info Below */}
           {sunSignData && (
             <section className="sun-sign-info">
               <div className="sun-sign-header">
@@ -276,9 +327,14 @@ export default function HoroscopePage({ userId, token, auth }) {
             </section>
           )}
 
+          {/* Info Box */}
+          <div className="moon-phase-info">
+            <p>🌙 The moon completes a full cycle approximately every 29.5 days. Each phase carries unique energy that influences all zodiac signs differently based on your personal birth chart.</p>
+          </div>
+
           {/* Disclaimer */}
-          <div className="horoscope-disclaimer">
-            <p>🔮 Horoscopes are for entertainment and inspiration. Your choices and actions ultimately shape your destiny.</p>
+          <div className="moon-phase-disclaimer">
+            <p>🔮 Moon phase insights are for inspiration and spiritual reflection. Your choices and actions are always your own.</p>
           </div>
         </section>
       )}

@@ -19,10 +19,12 @@ router.get("/:userId", authorizeUser, async (req, res) => {
         }
         
         const today = new Date().toISOString().split('T')[0];
+        const now = new Date();
+        const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
         
-        // Get today's moon phase commentary
+        // Get recent moon phase commentaries
         const { rows } = await db.query(
-            `SELECT content FROM messages 
+            `SELECT content, created_at FROM messages 
              WHERE user_id = $1 
              AND role = 'moon_phase'
              ORDER BY created_at DESC 
@@ -30,9 +32,10 @@ router.get("/:userId", authorizeUser, async (req, res) => {
             [userId]
         );
         
-        // Find one from today matching this phase
+        // Find one from today matching this phase that's less than 24 hours old
         let validCommentary = null;
         let staleEntriesExist = false;
+        let needsRefresh = false;
         
         for (const row of rows) {
             const commentary = typeof row.content === 'string' 
@@ -40,10 +43,16 @@ router.get("/:userId", authorizeUser, async (req, res) => {
                 : row.content;
             
             const generatedDate = commentary.generated_at?.split('T')[0];
+            const generatedTime = new Date(commentary.generated_at);
             
             if (generatedDate === today && commentary.phase === phase) {
-                validCommentary = commentary;
-                break;
+                // Check if commentary is older than 24 hours
+                if (generatedTime < twentyFourHoursAgo) {
+                    needsRefresh = true;
+                } else {
+                    validCommentary = commentary;
+                    break;
+                }
             }
             
             if (generatedDate !== today) {
@@ -63,6 +72,14 @@ router.get("/:userId", authorizeUser, async (req, res) => {
         }
         
         if (!validCommentary) {
+            if (needsRefresh) {
+                console.log(`[MOON-PHASE API] Commentary older than 24 hours, queueing refresh for user ${userId}`);
+                // Queue refresh in background (don't wait for it)
+                enqueueMessage({
+                    userId,
+                    message: `[SYSTEM] Generate moon phase commentary for ${phase}`
+                }).catch(err => console.error('[MOON-PHASE API] Error queueing refresh:', err));
+            }
             return res.status(404).json({ error: 'No moon phase commentary found. Generating now...' });
         }
         

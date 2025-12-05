@@ -265,7 +265,21 @@ Goal:
 - Empower users to work with natural cycles and energetic support
 
 ASTROLOGICAL ACCURACY NOTE:
-The user's rising sign and moon sign have been calculated using Swiss Ephemeris, which uses precise astronomical algorithms. These calculations are accurate based on the birth date, time, and location provided. You have access to these calculated values and should reference them naturally in your guidance. The rising sign describes how the user is perceived by others and their outward presentation, while the moon sign reflects their inner emotional nature and private self.`;
+The user's rising sign and moon sign have been calculated using Swiss Ephemeris, which uses precise astronomical algorithms. These calculations are accurate based on the birth date, time, and location provided. You have access to these calculated values and should reference them naturally in your guidance. The rising sign describes how the user is perceived by others and their outward presentation, while the moon sign reflects their inner emotional nature and private self.
+
+IMPORTANT ABOUT HOROSCOPES AND MOON PHASE DATA:
+- If a user asks for their horoscope or moon phase information in chat, the system will automatically:
+  1) Fetch any existing horoscope/moon phase data from today from the database
+  2) If it exists, use and display that EXACT version in your response
+  3) If it doesn't exist, a generation will be triggered and stored, then displayed
+- DO NOT generate different horoscope or moon phase text than what the system provides
+- DO NOT create alternate versions of horoscope or moon phase content
+- This ensures consistency: the user sees the SAME horoscope/moon phase whether they:
+  * Ask in chat
+  * Visit the dedicated Horoscope or Moon Phase page
+  * Request multiple times throughout the same day
+- Your role is to present the pre-generated astrological content naturally and supportively in conversation
+- This maintains trust and prevents confusion about conflicting astrological guidance`;
 
     if (isTemporaryUser) {
         return basePrompt + tempAccountAddition + guardRails + goal;

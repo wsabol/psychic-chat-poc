@@ -8,34 +8,71 @@ import './ChatPage.css';
  */
 export default function ChatPage({ userId, token, auth }) {
   const messagesEndRef = useRef(null);
+  const pollIntervalRef = useRef(null);
+  const lastMessageCountRef = useRef(0);
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
+  // Fetch latest messages
+  const fetchMessages = async () => {
+    if (!userId || !token) return 0;
+    try {
+      const response = await fetch(`${API_URL}/chat/history/${userId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setMessages(data);
+        scrollToBottom();
+        return data.length;
+      }
+    } catch (err) {
+      console.error('[CHAT] Error fetching messages:', err);
+    }
+    return 0;
+  };
+
+  // Start polling for new messages (for async processing)
+  const startPolling = () => {
+    if (pollIntervalRef.current) return; // Already polling
+    
+    let pollCount = 0;
+    const maxPolls = 120; // Max 1 minute of polling (500ms * 120)
+    
+    pollIntervalRef.current = setInterval(async () => {
+      pollCount++;
+      const messageCount = await fetchMessages();
+      
+      // Stop polling if we got new messages or hit max polls
+      if (messageCount > lastMessageCountRef.current || pollCount >= maxPolls) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+        lastMessageCountRef.current = messageCount;
+      }
+    }, 500); // Poll every 500ms
+  };
+
   // Load chat history on mount
   useEffect(() => {
     const loadChat = async () => {
-      if (!userId || !token) return;
-      
-      try {
-        const response = await fetch(`${API_URL}/chat/history/${userId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          setMessages(data);
-          scrollToBottom();
-        }
-      } catch (err) {
-        console.error('[CHAT] Error loading history:', err);
-      }
+      const count = await fetchMessages();
+      lastMessageCountRef.current = count;
     };
 
     loadChat();
-  }, [userId, token]);
+  }, [userId, token, API_URL]);
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+      }
+    };
+  }, []);
 
   const scrollToBottom = () => {
     setTimeout(() => {
@@ -65,16 +102,12 @@ export default function ChatPage({ userId, token, auth }) {
       if (response.ok) {
         setInputMessage('');
         
-        // Reload messages
-        const historyResponse = await fetch(`${API_URL}/chat/history/${userId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+        // Fetch messages immediately
+        const count = await fetchMessages();
+        lastMessageCountRef.current = count;
         
-        if (historyResponse.ok) {
-          const data = await historyResponse.json();
-          setMessages(data);
-          scrollToBottom();
-        }
+        // Start polling for async responses (horoscope, moon phase, etc.)
+        startPolling();
       }
     } catch (err) {
       console.error('[CHAT] Error sending message:', err);
@@ -127,5 +160,3 @@ export default function ChatPage({ userId, token, auth }) {
     </div>
   );
 }
-
-

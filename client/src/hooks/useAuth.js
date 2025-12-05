@@ -102,7 +102,6 @@ export function useAuth() {
                         });
                         
                         if (response.ok) {
-                            const data = await response.json();
                             console.log('[TEMP-ACCOUNT] Backend deletion successful');
                         } else {
                             console.error('[TEMP-ACCOUNT] Backend deletion failed:', response.status);

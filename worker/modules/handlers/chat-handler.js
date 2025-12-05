@@ -1,3 +1,4 @@
+import { db } from '../../shared/db.js';
 import { tarotDeck } from '../../tarotDeck.js';
 import { extractCardsFromResponse, formatCardsForStorage } from '../cards.js';
 import { 
@@ -79,7 +80,20 @@ export async function handleChatMessage(userId, message) {
             return;
         }
         
-        // NO VIOLATIONS - Continue with normal chat processing
+                // NO VIOLATIONS - Continue with normal chat processing
+        
+        // CHECK FOR HOROSCOPE REQUEST IN CHAT
+        if (isHoroscopeRequestInChat(message)) {
+            await handleHoroscopeInChat(userId, userInfo, astrologyInfo);
+            return;
+        }
+        
+        // CHECK FOR MOON PHASE REQUEST IN CHAT
+        if (isMoonPhaseRequestInChat(message)) {
+            const phase = extractMoonPhaseFromChat(message);
+            await handleMoonPhaseInChat(userId, userInfo, astrologyInfo, phase);
+            return;
+        }
         
         // Calculate astrology if not present and we have birth data
         if (!astrologyInfo && userInfo?.birth_date && userInfo?.birth_time && userInfo?.birth_country && userInfo?.birth_province && userInfo?.birth_city) {
@@ -162,11 +176,161 @@ IMPORTANT: Use the above personal and astrological information to:
 }
 
 /**
+ * Detect if user is asking for horoscope in chat
+ */
+function isHoroscopeRequestInChat(message) {
+    const horoscopeKeywords = ['horoscope', 'daily reading', 'weekly reading', 'cosmic guidance for me', "what's my horoscope"];
+    return horoscopeKeywords.some(keyword => message.toLowerCase().includes(keyword));
+}
+
+/**
+ * Detect if user is asking for moon phase in chat
+ */
+function isMoonPhaseRequestInChat(message) {
+    const moonKeywords = ['moon phase', 'lunar phase', 'what\'s the moon phase', 'current moon', 'lunar energy'];
+    return moonKeywords.some(keyword => message.toLowerCase().includes(keyword));
+}
+
+/**
+ * Extract moon phase from chat message (or use current)
+ */
+function extractMoonPhaseFromChat(message) {
+    const phases = ['newMoon', 'waxingCrescent', 'firstQuarter', 'waxingGibbous', 'fullMoon', 'waningGibbous', 'lastQuarter', 'waningCrescent'];
+    for (const phase of phases) {
+        if (message.toLowerCase().includes(phase.toLowerCase())) {
+            return phase;
+        }
+    }
+    return null; // Will be determined by Python calculation
+}
+
+/**
+ * Handle horoscope request in chat - fetch existing or trigger generation
+ */
+async function handleHoroscopeInChat(userId, userInfo, astrologyInfo) {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        const defaultRange = 'daily';
+        
+        // Check if horoscope exists for today
+        const { rows } = await db.query(
+            `SELECT content FROM messages 
+             WHERE user_id = $1 
+             AND role = 'horoscope'
+             ORDER BY created_at DESC 
+             LIMIT 5`,
+            [userId]
+        );
+        
+        // Find valid horoscope from today
+        let validHoroscope = null;
+        for (const row of rows) {
+            const horoscope = typeof row.content === 'string' ? JSON.parse(row.content) : row.content;
+            const generatedDate = horoscope.generated_at?.split('T')[0];
+            if (generatedDate === today && horoscope.range === defaultRange) {
+                validHoroscope = horoscope;
+                break;
+            }
+        }
+        
+        if (validHoroscope) {
+            // Horoscope exists - present it in chat
+            const userGreeting = getUserGreeting(userInfo, userId);
+            const response = `✨ Your personalized horoscope is available in the Horoscope page. Would you like me to help with something else?`;
+            await storeMessage(userId, 'assistant', response);
+            console.log('[CHAT-HANDLER] Horoscope available on Horoscope page');
+        } else {
+            // Horoscope doesn't exist - trigger generation and notify user
+            const userGreeting = getUserGreeting(userInfo, userId);
+            const response = `✨ I'm preparing your horoscope. Please visit the Horoscope page to see it when it's ready.`;
+            await storeMessage(userId, 'assistant', response);
+            
+                                    // Trigger horoscope generation directly
+            const { generateHoroscope } = await import('./horoscope-handler.js');
+            generateHoroscope(userId, defaultRange).catch(err => 
+                console.error('[CHAT-HANDLER] Error triggering horoscope:', err.message)
+            );
+            console.log('[CHAT-HANDLER] Queued horoscope generation');
+        }
+    } catch (err) {
+        console.error('[CHAT-HANDLER] Error handling horoscope in chat:', err.message);
+        const response = `I encountered an error retrieving your horoscope. Please try again in a moment.`;
+        await storeMessage(userId, 'assistant', response);
+    }
+}
+
+/**
+ * Handle moon phase request in chat - fetch existing or trigger generation
+ */
+async function handleMoonPhaseInChat(userId, userInfo, astrologyInfo, phase) {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        const userGreeting = getUserGreeting(userInfo, userId);
+        
+                // If no specific phase mentioned, calculate current
+        let currentPhase = phase;
+        if (!currentPhase) {
+            try {
+                const { getCurrentMoonPhase } = await import('../astrology.js');
+                const moonData = await getCurrentMoonPhase();
+                currentPhase = moonData.phase || 'fullMoon';
+            } catch (calcErr) {
+                console.warn('[CHAT-HANDLER] Failed to calculate moon phase, using default:', calcErr.message);
+                currentPhase = 'fullMoon'; // fallback
+            }
+        }
+        
+        // Check if moon phase commentary exists for today
+        const { rows } = await db.query(
+            `SELECT content FROM messages 
+             WHERE user_id = $1 
+             AND role = 'moon_phase'
+             ORDER BY created_at DESC 
+             LIMIT 5`,
+            [userId]
+        );
+        
+        // Find valid commentary from today
+        let validCommentary = null;
+        for (const row of rows) {
+            const commentary = typeof row.content === 'string' ? JSON.parse(row.content) : row.content;
+            const generatedDate = commentary.generated_at?.split('T')[0];
+            if (generatedDate === today && commentary.phase === currentPhase) {
+                validCommentary = commentary;
+                break;
+            }
+        }
+        
+                if (validCommentary) {
+            // Commentary exists - acknowledge but don't display the oracle response here
+            // User should visit the Moon Phase page to see the commentary
+            const response = `🌙 Your personalized moon phase insight is available in the Moon Phase page. Would you like me to help with something else?`;
+            await storeMessage(userId, 'assistant', response);
+            console.log('[CHAT-HANDLER] Moon phase commentary available on Moon Phase page');
+                } else {
+            // Commentary doesn't exist - trigger generation without showing oracle response
+            const response = `🌙 I'm preparing your lunar insight. Please visit the Moon Phase page to see it when it's ready.`;
+            await storeMessage(userId, 'assistant', response);
+            
+                                    // Trigger moon phase generation directly
+            const { generateMoonPhaseCommentary } = await import('./moon-phase-handler.js');
+            generateMoonPhaseCommentary(userId, currentPhase).catch(err => 
+                console.error('[CHAT-HANDLER] Error triggering moon phase:', err.message)
+            );
+            console.log('[CHAT-HANDLER] Queued moon phase commentary generation for phase: ' + currentPhase);
+        }
+    } catch (err) {
+        console.error('[CHAT-HANDLER] Error handling moon phase in chat:', err.message);
+        const response = `I encountered an error retrieving the lunar insight. Please try again in a moment.`;
+        await storeMessage(userId, 'assistant', response);
+    }
+}
+
+/**
  * Store astrology data in database
  */
 async function storeAstrologyData(userId, sunSign, astrologyData) {
     try {
-        const { db } = await import('../../shared/db.js');
         await db.query(
             `INSERT INTO user_astrology (user_id, zodiac_sign, astrology_data)
              VALUES ($1, $2, $3)

@@ -52,19 +52,7 @@ export default function Navigation({ pages, currentPageIndex, onNavigate, isVisi
     },
   ];
 
-  const getPageIcon = (pageId) => {
-    const icons = {
-      chat: '💬',
-      personal: '👤',
-      sign: '♈',
-      moon: '🌙',
-      horoscope: '🔮',
-      cosmic: '🌌',
-      security: '🔒',
-      billing: '💳',
-    };
-    return icons[pageId] || '✨';
-  };
+  
 
   const isPageActive = (pageId) => {
     const index = pages.findIndex(p => p.id === pageId);

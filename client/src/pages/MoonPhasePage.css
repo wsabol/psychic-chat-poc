@@ -1,0 +1,540 @@
+/* ============================================
+   MOON PHASE PAGE STYLES
+   ============================================ */
+
+.moon-phase-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  padding-bottom: var(--spacing-xl);
+}
+
+.moon-phase-header {
+  margin-bottom: var(--spacing-md);
+}
+
+.moon-phase-header h2 {
+  margin-bottom: var(--spacing-xs);
+}
+
+.moon-phase-subtitle {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--color-text-light);
+}
+
+/* ============================================
+   CURRENT MOON PHASE DISPLAY
+   ============================================ */
+
+.moon-phase-display {
+  text-align: center;
+  padding: var(--spacing-lg);
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: var(--spacing-lg);
+}
+
+.moon-phase-emoji {
+  font-size: 4rem;
+  margin-bottom: var(--spacing-md);
+  animation: glow 2s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0%, 100% {
+    text-shadow: 0 0 10px rgba(156, 39, 176, 0.3);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(156, 39, 176, 0.5);
+  }
+}
+
+.moon-phase-name {
+  font-size: 1.3rem;
+  color: var(--color-text);
+  margin: var(--spacing-sm) 0;
+  font-weight: 700;
+}
+
+.moon-phase-date {
+  color: var(--color-text-light);
+  font-size: 0.9rem;
+  margin: var(--spacing-sm) 0 0 0;
+}
+
+/* ============================================
+   BIRTH CHART DISPLAY
+   ============================================ */
+
+.moon-phase-birth-chart {
+  margin-bottom: var(--spacing-lg);
+}
+
+.birth-chart-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-md);
+}
+
+.chart-card {
+  padding: var(--spacing-md);
+  border-radius: 8px;
+  text-align: center;
+  background: white;
+  border-left: 4px solid transparent;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.chart-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.chart-icon {
+  font-size: 1.8rem;
+  display: block;
+  margin-bottom: var(--spacing-sm);
+}
+
+.chart-sign {
+  margin: 0 0 var(--spacing-xs) 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.chart-degree {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #9370db;
+  font-weight: 600;
+}
+
+.sun-card {
+  border-left-color: #ffc107;
+  background: #fffbf0;
+}
+
+.moon-card {
+  border-left-color: #9c27b0;
+  background: #f3e5f5;
+}
+
+.rising-card {
+  border-left-color: #2196f3;
+  background: #f0f7ff;
+}
+
+/* ============================================
+   LOADING STATE
+   ============================================ */
+
+.moon-phase-content.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl);
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  min-height: 300px;
+}
+
+.spinner {
+  font-size: 3rem;
+  animation: spin 2s linear infinite;
+  margin-bottom: var(--spacing-md);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.moon-phase-content.loading p {
+  text-align: center;
+  color: var(--color-text-light);
+  font-size: 1rem;
+}
+
+/* ============================================
+   ERROR STATE
+   ============================================ */
+
+.moon-phase-content.error {
+  padding: var(--spacing-lg);
+  background: white;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.error-message {
+  color: #d32f2f;
+  font-weight: 500;
+  margin-bottom: var(--spacing-md);
+}
+
+.btn-secondary {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: #f0f4ff;
+  color: #4a90e2;
+  border: 2px solid #4a90e2;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  min-height: var(--touch-target);
+}
+
+.btn-secondary:hover {
+  background: #4a90e2;
+  color: white;
+}
+
+/* ============================================
+   MOON PHASE CONTENT
+   ============================================ */
+
+.moon-phase-content {
+  background: white;
+  border-radius: 8px;
+  padding: var(--spacing-lg);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.moon-phase-insight {
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  background: #f8f3ff;
+  border-radius: 8px;
+  border-left: 4px solid #9c27b0;
+}
+
+.markdown-p {
+  margin: var(--spacing-md) 0;
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: var(--color-text);
+}
+
+.markdown-p:first-child {
+  margin-top: 0;
+}
+
+.markdown-p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-strong {
+  font-weight: 600;
+  color: #9370db;
+}
+
+.markdown-em {
+  font-style: italic;
+  color: var(--color-text-light);
+}
+
+.markdown-ul,
+.markdown-ol {
+  margin: var(--spacing-md) 0;
+  padding-left: 1.5rem;
+}
+
+.markdown-li {
+  margin: var(--spacing-sm) 0;
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: var(--color-text);
+}
+
+.moon-phase-timestamp {
+  text-align: right;
+  padding-top: var(--spacing-md);
+  border-top: 1px solid #eee;
+  margin-top: var(--spacing-md);
+}
+
+.text-muted {
+  color: var(--color-text-light);
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+/* ============================================
+   LUNAR CYCLE VISUALIZATION
+   ============================================ */
+
+.lunar-cycle {
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.lunar-cycle h3 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-md);
+  font-size: 1.1rem;
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.moon-phases-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-md);
+  text-align: center;
+}
+
+.moon-phase-item {
+  padding: var(--spacing-md);
+  border-radius: 8px;
+  background: #f8f8f8;
+  border: 2px solid #e0e0e0;
+  transition: all 0.2s ease;
+}
+
+.moon-phase-item.active {
+  background: #f8f3ff;
+  border-color: #9c27b0;
+  box-shadow: 0 2px 8px rgba(156, 39, 176, 0.15);
+}
+
+.moon-emoji {
+  font-size: 2rem;
+  margin-bottom: var(--spacing-sm);
+}
+
+.phase-name {
+  color: var(--color-text);
+  font-size: 0.75rem;
+  margin: 0;
+  font-weight: 500;
+  word-wrap: break-word;
+}
+
+/* ============================================
+   SUN SIGN INFO SECTION
+   ============================================ */
+
+.sun-sign-info {
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-lg);
+  border-top: 2px solid #eee;
+}
+
+.sun-sign-header h3 {
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: 1.3rem;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.sun-info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background: #f8f8f8;
+  border-radius: 6px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.info-item strong {
+  font-size: 0.85rem;
+  color: var(--color-text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-item span {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.sun-detail {
+  margin-bottom: var(--spacing-md);
+}
+
+.sun-detail h4 {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
+.sun-detail p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--color-text-light);
+  line-height: 1.6;
+  font-style: italic;
+}
+
+/* ============================================
+   INFO BOXES
+   ============================================ */
+
+.moon-phase-info,
+.moon-phase-disclaimer {
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background: #f5f5f5;
+  border-radius: 6px;
+  border-left: 3px solid #9370db;
+}
+
+.moon-phase-info p,
+.moon-phase-disclaimer p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-light);
+  font-style: italic;
+}
+
+/* ============================================
+   MOBILE ADJUSTMENTS
+   ============================================ */
+
+@media (max-width: 767px) {
+  .moon-phase-page {
+    padding-bottom: var(--spacing-lg);
+  }
+
+  .moon-phase-display {
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+  }
+
+  .moon-phase-emoji {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .moon-phase-name {
+    font-size: 1.1rem;
+  }
+
+  .birth-chart-cards {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+  }
+
+  .chart-card {
+    padding: var(--spacing-sm);
+  }
+
+  .chart-icon {
+    font-size: 1.5rem;
+    margin-bottom: var(--spacing-xs);
+  }
+
+  .chart-sign {
+    font-size: 1rem;
+    margin: 0 0 var(--spacing-xs) 0;
+  }
+
+  .chart-degree {
+    font-size: 0.85rem;
+  }
+
+  .moon-phase-insight {
+    padding: var(--spacing-md);
+  }
+
+  .moon-phases-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-sm);
+  }
+
+  .moon-phase-item {
+    padding: var(--spacing-sm);
+  }
+
+  .moon-emoji {
+    font-size: 1.5rem;
+    margin-bottom: var(--spacing-xs);
+  }
+
+  .phase-name {
+    font-size: 0.65rem;
+  }
+
+  .sun-info-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+  }
+
+  .lunar-cycle {
+    padding: var(--spacing-md);
+  }
+
+  .moon-phase-content {
+    padding: var(--spacing-md);
+  }
+
+  .markdown-p {
+    font-size: 0.9rem;
+  }
+
+  .sun-sign-header h3 {
+    font-size: 1.1rem;
+  }
+}
+
+/* ============================================
+   TABLET ADJUSTMENTS
+   ============================================ */
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .birth-chart-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+  }
+
+  .sun-info-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .moon-phases-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+.btn-secondary:focus {
+  outline: 2px solid #9370db;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner,
+  .chart-card,
+  .moon-phase-emoji {
+    transition: none;
+    animation: none;
+  }
+}
