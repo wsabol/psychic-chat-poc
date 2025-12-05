@@ -1,18 +1,34 @@
 /**
- * Card Extraction - Clean version without debug logs
+ * Card Extraction - Match only cards in the Tarot section
+ * 
+ * CRITICAL: Cards only appear in the initial Tarot section.
+ * Once we reach other sections (Astrology, Crystal Guidance, etc.), STOP looking.
+ * 
+ * Uses word boundaries and strict matching to avoid false positives.
  */
+
 export function extractCardsFromResponse(responseText, deck) {
     let searchText = responseText;
-    const insightIndex = responseText.toLowerCase().indexOf('astrological insight');
-    const interpretationIndex = responseText.toLowerCase().indexOf('interpretation:');
+    
+    // Find where the TAROT SECTION ENDS - these markers signal we've moved past cards
+    const endOfCardSectionMarkers = [
+        '<h3>astrology',
+        '<h3>crystal',
+        '<h3>astrological',
+        'astrology reflection',
+        'astrology insight',
+        'astrological reflection',
+        'crystal guidance',
+        'crystal insight',
+        '<h3>conclusion',
+    ];
     
     let cutoffIndex = -1;
-    if (insightIndex !== -1 && interpretationIndex !== -1) {
-        cutoffIndex = Math.min(insightIndex, interpretationIndex);
-    } else if (insightIndex !== -1) {
-        cutoffIndex = insightIndex;
-    } else if (interpretationIndex !== -1) {
-        cutoffIndex = interpretationIndex;
+    for (const marker of endOfCardSectionMarkers) {
+        const idx = responseText.toLowerCase().indexOf(marker);
+        if (idx !== -1 && (cutoffIndex === -1 || idx < cutoffIndex)) {
+            cutoffIndex = idx;
+        }
     }
     
     if (cutoffIndex !== -1) {
@@ -24,36 +40,39 @@ export function extractCardsFromResponse(responseText, deck) {
     for (const card of deck) {
         const baseName = card.name.replace(/^The\s+/i, '');
         
+        // Pattern 1: Reversals (explicit with parentheses)
         const reversePattern = new RegExp(
             `\\b(The\\s+)?${escapeRegex(baseName)}\\s*\\((?:Reversed|Inverted|reversed|inverted)\\)`,
-            'gi'
+            'i'
         );
         
-        let match = reversePattern.exec(searchText);
-        if (match) {
+        const reverseMatch = reversePattern.exec(searchText);
+        if (reverseMatch) {
             allMatches.push({
-                position: match.index,
+                position: reverseMatch.index,
                 card: card,
                 inverted: true
             });
             continue;
         }
         
-        const cardPattern = new RegExp(
-            `(?:Card\\s*\\d+\\s*:|^)\\s*(?:The\\s+)?${escapeRegex(baseName)}\\b`,
-            'gim'
+        // Pattern 2: Upright cards with word boundary enforcement
+        const uprightPattern = new RegExp(
+            `\\b(?:The\\s+)?${escapeRegex(baseName)}\\b(?=\\s|[,.:;!?<]|$)`,
+            'i'
         );
         
-        match = cardPattern.exec(searchText);
-        if (match) {
+        const uprightMatch = uprightPattern.exec(searchText);
+        if (uprightMatch) {
             allMatches.push({
-                position: match.index,
+                position: uprightMatch.index,
                 card: card,
                 inverted: false
             });
         }
     }
     
+    // Sort by position in text to maintain order
     allMatches.sort((a, b) => a.position - b.position);
     
     const extractedCards = [];

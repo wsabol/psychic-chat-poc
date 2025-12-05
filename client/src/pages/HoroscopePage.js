@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import ReactMarkdown from 'react-markdown';
 import { getAstrologyData } from '../utils/astroUtils';
 import '../styles/responsive.css';
 import './HoroscopePage.css';
@@ -229,18 +228,7 @@ export default function HoroscopePage({ userId, token, auth }) {
           </div>
 
           <div className="horoscope-text">
-            <ReactMarkdown
-              components={{
-                p: ({ node, ...props }) => <p className="markdown-p" {...props} />,
-                strong: ({ node, ...props }) => <strong className="markdown-strong" {...props} />,
-                em: ({ node, ...props }) => <em className="markdown-em" {...props} />,
-                ul: ({ node, ...props }) => <ul className="markdown-ul" {...props} />,
-                ol: ({ node, ...props }) => <ol className="markdown-ol" {...props} />,
-                li: ({ node, ...props }) => <li className="markdown-li" {...props} />,
-              }}
-            >
-              {horoscopeData.text}
-            </ReactMarkdown>
+            <div dangerouslySetInnerHTML={{ __html: horoscopeData.text }} />
           </div>
 
           {/* Sun Sign Info Below Horoscope */}

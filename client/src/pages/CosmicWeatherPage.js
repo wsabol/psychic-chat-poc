@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import ReactMarkdown from 'react-markdown';
 import '../styles/responsive.css';
 import './CosmicWeatherPage.css';
 
@@ -14,7 +13,6 @@ export default function CosmicWeatherPage({ userId, token, auth }) {
 
   useEffect(() => {
     loadCosmicWeather();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, token, API_URL]);
 
   useEffect(() => {
@@ -23,7 +21,6 @@ export default function CosmicWeatherPage({ userId, token, auth }) {
         clearInterval(pollIntervalRef.current);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadCosmicWeather = async () => {
@@ -39,7 +36,6 @@ export default function CosmicWeatherPage({ userId, token, auth }) {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('[COSMIC-WEATHER-PAGE] Received data:', data);
         setCosmicData({
           text: data.weather,
           birthChart: data.birthChart,
@@ -77,7 +73,6 @@ export default function CosmicWeatherPage({ userId, token, auth }) {
 
           if (pollResponse.ok) {
             const data = await pollResponse.json();
-            console.log('[COSMIC-WEATHER-PAGE] Polled data:', data);
             setCosmicData({
               text: data.weather,
               birthChart: data.birthChart,
@@ -134,18 +129,7 @@ export default function CosmicWeatherPage({ userId, token, auth }) {
           </div>
 
           <div className="cosmic-weather-text">
-            <ReactMarkdown
-              components={{
-                p: ({ node, ...props }) => <p className="markdown-p" {...props} />,
-                strong: ({ node, ...props }) => <strong className="markdown-strong" {...props} />,
-                em: ({ node, ...props }) => <em className="markdown-em" {...props} />,
-                ul: ({ node, ...props }) => <ul className="markdown-ul" {...props} />,
-                ol: ({ node, ...props }) => <ol className="markdown-ol" {...props} />,
-                li: ({ node, ...props }) => <li className="markdown-li" {...props} />,
-              }}
-            >
-              {cosmicData.text}
-            </ReactMarkdown>
+            <div dangerouslySetInnerHTML={{ __html: cosmicData.text }} />
           </div>
 
           {/* Desktop: Two Columns */}

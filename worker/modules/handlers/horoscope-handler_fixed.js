@@ -29,7 +29,6 @@ export async function generateHoroscope(userId, range = 'daily') {
         
         // If no astrology data, try to calculate it
         if (!astrologyInfo?.astrology_data) {
-            console.log('[HOROSCOPE-HANDLER] No astrology data found, attempting to calculate...');
             
             // Only calculate if we have sufficient birth data
             if (userInfo.birth_time && userInfo.birth_country && userInfo.birth_province && userInfo.birth_city) {
@@ -68,11 +67,10 @@ export async function generateHoroscope(userId, range = 'daily') {
                             [userId, calculatedChart.sun_sign, JSON.stringify(astrologyData)]
                         );
                         
-                        astrologyInfo = {
+                                                astrologyInfo = {
                             zodiac_sign: calculatedChart.sun_sign,
                             astrology_data: astrologyData
                         };
-                        console.log('[HOROSCOPE-HANDLER] ✓ Birth chart calculated successfully');
                     }
                 } catch (calcErr) {
                     console.warn('[HOROSCOPE-HANDLER] Birth chart calculation failed:', calcErr.message);
@@ -110,8 +108,6 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
         
         // Store as a system message for record-keeping
         await storeMessage(userId, 'horoscope', horoscopeData);
-        
-        console.log('[HOROSCOPE-HANDLER] ✓ Horoscope generated successfully');
         return oracleResponse;
         
     } catch (err) {

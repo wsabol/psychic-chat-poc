@@ -103,6 +103,98 @@
 }
 
 /* ============================================
+   TAROT CARDS DISPLAY
+   ============================================ */
+
+.cards-container {
+  margin-top: var(--spacing-md);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #9370db transparent;
+}
+
+.cards-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.cards-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cards-container::-webkit-scrollbar-thumb {
+  background: #9370db;
+  border-radius: 3px;
+}
+
+.cards-container::-webkit-scrollbar-thumb:hover {
+  background: #7b5cb8;
+}
+
+.cards-scroll-wrapper {
+  display: flex;
+  gap: 10px;
+  padding-bottom: 4px;
+  min-width: min-content;
+}
+
+.card-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.card-image {
+  width: 120px;
+  height: 168px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease;
+}
+
+.card-image:hover {
+  transform: scale(1.02);
+}
+
+.card-image.reversed {
+  transform: rotate(180deg);
+}
+
+.card-image.reversed:hover {
+  transform: scale(1.02) rotate(180deg);
+}
+
+.card-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: center;
+  max-width: 120px;
+  color: var(--color-text);
+  word-wrap: break-word;
+  line-height: 1.3;
+}
+
+/* Mobile adjustments */
+@media (max-width: 767px) {
+  .card-image {
+    width: 100px;
+    height: 140px;
+  }
+
+  .card-label {
+    font-size: 0.75rem;
+    max-width: 100px;
+  }
+
+  .cards-scroll-wrapper {
+    gap: 8px;
+  }
+}
+
+/* ============================================
    INPUT FORM
    ============================================ */
 

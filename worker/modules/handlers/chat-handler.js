@@ -36,16 +36,14 @@ export async function handleChatMessage(userId, message) {
         // CHECK ACCOUNT STATUS: Disabled or Suspended
         if (!tempUser) {
             const disabled = await isAccountDisabled(userId);
-            if (disabled) {
-                console.log(`[VIOLATION] User ${userId} has disabled account - blocking message`);
+                        if (disabled) {
                 const response = `Your account has been permanently disabled due to repeated violations of our community guidelines. If you wish to appeal, please contact support.`;
                 await storeMessage(userId, 'assistant', response);
                 return;
             }
             
             const suspended = await isAccountSuspended(userId);
-            if (suspended) {
-                console.log(`[VIOLATION] User ${userId} has suspended account - blocking message`);
+                        if (suspended) {
                 const response = `Your account is currently suspended. Please try again after the suspension period ends.`;
                 await storeMessage(userId, 'assistant', response);
                 return;
@@ -55,13 +53,9 @@ export async function handleChatMessage(userId, message) {
         // CHECK FOR VIOLATIONS IN USER MESSAGE
         const violation = detectViolation(message);
         
-        if (violation) {
-            console.log(`[VIOLATION] Violation detected: ${violation.type} (keyword: ${violation.keyword})`);
-            
+                if (violation) {
             // Record violation and get enforcement action
             const enforcement = await recordViolationAndGetAction(userId, violation.type, message, tempUser);
-            
-            console.log(`[VIOLATION] Enforcement action: ${enforcement.action}`);
             
             // Get response (includes self-harm hotline if needed)
             let responseToUser = enforcement.response;
@@ -72,10 +66,7 @@ export async function handleChatMessage(userId, message) {
             // Store response
             await storeMessage(userId, 'assistant', responseToUser);
             
-            // For temp accounts, we should signal that they're deleted
-            if (enforcement.action === 'TEMP_ACCOUNT_DELETED') {
-                console.log(`[VIOLATION] Temp account ${userId} has been deleted and should not process further messages`);
-            }
+                        // For temp accounts, account has been deleted
             
             return;
         }
@@ -247,12 +238,11 @@ async function handleHoroscopeInChat(userId, userInfo, astrologyInfo) {
             }
         }
         
-        if (validHoroscope) {
+                if (validHoroscope) {
             // Horoscope exists - present it in chat
             const userGreeting = getUserGreeting(userInfo, userId);
             const response = `✨ Your personalized horoscope is available in the Horoscope page. Would you like me to help with something else?`;
             await storeMessage(userId, 'assistant', response);
-            console.log('[CHAT-HANDLER] Horoscope available on Horoscope page');
         } else {
             // Horoscope doesn't exist - trigger generation and notify user
             const userGreeting = getUserGreeting(userInfo, userId);
@@ -261,10 +251,9 @@ async function handleHoroscopeInChat(userId, userInfo, astrologyInfo) {
             
                                     // Trigger horoscope generation directly
             const { generateHoroscope } = await import('./horoscope-handler.js');
-            generateHoroscope(userId, defaultRange).catch(err => 
+                        generateHoroscope(userId, defaultRange).catch(err => 
                 console.error('[CHAT-HANDLER] Error triggering horoscope:', err.message)
             );
-            console.log('[CHAT-HANDLER] Queued horoscope generation');
         }
     } catch (err) {
         console.error('[CHAT-HANDLER] Error handling horoscope in chat:', err.message);
@@ -320,7 +309,6 @@ async function handleMoonPhaseInChat(userId, userInfo, astrologyInfo, phase) {
             // User should visit the Moon Phase page to see the commentary
             const response = `🌙 Your personalized moon phase insight is available in the Moon Phase page. Would you like me to help with something else?`;
             await storeMessage(userId, 'assistant', response);
-            console.log('[CHAT-HANDLER] Moon phase commentary available on Moon Phase page');
                 } else {
             // Commentary doesn't exist - trigger generation without showing oracle response
             const response = `🌙 I'm preparing your lunar insight. Please visit the Moon Phase page to see it when it's ready.`;
@@ -328,10 +316,9 @@ async function handleMoonPhaseInChat(userId, userInfo, astrologyInfo, phase) {
             
                                     // Trigger moon phase generation directly
             const { generateMoonPhaseCommentary } = await import('./moon-phase-handler.js');
-            generateMoonPhaseCommentary(userId, currentPhase).catch(err => 
+                        generateMoonPhaseCommentary(userId, currentPhase).catch(err => 
                 console.error('[CHAT-HANDLER] Error triggering moon phase:', err.message)
             );
-            console.log('[CHAT-HANDLER] Queued moon phase commentary generation for phase: ' + currentPhase);
         }
     } catch (err) {
         console.error('[CHAT-HANDLER] Error handling moon phase in chat:', err.message);
@@ -363,16 +350,14 @@ async function handleCosmicWeatherInChat(userId, userInfo) {
                 break;
             }
         }
-        if (validWeather) {
+                if (validWeather) {
             const response = `✨ Today's cosmic weather is available in the Cosmic Weather page. Would you like me to help with something else?`;
             await storeMessage(userId, 'assistant', response);
-            console.log('[CHAT-HANDLER] Cosmic weather available on Cosmic Weather page');
         } else {
             const response = `✨ I'm reading today's planetary energies. Please visit the Cosmic Weather page to see them when ready.`;
             await storeMessage(userId, 'assistant', response);
             const { generateCosmicWeather } = await import('./cosmic-weather-handler.js');
-            generateCosmicWeather(userId).catch(err => console.error('[CHAT-HANDLER] Error triggering cosmic weather:', err.message));
-            console.log('[CHAT-HANDLER] Queued cosmic weather generation');
+                        generateCosmicWeather(userId).catch(err => console.error('[CHAT-HANDLER] Error triggering cosmic weather:', err.message));
         }
     } catch (err) {
         console.error('[CHAT-HANDLER] Error handling cosmic weather in chat:', err.message);

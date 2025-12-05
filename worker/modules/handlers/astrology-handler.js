@@ -69,8 +69,6 @@ export async function handleAstrologyCalculation(userId) {
              updated_at = CURRENT_TIMESTAMP`,
             [userId, calculatedChart.sun_sign, JSON.stringify(astrologyData)]
         );
-        
-        console.log('[ASTROLOGY-HANDLER] Birth chart calculated and saved for user:', userId);
     } catch (err) {
         console.error('[ASTROLOGY-HANDLER] Error:', err.message);
     }

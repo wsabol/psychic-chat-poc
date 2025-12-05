@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import ReactMarkdown from 'react-markdown';
 import { getAstrologyData } from '../utils/astroUtils';
 import '../styles/responsive.css';
 import './MoonPhasePage.css';
@@ -256,18 +255,7 @@ export default function MoonPhasePage({ userId, token, auth }) {
       {moonPhaseData && !loading && (
         <section className="moon-phase-content">
           <div className="moon-phase-insight">
-            <ReactMarkdown
-              components={{
-                p: ({ node, ...props }) => <p className="markdown-p" {...props} />,
-                strong: ({ node, ...props }) => <strong className="markdown-strong" {...props} />,
-                em: ({ node, ...props }) => <em className="markdown-em" {...props} />,
-                ul: ({ node, ...props }) => <ul className="markdown-ul" {...props} />,
-                ol: ({ node, ...props }) => <ol className="markdown-ol" {...props} />,
-                li: ({ node, ...props }) => <li className="markdown-li" {...props} />,
-              }}
-            >
-              {moonPhaseData.text}
-            </ReactMarkdown>
+            <div dangerouslySetInnerHTML={{ __html: moonPhaseData.text }} />
           </div>
 
           {lastUpdated && (

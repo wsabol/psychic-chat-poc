@@ -39,7 +39,6 @@ export async function generateCosmicWeather(userId) {
             const existingData = typeof rows[0].content === 'string' ? JSON.parse(rows[0].content) : rows[0].content;
             const existingDate = existingData.date?.split('T')[0];
             if (existingDate === today) {
-                console.log('[COSMIC-WEATHER-HANDLER] Cosmic weather already generated for today, skipping');
                 return;
             }
         }
@@ -52,7 +51,6 @@ export async function generateCosmicWeather(userId) {
         }
         
         // Get planets with retrograde status
-        console.log('[COSMIC-WEATHER-HANDLER] Calculating planets...');
         const planetsData = await getCosmicWeatherPlanets();
         if (!planetsData.success) {
             throw new Error('Failed to calculate planets');
@@ -100,8 +98,6 @@ What cosmic energies are at play today and how should they work with them?`;
             generated_at: new Date().toISOString(),
             date: today
         });
-        
-        console.log('[COSMIC-WEATHER-HANDLER] ✓ Cosmic weather generated successfully');
     } catch (err) {
         console.error('[COSMIC-WEATHER-HANDLER] Error:', err.message);
         throw err;

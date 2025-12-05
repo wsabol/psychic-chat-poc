@@ -1,6 +1,103 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { getCardImageByID, getCardImageByName } from '../utils/cardImageMap.js';
 import '../styles/responsive.css';
 import './ChatPage.css';
+
+/**
+ * TarotCard - Display a single tarot card with image and label
+ */
+function TarotCard({ card }) {
+  // Try ID-based lookup first (most reliable, matches backend extraction)
+  let imageFilename = card.id !== undefined ? getCardImageByID(card.id) : null;
+  
+  // Fallback to name-based lookup if ID not available
+  if (!imageFilename && card.name) {
+    imageFilename = getCardImageByName(card.name);
+  }
+
+  const isReversed = card.inverted;
+  const cardLabel = isReversed ? `${card.name} (Reversed)` : card.name;
+
+  if (!imageFilename) {
+    console.warn(`[TAROT] Could not find image for card:`, card);
+    return null;
+  }
+
+  return (
+    <div className="card-item">
+      <img
+        src={`/images/${imageFilename}`}
+        alt={cardLabel}
+        className={`card-image ${isReversed ? 'reversed' : ''}`}
+        loading="lazy"
+      />
+      <div className="card-label">{cardLabel}</div>
+    </div>
+  );
+}
+
+/**
+ * CardsDisplay - Show multiple tarot cards in horizontal scroll
+ */
+function CardsDisplay({ cards }) {
+  if (!cards || cards.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="cards-container">
+      <div className="cards-scroll-wrapper">
+        {cards.map((card, idx) => (
+          <TarotCard key={idx} card={card} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * ChatMessage - Render a single message with optional cards
+ */
+function ChatMessage({ msg }) {
+  let messageText = msg.content;
+  let cards = null;
+
+  // Parse content if it's stored as JSON with text + cards
+  if (typeof msg.content === 'string') {
+    try {
+      const parsed = JSON.parse(msg.content);
+      if (parsed.text && parsed.cards) {
+        messageText = parsed.text;
+        cards = parsed.cards;
+      } else {
+        messageText = msg.content;
+      }
+    } catch {
+      // Not JSON or not text+cards format, treat as plain text
+      messageText = msg.content;
+    }
+  } else if (typeof msg.content === 'object' && msg.content !== null) {
+    if (msg.content.text) {
+      messageText = msg.content.text;
+      cards = msg.content.cards || null;
+    }
+  }
+
+  return (
+    <div className={`chat-message chat-message-${msg.role}`}>
+      <div className="message-content">
+        {msg.role === 'assistant' ? (
+          <>
+            <div dangerouslySetInnerHTML={{ __html: messageText }} />
+            {cards && <CardsDisplay cards={cards} />}
+          </>
+        ) : (
+          <div>{messageText}</div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 /**
  * ChatPage - Full page version of ChatScreen
@@ -137,11 +234,7 @@ export default function ChatPage({ userId, token, auth }) {
           </div>
         ) : (
           messages.map((msg, idx) => (
-            <div key={idx} className={`chat-message chat-message-${msg.role}`}>
-              <div className="message-content">
-                {msg.content}
-              </div>
-            </div>
+            <ChatMessage key={idx} msg={msg} />
           ))
         )}
         <div ref={messagesEndRef} />
