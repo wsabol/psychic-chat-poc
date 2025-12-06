@@ -1,0 +1,116 @@
+import { useCallback } from 'react';
+
+/**
+ * useOnboardingHandlers - Manages onboarding event handlers
+ */
+export function useOnboardingHandlers(auth, onboarding, userId, token, apiUrl) {
+  const {
+    setShowAstrologyPrompt,
+    setShowPersonalInfoModal,
+    setShowHoroscopePage,
+    setShowFinalModal,
+    setIsOnboardingFlow
+  } = onboarding;
+
+  const handleAstrologyPromptNo = useCallback(async () => {
+    console.log('[ONBOARDING] User declined astrology - exiting to landing page');
+    setShowAstrologyPrompt(false);
+    
+    try {
+      const deleteUrl = `${apiUrl}/cleanup/delete-temp-account/${userId}`;
+      const response = await fetch(deleteUrl, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        console.log('[ONBOARDING] ✓ Temp account deleted');
+      } else {
+        console.warn('[ONBOARDING] ✗ Temp account deletion failed');
+      }
+    } catch (err) {
+      console.error('[ONBOARDING] Error deleting temp account:', err);
+    }
+    
+    auth.setHasLoggedOut(false);
+    await auth.handleLogout();
+  }, [apiUrl, userId, token, auth, setShowAstrologyPrompt]);
+
+  const handleAstrologyPromptYes = useCallback(() => {
+    setShowAstrologyPrompt(false);
+    setIsOnboardingFlow(true);
+    setShowPersonalInfoModal(true);
+  }, [setShowAstrologyPrompt, setIsOnboardingFlow, setShowPersonalInfoModal]);
+
+  const handlePersonalInfoClose = useCallback(() => {
+    setShowPersonalInfoModal(false);
+  }, [setShowPersonalInfoModal]);
+
+  const handlePersonalInfoSave = useCallback(() => {
+    setShowPersonalInfoModal(false);
+    setShowHoroscopePage(true);
+  }, [setShowPersonalInfoModal, setShowHoroscopePage]);
+
+  const handleHoroscopeClose = useCallback(() => {
+    setShowHoroscopePage(false);
+    setIsOnboardingFlow(false);
+    setShowFinalModal(true);
+  }, [setShowHoroscopePage, setIsOnboardingFlow, setShowFinalModal]);
+
+  const handleSetupAccount = useCallback(async () => {
+    console.log('[ONBOARDING] User clicked "Setup Account"');
+    setShowFinalModal(false);
+    
+    if (userId) {
+      try {
+        const migrationRes = await fetch(`${apiUrl}/migration/register-migration`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tempUserId: userId,
+            email: ''
+          })
+        });
+        
+        if (migrationRes.ok) {
+          console.log('[ONBOARDING] ✓ Migration registered');
+        }
+      } catch (err) {
+        console.warn('[ONBOARDING] Migration registration failed:', err);
+      }
+    }
+    
+    if (auth && auth.setShowRegisterMode) {
+      auth.setShowRegisterMode(true);
+    } else {
+      await auth.handleLogout();
+    }
+  }, [apiUrl, userId, auth, setShowFinalModal]);
+
+  const handleExit = useCallback(async () => {
+    console.log('[ONBOARDING] User clicked "Exit" from OnboardingModal');
+    setShowFinalModal(false);
+    
+    try {
+      const deleteUrl = `${apiUrl}/cleanup/delete-temp-account/${userId}`;
+      await fetch(deleteUrl, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    } catch (err) {
+      console.error('[ONBOARDING] Error deleting temp account:', err);
+    }
+    
+    await auth.handleLogout();
+  }, [apiUrl, userId, token, auth, setShowFinalModal]);
+
+  return {
+    handleAstrologyPromptNo,
+    handleAstrologyPromptYes,
+    handlePersonalInfoClose,
+    handlePersonalInfoSave,
+    handleHoroscopeClose,
+    handleSetupAccount,
+    handleExit
+  };
+}

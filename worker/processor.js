@@ -8,6 +8,8 @@ import { isCosmicWeatherRequest, generateCosmicWeather } from "./modules/handler
 import { isVoidOfCourseRequest, generateVoidOfCourseMoonAlert } from "./modules/handlers/void-of-course-handler.js";
 import { handleChatMessage } from "./modules/handlers/chat-handler.js";
 
+const API_URL = process.env.API_URL || 'http://localhost:3000';
+
 /**
  * Route job to appropriate handler based on message content
  */
@@ -52,6 +54,29 @@ async function updateMoonPhaseCache() {
 }
 
 /**
+ * Cleanup old temporary accounts every 24 hours
+ * Deletes temp accounts older than 7 days from Firebase and database
+ */
+async function cleanupOldTempAccounts() {
+    try {
+        console.log('[CLEANUP] Running cleanup job for old temporary accounts...');
+        const response = await fetch(`${API_URL}/cleanup/cleanup-old-temp-accounts`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            console.log('[CLEANUP] ✓ Cleanup complete:', result.message, `(${result.deletedCount} accounts deleted)`);
+        } else {
+            console.error('[CLEANUP] ✗ Cleanup failed with status:', response.status);
+        }
+    } catch (err) {
+        console.error('[CLEANUP] Error running cleanup job:', err.message);
+    }
+}
+
+/**
  * Main worker loop
  */
 export async function workerLoop() {
@@ -60,6 +85,13 @@ export async function workerLoop() {
     
     // Update cache hourly
     setInterval(updateMoonPhaseCache, 3600000);
+    
+    // Run cleanup job every 24 hours (86400000 ms)
+    console.log('[CLEANUP] Scheduling cleanup job to run every 24 hours');
+    setInterval(cleanupOldTempAccounts, 86400000);
+    
+    // Also run cleanup once on startup (after 5 seconds delay to let system initialize)
+    setTimeout(cleanupOldTempAccounts, 5000);
     
     // Main job processing loop
     while (true) {

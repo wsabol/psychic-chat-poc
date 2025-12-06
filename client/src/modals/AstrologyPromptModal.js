@@ -61,7 +61,7 @@ export default function AstrologyPromptModal({ show, isTemporary, onYes, onNo })
                             fontWeight: 'bold'
                         }}
                     >
-                        No, Exit
+                        Exit
                     </button>
                 </div>
             </div>

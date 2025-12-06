@@ -12,6 +12,7 @@ export function useAuth() {
     const [isFirstTime, setIsFirstTime] = useState(true);
     const [emailVerified, setEmailVerified] = useState(false);
     const [isEmailUser, setIsEmailUser] = useState(false);
+    const [hasLoggedOut, setHasLoggedOut] = useState(false);
 
     useEffect(() => {
         console.log('[AUTH-LISTENER] Setting up auth state listener...');
@@ -151,6 +152,7 @@ export function useAuth() {
             setAuthEmail(null);
             setToken(null);
             setIsTemporaryAccount(false);
+            setHasLoggedOut(true);
         } catch (err) {
             console.error('Logout error:', err);
         }
@@ -174,6 +176,8 @@ export function useAuth() {
         isFirstTime,
         emailVerified,
         isEmailUser,
+        hasLoggedOut,
+        setHasLoggedOut,
         handleLogout,
         createTemporaryAccount,
         deleteTemporaryAccount,

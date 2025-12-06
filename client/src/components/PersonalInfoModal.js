@@ -137,9 +137,7 @@ function PersonalInfoModal({ userId, token, isOpen, isTemporaryAccount, onClose,
                 return;
             }
         } else {
-            // For temporary accounts, sex is optional during onboarding
             if (!formData.sex) {
-                // Auto-fill with Unspecified if not provided
                 setFormData(prev => ({
                     ...prev,
                     sex: 'Unspecified'
@@ -175,7 +173,6 @@ function PersonalInfoModal({ userId, token, isOpen, isTemporaryAccount, onClose,
                 astrologyData: astrologyData
             };
 
-            // Auto-fill hidden fields for temporary accounts
             if (isTemporaryAccount) {
                 dataToSend.firstName = dataToSend.firstName || 'Seeker';
                 dataToSend.lastName = dataToSend.lastName || 'Soul';
@@ -300,64 +297,9 @@ function PersonalInfoModal({ userId, token, isOpen, isTemporaryAccount, onClose,
                         )}
                     </div>
 
+                    {/* FIXED: Birth date section moved BEFORE country section */}
                     <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
-                        <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>📍 Place of Birth</h3>
-                        
-                        <div style={{ marginBottom: '1rem' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Country <span style={{ color: '#999', fontSize: '12px' }}>(Optional)</span></label>
-                            <select
-                                name="birthCountry"
-                                value={formData.birthCountry}
-                                onChange={handleChange}
-                                style={{
-                                    width: '100%',
-                                    padding: '0.5rem',
-                                    paddingRight: '2rem',
-                                    borderRadius: '4px',
-                                    border: '1px solid #ccc',
-                                    boxSizing: 'border-box',
-                                    appearance: 'none',
-                                    backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e")',
-                                    backgroundRepeat: 'no-repeat',
-                                    backgroundPosition: 'left 0.5rem center',
-                                    backgroundSize: '1.5em',
-                                    paddingLeft: '2.5rem'
-                                }}
-                            >
-                                <option value="">-- Select Country --</option>
-                                {COUNTRIES.map((country, idx) => (
-                                    <option key={idx} value={country}>{country}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div style={{ marginBottom: '1rem' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>State / Province <span style={{ color: '#999', fontSize: '12px' }}>(Optional)</span></label>
-                            <input
-                                type="text"
-                                name="birthProvince"
-                                value={formData.birthProvince}
-                                onChange={handleChange}
-                                placeholder="e.g., California, Ontario, Tokyo"
-                                style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
-                            />
-                        </div>
-
-                        <div style={{ marginBottom: '1rem' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>City <span style={{ color: '#999', fontSize: '12px' }}>(Optional)</span></label>
-                            <input
-                                type="text"
-                                name="birthCity"
-                                value={formData.birthCity}
-                                onChange={handleChange}
-                                placeholder="e.g., New York, Toronto, Tokyo"
-                                style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
-                            />
-                        </div>
-                    </div>
-
-                    <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
-                        <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>⏰ Time & Date of Birth</h3>
+                        <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>⏰ Date of Birth</h3>
                         
                         <div style={{ marginBottom: '1rem' }}>
                             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Date of Birth <span style={{ color: 'red' }}>*</span></label>
@@ -392,6 +334,62 @@ function PersonalInfoModal({ userId, token, isOpen, isTemporaryAccount, onClose,
                                 onChange={handleChange}
                                 placeholder="e.g., America/New_York, Europe/London"
                                 style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box', fontSize: '12px' }}
+                            />
+                        </div>
+                    </div>
+
+                    <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
+                        <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>📍 Place of Birth</h3>
+                        
+                        <div style={{ marginBottom: '1rem' }}>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Country <span style={{ color: '#999', fontSize: '12px' }}>(Optional)</span></label>
+                            <select
+                                name="birthCountry"
+                                value={formData.birthCountry}
+                                onChange={handleChange}
+                                style={{
+                                    width: '100%',
+                                    padding: '0.5rem',
+                                    paddingRight: '2rem',
+                                    borderRadius: '4px',
+                                    border: '1px solid #ccc',
+                                    boxSizing: 'border-box',
+                                    appearance: 'none',
+                                    backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e\")',
+                                    backgroundRepeat: 'no-repeat',
+                                    backgroundPosition: 'left 0.5rem center',
+                                    backgroundSize: '1.5em',
+                                    paddingLeft: '2.5rem'
+                                }}
+                            >
+                                <option value="">-- Select Country --</option>
+                                {COUNTRIES.map((country, idx) => (
+                                    <option key={idx} value={country}>{country}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div style={{ marginBottom: '1rem' }}>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>State / Province <span style={{ color: '#999', fontSize: '12px' }}>(Optional)</span></label>
+                            <input
+                                type="text"
+                                name="birthProvince"
+                                value={formData.birthProvince}
+                                onChange={handleChange}
+                                placeholder="e.g., California, Ontario, Tokyo"
+                                style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
+                            />
+                        </div>
+
+                        <div style={{ marginBottom: '1rem' }}>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>City <span style={{ color: '#999', fontSize: '12px' }}>(Optional)</span></label>
+                            <input
+                                type="text"
+                                name="birthCity"
+                                value={formData.birthCity}
+                                onChange={handleChange}
+                                placeholder="e.g., New York, Toronto, Tokyo"
+                                style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
                             />
                         </div>
                     </div>
@@ -469,5 +467,3 @@ function PersonalInfoModal({ userId, token, isOpen, isTemporaryAccount, onClose,
 }
 
 export default PersonalInfoModal;
-
-

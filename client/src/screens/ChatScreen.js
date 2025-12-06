@@ -39,7 +39,8 @@ export function ChatScreen({
 
     const [timerActive, setTimerActive] = useState(false);
     const [timeRemaining, setTimeRemaining] = useState(60);
-    const [isOnboardingFlow, setIsOnboardingFlow] = useState(false); // Track if we're in onboarding flow
+    const [isOnboardingFlow, setIsOnboardingFlow] = useState(false);
+    const [showInputDisabledMessage, setShowInputDisabledMessage] = useState(false);
     
     // PHASE 1: Capture onboarding data for migration
     const [onboardingFirstMessage, setOnboardingFirstMessage] = useState(null);
@@ -82,6 +83,13 @@ export function ChatScreen({
                 }
                 
                 tempFlow.setFirstResponseReceived(true);
+                
+                // Show disabled message for 4 seconds
+                setShowInputDisabledMessage(true);
+                setTimeout(() => {
+                    setShowInputDisabledMessage(false);
+                }, 4000);
+                
                 setTimerActive(true);
                 setTimeRemaining(60);
                 
@@ -163,14 +171,12 @@ export function ChatScreen({
                 isTemporary={auth.isTemporaryAccount}
                 onYes={() => {
                     modals.setShowAstrologyPrompt(false);
-                    setIsOnboardingFlow(true); // Set flag that we're in onboarding flow
-                    // If YES, show PersonalInfo to collect birth date
+                    setIsOnboardingFlow(true);
                     modals.setShowPersonalInfoModal(true);
                 }}
                 onNo={() => {
                     modals.setShowAstrologyPrompt(false);
-                    // If NO, show final modal (exit flow)
-                    modals.setShowFinalModal(true);
+                    handlers.handleAstrologyPromptNo();
                 }}
             />
 
@@ -229,12 +235,11 @@ export function ChatScreen({
                 onClose={() => {
                     modals.setShowHoroscopeModal(false);
                     
-                    // During onboarding: skip MySign, go straight to Final Modal
+                    // During onboarding: show OnboardingModal (Setup/Exit choice)
                     if (isOnboardingFlow && auth.isTemporaryAccount) {
-                        setIsOnboardingFlow(false); // Reset flag
+                        setIsOnboardingFlow(false);
                         modals.setShowFinalModal(true);
                     }
-                    // For real accounts: just close (don't auto-navigate)
                 }}
             />
 
@@ -269,7 +274,7 @@ export function ChatScreen({
                 />
             )}
 
-            {/* Chat Area - Container with relative positioning for timer */}
+            {/* Chat Area */}
             <div style={{ maxWidth: 700, margin: "2rem auto", fontFamily: "sans-serif", textAlign: "center", position: "relative", zIndex: 10, paddingRight: '120px' }}>
                 {chat.error && <p style={{ color: "red" }}>Error: {chat.error}</p>}
 
@@ -307,7 +312,7 @@ export function ChatScreen({
                     />
                 </div>
 
-                {/* Chat box with absolute timer positioning */}
+                {/* Chat box */}
                 <div style={{ position: 'relative' }}>
                     <div
                         style={{
@@ -344,7 +349,7 @@ export function ChatScreen({
                         })}
                     </div>
 
-                    {/* Countdown Timer - Positioned to the right of chatbox */}
+                    {/* Countdown Timer */}
                     {timerActive && (
                         <div style={{
                             position: 'absolute',
@@ -367,20 +372,57 @@ export function ChatScreen({
                         onKeyDown={(e) => {
                             if (e.key === 'Enter' || e.code === 'Enter') {
                                 e.preventDefault();
+                                if (!firstResponseReceived || !auth.isTemporaryAccount) {
+                                    chat.sendMessage();
+                                }
+                            }
+                        }}
+                        placeholder={auth.isTemporaryAccount && firstResponseReceived ? "" : "Type a message..."}
+                        style={{ 
+                            width: "70%", 
+                            marginRight: "0.5rem",
+                            backgroundColor: auth.isTemporaryAccount && firstResponseReceived ? '#f5f5f5' : 'white',
+                            color: auth.isTemporaryAccount && firstResponseReceived ? '#999' : 'black',
+                            cursor: auth.isTemporaryAccount && firstResponseReceived ? 'not-allowed' : 'text'
+                        }}
+                        disabled={auth.isTemporaryAccount && firstResponseReceived}
+                    />
+                    <button
+                        onClick={() => {
+                            if (!firstResponseReceived || !auth.isTemporaryAccount) {
                                 chat.sendMessage();
                             }
                         }}
-                        placeholder="Type a message..."
-                        style={{ width: "70%", marginRight: "0.5rem" }}
-                        disabled={auth.isTemporaryAccount && firstResponseReceived && !modals.showAstrologyPrompt}
-                    />
-                    <button
-                        onClick={chat.sendMessage}
-                        disabled={auth.isTemporaryAccount && firstResponseReceived && !modals.showAstrologyPrompt}
+                        disabled={auth.isTemporaryAccount && firstResponseReceived}
                     >
                         Send
                     </button>
+                    
+                    {auth.isTemporaryAccount && firstResponseReceived && showInputDisabledMessage && (
+                        <div style={{
+                            marginTop: '0.5rem',
+                            padding: '0.75rem',
+                            backgroundColor: 'rgba(124, 99, 216, 0.15)',
+                            border: '1px solid rgba(124, 99, 216, 0.3)',
+                            borderRadius: '4px',
+                            color: '#7c63d8',
+                            fontSize: '0.9rem',
+                            textAlign: 'center',
+                            animation: 'fadeInOut 4s ease-in-out'
+                        }}>
+                            Thank you for trying Starship Psychics. Please create your account.
+                        </div>
+                    )}
                 </div>
+                
+                <style>{`
+                    @keyframes fadeInOut {
+                        0% { opacity: 0; }
+                        10% { opacity: 1; }
+                        90% { opacity: 1; }
+                        100% { opacity: 0; }
+                    }
+                `}</style>
             </div>
         </div>
     );

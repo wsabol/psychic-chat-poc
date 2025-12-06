@@ -39,7 +39,6 @@ export function useChat(userId, token, isAuthenticated, authUserId) {
             const res = await fetchWithTokenRefresh(url, { headers });
             if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
             await res.json();
-            // Don't call loadMessages here - let the polling handle it
         } catch (err) {
             // Opening request failed, continue silently
         }
@@ -63,19 +62,16 @@ export function useChat(userId, token, isAuthenticated, authUserId) {
         setMessage("");
     }, [message, userId, token, loadMessages]);
 
-    // Load messages and request opening when user changes (important for account migration!)
+    // Load messages and request opening when user changes
     useEffect(() => {
         if (isAuthenticated && authUserId && token) {
-            // Check if this is a NEW user (different from before)
             if (previousUserIdRef.current !== authUserId) {
                 console.log('[CHAT] User changed from', previousUserIdRef.current, 'to', authUserId, '- refetching messages');
                 previousUserIdRef.current = authUserId;
                 
-                // Clear old chat and load new
                 setChat([]);
                 setLoaded(false);
                 
-                // Wait a moment for auth to settle, then load
                 setTimeout(() => {
                     loadMessages();
                     requestOpening();

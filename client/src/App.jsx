@@ -114,14 +114,23 @@ function App() {
         return <ErrorBoundary><LoginScreenWrapper /></ErrorBoundary>;
     }
 
-    // Landing page
+        // Landing page
     if (isLanding) {
         return (
             <ErrorBoundary>
                 <LandingScreenWrapper
-                    onTryFree={handlers.handleTryFree}
-                    onCreateAccount={handlers.handleCreateAccount}
-                    onSignIn={handlers.handleSignIn}
+                    onTryFree={() => {
+                        authState.setHasLoggedOut(false);
+                        handlers.handleTryFree();
+                    }}
+                    onCreateAccount={() => {
+                        authState.setHasLoggedOut(false);
+                        handlers.handleCreateAccount();
+                    }}
+                    onSignIn={() => {
+                        authState.setHasLoggedOut(false);
+                        handlers.handleSignIn();
+                    }}
                 />
             </ErrorBoundary>
         );

@@ -28,6 +28,11 @@ export function useAppRouting(auth, appExited, showRegisterMode = false) {
             return 'verification';
         }
 
+        // User explicitly logged out - show landing page
+        if (!auth.isAuthenticated && auth.hasLoggedOut) {
+            return 'landing';
+        }
+
         // First time user or not authenticated
         if (auth.isFirstTime && !auth.isAuthenticated) {
             // If they've exited before, force Firebase login
@@ -44,7 +49,7 @@ export function useAppRouting(auth, appExited, showRegisterMode = false) {
 
         // Authenticated and verified - show chat
         return 'chat';
-    }, [auth.loading, auth.isAuthenticated, auth.isFirstTime, auth.isTemporaryAccount, auth.isEmailUser, auth.emailVerified, appExited, showRegisterMode, hasExitedBefore]);
+    }, [auth.loading, auth.isAuthenticated, auth.isFirstTime, auth.isTemporaryAccount, auth.isEmailUser, auth.emailVerified, auth.hasLoggedOut, appExited, showRegisterMode, hasExitedBefore]);
 
     return {
         currentScreen,
