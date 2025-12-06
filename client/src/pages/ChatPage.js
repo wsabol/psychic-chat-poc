@@ -1,29 +1,32 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useChat } from '../hooks/useChat';
-import { useOnboarding } from '../hooks/useOnboarding';
-import { useOnboardingHandlers } from '../hooks/useOnboardingHandlers';
 import ChatMessageList from '../components/ChatMessageList';
 import ChatInputForm from '../components/ChatInputForm';
-import OnboardingFlow from '../components/OnboardingFlow';
+import CircleTimer from '../components/CircleTimer';
 import '../styles/responsive.css';
 import './ChatPage.css';
 
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
-
 /**
- * ChatPage - Simplified main chat page
- * Uses existing useChat hook and new modular hooks
+ * ChatPage - Main chat page for free trial onboarding
+ * - Shows oracle greeting for temp accounts
+ * - 60 second countdown timer in circular display
+ * - Grays out input after sending message
+ * - Shows modal with birth info or exit options after timer
  */
-export default function ChatPage({ userId, token, auth }) {
-  const isTemporaryAccount = auth?.authEmail?.startsWith('temp_');
+export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogout }) {
+  const isTemporaryAccount = auth?.isTemporaryAccount;
   
-  // Use existing chat hook (returns chat, message, setMessage, sendMessage)
+  // Chat hook
   const { chat, message, setMessage, sendMessage } = 
     useChat(userId, token, !!token, userId);
   
-  // Use new onboarding hook
-  const onboarding = useOnboarding(auth, API_URL, isTemporaryAccount);
-  const handlers = useOnboardingHandlers(auth, onboarding, userId, token, API_URL);
+  // Onboarding flow state
+  const [greetingShown, setGreetingShown] = useState(false);
+  const [firstMessageSent, setFirstMessageSent] = useState(false);
+  const [timerActive, setTimerActive] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(60);
+  const [showAstrologyPrompt, setShowAstrologyPrompt] = useState(false);
+  const timerRef = useRef(null);
   
   // Refs for message end
   const messagesEndRef = useRef(null);
@@ -33,63 +36,136 @@ export default function ChatPage({ userId, token, auth }) {
     msg.role === 'user' || msg.role === 'assistant'
   );
 
-  // Check for first response and capture it
+  // Show oracle greeting for temp account users on mount
   useEffect(() => {
-    if (isTemporaryAccount && !onboarding.firstResponseReceived && displayMessages.length >= 2) {
-      const oracleMessages = displayMessages.filter(msg => msg.role === 'assistant');
-      if (oracleMessages.length >= 1) {
-        const firstOracleMessage = oracleMessages[0];
-        
-        onboarding.captureFirstMessage(firstOracleMessage);
-        onboarding.setFirstResponseReceived(true);
+    if (isTemporaryAccount && !greetingShown && displayMessages.length === 0) {
+      console.log('[CHAT] Showing oracle greeting for temp account');
+      setGreetingShown(true);
+    }
+  }, [isTemporaryAccount, greetingShown, displayMessages.length]);
+
+  // Check for first user message sent and start 60 second timer
+  useEffect(() => {
+    if (isTemporaryAccount && !firstMessageSent) {
+      const userMessages = displayMessages.filter(msg => msg.role === 'user');
+      if (userMessages.length > 0) {
+        console.log('[CHAT] First message sent - starting 60 second timer');
+        setFirstMessageSent(true);
+        setTimerActive(true);
+        setTimeRemaining(60);
       }
     }
-  }, [isTemporaryAccount, onboarding, displayMessages]);
+  }, [isTemporaryAccount, firstMessageSent, displayMessages]);
 
-  // Handle sending message with onboarding logic
-  const handleSendMessage = async () => {
-    // For temp accounts, start timer immediately when sending first message
-    if (isTemporaryAccount && !onboarding.firstResponseReceived) {
-      onboarding.startCountdown();
+  // 60 second timer countdown
+  useEffect(() => {
+    if (timerActive && timeRemaining > 0) {
+      timerRef.current = setTimeout(() => {
+        setTimeRemaining(timeRemaining - 1);
+      }, 1000);
+      return () => clearTimeout(timerRef.current);
+    } else if (timerActive && timeRemaining === 0) {
+      console.log('[CHAT] Timer expired - showing astrology prompt');
+      setTimerActive(false);
+      setShowAstrologyPrompt(true);
     }
+  }, [timerActive, timeRemaining]);
 
-    // Send the message
+  // REMOVED: Auto-scroll was preventing user from reading oracle's response at top
+  // User can scroll freely now, no forced scrolling
+
+  // Handle send message
+  const handleSendMessage = async () => {
     await sendMessage();
   };
 
+  // Handle astrology prompt Yes - navigate to Personal Info page
+  const handleAstrologyYes = () => {
+    console.log('[CHAT] User selected birth info - navigating to Personal Info');
+    setShowAstrologyPrompt(false);
+    if (onNavigateToPage) {
+      onNavigateToPage(1); // Personal Info is page index 1
+    }
+  };
 
+  // Handle astrology prompt No - log out and go to login
+  const handleAstrologyNo = () => {
+    console.log('[CHAT] User exited trial');
+    setShowAstrologyPrompt(false);
+    if (onLogout) {
+      onLogout();
+    }
+  };
+
+  const inputDisabled = isTemporaryAccount && firstMessageSent && !showAstrologyPrompt;
 
   return (
     <div style={{ position: 'relative' }}>
-      {/* All onboarding modals and pages */}
-      <OnboardingFlow
-        // State
-        showAstrologyPrompt={onboarding.showAstrologyPrompt}
-        setShowAstrologyPrompt={onboarding.setShowAstrologyPrompt}
-        showPersonalInfoModal={onboarding.showPersonalInfoModal}
-        setShowPersonalInfoModal={onboarding.setShowPersonalInfoModal}
-        showHoroscopePage={onboarding.showHoroscopePage}
-        setShowHoroscopePage={onboarding.setShowHoroscopePage}
-        showFinalModal={onboarding.showFinalModal}
-        setShowFinalModal={onboarding.setShowFinalModal}
-        isTemporaryAccount={isTemporaryAccount}
-        onboardingFirstMessage={onboarding.onboardingFirstMessage}
-        onboardingHoroscope={onboarding.onboardingHoroscope}
-        
-        // User data
-        userId={userId}
-        token={token}
-        auth={auth}
-        
-        // Handlers
-        handleAstrologyPromptNo={handlers.handleAstrologyPromptNo}
-        handleAstrologyPromptYes={handlers.handleAstrologyPromptYes}
-        handlePersonalInfoClose={handlers.handlePersonalInfoClose}
-        handlePersonalInfoSave={handlers.handlePersonalInfoSave}
-        handleHoroscopeClose={handlers.handleHoroscopeClose}
-        handleSetupAccount={handlers.handleSetupAccount}
-        handleExit={handlers.handleExit}
-      />
+      {/* Astrology/Birth Info Prompt Modal */}
+      {showAstrologyPrompt && isTemporaryAccount && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'rgba(30, 30, 60, 0.95)',
+            padding: '2rem',
+            borderRadius: '10px',
+            maxWidth: '400px',
+            color: 'white',
+            textAlign: 'center',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+            border: '1px solid rgba(100, 150, 255, 0.3)'
+          }}>
+            <h2 style={{ marginBottom: '1rem' }}>✨ Enhance Your Reading</h2>
+            <p style={{ marginBottom: '2rem', lineHeight: '1.6', color: '#d0d0ff' }}>
+              As your oracle, I can enhance your reading with astrology. If you would like, please enter your birth date, and optional time and place of birth.
+            </p>
+            <div style={{
+              display: 'flex',
+              gap: '1rem',
+              flexDirection: 'column'
+            }}>
+              <button
+                onClick={handleAstrologyYes}
+                style={{
+                  padding: '0.75rem',
+                  borderRadius: '5px',
+                  border: 'none',
+                  backgroundColor: '#7c63d8',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
+                Yes, Enter My Birth Info
+              </button>
+              <button
+                onClick={handleAstrologyNo}
+                style={{
+                  padding: '0.75rem',
+                  borderRadius: '5px',
+                  border: '1px solid #7c63d8',
+                  backgroundColor: 'transparent',
+                  color: '#7c63d8',
+                  cursor: 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
+                No, Exit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main chat UI */}
       <div className="page-safe-area chat-page-container">
@@ -100,23 +176,34 @@ export default function ChatPage({ userId, token, auth }) {
           <p className="chat-subtitle">Ask me anything about your journey</p>
         </div>
 
-        {/* Messages and timer */}
+        {/* Messages */}
         <ChatMessageList
           messages={displayMessages}
           messagesEndRef={messagesEndRef}
-          timerActive={onboarding.timerActive}
-          timeRemaining={onboarding.timeRemaining}
         />
 
-        {/* Input form */}
+        {/* Input form - grayed out after first message for temp accounts */}
         <ChatInputForm
           inputMessage={message}
           setInputMessage={setMessage}
           onSend={handleSendMessage}
-          disabled={onboarding.inputDisabled}
+          disabled={inputDisabled}
           loading={false}
           isTemporaryAccount={isTemporaryAccount}
         />
+
+        {/* Circular timer display - absolutely positioned overlay, zero layout impact */}
+        {isTemporaryAccount && timerActive && (
+          <div style={{
+            position: 'fixed',
+            bottom: '100px',
+            right: '2rem',
+            zIndex: 50,
+            pointerEvents: 'none'
+          }}>
+            <CircleTimer timeRemaining={timeRemaining} totalTime={60} />
+          </div>
+        )}
       </div>
     </div>
   );

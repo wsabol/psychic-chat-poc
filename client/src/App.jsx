@@ -75,7 +75,7 @@ function App() {
         return <ErrorBoundary><LoadingScreen /></ErrorBoundary>;
     }
 
-    // Thank you screen
+        // Thank you screen
     if (isThankyou || verificationFailed) {
         return (
             <ErrorBoundary>
@@ -84,6 +84,13 @@ function App() {
                         tempFlow.setAppExited(false);
                         setVerificationFailed(false);
                         modals.setShowRegisterMode(true);
+                    }}
+                    onContinue={() => {
+                        tempFlow.setAppExited(false);
+                        setVerificationFailed(false);
+                    }}
+                    onExit={() => {
+                        authState.exitApp();
                     }}
                 />
             </ErrorBoundary>
@@ -145,11 +152,14 @@ function App() {
     if (isChat) {
     return (
         <ErrorBoundary>
-            <MainContainer 
+                        <MainContainer 
                 auth={authState}
                 token={authState.token}
                 userId={authState.authUserId}
                 onLogout={authState.handleLogout}
+                onExit={() => {
+                    tempFlow.setAppExited(true);
+                }}
             />
         </ErrorBoundary>
     );

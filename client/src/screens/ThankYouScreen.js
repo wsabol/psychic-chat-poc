@@ -1,7 +1,7 @@
 import React from 'react';
 import StarField from '../components/StarField';
 
-export function ThankYouScreen({ onCreateAccount }) {
+export function ThankYouScreen({ onCreateAccount, onContinue, onExit }) {
     return (
         <div style={{
             display: 'flex',
@@ -24,31 +24,49 @@ export function ThankYouScreen({ onCreateAccount }) {
                 position: 'relative',
                 zIndex: 10
             }}>
-                <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>✨ Thank You ✨</h1>
-                <p style={{ fontSize: '1.1rem', lineHeight: '1.8', color: '#d0d0ff', marginBottom: '2rem' }}>
-                    Thank you for visiting the Oracle. Your free trial session has ended.
+                <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}>✨ Complete Your Onboarding</h1>
+                <p style={{ fontSize: '0.95rem', lineHeight: '1.6', color: '#d0d0ff', marginBottom: '2rem' }}>
+                    Thank you for exploring with our oracle. To save your readings and continue your spiritual journey, please complete your onboarding.
                 </p>
-                <p style={{ fontSize: '1rem', color: '#aaa', marginBottom: '2rem' }}>
-                    To continue your spiritual journey and access unlimited readings, please create an account.
-                </p>
-                <button
-                    onClick={onCreateAccount}
-                    style={{
-                        padding: '0.75rem 1.5rem',
-                        borderRadius: '5px',
-                        border: '1px solid #7c63d8',
-                        backgroundColor: '#7c63d8',
-                        color: 'white',
-                        cursor: 'pointer',
-                        fontWeight: 'bold',
-                        fontSize: '1rem'
-                    }}
-                >
-                    Create Account Now
-                </button>
-                <p style={{ fontSize: '0.9rem', color: '#666', marginTop: '2rem' }}>
-                    Refresh the page to start a new trial session.
-                </p>
+                <div style={{
+                    display: 'flex',
+                    gap: '1rem',
+                    flexDirection: 'column'
+                }}>
+                    <button
+                        onClick={onCreateAccount}
+                        style={{
+                            padding: '0.75rem 1.5rem',
+                            borderRadius: '5px',
+                            border: 'none',
+                            backgroundColor: '#7c63d8',
+                            color: 'white',
+                            cursor: 'pointer',
+                            fontWeight: 'bold',
+                            fontSize: '1rem'
+                        }}
+                    >
+                        📝 Set Up an Account
+                    </button>
+
+                    {onExit && (
+                        <button
+                            onClick={onExit}
+                            style={{
+                                padding: '0.75rem 1.5rem',
+                                borderRadius: '5px',
+                                border: '1px solid #999',
+                                backgroundColor: 'transparent',
+                                color: '#999',
+                                cursor: 'pointer',
+                                fontWeight: 'bold',
+                                fontSize: '1rem'
+                            }}
+                        >
+                            ❌ Exit
+                        </button>
+                    )}
+                </div>
             </div>
         </div>
     );

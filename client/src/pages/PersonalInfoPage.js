@@ -45,7 +45,7 @@ function parseDateForStorage(dateString) {
     }
 }
 
-export default function PersonalInfoPage({ userId, token, auth }) {
+export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage }) {
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -190,7 +190,14 @@ export default function PersonalInfoPage({ userId, token, auth }) {
             }
             
             setSuccess(true);
-            setTimeout(() => setSuccess(false), 3000);
+            if (isTemporaryAccount && onNavigateToPage) {
+                setTimeout(() => {
+                    console.log('[PERSONAL-INFO] Navigating to Horoscope page');
+                    onNavigateToPage(4);
+                }, 1500);
+            } else {
+                setTimeout(() => setSuccess(false), 3000);
+            }
         } catch (err) {
             setError(err.message);
         } finally {
@@ -266,6 +273,41 @@ export default function PersonalInfoPage({ userId, token, auth }) {
                     </div>
                 </section>
 
+                {/* Date & Time of Birth Section - MOVED BEFORE Place of Birth */}
+                <section className="form-section">
+                    <h3 className="heading-secondary">⏰ Date & Time of Birth</h3>
+                    
+                    <div className="form-grid">
+                        <div className="form-group">
+                            <label className="form-label">
+                                Date of Birth <span className="required">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                name="birthDate"
+                                value={formData.birthDate}
+                                onChange={handleChange}
+                                required
+                                className="form-input"
+                                placeholder="dd-mmm-yyyy (e.g., 09-Feb-1956)"
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label">
+                                Time of Birth <span className="optional">(Optional)</span>
+                            </label>
+                            <input
+                                type="time"
+                                name="birthTime"
+                                value={formData.birthTime}
+                                onChange={handleChange}
+                                className="form-input"
+                            />
+                        </div>
+                    </div>
+                </section>
+
                 {/* Place of Birth Section */}
                 <section className="form-section">
                     <h3 className="heading-secondary">📍 Place of Birth</h3>
@@ -315,41 +357,6 @@ export default function PersonalInfoPage({ userId, token, auth }) {
                             className="form-input"
                             placeholder="e.g., New York"
                         />
-                    </div>
-                </section>
-
-                {/* Date & Time of Birth Section */}
-                <section className="form-section">
-                    <h3 className="heading-secondary">⏰ Date & Time of Birth</h3>
-                    
-                    <div className="form-grid">
-                        <div className="form-group">
-                            <label className="form-label">
-                                Date of Birth <span className="required">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                name="birthDate"
-                                value={formData.birthDate}
-                                onChange={handleChange}
-                                required
-                                className="form-input"
-                                placeholder="dd-mmm-yyyy (e.g., 09-Feb-1956)"
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label className="form-label">
-                                Time of Birth <span className="optional">(Optional)</span>
-                            </label>
-                            <input
-                                type="time"
-                                name="birthTime"
-                                value={formData.birthTime}
-                                onChange={handleChange}
-                                className="form-input"
-                            />
-                        </div>
                     </div>
                 </section>
 

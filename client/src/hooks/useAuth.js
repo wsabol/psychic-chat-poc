@@ -79,7 +79,9 @@ export function useAuth() {
             
             localStorage.setItem('temp_account_uid', userCredential.user.uid);
             localStorage.setItem('temp_account_email', tempEmail);
+            sessionStorage.setItem('temp_user_id', userCredential.user.uid);
             console.log('[TEMP-ACCOUNT] Temp account created:', tempEmail);
+            console.log('[TEMP-ACCOUNT] Temp user ID saved to sessionStorage:', userCredential.user.uid);
         } catch (err) {
             console.error('[TEMP-ACCOUNT] Failed to create temporary account:', err);
             throw err;
@@ -170,11 +172,16 @@ export function useAuth() {
     };
 
     const exitApp = async () => {
+        // For temp accounts, try to delete, but always log out regardless
         if (isTemporaryAccount) {
-            await deleteTemporaryAccount();
-        } else {
-            await handleLogout();
+            try {
+                await deleteTemporaryAccount();
+            } catch (err) {
+                console.warn('[EXIT-APP] Delete failed, signing out anyway:', err);
+            }
         }
+        // Always sign out at the end
+        await handleLogout();
     };
 
     return {

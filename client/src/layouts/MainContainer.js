@@ -30,7 +30,7 @@ const PAGES = [
   { id: 'billing', label: 'Billing', component: () => <PlaceholderPage pageId="Billing" /> },
 ];
 
-export default function MainContainer({ auth, token, userId, onLogout }) {
+export default function MainContainer({ auth, token, userId, onLogout, onExit }) {
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [swipeDirection, setSwipeDirection] = useState(0);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -58,21 +58,28 @@ export default function MainContainer({ auth, token, userId, onLogout }) {
     }
   }, [lastScrollY]);
 
-  // Browser back button support
+  // Browser back button support - for temp accounts, exit instead of navigating
   useEffect(() => {
     const handlePopState = (e) => {
+      // For temp accounts, back button triggers exit (show ThankYouScreen)
+      if (auth?.isTemporaryAccount && onExit) {
+        console.log('[BACK-BUTTON] Temp account - triggering exit');
+        onExit();
+        return;
+      }
+      
+      // For permanent accounts, allow normal page navigation
       if (e.state?.pageIndex !== undefined) {
         setCurrentPageIndex(e.state.pageIndex);
       }
     };
 
+    // Push a dummy state to prevent going outside the app
+    window.history.pushState({ pageIndex: currentPageIndex }, '');
     window.addEventListener('popstate', handlePopState);
-    
-    // Set initial state
-    window.history.replaceState({ pageIndex: 0 }, '');
 
     return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+  }, [auth?.isTemporaryAccount, currentPageIndex, onExit]);
 
   // Swipe handlers
   const swipeHandlers = useSwipeable({
@@ -118,6 +125,9 @@ export default function MainContainer({ auth, token, userId, onLogout }) {
               userId={userId}
               token={token}
               auth={auth}
+              onNavigateToPage={goToPage}
+              onLogout={onLogout}
+              onExit={onExit}
             />
           </motion.div>
         </AnimatePresence>

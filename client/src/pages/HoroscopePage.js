@@ -3,7 +3,7 @@ import { getAstrologyData } from '../utils/astroUtils';
 import '../styles/responsive.css';
 import './HoroscopePage.css';
 
-export default function HoroscopePage({ userId, token, auth }) {
+export default function HoroscopePage({ userId, token, auth, onExit }) {
   const [horoscopeRange, setHoroscopeRange] = useState('daily');
   const [horoscopeData, setHoroscopeData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -144,8 +144,39 @@ export default function HoroscopePage({ userId, token, auth }) {
   const sunSignData = getSunSignInfo();
   const astro = astroInfo?.astrology_data || {};
 
+  const handleClose = () => {
+    console.log('[HOROSCOPE] Close button clicked - triggering exit');
+    if (onExit) {
+      onExit();
+    }
+  };
+
   return (
-    <div className="page-safe-area horoscope-page">
+    <div className="page-safe-area horoscope-page" style={{ position: 'relative' }}>
+      {/* Close button - top right for temp accounts during onboarding */}
+      {auth?.isTemporaryAccount && (
+        <button
+          onClick={handleClose}
+          style={{
+            position: 'absolute',
+            top: '1rem',
+            right: '1rem',
+            background: 'transparent',
+            border: 'none',
+            fontSize: '1.5rem',
+            cursor: 'pointer',
+            zIndex: 100,
+            opacity: 0.7,
+            transition: 'opacity 0.2s'
+          }}
+          onMouseEnter={(e) => e.target.style.opacity = '1'}
+          onMouseLeave={(e) => e.target.style.opacity = '0.7'}
+          title="Close and complete onboarding"
+        >
+          ✕
+        </button>
+      )}
+
       {/* Header */}
       <div className="horoscope-header">
         <h2 className="heading-primary">🔮 Your Horoscope</h2>
