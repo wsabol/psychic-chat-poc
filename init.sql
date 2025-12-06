@@ -129,3 +129,57 @@ CREATE TABLE IF NOT EXISTS pending_migrations (
 
 CREATE INDEX IF NOT EXISTS idx_pending_migrations_email ON pending_migrations(email);
 CREATE INDEX IF NOT EXISTS idx_pending_migrations_temp_id ON pending_migrations(temp_user_id);
+
+-- Security tables for managing user security settings
+CREATE TABLE IF NOT EXISTS security (
+  id SERIAL PRIMARY KEY,
+  user_id VARCHAR(255) NOT NULL UNIQUE,
+  phone_number VARCHAR(255),
+  recovery_phone VARCHAR(255),
+  recovery_email VARCHAR(255),
+  phone_verified BOOLEAN DEFAULT FALSE,
+  recovery_phone_verified BOOLEAN DEFAULT FALSE,
+  recovery_email_verified BOOLEAN DEFAULT FALSE,
+  password_changed_at TIMESTAMP DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES user_personal_info(user_id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_security_user_id ON security(user_id);
+
+-- Security sessions for device tracking
+CREATE TABLE IF NOT EXISTS security_sessions (
+  id SERIAL PRIMARY KEY,
+  user_id VARCHAR(255) NOT NULL,
+  firebase_token VARCHAR(1024) NOT NULL,
+  device_name VARCHAR(255),
+  ip_address VARCHAR(45),
+  user_agent VARCHAR(500),
+  last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES user_personal_info(user_id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_security_sessions_user_id ON security_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_security_sessions_token ON security_sessions(firebase_token);
+
+-- Verification codes for phone and email verification
+CREATE TABLE IF NOT EXISTS verification_codes (
+  id SERIAL PRIMARY KEY,
+  user_id VARCHAR(255) NOT NULL,
+  phone_number VARCHAR(255),
+  email VARCHAR(255),
+  code VARCHAR(6) NOT NULL,
+  code_type VARCHAR(10) NOT NULL DEFAULT 'sms',
+  attempts INT DEFAULT 0,
+  max_attempts INT DEFAULT 3,
+  expires_at TIMESTAMP NOT NULL,
+  verified_at TIMESTAMP DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES user_personal_info(user_id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_verification_user_id ON verification_codes(user_id);
+CREATE INDEX IF NOT EXISTS idx_verification_code ON verification_codes(code);
+CREATE INDEX IF NOT EXISTS idx_verification_expires ON verification_codes(expires_at);

@@ -1,0 +1,369 @@
+import React, { useState } from 'react';
+import {
+  reauthenticateWithCredential,
+  reauthenticateWithPopup,
+  EmailAuthProvider,
+  GoogleAuthProvider,
+  sendPasswordResetEmail
+} from 'firebase/auth';
+import { auth } from '../firebase';
+
+/**
+ * ReAuthModal - Re-authenticate user before accessing security settings
+ * Shows both Google and Password options (user picks which they use)
+ */
+export default function ReAuthModal({ isOpen, email, onSuccess, onCancel }) {
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+
+  const handleGoogleReAuth = async () => {
+    setError(null);
+    setLoading(true);
+
+    try {
+      console.log('[REAUTH] Starting Google re-auth');
+      const user = auth.currentUser;
+
+      if (!user) {
+        throw new Error('No user logged in');
+      }
+
+      const googleProvider = new GoogleAuthProvider();
+      await reauthenticateWithPopup(user, googleProvider);
+
+      console.log('[REAUTH] ✓ Google re-authentication successful');
+      onSuccess();
+    } catch (err) {
+      console.error('[REAUTH] Google re-auth failed:', err);
+      
+      if (err.code === 'auth/popup-closed-by-user') {
+        setError('Sign-in was cancelled. Please try again.');
+      } else if (err.code === 'auth/popup-blocked') {
+        setError('Pop-up was blocked. Please allow pop-ups for this site.');
+      } else {
+        setError(err.message || 'Google authentication failed');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordReAuth = async (e) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    try {
+      console.log('[REAUTH] Starting password re-auth');
+      const user = auth.currentUser;
+
+      if (!user) {
+        throw new Error('No user logged in');
+      }
+
+      const credential = EmailAuthProvider.credential(email, password);
+      await reauthenticateWithCredential(user, credential);
+
+      console.log('[REAUTH] ✓ Password re-authentication successful');
+      onSuccess();
+    } catch (err) {
+      console.error('[REAUTH] Password re-auth failed:', err);
+      
+      if (err.code === 'auth/wrong-password') {
+        setError('Incorrect password. Please try again.');
+      } else if (err.code === 'auth/user-mismatch') {
+        setError('This password is not associated with this account.');
+      } else {
+        setError(err.message || 'Authentication failed. Please check your password.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    setError(null);
+    setLoading(true);
+
+    try {
+      console.log('[REAUTH] Sending password reset email to:', email);
+      await sendPasswordResetEmail(auth, email);
+
+      console.log('[REAUTH] ✓ Password reset email sent');
+      setResetSent(true);
+      
+      setTimeout(() => {
+        setShowPasswordReset(false);
+        setResetSent(false);
+      }, 3000);
+    } catch (err) {
+      console.error('[REAUTH] Password reset failed:', err);
+      setError('Failed to send password reset email. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 3000
+    }}>
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        padding: '2rem',
+        maxWidth: '400px',
+        width: '90%',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+      }}>
+        <h2 style={{ marginTop: 0, marginBottom: '0.5rem' }}>Verify Your Identity</h2>
+        <p style={{ color: '#666', marginBottom: '1.5rem', fontSize: '14px' }}>
+          For your security, please verify your identity to access security settings.
+        </p>
+
+        {error && (
+          <p style={{
+            color: '#d32f2f',
+            backgroundColor: '#ffebee',
+            padding: '0.75rem',
+            borderRadius: '4px',
+            marginBottom: '1rem',
+            fontSize: '14px'
+          }}>
+            {error}
+          </p>
+        )}
+
+        {resetSent && (
+          <p style={{
+            color: '#2e7d32',
+            backgroundColor: '#e8f5e9',
+            padding: '0.75rem',
+            borderRadius: '4px',
+            marginBottom: '1rem',
+            fontSize: '14px'
+          }}>
+            ✓ Password reset email sent! Check your inbox.
+          </p>
+        )}
+
+        {/* Email Display */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <label style={{
+            display: 'block',
+            marginBottom: '0.5rem',
+            fontWeight: 'bold',
+            fontSize: '14px'
+          }}>
+            Email
+          </label>
+          <input
+            type="email"
+            value={email}
+            disabled
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              borderRadius: '4px',
+              border: '1px solid #ccc',
+              boxSizing: 'border-box',
+              backgroundColor: '#f5f5f5',
+              color: '#999'
+            }}
+          />
+        </div>
+
+        {/* Google Sign-in Option */}
+        {!showPasswordReset && (
+          <>
+            <button
+              onClick={handleGoogleReAuth}
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                marginBottom: '1rem',
+                backgroundColor: '#fff',
+                color: '#333',
+                border: '1px solid #dadce0',
+                borderRadius: '4px',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                opacity: loading ? 0.6 : 1
+              }}
+            >
+              <img
+                src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj48cGF0aCBkPSJNMTcuNiA5LjJsLS4xLTEuOEg5djMuNGg0LjhDMTMuNiAxIDMuMzIgMTMgMTIgMTMuNnYyLjJIOXYuMkM1LjMgMTUuNSAyIDEyLjkgMiA5YzAtMy41IDIuNi02LjcgNi41LTYuN2gyLjdWMnoiIGZpbGw9IiM0Mjg1RjQiIGZpbGwtcnVsZT0ibm9uemVybyIvPjwvZz48L3N2Zz4="
+                alt="Google"
+                style={{ width: '16px', height: '16px' }}
+              />
+              {loading ? 'Signing in...' : 'Sign in with Google'}
+            </button>
+
+            {/* Divider */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              marginBottom: '1rem',
+              gap: '1rem'
+            }}>
+              <div style={{ flex: 1, height: '1px', backgroundColor: '#ddd' }} />
+              <span style={{ color: '#999', fontSize: '12px' }}>or</span>
+              <div style={{ flex: 1, height: '1px', backgroundColor: '#ddd' }} />
+            </div>
+
+            {/* Password Option */}
+            <form onSubmit={handlePasswordReAuth}>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '0.5rem',
+                  fontWeight: 'bold',
+                  fontSize: '14px'
+                }}>
+                  Password
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  autoFocus
+                  disabled={loading}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    borderRadius: '4px',
+                    border: '1px solid #ccc',
+                    boxSizing: 'border-box',
+                    opacity: loading ? 0.6 : 1
+                  }}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading || !password.trim()}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  marginBottom: '1rem',
+                  backgroundColor: '#7c63d8',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  opacity: loading || !password.trim() ? 0.6 : 1
+                }}
+              >
+                {loading ? 'Verifying...' : 'Verify'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowPasswordReset(true)}
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  backgroundColor: 'transparent',
+                  color: '#7c63d8',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  textDecoration: 'underline'
+                }}
+              >
+                Forgot password?
+              </button>
+            </form>
+          </>
+        )}
+
+        {/* Password Reset Form */}
+        {showPasswordReset && (
+          <div>
+            <p style={{ color: '#666', fontSize: '14px', marginBottom: '1rem' }}>
+              We'll send a password reset link to your email.
+            </p>
+            <button
+              onClick={handlePasswordReset}
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                marginBottom: '1rem',
+                backgroundColor: '#7c63d8',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                opacity: loading ? 0.6 : 1
+              }}
+            >
+              {loading ? 'Sending...' : 'Send Reset Email'}
+            </button>
+            <button
+              onClick={() => setShowPasswordReset(false)}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                backgroundColor: '#f5f5f5',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '14px'
+              }}
+            >
+              Back
+            </button>
+          </div>
+        )}
+
+        {/* Bottom Actions */}
+        {!showPasswordReset && (
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+            <button
+              onClick={onCancel}
+              disabled={loading}
+              style={{
+                flex: 1,
+                padding: '0.75rem',
+                backgroundColor: '#f5f5f5',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                fontSize: '14px',
+                fontWeight: '500'
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

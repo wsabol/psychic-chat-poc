@@ -8,8 +8,10 @@ import MySignPage from '../pages/MySignPage';
 import MoonPhasePage from '../pages/MoonPhasePage';
 import HoroscopePage from '../pages/HoroscopePage';
 import CosmicWeatherPage from '../pages/CosmicWeatherPage';
+import SecurityPage from '../pages/SecurityPage';
 import './MainContainer.css';
 
+// Define all pages in order (matches menu order)
 const PlaceholderPage = ({ pageId }) => (
   <div style={{ padding: '2rem', textAlign: 'center' }}>
     <h2>{pageId}</h2>
@@ -24,7 +26,7 @@ const PAGES = [
   { id: 'moon', label: 'Moon Phase', component: MoonPhasePage },
   { id: 'horoscope', label: 'Horoscope', component: HoroscopePage },
   { id: 'cosmic', label: 'Cosmic Weather', component: CosmicWeatherPage },
-  { id: 'security', label: 'Security', component: () => <PlaceholderPage pageId="Security" /> },
+  { id: 'security', label: 'Security', component: SecurityPage },
   { id: 'billing', label: 'Billing', component: () => <PlaceholderPage pageId="Billing" /> },
 ];
 
@@ -34,10 +36,12 @@ export default function MainContainer({ auth, token, userId, onLogout }) {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [navVisible, setNavVisible] = useState(true);
 
+  // Track scroll to hide/show nav on mobile
   useEffect(() => {
     const handleScroll = (e) => {
       const currentScrollY = e.target.scrollTop || window.scrollY;
       
+      // Only hide nav on mobile when scrolling down
       if (currentScrollY > lastScrollY + 50) {
         setNavVisible(false);
       } else if (currentScrollY < lastScrollY - 50) {
@@ -54,6 +58,7 @@ export default function MainContainer({ auth, token, userId, onLogout }) {
     }
   }, [lastScrollY]);
 
+  // Browser back button support
   useEffect(() => {
     const handlePopState = (e) => {
       if (e.state?.pageIndex !== undefined) {
@@ -62,11 +67,14 @@ export default function MainContainer({ auth, token, userId, onLogout }) {
     };
 
     window.addEventListener('popstate', handlePopState);
+    
+    // Set initial state
     window.history.replaceState({ pageIndex: 0 }, '');
 
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  // Swipe handlers
   const swipeHandlers = useSwipeable({
     onSwipedLeft: () => goToPage(currentPageIndex + 1),
     onSwipedRight: () => goToPage(currentPageIndex - 1),
@@ -95,8 +103,6 @@ export default function MainContainer({ auth, token, userId, onLogout }) {
         isVisible={navVisible}
         onLogout={onLogout}
       />
-
-      {/* PageIndicator removed - was overlapping send button */}
 
       <div className="pages-container" {...swipeHandlers}>
         <AnimatePresence mode="wait">

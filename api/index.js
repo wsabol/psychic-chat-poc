@@ -10,6 +10,7 @@ import astrologyInsightsRoutes from "./routes/astrology-insights.js";
 import authRoutes from "./routes/auth-firebase.js";
 import cleanupRoutes from "./routes/cleanup.js";
 import migrationRoutes from "./routes/migration.js";
+import securityRoutes from "./routes/security.js";
 import { authenticateToken } from "./middleware/auth.js";
 import cors from "cors";
 
@@ -41,6 +42,7 @@ app.use("/horoscope", authenticateToken, horoscopeRoutes);
 app.use("/moon-phase", authenticateToken, moonPhaseRoutes);
 app.use("/astrology-insights", authenticateToken, astrologyInsightsRoutes);
 app.use("/migration", authenticateToken, migrationRoutes);
+app.use("/security", authenticateToken, securityRoutes);
 
 let server;
 if (fs.existsSync('./certificates/key.pem') && fs.existsSync('./certificates/cert.pem')) {
@@ -57,9 +59,9 @@ if (fs.existsSync('./certificates/key.pem') && fs.existsSync('./certificates/cer
     });
 }
 
-// Daily cleanup of old temp accounts
-setInterval(async () => {
-    try {
-        const res = await fetch(`http://localhost:${PORT}/cleanup/cleanup-old-temp-accounts`, { method: 'DELETE' });
-    } catch (e) { console.error('[CLEANUP] Error:', e.message); }
-}, 24 * 60 * 60 * 1000);
+// Daily cleanup of old temp accounts (disabled - can be called via HTTP endpoint instead)
+// setInterval(async () => {
+//     try {
+//         const res = await fetch(`http://localhost:${PORT}/cleanup/cleanup-old-temp-accounts`, { method: 'DELETE' });
+//     } catch (e) { console.error('[CLEANUP] Error:', e.message); }
+// }, 24 * 60 * 60 * 1000);

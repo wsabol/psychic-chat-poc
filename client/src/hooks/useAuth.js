@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { auth } from '../firebase';
 import { onAuthStateChanged, signOut, createUserWithEmailAndPassword } from 'firebase/auth';
+import { useDeviceSecurityTracking } from './useDeviceSecurityTracking';
 
 export function useAuth() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -13,6 +14,8 @@ export function useAuth() {
     const [emailVerified, setEmailVerified] = useState(false);
     const [isEmailUser, setIsEmailUser] = useState(false);
     const [hasLoggedOut, setHasLoggedOut] = useState(false);
+    
+    const { trackDevice } = useDeviceSecurityTracking();
 
     useEffect(() => {
         console.log('[AUTH-LISTENER] Setting up auth state listener...');
@@ -30,9 +33,17 @@ export function useAuth() {
                     setEmailVerified(firebaseUser.emailVerified);
                     const isEmail = firebaseUser.providerData.some(p => p.providerId === 'password');
                     setIsEmailUser(isEmail);
+                    
                     if (!isTemp) {
                         setIsFirstTime(false);
                         localStorage.setItem('psychic_app_registered', 'true');
+                        
+                        // Track device for permanent accounts
+                        try {
+                            await trackDevice(firebaseUser.uid, idToken);
+                        } catch (err) {
+                            console.warn('[DEVICE-TRACKING] Non-critical error:', err);
+                        }
                     }
                 } else {
                     console.log('[AUTH-LISTENER] User logged out');
@@ -55,7 +66,7 @@ export function useAuth() {
         });
 
         return unsubscribe;
-    }, []);
+    }, [trackDevice]);
 
     const createTemporaryAccount = async () => {
         try {
