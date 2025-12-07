@@ -5,9 +5,7 @@ export default function Navigation({ pages, currentPageIndex, onNavigate, isVisi
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [expandedSubmenu, setExpandedSubmenu] = useState(null);
 
-  // Disable menu navigation for temporary accounts (during onboarding)
   const handlePageClick = (pageId) => {
-    if (isTemporaryAccount) return; // Menu disabled for temp accounts
     const index = pages.findIndex(p => p.id === pageId);
     if (index !== -1) {
       onNavigate(index);
@@ -16,12 +14,8 @@ export default function Navigation({ pages, currentPageIndex, onNavigate, isVisi
     }
   };
 
-  const showSubmenu = (submenuName) => {
-    setExpandedSubmenu(submenuName);
-  };
-
-  const hideSubmenu = () => {
-    setExpandedSubmenu(null);
+  const toggleSubmenu = (submenuName) => {
+    setExpandedSubmenu(expandedSubmenu === submenuName ? null : submenuName);
   };
 
   // Menu structure - mirrors the old menu layout
@@ -58,6 +52,8 @@ export default function Navigation({ pages, currentPageIndex, onNavigate, isVisi
     },
   ];
 
+  
+
   const isPageActive = (pageId) => {
     const index = pages.findIndex(p => p.id === pageId);
     return index === currentPageIndex;
@@ -86,14 +82,13 @@ export default function Navigation({ pages, currentPageIndex, onNavigate, isVisi
           <h1>🔮 Oracle</h1>
         </div>
 
-        <ul className="nav-menu" style={isTemporaryAccount ? { opacity: 0.5 } : {}}>
+        <ul className="nav-menu">
           {menuStructure.map((item) => (
             <li key={item.id}>
               {item.type === 'page' ? (
                 // Direct page link
                 <button
-                  disabled={isTemporaryAccount}
-                  className={`nav-item ${isPageActive(item.pageId) ? 'active' : ''} ${isTemporaryAccount ? 'disabled' : ''}`}
+                  className={`nav-item ${isPageActive(item.pageId) ? 'active' : ''}`}
                   onClick={() => handlePageClick(item.pageId)}
                 >
                   <span className="nav-icon">{item.icon}</span>
@@ -104,8 +99,7 @@ export default function Navigation({ pages, currentPageIndex, onNavigate, isVisi
                 <>
                   <button
                     className="nav-item nav-category"
-                    onMouseEnter={() => showSubmenu(item.id)}
-                    onMouseLeave={() => hideSubmenu()}
+                    onClick={() => toggleSubmenu(item.id)}
                   >
                     <span className="nav-icon">{item.icon}</span>
                     <span className="nav-label">{item.label}</span>
@@ -116,8 +110,7 @@ export default function Navigation({ pages, currentPageIndex, onNavigate, isVisi
                       {item.submenu.map((subitem) => (
                         <li key={subitem.id}>
                           <button
-                            disabled={isTemporaryAccount}
-                            className={`nav-subitem ${isPageActive(subitem.pageId) ? 'active' : ''} ${isTemporaryAccount ? 'disabled' : ''}`}
+                            className={`nav-subitem ${isPageActive(subitem.pageId) ? 'active' : ''}`}
                             onClick={() => handlePageClick(subitem.pageId)}
                           >
                             <span className="nav-icon">{subitem.icon}</span>
@@ -168,14 +161,13 @@ export default function Navigation({ pages, currentPageIndex, onNavigate, isVisi
               </button>
             </div>
 
-            <ul className="nav-mobile-list" style={isTemporaryAccount ? { opacity: 0.5 } : {}}>
+            <ul className="nav-mobile-list">
               {menuStructure.map((item) => (
                 <li key={item.id}>
                   {item.type === 'page' ? (
                     // Direct page link
                     <button
-                      disabled={isTemporaryAccount}
-                      className={`nav-mobile-item ${isPageActive(item.pageId) ? 'active' : ''} ${isTemporaryAccount ? 'disabled' : ''}`}
+                      className={`nav-mobile-item ${isPageActive(item.pageId) ? 'active' : ''}`}
                       onClick={() => handlePageClick(item.pageId)}
                     >
                       <span className="nav-icon">{item.icon}</span>
@@ -186,7 +178,7 @@ export default function Navigation({ pages, currentPageIndex, onNavigate, isVisi
                     <>
                       <button
                         className="nav-mobile-item nav-mobile-category"
-                        onClick={() => setExpandedSubmenu(expandedSubmenu === item.id ? null : item.id)}
+                        onClick={() => toggleSubmenu(item.id)}
                       >
                         <span className="nav-icon">{item.icon}</span>
                         <span className="nav-label">{item.label}</span>
@@ -197,8 +189,7 @@ export default function Navigation({ pages, currentPageIndex, onNavigate, isVisi
                           {item.submenu.map((subitem) => (
                             <li key={subitem.id}>
                               <button
-                                disabled={isTemporaryAccount}
-                                className={`nav-mobile-subitem ${isPageActive(subitem.pageId) ? 'active' : ''} ${isTemporaryAccount ? 'disabled' : ''}`}
+                                className={`nav-mobile-subitem ${isPageActive(subitem.pageId) ? 'active' : ''}`}
                                 onClick={() => handlePageClick(subitem.pageId)}
                               >
                                 <span className="nav-icon">{subitem.icon}</span>

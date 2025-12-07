@@ -1,7 +1,6 @@
 import express from "express";
 import fs from "fs";
 import https from "https";
-import helmet from "helmet";
 import chatRoutes from "./routes/chat.js";
 import userProfileRoutes from "./routes/user-profile.js";
 import astrologyRoutes from "./routes/astrology.js";
@@ -13,7 +12,6 @@ import cleanupRoutes from "./routes/cleanup.js";
 import migrationRoutes from "./routes/migration.js";
 import securityRoutes from "./routes/security.js";
 import { authenticateToken } from "./middleware/auth.js";
-import { apiLimiter } from "./middleware/rateLimiter.js";
 import cors from "cors";
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;

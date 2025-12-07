@@ -109,6 +109,7 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit })
         onNavigate={(index) => goToPage(index)}
         isVisible={navVisible}
         onLogout={onLogout}
+        isTemporaryAccount={auth?.isTemporaryAccount}
       />
 
       <div className="pages-container" {...swipeHandlers}>

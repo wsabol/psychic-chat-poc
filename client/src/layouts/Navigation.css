@@ -457,3 +457,22 @@
   background: rgba(255, 107, 157, 0.1);
   color: white;
 }
+
+/* ============================================
+   DISABLED MENU STYLES (TEMP ACCOUNTS)
+   ============================================ */
+
+.nav-item.disabled,
+.nav-category.disabled,
+.nav-subitem.disabled,
+.nav-mobile-item.disabled,
+.nav-mobile-category.disabled,
+.nav-mobile-subitem.disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
