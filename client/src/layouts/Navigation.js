@@ -92,9 +92,9 @@ export default function Navigation({ pages, currentPageIndex, onNavigate, isVisi
               {item.type === 'page' ? (
                 // Direct page link
                 <button
-                  disabled={isTemporaryAccount}
-                  className={`nav-item ${isPageActive(item.pageId) ? 'active' : ''} ${isTemporaryAccount ? 'disabled' : ''}`}
+                  className={`nav-item ${isPageActive(item.pageId) ? 'active' : ''}`}
                   onClick={() => handlePageClick(item.pageId)}
+                  style={isTemporaryAccount ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
                 >
                   <span className="nav-icon">{item.icon}</span>
                   <span className="nav-label">{item.label}</span>
@@ -104,8 +104,8 @@ export default function Navigation({ pages, currentPageIndex, onNavigate, isVisi
                 <>
                   <button
                     className="nav-item nav-category"
-                    onMouseEnter={() => showSubmenu(item.id)}
-                    onMouseLeave={() => hideSubmenu()}
+                    onClick={() => setExpandedSubmenu(expandedSubmenu === item.id ? null : item.id)}
+                    style={isTemporaryAccount ? { opacity: 0.6 } : {}}
                   >
                     <span className="nav-icon">{item.icon}</span>
                     <span className="nav-label">{item.label}</span>
@@ -116,9 +116,9 @@ export default function Navigation({ pages, currentPageIndex, onNavigate, isVisi
                       {item.submenu.map((subitem) => (
                         <li key={subitem.id}>
                           <button
-                            disabled={isTemporaryAccount}
-                            className={`nav-subitem ${isPageActive(subitem.pageId) ? 'active' : ''} ${isTemporaryAccount ? 'disabled' : ''}`}
+                            className={`nav-subitem ${isPageActive(subitem.pageId) ? 'active' : ''}`}
                             onClick={() => handlePageClick(subitem.pageId)}
+                            style={isTemporaryAccount ? { opacity: 0.6 } : {}}
                           >
                             <span className="nav-icon">{subitem.icon}</span>
                             <span className="nav-label">{subitem.label}</span>
@@ -174,9 +174,9 @@ export default function Navigation({ pages, currentPageIndex, onNavigate, isVisi
                   {item.type === 'page' ? (
                     // Direct page link
                     <button
-                      disabled={isTemporaryAccount}
-                      className={`nav-mobile-item ${isPageActive(item.pageId) ? 'active' : ''} ${isTemporaryAccount ? 'disabled' : ''}`}
+                      className={`nav-mobile-item ${isPageActive(item.pageId) ? 'active' : ''}`}
                       onClick={() => handlePageClick(item.pageId)}
+                      style={isTemporaryAccount ? { opacity: 0.6 } : {}}
                     >
                       <span className="nav-icon">{item.icon}</span>
                       <span className="nav-label">{item.label}</span>
@@ -197,9 +197,9 @@ export default function Navigation({ pages, currentPageIndex, onNavigate, isVisi
                           {item.submenu.map((subitem) => (
                             <li key={subitem.id}>
                               <button
-                                disabled={isTemporaryAccount}
-                                className={`nav-mobile-subitem ${isPageActive(subitem.pageId) ? 'active' : ''} ${isTemporaryAccount ? 'disabled' : ''}`}
+                                className={`nav-mobile-subitem ${isPageActive(subitem.pageId) ? 'active' : ''}`}
                                 onClick={() => handlePageClick(subitem.pageId)}
+                                style={isTemporaryAccount ? { opacity: 0.6 } : {}}
                               >
                                 <span className="nav-icon">{subitem.icon}</span>
                                 <span className="nav-label">{subitem.label}</span>

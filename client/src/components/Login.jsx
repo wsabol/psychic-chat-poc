@@ -141,10 +141,32 @@ export function Login() {
         }
       }
       
-      // Step 2: Create regular account (not upgrading from temp)
+            // Step 2: Create regular account (not upgrading from temp)
       console.log('[AUTH] Creating new user account...');
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       console.log('[AUTH] ✓ User created successfully:', userCredential.user.uid);
+      
+            // Step 2.5: Create user record in backend database (CRITICAL for foreign keys)
+      console.log('[AUTH-DB] Creating database user record...');
+      try {
+        const dbResponse = await fetch('http://localhost:3000/auth/register-firebase-user', {
+          method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: userCredential.user.uid,
+            email: email
+          })
+        });
+        
+        if (dbResponse.ok) {
+          console.log('[AUTH-DB] ✓ Database user record created');
+        } else {
+          const errorData = await dbResponse.json();
+          console.warn('[AUTH-DB] ⚠️ Database record creation failed:', errorData);
+        }
+      } catch (dbErr) {
+        console.warn('[AUTH-DB] ⚠️ Could not create database record:', dbErr.message);
+      }
       
             // Step 3: Send verification email
       console.log('[EMAIL-VERIFY] Attempting to send verification email...');

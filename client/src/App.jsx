@@ -43,13 +43,17 @@ function App() {
         setPreviousAuthState(authState.isAuthenticated);
     }, [authState.isAuthenticated, previousAuthState, modals]);
 
-    // Start email verification polling when on verification screen
+        // Start email verification polling when on verification screen
     useEffect(() => {
         if (isVerification && auth.currentUser) {
             console.log('[VERIFICATION] Starting verification polling for:', auth.currentUser.email);
-            emailVerification.startVerificationPolling(auth.currentUser);
+            emailVerification.startVerificationPolling(
+                auth.currentUser,
+                40,
+                () => authState.refreshEmailVerificationStatus()
+            );
         }
-    }, [isVerification, emailVerification]);
+    }, [isVerification, emailVerification, authState.refreshEmailVerificationStatus]);
 
     // Handle verification failure
     const handleVerificationFailed = () => {

@@ -3,8 +3,25 @@ import { auth } from '../shared/firebase-admin.js';
 import { db } from '../shared/db.js';
 import { authenticateToken, authorizeUser } from '../middleware/auth.js';
 import { migrateOnboardingData } from '../shared/accountMigration.js';
+import { logAudit } from '../shared/auditLog.js';
 
 const router = Router();
+
+router.post('/register-firebase-user', async (req, res) => {
+  try {
+    const { userId, email } = req.body;
+    if (!userId || !email) return res.status(400).json({ error: 'userId and email required' });
+    const exists = await db.query('SELECT user_id FROM user_personal_info WHERE user_id = $1', [userId]);
+    if (exists.rows.length > 0) return res.json({ success: true });
+    await db.query('INSERT INTO user_personal_info (user_id, email, email_verified, created_at, updated_at) VALUES ($1, $2, false, NOW(), NOW())', [userId, email]);
+    await db.query('INSERT INTO user_2fa_settings (user_id, enabled, method, created_at, updated_at) VALUES ($1, true, \'email\', NOW(), NOW())', [userId]);
+    await db.query('INSERT INTO user_astrology (user_id, created_at, updated_at) VALUES ($1, NOW(), NOW())', [userId]);
+    await logAudit(db, { userId, action: 'USER_REGISTERED', resourceType: 'authentication', ipAddress: req.ip, userAgent: req.get('user-agent'), httpMethod: req.method, endpoint: req.path, status: 'SUCCESS', details: { email } });
+    return res.json({ success: true, userId });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
 
 /**
  * POST /auth/register
@@ -44,6 +61,57 @@ router.post('/register', async (req, res) => {
       return res.status(409).json({ error: 'Email already registered' });
     }
     return res.status(500).json({ error: 'Registration failed', details: err.message });
+  }
+});
+
+/**
+ * POST /auth/log-email-verified
+ * Log email verification (called from client after Firebase verification)
+ */
+router.post('/log-email-verified', async (req, res) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ error: 'userId required' });
+    await logAudit(db, {
+      userId,
+      action: 'USER_EMAIL_VERIFIED',
+      resourceType: 'authentication',
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      httpMethod: req.method,
+      endpoint: req.path,
+      status: 'SUCCESS'
+    });
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('[AUTH] Email verified logging error:', err.message);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /auth/log-login-success
+ * Log user login (called from client after Firebase login)
+ */
+router.post('/log-login-success', async (req, res) => {
+  try {
+    const { userId, email } = req.body;
+    if (!userId || !email) return res.status(400).json({ error: 'userId and email required' });
+    await logAudit(db, {
+      userId,
+      action: 'USER_LOGIN_SUCCESS',
+      resourceType: 'authentication',
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      httpMethod: req.method,
+      endpoint: req.path,
+      status: 'SUCCESS',
+      details: { email }
+    });
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('[AUTH] Login logging error:', err.message);
+    return res.status(500).json({ error: err.message });
   }
 });
 

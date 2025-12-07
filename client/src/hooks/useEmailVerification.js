@@ -4,6 +4,7 @@ import { sendEmailVerification } from 'firebase/auth';
 /**
  * Manages email verification for email/password accounts
  * Handles sending verification emails and checking status
+ * FIXED: Now properly reloads user to detect verification changes
  */
 export function useEmailVerification() {
     const [verificationSent, setVerificationSent] = useState(false);
@@ -33,13 +34,13 @@ export function useEmailVerification() {
     // Check if email is verified
     const checkEmailVerification = useCallback(async (user) => {
         try {
-            // Reload user to get latest verification status
+            // Reload user to get latest verification status from Firebase
             await user.reload();
             const verified = user.emailVerified;
             setIsVerified(verified);
             
             if (verified) {
-                console.log('[EMAIL-VERIFY] Email verified for', user.email);
+                console.log('[EMAIL-VERIFY] ✓ Email verified for', user.email);
             }
             return verified;
         } catch (err) {
@@ -49,30 +50,52 @@ export function useEmailVerification() {
     }, []);
 
     // Poll for verification (user clicks link in email)
-    const startVerificationPolling = useCallback((user, maxAttempts = 40) => {
+    const startVerificationPolling = useCallback((user, maxAttempts = 40, onVerified = null) => {
+        console.log('[EMAIL-VERIFY-POLL] Starting verification polling...');
         setCheckCount(0);
         let attemptCount = 0;
         
         const pollInterval = setInterval(async () => {
             attemptCount++;
             setCheckCount(attemptCount);
-            const verified = await checkEmailVerification(user);
             
-            if (verified) {
-                clearInterval(pollInterval);
-                setIsVerified(true);
-                console.log('[EMAIL-VERIFY] Verification detected!');
-                return;
+            try {
+                // CRITICAL: Force reload to get latest Firebase status
+                // Firebase email verification link doesn't trigger onAuthStateChanged
+                await user.reload();
+                const verified = user.emailVerified;
+                setIsVerified(verified);
+                
+                if (verified) {
+                    console.log('[EMAIL-VERIFY-POLL] ✓ Verification detected at attempt', attemptCount);
+                    clearInterval(pollInterval);
+                    setIsVerified(true);
+                    try { await fetch('http://localhost:3000/auth/log-email-verified', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.uid }) }); } catch (err) { console.warn('[AUDIT] Email verification logging skipped'); }
+                    
+                    // Call parent callback if provided (to update auth context)
+                    if (onVerified) {
+                        console.log('[EMAIL-VERIFY-POLL] Calling onVerified callback...');
+                        onVerified();
+                    }
+                    return;
+                } else {
+                    console.log('[EMAIL-VERIFY-POLL] Still waiting... (attempt', attemptCount + ')');
+                }
+            } catch (err) {
+                console.error('[EMAIL-VERIFY-POLL] Error during polling:', err.message);
             }
             
             if (attemptCount >= maxAttempts) {
                 clearInterval(pollInterval);
-                console.log('[EMAIL-VERIFY] Verification polling stopped after', attemptCount, 'attempts');
+                console.log('[EMAIL-VERIFY-POLL] ✗ Verification polling stopped after', attemptCount, 'attempts (no verification detected)');
             }
         }, 3000); // Check every 3 seconds
 
-        return () => clearInterval(pollInterval);
-    }, [checkEmailVerification]);
+        return () => {
+            clearInterval(pollInterval);
+            console.log('[EMAIL-VERIFY-POLL] Polling cleanup called');
+        };
+    }, []);
 
     // Resend verification email
     const resendVerificationEmail = useCallback(async (user) => {

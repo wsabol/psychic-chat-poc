@@ -37,13 +37,17 @@ export function useAuth() {
                     if (!isTemp) {
                         setIsFirstTime(false);
                         localStorage.setItem('psychic_app_registered', 'true');
+                        // Log login to audit
+                        (async () => { try { await fetch('http://localhost:3000/auth/log-login-success', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: firebaseUser.uid, email: firebaseUser.email }) }); } catch (err) { console.warn('[AUDIT] Login log skipped'); } })();
                         
                         // Track device for permanent accounts
-                        try {
-                            await trackDevice(firebaseUser.uid, idToken);
-                        } catch (err) {
-                            console.warn('[DEVICE-TRACKING] Non-critical error:', err);
-                        }
+                        // DISABLED TEMPORARILY: Device tracking fails before user DB record exists
+                        // console.log('[DEVICE-TRACKING] Skipped - will track after user DB record created');
+                        // try {
+                        //     await trackDevice(firebaseUser.uid, idToken);
+                        // } catch (err) {
+                        //     console.warn('[DEVICE-TRACKING] Non-critical error:', err);
+                        // }
                     }
                 } else {
                     console.log('[AUTH-LISTENER] User logged out');
@@ -171,6 +175,20 @@ export function useAuth() {
         }
     };
 
+    const refreshEmailVerificationStatus = async () => {
+        try {
+            if (auth.currentUser) {
+                await auth.currentUser.reload();
+                setEmailVerified(auth.currentUser.emailVerified);
+                console.log('[EMAIL-VERIFY-REFRESH] Updated emailVerified status:', auth.currentUser.emailVerified);
+                return auth.currentUser.emailVerified;
+            }
+        } catch (err) {
+            console.error('[EMAIL-VERIFY-REFRESH] Error refreshing email status:', err);
+        }
+        return false;
+    };
+
     const exitApp = async () => {
         // For temp accounts, try to delete, but always log out regardless
         if (isTemporaryAccount) {
@@ -197,6 +215,7 @@ export function useAuth() {
         hasLoggedOut,
         setHasLoggedOut,
         handleLogout,
+        refreshEmailVerificationStatus,
         createTemporaryAccount,
         deleteTemporaryAccount,
         exitApp,

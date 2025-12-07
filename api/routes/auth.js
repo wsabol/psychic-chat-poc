@@ -8,15 +8,76 @@ import {
   generate6DigitCode,
   validate6DigitCode,
   formatPhoneNumber,
-  validateEmail,
-  logAudit
+  validateEmail
 } from '../shared/authUtils.js';
+import { logAudit } from '../shared/auditLog.js';
 import { sendSMS, sendPasswordResetSMS } from '../shared/smsService.js';
 import { sendEmailVerification, sendPasswordResetEmail, send2FACodeEmail } from '../shared/emailService.js';
 import { generateToken, generateRefreshToken, authenticateToken, authorizeUser, verify2FA } from '../middleware/auth.js';
 import { db } from '../shared/db.js';
 
 const router = Router();
+
+/**
+ * POST /auth/register-firebase-user
+ * Create database user record for Firebase-authenticated user
+ * Called after Firebase registration to sync user to database
+ */
+router.post('/register-firebase-user', async (req, res) => {
+  try {
+    console.log('[AUTH-DB] /register-firebase-user endpoint called');
+    const { userId, email } = req.body;
+    console.log('[AUTH-DB] Received userId:', userId, 'email:', email);
+
+    if (!userId || !email) {
+      console.error('[AUTH-DB] Missing userId or email');
+      return res.status(400).json({ error: 'userId and email required' });
+    }
+
+    // Check if user already exists
+    const existingUser = await db.query(
+      'SELECT user_id FROM user_personal_info WHERE user_id = $1',
+      [userId]
+    );
+
+    if (existingUser.rows.length > 0) {
+      console.log('[AUTH-DB] User already exists:', userId);
+      return res.json({ success: true, message: 'User already exists' });
+    }
+
+    // Create user record in database
+    await db.query(
+      `INSERT INTO user_personal_info (user_id, email, email_verified, created_at, updated_at)
+       VALUES ($1, $2, false, NOW(), NOW())`,
+      [userId, email]
+    );
+
+        // Create 2FA settings
+    await db.query(
+      `INSERT INTO user_2fa_settings (user_id, enabled, method, created_at, updated_at)
+       VALUES ($1, true, 'email', NOW(), NOW())`,
+      [userId]
+    );
+
+    // Create astrology record (needed for horoscope/cosmic weather requests)
+    await db.query(
+      `INSERT INTO user_astrology (user_id, created_at, updated_at)
+       VALUES ($1, NOW(), NOW())`,
+      [userId]
+    );
+
+    console.log('[AUTH-DB] ✓ Database user record created for:', userId, email);
+
+    return res.json({
+      success: true,
+      message: 'User database record created',
+      userId
+    });
+  } catch (error) {
+    console.error('[AUTH-DB] Error creating database user record:', error);
+    return res.status(500).json({ error: 'Failed to create user database record', details: error.message });
+  }
+});
 
 /**
  * POST /auth/register
@@ -97,8 +158,18 @@ router.post('/register', async (req, res) => {
         return res.status(500).json({ error: 'Failed to send verification email' });
       }
 
-      // Log audit
-      await logAudit(db, userId, 'REGISTER', { email }, req.ip, req.get('user-agent'));
+            // Log audit
+      await logAudit(db, {
+        userId,
+        action: 'USER_REGISTERED',
+        resourceType: 'authentication',
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        httpMethod: req.method,
+        endpoint: req.path,
+        status: 'SUCCESS',
+        details: { email }
+      });
 
       return res.status(201).json({
         success: true,
@@ -162,8 +233,17 @@ router.post('/verify-email', async (req, res) => {
 
       await db.query('COMMIT');
 
-      // Log audit
-      await logAudit(db, userId, 'EMAIL_VERIFIED', {}, req.ip, req.get('user-agent'));
+            // Log audit
+      await logAudit(db, {
+        userId,
+        action: 'USER_EMAIL_VERIFIED',
+        resourceType: 'authentication',
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        httpMethod: req.method,
+        endpoint: req.path,
+        status: 'SUCCESS'
+      });
 
       return res.json({
         success: true,
@@ -197,7 +277,19 @@ router.post('/login', async (req, res) => {
       [email]
     );
 
-    if (userResult.rows.length === 0) {
+        if (userResult.rows.length === 0) {
+      // Log failed login attempt (without user_id since user doesn't exist)
+      await logAudit(db, {
+        action: 'USER_LOGIN_FAILED',
+        resourceType: 'authentication',
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        httpMethod: req.method,
+        endpoint: req.path,
+        status: 'FAILURE',
+        errorCode: 'USER_NOT_FOUND',
+        details: { email }
+      });
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
@@ -206,7 +298,19 @@ router.post('/login', async (req, res) => {
     // Verify password
     const passwordMatch = await comparePassword(password, user.password_hash);
     if (!passwordMatch) {
-      await logAudit(db, user.user_id, 'LOGIN_FAILED', { reason: 'invalid_password' }, req.ip, req.get('user-agent'));
+      // Log failed login attempt
+      await logAudit(db, {
+        userId: user.user_id,
+        action: 'USER_LOGIN_FAILED',
+        resourceType: 'authentication',
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        httpMethod: req.method,
+        endpoint: req.path,
+        status: 'FAILURE',
+        errorCode: 'INVALID_PASSWORD',
+        details: { email }
+      });
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
@@ -266,12 +370,23 @@ router.post('/login', async (req, res) => {
     //   });
     // }
 
-        // 2FA disabled for testing - skip to direct login
+            // 2FA disabled for testing - skip to direct login
     // TODO: Re-enable after Twilio account setup
     const token = generateToken(user.user_id, false);
     const refreshToken = generateRefreshToken(user.user_id);
 
-    await logAudit(db, user.user_id, 'LOGIN_SUCCESS', {}, req.ip, req.get('user-agent'));
+    // Log successful login
+    await logAudit(db, {
+      userId: user.user_id,
+      action: 'USER_LOGIN_SUCCESS',
+      resourceType: 'authentication',
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      httpMethod: req.method,
+      endpoint: req.path,
+      status: 'SUCCESS',
+      details: { email }
+    });
 
     return res.json({
       success: true,
@@ -316,7 +431,7 @@ router.post('/verify-2fa', verify2FA, async (req, res) => {
       return res.status(400).json({ error: 'Invalid or expired 2FA code' });
     }
 
-    // Mark code as used
+        // Mark code as used
     await db.query(
       'UPDATE user_2fa_codes SET used = true WHERE id = $1',
       [codeResult.rows[0].id]
@@ -326,7 +441,17 @@ router.post('/verify-2fa', verify2FA, async (req, res) => {
     const token = generateToken(userId, false);
     const refreshToken = generateRefreshToken(userId);
 
-    await logAudit(db, userId, 'LOGIN_2FA_VERIFIED', {}, req.ip, req.get('user-agent'));
+    // Log 2FA verification
+    await logAudit(db, {
+      userId,
+      action: 'USER_2FA_VERIFIED',
+      resourceType: 'authentication',
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      httpMethod: req.method,
+      endpoint: req.path,
+      status: 'SUCCESS'
+    });
 
     return res.json({
       success: true,
@@ -398,7 +523,18 @@ router.post('/forgot-password', async (req, res) => {
       console.error('Failed to send password reset SMS:', sendResult.error);
     }
 
-    await logAudit(db, userId, 'PASSWORD_RESET_REQUESTED', {}, req.ip, req.get('user-agent'));
+    // Log password reset request
+    await logAudit(db, {
+      userId,
+      action: 'PASSWORD_RESET_REQUESTED',
+      resourceType: 'authentication',
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      httpMethod: req.method,
+      endpoint: req.path,
+      status: 'SUCCESS',
+      details: { email }
+    });
 
     return res.json({
       success: true,
@@ -469,7 +605,17 @@ router.post('/reset-password', async (req, res) => {
 
       await db.query('COMMIT');
 
-      await logAudit(db, userId, 'PASSWORD_RESET', {}, req.ip, req.get('user-agent'));
+      // Log password reset completion
+      await logAudit(db, {
+        userId,
+        action: 'PASSWORD_RESET_COMPLETED',
+        resourceType: 'authentication',
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        httpMethod: req.method,
+        endpoint: req.path,
+        status: 'SUCCESS'
+      });
 
       return res.json({
         success: true,
@@ -510,7 +656,18 @@ router.post('/refresh', async (req, res) => {
         expiresIn: '15m',
         message: 'Token refreshed successfully'
       });
-    } catch (err) {
+        } catch (err) {
+      // Log failed token refresh
+      await logAudit(db, {
+        action: 'TOKEN_REFRESH_FAILED',
+        resourceType: 'authentication',
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        httpMethod: req.method,
+        endpoint: req.path,
+        status: 'FAILURE',
+        errorCode: 'INVALID_REFRESH_TOKEN'
+      });
       return res.status(403).json({ error: 'Invalid or expired refresh token' });
     }
   } catch (error) {
@@ -618,7 +775,18 @@ router.post('/2fa-settings/:userId', authenticateToken, authorizeUser, async (re
       return res.status(404).json({ error: '2FA settings not found' });
     }
 
-    await logAudit(db, userId, '2FA_SETTINGS_UPDATED', { method, enabled }, req.ip, req.get('user-agent'));
+    // Log 2FA settings change
+    await logAudit(db, {
+      userId,
+      action: '2FA_SETTINGS_UPDATED',
+      resourceType: 'account',
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      httpMethod: req.method,
+      endpoint: req.path,
+      status: 'SUCCESS',
+      details: { method, enabled }
+    });
 
     return res.json({
       success: true,
