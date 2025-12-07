@@ -115,13 +115,9 @@ export function Login() {
               const newUserCred = await signInWithEmailAndPassword(auth, email, password);
               console.log('[AUTH-MIGRATION] ✓ Signed in as new user:', newUserCred.user.uid);
               
-              // Now send verification email
+                            // Now send verification email
               console.log('[EMAIL-VERIFY] Sending verification email...');
-              const actionCodeSettings = {
-                url: window.location.origin,
-                handleCodeInApp: false
-              };
-              await sendEmailVerification(newUserCred.user, actionCodeSettings);
+              await sendEmailVerification(newUserCred.user);
               console.log('[EMAIL-VERIFY] ✓ Verification email sent');
               
             } catch (reAuthErr) {
@@ -150,16 +146,10 @@ export function Login() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       console.log('[AUTH] ✓ User created successfully:', userCredential.user.uid);
       
-      // Step 3: Send verification email
+            // Step 3: Send verification email
       console.log('[EMAIL-VERIFY] Attempting to send verification email...');
       try {
-        const actionCodeSettings = {
-          url: window.location.origin,
-          handleCodeInApp: false
-        };
-        console.log('[EMAIL-VERIFY] Action code settings:', actionCodeSettings);
-        
-        await sendEmailVerification(userCredential.user, actionCodeSettings);
+        await sendEmailVerification(userCredential.user);
         console.log('[EMAIL-VERIFY] ✓ Verification email sent');
         setSuccessMessage('Account created! Check your email to verify your account.');
       } catch (verifyErr) {

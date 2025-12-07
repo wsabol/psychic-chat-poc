@@ -46,14 +46,15 @@ router.delete("/delete-temp-account/:tempUserId", async (req, res) => {
 
 /**
  * DELETE /cleanup-old-temp-accounts
- * Batch cleanup for accounts older than 7 days
+ * Batch cleanup for accounts older than 24 hours
+ * Runs daily to prevent Firebase cost buildup from accumulating temp accounts
  */
 router.delete("/cleanup-old-temp-accounts", async (req, res) => {
     try {
-        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-        const { rows: oldTempUsers } = await db.query(
+        const oneDayAgo = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000);
+                const { rows: oldTempUsers } = await db.query(
             `SELECT user_id FROM user_personal_info WHERE email LIKE 'temp_%@psychic.local' AND created_at < $1 LIMIT 500`,
-            [sevenDaysAgo]
+            [oneDayAgo]
         );
         let deletedCount = 0;
         const uids = oldTempUsers.map(u => u.user_id);
@@ -75,7 +76,8 @@ router.delete("/cleanup-old-temp-accounts", async (req, res) => {
             }
         }
         
-        res.json({ success: true, message: `Cleaned up ${deletedCount} old temp accounts`, deletedCount });
+        console.log(`[CLEANUP] ✓ Daily cleanup completed: ${deletedCount} temp accounts deleted (older than 24 hours)`);
+        res.json({ success: true, message: `Cleaned up ${deletedCount} old temp accounts (24+ hours old)`, deletedCount });
     } catch (err) {
         console.error('[CLEANUP] Batch cleanup error:', err);
         res.status(500).json({ error: 'Failed to cleanup old temp accounts', details: err.message });
