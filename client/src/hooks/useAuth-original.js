@@ -14,11 +14,6 @@ export function useAuth() {
     const [emailVerified, setEmailVerified] = useState(false);
     const [isEmailUser, setIsEmailUser] = useState(false);
     const [hasLoggedOut, setHasLoggedOut] = useState(false);
-    const [showTwoFactor, setShowTwoFactor] = useState(false);
-    const [tempToken, setTempToken] = useState(null);
-    const [tempUserId, setTempUserId] = useState(null);
-    const [twoFactorMethod, setTwoFactorMethod] = useState('email');
-    const [error, setError] = useState(null);
     
     const { trackDevice } = useDeviceSecurityTracking();
 
@@ -33,6 +28,7 @@ export function useAuth() {
                     setAuthUserId(firebaseUser.uid);
                     setAuthEmail(firebaseUser.email);
                     setToken(idToken);
+                    setIsAuthenticated(true);
                     setIsTemporaryAccount(isTemp);
                     setEmailVerified(firebaseUser.emailVerified);
                     const isEmail = firebaseUser.providerData.some(p => p.providerId === 'password');
@@ -42,51 +38,16 @@ export function useAuth() {
                         setIsFirstTime(false);
                         localStorage.setItem('psychic_app_registered', 'true');
                         // Log login to audit
-                        (async () => { 
-                            try { 
-                                await fetch('http://localhost:3000/auth/log-login-success', { 
-                                    method: 'POST', 
-                                    headers: { 'Content-Type': 'application/json' }, 
-                                    body: JSON.stringify({ userId: firebaseUser.uid, email: firebaseUser.email }) 
-                                }); 
-                            } catch (err) { 
-                                console.warn('[AUDIT] Login log skipped'); 
-                            } 
-                        })();
+                        (async () => { try { await fetch('http://localhost:3000/auth/log-login-success', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: firebaseUser.uid, email: firebaseUser.email }) }); } catch (err) { console.warn('[AUDIT] Login log skipped'); } })();
                         
-                        // Check if 2FA is required
-                        (async () => {
-                          try {
-                            const twoFAResponse = await fetch(`http://localhost:3000/auth/check-2fa/${firebaseUser.uid}`, {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' }
-                            });
-                            const twoFAData = await twoFAResponse.json();
-                            console.log('[2FA-CHECK] Response:', twoFAData);
-                            if (twoFAData.requires2FA) {
-                              console.log('[2FA-CHECK] 2FA required, showing modal');
-                              setTempToken(twoFAData.tempToken);
-                              setTempUserId(firebaseUser.uid);
-                              setShowTwoFactor(true);
-                              setTwoFactorMethod(twoFAData.method || 'email');
-                              setIsAuthenticated(false); // Don't set authenticated until 2FA passes
-                            } else {
-                              console.log('[2FA-CHECK] No 2FA required');
-                              setIsAuthenticated(true);
-                            }
-                          } catch (err) {
-                            console.warn('[2FA-CHECK] Failed to check 2FA, allowing access anyway:', err);
-                            setIsAuthenticated(true); // Fallback to allowing access
-                          }
-                        })();
-                        
-                        // If temp account is NOT requiring 2FA, set authenticated right away
-                        if (isTemp) {
-                            setIsAuthenticated(true);
-                        }
-                    } else {
-                        // Temporary accounts don't need 2FA
-                        setIsAuthenticated(true);
+                        // Track device for permanent accounts
+                        // DISABLED TEMPORARILY: Device tracking fails before user DB record exists
+                        // console.log('[DEVICE-TRACKING] Skipped - will track after user DB record created');
+                        // try {
+                        //     await trackDevice(firebaseUser.uid, idToken);
+                        // } catch (err) {
+                        //     console.warn('[DEVICE-TRACKING] Non-critical error:', err);
+                        // }
                     }
                 } else {
                     console.log('[AUTH-LISTENER] User logged out');
@@ -95,9 +56,6 @@ export function useAuth() {
                     setAuthEmail(null);
                     setToken(null);
                     setIsTemporaryAccount(false);
-                    setShowTwoFactor(false);
-                    setTempToken(null);
-                    setTempUserId(null);
                     const hasRegistered = localStorage.getItem('psychic_app_registered');
                     if (hasRegistered) {
                         setIsFirstTime(false);
@@ -211,9 +169,6 @@ export function useAuth() {
             setAuthEmail(null);
             setToken(null);
             setIsTemporaryAccount(false);
-            setShowTwoFactor(false);
-            setTempToken(null);
-            setTempUserId(null);
             setHasLoggedOut(true);
         } catch (err) {
             console.error('Logout error:', err);
@@ -247,49 +202,6 @@ export function useAuth() {
         await handleLogout();
     };
 
-    const verify2FA = async (code) => {
-        try {
-            if (!tempUserId || !tempToken) {
-                setError('2FA session expired. Please log in again.');
-                return false;
-            }
-            
-            const response = await fetch('http://localhost:3000/auth/verify-2fa', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${tempToken}`
-                },
-                body: JSON.stringify({
-                    userId: tempUserId,
-                    code: code
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (!response.ok || !data.success) {
-                setError(data.error || '2FA verification failed');
-                return false;
-            }
-            
-            // 2FA verified, set full token and authenticate
-            setToken(data.token);
-            setTempToken(null);
-            setTempUserId(null);
-            setShowTwoFactor(false);
-            setIsAuthenticated(true);
-            setError(null);
-            
-            console.log('[2FA] Verification successful');
-            return true;
-        } catch (err) {
-            console.error('[2FA] Verification error:', err);
-            setError('Failed to verify 2FA code');
-            return false;
-        }
-    };
-
     return {
         isAuthenticated,
         isTemporaryAccount,
@@ -309,17 +221,16 @@ export function useAuth() {
         exitApp,
         showLoginRegister: false,
         setShowLoginRegister: () => {},
-        showTwoFactor,
-        setShowTwoFactor,
+        showTwoFactor: false,
+        setShowTwoFactor: () => {},
         showForgotPassword: false,
         setShowForgotPassword: () => {},
         showEmailVerification: false,
         setShowEmailVerification: () => {},
-        tempToken,
-        tempUserId,
-        twoFactorMethod,
-        error,
-        setError,
-        verify2FA,
+        tempToken: null,
+        tempUserId: null,
+        twoFactorMethod: 'sms',
+        error: null,
+        setError: () => {},
     };
 }

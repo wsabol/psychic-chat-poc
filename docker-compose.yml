@@ -21,6 +21,7 @@ services:
       - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
       - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER}
       - RESEND_API_KEY=${RESEND_API_KEY}
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
     depends_on:
       redis:
         condition: service_started

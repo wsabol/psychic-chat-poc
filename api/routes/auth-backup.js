@@ -325,54 +325,60 @@ router.post('/login', async (req, res) => {
     //   });
     // }
 
-    // Get 2FA settings (disabled for testing while Twilio setup pending)
-    // const twoFAResult = await db.query(
-    //   'SELECT * FROM user_2fa_settings WHERE user_id = $1',
-    //   [user.user_id]
-    // );
-    //
-    // const twoFASettings = twoFAResult.rows[0];
-    //
-    // if (twoFASettings && twoFASettings.enabled) {
-    //   // Generate and send 2FA code
-    //   const code = generate6DigitCode();
-    //   const codeExpires = new Date(Date.now() + 10 * 60000); // 10 minutes
-    //
-    //   await db.query(
-    //     `INSERT INTO user_2fa_codes (user_id, code, code_type, created_at, expires_at)
-    //      VALUES ($1, $2, 'login', NOW(), $3)`,
-    //     [user.user_id, code, codeExpires]
-    //   );
-    //
-    //   // Send code via preferred method
-    //   let sendResult;
-    //   if (twoFASettings.method === 'email') {
-    //     sendResult = await send2FACodeEmail(email, code);
-    //   } else {
-    //     sendResult = await sendSMS(twoFASettings.phone_number, code);
-    //   }
-    //
-    //   if (!sendResult.success) {
-    //     return res.status(500).json({ error: 'Failed to send 2FA code' });
-    //   }
-    //
-    //   // Return temporary token requiring 2FA
-    //   const tempToken = generateToken(user.user_id, true);
-    //
-    //   await logAudit(db, user.user_id, 'LOGIN_2FA_REQUESTED', { method: twoFASettings.method }, req.ip, req.get('user-agent'));
-    //
-    //   return res.json({
-    //     success: true,
-    //     userId: user.user_id,
-    //     tempToken,
-    //     requires2FA: true,
-    //     method: twoFASettings.method,
-    //     message: `2FA code sent via ${twoFASettings.method}`
-    //   });
-    // }
+            // Get 2FA settings - ENABLED with SendGrid email
+    const twoFAResult = await db.query(
+      'SELECT * FROM user_2fa_settings WHERE user_id = $1',
+            [user.user_id]
+    );
 
-            // 2FA disabled for testing - skip to direct login
-    // TODO: Re-enable after Twilio account setup
+    const twoFASettings = twoFAResult.rows[0];
+
+    if (twoFASettings && twoFASettings.enabled) {
+      // Generate and send 2FA code via email
+      const code = generate6DigitCode();
+      const codeExpires = new Date(Date.now() + 10 * 60000); // 10 minutes
+    //
+          await db.query(
+        `INSERT INTO user_2fa_codes (user_id, code, code_type, created_at, expires_at)
+         VALUES ($1, $2, 'login', NOW(), $3)`,
+        [user.user_id, code, codeExpires]
+      );
+    //
+          // Send 2FA code via email (SendGrid)
+      const sendResult = await send2FACodeEmail(email, code);
+    //
+          if (!sendResult.success) {
+        console.error('[AUTH] Failed to send 2FA code:', sendResult.error);
+        return res.status(500).json({ error: 'Failed to send 2FA code', details: sendResult.error });
+      }
+    //
+          // Return temporary token requiring 2FA
+      const tempToken = generateToken(user.user_id, true);
+
+      // Log 2FA request
+      await logAudit(db, {
+        userId: user.user_id,
+        action: 'LOGIN_2FA_REQUESTED',
+        resourceType: 'authentication',
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        httpMethod: req.method,
+        endpoint: req.path,
+        status: 'SUCCESS',
+        details: { method: 'email', email }
+      });
+
+      return res.json({
+        success: true,
+        userId: user.user_id,
+        tempToken,
+        requires2FA: true,
+        method: 'email',
+        message: '2FA code sent to your email. Check your inbox and verify within 10 minutes.'
+      });
+    }
+
+                // 2FA disabled or not configured - skip to direct login
     const token = generateToken(user.user_id, false);
     const refreshToken = generateRefreshToken(user.user_id);
 
