@@ -13,7 +13,7 @@ router.post('/register-firebase-user', async (req, res) => {
     if (!userId || !email) return res.status(400).json({ error: 'userId and email required' });
     const exists = await db.query('SELECT user_id FROM user_personal_info WHERE user_id = $1', [userId]);
     if (exists.rows.length > 0) return res.json({ success: true });
-    await db.query('INSERT INTO user_personal_info (user_id, email, email_verified, created_at, updated_at) VALUES ($1, $2, false, NOW(), NOW())', [userId, email]);
+    await db.query('INSERT INTO user_personal_info (user_id, email_encrypted, email_verified, created_at, updated_at) VALUES ($1, pgp_sym_encrypt($2, $3), false, NOW(), NOW())', [userId, email, process.env.ENCRYPTION_KEY]);
     await db.query('INSERT INTO user_2fa_settings (user_id, enabled, method, created_at, updated_at) VALUES ($1, true, \'email\', NOW(), NOW())', [userId]);
     await db.query('INSERT INTO user_astrology (user_id, created_at, updated_at) VALUES ($1, NOW(), NOW())', [userId]);
     await logAudit(db, { userId, action: 'USER_REGISTERED', resourceType: 'authentication', ipAddress: req.ip, userAgent: req.get('user-agent'), httpMethod: req.method, endpoint: req.path, status: 'SUCCESS', details: { email } });
@@ -43,10 +43,10 @@ router.post('/register', async (req, res) => {
     });
     
     // Create user profile in database
-    await db.query(
-      `INSERT INTO user_personal_info (user_id, email, first_name, last_name, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, NOW(), NOW())`,
-      [userRecord.uid, email, firstName || '', lastName || '']
+        await db.query(
+      `INSERT INTO user_personal_info (user_id, email_encrypted, first_name, last_name, created_at, updated_at)
+       VALUES ($1, pgp_sym_encrypt($2, $3), $4, $5, NOW(), NOW())`,
+      [userRecord.uid, email, process.env.ENCRYPTION_KEY, firstName || '', lastName || '']
     );
     
     return res.status(201).json({
@@ -209,10 +209,10 @@ router.get('/user', authenticateToken, async (req, res) => {
   try {
     const firebaseUser = await auth.getUser(req.user.uid);
     
-    // Get user profile from database
+      // Get user profile from database (decrypt email)
     const result = await db.query(
-      'SELECT * FROM user_personal_info WHERE user_id = $1',
-      [req.user.uid]
+      `SELECT user_id, pgp_sym_decrypt(email_encrypted, $1) as email, first_name, last_name, created_at, updated_at FROM user_personal_info WHERE user_id = $2`,
+      [process.env.ENCRYPTION_KEY, req.user.uid]
     );
     
     const userProfile = result.rows[0] || {};
@@ -274,13 +274,13 @@ router.delete('/delete-account/:userId', authenticateToken, authorizeUser, async
     
     // Delete/anonymize from database
     await db.query(
-      `UPDATE user_personal_info 
+            `UPDATE user_personal_info 
        SET first_name = 'DELETED', 
            last_name = 'DELETED',
-           email = $1,
+           email_encrypted = pgp_sym_encrypt($1, $2),
            updated_at = NOW()
-       WHERE user_id = $2`,
-      [`deleted_${userId}@deleted.local`, userId]
+       WHERE user_id = $3`,
+      [`deleted_${userId}@deleted.local`, process.env.ENCRYPTION_KEY, userId]
     );
     
     // Delete associated data

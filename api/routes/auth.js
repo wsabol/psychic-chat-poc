@@ -45,11 +45,11 @@ router.post('/register-firebase-user', async (req, res) => {
       return res.json({ success: true, message: 'User already exists' });
     }
 
-    // Create user record in database
+        // Create user record in database - encrypt email
     await db.query(
-      `INSERT INTO user_personal_info (user_id, email, email_verified, created_at, updated_at)
-       VALUES ($1, $2, false, NOW(), NOW())`,
-      [userId, email]
+      `INSERT INTO user_personal_info (user_id, email_encrypted, email_verified, created_at, updated_at)
+       VALUES ($1, pgp_sym_encrypt($2, $3), false, NOW(), NOW())`,
+      [userId, email, process.env.ENCRYPTION_KEY]
     );
 
         // Create 2FA settings
@@ -106,10 +106,10 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Invalid phone number format' });
     }
 
-    // Check if email already exists
+        // Check if email already exists - decrypt to compare
     const existingUser = await db.query(
-      'SELECT user_id FROM user_personal_info WHERE email = $1',
-      [email]
+      `SELECT user_id FROM user_personal_info WHERE pgp_sym_decrypt(email_encrypted, $1) = $2`,
+      [process.env.ENCRYPTION_KEY, email]
     );
 
     if (existingUser.rows.length > 0) {
@@ -124,11 +124,12 @@ router.post('/register', async (req, res) => {
     await db.query('BEGIN');
 
     try {
-      // Create user record with auto-verified email (for testing - remove in production)
+            // Create user record with auto-verified email (for testing - remove in production)
+      // Encrypt email before storing
       await db.query(
-        `INSERT INTO user_personal_info (user_id, email, password_hash, email_verified, email_verified_at, created_at, updated_at)
-         VALUES ($1, $2, $3, true, NOW(), NOW(), NOW())`,
-        [userId, email, passwordHash]
+        `INSERT INTO user_personal_info (user_id, email_encrypted, password_hash, email_verified, email_verified_at, created_at, updated_at)
+         VALUES ($1, pgp_sym_encrypt($2, $3), $4, true, NOW(), NOW(), NOW())`,
+        [userId, email, process.env.ENCRYPTION_KEY, passwordHash]
       );
 
       // Create 2FA settings (default: enabled with SMS)
@@ -271,10 +272,10 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Email and password required' });
     }
 
-    // Find user by email
+        // Find user by email - decrypt to compare
     const userResult = await db.query(
-      'SELECT user_id, password_hash, email_verified FROM user_personal_info WHERE email = $1',
-      [email]
+      `SELECT user_id, password_hash, email_verified FROM user_personal_info WHERE pgp_sym_decrypt(email_encrypted, $1) = $2`,
+      [process.env.ENCRYPTION_KEY, email]
     );
 
         if (userResult.rows.length === 0) {
@@ -388,10 +389,9 @@ router.post('/login', async (req, res) => {
       details: { email }
     });
 
-    return res.json({
+        return res.json({
       success: true,
       userId: user.user_id,
-      email: email,
       token,
       refreshToken,
       requires2FA: false,
@@ -477,10 +477,10 @@ router.post('/forgot-password', async (req, res) => {
       return res.status(400).json({ error: 'Email required' });
     }
 
-    // Find user by email
+        // Find user by email - decrypt to compare
     const userResult = await db.query(
-      'SELECT user_id FROM user_personal_info WHERE email = $1',
-      [email]
+      `SELECT user_id FROM user_personal_info WHERE pgp_sym_decrypt(email_encrypted, $1) = $2`,
+      [process.env.ENCRYPTION_KEY, email]
     );
 
     if (userResult.rows.length === 0) {

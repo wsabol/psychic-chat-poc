@@ -6,7 +6,7 @@ const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 export async function fetchUserPersonalInfo(userId) {
     try {
         const { rows } = await db.query(`
-            SELECT first_name, last_name, email, birth_date, birth_time, birth_country, birth_province, birth_city, birth_timezone, sex, address_preference 
+            SELECT first_name, last_name, birth_date, birth_time, birth_country, birth_province, birth_city, birth_timezone, sex, address_preference 
             FROM user_personal_info WHERE user_id = $1
         `, [userId]);
         return rows.length > 0 ? rows[0] : null;
@@ -35,7 +35,10 @@ export async function fetchUserAstrology(userId) {
 
 export async function isTemporaryUser(userId) {
     try {
-        const { rows } = await db.query("SELECT email FROM user_personal_info WHERE user_id = $1", [userId]);
+        const { rows } = await db.query(
+            `SELECT pgp_sym_decrypt(email_encrypted, $1) as email FROM user_personal_info WHERE user_id = $2`,
+            [process.env.ENCRYPTION_KEY, userId]
+        );
         if (rows.length > 0 && rows[0].email) {
             return rows[0].email.includes('temp_');
         }

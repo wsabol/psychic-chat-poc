@@ -184,4 +184,74 @@ router.post("/migrate-chat-history", authenticateToken, async (req, res) => {
     }
 });
 
+/**
+ * POST /migration/run-schema-updates
+ * Run schema updates (email encryption migration)
+ * Admin endpoint - requires authentication
+ */
+router.post("/run-schema-updates", async (req, res) => {
+    try {
+        console.log('[SCHEMA UPDATE] Starting email encryption migration...');
+        
+        // Step 1: Add encrypted email column
+        console.log('[SCHEMA UPDATE] Step 1: Adding email_encrypted column...');
+        await db.query(`
+            ALTER TABLE user_personal_info
+            ADD COLUMN IF NOT EXISTS email_encrypted BYTEA;
+        `);
+        console.log('[SCHEMA UPDATE] ✅ Column added');
+        
+        // Step 2: Encrypt all existing plaintext emails
+        console.log('[SCHEMA UPDATE] Step 2: Encrypting existing emails...');
+        const encryptResult = await db.query(`
+            UPDATE user_personal_info
+            SET email_encrypted = pgp_sym_encrypt(email, $1)
+            WHERE email_encrypted IS NULL AND email IS NOT NULL
+        `, [process.env.ENCRYPTION_KEY]);
+        console.log(`[SCHEMA UPDATE] ✅ Encrypted ${encryptResult.rowCount} rows`);
+        
+        // Step 3: Verify encryption
+        console.log('[SCHEMA UPDATE] Step 3: Verifying encryption...');
+        const encryptedCount = await db.query(`
+            SELECT COUNT(*) as count FROM user_personal_info 
+            WHERE email_encrypted IS NOT NULL
+        `);
+        console.log(`[SCHEMA UPDATE] ✅ Encrypted count: ${encryptedCount.rows[0].count}`);
+        
+        // Step 4: Verify no data loss
+        console.log('[SCHEMA UPDATE] Step 4: Verifying no data loss...');
+        const plaintextCount = await db.query(`
+            SELECT COUNT(*) as count FROM user_personal_info 
+            WHERE email IS NOT NULL AND email_encrypted IS NULL
+        `);
+        console.log(`[SCHEMA UPDATE] ✅ Unencrypted count: ${plaintextCount.rows[0].count}`);
+        
+        // Step 5: Drop plaintext email column
+        console.log('[SCHEMA UPDATE] Step 5: Dropping plaintext email column...');
+        await db.query(`
+            ALTER TABLE user_personal_info
+            DROP COLUMN IF EXISTS email CASCADE;
+        `);
+        console.log('[SCHEMA UPDATE] ✅ Column dropped');
+        
+        console.log('[SCHEMA UPDATE] 🎉 Migration complete!');
+        
+        res.json({ 
+            success: true, 
+            message: 'Schema update complete',
+            details: {
+                encryptedRows: encryptResult.rowCount,
+                totalEncrypted: encryptedCount.rows[0].count,
+                unencrypted: plaintextCount.rows[0].count
+            }
+        });
+    } catch (error) {
+        console.error('[SCHEMA UPDATE] ❌ Error:', error.message);
+        res.status(500).json({ 
+            success: false,
+            error: 'Schema update failed: ' + error.message
+        });
+    }
+});
+
 export default router;

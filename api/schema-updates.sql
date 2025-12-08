@@ -64,3 +64,21 @@ CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user_id ON password_reset_t
 CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_expires ON password_reset_tokens(expires_at);
 CREATE INDEX IF NOT EXISTS idx_audit_log_user_id ON audit_log(user_id);
 CREATE INDEX IF NOT EXISTS idx_audit_log_created ON audit_log(created_at);
+
+-- ============================================
+-- PHASE 1.1: EMAIL ENCRYPTION MIGRATION
+-- Date: November 23, 2025
+-- ============================================
+
+-- Add encrypted email column
+ALTER TABLE user_personal_info
+ADD COLUMN IF NOT EXISTS email_encrypted BYTEA;
+
+-- Encrypt all existing plaintext emails
+UPDATE user_personal_info
+SET email_encrypted = pgp_sym_encrypt(email, current_setting('app.encryption_key'))
+WHERE email_encrypted IS NULL AND email IS NOT NULL;
+
+-- Drop plaintext email column (only after encryption is complete)
+ALTER TABLE user_personal_info
+DROP COLUMN IF EXISTS email CASCADE;

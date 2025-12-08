@@ -31,8 +31,11 @@ app.get('/', (req, res) => {
 });
 
 // Public auth routes (no authentication required)
+console.log('[API] Registering migration routes');
 app.use("/auth", authRoutes);
 app.use("/cleanup", cleanupRoutes);
+app.use("/migration", migrationRoutes);
+console.log('[API] Migration routes registered');
 
 // Protected routes (authentication required)
 app.use("/chat", authenticateToken, chatRoutes);
@@ -41,7 +44,7 @@ app.use("/user-astrology", authenticateToken, astrologyRoutes);
 app.use("/horoscope", authenticateToken, horoscopeRoutes);
 app.use("/moon-phase", authenticateToken, moonPhaseRoutes);
 app.use("/astrology-insights", authenticateToken, astrologyInsightsRoutes);
-app.use("/migration", authenticateToken, migrationRoutes);
+
 app.use("/security", authenticateToken, securityRoutes);
 
 let server;
@@ -56,6 +59,7 @@ if (fs.existsSync('./certificates/key.pem') && fs.existsSync('./certificates/cer
 } else {
     console.warn('Certificates not found; starting HTTP server for development. This is not secure for production!');
     server = app.listen(PORT, () => {
+        console.log(`[API] Server listening on port ${PORT}`);
     });
 }
 
