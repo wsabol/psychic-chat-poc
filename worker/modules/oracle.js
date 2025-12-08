@@ -6,9 +6,9 @@ const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 export async function fetchUserPersonalInfo(userId) {
     try {
         const { rows } = await db.query(`
-            SELECT first_name, last_name, birth_date, birth_time, birth_country, birth_province, birth_city, birth_timezone, sex, address_preference 
-            FROM user_personal_info WHERE user_id = $1
-        `, [userId]);
+            SELECT pgp_sym_decrypt(first_name_encrypted, $1) as first_name, pgp_sym_decrypt(last_name_encrypted, $1) as last_name, pgp_sym_decrypt(birth_date_encrypted, $1) as birth_date, pgp_sym_decrypt(birth_time_encrypted, $1) as birth_time, pgp_sym_decrypt(birth_country_encrypted, $1) as birth_country, pgp_sym_decrypt(birth_province_encrypted, $1) as birth_province, pgp_sym_decrypt(birth_city_encrypted, $1) as birth_city, pgp_sym_decrypt(birth_timezone_encrypted, $1) as birth_timezone, pgp_sym_decrypt(sex_encrypted, $1) as sex, pgp_sym_decrypt(address_preference_encrypted, $1) as address_preference 
+            FROM user_personal_info WHERE user_id = $2
+        `, [process.env.ENCRYPTION_KEY, userId]);
         return rows.length > 0 ? rows[0] : null;
     } catch (err) {
         console.error('[ORACLE] Error fetching personal info:', err);

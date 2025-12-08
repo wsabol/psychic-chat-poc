@@ -9,9 +9,9 @@ export async function handleAstrologyCalculation(userId) {
     try {
         // Fetch user's personal information
         const { rows: personalInfoRows } = await db.query(`
-            SELECT to_char(birth_date, 'YYYY-MM-DD') as birth_date, birth_time, birth_country, birth_province, birth_city, birth_timezone
-            FROM user_personal_info WHERE user_id = $1
-        `, [userId]);
+            SELECT pgp_sym_decrypt(birth_date_encrypted, $1) as birth_date, pgp_sym_decrypt(birth_time_encrypted, $1) as birth_time, pgp_sym_decrypt(birth_country_encrypted, $1) as birth_country, pgp_sym_decrypt(birth_province_encrypted, $1) as birth_province, pgp_sym_decrypt(birth_city_encrypted, $1) as birth_city, pgp_sym_decrypt(birth_timezone_encrypted, $1) as birth_timezone
+            FROM user_personal_info WHERE user_id = $2
+        `, [process.env.ENCRYPTION_KEY, userId]);
         
         if (personalInfoRows.length === 0) {
             console.warn('[ASTROLOGY-HANDLER] No personal info found for user', userId);

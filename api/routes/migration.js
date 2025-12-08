@@ -316,4 +316,70 @@ router.post("/run-phase-1-2", async (req, res) => {
     }
 });
 
+/**
+ * POST /migration/run-phase-1-3
+ * Run Phase 1.3: Encrypt name and birth information fields
+ */
+router.post("/run-phase-1-3", async (req, res) => {
+    try {
+        console.log('[PHASE 1.3] Starting name and birth information encryption...');
+        
+        // Step 1: Add encrypted columns
+        console.log('[PHASE 1.3] Step 1: Adding encrypted columns...');
+        await db.query(`ALTER TABLE user_personal_info ADD COLUMN IF NOT EXISTS first_name_encrypted BYTEA;`);
+        await db.query(`ALTER TABLE user_personal_info ADD COLUMN IF NOT EXISTS last_name_encrypted BYTEA;`);
+        await db.query(`ALTER TABLE user_personal_info ADD COLUMN IF NOT EXISTS birth_date_encrypted BYTEA;`);
+        await db.query(`ALTER TABLE user_personal_info ADD COLUMN IF NOT EXISTS birth_time_encrypted BYTEA;`);
+        await db.query(`ALTER TABLE user_personal_info ADD COLUMN IF NOT EXISTS birth_country_encrypted BYTEA;`);
+        await db.query(`ALTER TABLE user_personal_info ADD COLUMN IF NOT EXISTS birth_province_encrypted BYTEA;`);
+        await db.query(`ALTER TABLE user_personal_info ADD COLUMN IF NOT EXISTS birth_city_encrypted BYTEA;`);
+        await db.query(`ALTER TABLE user_personal_info ADD COLUMN IF NOT EXISTS birth_timezone_encrypted BYTEA;`);
+        console.log('[PHASE 1.3] ✅ Columns added');
+        
+        // Step 2: Encrypt all name and birth fields
+        console.log('[PHASE 1.3] Step 2: Encrypting fields...');
+        const firstNameResult = await db.query(`UPDATE user_personal_info SET first_name_encrypted = pgp_sym_encrypt(first_name, $1) WHERE first_name_encrypted IS NULL AND first_name IS NOT NULL`, [process.env.ENCRYPTION_KEY]);
+        const lastNameResult = await db.query(`UPDATE user_personal_info SET last_name_encrypted = pgp_sym_encrypt(last_name, $1) WHERE last_name_encrypted IS NULL AND last_name IS NOT NULL`, [process.env.ENCRYPTION_KEY]);
+        const birthDateResult = await db.query(`UPDATE user_personal_info SET birth_date_encrypted = pgp_sym_encrypt(birth_date::text, $1) WHERE birth_date_encrypted IS NULL AND birth_date IS NOT NULL`, [process.env.ENCRYPTION_KEY]);
+        const birthTimeResult = await db.query(`UPDATE user_personal_info SET birth_time_encrypted = pgp_sym_encrypt(birth_time::text, $1) WHERE birth_time_encrypted IS NULL AND birth_time IS NOT NULL`, [process.env.ENCRYPTION_KEY]);
+        const birthCountryResult = await db.query(`UPDATE user_personal_info SET birth_country_encrypted = pgp_sym_encrypt(birth_country, $1) WHERE birth_country_encrypted IS NULL AND birth_country IS NOT NULL`, [process.env.ENCRYPTION_KEY]);
+        const birthProvinceResult = await db.query(`UPDATE user_personal_info SET birth_province_encrypted = pgp_sym_encrypt(birth_province, $1) WHERE birth_province_encrypted IS NULL AND birth_province IS NOT NULL`, [process.env.ENCRYPTION_KEY]);
+        const birthCityResult = await db.query(`UPDATE user_personal_info SET birth_city_encrypted = pgp_sym_encrypt(birth_city, $1) WHERE birth_city_encrypted IS NULL AND birth_city IS NOT NULL`, [process.env.ENCRYPTION_KEY]);
+        const birthTimezoneResult = await db.query(`UPDATE user_personal_info SET birth_timezone_encrypted = pgp_sym_encrypt(birth_timezone, $1) WHERE birth_timezone_encrypted IS NULL AND birth_timezone IS NOT NULL`, [process.env.ENCRYPTION_KEY]);
+        console.log(`[PHASE 1.3] ✅ Encrypted: firstName=${firstNameResult.rowCount}, lastName=${lastNameResult.rowCount}, birthDate=${birthDateResult.rowCount}, birthTime=${birthTimeResult.rowCount}, birthCountry=${birthCountryResult.rowCount}, birthProvince=${birthProvinceResult.rowCount}, birthCity=${birthCityResult.rowCount}, birthTimezone=${birthTimezoneResult.rowCount}`);
+        
+        // Step 3: Drop plaintext columns
+        console.log('[PHASE 1.3] Step 3: Dropping plaintext columns...');
+        await db.query(`ALTER TABLE user_personal_info DROP COLUMN IF EXISTS first_name CASCADE;`);
+        await db.query(`ALTER TABLE user_personal_info DROP COLUMN IF EXISTS last_name CASCADE;`);
+        await db.query(`ALTER TABLE user_personal_info DROP COLUMN IF EXISTS birth_date CASCADE;`);
+        await db.query(`ALTER TABLE user_personal_info DROP COLUMN IF EXISTS birth_time CASCADE;`);
+        await db.query(`ALTER TABLE user_personal_info DROP COLUMN IF EXISTS birth_country CASCADE;`);
+        await db.query(`ALTER TABLE user_personal_info DROP COLUMN IF EXISTS birth_province CASCADE;`);
+        await db.query(`ALTER TABLE user_personal_info DROP COLUMN IF EXISTS birth_city CASCADE;`);
+        await db.query(`ALTER TABLE user_personal_info DROP COLUMN IF EXISTS birth_timezone CASCADE;`);
+        console.log('[PHASE 1.3] ✅ Columns dropped');
+        
+        console.log('[PHASE 1.3] 🎉 Migration complete!');
+        
+        res.json({
+            success: true,
+            message: 'Phase 1.3 migration complete',
+            details: {
+                firstNameEncrypted: firstNameResult.rowCount,
+                lastNameEncrypted: lastNameResult.rowCount,
+                birthDateEncrypted: birthDateResult.rowCount,
+                birthTimeEncrypted: birthTimeResult.rowCount,
+                birthCountryEncrypted: birthCountryResult.rowCount,
+                birthProvinceEncrypted: birthProvinceResult.rowCount,
+                birthCityEncrypted: birthCityResult.rowCount,
+                birthTimezoneEncrypted: birthTimezoneResult.rowCount
+            }
+        });
+    } catch (error) {
+        console.error('[PHASE 1.3] ❌ Error:', error.message);
+        res.status(500).json({ success: false, error: 'Phase 1.3 migration failed: ' + error.message });
+    }
+});
+
 export default router;
