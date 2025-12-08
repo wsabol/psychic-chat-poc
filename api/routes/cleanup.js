@@ -53,8 +53,8 @@ router.delete("/cleanup-old-temp-accounts", async (req, res) => {
     try {
         const oneDayAgo = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000);
                 const { rows: oldTempUsers } = await db.query(
-            `SELECT user_id FROM user_personal_info WHERE email LIKE 'temp%' AND created_at < $1 LIMIT 500`,
-            [oneDayAgo]
+            `SELECT user_id FROM user_personal_info WHERE pgp_sym_decrypt(email_encrypted, $1) LIKE 'temp%' AND created_at < $2 LIMIT 500`,
+            [process.env.ENCRYPTION_KEY, oneDayAgo]
         );
         let deletedCount = 0;
         const uids = oldTempUsers.map(u => u.user_id);

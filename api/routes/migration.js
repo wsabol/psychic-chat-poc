@@ -254,4 +254,66 @@ router.post("/run-schema-updates", async (req, res) => {
     }
 });
 
+/**
+ * POST /migration/run-phase-1-2
+ * Run Phase 1.2: Encrypt additional sensitive fields (sex, familiar_name, phone numbers)
+ */
+router.post("/run-phase-1-2", async (req, res) => {
+    try {
+        console.log('[PHASE 1.2] Starting additional field encryption migration...');
+        
+        // Step 1: Add encrypted columns
+        console.log('[PHASE 1.2] Step 1: Adding encrypted columns...');
+                await db.query(`ALTER TABLE user_personal_info ADD COLUMN IF NOT EXISTS sex_encrypted BYTEA;`);
+        await db.query(`ALTER TABLE user_personal_info ADD COLUMN IF NOT EXISTS address_preference_encrypted BYTEA;`);
+        await db.query(`ALTER TABLE user_2fa_settings ADD COLUMN IF NOT EXISTS phone_number_encrypted BYTEA;`);
+        await db.query(`ALTER TABLE user_2fa_settings ADD COLUMN IF NOT EXISTS backup_phone_number_encrypted BYTEA;`);
+        console.log('[PHASE 1.2] ✅ Columns added');
+        
+        // Step 2: Encrypt sex
+        console.log('[PHASE 1.2] Step 2: Encrypting sex field...');
+        const sexResult = await db.query(`UPDATE user_personal_info SET sex_encrypted = pgp_sym_encrypt(sex, $1) WHERE sex_encrypted IS NULL AND sex IS NOT NULL`, [process.env.ENCRYPTION_KEY]);
+        console.log(`[PHASE 1.2] ✅ Encrypted ${sexResult.rowCount} sex values`);
+        
+                // Step 3: Encrypt address_preference
+        console.log('[PHASE 1.2] Step 3: Encrypting address_preference...');
+        const addressResult = await db.query(`UPDATE user_personal_info SET address_preference_encrypted = pgp_sym_encrypt(address_preference, $1) WHERE address_preference_encrypted IS NULL AND address_preference IS NOT NULL`, [process.env.ENCRYPTION_KEY]);
+        console.log(`[PHASE 1.2] ✅ Encrypted ${addressResult.rowCount} address preferences`);
+        
+        // Step 4: Encrypt phone numbers
+        console.log('[PHASE 1.2] Step 4: Encrypting phone numbers...');
+        const phoneResult = await db.query(`UPDATE user_2fa_settings SET phone_number_encrypted = pgp_sym_encrypt(phone_number::text, $1) WHERE phone_number_encrypted IS NULL AND phone_number IS NOT NULL`, [process.env.ENCRYPTION_KEY]);
+        console.log(`[PHASE 1.2] ✅ Encrypted ${phoneResult.rowCount} phone numbers`);
+        
+        // Step 5: Encrypt backup phones
+        console.log('[PHASE 1.2] Step 5: Encrypting backup phone numbers...');
+        const backupResult = await db.query(`UPDATE user_2fa_settings SET backup_phone_number_encrypted = pgp_sym_encrypt(backup_phone_number::text, $1) WHERE backup_phone_number_encrypted IS NULL AND backup_phone_number IS NOT NULL`, [process.env.ENCRYPTION_KEY]);
+        console.log(`[PHASE 1.2] ✅ Encrypted ${backupResult.rowCount} backup phones`);
+        
+        // Step 6: Drop plaintext columns
+        console.log('[PHASE 1.2] Step 6: Dropping plaintext columns...');
+                await db.query(`ALTER TABLE user_personal_info DROP COLUMN IF EXISTS sex CASCADE;`);
+        await db.query(`ALTER TABLE user_personal_info DROP COLUMN IF EXISTS address_preference CASCADE;`);
+        await db.query(`ALTER TABLE user_2fa_settings DROP COLUMN IF EXISTS phone_number CASCADE;`);
+        await db.query(`ALTER TABLE user_2fa_settings DROP COLUMN IF EXISTS backup_phone_number CASCADE;`);
+        console.log('[PHASE 1.2] ✅ Columns dropped');
+        
+        console.log('[PHASE 1.2] 🎉 Migration complete!');
+        
+        res.json({
+            success: true,
+            message: 'Phase 1.2 migration complete',
+            details: {
+                                sexEncrypted: sexResult.rowCount,
+                addressPreferenceEncrypted: addressResult.rowCount,
+                phonesEncrypted: phoneResult.rowCount,
+                backupPhonesEncrypted: backupResult.rowCount
+            }
+        });
+    } catch (error) {
+        console.error('[PHASE 1.2] ❌ Error:', error.message);
+        res.status(500).json({ success: false, error: 'Phase 1.2 migration failed: ' + error.message });
+    }
+});
+
 export default router;

@@ -82,3 +82,47 @@ WHERE email_encrypted IS NULL AND email IS NOT NULL;
 -- Drop plaintext email column (only after encryption is complete)
 ALTER TABLE user_personal_info
 DROP COLUMN IF EXISTS email CASCADE;
+
+-- ============================================
+-- PHASE 1.2: ADDITIONAL FIELD ENCRYPTION
+-- Date: November 23, 2025
+-- Fields: phone_number, sex, familiar_name (user_personal_info)
+--         phone_number, backup_phone_number (user_2fa_settings)
+-- ============================================
+
+-- Add encrypted columns to user_personal_info
+ALTER TABLE user_personal_info
+ADD COLUMN IF NOT EXISTS sex_encrypted BYTEA,
+ADD COLUMN IF NOT EXISTS familiar_name_encrypted BYTEA;
+
+-- Encrypt existing sex and familiar_name data
+UPDATE user_personal_info
+SET sex_encrypted = pgp_sym_encrypt(sex, current_setting('app.encryption_key'))
+WHERE sex_encrypted IS NULL AND sex IS NOT NULL;
+
+UPDATE user_personal_info
+SET familiar_name_encrypted = pgp_sym_encrypt(familiar_name, current_setting('app.encryption_key'))
+WHERE familiar_name_encrypted IS NULL AND familiar_name IS NOT NULL;
+
+-- Add encrypted columns to user_2fa_settings
+ALTER TABLE user_2fa_settings
+ADD COLUMN IF NOT EXISTS phone_number_encrypted BYTEA,
+ADD COLUMN IF NOT EXISTS backup_phone_number_encrypted BYTEA;
+
+-- Encrypt phone numbers in 2FA settings
+UPDATE user_2fa_settings
+SET phone_number_encrypted = pgp_sym_encrypt(phone_number::text, current_setting('app.encryption_key'))
+WHERE phone_number_encrypted IS NULL AND phone_number IS NOT NULL;
+
+UPDATE user_2fa_settings
+SET backup_phone_number_encrypted = pgp_sym_encrypt(backup_phone_number::text, current_setting('app.encryption_key'))
+WHERE backup_phone_number_encrypted IS NULL AND backup_phone_number IS NOT NULL;
+
+-- Drop plaintext columns (after verification)
+ALTER TABLE user_personal_info
+DROP COLUMN IF EXISTS sex CASCADE,
+DROP COLUMN IF EXISTS familiar_name CASCADE;
+
+ALTER TABLE user_2fa_settings
+DROP COLUMN IF EXISTS phone_number CASCADE,
+DROP COLUMN IF EXISTS backup_phone_number CASCADE;

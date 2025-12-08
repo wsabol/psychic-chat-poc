@@ -31,9 +31,9 @@ function parseDateForStorage(dateString) {
 router.get("/:userId", authorizeUser, async (req, res) => {
     const { userId } = req.params;
     try {
-        const { rows } = await db.query(
-            "SELECT first_name, last_name, email, to_char(birth_date, 'YYYY-MM-DD') AS birth_date, birth_time, birth_country, birth_province, birth_city, birth_timezone, sex, address_preference FROM user_personal_info WHERE user_id = $1",
-            [userId]
+                const { rows } = await db.query(
+            `SELECT first_name, last_name, to_char(birth_date, 'YYYY-MM-DD') AS birth_date, birth_time, birth_country, birth_province, birth_city, birth_timezone, pgp_sym_decrypt(sex_encrypted, $1) as sex, pgp_sym_decrypt(address_preference_encrypted, $1) as address_preference FROM user_personal_info WHERE user_id = $2`,
+            [process.env.ENCRYPTION_KEY, userId]
         );
         if (rows.length === 0) {
             return res.json({});
@@ -75,24 +75,24 @@ router.post("/:userId", authorizeUser, async (req, res) => {
         const safeTimezone = birthTimezone && birthTimezone.trim() ? birthTimezone : null;
         const safeAddressPreference = addressPreference && addressPreference.trim() ? addressPreference : null;
 
-        await db.query(
+                        await db.query(
             `INSERT INTO user_personal_info 
-             (user_id, first_name, last_name, email, birth_date, birth_time, birth_country, birth_province, birth_city, birth_timezone, sex, address_preference)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-             ON CONFLICT (user_id) DO UPDATE SET
+             (user_id, first_name, last_name, email_encrypted, birth_date, birth_time, birth_country, birth_province, birth_city, birth_timezone, sex_encrypted, address_preference_encrypted)
+             VALUES ($1, $2, $3, pgp_sym_encrypt($4, $5), $6, $7, $8, $9, $10, $11, pgp_sym_encrypt($12, $5), pgp_sym_encrypt($13, $5))
+                          ON CONFLICT (user_id) DO UPDATE SET
              first_name = EXCLUDED.first_name,
              last_name = EXCLUDED.last_name,
-             email = EXCLUDED.email,
+             email_encrypted = EXCLUDED.email_encrypted,
              birth_date = EXCLUDED.birth_date,
              birth_time = EXCLUDED.birth_time,
              birth_country = EXCLUDED.birth_country,
              birth_province = EXCLUDED.birth_province,
              birth_city = EXCLUDED.birth_city,
              birth_timezone = EXCLUDED.birth_timezone,
-             sex = EXCLUDED.sex,
-             address_preference = EXCLUDED.address_preference,
+                          sex_encrypted = EXCLUDED.sex_encrypted,
+             address_preference_encrypted = EXCLUDED.address_preference_encrypted,
              updated_at = CURRENT_TIMESTAMP`,
-            [userId, firstName || 'Temporary', lastName || 'User', email, parsedBirthDate, safeTime, safeCountry, safeProvince, safeCity, safeTimezone, sex || 'Unspecified', safeAddressPreference]
+            [userId, firstName || 'Temporary', lastName || 'User', email, process.env.ENCRYPTION_KEY, parsedBirthDate, safeTime, safeCountry, safeProvince, safeCity, safeTimezone, sex || 'Unspecified', safeAddressPreference]
         );
 
         // Clear cached horoscopes and astrology insights since birth data changed
