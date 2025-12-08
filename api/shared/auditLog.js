@@ -40,15 +40,11 @@ export async function logAudit(db, options) {
     durationMs = null                 // Request duration in milliseconds
   } = options;
 
-  console.log('[AUDIT] logAudit called with action:', action);
-
   // Validate required fields
   if (!action) {
     console.error('[AUDIT] ERROR: action is required for audit log');
     return;
   }
-  
-  console.log('[AUDIT] Inserting audit log: action=' + action + ', userId=' + userId + ', status=' + status);
 
   // Sanitize error message to prevent log injection
   let sanitizedErrorMessage = null;

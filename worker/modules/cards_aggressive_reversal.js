@@ -51,12 +51,9 @@ export function extractCardsFromResponse(responseText, deck) {
             });
             foundCardIds.add(match.card.id);
             
-            console.log(`[CARDS] Found ${match.card.name}${match.inverted ? ' (REVERSED)' : ' (upright)'}`);
+
         }
     }
-    
-    console.log(`[CARDS] ✓ Extracted ${extractedCards.length} cards:`, 
-                extractedCards.map(c => `${c.name}${c.inverted ? ' [REV]' : ''}`).join(', '));
     
     return extractedCards;
 }

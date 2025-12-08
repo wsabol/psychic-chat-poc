@@ -23,17 +23,15 @@ export async function generateCosmicWeather(userId) {
                 moonPhase = moonData.phase;
             }
             
-            console.log('[COSMIC-WEATHER] Calling getCurrentPlanets()...');
             const planetsData = await getCurrentPlanets();
-            console.log('[COSMIC-WEATHER] getCurrentPlanets returned:', JSON.stringify(planetsData));
             if (planetsData && planetsData.success && planetsData.planets && planetsData.planets.length > 0) {
                 planets = planetsData.planets;
-                console.log('[COSMIC-WEATHER] ✓ Planets set, count:', planets.length);
+
             } else {
-                console.warn('[COSMIC-WEATHER] ✗ Planets empty or failed:', planetsData);
+
             }
         } catch (err) {
-            console.error('[COSMIC-WEATHER] Astro fetch EXCEPTION:', err.message, err);
+
         }
         
         const currentPlanets = planets

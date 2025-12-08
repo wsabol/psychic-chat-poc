@@ -273,11 +273,8 @@ export async function recordViolationAndGetAction(userId, violationType, userMes
             [userId, violationType, violationCount, userMessage.substring(0, 500)]
         );
         
-        console.log(`[VIOLATION] Violation recorded for user ${userId}: ${violationType} (count: ${violationCount})`);
-        
         // TEMP ACCOUNT: Delete immediately on any violation
         if (isTemporaryUser) {
-            console.log(`[VIOLATION] Temp account violation - marking for deletion: ${userId}`);
             return {
                 action: 'TEMP_ACCOUNT_DELETED',
                 violationCount: violationCount,
@@ -288,7 +285,6 @@ export async function recordViolationAndGetAction(userId, violationType, userMes
         // ESTABLISHED ACCOUNT: Enforce based on violation count
         if (violationCount === 1) {
             // First offense: Warning
-            console.log(`[VIOLATION] First violation for user ${userId}: ${violationType}`);
             return {
                 action: 'WARNING',
                 violationCount: violationCount,
@@ -296,7 +292,6 @@ export async function recordViolationAndGetAction(userId, violationType, userMes
             };
         } else if (violationCount === 2) {
             // Second offense: 7-day suspension
-            console.log(`[VIOLATION] Second violation for user ${userId}: ${violationType} - Suspending for 7 days`);
             const suspensionEnd = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
             
             await db.query(
@@ -312,8 +307,6 @@ export async function recordViolationAndGetAction(userId, violationType, userMes
             };
         } else {
             // Third+ offense: Permanent ban
-            console.log(`[VIOLATION] Third+ violation for user ${userId}: ${violationType} - Permanently disabling account`);
-            
             // Mark as disabled in database
             await db.query(
                 `UPDATE user_violations SET is_account_disabled = TRUE WHERE user_id = $1`,

@@ -6,9 +6,6 @@ export function extractCardsFromResponse(responseText, deck) {
     const extractedCards = [];
     const foundCardIds = new Set();
     
-    console.log('[CARDS] Starting extraction...');
-    console.log('[CARDS] Deck has', deck.length, 'cards');
-    
     // Step 1: Find bolded card patterns
     const boldCardPattern = /\*\*([^*]+)\*\*/g;
     const boldMatches = [];

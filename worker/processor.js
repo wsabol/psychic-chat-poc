@@ -59,7 +59,6 @@ async function updateMoonPhaseCache() {
  */
 async function cleanupOldTempAccounts() {
     try {
-        console.log('[CLEANUP] Running cleanup job for old temporary accounts...');
         const response = await fetch(`${API_URL}/cleanup/cleanup-old-temp-accounts`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' }
@@ -67,7 +66,6 @@ async function cleanupOldTempAccounts() {
         
         if (response.ok) {
             const result = await response.json();
-            console.log('[CLEANUP] ✓ Cleanup complete:', result.message, `(${result.deletedCount} accounts deleted)`);
         } else {
             console.error('[CLEANUP] ✗ Cleanup failed with status:', response.status);
         }
@@ -87,7 +85,6 @@ export async function workerLoop() {
     setInterval(updateMoonPhaseCache, 3600000);
     
     // Run cleanup job every 24 hours (86400000 ms)
-    console.log('[CLEANUP] Scheduling cleanup job to run every 24 hours');
     setInterval(cleanupOldTempAccounts, 86400000);
     
     // Also run cleanup once on startup (after 5 seconds delay to let system initialize)

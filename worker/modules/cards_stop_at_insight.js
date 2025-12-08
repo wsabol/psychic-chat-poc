@@ -2,7 +2,6 @@
  * Card Extraction - Stop before "Astrological Insight" section
  */
 export function extractCardsFromResponse(responseText, deck) {
-    console.log('[CARDS] Starting extraction...');
     
     // IMPORTANT: Only search for cards BEFORE the "Astrological Insight" section
     // This prevents picking up card names mentioned in astrology/interpretation
@@ -22,7 +21,6 @@ export function extractCardsFromResponse(responseText, deck) {
     
     if (cutoffIndex !== -1) {
         searchText = responseText.substring(0, cutoffIndex);
-        console.log(`[CARDS] Limiting search to before position ${cutoffIndex}`);
     }
     
     const allMatches = [];
@@ -81,14 +79,8 @@ export function extractCardsFromResponse(responseText, deck) {
                 inverted: match.inverted
             });
             foundCardIds.add(match.card.id);
-            
-            console.log(`[CARDS] ✓ Found ${match.card.name}${match.inverted ? ' [REVERSED]' : ''} (${match.source})`);
         }
-    }
-    
-    console.log(`[CARDS] ✓ Extraction complete: ${extractedCards.length} cards`);
-    console.log(`[CARDS] Result:`, extractedCards.map(c => `${c.name}${c.inverted ? ' [REV]' : ''}`).join(', '));
-    
+    }   
     return extractedCards;
 }
 

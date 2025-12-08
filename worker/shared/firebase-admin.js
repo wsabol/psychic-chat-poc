@@ -12,7 +12,6 @@ let serviceAccountPath = null;
 for (const p of possiblePaths) {
   if (fs.existsSync(p)) {
     serviceAccountPath = p;
-    console.log('[FIREBASE] Found firebase-adminsdk-key.json at:', p);
     break;
   }
 }
