@@ -69,11 +69,10 @@ router.get("/:userId/:range", authorizeUser, async (req, res) => {
             return res.status(404).json({ error: `No ${range} horoscope found. Generating now...` });
         }
         
-        console.log(`[HOROSCOPE API] Retrieved ${range} horoscope from database for user ${userId}`);
         res.json({ horoscope: validHoroscope.text, generated_at: validHoroscope.generated_at });
         
     } catch (err) {
-        console.error('[HOROSCOPE API] Error fetching horoscope:', err);
+        console.error('[HOROSCOPE] Error fetching horoscope:', err);
         res.status(500).json({ error: 'Failed to fetch horoscope' });
     }
 });

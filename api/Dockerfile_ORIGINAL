@@ -1,8 +1,4 @@
 FROM node
-
-# Install Python3
-RUN apt-get update && apt-get install -y python3 && rm -rf /var/lib/apt/lists/*
-
 ENV OPENAI_API_KEY=${OPENAI_API_KEY}
 ENV REDIS_URL=${REDIS_URL}
 ENV DATABASE_URL=${DATABASE_URL}

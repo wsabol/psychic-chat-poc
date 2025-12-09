@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getAstrologyFromBirthDate, getZodiacSignFromDate } from '../utils/astroUtils';
 import { COUNTRIES } from '../data/countries';
+import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
 import '../styles/responsive.css';
 import './PersonalInfoPage.css';
 
@@ -72,11 +73,11 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
 
     const fetchPersonalInfo = async () => {
         try {
-            const headers = {};
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
-            }
-            const response = await fetch(`${API_URL}/user-profile/${userId}`, { headers });
+            const response = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}`, { 
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : ''
+                }
+            });
             if (!response.ok) throw new Error('Failed to fetch personal info');
             
             const data = await response.json();
@@ -175,7 +176,7 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
                 dataToSend.sex = dataToSend.sex || 'Unspecified';
             }
 
-            const response = await fetch(`${API_URL}/user-profile/${userId}`, {
+            const response = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',

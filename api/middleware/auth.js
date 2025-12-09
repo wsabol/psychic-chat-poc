@@ -20,9 +20,18 @@ export async function authenticateToken(req, res, next) {
     req.userId = decodedToken.uid;
     
     next();
-  } catch (err) {
-    console.error('Auth error:', err);
-    return res.status(403).json({ error: 'Invalid or expired token' });
+    } catch (err) {
+    // Distinguish between token expired vs other auth errors
+    if (err.code === 'auth/id-token-expired') {
+      console.warn('[AUTH] Token expired - client should refresh:', err.message);
+      return res.status(401).json({ 
+        error: 'Token expired',
+        code: 'TOKEN_EXPIRED'
+      });
+    }
+    
+    console.error('[AUTH] Authentication error:', err.message || err);
+    return res.status(403).json({ error: 'Invalid token' });
   }
 }
 

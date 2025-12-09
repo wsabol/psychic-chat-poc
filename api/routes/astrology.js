@@ -10,7 +10,8 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Helper function to calculate birth chart synchronously via Python script
-function calculateBirthChartSync(birthData) {
+// EXPORTED for use in other routes
+export async function calculateBirthChartSync(birthData) {
     return new Promise((resolve, reject) => {
         const workerDir = path.join(__dirname, '../..', 'worker');
         const python = spawn('python3', ['./astrology.py'], { cwd: workerDir });
@@ -56,12 +57,18 @@ router.post('/sync-calculate/:userId', authorizeUser, async (req, res) => {
     try {
         const { userId } = req.params;
         
-        // Fetch user's personal information
+        // Fetch user's personal information (decrypted)
         const { rows: personalInfoRows } = await db.query(
-            `SELECT birth_date, birth_time, birth_country, birth_province, birth_city, birth_timezone
+            `SELECT 
+                pgp_sym_decrypt(birth_date_encrypted, $1) as birth_date,
+                pgp_sym_decrypt(birth_time_encrypted, $1) as birth_time,
+                pgp_sym_decrypt(birth_country_encrypted, $1) as birth_country,
+                pgp_sym_decrypt(birth_province_encrypted, $1) as birth_province,
+                pgp_sym_decrypt(birth_city_encrypted, $1) as birth_city,
+                pgp_sym_decrypt(birth_timezone_encrypted, $1) as birth_timezone
              FROM user_personal_info 
-             WHERE user_id = $1`,
-            [userId]
+             WHERE user_id = $2`,
+            [process.env.ENCRYPTION_KEY, userId]
         );
         
         if (!personalInfoRows.length) {
@@ -123,13 +130,10 @@ router.post('/sync-calculate/:userId', authorizeUser, async (req, res) => {
     }
 });
 
-// Endpoint to trigger astrology calculation by enqueueing a worker job
-// MUST come before /:userId routes to match first
 router.post('/calculate/:userId', authorizeUser, async (req, res) => {
     try {
         const { userId } = req.params;
         
-        // Enqueue a special message that triggers calculation
         await enqueueMessage({ 
             userId, 
             message: '[SYSTEM] Calculate my rising sign and moon sign based on my birth information.'
@@ -142,7 +146,6 @@ router.post('/calculate/:userId', authorizeUser, async (req, res) => {
     }
 });
 
-// Get user astrology information
 router.get("/:userId", authorizeUser, async (req, res) => {
     const { userId } = req.params;
     try {
@@ -166,13 +169,11 @@ router.get("/:userId", authorizeUser, async (req, res) => {
     }
 });
 
-// Update astrology data with rising sign, moon sign, or other calculated values
 router.post("/:userId", async (req, res) => {
     const { userId } = req.params;
     const { risingSign, moonSign, astrology_data } = req.body;
     
     try {
-        // Get existing astrology data
         const { rows } = await db.query(
             "SELECT astrology_data FROM user_astrology WHERE user_id = $1",
             [userId]
@@ -187,7 +188,6 @@ router.post("/:userId", async (req, res) => {
             existingData = JSON.parse(existingData);
         }
         
-        // Merge new data with existing data
         const updatedData = { ...existingData };
         if (risingSign) updatedData.risingSign = risingSign;
         if (moonSign) updatedData.moonSign = moonSign;
@@ -195,7 +195,6 @@ router.post("/:userId", async (req, res) => {
             Object.assign(updatedData, astrology_data);
         }
         
-        // Update the database
         await db.query(
             "UPDATE user_astrology SET astrology_data = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2",
             [JSON.stringify(updatedData), userId]

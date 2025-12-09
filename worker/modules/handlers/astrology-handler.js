@@ -42,7 +42,7 @@ export async function handleAstrologyCalculation(userId) {
             return;
         }
         
-        // Format astrology data with lunar nodes
+        // Store calculated birth chart data only
         const astrologyData = {
             rising_sign: calculatedChart.rising_sign,
             rising_degree: calculatedChart.rising_degree,

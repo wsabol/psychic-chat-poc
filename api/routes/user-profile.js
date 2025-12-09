@@ -32,8 +32,8 @@ router.get("/:userId", authorizeUser, async (req, res) => {
     const { userId } = req.params;
     try {
         const { rows } = await db.query(
-            "SELECT first_name, last_name, email, to_char(birth_date, 'YYYY-MM-DD') AS birth_date, birth_time, birth_country, birth_province, birth_city, birth_timezone, sex, address_preference FROM user_personal_info WHERE user_id = $1",
-            [userId]
+            `SELECT pgp_sym_decrypt(first_name_encrypted, $1) as first_name, pgp_sym_decrypt(last_name_encrypted, $1) as last_name, pgp_sym_decrypt(email_encrypted, $1) as email, pgp_sym_decrypt(birth_date_encrypted, $1) as birth_date, pgp_sym_decrypt(birth_time_encrypted, $1) as birth_time, pgp_sym_decrypt(birth_country_encrypted, $1) as birth_country, pgp_sym_decrypt(birth_province_encrypted, $1) as birth_province, pgp_sym_decrypt(birth_city_encrypted, $1) as birth_city, pgp_sym_decrypt(birth_timezone_encrypted, $1) as birth_timezone, pgp_sym_decrypt(sex_encrypted, $1) as sex, pgp_sym_decrypt(address_preference_encrypted, $1) as address_preference FROM user_personal_info WHERE user_id = $2`,
+            [process.env.ENCRYPTION_KEY, userId]
         );
         if (rows.length === 0) {
             return res.json({});
@@ -50,7 +50,6 @@ router.post("/:userId", authorizeUser, async (req, res) => {
     const { firstName, lastName, email, birthDate, birthTime, birthCountry, birthProvince, birthCity, birthTimezone, sex, addressPreference, zodiacSign, astrologyData } = req.body;
 
     try {
-        // For temporary accounts, make firstName/lastName optional
         const isTemporary = email && email.startsWith('tempuser');
         
         if (!isTemporary && (!firstName || !lastName || !email || !birthDate || !sex)) {
@@ -67,7 +66,6 @@ router.post("/:userId", authorizeUser, async (req, res) => {
             return res.status(400).json({ error: 'Invalid birth date format' });
         }
 
-        // Convert empty strings to NULL for optional fields that can't accept empty strings
         const safeTime = birthTime && birthTime.trim() ? birthTime : null;
         const safeCountry = birthCountry && birthCountry.trim() ? birthCountry : null;
         const safeProvince = birthProvince && birthProvince.trim() ? birthProvince : null;
@@ -75,24 +73,25 @@ router.post("/:userId", authorizeUser, async (req, res) => {
         const safeTimezone = birthTimezone && birthTimezone.trim() ? birthTimezone : null;
         const safeAddressPreference = addressPreference && addressPreference.trim() ? addressPreference : null;
 
+        // Save personal info with encryption
         await db.query(
             `INSERT INTO user_personal_info 
-             (user_id, first_name, last_name, email, birth_date, birth_time, birth_country, birth_province, birth_city, birth_timezone, sex, address_preference)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+             (user_id, first_name_encrypted, last_name_encrypted, email_encrypted, birth_date_encrypted, birth_time_encrypted, birth_country_encrypted, birth_province_encrypted, birth_city_encrypted, birth_timezone_encrypted, sex_encrypted, address_preference_encrypted)
+             VALUES ($2, pgp_sym_encrypt($3, $1), pgp_sym_encrypt($4, $1), pgp_sym_encrypt($5, $1), pgp_sym_encrypt($6, $1), pgp_sym_encrypt($7, $1), pgp_sym_encrypt($8, $1), pgp_sym_encrypt($9, $1), pgp_sym_encrypt($10, $1), pgp_sym_encrypt($11, $1), pgp_sym_encrypt($12, $1), pgp_sym_encrypt($13, $1))
              ON CONFLICT (user_id) DO UPDATE SET
-             first_name = EXCLUDED.first_name,
-             last_name = EXCLUDED.last_name,
-             email = EXCLUDED.email,
-             birth_date = EXCLUDED.birth_date,
-             birth_time = EXCLUDED.birth_time,
-             birth_country = EXCLUDED.birth_country,
-             birth_province = EXCLUDED.birth_province,
-             birth_city = EXCLUDED.birth_city,
-             birth_timezone = EXCLUDED.birth_timezone,
-             sex = EXCLUDED.sex,
-             address_preference = EXCLUDED.address_preference,
+             first_name_encrypted = EXCLUDED.first_name_encrypted,
+             last_name_encrypted = EXCLUDED.last_name_encrypted,
+             email_encrypted = EXCLUDED.email_encrypted,
+             birth_date_encrypted = EXCLUDED.birth_date_encrypted,
+             birth_time_encrypted = EXCLUDED.birth_time_encrypted,
+             birth_country_encrypted = EXCLUDED.birth_country_encrypted,
+             birth_province_encrypted = EXCLUDED.birth_province_encrypted,
+             birth_city_encrypted = EXCLUDED.birth_city_encrypted,
+             birth_timezone_encrypted = EXCLUDED.birth_timezone_encrypted,
+             sex_encrypted = EXCLUDED.sex_encrypted,
+             address_preference_encrypted = EXCLUDED.address_preference_encrypted,
              updated_at = CURRENT_TIMESTAMP`,
-            [userId, firstName || 'Temporary', lastName || 'User', email, parsedBirthDate, safeTime, safeCountry, safeProvince, safeCity, safeTimezone, sex || 'Unspecified', safeAddressPreference]
+            [process.env.ENCRYPTION_KEY, userId, firstName || 'Temporary', lastName || 'User', email, parsedBirthDate, safeTime, safeCountry, safeProvince, safeCity, safeTimezone, sex || 'Unspecified', safeAddressPreference]
         );
 
         // Clear cached horoscopes and astrology insights since birth data changed
@@ -115,7 +114,7 @@ router.post("/:userId", authorizeUser, async (req, res) => {
                     message: '[SYSTEM] Calculate my birth chart with rising sign and moon sign.'
                 });
             } catch (err) {
-                // Silently continue if astrology enqueue fails
+                console.error('Error enqueueing astrology calculation:', err);
             }
         }
 
@@ -140,7 +139,6 @@ router.post("/:userId", authorizeUser, async (req, res) => {
     }
 });
 
-// DEVELOPMENT ONLY - Clear astrology cache (horoscope, moon phase, cosmic weather)
 router.delete("/:userId/astrology-cache", authorizeUser, async (req, res) => {
     const { userId } = req.params;
     try {
@@ -156,4 +154,3 @@ router.delete("/:userId/astrology-cache", authorizeUser, async (req, res) => {
 });
 
 export default router;
-

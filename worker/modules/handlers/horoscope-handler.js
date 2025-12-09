@@ -36,12 +36,12 @@ export async function generateHoroscope(userId, range = 'daily') {
         
         for (const currentRange of ranges) {
             try {
-                const horoscopePrompt = buildHoroscopePrompt(userInfo, astrologyInfo, currentRange);
+                const horoscopePrompt = buildHoroscopePrompt(userInfo, astrologyInfo, currentRange, userGreeting);
                 
                 const systemPrompt = baseSystemPrompt + `
 
 SPECIAL REQUEST - HOROSCOPE GENERATION:
-Generate a personalized ${currentRange} horoscope for ${userGreeting} based on their birth chart and current cosmic energy.
+Generate a personalized ${currentRange} horoscope addressing the user as "Dear ${userGreeting}" based on their birth chart and current cosmic energy.
 Focus on practical guidance blended with cosmic timing.
 Keep it concise but meaningful (2-3 paragraphs).
 Do NOT include tarot cards in this response - this is purely astrological guidance with crystal recommendations.
@@ -76,10 +76,10 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
 /**
  * Build horoscope prompt with user context
  */
-function buildHoroscopePrompt(userInfo, astrologyInfo, range) {
+function buildHoroscopePrompt(userInfo, astrologyInfo, range, userGreeting) {
     const astro = astrologyInfo.astrology_data;
     
-    let prompt = `Generate a personalized ${range} horoscope for ${userInfo.first_name || 'this person'}:\n\n`;
+    let prompt = `Generate a personalized ${range} horoscope for ${userGreeting}:\n\n`;
     
     if (astro.sun_sign) {
         // Calculated birth chart

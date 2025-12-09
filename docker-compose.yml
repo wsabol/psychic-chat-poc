@@ -40,6 +40,7 @@ services:
       - REDIS_URL=redis://redis:6379
       - DATABASE_URL=postgres://postgres:postgres@db:5432/chatbot
       - API_URL=http://api:3000
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-default-encryption-key-change-in-production}
     depends_on:
       redis:
         condition: service_started

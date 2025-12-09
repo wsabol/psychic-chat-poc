@@ -350,6 +350,149 @@ router.post('/verify-2fa', async (req, res) => {
 });
 
 /**
+ * POST /auth/check-account-lockout/:userId
+ * Check if account is currently locked due to failed login attempts
+ */
+router.post('/check-account-lockout/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'userId required' });
+    }
+
+    // Check if account is locked
+    const lockoutResult = await db.query(
+      `SELECT unlock_at FROM user_account_lockouts 
+       WHERE user_id = $1 AND unlock_at > NOW()`,
+      [userId]
+    );
+
+    if (lockoutResult.rows.length > 0) {
+      const lockout = lockoutResult.rows[0];
+      const minutesRemaining = Math.ceil(
+        (new Date(lockout.unlock_at) - new Date()) / 1000 / 60
+      );
+
+      // Log audit: Account access blocked
+      await logAudit(db, {
+        userId,
+        action: 'LOGIN_BLOCKED_ACCOUNT_LOCKED',
+        resourceType: 'authentication',
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        httpMethod: req.method,
+        endpoint: req.path,
+        status: 'BLOCKED',
+        details: { minutesRemaining }
+      });
+
+      return res.status(429).json({
+        success: false,
+        locked: true,
+        message: `Account locked due to too many failed login attempts. Try again in ${minutesRemaining} minute${minutesRemaining !== 1 ? 's' : ''}.`,
+        unlockAt: lockout.unlock_at,
+        minutesRemaining
+      });
+    }
+
+    return res.json({
+      success: true,
+      locked: false,
+      message: 'Account is not locked'
+    });
+  } catch (error) {
+    console.error('[CHECK-LOCKOUT] Error:', error);
+    return res.status(500).json({ error: 'Failed to check account lockout' });
+  }
+});
+
+/**
+ * POST /auth/log-login-attempt
+ * Record a login attempt (success or failure)
+ * Called from client after Firebase login attempt
+ */
+router.post('/log-login-attempt', async (req, res) => {
+  try {
+    const { userId, success, reason } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'userId required' });
+    }
+
+    // Record the attempt
+    await db.query(
+      `INSERT INTO user_login_attempts (user_id, ip_address, user_agent, success, reason)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [userId, req.ip, req.get('user-agent'), success || false, reason || null]
+    );
+
+    // If failed attempt, check if we should lock the account
+    if (!success) {
+      // Count recent failed attempts (last 60 minutes)
+      const countResult = await db.query(
+        `SELECT COUNT(*) as failed_count FROM user_login_attempts
+         WHERE user_id = $1 AND success = FALSE
+         AND created_at > NOW() - INTERVAL '60 minutes'`,
+        [userId]
+      );
+
+      const failedCount = parseInt(countResult.rows[0].failed_count);
+      const LOCKOUT_THRESHOLD = 5;
+
+      // If threshold reached, lock account for 15 minutes
+      if (failedCount >= LOCKOUT_THRESHOLD) {
+        const unlockAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+        // Try to create lockout (or update existing)
+        try {
+          await db.query(
+            `INSERT INTO user_account_lockouts (user_id, reason, failed_attempt_count, unlock_at, details)
+             VALUES ($1, 'failed_attempts', $2, $3, '{}' ::JSONB)
+             ON CONFLICT (user_id) WHERE (unlock_at > NOW())
+             DO UPDATE SET failed_attempt_count = $2, unlock_at = $3`,
+            [userId, failedCount, unlockAt]
+          );
+
+          // Log audit: Account locked
+          await logAudit(db, {
+            userId,
+            action: 'ACCOUNT_LOCKED_AUTO',
+            resourceType: 'authentication',
+            ipAddress: req.ip,
+            userAgent: req.get('user-agent'),
+            httpMethod: req.method,
+            endpoint: req.path,
+            status: 'SUCCESS',
+            details: { failedAttempts: failedCount, reason: 'Too many failed login attempts' }
+          });
+
+          return res.json({
+            success: true,
+            accountLocked: true,
+            message: `Account locked after ${failedCount} failed attempts. Try again in 15 minutes.`
+          });
+        } catch (lockErr) {
+          console.error('[LOGIN-ATTEMPT] Failed to lock account:', lockErr);
+        }
+      }
+    } else {
+      // Successful login - clear any pending account lockout after some time
+      // (or on next successful login, reset the counter)
+      // Note: Lockout will auto-expire after 15 minutes
+    }
+
+    return res.json({
+      success: true,
+      message: `Login attempt recorded (${success ? 'success' : 'failure'})`
+    });
+  } catch (error) {
+    console.error('[LOGIN-ATTEMPT] Error:', error);
+    return res.status(500).json({ error: 'Failed to log login attempt' });
+  }
+});
+
+/**
  * POST /auth/check-2fa/:userId
  * Check if 2FA is enabled and send code (for Firebase users)
  */
@@ -369,7 +512,7 @@ router.post('/check-2fa/:userId', async (req, res) => {
 
     const twoFASettings = twoFAResult.rows[0];
 
-    // If 2FA disabled, allow access
+        // If 2FA disabled, allow access
     if (!twoFASettings || !twoFASettings.enabled) {
       return res.json({
         success: true,
@@ -378,6 +521,8 @@ router.post('/check-2fa/:userId', async (req, res) => {
         message: 'No 2FA required'
       });
     }
+
+    // Account not locked and 2FA enabled, continue with sending code
 
     // 2FA is enabled - generate and send code
     const { generate6DigitCode } = await import('../shared/authUtils.js');
@@ -444,6 +589,57 @@ router.post('/check-2fa/:userId', async (req, res) => {
   } catch (error) {
     console.error('[CHECK-2FA] Error:', error);
     return res.status(500).json({ error: 'Failed to check 2FA', details: error.message });
+  }
+});
+
+/**
+ * POST /auth/unlock-account/:userId
+ * Manually unlock an account (user-initiated recovery)
+ * Requires: User authorization
+ */
+router.post('/unlock-account/:userId', authenticateToken, authorizeUser, async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Only allow user to unlock their own account
+    if (req.userId !== userId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    // Remove lockout
+    const result = await db.query(
+      `DELETE FROM user_account_lockouts 
+       WHERE user_id = $1 AND unlock_at > NOW()
+       RETURNING id`,
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.json({
+        success: false,
+        message: 'Account is not currently locked'
+      });
+    }
+
+    // Log audit
+    await logAudit(db, {
+      userId,
+      action: 'ACCOUNT_UNLOCKED_MANUAL',
+      resourceType: 'authentication',
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      httpMethod: req.method,
+      endpoint: req.path,
+      status: 'SUCCESS'
+    });
+
+    return res.json({
+      success: true,
+      message: 'Account unlocked successfully'
+    });
+  } catch (error) {
+    console.error('[UNLOCK-ACCOUNT] Error:', error);
+    return res.status(500).json({ error: 'Failed to unlock account' });
   }
 });
 

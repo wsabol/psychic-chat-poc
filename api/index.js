@@ -1,6 +1,7 @@
 import express from "express";
 import fs from "fs";
 import https from "https";
+import helmet from "helmet";
 import chatRoutes from "./routes/chat.js";
 import userProfileRoutes from "./routes/user-profile.js";
 import astrologyRoutes from "./routes/astrology.js";
@@ -17,6 +18,33 @@ import cors from "cors";
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 const app = express();
 
+// Security: Apply helmet middleware first (sets many secure headers automatically)
+app.use(helmet({
+    // Configure helmet options
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", "data:", "https:"],
+            fontSrc: ["'self'", "data:"],
+            connectSrc: ["'self'", "https:"],
+            frameSrc: ["'none'"],  // Prevent embedding in iframes
+            objectSrc: ["'none'"],
+            upgradeInsecureRequests: []
+        }
+    },
+    frameguard: { action: 'DENY' },  // X-Frame-Options: DENY
+    noSniff: true,                   // X-Content-Type-Options: nosniff
+    xssFilter: true,                 // X-XSS-Protection: 1; mode=block
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    hsts: {
+        maxAge: 31536000,            // 1 year
+        includeSubDomains: true,
+        preload: true
+    }
+}));
+
 // Allow client at 3001. Adjust as needed or use an env var.
 app.use(cors({
     origin: process.env.CORS_ORIGIN || "http://localhost:3001",
@@ -24,6 +52,22 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// Additional custom security headers (beyond helmet)
+app.use((req, res, next) => {
+    // Prevent clients from caching sensitive data
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
+    // Prevent DNS prefetching (privacy)
+    res.setHeader('X-DNS-Prefetch-Control', 'off');
+    
+    // Remove X-Powered-By header (don't advertise framework)
+    res.removeHeader('X-Powered-By');
+    
+    next();
+});
 
 // Welcome route
 app.get('/', (req, res) => {
