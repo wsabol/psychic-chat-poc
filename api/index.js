@@ -31,11 +31,9 @@ app.get('/', (req, res) => {
 });
 
 // Public auth routes (no authentication required)
-console.log('[API] Registering migration routes');
 app.use("/auth", authRoutes);
 app.use("/cleanup", cleanupRoutes);
 app.use("/migration", migrationRoutes);
-console.log('[API] Migration routes registered');
 
 // Protected routes (authentication required)
 app.use("/chat", authenticateToken, chatRoutes);

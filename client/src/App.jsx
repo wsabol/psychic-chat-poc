@@ -15,6 +15,7 @@ import { LandingScreenWrapper } from "./screens/LandingScreenWrapper";
 import { LoginScreenWrapper } from "./screens/LoginScreenWrapper";
 
 import { VerificationScreen } from "./screens/VerificationScreen";
+import TwoFAScreen from "./screens/TwoFAScreen";
 import { auth } from "./firebase";
 import MainContainer from "./layouts/MainContainer";
 
@@ -28,7 +29,7 @@ function App() {
     const modals = useModalState();
     const tempFlow = useTempAccountFlow(authState);
     const handlers = useAuthHandlers(authState, modals, tempFlow);
-    const { isLoading, isThankyou, isRegister, isVerification, isLanding, isLogin, isChat } = useAppRouting(authState, tempFlow.appExited, modals.showRegisterMode);
+    const { isLoading, isThankyou, isRegister, isVerification, isLanding, isLogin, isTwoFactor, isChat } = useAppRouting(authState, tempFlow.appExited, modals.showRegisterMode);
     const emailVerification = useEmailVerification();
     
     const [verificationFailed, setVerificationFailed] = useState(false);
@@ -147,9 +148,29 @@ function App() {
         );
     }
 
-    // Login page
+        // Login page
     if (isLogin) {
         return <ErrorBoundary><LoginScreenWrapper /></ErrorBoundary>;
+    }
+
+    // 2FA verification screen
+    if (isTwoFactor) {
+        return (
+            <ErrorBoundary>
+                <TwoFAScreen
+                    userId={authState.tempUserId}
+                    tempToken={authState.tempToken}
+                    method={authState.twoFactorMethod}
+                                        verify2FAFunc={authState.verify2FA}
+                    onVerified={() => {
+                        console.log('[2FA-APP] Code verified by verify2FA');
+                    }}
+                    onSignOut={authState.handleLogout}
+                    isLoading={false}
+                    error={authState.error}
+                />
+            </ErrorBoundary>
+        );
     }
 
     // Chat screen

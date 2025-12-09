@@ -15,6 +15,11 @@ export function useAppRouting(auth, appExited, showRegisterMode = false) {
         // Exit screen
         if (appExited) return 'thankYou';
 
+        // 2FA verification - CHECK THIS EARLY (before chat)
+        if (auth.showTwoFactor && auth.tempUserId && auth.tempToken) {
+            return 'twoFactor';
+        }
+
         // Register mode - CHECK THIS FIRST (before authenticated check)
         // This allows temp users to go to Firebase login to create real account
         if (showRegisterMode) return 'register';
@@ -59,6 +64,7 @@ export function useAppRouting(auth, appExited, showRegisterMode = false) {
         isVerification: currentScreen === 'verification',
         isLanding: currentScreen === 'landing',
         isLogin: currentScreen === 'login',
+        isTwoFactor: currentScreen === 'twoFactor',
         isChat: currentScreen === 'chat',
     };
 }

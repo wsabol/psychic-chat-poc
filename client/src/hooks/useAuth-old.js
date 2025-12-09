@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { auth } from '../firebase';
 import { onAuthStateChanged, signOut, createUserWithEmailAndPassword } from 'firebase/auth';
 import { useDeviceSecurityTracking } from './useDeviceSecurityTracking';
@@ -30,8 +30,6 @@ export function useAuth() {
                     console.log('[AUTH-LISTENER] User authenticated:', firebaseUser.uid, firebaseUser.email);
                     const isTemp = firebaseUser.email.startsWith('temp_');
                     const idToken = await firebaseUser.getIdToken();
-                    
-                    // Set auth state
                     setAuthUserId(firebaseUser.uid);
                     setAuthEmail(firebaseUser.email);
                     setToken(idToken);
@@ -40,65 +38,55 @@ export function useAuth() {
                     const isEmail = firebaseUser.providerData.some(p => p.providerId === 'password');
                     setIsEmailUser(isEmail);
                     
-                    if (isTemp) {
-                        // Temporary accounts - authenticate immediately (no 2FA)
-                        console.log('[AUTH-LISTENER] Temp account detected - authenticating immediately');
-                        setIsFirstTime(true);
-                        setIsAuthenticated(true);
-                        setLoading(false);
-                    } else {
-                        // Permanent accounts - check 2FA first BEFORE authenticating
-                        console.log('[AUTH-LISTENER] Permanent account - checking 2FA...');
+                    if (!isTemp) {
                         setIsFirstTime(false);
                         localStorage.setItem('psychic_app_registered', 'true');
-                        
                         // Log login to audit
-                        fetch('http://localhost:3000/auth/log-login-success', { 
-                            method: 'POST', 
-                            headers: { 'Content-Type': 'application/json' }, 
-                            body: JSON.stringify({ userId: firebaseUser.uid, email: firebaseUser.email }) 
-                        }).catch(err => console.warn('[AUDIT] Login log skipped'));
+                        (async () => { 
+                            try { 
+                                await fetch('http://localhost:3000/auth/log-login-success', { 
+                                    method: 'POST', 
+                                    headers: { 'Content-Type': 'application/json' }, 
+                                    body: JSON.stringify({ userId: firebaseUser.uid, email: firebaseUser.email }) 
+                                }); 
+                            } catch (err) { 
+                                console.warn('[AUDIT] Login log skipped'); 
+                            } 
+                        })();
                         
-                        // Check if 2FA was already verified in THIS SESSION
-                        const twoFAVerifiedKey = `2fa_verified_${firebaseUser.uid}`;
-                        const alreadyVerified = sessionStorage.getItem(twoFAVerifiedKey);
-                        
-                        if (alreadyVerified) {
-                          console.log('[2FA-CHECK] 2FA already verified in session, skipping check');
-                          setShowTwoFactor(false);
-                          setIsAuthenticated(true);
-                          setLoading(false);
-                        } else {
+                        // Check if 2FA is required
+                        (async () => {
                           try {
-                            console.log('[2FA-CHECK] Checking 2FA for user:', firebaseUser.uid);
                             const twoFAResponse = await fetch(`http://localhost:3000/auth/check-2fa/${firebaseUser.uid}`, {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json' }
                             });
                             const twoFAData = await twoFAResponse.json();
                             console.log('[2FA-CHECK] Response:', twoFAData);
-                            
                             if (twoFAData.requires2FA) {
-                              // 2FA required - show 2FA screen, DON'T authenticate
-                              console.log('[2FA-CHECK] 2FA required, showing 2FA screen');
+                              console.log('[2FA-CHECK] 2FA required, showing modal');
                               setTempToken(twoFAData.tempToken);
                               setTempUserId(firebaseUser.uid);
                               setShowTwoFactor(true);
                               setTwoFactorMethod(twoFAData.method || 'email');
-                              setIsAuthenticated(false); // ← KEY: Don't authenticate until 2FA passes
+                              setIsAuthenticated(false); // Don't set authenticated until 2FA passes
                             } else {
-                              // No 2FA required - authenticate now
-                              console.log('[2FA-CHECK] No 2FA required, authenticating now');
-                              setShowTwoFactor(false);
+                              console.log('[2FA-CHECK] No 2FA required');
                               setIsAuthenticated(true);
                             }
                           } catch (err) {
-                              console.warn('[2FA-CHECK] Failed to check 2FA:', err);
-                              setIsAuthenticated(true);
-                          } finally {
-                              setLoading(false);
+                            console.warn('[2FA-CHECK] Failed to check 2FA, allowing access anyway:', err);
+                            setIsAuthenticated(true); // Fallback to allowing access
                           }
+                        })();
+                        
+                        // If temp account is NOT requiring 2FA, set authenticated right away
+                        if (isTemp) {
+                            setIsAuthenticated(true);
                         }
+                    } else {
+                        // Temporary accounts don't need 2FA
+                        setIsAuthenticated(true);
                     }
                 } else {
                     console.log('[AUTH-LISTENER] User logged out');
@@ -114,11 +102,11 @@ export function useAuth() {
                     if (hasRegistered) {
                         setIsFirstTime(false);
                     }
-                    setLoading(false);
                 }
             } catch (err) {
                 console.error('[AUTH-LISTENER] Error:', err);
                 setIsAuthenticated(false);
+            } finally {
                 setLoading(false);
             }
         });
@@ -259,7 +247,7 @@ export function useAuth() {
         await handleLogout();
     };
 
-    const verify2FA = useCallback(async (code) => {
+    const verify2FA = async (code) => {
         try {
             if (!tempUserId || !tempToken) {
                 setError('2FA session expired. Please log in again.');
@@ -285,26 +273,22 @@ export function useAuth() {
                 return false;
             }
             
-            // 2FA verified - NOW authenticate
-            console.log('[2FA] Code verified, authenticating user');
-            
-            // Mark 2FA as verified in this session so page refreshes don't require it again
-            sessionStorage.setItem(`2fa_verified_${tempUserId}`, 'true');
-            
+            // 2FA verified, set full token and authenticate
+            setToken(data.token);
             setTempToken(null);
             setTempUserId(null);
             setShowTwoFactor(false);
-            setIsAuthenticated(true); // ← KEY: Only authenticate after 2FA passes
+            setIsAuthenticated(true);
             setError(null);
             
-            console.log('[2FA] Verification successful, session marked');
+            console.log('[2FA] Verification successful');
             return true;
         } catch (err) {
             console.error('[2FA] Verification error:', err);
             setError('Failed to verify 2FA code');
             return false;
         }
-    }, [tempUserId, tempToken]);
+    };
 
     return {
         isAuthenticated,
