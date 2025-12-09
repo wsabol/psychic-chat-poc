@@ -32,8 +32,8 @@ router.get("/:userId", authorizeUser, async (req, res) => {
     const { userId } = req.params;
     try {
         const { rows } = await db.query(
-            `SELECT pgp_sym_decrypt(first_name_encrypted, $1) as first_name, pgp_sym_decrypt(last_name_encrypted, $1) as last_name, pgp_sym_decrypt(birth_date_encrypted, $1) as birth_date, pgp_sym_decrypt(birth_time_encrypted, $1) as birth_time, pgp_sym_decrypt(birth_country_encrypted, $1) as birth_country, pgp_sym_decrypt(birth_province_encrypted, $1) as birth_province, pgp_sym_decrypt(birth_city_encrypted, $1) as birth_city, pgp_sym_decrypt(birth_timezone_encrypted, $1) as birth_timezone, pgp_sym_decrypt(sex_encrypted, $1) as sex, pgp_sym_decrypt(address_preference_encrypted, $1) as address_preference FROM user_personal_info WHERE user_id = $2`,
-            [process.env.ENCRYPTION_KEY, userId]
+            "SELECT first_name, last_name, email, to_char(birth_date, 'YYYY-MM-DD') AS birth_date, birth_time, birth_country, birth_province, birth_city, birth_timezone, sex, address_preference FROM user_personal_info WHERE user_id = $1",
+            [userId]
         );
         if (rows.length === 0) {
             return res.json({});
@@ -77,22 +77,22 @@ router.post("/:userId", authorizeUser, async (req, res) => {
 
         await db.query(
             `INSERT INTO user_personal_info 
-             (user_id, first_name_encrypted, last_name_encrypted, email_encrypted, birth_date_encrypted, birth_time_encrypted, birth_country_encrypted, birth_province_encrypted, birth_city_encrypted, birth_timezone_encrypted, sex_encrypted, address_preference_encrypted)
-             VALUES ($1, pgp_sym_encrypt($2, $3), pgp_sym_encrypt($4, $3), pgp_sym_encrypt($5, $3), pgp_sym_encrypt($6, $3), pgp_sym_encrypt($7, $3), pgp_sym_encrypt($8, $3), pgp_sym_encrypt($9, $3), pgp_sym_encrypt($10, $3), pgp_sym_encrypt($11, $3), pgp_sym_encrypt($12, $3), pgp_sym_encrypt($13, $3))
+             (user_id, first_name, last_name, email, birth_date, birth_time, birth_country, birth_province, birth_city, birth_timezone, sex, address_preference)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
              ON CONFLICT (user_id) DO UPDATE SET
-             first_name_encrypted = EXCLUDED.first_name_encrypted,
-             last_name_encrypted = EXCLUDED.last_name_encrypted,
-             email_encrypted = EXCLUDED.email_encrypted,
-             birth_date_encrypted = EXCLUDED.birth_date_encrypted,
-             birth_time_encrypted = EXCLUDED.birth_time_encrypted,
-             birth_country_encrypted = EXCLUDED.birth_country_encrypted,
-             birth_province_encrypted = EXCLUDED.birth_province_encrypted,
-             birth_city_encrypted = EXCLUDED.birth_city_encrypted,
-             birth_timezone_encrypted = EXCLUDED.birth_timezone_encrypted,
-             sex_encrypted = EXCLUDED.sex_encrypted,
-             address_preference_encrypted = EXCLUDED.address_preference_encrypted,
+             first_name = EXCLUDED.first_name,
+             last_name = EXCLUDED.last_name,
+             email = EXCLUDED.email,
+             birth_date = EXCLUDED.birth_date,
+             birth_time = EXCLUDED.birth_time,
+             birth_country = EXCLUDED.birth_country,
+             birth_province = EXCLUDED.birth_province,
+             birth_city = EXCLUDED.birth_city,
+             birth_timezone = EXCLUDED.birth_timezone,
+             sex = EXCLUDED.sex,
+             address_preference = EXCLUDED.address_preference,
              updated_at = CURRENT_TIMESTAMP`,
-            [userId, firstName || 'Temporary', lastName || 'User', email, parsedBirthDate, safeTime, safeCountry, safeProvince, safeCity, safeTimezone, sex || 'Unspecified', safeAddressPreference, process.env.ENCRYPTION_KEY]
+            [userId, firstName || 'Temporary', lastName || 'User', email, parsedBirthDate, safeTime, safeCountry, safeProvince, safeCity, safeTimezone, sex || 'Unspecified', safeAddressPreference]
         );
 
         // Clear cached horoscopes and astrology insights since birth data changed
@@ -156,3 +156,4 @@ router.delete("/:userId/astrology-cache", authorizeUser, async (req, res) => {
 });
 
 export default router;
+
