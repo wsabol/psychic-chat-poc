@@ -89,6 +89,7 @@ CREATE TABLE IF NOT EXISTS user_2fa_settings (
     phone_number VARCHAR(20),
     backup_phone_number VARCHAR(20),
     method VARCHAR(20) DEFAULT 'sms',
+    persistent_session BOOLEAN DEFAULT false,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

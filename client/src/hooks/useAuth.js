@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { auth } from '../firebase';
-import { onAuthStateChanged, signOut, createUserWithEmailAndPassword } from 'firebase/auth';
+import { onAuthStateChanged, signOut, createUserWithEmailAndPassword, setPersistence, browserLocalPersistence, browserSessionPersistence } from 'firebase/auth';
 import { useDeviceSecurityTracking } from './useDeviceSecurityTracking';
 
 export function useAuth() {
@@ -30,6 +30,31 @@ export function useAuth() {
                     console.log('[AUTH-LISTENER] User authenticated:', firebaseUser.uid, firebaseUser.email);
                     const isTemp = firebaseUser.email.startsWith('temp_');
                     const idToken = await firebaseUser.getIdToken();
+                    
+                    // Check session persistence preference and set Firebase persistence
+                    if (!isTemp) {
+                        try {
+                            const persistenceResponse = await fetch(`http://localhost:3000/security/2fa-settings/${firebaseUser.uid}`, {
+                                headers: { 'Authorization': `Bearer ${idToken}` }
+                            });
+                            
+                            if (persistenceResponse.ok) {
+                                const persistenceData = await persistenceResponse.json();
+                                const persistentSession = persistenceData.settings?.persistent_session || false;
+                                
+                                // Set Firebase persistence based on user preference
+                                const persistence = persistentSession ? browserLocalPersistence : browserSessionPersistence;
+                                try {
+                                    await setPersistence(auth, persistence);
+                                    console.log('[AUTH-PERSISTENCE] Set to:', persistentSession ? 'LOCAL (30 days)' : 'SESSION (closes on browser exit)');
+                                } catch (err) {
+                                    console.warn('[AUTH-PERSISTENCE] Could not set persistence:', err.message);
+                                }
+                            }
+                        } catch (err) {
+                            console.warn('[AUTH-PERSISTENCE] Could not fetch settings:', err.message);
+                        }
+                    }
                     
                     // Set auth state
                     setAuthUserId(firebaseUser.uid);

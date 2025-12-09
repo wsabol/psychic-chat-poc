@@ -264,4 +264,119 @@ router.post('/password-changed/:userId', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/security/2fa-settings/:userId
+ * Get 2FA and session settings
+ */
+router.get('/2fa-settings/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    if (req.user.uid !== userId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    const settings = await securityService.get2FASettings(userId);
+    res.json({ success: true, settings });
+  } catch (err) {
+    console.error('[SECURITY] Error in GET /2fa-settings:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /api/security/2fa-settings/:userId
+ * Update 2FA settings (enabled, method)
+ */
+router.post('/2fa-settings/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { enabled, method } = req.body;
+    
+    if (req.user.uid !== userId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    if (typeof enabled !== 'boolean') {
+      return res.status(400).json({ error: 'enabled must be boolean' });
+    }
+
+    if (!method || !['sms', 'email'].includes(method)) {
+      return res.status(400).json({ error: 'method must be sms or email' });
+    }
+
+    const settings = await securityService.update2FASettings(userId, { enabled, method });
+
+    console.log('[SECURITY] ✓ 2FA settings updated for user:', userId);
+    res.json({ 
+      success: true, 
+      settings,
+      message: enabled ? '2FA enabled' : '2FA disabled'
+    });
+  } catch (err) {
+    console.error('[SECURITY] Error in POST /2fa-settings:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /api/security/session-preference/:userId
+ * Update "Stay Logged In" preference
+ */
+router.post('/session-preference/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { persistentSession } = req.body;
+    
+    if (req.user.uid !== userId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    if (typeof persistentSession !== 'boolean') {
+      return res.status(400).json({ error: 'persistentSession must be boolean' });
+    }
+
+    const result = await securityService.updateSessionPreference(userId, persistentSession);
+
+    console.log('[SECURITY] ✓ Session preference updated for user:', userId);
+    res.json({ 
+      success: true, 
+      persistentSession: result.persistent_session,
+      message: persistentSession 
+        ? 'You will stay logged in for 30 days' 
+        : 'You will log out when closing the browser'
+    });
+  } catch (err) {
+    console.error('[SECURITY] Error in POST /session-preference:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * GET /api/security/verification-methods/:userId
+ * Get combined verification methods (phone + email from both tables)
+ */
+router.get('/verification-methods/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    if (req.user.uid !== userId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    // Get user email from database
+    const userResult = await db.query(
+      `SELECT pgp_sym_decrypt(email_encrypted, $1) as email FROM user_personal_info WHERE user_id = $2`,
+      [process.env.ENCRYPTION_KEY, userId]
+    );
+    
+    const userEmail = userResult.rows[0]?.email || '';
+    const methods = await securityService.getVerificationMethods(userId, userEmail);
+    res.json({ success: true, methods });
+  } catch (err) {
+    console.error('[SECURITY] Error in GET /verification-methods:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;

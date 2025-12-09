@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { getAuth } from 'firebase/auth';
 import ReAuthModal from '../components/ReAuthModal';
 import DevicesTab from '../components/security/DevicesTab';
-import PhoneTab from '../components/security/PhoneTab';
-import EmailTab from '../components/security/EmailTab';
+import VerificationMethodsTab from '../components/security/VerificationMethodsTab';
+import TwoFactorAuthTab from '../components/security/TwoFactorAuthTab';
+import SessionPrivacyTab from '../components/security/SessionPrivacyTab';
 import PasswordTab from '../components/security/PasswordTab';
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
@@ -52,9 +53,10 @@ export default function SecurityPage({ userId, token, auth }) {
 
   const tabs = [
     { id: 'devices', label: '📱 Devices', icon: '📱' },
-    { id: 'phone', label: '📞 Phone Number', icon: '📞' },
-    { id: 'email', label: '✉️ Email', icon: '✉️' },
-    { id: 'password', label: '🔒 Password', icon: '🔒' }
+    { id: 'verification', label: '🔐 Verification Methods', icon: '🔐' },
+    { id: 'twofa', label: '🔑 Two-Factor Auth', icon: '🔑' },
+    { id: 'password', label: '🔒 Password', icon: '🔒' },
+    { id: 'session', label: '⏱️ Session & Privacy', icon: '⏱️' }
   ];
 
   return (
@@ -106,14 +108,17 @@ export default function SecurityPage({ userId, token, auth }) {
           {activeTab === 'devices' && (
             <DevicesTab userId={userId} token={token} apiUrl={API_URL} />
           )}
-          {activeTab === 'phone' && (
-            <PhoneTab userId={userId} token={token} apiUrl={API_URL} />
+          {activeTab === 'verification' && (
+            <VerificationMethodsTab userId={userId} token={token} apiUrl={API_URL} userEmail={userEmail} />
           )}
-          {activeTab === 'email' && (
-            <EmailTab userEmail={userEmail} userId={userId} token={token} apiUrl={API_URL} />
+          {activeTab === 'twofa' && (
+            <TwoFactorAuthTab userId={userId} token={token} apiUrl={API_URL} />
           )}
           {activeTab === 'password' && (
             <PasswordTab userId={userId} token={token} apiUrl={API_URL} />
+          )}
+          {activeTab === 'session' && (
+            <SessionPrivacyTab userId={userId} token={token} apiUrl={API_URL} />
           )}
         </div>
       </div>
