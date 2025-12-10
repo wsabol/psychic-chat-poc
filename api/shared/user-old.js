@@ -20,11 +20,9 @@ export async function getRecentMessages(userId) {
 }
 
 export async function insertMessage(userId, role, content) {
-    const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
-    // ✅ ENCRYPTION: Messages are encrypted with AES-256 at database level
-    await db.query(
-        `INSERT INTO messages(user_id, role, content_encrypted) 
-         VALUES($1, $2, pgp_sym_encrypt($3, $4))`,
-        [userId, role, content, ENCRYPTION_KEY]
-    );
+    await db.query("INSERT INTO messages(user_id, role, content) VALUES($1,$2,$3)", [
+        userId,
+        role,
+        content,
+    ]);
 }
