@@ -28,12 +28,7 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
             return res.status(404).json({ error: 'Generating today\'s cosmic weather...' });
         }
         
-        console.log('[API-COSMIC-WEATHER] Returning:', {
-            hasText: !!todaysWeather.text,
-            hasBirthChart: !!todaysWeather.birth_chart,
-            hasPlanets: !!todaysWeather.planets,
-            planetsCount: todaysWeather.planets?.length
-        });
+
         
         res.json({
             weather: todaysWeather.text,

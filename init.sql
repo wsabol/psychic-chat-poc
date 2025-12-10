@@ -184,3 +184,19 @@ CREATE TABLE IF NOT EXISTS verification_codes (
 CREATE INDEX IF NOT EXISTS idx_verification_user_id ON verification_codes(user_id);
 CREATE INDEX IF NOT EXISTS idx_verification_code ON verification_codes(code);
 CREATE INDEX IF NOT EXISTS idx_verification_expires ON verification_codes(expires_at);
+
+-- Account violations and enforcement
+CREATE TABLE IF NOT EXISTS user_violations (
+    id SERIAL PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,
+    violation_type VARCHAR(50) NOT NULL,
+    reason TEXT,
+    severity VARCHAR(20) DEFAULT 'warning',
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES user_personal_info(user_id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_violations_user_id ON user_violations(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_violations_active ON user_violations(is_active);
