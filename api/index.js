@@ -10,6 +10,7 @@ import moonPhaseRoutes from "./routes/moon-phase.js";
 import astrologyInsightsRoutes from "./routes/astrology-insights.js";
 import authRoutes from "./routes/auth-firebase.js";
 import consentRoutes from "./routes/consent.js";
+import userDataRoutes from "./routes/user-data.js";
 import cleanupRoutes from "./routes/cleanup.js";
 import migrationRoutes from "./routes/migration.js";
 import securityRoutes from "./routes/security.js";
@@ -84,6 +85,7 @@ app.use("/migration", migrationRoutes);
 // Protected routes (authentication required)
 app.use("/chat", authenticateToken, chatRoutes);
 app.use("/user-profile", authenticateToken, userProfileRoutes);
+app.use("/user", authenticateToken, userDataRoutes);
 app.use("/user-astrology", authenticateToken, astrologyRoutes);
 app.use("/horoscope", authenticateToken, horoscopeRoutes);
 app.use("/moon-phase", authenticateToken, moonPhaseRoutes);
