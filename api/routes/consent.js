@@ -5,6 +5,11 @@ import { logAudit } from '../shared/auditLog.js';
 
 const router = Router();
 
+// Current versions (update when T&C changes)
+const CURRENT_TERMS_VERSION = "1.0";
+const CURRENT_PRIVACY_VERSION = "1.0";
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
+
 /**
  * POST /auth/consents
  * Record or update user consent for data processing

@@ -11,6 +11,8 @@ export function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const googleProvider = new GoogleAuthProvider();
 
   const handleEmailLogin = async (e) => {
@@ -32,6 +34,13 @@ export function Login() {
     setLoading(true);
     setError('');
     setSuccessMessage('');
+    
+    // ✅ PHASE 4: Require T&C acceptance
+    if (!termsAccepted || !privacyAccepted) {
+      setError('You must accept Terms of Service and Privacy Policy to create an account');
+      setLoading(false);
+      return;
+    }
     
     if (password !== confirmPassword) {
       setError('Passwords do not match');
@@ -115,7 +124,7 @@ export function Login() {
               const newUserCred = await signInWithEmailAndPassword(auth, email, password);
               console.log('[AUTH-MIGRATION] ✓ Signed in as new user:', newUserCred.user.uid);
               
-                            // Now send verification email
+              // Now send verification email
               console.log('[EMAIL-VERIFY] Sending verification email...');
               await sendEmailVerification(newUserCred.user);
               console.log('[EMAIL-VERIFY] ✓ Verification email sent');
@@ -141,17 +150,17 @@ export function Login() {
         }
       }
       
-            // Step 2: Create regular account (not upgrading from temp)
+      // Step 2: Create regular account (not upgrading from temp)
       console.log('[AUTH] Creating new user account...');
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       console.log('[AUTH] ✓ User created successfully:', userCredential.user.uid);
       
-            // Step 2.5: Create user record in backend database (CRITICAL for foreign keys)
+      // Step 2.5: Create user record in backend database (CRITICAL for foreign keys)
       console.log('[AUTH-DB] Creating database user record...');
       try {
         const dbResponse = await fetch('http://localhost:3000/auth/register-firebase-user', {
           method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             userId: userCredential.user.uid,
             email: email
@@ -168,7 +177,30 @@ export function Login() {
         console.warn('[AUTH-DB] ⚠️ Could not create database record:', dbErr.message);
       }
       
-            // Step 3: Send verification email
+      // Step 2.6: ✅ PHASE 4: Save T&C acceptance with encrypted IP
+      console.log('[CONSENT] Saving T&C acceptance...');
+      try {
+        const clientIp = 'auto-detected'; // Will be captured by server
+        const consentResponse = await fetch('http://localhost:3000/auth/consent/terms-acceptance', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${await userCredential.user.getIdToken()}` },
+          body: JSON.stringify({
+            terms_accepted: termsAccepted,
+            privacy_accepted: privacyAccepted,
+            ip_address: clientIp
+          })
+        });
+        
+        if (consentResponse.ok) {
+          console.log('[CONSENT] ✓ T&C acceptance recorded');
+        } else {
+          console.warn('[CONSENT] ⚠️ Failed to record T&C acceptance:', await consentResponse.json());
+        }
+      } catch (consentErr) {
+        console.warn('[CONSENT] ⚠️ Could not record T&C acceptance:', consentErr.message);
+      }
+      
+      // Step 3: Send verification email
       console.log('[EMAIL-VERIFY] Attempting to send verification email...');
       try {
         await sendEmailVerification(userCredential.user);
@@ -220,7 +252,9 @@ export function Login() {
         borderRadius: '10px',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
         maxWidth: '400px',
-        width: '90%'
+        width: '90%',
+        maxHeight: '90vh',
+        overflowY: 'auto'
       }}>
         <h2 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
           {mode === 'login' ? 'Sign In' : mode === 'register' ? 'Create Account' : 'Reset Password'}
@@ -324,17 +358,58 @@ export function Login() {
               placeholder="Confirm Password"
               autoComplete="new-password"
             />
+
+            {/* ✅ PHASE 4: T&C CHECKBOX */}
+            <div style={{
+              backgroundColor: 'rgba(100, 100, 150, 0.3)',
+              padding: '1rem',
+              borderRadius: '5px',
+              border: '1px solid rgba(100, 150, 255, 0.3)',
+              fontSize: '0.85rem',
+              lineHeight: '1.4'
+            }}>
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', cursor: 'pointer', marginBottom: '0.75rem' }}>
+                <input
+                  type="checkbox"
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                  disabled={loading}
+                  style={{ marginTop: '0.25rem', cursor: 'pointer' }}
+                />
+                <span>
+                  I accept the <a href="/TERMS_OF_SERVICE.md" target="_blank" rel="noopener noreferrer" style={{ color: '#64B5F6', textDecoration: 'underline' }}>Terms of Service</a> *
+                </span>
+              </label>
+
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={privacyAccepted}
+                  onChange={(e) => setPrivacyAccepted(e.target.checked)}
+                  disabled={loading}
+                  style={{ marginTop: '0.25rem', cursor: 'pointer' }}
+                />
+                <span>
+                  I accept the <a href="/privacy.md" target="_blank" rel="noopener noreferrer" style={{ color: '#64B5F6', textDecoration: 'underline' }}>Privacy Policy</a> *
+                </span>
+              </label>
+
+              <p style={{ fontSize: '0.75rem', color: '#aaa', margin: '0.75rem 0 0 0' }}>
+                * Required to create account
+              </p>
+            </div>
+
             <button 
               type="submit" 
-              disabled={loading}
+              disabled={loading || !termsAccepted || !privacyAccepted}
               style={{
                 padding: '0.75rem',
                 borderRadius: '5px',
                 border: 'none',
-                backgroundColor: loading ? '#666' : '#4CAF50',
+                backgroundColor: (loading || !termsAccepted || !privacyAccepted) ? '#666' : '#4CAF50',
                 color: 'white',
                 fontSize: '1rem',
-                cursor: loading ? 'not-allowed' : 'pointer'
+                cursor: (loading || !termsAccepted || !privacyAccepted) ? 'not-allowed' : 'pointer'
               }}
             >
               {loading ? 'Creating account...' : 'Create Account'}
@@ -376,7 +451,7 @@ export function Login() {
             </>
           )}
           {mode === 'register' && (
-            <p>Already have an account? <button onClick={() => { setMode('login'); setError(''); setSuccessMessage(''); }} style={{background: 'none', border: 'none', color: '#64B5F6', cursor: 'pointer', textDecoration: 'underline'}}>Sign in</button></p>
+            <p>Already have an account? <button onClick={() => { setMode('login'); setError(''); setSuccessMessage(''); setTermsAccepted(false); setPrivacyAccepted(false); }} style={{background: 'none', border: 'none', color: '#64B5F6', cursor: 'pointer', textDecoration: 'underline'}}>Sign in</button></p>
           )}
           {mode === 'forgot' && (
             <p><button onClick={() => { setMode('login'); setError(''); setSuccessMessage(''); }} style={{background: 'none', border: 'none', color: '#64B5F6', cursor: 'pointer', textDecoration: 'underline'}}>Back to login</button></p>

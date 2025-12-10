@@ -72,10 +72,22 @@ export function useAuth() {
                         setIsAuthenticated(true);
                         setLoading(false);
                     } else {
-                        // Permanent accounts - check 2FA first BEFORE authenticating
-                        console.log('[AUTH-LISTENER] Permanent account - checking 2FA...');
+                        // Permanent accounts
+                        console.log('[AUTH-LISTENER] Permanent account detected');
                         setIsFirstTime(false);
                         localStorage.setItem('psychic_app_registered', 'true');
+                        
+                        // ✅ OPTION B: Skip 2FA if email NOT verified (brand new account)
+                        if (!firebaseUser.emailVerified) {
+                          console.log('[AUTH-LISTENER] Email NOT verified (new account) - skipping 2FA, show email verification');
+                          setShowTwoFactor(false);
+                          setIsAuthenticated(true);
+                          setLoading(false);
+                          return;
+                        }
+                        
+                        // Email IS verified - existing user logging in
+                        console.log('[AUTH-LISTENER] Email verified - checking 2FA...');
                         
                         // Log login to audit
                         fetch('http://localhost:3000/auth/log-login-success', { 
