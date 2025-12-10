@@ -16,6 +16,8 @@ import migrationRoutes from "./routes/migration.js";
 import securityRoutes from "./routes/security.js";
 import { authenticateToken } from "./middleware/auth.js";
 import cors from "cors";
+import cleanupStatusRoutes from "./routes/cleanup-status.js";
+import { initializeScheduler } from "./jobs/scheduler.js";
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 const app = express();
@@ -80,6 +82,7 @@ app.get('/', (req, res) => {
 app.use("/auth", authRoutes);
 app.use("/auth", consentRoutes);
 app.use("/cleanup", cleanupRoutes);
+app.use("/cleanup", cleanupStatusRoutes);
 app.use("/migration", migrationRoutes);
 
 // Protected routes (authentication required)
@@ -92,6 +95,9 @@ app.use("/moon-phase", authenticateToken, moonPhaseRoutes);
 app.use("/astrology-insights", authenticateToken, astrologyInsightsRoutes);
 
 app.use("/security", authenticateToken, securityRoutes);
+
+// Initialize scheduled jobs
+initializeScheduler();
 
 let server;
 if (fs.existsSync('./certificates/key.pem') && fs.existsSync('./certificates/cert.pem')) {
