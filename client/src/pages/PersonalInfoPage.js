@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { getAstrologyFromBirthDate, getZodiacSignFromDate } from '../utils/astroUtils';
 import { COUNTRIES } from '../data/countries';
 import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
+import { validateBirthDate } from '../utils/dateValidator';
 import '../styles/responsive.css';
 import './PersonalInfoPage.css';
 
@@ -149,6 +150,21 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
         }
         if (!formData.birthDate) {
             setError('Date of birth is required (format: dd-mmm-yyyy, e.g., 09-Feb-1956)');
+            setLoading(false);
+            return;
+        }
+
+        // ✅ Validate birth date format and check age
+        const dateValidation = validateBirthDate(formData.birthDate);
+        if (!dateValidation.isValid) {
+            setError(dateValidation.error);
+            setLoading(false);
+            return;
+        }
+
+        // ✅ Check if user is 18+
+        if (!dateValidation.isAdult) {
+            setError(dateValidation.error);
             setLoading(false);
             return;
         }

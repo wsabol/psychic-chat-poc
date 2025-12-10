@@ -2,6 +2,8 @@ import { Router } from "express";
 import { authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
 import { enqueueMessage } from "../shared/queue.js";
+import { validateAge } from "../shared/ageValidator.js";
+import { handleAgeViolation } from "../shared/violationHandler.js";
 
 const router = Router();
 
@@ -64,6 +66,36 @@ router.post("/:userId", authorizeUser, async (req, res) => {
         
         if (!parsedBirthDate || parsedBirthDate === 'Invalid Date') {
             return res.status(400).json({ error: 'Invalid birth date format' });
+        }
+
+        // ✅ ENFORCE: Validate birth date format and age
+        const ageValidation = validateAge(parsedBirthDate);
+        if (!ageValidation.isValid) {
+            return res.status(400).json({ error: ageValidation.error });
+        }
+
+        // ✅ ENFORCE: Check if user is 18+ (CRITICAL RULE)
+        if (!ageValidation.isAdult) {
+            console.log(`[AGE-VIOLATION] User ${userId} is ${ageValidation.age} years old - under 18`);
+            
+            // Handle the age violation
+            const violationResult = await handleAgeViolation(userId, ageValidation.age);
+
+            if (violationResult.deleted) {
+                // Account has been deleted
+                return res.status(403).json({
+                    error: 'Account has been terminated due to policy violation.',
+                    reason: 'Users must be 18 years or older',
+                    deleted: true
+                });
+            } else {
+                // First violation warning
+                return res.status(403).json({
+                    error: ageValidation.error,
+                    warning: 'This is your first age restriction warning. A second violation will result in account deletion.',
+                    violationCount: violationResult.violationCount
+                });
+            }
         }
 
         const safeTime = birthTime && birthTime.trim() ? birthTime : null;
