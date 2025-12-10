@@ -71,8 +71,12 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
     }
   }, [timerActive, timeRemaining]);
 
-  // REMOVED: Auto-scroll was preventing user from reading oracle's response at top
-  // User can scroll freely now, no forced scrolling
+  // Auto-scroll to bottom when messages load or new messages arrive
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [displayMessages]);
 
   // Handle send message
   const handleSendMessage = async () => {
