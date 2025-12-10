@@ -52,10 +52,12 @@ router.delete("/delete-temp-account/:tempUserId", async (req, res) => {
 router.delete("/cleanup-old-temp-accounts", async (req, res) => {
     try {
         const oneDayAgo = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000);
-                const { rows: oldTempUsers } = await db.query(
+        
+        const { rows: oldTempUsers } = await db.query(
             `SELECT user_id FROM user_personal_info WHERE pgp_sym_decrypt(email_encrypted, $1) LIKE 'temp%' AND created_at < $2 LIMIT 500`,
             [process.env.ENCRYPTION_KEY, oneDayAgo]
         );
+        
         let deletedCount = 0;
         const uids = oldTempUsers.map(u => u.user_id);
         
@@ -71,7 +73,7 @@ router.delete("/cleanup-old-temp-accounts", async (req, res) => {
                     await firebaseAuth.deleteUser(uid); 
                     deletedCount++; 
                 } catch (err) { 
-                    console.error(`[CLEANUP] ✗ Failed to delete Firebase user ${uid}:`, err.code, err.message); 
+                    console.error(`[CLEANUP] Failed to delete Firebase user ${uid}:`, err.code); 
                 }
             }
         }
