@@ -9,20 +9,10 @@ const router = Router();
 router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (req, res) => {
     const { userId } = req.params;
     const today = new Date().toISOString().split('T')[0];
-    const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
-    
     try {
         const { rows } = await db.query(
-            `SELECT 
-                CASE 
-                    WHEN content_encrypted IS NOT NULL 
-                    THEN pgp_sym_decrypt(content_encrypted, $2)::text
-                    ELSE content
-                END as content
-             FROM messages 
-             WHERE user_id = $1 AND role = 'cosmic_weather' 
-             ORDER BY created_at DESC LIMIT 5`,
-            [userId, ENCRYPTION_KEY]
+            `SELECT content FROM messages WHERE user_id = $1 AND role = 'cosmic_weather' ORDER BY created_at DESC LIMIT 5`,
+            [userId]
         );
         
         let todaysWeather = null;
@@ -37,6 +27,8 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
         if (!todaysWeather) {
             return res.status(404).json({ error: 'Generating today\'s cosmic weather...' });
         }
+        
+
         
         res.json({
             weather: todaysWeather.text,
@@ -64,20 +56,10 @@ router.post("/cosmic-weather/:userId", authorizeUser, async (req, res) => {
 // Lunar Nodes Endpoint
 router.get("/lunar-nodes/:userId", authorizeUser, async (req, res) => {
     const { userId } = req.params;
-    const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
-    
     try {
         const { rows } = await db.query(
-            `SELECT 
-                CASE 
-                    WHEN content_encrypted IS NOT NULL 
-                    THEN pgp_sym_decrypt(content_encrypted, $2)::text
-                    ELSE content
-                END as content
-             FROM messages 
-             WHERE user_id = $1 AND role = 'lunar_nodes' 
-             ORDER BY created_at DESC LIMIT 1`,
-            [userId, ENCRYPTION_KEY]
+            `SELECT content FROM messages WHERE user_id = $1 AND role = 'lunar_nodes' ORDER BY created_at DESC LIMIT 1`,
+            [userId]
         );
         
         if (rows.length === 0) {
@@ -107,20 +89,10 @@ router.post("/lunar-nodes/:userId", authorizeUser, async (req, res) => {
 router.get("/void-of-course/:userId", authorizeUser, async (req, res) => {
     const { userId } = req.params;
     const today = new Date().toISOString().split('T')[0];
-    const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
-    
     try {
         const { rows } = await db.query(
-            `SELECT 
-                CASE 
-                    WHEN content_encrypted IS NOT NULL 
-                    THEN pgp_sym_decrypt(content_encrypted, $2)::text
-                    ELSE content
-                END as content
-             FROM messages 
-             WHERE user_id = $1 AND role = 'void_of_course' 
-             ORDER BY created_at DESC LIMIT 5`,
-            [userId, ENCRYPTION_KEY]
+            `SELECT content FROM messages WHERE user_id = $1 AND role = 'void_of_course' ORDER BY created_at DESC LIMIT 5`,
+            [userId]
         );
         
         let todaysAlert = null;

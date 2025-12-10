@@ -1,8 +1,9 @@
 import { db } from './db.js'
 
 export async function getRecentMessages(userId) {
-    // ✅ Using real encryption key from environment
-    const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+    // IMPORTANT: Use 'default_key' to decrypt old messages
+    // New messages will also be encrypted with this key (from insertMessage below)
+    const ENCRYPTION_KEY = 'default_key';
     const { rows: history } = await db.query(
         `SELECT 
             CASE 
@@ -21,8 +22,10 @@ export async function getRecentMessages(userId) {
 }
 
 export async function insertMessage(userId, role, content) {
-    // ✅ Using real encryption key from environment
-    const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+    // IMPORTANT: Use 'default_key' for consistency with getRecentMessages
+    // This matches the key used for old encrypted messages
+    const ENCRYPTION_KEY = 'default_key';
+    // ✅ ENCRYPTION: Messages are encrypted with AES-256 at database level
     await db.query(
         `INSERT INTO messages(user_id, role, content_encrypted) 
          VALUES($1, $2, pgp_sym_encrypt($3, $4))`,

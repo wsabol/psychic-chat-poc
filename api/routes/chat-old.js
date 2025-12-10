@@ -11,7 +11,7 @@ const router = Router();
 
 router.post("/", verify2FA, async (req, res) => {
     const { message } = req.body;
-    const userId = req.userId;
+    const userId = req.userId;  // Get userId from authenticated token
 
     await insertMessage(userId, 'user', message)
 
@@ -21,7 +21,7 @@ router.post("/", verify2FA, async (req, res) => {
 });
 
 router.get("/opening/:userId", authorizeUser, verify2FA, async (req, res) => {
-    const userId = req.userId;
+    const userId = req.userId;  // Use authenticated userId instead of URL param
 
     const recentMessages = await getRecentMessages(userId)
     
@@ -29,14 +29,16 @@ router.get("/opening/:userId", authorizeUser, verify2FA, async (req, res) => {
     let clientName = userId;
     try {
         const { rows: personalInfoRows } = await db.query(
-            "SELECT pgp_sym_decrypt(first_name_encrypted, $1) as first_name, pgp_sym_decrypt(address_preference_encrypted, $1) as address_preference FROM user_personal_info WHERE user_id = $2",
+                        "SELECT pgp_sym_decrypt(first_name_encrypted, $1) as first_name, pgp_sym_decrypt(address_preference_encrypted, $1) as address_preference FROM user_personal_info WHERE user_id = $2",
             [process.env.ENCRYPTION_KEY, userId]
         );
         if (personalInfoRows.length > 0 && personalInfoRows[0]) {
+            // Use address preference if available, otherwise use first name
             clientName = personalInfoRows[0].address_preference || personalInfoRows[0].first_name || userId;
         }
     } catch (err) {
         console.error('Error fetching personal info for greeting:', err);
+        // Continue with userId if fetch fails
     }
 
     let opening = await generatePsychicOpening({
@@ -57,9 +59,9 @@ router.get("/opening/:userId", authorizeUser, verify2FA, async (req, res) => {
 });
 
 router.get("/history/:userId", authorizeUser, verify2FA, async (req, res) => {
-    const userId = req.userId;
-    // ✅ Using real encryption key from environment (re-encrypted in database)
-    const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+    const userId = req.userId;  // Use authenticated userId instead of URL param
+    // IMPORTANT: Use 'default_key' for decryption - this is the key used when encrypting messages in database
+    const ENCRYPTION_KEY = 'default_key';
     try {
         const { rows } = await db.query(
             `SELECT 
