@@ -11,7 +11,32 @@ const router = Router();
 
 router.post("/", verify2FA, async (req, res) => {
     const { message } = req.body;
-    const userId = req.userId;  // Get userId from authenticated token
+    const userId = req.userId;
+
+    // Health content guardrail check
+    if (containsHealthContent(message)) {
+        const keywords = detectHealthKeywords(message);
+        console.log(`[HEALTH-GUARD] Blocked health content: ${keywords.join(', ')}`);
+        
+        // Log to audit trail
+        await logAudit(db, {
+            userId,
+            action: 'CHAT_MESSAGE_BLOCKED_HEALTH',
+            resourceType: 'chat',
+            ipAddress: req.ip,
+            userAgent: req.get('user-agent'),
+            httpMethod: req.method,
+            endpoint: req.path,
+            status: 'BLOCKED',
+            details: { keywords }
+        }).catch(e => console.error('[AUDIT] Error logging:', e.message));
+        
+        return res.status(400).json({
+            success: false,
+            error: getBlockedResponse().message,
+            reason: 'health_content_blocked'
+        });
+    }
 
     await insertMessage(userId, 'user', message)
 
@@ -21,7 +46,7 @@ router.post("/", verify2FA, async (req, res) => {
 });
 
 router.get("/opening/:userId", authorizeUser, verify2FA, async (req, res) => {
-    const userId = req.userId;  // Use authenticated userId instead of URL param
+    const userId = req.userId;
 
     const recentMessages = await getRecentMessages(userId)
     
@@ -59,7 +84,7 @@ router.get("/opening/:userId", authorizeUser, verify2FA, async (req, res) => {
 });
 
 router.get("/history/:userId", authorizeUser, verify2FA, async (req, res) => {
-    const userId = req.userId;  // Use authenticated userId instead of URL param
+    const userId = req.userId;
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
     try {
         const { rows } = await db.query(

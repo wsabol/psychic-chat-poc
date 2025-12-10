@@ -9,6 +9,7 @@ import horoscopeRoutes from "./routes/horoscope.js";
 import moonPhaseRoutes from "./routes/moon-phase.js";
 import astrologyInsightsRoutes from "./routes/astrology-insights.js";
 import authRoutes from "./routes/auth-firebase.js";
+import consentRoutes from "./routes/consent.js";
 import cleanupRoutes from "./routes/cleanup.js";
 import migrationRoutes from "./routes/migration.js";
 import securityRoutes from "./routes/security.js";
@@ -76,6 +77,7 @@ app.get('/', (req, res) => {
 
 // Public auth routes (no authentication required)
 app.use("/auth", authRoutes);
+app.use("/auth", consentRoutes);
 app.use("/cleanup", cleanupRoutes);
 app.use("/migration", migrationRoutes);
 
