@@ -18,6 +18,8 @@ import { authenticateToken } from "./middleware/auth.js";
 import cors from "cors";
 import cleanupStatusRoutes from "./routes/cleanup-status.js";
 import { initializeScheduler } from "./jobs/scheduler.js";
+import { validateRequestPayload, rateLimit } from "./middleware/inputValidation.js";
+import { errorHandler } from "./middleware/errorHandler.js";
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 const app = express();
@@ -56,6 +58,10 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// Phase 5: Input validation & rate limiting (EARLY in middleware chain)
+app.use(validateRequestPayload);
+app.use(rateLimit({}, 1000, 60000));  // 1000 requests per minute
 
 // Additional custom security headers (beyond helmet)
 app.use((req, res, next) => {
@@ -98,6 +104,9 @@ app.use("/security", authenticateToken, securityRoutes);
 
 // Initialize scheduled jobs
 initializeScheduler();
+
+// Phase 5: Safe error handling (LATE in middleware chain - after all routes)
+app.use(errorHandler);
 
 let server;
 if (fs.existsSync('./certificates/key.pem') && fs.existsSync('./certificates/cert.pem')) {

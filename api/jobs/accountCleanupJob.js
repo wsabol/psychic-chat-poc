@@ -12,13 +12,10 @@ const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
  */
 export async function runAccountCleanupJob() {
   try {
-    console.log(`[CLEANUP-JOB] Starting cleanup at ${new Date().toISOString()}`);
 
     await anonymizeOldAccounts();
     await sendReEngagementEmails();
     await permanentlyDeleteOldAccounts();
-
-    console.log(`[CLEANUP-JOB] Cleanup completed`);
     return { success: true };
 
   } catch (error) {
@@ -40,8 +37,6 @@ async function anonymizeOldAccounts() {
          AND (CURRENT_DATE - deletion_requested_at::DATE) >= 365`
     );
 
-    console.log(`[ANONYMIZE] Found ${result.rows.length} accounts`);
-
     for (const account of result.rows) {
       try {
         await db.query(
@@ -52,7 +47,6 @@ async function anonymizeOldAccounts() {
            WHERE user_id = $1`,
           [account.user_id]
         );
-        console.log(`[ANONYMIZE] ✅ ${account.user_id}`);
       } catch (e) {
         console.error(`[ANONYMIZE] ❌ ${account.user_id}:`, e.message);
       }
@@ -73,8 +67,6 @@ async function sendReEngagementEmails() {
          AND anonymization_date IS NOT NULL
          AND (CURRENT_DATE - anonymization_date::DATE) = 0`
     );
-
-    console.log(`[RE-ENGAGEMENT] Found ${result.rows.length} to email`);
     // Emails would be sent here via sendGrid
   } catch (error) {
     console.error('[RE-ENGAGEMENT] Error:', error);
@@ -93,8 +85,6 @@ async function permanentlyDeleteOldAccounts() {
          AND (CURRENT_DATE - deletion_requested_at::DATE) >= 730`
     );
 
-    console.log(`[PERMANENT-DELETE] Found ${result.rows.length} accounts`);
-
     for (const account of result.rows) {
       try {
         await db.query('DELETE FROM messages WHERE user_id = $1', [account.user_id]);
@@ -108,7 +98,7 @@ async function permanentlyDeleteOldAccounts() {
            WHERE user_id = $1`,
           [account.user_id]
         );
-        console.log(`[PERMANENT-DELETE] ✅ ${account.user_id}`);
+
       } catch (e) {
         console.error(`[PERMANENT-DELETE] ❌ ${account.user_id}:`, e.message);
       }
