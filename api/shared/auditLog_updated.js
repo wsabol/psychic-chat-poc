@@ -1,10 +1,23 @@
 /**
-* Audit Logging Utility
+ * Audit Logging Utility
  * Logs all critical actions to audit_logs table for compliance and security analysis
  * 
  * ALL SENSITIVE DATA IS ENCRYPTED BEFORE STORAGE:
  * - IP addresses are encrypted with pgp_sym_encrypt
  * - Sensitive details should NOT be stored in the details JSON
+ * 
+ * Usage:
+ * await logAudit(db, {
+ *   userId: user.user_id,
+ *   action: 'USER_LOGIN_SUCCESS',
+ *   resourceType: 'authentication',
+ *   ipAddress: req.ip,  // Will be encrypted automatically
+ *   userAgent: req.get('user-agent'),
+ *   httpMethod: req.method,
+ *   endpoint: req.path,
+ *   status: 'SUCCESS',
+ *   details: {}  // NEVER put plaintext emails/phones here
+ * });
  */
 
 import { getEncryptionKey } from './decryptionHelper.js';
@@ -22,13 +35,13 @@ export async function logAudit(db, options) {
     action,                           // REQUIRED: ACTION_TYPE
     resourceType = null,              // Category: 'authentication', 'messages', 'profile', 'account'
     resourceId = null,                // UUID of affected resource
-    ipAddress = null,                 // From req.ip
+    ipAddress = null,                 // From req.ip - WILL BE ENCRYPTED
     userAgent = null,                 // From req.get('user-agent')
     httpMethod = null,                // From req.method (GET, POST, DELETE, etc.)
     endpoint = null,                  // From req.path (/auth/login, /chat/send, etc.)
     status = 'SUCCESS',               // SUCCESS or FAILURE
     errorCode = null,                 // Error type if failed
-    errorMessage = null,              // Error details (will be truncated to 500 chars)
+    errorMessage = null,              // Error details (sanitized, max 500 chars)
     details = {},                     // JSONB object for action-specific metadata
     durationMs = null                 // Request duration in milliseconds
   } = options;
@@ -67,6 +80,7 @@ export async function logAudit(db, options) {
         encryptedIp = encResult.rows[0]?.encrypted;
       } catch (encErr) {
         console.warn('[AUDIT] WARNING: Failed to encrypt IP address:', encErr.message);
+        // Continue without encryption if it fails
       }
     }
 
@@ -95,6 +109,8 @@ export async function logAudit(db, options) {
       ]
     );
   } catch (err) {
+    // CRITICAL: Do not fail the main operation if audit logging fails
+    // Just log the error and continue
     console.error('[AUDIT] ERROR: Failed to write audit log:', {
       action,
       error: err.message,
@@ -108,7 +124,7 @@ export async function logAudit(db, options) {
  * @param {Object} db - Database connection
  * @param {string} userId - User UUID
  * @param {number} limit - Max results (default 100)
- * @returns {Promise<Array>} Audit log records
+ * @returns {Promise<Array>} Audit log records (IP addresses will be decrypted)
  */
 export async function getUserAuditLogs(db, userId, limit = 100) {
   try {
@@ -139,6 +155,8 @@ export async function getUserAuditLogs(db, userId, limit = 100) {
  */
 export async function findBruteForceAttempts(db, threshold = 5) {
   try {
+    // Note: We don't include IP addresses in the aggregation to avoid
+    // decryption performance issues. Use other functions for IP-based queries.
     const result = await db.query(
       `SELECT user_id, COUNT(*) as failed_attempts, 
               MAX(created_at) as latest_attempt
@@ -161,12 +179,13 @@ export async function findBruteForceAttempts(db, threshold = 5) {
  * Find suspicious IP addresses (unusual activity)
  * @param {Object} db - Database connection
  * @param {number} requestThreshold - Min requests to flag (default 100 in 24h)
- * @returns {Promise<Array>} Suspicious IPs
+ * @returns {Promise<Array>} Suspicious IPs (with decrypted IP addresses)
  */
 export async function findSuspiciousIPs(db, requestThreshold = 100) {
   try {
     const ENCRYPTION_KEY = getEncryptionKey();
     
+    // First, get encrypted IPs and their counts
     const result = await db.query(
       `SELECT ip_address_encrypted, COUNT(*) as request_count,
               COUNT(DISTINCT user_id) as unique_users,
@@ -182,6 +201,7 @@ export async function findSuspiciousIPs(db, requestThreshold = 100) {
       [requestThreshold]
     );
     
+    // Decrypt the IPs in the application
     return result.rows.map(row => ({
       ...row,
       ip_address: row.ip_address_encrypted ? '[ENCRYPTED]' : null
@@ -198,7 +218,7 @@ export async function findSuspiciousIPs(db, requestThreshold = 100) {
  * @param {Object} db - Database connection
  * @param {string} userId - User UUID to check access for
  * @param {number} daysBack - How many days back (default 30)
- * @returns {Promise<Array>} Access logs
+ * @returns {Promise<Array>} Access logs (with decrypted IP addresses)
  */
 export async function getDataAccessLogs(db, userId, daysBack = 30) {
   try {
@@ -226,7 +246,7 @@ export async function getDataAccessLogs(db, userId, daysBack = 30) {
  * @param {Object} db - Database connection
  * @param {string} userId - User UUID
  * @param {number} daysBack - How many days back (default 365)
- * @returns {Promise<Array>} Complete audit trail
+ * @returns {Promise<Array>} Complete audit trail (with decrypted IP addresses)
  */
 export async function exportUserAuditLogs(db, userId, daysBack = 365) {
   try {
