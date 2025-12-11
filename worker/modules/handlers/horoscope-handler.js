@@ -41,10 +41,13 @@ export async function generateHoroscope(userId, range = 'daily') {
                 const systemPrompt = baseSystemPrompt + `
 
 SPECIAL REQUEST - HOROSCOPE GENERATION:
-Generate a personalized ${currentRange} horoscope addressing the user as "Dear ${userGreeting}" based on their birth chart and current cosmic energy.
+Generate a rich, personalized ${currentRange} horoscope addressing the user as "Dear ${userGreeting}" based on their birth chart and current cosmic energy.
+Do NOT keep it brief - provide meaningful depth (3-4 paragraphs minimum).
+Reference their Sun sign (core identity), Moon sign (emotional nature), and Rising sign (how they appear to the world).
 Focus on practical guidance blended with cosmic timing.
-Keep it concise but meaningful (2-3 paragraphs).
-Do NOT include tarot cards in this response - this is purely astrological guidance with crystal recommendations.
+Include crystal recommendations aligned with their chart and this ${currentRange} period.
+Make it deeply personal and specific to their astrological signature.
+Do NOT include tarot cards in this response - this is purely astrological guidance enriched by their unique birth chart.
 `;
                 
                 // Call Oracle with just the user's birth data (no chat history for horoscopes)
@@ -82,33 +85,46 @@ function buildHoroscopePrompt(userInfo, astrologyInfo, range, userGreeting) {
     let prompt = `Generate a personalized ${range} horoscope for ${userGreeting}:\n\n`;
     
     if (astro.sun_sign) {
-        // Calculated birth chart
-        prompt += `Birth Chart:\n`;
-        prompt += `- Sun Sign: ${astro.sun_sign} (${astro.sun_degree}°) - Core Identity\n`;
-        prompt += `- Moon Sign: ${astro.moon_sign} (${astro.moon_degree}°) - Emotional Nature\n`;
-        prompt += `- Rising Sign: ${astro.rising_sign} (${astro.rising_degree}°) - Outward Presentation\n`;
+        // Calculated birth chart with complete details
+        prompt += `COMPLETE BIRTH CHART:\n`;
+        prompt += `- Sun Sign: ${astro.sun_sign} (${astro.sun_degree}°) - Core Identity, Life Purpose\n`;
+        prompt += `- Moon Sign: ${astro.moon_sign} (${astro.moon_degree}°) - Inner Emotional World, Needs, Instincts\n`;
+        prompt += `- Rising Sign/Ascendant: ${astro.rising_sign} (${astro.rising_degree}°) - How they appear to others, First Impression\n`;
         prompt += `- Birth Location: ${userInfo.birth_city}, ${userInfo.birth_province}, ${userInfo.birth_country}\n`;
+        prompt += `- Birth Time: ${userInfo.birth_time || 'Unknown'}\n`;
+        if (astro.venus_sign) prompt += `- Venus Sign: ${astro.venus_sign} (${astro.venus_degree}°) - Love, Attraction, Values\n`;
+        if (astro.mars_sign) prompt += `- Mars Sign: ${astro.mars_sign} (${astro.mars_degree}°) - Action, Drive, Passion\n`;
+        if (astro.mercury_sign) prompt += `- Mercury Sign: ${astro.mercury_sign} (${astro.mercury_degree}°) - Communication, Thinking Style\n`;
     } else if (astro.name) {
         // Traditional zodiac data
         prompt += `Sun Sign: ${astro.name}\n`;
     }
     
-    prompt += `\nFor the ${range}, consider:\n`;
+    prompt += `\nCONTEXT FOR THIS ${range.toUpperCase()}:\n`;
     
     switch (range.toLowerCase()) {
         case 'daily':
             prompt += `- What energies are prominent TODAY for this person?\n`;
+            prompt += `- How do today's transits interact with their natal chart?\n`;
             prompt += `- What actions or reflections would be most valuable right now?\n`;
+            prompt += `- What lunar phase influences are at play?\n`;
             prompt += `- What crystals or practices would support them today?\n`;
             break;
         case 'weekly':
             prompt += `- What themes are emerging THIS WEEK?\n`;
             prompt += `- How do current planetary positions affect their trajectory?\n`;
+            prompt += `- Which areas of life (relationship, career, health, spiritual growth) are most activated?\n`;
             prompt += `- What should they focus on or prepare for?\n`;
+            prompt += `- How can they align with the cosmic flow?\n`;
             break;
     }
     
-    prompt += `\nProvide practical, personalized guidance that honors their unique birth chart.`;
+    prompt += `\nPROVIDE A RICH, PERSONALIZED READING that:\n`;
+    prompt += `- Addresses them directly by name\n`;
+    prompt += `- References their Sun, Moon, and Rising signs\n`;
+    prompt += `- Incorporates their complete birth chart nuances\n`;
+    prompt += `- Gives specific, actionable guidance\n`;
+    prompt += `- Honors the unique complexity of their chart`;
     
     return prompt;
 }

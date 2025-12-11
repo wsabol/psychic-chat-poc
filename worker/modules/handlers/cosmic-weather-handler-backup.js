@@ -50,7 +50,7 @@ export async function generateCosmicWeather(userId) {
             throw new Error('No astrology data found');
         }
         
-        // Get planets with retrograde status and calculated degrees
+        // Get planets with retrograde status
         const planetsData = await getCosmicWeatherPlanets();
         if (!planetsData.success) {
             throw new Error('Failed to calculate planets');
@@ -61,6 +61,10 @@ export async function generateCosmicWeather(userId) {
         const userGreeting = getUserGreeting(userInfo, userId);
         
         // Build detailed planet information with calculated positions and degrees
+        const planetsText = planets
+            .map(p => `${p.icon} ${p.name} in ${p.sign}${p.retrograde ? ' ♻️ (Retrograde)' : ''}`)
+            .join(', ');
+        
         const planetsDetailed = planets
             .map(p => `- ${p.icon} ${p.name} at ${p.degree}° in ${p.sign}${p.retrograde ? ' ♻️ RETROGRADE' : ''}`)
             .join('\n');
@@ -79,7 +83,7 @@ Focus on TODAY's cosmic energies with specific, personal insight.
 Do NOT include tarot cards - this is pure astrological forecasting enriched by their unique birth chart.
 `;
         
-        const prompt = buildCosmicWeatherPrompt(userInfo, astrologyInfo, planets, planetsDetailed, userGreeting);
+        const prompt = buildCosmicWeatherPrompt(userInfo, astrologyInfo, planets, planetsText, planetsDetailed, userGreeting);
         
         const oracleResponse = await callOracle(systemPrompt, [], prompt);
         
@@ -110,9 +114,9 @@ Do NOT include tarot cards - this is pure astrological forecasting enriched by t
 }
 
 /**
- * Build comprehensive cosmic weather prompt - let oracle interpret calculated positions
+ * Build comprehensive cosmic weather prompt
  */
-function buildCosmicWeatherPrompt(userInfo, astrologyInfo, planets, planetsDetailed, userGreeting) {
+function buildCosmicWeatherPrompt(userInfo, astrologyInfo, planets, planetsText, planetsDetailed, userGreeting) {
     const astro = astrologyInfo.astrology_data;
     
     let prompt = `Generate today's comprehensive cosmic weather for ${userGreeting}:\n\n`;
@@ -126,25 +130,41 @@ function buildCosmicWeatherPrompt(userInfo, astrologyInfo, planets, planetsDetai
     if (astro.mercury_sign) prompt += `- Mercury Sign: ${astro.mercury_sign} (${astro.mercury_degree}°) - Communication, Thinking Style, Mental Processing\n`;
     prompt += `- Birth Location: ${userInfo.birth_city}, ${userInfo.birth_province}, ${userInfo.birth_country}\n\n`;
     
-    prompt += `TODAY'S CALCULATED PLANETARY POSITIONS (use your astrological knowledge to interpret):\n`;
+    prompt += `TODAY'S PLANETARY ALIGNMENTS:\n`;
     prompt += planetsDetailed + '\n\n';
     
-    prompt += `ORACLE INSTRUCTIONS:\n`;
-    prompt += `You are a mystical oracle interpreting the unique cosmic weather created by today's specific planetary positions and degrees.\n`;
-    prompt += `Each day is completely unique based on where the planets are positioned - use your deep astrological knowledge to interpret what THESE specific positions mean.\n`;
-    prompt += `- Show how each planet's current position (degree in sign) interacts with their natal Sun, Moon, and Rising signs\n`;
-    prompt += `- Identify which life areas (relationships, career, health, creativity, spirituality) are most activated by today's specific transits\n`;
-    prompt += `- Explain retrograde influences if applicable and what they uniquely mean for this person's chart\n`;
-    prompt += `- Provide 3-4 paragraphs of rich, personalized insight that could NOT be the same as any other day (due to different planetary positions)\n`;
-    prompt += `- Address them directly by name and make this deeply personal and unique to TODAY's cosmic moment\n`;
+    prompt += `COSMIC WEATHER ANALYSIS REQUIREMENTS:\n`;
+    prompt += `- Show how each key planet today interacts with their natal Sun, Moon, and Rising signs\n`;
+    prompt += `- Identify which life areas (relationships, career, health, creativity, spirituality) are most activated today\n`;
+    prompt += `- Explain retrograde influences if applicable and how they specifically affect this person\n`;
+    prompt += `- Provide 3-4 paragraphs of rich, personalized insight\n`;
+    prompt += `- Address them directly by name and make this deeply personal\n`;
     prompt += `- Include practical guidance for working harmoniously with today's energies\n`;
-    prompt += `- Suggest crystals or practices that align with their chart and today's specific planetary weather\n`;
-    prompt += `- Be poetic, mystical, and reveal your deep astrological knowledge through interpretation, not through pre-written meanings\n`;
+    prompt += `- Suggest crystals or practices that align with their chart and today's planetary weather\n`;
+    prompt += `- Be poetic, mystical, and deeply knowledgeable about astrology\n`;
     prompt += `- Show how today's transits either support or challenge their natal chart strengths\n`;
-    prompt += `- Make specific references to their unique astrological signature and what today's planets mean for THEM specifically\n`;
-    prompt += `- Remember: each day's reading must be unique to the specific planetary degrees and positions for that day`;
+    prompt += `- Make specific references to their unique astrological signature`;
     
     return prompt;
+}
+
+/**
+ * Get planetary house influences (simplified)
+ */
+function getHouseInfluence(planetName) {
+    const influences = {
+        'Sun': 'identity and self-expression',
+        'Moon': 'emotions and home life',
+        'Mercury': 'communication and thinking',
+        'Venus': 'love and values',
+        'Mars': 'action and desire',
+        'Jupiter': 'expansion and luck',
+        'Saturn': 'structure and responsibility',
+        'Uranus': 'revolution and innovation',
+        'Neptune': 'dreams and spirituality',
+        'Pluto': 'transformation and power'
+    };
+    return influences[planetName] || 'cosmic influence';
 }
 
 export function isCosmicWeatherRequest(message) {
