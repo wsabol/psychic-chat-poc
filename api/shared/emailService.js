@@ -124,7 +124,6 @@ export async function send2FACodeEmail(userEmail, code) {
         };
 
         const result = await sgMail.send(msg);
-        console.log('[EMAIL] 2FA code sent to', userEmail);
 
         return {
             success: true,

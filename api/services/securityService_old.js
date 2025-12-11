@@ -359,7 +359,6 @@ export async function update2FASettings(userId, { enabled, method }) {
       throw new Error('2FA settings not found');
     }
 
-    console.log('[SECURITY] ✓ 2FA settings updated for user:', userId, { enabled, method });
     return result.rows[0];
   } catch (err) {
     console.error('[SECURITY] Error updating 2FA settings:', err);

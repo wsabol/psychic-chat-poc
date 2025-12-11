@@ -307,7 +307,6 @@ router.post('/2fa-settings/:userId', async (req, res) => {
 
     const settings = await securityService.update2FASettings(userId, { enabled, method });
 
-    console.log('[SECURITY] ✓ 2FA settings updated for user:', userId);
     res.json({ 
       success: true, 
       settings,
