@@ -9,6 +9,7 @@ import MoonPhasePage from '../pages/MoonPhasePage';
 import HoroscopePage from '../pages/HoroscopePage';
 import CosmicWeatherPage from '../pages/CosmicWeatherPage';
 import SecurityPage from '../pages/SecurityPage';
+import BillingPage from '../pages/BillingPage';
 import './MainContainer.css';
 
 // Define all pages in order (matches menu order)
@@ -27,7 +28,7 @@ const PAGES = [
   { id: 'horoscope', label: 'Horoscope', component: HoroscopePage },
   { id: 'cosmic', label: 'Cosmic Weather', component: CosmicWeatherPage },
   { id: 'security', label: 'Security', component: SecurityPage },
-  { id: 'billing', label: 'Billing', component: () => <PlaceholderPage pageId="Billing" /> },
+  { id: 'billing', label: 'Billing & Subscriptions', component: BillingPage },
 ];
 
 export default function MainContainer({ auth, token, userId, onLogout, onExit }) {

@@ -128,4 +128,5 @@ export function validateBirthDate(dateString) {
   };
 }
 
-export default { validateDateFormat, checkAge, validateBirthDate };
+const dateValidatorExport = { validateDateFormat, checkAge, validateBirthDate };
+export default dateValidatorExport;

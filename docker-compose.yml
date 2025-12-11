@@ -8,6 +8,8 @@ services:
       - /app/node_modules
     ports:
       - "3000:3000"
+    env_file:
+      - .env
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379}
@@ -22,6 +24,9 @@ services:
       - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER}
       - RESEND_API_KEY=${RESEND_API_KEY}
       - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_PUBLIC_KEY=${STRIPE_PUBLIC_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
     depends_on:
       redis:
         condition: service_started
@@ -75,15 +80,19 @@ services:
       dockerfile: Dockerfile-dev
       args:
         - REACT_APP_API_URL=http://localhost:3000
+        - REACT_APP_STRIPE_PUBLIC_KEY=${STRIPE_PUBLIC_KEY}
     command: npm start
     volumes:
       - ./client:/app
       - /app/node_modules
     ports:
       - "3001:3000"
+    env_file:
+      - .env
     environment:
       - CHOKIDAR_USEPOLLING=true
       - REACT_APP_API_URL=http://localhost:3000
+      - REACT_APP_STRIPE_PUBLIC_KEY=${STRIPE_PUBLIC_KEY}
 
 volumes:
   postgres_data:

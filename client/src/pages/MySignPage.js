@@ -11,6 +11,7 @@ export default function MySignPage({ userId, token, auth }) {
 
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchAstrologyData();
   }, [userId, token]);

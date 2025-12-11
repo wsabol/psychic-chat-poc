@@ -5,7 +5,6 @@ import { auth } from '../firebase';
  * Firebase tokens expire after 1 hour - this automatically refreshes them
  */
 export async function fetchWithTokenRefresh(url, options = {}) {
-  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
   
   try {
     let response = await fetch(url, options);

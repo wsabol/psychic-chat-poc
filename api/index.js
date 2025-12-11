@@ -14,6 +14,7 @@ import userDataRoutes from "./routes/user-data.js";
 import cleanupRoutes from "./routes/cleanup.js";
 import migrationRoutes from "./routes/migration.js";
 import securityRoutes from "./routes/security.js";
+import billingRoutes from "./routes/billing.js";
 import { authenticateToken } from "./middleware/auth.js";
 import cors from "cors";
 import cleanupStatusRoutes from "./routes/cleanup-status.js";
@@ -101,6 +102,7 @@ app.use("/moon-phase", authenticateToken, moonPhaseRoutes);
 app.use("/astrology-insights", authenticateToken, astrologyInsightsRoutes);
 
 app.use("/security", authenticateToken, securityRoutes);
+app.use("/billing", authenticateToken, billingRoutes);
 
 // Initialize scheduled jobs
 initializeScheduler();

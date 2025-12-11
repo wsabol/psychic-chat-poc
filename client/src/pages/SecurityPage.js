@@ -18,7 +18,7 @@ export default function SecurityPage({ userId, token, auth }) {
   const [isVerified, setIsVerified] = useState(false);
   const [userEmail, setUserEmail] = useState('');
   const [activeTab, setActiveTab] = useState('devices');
-  const [loading, setLoading] = useState(false);
+
 
   // Get user email from Firebase
   useEffect(() => {

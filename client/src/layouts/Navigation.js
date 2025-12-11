@@ -41,8 +41,14 @@ export default function Navigation({ pages, currentPageIndex, onNavigate, isVisi
       submenu: [
         { id: 'personalInfo', label: 'Personal Information', icon: '👤', pageId: 'personal' },
         { id: 'security', label: 'Security', icon: '🔒', pageId: 'security' },
-        { id: 'billing', label: 'Billing', icon: '💳', pageId: 'billing' },
       ],
+    },
+    {
+      id: 'billing',
+      label: 'Billing & Subscriptions',
+      icon: '💳',
+      type: 'page',
+      pageId: 'billing',
     },
     {
       id: 'astrology',

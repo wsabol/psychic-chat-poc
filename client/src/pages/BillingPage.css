@@ -1,0 +1,353 @@
+/* BillingPage.css - Main billing container styles */
+
+.billing-page {
+  padding: 1rem;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
+}
+
+.billing-page > div {
+  margin: 0 auto;
+}
+
+/* Tab Navigation */
+.billing-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #e0e0e0;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+  scroll-behavior: smooth;
+}
+
+.billing-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: transparent;
+  border: none;
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  position: relative;
+}
+
+.billing-tab:hover {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.billing-tab.active {
+  background-color: #7c63d8;
+  color: white;
+  font-weight: 600;
+}
+
+.billing-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #7c63d8;
+  border-radius: 2px;
+}
+
+.tab-icon {
+  font-size: 1.1em;
+}
+
+.tab-label {
+  display: none;
+}
+
+@media (min-width: 600px) {
+  .tab-label {
+    display: inline;
+  }
+}
+
+/* Tab Content */
+.billing-content {
+  background: white;
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Section Header */
+.section-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.section-header h2 {
+  font-size: 1.75rem;
+  color: #333;
+  margin: 0 0 0.5rem 0;
+}
+
+.section-header p {
+  color: #666;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+/* Alerts */
+.alert {
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border-radius: 6px;
+  font-weight: 500;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.alert-error {
+  background-color: #fee;
+  border-left: 4px solid #c33;
+  color: #c33;
+}
+
+.alert-success {
+  background-color: #efe;
+  border-left: 4px solid #3c3;
+  color: #3c3;
+}
+
+.alert-warning {
+  background-color: #ffd;
+  border-left: 4px solid #cc0;
+  color: #660;
+}
+
+/* Buttons */
+.btn-primary,
+.btn-secondary,
+.btn-danger,
+.btn-link,
+.btn-small {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #7c63d8 0%, #6a4fc4 100%);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(124, 99, 216, 0.4);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #f0f0f0;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #e0e0e0;
+}
+
+.btn-danger {
+  background: #ff4757;
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #ff3838;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 71, 87, 0.4);
+}
+
+.btn-link {
+  background: none;
+  color: #7c63d8;
+  padding: 0;
+  text-decoration: underline;
+  font-size: 13px;
+}
+
+.btn-link:hover {
+  color: #6a4fc4;
+}
+
+.btn-small {
+  padding: 0.5rem 1rem;
+  font-size: 12px;
+}
+
+/* Form Elements */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.form-input,
+.form-select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+}
+
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: #7c63d8;
+  box-shadow: 0 0 0 3px rgba(124, 99, 216, 0.1);
+}
+
+.form-input::placeholder {
+  color: #999;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: #999;
+  background: #f9f9f9;
+  border-radius: 8px;
+  border: 2px dashed #ddd;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* Status Badge */
+.status-badge {
+  display: inline-block;
+  padding: 0.4rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-success {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-danger,
+.status-failed {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.status-warning,
+.status-open,
+.status-pending {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.status-info,
+.status-draft {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.status-default {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.status-active {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-inactive {
+  background: #f5f5f5;
+  color: #999;
+}
+
+.status-canceled {
+  background: #ffebee;
+  color: #c62828;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .billing-page {
+    padding: 0.5rem;
+  }
+
+  .billing-content {
+    padding: 1rem;
+  }
+
+  .billing-tabs {
+    gap: 0.25rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .billing-tab {
+    padding: 0.5rem 0.75rem;
+    font-size: 12px;
+  }
+
+  .section-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .section-header p {
+    font-size: 0.9rem;
+  }
+}
