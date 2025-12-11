@@ -1,16 +1,13 @@
 /**
  * Session Management Service
  * Handles user session lifecycle, timeouts, and multi-device login
- * SECURITY: Session tokens are HASHED (SHA-256) before storage
- * SECURITY: Login attempt emails are ENCRYPTED (pgp_sym_encrypt) before storage
  * 
  * Features:
- * - Session token generation and validation (with hashing)
+ * - Session token generation and validation
  * - Inactivity timeout (15 minutes)
  * - Multi-device session tracking
  * - Device fingerprinting (browser, OS, IP)
  * - Session revocation
- * - Encrypted login attempt logging
  */
 
 import { db } from './db.js';
@@ -28,10 +25,7 @@ const MAX_SESSIONS_PER_USER = 5;  // Max simultaneous sessions
  */
 export async function createSession(userId, req) {
   try {
-    // Generate plaintext token (sent to client)
     const sessionToken = crypto.randomBytes(32).toString('hex');
-    // Hash token before storing in database (security best practice)
-    const sessionTokenHash = crypto.createHash('sha256').update(sessionToken).digest('hex');
     const expiresAt = new Date(Date.now() + SESSION_TIMEOUT_MS);
     
     // Parse device info
@@ -41,17 +35,17 @@ export async function createSession(userId, req) {
     const deviceName = `${result.browser.name || 'Unknown'} on ${result.os.name || 'Unknown'}`;
     const ipAddress = req.ip || req.connection.remoteAddress;
     
-    // Insert session with HASHED token (not plaintext)
+    // Insert session
     const sessionResult = await db.query(
       `INSERT INTO user_sessions (
-        user_id, session_token_hash, device_name, device_type,
+        user_id, session_token, device_name, device_type,
         browser_name, browser_version, ip_address, user_agent,
         expires_at, created_at, last_activity_at, status, is_2fa_verified
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW(), 'active', FALSE)
-      RETURNING id, expires_at, device_name`,
+      RETURNING id, session_token, expires_at, device_name`,
       [
         userId,
-        sessionTokenHash,
+        sessionToken,
         deviceName,
         result.device.type || 'desktop',
         result.browser.name || 'Unknown',
@@ -69,7 +63,7 @@ export async function createSession(userId, req) {
     
     return {
       sessionId: sessionResult.rows[0].id,
-      token: sessionToken,  // Return plaintext token to client
+      token: sessionToken,
       expiresAt: expiresAt,
       deviceName: sessionResult.rows[0].device_name
     };
@@ -82,20 +76,17 @@ export async function createSession(userId, req) {
 
 /**
  * Validate and update session
- * @param {string} sessionToken - Session token (plaintext from client)
+ * @param {string} sessionToken - Session token
  * @returns {Promise<Object>} Valid session or null
  */
 export async function validateSession(sessionToken) {
   try {
-    // Hash the token before comparing with database hash
-    const sessionTokenHash = crypto.createHash('sha256').update(sessionToken).digest('hex');
-    
     const result = await db.query(
       `SELECT id, user_id, expires_at, status, last_activity_at 
        FROM user_sessions 
-       WHERE session_token_hash = $1
+       WHERE session_token = $1
        LIMIT 1`,
-      [sessionTokenHash]
+      [sessionToken]
     );
 
     if (result.rows.length === 0) {
@@ -256,7 +247,6 @@ async function cleanupOldSessions(userId) {
 
 /**
  * Log login attempt
- * SECURITY: Email is ENCRYPTED before storage
  * @param {Object} options - Login attempt details
  */
 export async function logLoginAttempt(options) {
@@ -270,13 +260,12 @@ export async function logLoginAttempt(options) {
       reason = null
     } = options;
 
-    // Encrypt email before storing in database
     await db.query(
       `INSERT INTO login_attempts (
-        user_id, email_attempted_encrypted, ip_address, user_agent,
+        user_id, email_attempted, ip_address, user_agent,
         attempt_type, reason, created_at
-      ) VALUES ($1, pgp_sym_encrypt($2, $3), $4, $5, $6, $7, NOW())`,
-      [userId, emailAttempted, process.env.ENCRYPTION_KEY, ipAddress, userAgent, attemptType, reason]
+      ) VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+      [userId, emailAttempted, ipAddress, userAgent, attemptType, reason]
     );
 
   } catch (error) {
@@ -288,11 +277,10 @@ export async function logLoginAttempt(options) {
  * Get recent login attempts for a user
  * @param {string} userId - User ID
  * @param {number} hours - How many hours back to check
- * @returns {Promise<Array>} Login attempts (email NOT decrypted, only metadata)
+ * @returns {Promise<Array>} Login attempts
  */
 export async function getLoginAttempts(userId, hours = 24) {
   try {
-    // Note: Email is encrypted, don't include in SELECT for privacy
     const result = await db.query(
       `SELECT attempt_type, reason, ip_address, created_at
        FROM login_attempts
@@ -318,7 +306,6 @@ export async function getLoginAttempts(userId, hours = 24) {
  */
 export async function detectSuspiciousLogins(ipAddress, minutes = 60) {
   try {
-    // Note: Don't include email in SELECT since it's now encrypted
     const result = await db.query(
       `SELECT 
         attempt_type,
