@@ -11,11 +11,6 @@ export default function CosmicWeatherPage({ userId, token, auth }) {
 
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    loadCosmicWeather();
-  }, [userId, token]);
-
   useEffect(() => {
     return () => {
       if (pollIntervalRef.current) {
@@ -101,6 +96,10 @@ export default function CosmicWeatherPage({ userId, token, auth }) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadCosmicWeather();
+  }, [userId, token, API_URL]);
 
   return (
     <div className="page-safe-area cosmic-weather-page">

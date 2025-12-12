@@ -1,117 +1,65 @@
-import { createUserWithEmailAndPassword, sendEmailVerification, signOut, signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase';
-import { useAuthAPI } from './useAuthAPI';
+import { useCallback } from 'react';
 
 /**
- * useRegistrationFlow Hook
- * Handles complete registration workflow:
- * 1. Create Firebase account
- * 2. Create database record
- * 3. Save T&C acceptance
- * 4. Send verification email
- * 5. Handle temp account migration
+ * useDeviceSecurityTracking - Track current device after login for security
  */
-
-export function useRegistrationFlow() {
-  const api = useAuthAPI();
-
-  const registerWithEmail = async (email, password, termsAccepted, privacyAccepted) => {
+export function useDeviceSecurityTracking() {
+  const trackDevice = useCallback(async (userId, token) => {
     try {
-      // Retrieve onboarding data from sessionStorage (for temp account migration)
-      let onboarding_first_message = null;
-      let onboarding_horoscope = null;
-      let temp_user_id = null;
+      if (!userId || !token) return;
 
+      // Get device name and IP info
+      let deviceName = 'Unknown Device';
+      let ipAddress = 'unknown';
+
+      // Try to get geolocation data
       try {
-        const storedMessage = sessionStorage.getItem('onboarding_first_message');
-        const storedHoroscope = sessionStorage.getItem('onboarding_horoscope');
-
-        if (storedMessage) {
-          onboarding_first_message = JSON.parse(storedMessage);
-        }
-
-        if (storedHoroscope) {
-          onboarding_horoscope = JSON.parse(storedHoroscope);
-        }
-
-        const currentUser = auth.currentUser;
-        if (currentUser && currentUser.email && currentUser.email.startsWith('temp_')) {
-          temp_user_id = currentUser.uid;
-        }
-      } catch (storageErr) {
-        console.warn('[MIGRATION] Could not retrieve onboarding data:', storageErr);
-      }
-
-      // Check if user is upgrading from temp account
-      const currentUser = auth.currentUser;
-      if (currentUser && currentUser.email && currentUser.email.startsWith('temp_')) {
-        const tempUid = currentUser.uid;
-
-        try {
-          const migrationResponse = await fetch('http://localhost:3000/auth/register-and-migrate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email,
-              password,
-              temp_user_id: tempUid,
-              onboarding_first_message,
-              onboarding_horoscope
-            })
-          });
-
-          if (!migrationResponse.ok) {
-            const errorData = await migrationResponse.json();
-            console.error('[AUTH-MIGRATION] ✗ Register-and-migrate failed:', errorData);
-            throw new Error(errorData.error || 'Migration failed');
+        const geoResponse = await fetch('https://ipapi.co/json/');
+        if (geoResponse.ok) {
+          const geoData = await geoResponse.json();
+          ipAddress = geoData.ip || 'unknown';
+          
+          // Build device name from location
+          const city = geoData.city || '';
+          const country = geoData.country_name || '';
+          if (city && country) {
+            deviceName = `${city}, ${country}`;
+          } else if (country) {
+            deviceName = country;
           }
-
-          // Re-authenticate as new user
-          try {
-            await signOut(auth);
-            const newUserCred = await signInWithEmailAndPassword(auth, email, password);
-
-            // Send verification email
-            await sendEmailVerification(newUserCred.user);
-          } catch (reAuthErr) {
-            console.warn('[AUTH-MIGRATION] Re-authentication error:', reAuthErr.message);
-          }
-
-          return { success: true, userId: null };
-        } catch (migrationErr) {
-          console.error('[AUTH-MIGRATION] Error:', migrationErr.message);
-          throw new Error('Account upgrade failed: ' + migrationErr.message);
         }
+      } catch (err) {
+        console.warn('[DEVICE-SECURITY] Could not get geolocation:', err.message);
+        // Fall back to browser info
+        deviceName = `${navigator.userAgent.substring(0, 50)}...`;
       }
 
-      // Step 1: Create Firebase account
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const userId = userCredential.user.uid;
-      const idToken = await userCredential.user.getIdToken();
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
-      // Step 2: Create database record
-      await api.createDatabaseUser(userId, email, idToken);
+      // Send to backend
+      const response = await fetch(`${API_URL}/security/track-device/${userId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          deviceName,
+          ipAddress
+        })
+      });
 
-      // Step 3: Save T&C acceptance
-      await api.saveTermsAcceptance(userId, termsAccepted, privacyAccepted, idToken);
-
-      // Step 4: Send verification email
-      try {
-        await sendEmailVerification(userCredential.user);
-      } catch (verifyErr) {
-        console.error('[EMAIL-VERIFY] ✗ Failed to send verification email:', verifyErr.message);
+      if (!response.ok) {
+        console.warn('[DEVICE-SECURITY] Failed to track device:', response.status);
+        return;
       }
 
-      return { success: true, userId };
+
+      await response.json();
     } catch (err) {
-      console.error('[AUTH] Registration failed:', err.message);
-      throw err;
+      console.warn('[DEVICE-SECURITY] Error tracking device:', err.message);
+      // Don't throw - device tracking is non-critical
     }
-  };
+  }, []);
 
-  return {
-    registerWithEmail
-  };
+  return { trackDevice };
 }
-
-export default useRegistrationFlow;

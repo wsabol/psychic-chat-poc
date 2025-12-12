@@ -1,4 +1,5 @@
 import { Router } from "express";
+import logger from "../shared/logger.js";
 import { authorizeUser, verify2FA } from "../middleware/auth.js";
 import { enqueueMessage } from "../shared/queue.js";
 import { generatePsychicOpening } from "../shared/opening.js";
@@ -77,7 +78,7 @@ router.get("/history/:userId", authorizeUser, verify2FA, async (req, res) => {
         );
         res.json(rows);
     } catch (err) {
-        console.error('Query error for messages table:', err);
+        logger.error('Chat history query error:', err.message);
         res.status(500).json({ error: 'Database query error: ' + err.message });
     }
 });

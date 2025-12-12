@@ -1,0 +1,173 @@
+import { Router } from 'express';
+import logger from '../../shared/logger.js';
+import { auth } from '../../shared/firebase-admin.js';
+import { db } from '../../shared/db.js';
+import { migrateOnboardingData } from '../../shared/accountMigration.js';
+import { logAudit } from '../../shared/auditLog.js';
+import { createUserDatabaseRecords } from './helpers/userCreation.js';
+
+const router = Router();
+
+/**
+ * POST /auth/register
+ * User registration via Firebase
+ */
+router.post('/register', async (req, res) => {
+  try {
+    const { email, password, firstName, lastName } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password required' });
+    }
+    
+    // Create user in Firebase
+    const userRecord = await auth.createUser({
+      email,
+      password,
+      displayName: `${firstName || ''} ${lastName || ''}`.trim()
+    });
+    
+    // Create user profile in database
+    await createUserDatabaseRecords(userRecord.uid, email, firstName, lastName);
+
+    // Log registration
+    await logAudit(db, {
+      userId: userRecord.uid,
+      action: 'USER_REGISTERED',
+      resourceType: 'authentication',
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      httpMethod: req.method,
+      endpoint: req.path,
+      status: 'SUCCESS',
+      details: { email }
+    });
+    
+    return res.status(201).json({
+      success: true,
+      uid: userRecord.uid,
+      email: userRecord.email,
+      message: 'User registered successfully. Please sign in.'
+    });
+  } catch (err) {
+    logger.error('Registration error:', err.message);
+    if (err.code === 'auth/email-already-exists') {
+      return res.status(409).json({ error: 'Email already registered' });
+    }
+    return res.status(500).json({ error: 'Registration failed', details: err.message });
+  }
+});
+
+/**
+ * POST /auth/register-firebase-user
+ * Register user and create database record (called from client)
+ */
+router.post('/register-firebase-user', async (req, res) => {
+  try {
+    const { userId, email } = req.body;
+    if (!userId || !email) return res.status(400).json({ error: 'userId and email required' });
+
+    // Check if already exists
+    const exists = await db.query('SELECT user_id FROM user_personal_info WHERE user_id = $1', [userId]);
+    if (exists.rows.length > 0) return res.json({ success: true });
+
+    // Create records
+    await createUserDatabaseRecords(userId, email);
+
+    // Log
+    await logAudit(db, {
+      userId,
+      action: 'USER_REGISTERED',
+      resourceType: 'authentication',
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      httpMethod: req.method,
+      endpoint: req.path,
+      status: 'SUCCESS',
+      details: { email }
+    });
+
+    return res.json({ success: true, userId });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /auth/register-and-migrate
+ * Register account and migrate onboarding data from temp account
+ */
+router.post('/register-and-migrate', async (req, res) => {
+  try {
+    const { 
+      email, 
+      password, 
+      firstName, 
+      lastName,
+      temp_user_id,
+      onboarding_first_message,
+      onboarding_horoscope
+    } = req.body;
+    
+    if (!email || !password || !temp_user_id) {
+      return res.status(400).json({ 
+        error: 'Email, password, and temp_user_id required' 
+      });
+    }
+
+    // Step 1: Create permanent Firebase user
+    const userRecord = await auth.createUser({
+      email,
+      password,
+      displayName: `${firstName || ''} ${lastName || ''}`.trim()
+    });
+    
+    const newUserId = userRecord.uid;
+
+    // Step 2: Create database records
+    await createUserDatabaseRecords(newUserId, email, firstName, lastName);
+
+    try {
+      // Step 3: Migrate onboarding data
+      const migrationResult = await migrateOnboardingData({
+        newUserId,
+        temp_user_id,
+        firstName: firstName || '',
+        lastName: lastName || '',
+        email,
+        onboarding_first_message,
+        onboarding_horoscope
+      });
+      
+      return res.status(201).json({
+        success: true,
+        uid: newUserId,
+        email: userRecord.email,
+        message: 'Account created and onboarding data migrated successfully',
+        migration: migrationResult
+      });
+      
+    } catch (migrationErr) {
+      logger.error('Migration failed after account creation:', migrationErr.message);
+      return res.status(201).json({
+        success: true,
+        uid: newUserId,
+        email: userRecord.email,
+        message: 'Account created but data migration encountered issues',
+        warning: migrationErr.message
+      });
+    }
+    
+  } catch (err) {
+    logger.error('Registration with migration error:', err.message);
+    if (err.code === 'auth/email-already-exists') {
+      return res.status(409).json({ error: 'Email already registered' });
+    }
+    return res.status(500).json({ 
+      error: 'Registration with migration failed', 
+      details: err.message 
+    });
+  }
+});
+
+export default router;

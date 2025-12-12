@@ -27,3 +27,7 @@ yarn-error.log*
 api/firebase-adminsdk-key.json
 worker/firebase-adminsdk-key.json
 client/.env.local
+
+# Logs (auto-rotated and cleaned up)
+logs/
+*.log

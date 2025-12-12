@@ -1,167 +1,480 @@
-import React, { useState, useEffect } from 'react';
-import { useBilling } from '../hooks/useBilling';
-import './InvoicesPage.css';
+import { useState, useEffect } from 'react';
+import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
+import { zodiacSigns } from '../data/ZodiacSigns';
+import '../styles/responsive.css';
+import './MySignPage.css';
 
-/**
- * InvoicesPage - View and download invoices
- */
-export default function InvoicesPage({ userId, token, auth }) {
-  const billing = useBilling(token);
-  const [filterStatus, setFilterStatus] = useState('all');
+export default function MySignPage({ userId, token, auth }) {
+  const [astroData, setAstroData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Load invoices on mount
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    billing.fetchInvoices();
-  }, []);
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
-  const formatDate = (timestamp) => {
-    return new Date(timestamp * 1000).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
+    const fetchAstrologyData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetchWithTokenRefresh(`${API_URL}/user-astrology/${userId}`, { 
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : ''
+        }
+      });
+      
+      if (!response.ok) {
+        setError('Your birth chart is being calculated. Please refresh in a moment.');
+        setLoading(false);
+        return;
+      }
 
-  const formatAmount = (amount, currency) => {
-    const value = (amount / 100).toFixed(2);
-    return `${currency?.toUpperCase() || 'USD'} $${value}`;
-  };
+      const data = await response.json();
+      let astroDataObj = data.astrology_data;
+      if (typeof astroDataObj === 'string') {
+        astroDataObj = JSON.parse(astroDataObj);
+      }
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'paid':
-        return 'success';
-      case 'open':
-        return 'warning';
-      case 'draft':
-        return 'info';
-      case 'void':
-      case 'uncollectible':
-        return 'danger';
-      default:
-        return 'default';
+      // Get zodiac enrichment data from ZodiacSigns.js
+      const sunSignKey = astroDataObj.sun_sign?.toLowerCase();
+      const zodiacEnrichment = zodiacSigns[sunSignKey] || {};
+
+      // Merge API calculated data with zodiac enrichment
+      const mergedAstroData = {
+        ...astroDataObj,
+        ...zodiacEnrichment
+      };
+
+      setAstroData({
+        ...data,
+        astrology_data: mergedAstroData
+      });
+      setLoading(false);
+    } catch (err) {
+      setError('Unable to load your birth chart. Please try again.');
+      setLoading(false);
     }
   };
 
-  const filteredInvoices = billing.invoices.filter(invoice => {
-    if (filterStatus === 'all') return true;
-    return invoice.status === filterStatus;
-  });
+  useEffect(() => {
+    fetchAstrologyData();
+  }, [userId, token, API_URL]);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  if (loading) {
+    return (
+      <div className="page-safe-area sign-page">
+        <div className="loading-container">
+          <p>Loading your birth chart...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="page-safe-area sign-page">
+        <div className="error-container">
+          <p className="error-message">⚠️ {error}</p>
+          <button onClick={fetchAstrologyData} className="btn-secondary">
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!astroData?.astrology_data) {
+    return (
+      <div className="page-safe-area sign-page">
+        <div className="error-container">
+          <p className="error-message">No astrology data available.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const astro = astroData.astrology_data;
 
   return (
-    <div className="invoices-page">
+    <div className="page-safe-area sign-page">
       {/* Header */}
-      <div className="section-header">
-        <h2>📄 Invoices</h2>
-        <p>View and download your billing invoices</p>
+      <div className="sign-header">
+        <h2 className="heading-primary">♈ Your Birth Chart</h2>
+        <p className="sign-subtitle">Your Sun, Moon, and Rising Signs calculated from your birth data</p>
       </div>
 
-      {/* Filter */}
-      {billing.invoices && billing.invoices.length > 0 && (
-        <div className="filter-bar">
-          <label htmlFor="status-filter">Filter by Status:</label>
-          <select
-            id="status-filter"
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="form-select"
-          >
-            <option value="all">All Invoices</option>
-            <option value="paid">Paid</option>
-            <option value="open">Open</option>
-            <option value="draft">Draft</option>
-          </select>
-        </div>
-      )}
+      {/* The Three Signs */}
+      <section className="sign-cards-section">
+        {/* Sun Sign Card */}
+        {astro.sun_sign && (
+          <div className="sign-card sun-sign-card">
+            <div className="sign-card-icon">☀️</div>
+            <div className="sign-card-content">
+              <h3 className="sign-card-title">Sun Sign</h3>
+              <p className="sign-card-value">{astro.sun_sign}</p>
+              {astro.sun_degree && (
+                <p className="sign-card-degree">{astro.sun_degree}°</p>
+              )}
+              <p className="sign-card-meaning">Your core identity and essence</p>
+            </div>
+          </div>
+        )}
 
-      {/* Invoices Table */}
-      {filteredInvoices && filteredInvoices.length > 0 ? (
-        <div className="invoices-table-container">
-          <table className="invoices-table">
-            <thead>
-              <tr>
-                <th>Invoice #</th>
-                <th>Date</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Description</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredInvoices.map(invoice => (
-                <tr key={invoice.id} className="invoice-row">
-                  <td className="invoice-number">
-                    {invoice.number || invoice.id.substring(0, 12)}
-                  </td>
-                  <td className="invoice-date">
-                    {formatDate(invoice.created)}
-                  </td>
-                  <td className="invoice-amount">
-                    {formatAmount(invoice.amount_paid || invoice.amount_due, invoice.currency)}
-                  </td>
-                  <td className="invoice-status">
-                    <span className={`status-badge status-${getStatusColor(invoice.status)}`}>
-                      {invoice.status.toUpperCase()}
-                    </span>
-                  </td>
-                  <td className="invoice-description">
-                    {invoice.description || 'Subscription billing'}
-                  </td>
-                  <td className="invoice-actions">
-                    {invoice.pdf && (
-                      <a
-                        href={invoice.pdf}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn-small btn-primary"
-                        title="Download PDF"
-                      >
-                        📥 Download
-                      </a>
-                    )}
-                    {invoice.hosted_invoice_url && (
-                      <a
-                        href={invoice.hosted_invoice_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn-small btn-secondary"
-                        title="View Invoice"
-                      >
-                        👁️ View
-                      </a>
-                    )}
-                  </td>
-                </tr>
+        {/* Moon Sign Card */}
+        {astro.moon_sign && (
+          <div className="sign-card moon-sign-card">
+            <div className="sign-card-icon">🌙</div>
+            <div className="sign-card-content">
+              <h3 className="sign-card-title">Moon Sign</h3>
+              <p className="sign-card-value">{astro.moon_sign}</p>
+              {astro.moon_degree && (
+                <p className="sign-card-degree">{astro.moon_degree}°</p>
+              )}
+              <p className="sign-card-meaning">Your inner emotional world</p>
+            </div>
+          </div>
+        )}
+
+        {/* Rising Sign Card */}
+        {astro.rising_sign && (
+          <div className="sign-card rising-sign-card">
+            <div className="sign-card-icon">↗️</div>
+            <div className="sign-card-content">
+              <h3 className="sign-card-title">Rising Sign</h3>
+              <p className="sign-card-value">{astro.rising_sign}</p>
+              {astro.rising_degree && (
+                <p className="sign-card-degree">{astro.rising_degree}°</p>
+              )}
+              <p className="sign-card-meaning">How others perceive you</p>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* Divider */}
+      <div className="section-divider"></div>
+
+      {/* Sun Sign Detailed Info - Display Merged Data */}
+      <section className="zodiac-details-section">
+        <div className="zodiac-header">
+          <h2 className="heading-secondary">
+            {astro.emoji && <span>{astro.emoji}</span>} {astro.sun_sign}
+            {astro.symbol && <span className="zodiac-symbol">{astro.symbol}</span>}
+          </h2>
+        </div>
+
+        {/* Basic Info */}
+        <div className="info-grid">
+          {astro.dates && (
+            <div className="info-item">
+              <strong>Dates:</strong>
+              <span>{astro.dates}</span>
+            </div>
+          )}
+          {astro.element && (
+            <div className="info-item">
+              <strong>Element:</strong>
+              <span>{astro.element}</span>
+            </div>
+          )}
+          {astro.rulingPlanet && (
+            <div className="info-item">
+              <strong>Ruling Planet:</strong>
+              <span>{astro.rulingPlanet}</span>
+            </div>
+          )}
+          {astro.planet && (
+            <div className="info-item">
+              <strong>Planet:</strong>
+              <span>{astro.planet}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Personality */}
+        {astro.personality && (
+          <div className="detail-section">
+            <h4>Personality Essence</h4>
+            <p className="italic-text">{astro.personality}</p>
+          </div>
+        )}
+
+        {/* Life Path */}
+        {astro.lifePath && (
+          <div className="detail-section">
+            <h4>Your Life Path</h4>
+            <p>{astro.lifePath}</p>
+          </div>
+        )}
+
+        {/* Strengths */}
+        {astro.strengths && Array.isArray(astro.strengths) && (
+          <div className="detail-section">
+            <h4>Strengths</h4>
+            <ul className="strength-list">
+              {astro.strengths.map((strength, idx) => (
+                <li key={idx}>{strength}</li>
               ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="empty-state">
-          <p>
-            {billing.invoices && billing.invoices.length === 0
-              ? 'No invoices yet. You will see them here when you make a payment.'
-              : 'No invoices match the selected filter.'}
-          </p>
-        </div>
-      )}
+            </ul>
+          </div>
+        )}
 
-      {/* Invoice Details Info */}
-      {filteredInvoices && filteredInvoices.length > 0 && (
-        <div className="invoice-info-box">
-          <h3>Invoice Information</h3>
-          <ul>
-            <li><strong>Invoice Number:</strong> Unique identifier for each invoice</li>
-            <li><strong>Date:</strong> Date the invoice was issued</li>
-            <li><strong>Amount:</strong> Total amount due or paid</li>
-            <li><strong>Status:</strong> Current payment status (Paid, Open, Draft)</li>
-            <li><strong>Download:</strong> Get a PDF copy of the invoice</li>
-            <li><strong>View:</strong> Open invoice in your browser</li>
-          </ul>
-        </div>
-      )}
+        {/* Challenges */}
+        {astro.challenges && (
+          <div className="detail-section">
+            <h4>Challenges to Balance</h4>
+            <p>{astro.challenges}</p>
+          </div>
+        )}
+
+        {astro.weaknesses && Array.isArray(astro.weaknesses) && (
+          <div className="detail-section">
+            <h4>Weaknesses</h4>
+            <ul className="challenge-list">
+              {astro.weaknesses.map((weakness, idx) => (
+                <li key={idx}>{weakness}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Lucky Elements */}
+        {astro.luckyElements && (
+          <div className="detail-section lucky-section">
+            <h4>Lucky Elements</h4>
+            <div className="lucky-grid">
+              {astro.luckyElements.numbers && (
+                <div className="lucky-item">
+                  <strong>Numbers:</strong>
+                  <span>{Array.isArray(astro.luckyElements.numbers) ? astro.luckyElements.numbers.join(', ') : astro.luckyElements.numbers}</span>
+                </div>
+              )}
+              {astro.luckyElements.colors && (
+                <div className="lucky-item">
+                  <strong>Colors:</strong>
+                  <span>{Array.isArray(astro.luckyElements.colors) ? astro.luckyElements.colors.join(', ') : astro.luckyElements.colors}</span>
+                </div>
+              )}
+              {astro.luckyElements.days && (
+                <div className="lucky-item">
+                  <strong>Days:</strong>
+                  <span>{Array.isArray(astro.luckyElements.days) ? astro.luckyElements.days.join(', ') : astro.luckyElements.days}</span>
+                </div>
+              )}
+              {astro.luckyElements.stones && (
+                <div className="lucky-item">
+                  <strong>Crystals:</strong>
+                  <span>{Array.isArray(astro.luckyElements.stones) ? astro.luckyElements.stones.join(', ') : astro.luckyElements.stones}</span>
+                </div>
+              )}
+              {astro.luckyElements.metals && (
+                <div className="lucky-item">
+                  <strong>Metals:</strong>
+                  <span>{Array.isArray(astro.luckyElements.metals) ? astro.luckyElements.metals.join(', ') : astro.luckyElements.metals}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Compatibility */}
+        {astro.compatibility && (
+          <div className="detail-section">
+            <h4>Compatibility</h4>
+            {astro.compatibility.mostCompatible && (
+              <p><strong>Most Compatible:</strong> {Array.isArray(astro.compatibility.mostCompatible) ? astro.compatibility.mostCompatible.join(', ') : astro.compatibility.mostCompatible}</p>
+            )}
+            {astro.compatibility.leastCompatible && (
+              <p><strong>Challenges:</strong> {Array.isArray(astro.compatibility.leastCompatible) ? astro.compatibility.leastCompatible.join(', ') : astro.compatibility.leastCompatible}</p>
+            )}
+            {astro.compatibility.description && (
+              <p className="italic-text">{astro.compatibility.description}</p>
+            )}
+            {astro.compatibility.soulmate && (
+              <p><strong>Soulmate Sign:</strong> {astro.compatibility.soulmate}</p>
+            )}
+          </div>
+        )}
+
+        {/* Career */}
+        {astro.careerSpecific && (
+          <div className="detail-section">
+            <h4>Career & Purpose</h4>
+            {astro.careerSpecific.ideal && (
+              <div>
+                <p><strong>Ideal Careers:</strong></p>
+                <ul>
+                  {Array.isArray(astro.careerSpecific.ideal) ? 
+                    astro.careerSpecific.ideal.map((job, idx) => (
+                      <li key={idx}>{job}</li>
+                    )) : 
+                    <li>{astro.careerSpecific.ideal}</li>
+                  }
+                </ul>
+              </div>
+            )}
+            {astro.careerSpecific.leadership && (
+              <p><strong>Leadership Style:</strong> {astro.careerSpecific.leadership}</p>
+            )}
+            {astro.careerSpecific.avoid && (
+              <div>
+                <p><strong>Paths to Avoid:</strong></p>
+                <ul>
+                  {Array.isArray(astro.careerSpecific.avoid) ? 
+                    astro.careerSpecific.avoid.map((job, idx) => (
+                      <li key={idx}>{job}</li>
+                    )) : 
+                    <li>{astro.careerSpecific.avoid}</li>
+                  }
+                </ul>
+              </div>
+            )}
+            {astro.opportunities && (
+              <p><strong>Opportunities:</strong> {astro.opportunities}</p>
+            )}
+          </div>
+        )}
+
+        {/* Health */}
+        {astro.health && (
+          <div className="detail-section">
+            <h4>Health & Wellness</h4>
+            {astro.health.bodyParts && (
+              <p><strong>Vulnerable Areas:</strong> {Array.isArray(astro.health.bodyParts) ? astro.health.bodyParts.join(', ') : astro.health.bodyParts}</p>
+            )}
+            {astro.health.tendencies && (
+              <div>
+                <p><strong>Health Tendencies:</strong></p>
+                <ul>
+                  {Array.isArray(astro.health.tendencies) ? 
+                    astro.health.tendencies.map((t, idx) => (
+                      <li key={idx}>{t}</li>
+                    )) : 
+                    <li>{astro.health.tendencies}</li>
+                  }
+                </ul>
+              </div>
+            )}
+            {astro.health.recommendations && (
+              <div>
+                <p><strong>Wellness Recommendations:</strong></p>
+                <ul>
+                  {Array.isArray(astro.health.recommendations) ? 
+                    astro.health.recommendations.map((rec, idx) => (
+                      <li key={idx}>{rec}</li>
+                    )) : 
+                    <li>{astro.health.recommendations}</li>
+                  }
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Mythology */}
+        {astro.mythology && (
+          <div className="detail-section mythology-section">
+            <h4>Mythology</h4>
+            {astro.mythology.archetype && (
+              <p><strong>Archetype:</strong> {astro.mythology.archetype}</p>
+            )}
+            {astro.mythology.deity && (
+              <p><strong>Deity:</strong> {astro.mythology.deity}</p>
+            )}
+            {astro.mythology.origin && (
+              <p><strong>Origin:</strong> {astro.mythology.origin}</p>
+            )}
+            {astro.mythology.story && (
+              <p className="italic-text">{astro.mythology.story}</p>
+            )}
+          </div>
+        )}
+
+        {/* Seasonal */}
+        {astro.seasonal && (
+          <div className="detail-section seasonal-section">
+            <h4>Seasonal Influence</h4>
+            {astro.seasonal.season && (
+              <p><strong>Season:</strong> {astro.seasonal.season}</p>
+            )}
+            {astro.seasonal.energy && (
+              <p><strong>Energy:</strong> {astro.seasonal.energy}</p>
+            )}
+            {astro.seasonal.bestSeason && (
+              <p><strong>Best Season:</strong> {astro.seasonal.bestSeason}</p>
+            )}
+            {astro.seasonal.connection && (
+              <p className="italic-text">{astro.seasonal.connection}</p>
+            )}
+          </div>
+        )}
+
+        {/* Moon Phases */}
+        {astro.moonPhases && (
+          <div className="detail-section">
+            <h4>Moon Phase Influences</h4>
+            {astro.moonPhases.influence && (
+              <p className="italic-text">{astro.moonPhases.influence}</p>
+            )}
+            {astro.moonPhases.newMoon && (
+              <div>
+                <p><strong>New Moon:</strong> {astro.moonPhases.newMoon}</p>
+              </div>
+            )}
+            {astro.moonPhases.fullMoon && (
+              <div>
+                <p><strong>Full Moon:</strong> {astro.moonPhases.fullMoon}</p>
+              </div>
+            )}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

@@ -2,6 +2,7 @@ import express from "express";
 import fs from "fs";
 import https from "https";
 import helmet from "helmet";
+import logger from "./shared/logger.js";
 import chatRoutes from "./routes/chat.js";
 import userProfileRoutes from "./routes/user-profile.js";
 import astrologyRoutes from "./routes/astrology.js";
@@ -118,8 +119,9 @@ if (fs.existsSync('./certificates/key.pem') && fs.existsSync('./certificates/cer
     server.listen(PORT, () => {
     });
 } else {
-    console.warn('Certificates not found; starting HTTP server for development. This is not secure for production!');
+    logger.warn('Certificates not found; starting HTTP server for development. This is not secure for production!');
     server = app.listen(PORT, () => {
+        logger.info(`API Server listening on port ${PORT} (HTTP - development mode)`);
     });
 }
 
@@ -127,5 +129,7 @@ if (fs.existsSync('./certificates/key.pem') && fs.existsSync('./certificates/cer
 // setInterval(async () => {
 //     try {
 //         const res = await fetch(`http://localhost:${PORT}/cleanup/cleanup-old-temp-accounts`, { method: 'DELETE' });
-//     } catch (e) { console.error('[CLEANUP] Error:', e.message); }
+//     } catch (e) { logger.error('[CLEANUP] Error:', e.message); }
 // }, 24 * 60 * 60 * 1000);
+
+export { logger };

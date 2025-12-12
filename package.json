@@ -17,6 +17,8 @@
     "openai": "^5.23.2",
     "pg": "^8.16.3",
     "react-swipeable": "^7.0.2",
-    "redis": "^5.9.0"
+    "redis": "^5.9.0",
+    "winston": "^3.19.0",
+    "winston-daily-rotate-file": "^5.0.0"
   }
 }

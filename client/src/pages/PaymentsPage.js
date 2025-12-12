@@ -11,10 +11,9 @@ export default function PaymentsPage({ userId, token, auth }) {
   const [dateRange, setDateRange] = useState('all');
 
   // Load payments on mount
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     billing.fetchPayments();
-  }, []);
+  }, [billing]);
 
   const formatDate = (timestamp) => {
     return new Date(timestamp * 1000).toLocaleDateString('en-US', {
