@@ -28,8 +28,9 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
   const [showAstrologyPrompt, setShowAstrologyPrompt] = useState(false);
   const timerRef = useRef(null);
   
-  // Refs for message end
+  // Refs for message end and message count tracking
   const messagesEndRef = useRef(null);
+  const previousMessageCountRef = useRef(0);
   
   // Filter out special message types for display
   const displayMessages = chat.filter(msg => 
@@ -71,12 +72,19 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
     }
   }, [timerActive, timeRemaining]);
 
-  // Auto-scroll to bottom when messages load or new messages arrive
+  // Auto-scroll to bottom ONLY when NEW messages arrive (not on every render)
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    // Only scroll if messages array has grown (new message arrived)
+    if (displayMessages.length > previousMessageCountRef.current) {
+      previousMessageCountRef.current = displayMessages.length;
+      // Small delay to ensure DOM is updated
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 0);
     }
-  }, [displayMessages]);
+  }, [displayMessages.length]);
 
   // Handle send message
   const handleSendMessage = async () => {

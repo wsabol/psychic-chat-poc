@@ -1,5 +1,6 @@
 import { db } from '../shared/db.js';
 import OpenAI from 'openai';
+import { getScentsByCard, getScentsByCards, formatScentRecommendation } from './scentUtils.js';
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -102,6 +103,13 @@ CRYSTAL GUIDANCE:
 - Suggest crystals that support the energy of the reading
 - Mention how crystals amplify tarot insights or ground astrological energies
 
+AROMATHERAPY GUIDANCE (Optional):
+- When appropriate, suggest essential oils or fragrance notes that align with the card energies
+- Recommend scents that support emotional grounding or amplify the reading's purpose
+- Examples: Frankincense for grounding, rose for heart-opening, peppermint for clarity
+- Only include aromatherapy if it naturally serves the reading—do not force it into every response
+- Keep scent recommendations brief and poetic, woven into the narrative
+
 Purpose:
 - Provide holistic readings that reveal the complete picture
 - Help users understand how cosmic timing, card energies, and crystal support work together
@@ -134,7 +142,9 @@ EXAMPLE - COPY THIS STRUCTURE:
 <h3>Astrology Reflection</h3>
 <p>Your Aquarian nature craves innovation and change.</p>
 <h3>Crystal Guidance</h3>
-<p>Consider Black Tourmaline for grounding energy during transitions.</p>`;
+<p>Consider Black Tourmaline for grounding energy during transitions.</p>
+<h3>Aromatherapy Support</h3>
+<p>To deepen this reading, consider <em>frankincense and cedarwood</em> — their grounding, protective energies support your journey toward completion.</p>`;
 
     const tempAccountAddition = `
 
@@ -187,4 +197,29 @@ export async function callOracle(systemPrompt, messageHistory, userMessage) {
 export function getUserGreeting(userInfo, userId) {
     if (!userInfo) return userId;
     return userInfo.address_preference || userInfo.first_name || userId;
+}
+
+/**
+ * Extract scent recommendations from oracle response
+ * Utility function for potential future use (logging, analytics, etc.)
+ * @param {string} responseText - The oracle's HTML response
+ * @returns {object} Scent data found in response
+ */
+export function extractScentDataFromResponse(responseText) {
+    if (!responseText) return null;
+
+    const scentSectionRegex = /<h3>Aromatherapy Support<\/h3>([\s\S]*?)(?=<h3>|$)/i;
+    const match = responseText.match(scentSectionRegex);
+
+    if (match) {
+        return {
+            hasScentGuidance: true,
+            content: match[1].trim()
+        };
+    }
+
+    return {
+        hasScentGuidance: false,
+        content: null
+    };
 }
