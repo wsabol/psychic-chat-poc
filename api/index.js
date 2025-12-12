@@ -12,7 +12,6 @@ import authRoutes from "./routes/auth-firebase.js";
 import consentRoutes from "./routes/consent.js";
 import userDataRoutes from "./routes/user-data.js";
 import cleanupRoutes from "./routes/cleanup.js";
-import migrationRoutes from "./routes/migration.js";
 import securityRoutes from "./routes/security.js";
 import billingRoutes from "./routes/billing.js";
 import { authenticateToken } from "./middleware/auth.js";
@@ -90,7 +89,6 @@ app.use("/auth", authRoutes);
 app.use("/auth", consentRoutes);
 app.use("/cleanup", cleanupRoutes);
 app.use("/cleanup", cleanupStatusRoutes);
-app.use("/migration", migrationRoutes);
 
 // Protected routes (authentication required)
 app.use("/chat", authenticateToken, chatRoutes);
@@ -122,7 +120,6 @@ if (fs.existsSync('./certificates/key.pem') && fs.existsSync('./certificates/cer
 } else {
     console.warn('Certificates not found; starting HTTP server for development. This is not secure for production!');
     server = app.listen(PORT, () => {
-        console.log(`[API] Server listening on port ${PORT}`);
     });
 }
 

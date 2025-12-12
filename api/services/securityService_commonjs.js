@@ -58,12 +58,10 @@ async function logoutDevice(userId, deviceId) {
     // This prevents the user from making authenticated requests with that token
     try {
       await admin.auth().revokeRefreshTokens(userId);
-      console.log('[SECURITY] ✓ Refresh tokens revoked for user:', userId);
     } catch (err) {
       console.warn('[SECURITY] Could not revoke Firebase tokens:', err.message);
     }
 
-    console.log('[SECURITY] ✓ Device logged out:', deviceId);
     return { success: true };
   } catch (err) {
     console.error('[SECURITY] Error logging out device:', err);
@@ -130,11 +128,7 @@ async function savePhoneNumber(userId, phoneNumber, recoveryPhone) {
       [userId, phoneNumber, code, expiresAt]
     );
 
-    console.log('[SECURITY] ✓ Phone saved, verification code generated');
-
     // TODO: Send SMS to phoneNumber with code
-    // For now, log it for testing
-    console.log(`[SECURITY] SMS CODE FOR TESTING: ${code}`);
 
     return { success: true, codeSent: true };
   } catch (err) {
@@ -176,7 +170,6 @@ async function verifyPhoneCode(userId, code) {
       [userId, encryptedPhone]
     );
 
-    console.log('[SECURITY] ✓ Phone verified for user:', userId);
     return { success: true, verified: true };
   } catch (err) {
     console.error('[SECURITY] Error verifying phone code:', err);
@@ -238,11 +231,6 @@ async function saveRecoveryEmail(userId, recoveryEmail) {
       [userId, recoveryEmail, code, expiresAt]
     );
 
-    console.log('[SECURITY] ✓ Recovery email saved, verification code generated');
-
-    // TODO: Send email to recoveryEmail with code
-    console.log(`[SECURITY] EMAIL CODE FOR TESTING: ${code}`);
-
     return { success: true, codeSent: true };
   } catch (err) {
     console.error('[SECURITY] Error saving recovery email:', err);
@@ -282,7 +270,6 @@ async function verifyEmailCode(userId, code) {
       [userId, encryptedEmail]
     );
 
-    console.log('[SECURITY] ✓ Email verified for user:', userId);
     return { success: true, verified: true };
   } catch (err) {
     console.error('[SECURITY] Error verifying email code:', err);
@@ -301,7 +288,6 @@ async function removeRecoveryEmail(userId) {
       [userId]
     );
 
-    console.log('[SECURITY] ✓ Recovery email removed for user:', userId);
     return { success: true };
   } catch (err) {
     console.error('[SECURITY] Error removing recovery email:', err);
@@ -328,7 +314,6 @@ async function recordPasswordChange(userId) {
       [userId]
     );
 
-    console.log('[SECURITY] ✓ Password change recorded, sessions cleared');
     return { success: true };
   } catch (err) {
     console.error('[SECURITY] Error recording password change:', err);

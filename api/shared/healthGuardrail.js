@@ -162,9 +162,6 @@ export function healthContentMiddleware(req, res, next) {
     if (containsHealthContent(userMessage)) {
       const detectedKeywords = detectHealthKeywords(userMessage);
       
-      // Log the blocked attempt
-      console.log(`[HEALTH-GUARD] Blocked health content. Keywords: ${detectedKeywords.join(', ')}`);
-      
       return res.status(400).json({
         success: false,
         error: getBlockedResponse().message,

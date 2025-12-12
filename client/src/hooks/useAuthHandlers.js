@@ -36,7 +36,6 @@ export function useAuthHandlers(auth, modals, tempFlow) {
     }, []);
 
     const handleSetupAccount = useCallback(async (onboardingData) => {
-        console.log('[ONBOARDING] User clicked "Setup Account"');
         setShowFinalModal(false);
         
         // Register pending migration so backend knows to expect this temp user's data
@@ -51,9 +50,6 @@ export function useAuthHandlers(auth, modals, tempFlow) {
                     })
                 });
                 
-                if (migrationRes.ok) {
-                    console.log('[ONBOARDING] ✓ Migration registered');
-                }
             } catch (err) {
                 console.warn('[ONBOARDING] Migration registration failed:', err);
             }
@@ -64,7 +60,6 @@ export function useAuthHandlers(auth, modals, tempFlow) {
     }, [auth, setShowFinalModal, setShowRegisterMode]);
 
     const handleExit = useCallback(async () => {
-        console.log('[ONBOARDING] User clicked "Exit" from OnboardingModal');
         setShowFinalModal(false);
         await auth.deleteTemporaryAccount();
         markAsExited();
@@ -88,7 +83,6 @@ export function useAuthHandlers(auth, modals, tempFlow) {
     }, [setShowAstrologyPrompt, setShowPersonalInfoModal]);
 
     const handleAstrologyPromptNo = useCallback(async () => {
-        console.log('[ONBOARDING] User declined astrology - exiting to landing page');
         setShowAstrologyPrompt(false);
         
         try {
@@ -99,11 +93,6 @@ export function useAuthHandlers(auth, modals, tempFlow) {
                 headers: { 'Authorization': `Bearer ${auth.token}` }
             });
             
-            if (response.ok) {
-                console.log('[ONBOARDING] ✓ Temp account deleted');
-            } else {
-                console.warn('[ONBOARDING] ✗ Temp account deletion failed');
-            }
         } catch (err) {
             console.error('[ONBOARDING] Error deleting temp account:', err);
         }

@@ -53,7 +53,6 @@ setTimeout(() => {
 **Code:**
 ```javascript
 const handleAstrologyPromptNo = useCallback(async () => {
-    console.log('[ONBOARDING] User declined astrology - exiting to landing page');
     setShowAstrologyPrompt(false);
     
     try {
@@ -63,11 +62,6 @@ const handleAstrologyPromptNo = useCallback(async () => {
             headers: { 'Authorization': `Bearer ${auth.token}` }
         });
         
-        if (response.ok) {
-            console.log('[ONBOARDING] ✓ Temp account deleted');
-        } else {
-            console.warn('[ONBOARDING] ✗ Temp account deletion failed');
-        }
     } catch (err) {
         console.error('[ONBOARDING] Error deleting temp account:', err);
     }
@@ -113,7 +107,6 @@ const handleAstrologyPromptNo = useCallback(async () => {
 **Code:**
 ```javascript
 const handleSetupAccount = useCallback(async (onboardingData) => {
-    console.log('[ONBOARDING] User clicked "Setup Account"');
     setShowFinalModal(false);
     
     if (auth.authUserId) {
@@ -127,9 +120,6 @@ const handleSetupAccount = useCallback(async (onboardingData) => {
                 })
             });
             
-            if (migrationRes.ok) {
-                console.log('[ONBOARDING] ✓ Migration registered');
-            }
         } catch (err) {
             console.warn('[ONBOARDING] Migration registration failed:', err);
         }
@@ -176,7 +166,6 @@ const API_URL = process.env.API_URL || 'http://localhost:3000';
 
 async function cleanupOldTempAccounts() {
     try {
-        console.log('[CLEANUP] Running cleanup job for old temporary accounts...');
         const response = await fetch(`${API_URL}/cleanup/cleanup-old-temp-accounts`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' }
@@ -184,7 +173,6 @@ async function cleanupOldTempAccounts() {
         
         if (response.ok) {
             const result = await response.json();
-            console.log('[CLEANUP] ✓ Cleanup complete:', result.message, `(${result.deletedCount} accounts deleted)`);
         } else {
             console.error('[CLEANUP] ✗ Cleanup failed with status:', response.status);
         }
@@ -197,7 +185,6 @@ export async function workerLoop() {
     // ... existing code ...
     
     // Run cleanup job every 24 hours (86400000 ms)
-    console.log('[CLEANUP] Scheduling cleanup job to run every 24 hours');
     setInterval(cleanupOldTempAccounts, 86400000);
     
     // Also run cleanup once on startup (after 5 seconds delay)

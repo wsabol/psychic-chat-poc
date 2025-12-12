@@ -64,7 +64,6 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit })
     const handlePopState = (e) => {
       // For temp accounts, back button triggers exit (show ThankYouScreen)
       if (auth?.isTemporaryAccount && onExit) {
-        console.log('[BACK-BUTTON] Temp account - triggering exit');
         onExit();
         return;
       }

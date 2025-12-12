@@ -38,7 +38,6 @@ function App() {
     // Auto-close register mode when user successfully authenticates
     useEffect(() => {
         if (authState.isAuthenticated && previousAuthState !== authState.isAuthenticated) {
-            console.log('[AUTO-NAV] User authenticated, closing register mode');
             modals.setShowRegisterMode(false);
         }
         setPreviousAuthState(authState.isAuthenticated);
@@ -47,7 +46,6 @@ function App() {
         // Start email verification polling when on verification screen
     useEffect(() => {
         if (isVerification && auth.currentUser) {
-            console.log('[VERIFICATION] Starting verification polling for:', auth.currentUser.email);
             emailVerification.startVerificationPolling(
                 auth.currentUser,
                 40,
@@ -58,7 +56,6 @@ function App() {
 
     // Handle verification failure
     const handleVerificationFailed = () => {
-        console.log('[EMAIL-VERIFY] Verification failed - three strikes');
         setVerificationFailed(true);
         tempFlow.setAppExited(true);
     };
@@ -71,7 +68,6 @@ function App() {
     };
 
     const handleSignOutFromVerification = async () => {
-        console.log('[AUTH] Signing out from verification screen');
         await authState.handleLogout();
     };
 
@@ -163,7 +159,6 @@ function App() {
                     method={authState.twoFactorMethod}
                                         verify2FAFunc={authState.verify2FA}
                     onVerified={() => {
-                        console.log('[2FA-APP] Code verified by verify2FA');
                     }}
                     onSignOut={authState.handleLogout}
                     isLoading={false}

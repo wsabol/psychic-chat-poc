@@ -27,7 +27,6 @@ function AstrologyModal({ userId, token, isOpen, onClose, birthDate, birthTime, 
                 const astroResponse = await fetchWithTokenRefresh(`${API_URL}/user-astrology/${userId}`, { headers });
                 if (astroResponse.ok) {
                     const dbAstroData = await astroResponse.json();
-                    console.log('[AstrologyModal] Fetched from database:', dbAstroData);
                     
                     let astroDataObj = dbAstroData.astrology_data;
                     if (typeof astroDataObj === 'string') {
@@ -40,7 +39,6 @@ function AstrologyModal({ userId, token, isOpen, onClose, birthDate, birthTime, 
                             ...zodiacSignData,
                             ...astroDataObj
                         };
-                        console.log('[AstrologyModal] Using merged astrology data:', mergedData);
                         setAstroData({
                             ...dbAstroData,
                             astrology_data: mergedData
@@ -48,7 +46,6 @@ function AstrologyModal({ userId, token, isOpen, onClose, birthDate, birthTime, 
                         setLoading(false);
                         return;
                     } else {
-                        console.log('[AstrologyModal] No calculated signs yet, will retry...');
                         // Retry after 3 seconds
                         setTimeout(() => loadAndStoreAstrologyData(), 3000);
                         return;

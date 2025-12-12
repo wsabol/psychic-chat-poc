@@ -36,8 +36,6 @@ export async function fetchWithTokenRefresh(url, options = {}) {
           window.location.href = '/';
           return response;
         }
-
-        console.log('[FETCH] Token expired, refreshing from Firebase...');
         
         // Force token refresh from Firebase
         const freshToken = await currentUser.getIdToken(true); // 'true' forces refresh
@@ -49,8 +47,6 @@ export async function fetchWithTokenRefresh(url, options = {}) {
           window.location.href = '/';
           return response;
         }
-
-        console.log('[FETCH] Got fresh token, retrying request...');
         
         // Retry original request with fresh token
         const headers = options.headers || {};

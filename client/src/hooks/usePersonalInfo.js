@@ -19,18 +19,10 @@ export function usePersonalInfo(userId, token) {
                 console.warn('[PERSONAL-INFO] Missing userId or token');
                 return;
             }
-            console.log('[PERSONAL-INFO] Fetching for user:', userId);
             const headers = { 'Authorization': `Bearer ${token}` };
             const res = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}`, { headers });
             if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
             const data = await res.json();
-            
-            console.log('[PERSONAL-INFO] ✓ Received data:', {
-                first_name: data.first_name,
-                birth_date: data.birth_date,
-                birth_city: data.birth_city,
-                birth_country: data.birth_country
-            });
             
             if (data.first_name) setFirstName(data.first_name);
             if (data.last_name) setLastName(data.last_name);
@@ -48,7 +40,6 @@ export function usePersonalInfo(userId, token) {
     // Load on mount or userId change
     useEffect(() => {
         if (userId && token) {
-            console.log('[PERSONAL-INFO] useEffect triggered - userId:', userId);
             fetchPersonalInfo();
         }
     }, [userId, token, fetchPersonalInfo]);

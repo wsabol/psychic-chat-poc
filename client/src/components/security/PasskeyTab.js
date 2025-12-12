@@ -38,7 +38,6 @@ export default function PasskeyTab({ userId, token, apiUrl }) {
       setLoading(true);
       // This would be handled by JustPass.me Firebase Extension
       // The extension provides a UI component for adding passkeys
-      console.log('[PASSKEY] Initiating passkey creation via JustPass.me');
       
       // For now, show a placeholder
       alert('Passkey creation will be handled by Firebase JustPass.me Extension');
@@ -61,8 +60,6 @@ export default function PasskeyTab({ userId, token, apiUrl }) {
       });
 
       if (!response.ok) throw new Error('Failed to remove passkey');
-      
-      console.log('[PASSKEY] ✓ Passkey removed');
       setPasskeys(passkeys.filter(p => p.id !== passkeyId));
     } catch (err) {
       setError(err.message);

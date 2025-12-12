@@ -2,7 +2,6 @@ import Stripe from 'stripe';
 import { db } from '../shared/db.js';
 
 // Initialize Stripe only if secret key is provided
-console.log('[STRIPE] STRIPE_SECRET_KEY env:', process.env.STRIPE_SECRET_KEY ? 'SET' : 'NOT SET');
 
 const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY, {

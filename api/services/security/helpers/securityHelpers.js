@@ -45,5 +45,4 @@ export function generateVerificationCodeWithExpiry() {
  * Helper: Log verification code for testing
  */
 export function logVerificationCode(type, code) {
-  console.log(`[SECURITY] ${type.toUpperCase()} CODE FOR TESTING: ${code}`);
 }

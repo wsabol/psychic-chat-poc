@@ -76,7 +76,6 @@ router.post("/:userId", authorizeUser, async (req, res) => {
 
         // ✅ ENFORCE: Check if user is 18+ (CRITICAL RULE)
         if (!ageValidation.isAdult) {
-            console.log(`[AGE-VIOLATION] User ${userId} is ${ageValidation.age} years old - under 18`);
             
             // Handle the age violation
             const violationResult = await handleAgeViolation(userId, ageValidation.age);

@@ -18,7 +18,6 @@ export async function recordPasswordChange(userId) {
       [userId]
     );
 
-    console.log('[SECURITY] ✓ Password change recorded, sessions cleared');
     return { success: true };
   } catch (err) {
     console.error('[SECURITY] Error recording password change:', err);

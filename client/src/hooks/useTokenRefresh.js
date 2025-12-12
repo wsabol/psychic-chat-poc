@@ -28,7 +28,6 @@ export function useTokenRefresh() {
         
         const data = await res.json();
         localStorage.setItem('token', data.token);
-        console.log('✅ Token auto-refreshed successfully');
       } catch (err) {
         console.error('Token refresh error:', err);
       }

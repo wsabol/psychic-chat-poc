@@ -50,7 +50,6 @@ export default function DevicesTab({ userId, token, apiUrl }) {
 
       if (!response.ok) throw new Error('Failed to logout device');
       
-      console.log('[DEVICES] ✓ Device logged out');
       setDevices(devices.filter(d => d.id !== deviceId));
     } catch (err) {
       console.error('[DEVICES] Error logging out device:', err);

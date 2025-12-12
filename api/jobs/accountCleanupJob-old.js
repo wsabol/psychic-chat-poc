@@ -17,7 +17,6 @@ const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
  */
 export async function runAccountCleanupJob() {
   try {
-    console.log(`[CLEANUP-JOB] Starting account cleanup job at ${new Date().toISOString()}`);
 
     // Step 1: Find accounts ready for anonymization (1 year old)
     await anonymizeOldAccounts();
@@ -28,7 +27,6 @@ export async function runAccountCleanupJob() {
     // Step 3: Find accounts ready for permanent deletion (2 years old)
     await permanentlyDeleteOldAccounts();
 
-    console.log(`[CLEANUP-JOB] Cleanup job completed successfully`);
     return { success: true };
 
   } catch (error) {
@@ -51,8 +49,6 @@ async function anonymizeOldAccounts() {
          AND anonymization_date IS NULL
          AND (CURRENT_DATE - deletion_requested_at::DATE) >= 365`
     );
-
-    console.log(`[ANONYMIZE] Found ${result.rows.length} accounts to anonymize`);
 
     for (const account of result.rows) {
       try {
@@ -91,8 +87,6 @@ async function anonymizeOldAccounts() {
           [account.user_id]
         );
 
-        console.log(`[ANONYMIZE] ✅ Anonymized account: ${account.user_id}`);
-
       } catch (error) {
         console.error(`[ANONYMIZE] ❌ Failed to anonymize ${account.user_id}:`, error.message);
       }
@@ -118,8 +112,6 @@ async function sendReEngagementEmails() {
          AND (CURRENT_DATE - anonymization_date::DATE) = 0`  // Just anonymized today
     );
 
-    console.log(`[RE-ENGAGEMENT] Found ${result.rows.length} accounts to email`);
-
     for (const account of result.rows) {
       try {
         // Decrypt email to send
@@ -130,7 +122,6 @@ async function sendReEngagementEmails() {
 
         const email = emailResult.rows[0]?.email;
         if (!email || email.includes('deleted')) {
-          console.log(`[RE-ENGAGEMENT] ⚠️  No valid email for ${account.user_id}, skipping`);
           continue;
         }
 
@@ -143,12 +134,6 @@ async function sendReEngagementEmails() {
           deletionDate: finalDeleteDate,
           reactivationLink: `${process.env.FRONTEND_URL || 'https://psychicchat.app'}/reactivate?userId=${account.user_id}`
         });
-
-        if (emailSent) {
-          console.log(`[RE-ENGAGEMENT] ✅ Sent re-engagement email to ${email}`);
-        } else {
-          console.log(`[RE-ENGAGEMENT] ⚠️  Failed to send email to ${email}`);
-        }
 
       } catch (error) {
         console.error(`[RE-ENGAGEMENT] ❌ Error sending email for ${account.user_id}:`, error.message);
@@ -173,8 +158,6 @@ async function permanentlyDeleteOldAccounts() {
          AND deletion_requested_at IS NOT NULL
          AND (CURRENT_DATE - deletion_requested_at::DATE) >= 730`
     );
-
-    console.log(`[PERMANENT-DELETE] Found ${result.rows.length} accounts to permanently delete`);
 
     for (const account of result.rows) {
       try {
@@ -206,8 +189,6 @@ async function permanentlyDeleteOldAccounts() {
            VALUES ($1, 'PERMANENTLY_DELETED', 'Automatic deletion at 2-year mark')`,
           [account.user_id]
         );
-
-        console.log(`[PERMANENT-DELETE] ✅ Permanently deleted account: ${account.user_id}`);
 
       } catch (error) {
         console.error(`[PERMANENT-DELETE] ❌ Failed to delete ${account.user_id}:`, error.message);

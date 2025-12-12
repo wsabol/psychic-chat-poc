@@ -37,20 +37,27 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
     msg.role === 'user' || msg.role === 'assistant'
   );
 
-  // Show oracle greeting for temp account users on mount
+  // Show oracle greeting once per day for temp account users
   useEffect(() => {
     if (isTemporaryAccount && !greetingShown && displayMessages.length === 0) {
-      console.log('[CHAT] Showing oracle greeting for temp account');
-      setGreetingShown(true);
+      // Get today's date (YYYY-MM-DD format)
+      const today = new Date().toISOString().split('T')[0];
+      const lastGreetingDate = localStorage.getItem(`oracle_greeting_date_${userId}`);
+      
+      // Only show greeting if we haven't shown it today
+      if (lastGreetingDate !== today) {
+        setGreetingShown(true);
+        // Store today's date in localStorage
+        localStorage.setItem(`oracle_greeting_date_${userId}`, today);
+      } 
     }
-  }, [isTemporaryAccount, greetingShown, displayMessages.length]);
+  }, [isTemporaryAccount, greetingShown, displayMessages.length, userId]);
 
   // Check for first user message sent and start 60 second timer
   useEffect(() => {
     if (isTemporaryAccount && !firstMessageSent) {
       const userMessages = displayMessages.filter(msg => msg.role === 'user');
       if (userMessages.length > 0) {
-        console.log('[CHAT] First message sent - starting 60 second timer');
         setFirstMessageSent(true);
         setTimerActive(true);
         setTimeRemaining(60);
@@ -66,7 +73,6 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
       }, 1000);
       return () => clearTimeout(timerRef.current);
     } else if (timerActive && timeRemaining === 0) {
-      console.log('[CHAT] Timer expired - showing astrology prompt');
       setTimerActive(false);
       setShowAstrologyPrompt(true);
     }
@@ -93,7 +99,6 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
 
   // Handle astrology prompt Yes - navigate to Personal Info page
   const handleAstrologyYes = () => {
-    console.log('[CHAT] User selected birth info - navigating to Personal Info');
     setShowAstrologyPrompt(false);
     if (onNavigateToPage) {
       onNavigateToPage(1); // Personal Info is page index 1
@@ -102,7 +107,6 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
 
   // Handle astrology prompt No - log out and go to login
   const handleAstrologyNo = () => {
-    console.log('[CHAT] User exited trial');
     setShowAstrologyPrompt(false);
     if (onLogout) {
       onLogout();

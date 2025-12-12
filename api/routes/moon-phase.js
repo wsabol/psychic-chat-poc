@@ -73,7 +73,6 @@ router.get("/:userId", authorizeUser, async (req, res) => {
         
         if (!validCommentary) {
             if (needsRefresh) {
-                console.log(`[MOON-PHASE API] Commentary older than 24 hours, queueing refresh for user ${userId}`);
                 // Queue refresh in background (don't wait for it)
                 enqueueMessage({
                     userId,

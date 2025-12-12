@@ -24,7 +24,6 @@ export default function ReAuthModal({ isOpen, email, onSuccess, onCancel }) {
     setLoading(true);
 
     try {
-      console.log('[REAUTH] Starting Google re-auth');
       const user = auth.currentUser;
 
       if (!user) {
@@ -34,8 +33,6 @@ export default function ReAuthModal({ isOpen, email, onSuccess, onCancel }) {
       const googleProvider = new GoogleAuthProvider();
       await reauthenticateWithPopup(user, googleProvider);
 
-      console.log('[REAUTH] ✓ Google re-authentication successful');
-      onSuccess();
     } catch (err) {
       console.error('[REAUTH] Google re-auth failed:', err);
       
@@ -57,7 +54,6 @@ export default function ReAuthModal({ isOpen, email, onSuccess, onCancel }) {
     setLoading(true);
 
     try {
-      console.log('[REAUTH] Starting password re-auth');
       const user = auth.currentUser;
 
       if (!user) {
@@ -67,7 +63,6 @@ export default function ReAuthModal({ isOpen, email, onSuccess, onCancel }) {
       const credential = EmailAuthProvider.credential(email, password);
       await reauthenticateWithCredential(user, credential);
 
-      console.log('[REAUTH] ✓ Password re-authentication successful');
       onSuccess();
     } catch (err) {
       console.error('[REAUTH] Password re-auth failed:', err);
@@ -89,10 +84,7 @@ export default function ReAuthModal({ isOpen, email, onSuccess, onCancel }) {
     setLoading(true);
 
     try {
-      console.log('[REAUTH] Sending password reset email to:', email);
       await sendPasswordResetEmail(auth, email);
-
-      console.log('[REAUTH] ✓ Password reset email sent');
       setResetSent(true);
       
       setTimeout(() => {

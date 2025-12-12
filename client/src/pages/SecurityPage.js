@@ -30,7 +30,6 @@ export default function SecurityPage({ userId, token, auth }) {
   }, []);
 
   const handleReAuthSuccess = () => {
-    console.log('[SECURITY] User verified, showing security settings');
     setShowReAuthModal(false);
     setIsVerified(true);
   };

@@ -145,7 +145,6 @@ export default function HoroscopePage({ userId, token, auth, onExit }) {
   const astro = astroInfo?.astrology_data || {};
 
   const handleClose = () => {
-    console.log('[HOROSCOPE] Close button clicked - triggering exit');
     if (onExit) {
       onExit();
     }

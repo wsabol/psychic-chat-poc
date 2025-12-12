@@ -226,14 +226,6 @@ async function raiseAlert(event, anomalies) {
       .map(a => `${a.type} (${a.severity})`)
       .join(', ');
 
-    console.log(`[IDS] 🚨 ALERT: ${alertSummary}`);
-    console.log(`[IDS] Event:`, {
-      ipAddress: event.ipAddress,
-      userId: event.userId,
-      action: event.action,
-      anomalies: anomalies.length
-    });
-
     // Log to security audit trail
     await logAudit(db, {
       userId: event.userId || 'unknown',
@@ -313,7 +305,6 @@ export async function getIPSecurityScore(ipAddress) {
 export async function blockIP(ipAddress, reason, durationHours = 24) {
   try {
     // TODO: Implement IP blocking in firewall/WAF
-    console.log(`[IDS] Blocking IP ${ipAddress}: ${reason} (${durationHours}h)`);
     
     // Log to audit trail
     await logAudit(db, {

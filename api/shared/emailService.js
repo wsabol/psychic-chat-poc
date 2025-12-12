@@ -37,7 +37,6 @@ export async function sendEmailVerification(userEmail, verificationCode) {
         };
 
         const result = await sgMail.send(msg);
-        console.log('[EMAIL] Email verification sent to', userEmail);
 
         return {
             success: true,
@@ -81,7 +80,6 @@ export async function sendPasswordResetEmail(userEmail, resetCode) {
         };
 
         const result = await sgMail.send(msg);
-        console.log('[EMAIL] Password reset email sent to', userEmail);
 
         return {
             success: true,

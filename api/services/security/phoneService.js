@@ -57,7 +57,6 @@ export async function savePhoneNumber(userId, phoneNumber, recoveryPhone) {
       [userId, phoneNumber, code, expiresAt]
     );
 
-    console.log('[SECURITY] ✓ Phone saved, verification code generated');
     logVerificationCode('sms', code);
 
     return { success: true, codeSent: true };
@@ -97,7 +96,6 @@ export async function verifyPhoneCode(userId, code) {
       [userId, encryptedPhone]
     );
 
-    console.log('[SECURITY] ✓ Phone verified for user:', userId);
     return { success: true, verified: true };
   } catch (err) {
     console.error('[SECURITY] Error verifying phone code:', err);

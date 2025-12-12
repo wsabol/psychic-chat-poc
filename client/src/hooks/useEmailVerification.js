@@ -20,7 +20,6 @@ export function useEmailVerification() {
         try {
             await sendEmailVerification(user);
             setVerificationSent(true);
-            console.log('[EMAIL-VERIFY] Verification email sent to', user.email);
             return true;
         } catch (err) {
             console.error('[EMAIL-VERIFY] Failed to send verification email:', err.message);
@@ -38,10 +37,6 @@ export function useEmailVerification() {
             await user.reload();
             const verified = user.emailVerified;
             setIsVerified(verified);
-            
-            if (verified) {
-                console.log('[EMAIL-VERIFY] ✓ Email verified for', user.email);
-            }
             return verified;
         } catch (err) {
             console.error('[EMAIL-VERIFY] Error checking verification:', err.message);
@@ -51,7 +46,6 @@ export function useEmailVerification() {
 
     // Poll for verification (user clicks link in email)
     const startVerificationPolling = useCallback((user, maxAttempts = 40, onVerified = null) => {
-        console.log('[EMAIL-VERIFY-POLL] Starting verification polling...');
         setCheckCount(0);
         let attemptCount = 0;
         
@@ -67,33 +61,27 @@ export function useEmailVerification() {
                 setIsVerified(verified);
                 
                 if (verified) {
-                    console.log('[EMAIL-VERIFY-POLL] ✓ Verification detected at attempt', attemptCount);
                     clearInterval(pollInterval);
                     setIsVerified(true);
                     try { await fetch('http://localhost:3000/auth/log-email-verified', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.uid }) }); } catch (err) { console.warn('[AUDIT] Email verification logging skipped'); }
                     
                     // Call parent callback if provided (to update auth context)
                     if (onVerified) {
-                        console.log('[EMAIL-VERIFY-POLL] Calling onVerified callback...');
                         onVerified();
                     }
                     return;
-                } else {
-                    console.log('[EMAIL-VERIFY-POLL] Still waiting... (attempt', attemptCount + ')');
-                }
+                } 
             } catch (err) {
                 console.error('[EMAIL-VERIFY-POLL] Error during polling:', err.message);
             }
             
             if (attemptCount >= maxAttempts) {
                 clearInterval(pollInterval);
-                console.log('[EMAIL-VERIFY-POLL] ✗ Verification polling stopped after', attemptCount, 'attempts (no verification detected)');
             }
         }, 3000); // Check every 3 seconds
 
         return () => {
             clearInterval(pollInterval);
-            console.log('[EMAIL-VERIFY-POLL] Polling cleanup called');
         };
     }, []);
 
@@ -103,7 +91,6 @@ export function useEmailVerification() {
         setError(null);
         try {
             await sendEmailVerification(user);
-            console.log('[EMAIL-VERIFY] Verification email resent to', user.email);
             return true;
         } catch (err) {
             console.error('[EMAIL-VERIFY] Failed to resend verification:', err.message);

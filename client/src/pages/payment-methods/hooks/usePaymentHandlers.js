@@ -85,8 +85,6 @@ export function usePaymentHandlers({
         };
       }
 
-      console.log('[CARD] Creating payment method with:', billingDetails);
-
       const paymentMethodResponse = await stripe.createPaymentMethod({
         type: 'card',
         card: cardElement,
@@ -98,8 +96,6 @@ export function usePaymentHandlers({
         setLoading(false);
         return;
       }
-
-      console.log('[CARD] PaymentMethod created:', paymentMethodResponse.paymentMethod.id);
 
       const response = await stripe.confirmCardSetup(
         setupIntent.clientSecret,
@@ -163,8 +159,6 @@ export function usePaymentHandlers({
         };
       }
 
-      console.log('[BANK] Creating payment method with:', billingDetails);
-
       const paymentMethodResponse = await stripe.createPaymentMethod({
         type: 'us_bank_account',
         us_bank_account: {
@@ -181,8 +175,6 @@ export function usePaymentHandlers({
         setLoading(false);
         return;
       }
-
-      console.log('[BANK] PaymentMethod created:', paymentMethodResponse.paymentMethod.id);
 
       const response = await stripe.confirmUsBankAccountSetup(
         setupIntent.clientSecret,
@@ -201,7 +193,6 @@ export function usePaymentHandlers({
       
       // Check if bank account needs micro-deposit verification
       if (result && result.next_action?.type === 'verify_with_microdeposits') {
-        console.log('[BANK] Bank account requires micro-deposit verification');
         // Store the setup intent and show verification modal
         setPendingSetupIntent(result);
         setShowBankVerificationModal(true);

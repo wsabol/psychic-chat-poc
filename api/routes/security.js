@@ -36,7 +36,6 @@ router.post('/track-device/:userId', async (req, res) => {
       [userId, token, deviceName, ipAddress, userAgent]
     );
 
-    console.log('[SECURITY] ✓ Device tracked for user:', userId, 'Device:', deviceName);
     res.json({ success: true, device: result.rows[0] });
   } catch (err) {
     console.error('[SECURITY] Error tracking device:', err);
@@ -337,7 +336,6 @@ router.post('/session-preference/:userId', async (req, res) => {
 
     const result = await securityService.updateSessionPreference(userId, persistentSession);
 
-    console.log('[SECURITY] ✓ Session preference updated for user:', userId);
     res.json({ 
       success: true, 
       persistentSession: result.persistent_session,

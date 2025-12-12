@@ -15,11 +15,9 @@ export function useChat(userId, token, isAuthenticated, authUserId) {
             if (!token || !userId) return [];
             const headers = { "Authorization": `Bearer ${token}` };
             const url = `${API_URL}/chat/history/${userId}`;
-            console.log('[CHAT] Loading messages for user:', userId);
             const res = await fetchWithTokenRefresh(url, { headers });
             if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
             const data = await res.json();
-            console.log('[CHAT] ✓ Loaded', data.length, 'messages');
             setChat(Array.isArray(data) ? data : []);
             setLoaded(true);
             setError(null);
@@ -66,7 +64,6 @@ export function useChat(userId, token, isAuthenticated, authUserId) {
     useEffect(() => {
         if (isAuthenticated && authUserId && token) {
             if (previousUserIdRef.current !== authUserId) {
-                console.log('[CHAT] User changed from', previousUserIdRef.current, 'to', authUserId, '- refetching messages');
                 previousUserIdRef.current = authUserId;
                 
                 setChat([]);

@@ -63,8 +63,6 @@ export default function EmailTab({ userEmail, userId, token, apiUrl }) {
       });
 
       if (!response.ok) throw new Error('Failed to save recovery email');
-
-      console.log('[EMAIL] ✓ Recovery email saved');
       setSuccess('Recovery email saved. A verification code will be sent.');
       setShowVerification(true);
       setEditMode(false);
@@ -95,8 +93,6 @@ export default function EmailTab({ userEmail, userId, token, apiUrl }) {
       });
 
       if (!response.ok) throw new Error('Invalid verification code');
-
-      console.log('[EMAIL] ✓ Email verified');
       setSuccess('Recovery email verified successfully!');
       setShowVerification(false);
       setVerificationCode('');
@@ -120,8 +116,6 @@ export default function EmailTab({ userEmail, userId, token, apiUrl }) {
       });
 
       if (!response.ok) throw new Error('Failed to remove recovery email');
-
-      console.log('[EMAIL] ✓ Recovery email removed');
       setRecoveryEmail('');
       setSuccess('Recovery email removed');
     } catch (err) {

@@ -66,7 +66,6 @@ export default function PasswordTab({ userId, token, apiUrl }) {
       // Update password via Firebase
       await updatePassword(user, newPassword);
 
-      console.log('[PASSWORD] ✓ Password changed successfully');
       setSuccess('✓ Password changed successfully!');
       
       // Clear form

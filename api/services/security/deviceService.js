@@ -48,12 +48,10 @@ export async function logoutDevice(userId, deviceId) {
 
     try {
       await admin.auth().revokeRefreshTokens(userId);
-      console.log('[SECURITY] ✓ Refresh tokens revoked for user:', userId);
     } catch (err) {
       console.warn('[SECURITY] Could not revoke Firebase tokens:', err.message);
     }
 
-    console.log('[SECURITY] ✓ Device logged out:', deviceId);
     return { success: true };
   } catch (err) {
     console.error('[SECURITY] Error logging out device:', err);

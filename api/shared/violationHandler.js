@@ -21,7 +21,6 @@ export async function logViolation(userId, violationType, severity = 'warning', 
       [userId, violationType, severity, reason]
     );
 
-    console.log(`[VIOLATION] Logged ${severity} violation for user ${userId}: ${violationType}`);
     return result.rows[0];
   } catch (err) {
     console.error('[VIOLATION] Error logging violation:', err);
@@ -82,7 +81,6 @@ export async function resolveViolation(violationId) {
       `UPDATE user_violations SET is_active = false WHERE id = $1`,
       [violationId]
     );
-    console.log('[VIOLATION] Resolved violation:', violationId);
   } catch (err) {
     console.error('[VIOLATION] Error resolving violation:', err);
     throw err;
@@ -96,7 +94,6 @@ export async function resolveViolation(violationId) {
  */
 export async function deleteUserAccount(userId) {
   try {
-    console.log(`[VIOLATION] Deleting account for user ${userId}...`);
 
     // Anonymize personal data
     await db.query(
@@ -127,7 +124,6 @@ export async function deleteUserAccount(userId) {
       [userId]
     );
 
-    console.log(`[VIOLATION] Account ${userId} deleted successfully`);
     return true;
   } catch (err) {
     console.error('[VIOLATION] Error deleting account:', err);
@@ -148,8 +144,6 @@ export async function handleAgeViolation(userId, userAge) {
     // Get existing age violations
     const violationCount = await getActiveViolationCount(userId, 'age_restriction');
     const newViolationCount = violationCount + 1;
-
-    console.log(`[AGE-VIOLATION] User ${userId} is ${userAge} years old. Violation count: ${newViolationCount}`);
 
     if (newViolationCount === 1) {
       // First violation: Log warning

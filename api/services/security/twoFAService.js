@@ -66,7 +66,6 @@ export async function updateSessionPreference(userId, persistentSession) {
       throw new Error('2FA settings not found');
     }
 
-    console.log('[SECURITY] ✓ Session preference updated for user:', userId, { persistentSession });
     return result.rows[0];
   } catch (err) {
     console.error('[SECURITY] Error updating session preference:', err);

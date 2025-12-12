@@ -348,13 +348,7 @@ useChat.js:
 
 ### Tip 1: Console Logging
 ```javascript
-// Add to useChat.js loadMessages:
-console.group('🔍 Chat Load Debug');
-console.log('1. Token:', token?.substring(0, 30) + '...');
-console.log('2. User ID:', userId);
-console.log('3. Auth User ID:', authUserId);
-console.log('4. IDs Match?', userId === authUserId);
-console.groupEnd();
+
 ```
 
 ### Tip 2: Network Inspection

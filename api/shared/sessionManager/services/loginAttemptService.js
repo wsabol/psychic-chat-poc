@@ -45,7 +45,6 @@ export async function logLoginAttempt(options) {
       ]
     );
 
-    console.log(`[LOGIN-ATTEMPT] Logged ${attemptType} attempt from ${ipAddress}`);
     return true;
 
   } catch (error) {

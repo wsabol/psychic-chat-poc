@@ -14,10 +14,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 
 async function setupProducts() {
   try {
-    console.log('🚀 Setting up Stripe Products and Prices...\n');
 
     // Product 1: Basic Plan
-    console.log('📦 Creating Basic Plan...');
     const basicProduct = await stripe.products.create({
       name: 'Basic Plan',
       description: 'Our most popular plan for individuals',
@@ -26,7 +24,6 @@ async function setupProducts() {
         tier: 'basic',
       },
     });
-    console.log('✅ Basic Product created:', basicProduct.id);
 
     const basicPrice = await stripe.prices.create({
       product: basicProduct.id,
@@ -41,10 +38,8 @@ async function setupProducts() {
         displayName: 'Basic - $9.99/month',
       },
     });
-    console.log('✅ Basic Price created:', basicPrice.id, '\n');
 
     // Product 2: Pro Plan
-    console.log('📦 Creating Pro Plan...');
     const proProduct = await stripe.products.create({
       name: 'Pro Plan',
       description: 'For power users and teams',
@@ -53,7 +48,6 @@ async function setupProducts() {
         tier: 'pro',
       },
     });
-    console.log('✅ Pro Product created:', proProduct.id);
 
     const proPrice = await stripe.prices.create({
       product: proProduct.id,
@@ -68,10 +62,7 @@ async function setupProducts() {
         displayName: 'Pro - $29.99/month',
       },
     });
-    console.log('✅ Pro Price created:', proPrice.id, '\n');
-
     // Product 3: Premium Plan
-    console.log('📦 Creating Premium Plan...');
     const premiumProduct = await stripe.products.create({
       name: 'Premium Plan',
       description: 'All features, unlimited access',

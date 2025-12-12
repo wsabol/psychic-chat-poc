@@ -63,8 +63,6 @@ export default function PhoneTab({ userId, token, apiUrl }) {
       });
 
       if (!response.ok) throw new Error('Failed to save phone number');
-
-      console.log('[PHONE] ✓ Phone number saved');
       setSuccess('Phone number saved successfully. A verification code will be sent.');
       setShowVerification(true);
       setEditMode(false);
@@ -95,8 +93,6 @@ export default function PhoneTab({ userId, token, apiUrl }) {
       });
 
       if (!response.ok) throw new Error('Invalid verification code');
-
-      console.log('[PHONE] ✓ Phone verified');
       setSuccess('Phone number verified successfully!');
       setShowVerification(false);
       setVerificationCode('');

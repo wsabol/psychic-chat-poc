@@ -8,8 +8,6 @@ export function useDeviceSecurityTracking() {
     try {
       if (!userId || !token) return;
 
-      console.log('[DEVICE-SECURITY] Tracking device for user:', userId);
-
       // Get device name and IP info
       let deviceName = 'Unknown Device';
       let ipAddress = 'unknown';
@@ -57,7 +55,6 @@ export function useDeviceSecurityTracking() {
       }
 
       const result = await response.json();
-      console.log('[DEVICE-SECURITY] ✓ Device tracked successfully:', result);
     } catch (err) {
       console.warn('[DEVICE-SECURITY] Error tracking device:', err.message);
       // Don't throw - device tracking is non-critical

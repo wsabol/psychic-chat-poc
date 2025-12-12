@@ -54,8 +54,6 @@ export async function createSession(userId, req) {
     // Clean up old sessions
     await cleanupOldSessions(userId);
 
-    console.log(`[SESSION] Created session for user ${userId}`);
-
     return {
       sessionId: result.rows[0].id,
       token: sessionToken, // Return plaintext to client
@@ -169,9 +167,6 @@ export async function revokeSession(sessionId, userId) {
       [sessionId, userId]
     );
 
-    if (result.rowCount > 0) {
-      console.log(`[SESSION] Revoked session ${sessionId} for user ${userId}`);
-    }
     return result.rowCount > 0;
 
   } catch (error) {
@@ -194,7 +189,6 @@ export async function revokeAllSessions(userId) {
       [userId]
     );
 
-    console.log(`[SESSION] Revoked ${result.rowCount} sessions for user ${userId}`);
     return result.rowCount;
 
   } catch (error) {

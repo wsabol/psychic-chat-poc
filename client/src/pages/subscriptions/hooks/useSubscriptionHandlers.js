@@ -21,11 +21,8 @@ export function useSubscriptionHandlers({
       setError(null);
       const result = await billing.createSubscription(priceId);
 
-      console.log('[SUBSCRIPTION] Created subscription:', result.subscriptionId, 'Status:', result.status);
-
       // If subscription is incomplete, show confirmation modal
       if (result.status === 'incomplete' || result.status === 'incomplete_expired') {
-        console.log('[SUBSCRIPTION] Subscription incomplete, showing confirmation modal');
         setPendingSubscription(result);
         setShowSubscriptionConfirmationModal(true);
         return;
@@ -34,7 +31,6 @@ export function useSubscriptionHandlers({
       // If subscription needs payment action, show confirmation modal
       if (result.clientSecret && (result.status === 'requires_payment_action' || result.status === 'active')) {
         if (result.status === 'requires_payment_action') {
-          console.log('[SUBSCRIPTION] Payment action required, showing confirmation modal');
           setPendingSubscription(result);
           setShowSubscriptionConfirmationModal(true);
           return;
@@ -55,7 +51,6 @@ export function useSubscriptionHandlers({
    */
   const handleSubscriptionConfirmationSuccess = useCallback(async (paymentIntent) => {
     try {
-      console.log('[SUBSCRIPTION] Confirmation successful, PaymentIntent status:', paymentIntent.status);
       setShowSubscriptionConfirmationModal(false);
       setPendingSubscription(null);
       setSuccess(true);
@@ -116,8 +111,6 @@ export function useSubscriptionHandlers({
       setError(null);
       await billing.cancelSubscription(currentSub.id);
       const result = await billing.createSubscription(newPriceId);
-
-      console.log('[SUBSCRIPTION] Changed to new subscription:', result.subscriptionId);
 
       // Handle incomplete new subscription
       if (result.status === 'incomplete' || result.status === 'incomplete_expired') {

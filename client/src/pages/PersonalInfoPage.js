@@ -209,7 +209,6 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
             setSuccess(true);
             if (isTemporaryAccount && onNavigateToPage) {
                 setTimeout(() => {
-                    console.log('[PERSONAL-INFO] Navigating to Horoscope page');
                     onNavigateToPage(4);
                 }, 1500);
             } else {

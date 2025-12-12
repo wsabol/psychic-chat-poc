@@ -108,8 +108,6 @@ Add this to your `App.js` or `useAuth.js`:
 ```javascript
 // Check if token is stored
 const token = localStorage.getItem('token');
-console.log('Token in localStorage:', token);
-console.log('Token present:', !!token);
 ```
 
 #### Step 2: Check token expiration
@@ -180,9 +178,6 @@ Ensure you're requesting your own chat history:
 In `useChat.js` add debugging:
 ```javascript
 const loadMessages = useCallback(async () => {
-    console.log('Requesting chat history for userId:', userId);
-    console.log('Authenticated userId:', authUserId);
-    console.log('Are they the same?', userId === authUserId);
     
     try {
         const headers = token ? { "Authorization": `Bearer ${token}` } : {};
@@ -205,7 +200,6 @@ const loginResponse = await fetch('http://localhost:3000/auth/login', {
 });
 
 const data = await loginResponse.json();
-console.log('Logged in as userId:', data.userId);  // ← This should match
 localStorage.setItem('userId', data.userId);
 ```
 
@@ -261,17 +255,11 @@ Just log in again! The new token won't have 2FA requirement.
 ### Check localStorage
 Open DevTools Console and run:
 ```javascript
-// Check all stored values
-console.log('localStorage.token:', localStorage.getItem('token'));
-console.log('localStorage.userId:', localStorage.getItem('userId'));
-console.log('localStorage.refreshToken:', localStorage.getItem('refreshToken'));
 
 // Check if they're expired
 const token = localStorage.getItem('token');
 if (token) {
   const decoded = jwt_decode(token);  // Requires jwt-decode library
-  console.log('Token expires at:', new Date(decoded.exp * 1000));
-  console.log('Token expired?', Date.now() > decoded.exp * 1000);
 }
 ```
 
@@ -364,7 +352,6 @@ export function useTokenRefresh() {
         
         const data = await res.json();
         localStorage.setItem('token', data.token);
-        console.log('✅ Token refreshed automatically');
       } catch (err) {
         console.error('Token refresh failed:', err);
         localStorage.removeItem('token');
@@ -418,13 +405,8 @@ export function useChat(userId, token, isAuthenticated, authUserId) {
                 return [];
             }
             
-            console.log('📤 Fetching chat history...');
-            console.log('Token:', token.substring(0, 20) + '...');
-            
             const headers = { "Authorization": `Bearer ${token}` };
             const res = await fetch(`${API_URL}/chat/history/${userId}`, { headers });
-            
-            console.log('📥 Response status:', res.status);
             
             if (!res.ok) {
                 const errorData = await res.json();
@@ -450,7 +432,6 @@ export function useChat(userId, token, isAuthenticated, authUserId) {
             }
             
             const data = await res.json();
-            console.log('✅ Messages loaded:', data.length);
             setChat(data);
             setLoaded(true);
             setError(null);
@@ -477,24 +458,11 @@ Create `api/middleware/logging.js`:
 ```javascript
 export function requestLogger(req, res, next) {
   const start = Date.now();
-  
-  // Log request
-  console.log(`\n📥 ${req.method} ${req.path}`);
-  console.log(`   Headers:`, {
-    authorization: req.headers.authorization ? req.headers.authorization.substring(0, 50) + '...' : 'none',
-    userAgent: req.get('user-agent')
-  });
-  
-  // Log response
+
   const originalJson = res.json;
   res.json = function(data) {
     const duration = Date.now() - start;
     const status = res.statusCode;
-    
-    console.log(`📤 ${status} (${duration}ms)`);
-    if (status >= 400) {
-      console.log(`   Error:`, data);
-    }
     
     return originalJson.call(this, data);
   };

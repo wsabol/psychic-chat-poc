@@ -41,7 +41,6 @@ export default function TwoFAScreen({
       
       if (verify2FAFunc) {
         // Use verify2FA from authState - this updates auth state directly
-        console.log('[2FA-SCREEN] Using authState.verify2FA()');
         success = await verify2FAFunc(code);
         if (!success) {
           // Error is already set by verify2FA
@@ -50,7 +49,6 @@ export default function TwoFAScreen({
         }
       } else {
         // Fallback to API call (shouldn't happen in normal flow)
-        console.log('[2FA-SCREEN] Fallback: Using API call directly');
         const response = await fetch('http://localhost:3000/auth/verify-2fa', {
           method: 'POST',
           headers: {
@@ -75,7 +73,6 @@ export default function TwoFAScreen({
       }
 
       if (success) {
-        console.log('[2FA-SCREEN] Verification successful, routing to chat');
         // Don't need to do anything - auth state change will trigger navigation
         onVerified();
       }

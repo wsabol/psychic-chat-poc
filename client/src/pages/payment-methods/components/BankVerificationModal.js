@@ -35,9 +35,6 @@ export default function BankVerificationModal({
 
       const stripe = stripeRef.current;
 
-      console.log('[BANK VERIFY] Using client secret:', setupIntent.client_secret || setupIntent.clientSecret);
-      console.log('[BANK VERIFY] Payment method:', setupIntent.payment_method);
-
       // Confirm the setup intent
       const { setupIntent: result, error: stripeError } = await stripe.confirmUsBankAccountSetup(
         setupIntent.client_secret || setupIntent.clientSecret,
@@ -59,13 +56,10 @@ export default function BankVerificationModal({
         return;
       }
 
-      console.log('[BANK VERIFY] Result status:', result?.status);
-
       // For bank accounts, both 'succeeded' and 'requires_action' are valid
       // 'requires_action' = mandate needs final approval or verification pending
       // 'succeeded' = verification is complete
       if (result && (result.status === 'succeeded' || result.status === 'requires_action')) {
-        console.log('[BANK VERIFY] Verification successful! Status:', result.status);
         setError(null);
         onSuccess(result);
       } else {

@@ -52,7 +52,6 @@ export async function saveRecoveryEmail(userId, recoveryEmail) {
       [userId, recoveryEmail, code, expiresAt]
     );
 
-    console.log('[SECURITY] ✓ Recovery email saved, verification code generated');
     logVerificationCode('email', code);
 
     return { success: true, codeSent: true };
@@ -92,7 +91,6 @@ export async function verifyEmailCode(userId, code) {
       [userId, encryptedEmail]
     );
 
-    console.log('[SECURITY] ✓ Email verified for user:', userId);
     return { success: true, verified: true };
   } catch (err) {
     console.error('[SECURITY] Error verifying email code:', err);
@@ -111,7 +109,6 @@ export async function removeRecoveryEmail(userId) {
       [userId]
     );
 
-    console.log('[SECURITY] ✓ Recovery email removed for user:', userId);
     return { success: true };
   } catch (err) {
     console.error('[SECURITY] Error removing recovery email:', err);

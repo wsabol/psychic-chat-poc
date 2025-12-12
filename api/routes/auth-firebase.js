@@ -101,12 +101,11 @@ router.post('/log-login-success', async (req, res) => {
     // Ensure user record exists (prevent FK constraint violations)
     const exists = await db.query('SELECT user_id FROM user_personal_info WHERE user_id = $1', [userId]);
     if (exists.rows.length === 0) {
-      console.log('[LOGIN-SUCCESS] Creating missing user_personal_info for:', userId);
+
       try {
         await db.query('INSERT INTO user_personal_info (user_id, email_encrypted, email_verified, created_at, updated_at) VALUES ($1, pgp_sym_encrypt($2, $3), false, NOW(), NOW())', [userId, email, process.env.ENCRYPTION_KEY]);
         await db.query('INSERT INTO user_2fa_settings (user_id, enabled, method, created_at, updated_at) VALUES ($1, true, \'email\', NOW(), NOW())', [userId]);
         await db.query('INSERT INTO user_astrology (user_id, created_at, updated_at) VALUES ($1, NOW(), NOW())', [userId]);
-        console.log('[LOGIN-SUCCESS] User records created');
       } catch (createErr) {
         console.error('[LOGIN-SUCCESS] Failed to create user records:', createErr.message);
       }

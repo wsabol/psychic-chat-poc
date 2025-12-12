@@ -38,15 +38,9 @@ export default function MySignPage({ userId, token, auth }) {
         astroDataObj = JSON.parse(astroDataObj);
       }
 
-      console.log('[MY-SIGN] 📥 Raw API data:', astroDataObj);
-      console.log('[MY-SIGN] Sun sign:', astroDataObj.sun_sign);
-
       // Get zodiac enrichment data from ZodiacSigns.js
       const sunSignKey = astroDataObj.sun_sign?.toLowerCase();
       const zodiacEnrichment = zodiacSigns[sunSignKey] || {};
-      
-      console.log('[MY-SIGN] 🔍 Looking for zodiac key:', sunSignKey);
-      console.log('[MY-SIGN] 📚 Zodiac enrichment found:', !!zodiacEnrichment.personality);
 
       // Merge API calculated data with zodiac enrichment
       const mergedAstroData = {
@@ -54,16 +48,12 @@ export default function MySignPage({ userId, token, auth }) {
         ...zodiacEnrichment
       };
 
-      console.log('[MY-SIGN] ✅ Merged data - personality available:', !!mergedAstroData.personality);
-      console.log('[MY-SIGN] ✅ Merged data - strengths available:', !!mergedAstroData.strengths);
-
       setAstroData({
         ...data,
         astrology_data: mergedAstroData
       });
       setLoading(false);
     } catch (err) {
-      console.error('[MY-SIGN] ❌ Error:', err);
       setError('Unable to load your birth chart. Please try again.');
       setLoading(false);
     }

@@ -20,7 +20,6 @@ export function useAuthAPI() {
       });
 
       if (dbResponse.ok) {
-        console.log('[AUTH-DB] ✓ Database user record created');
         return true;
       } else {
         const errorData = await dbResponse.json();
@@ -52,7 +51,6 @@ export function useAuthAPI() {
       });
 
       if (consentResponse.ok) {
-        console.log('[CONSENT] ✓ T&C acceptance recorded');
         return true;
       } else {
         console.warn('[CONSENT] ⚠️ Failed to record T&C acceptance:', await consentResponse.json());

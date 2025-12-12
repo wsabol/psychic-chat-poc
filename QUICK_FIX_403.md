@@ -168,7 +168,6 @@ export function useTokenRefresh() {
         
         const data = await res.json();
         localStorage.setItem('token', data.token);
-        console.log('✅ Token refreshed (valid for another 15 min)');
       } catch (err) {
         console.error('Token refresh error:', err);
       }

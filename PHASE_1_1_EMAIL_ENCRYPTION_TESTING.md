@@ -254,7 +254,6 @@ const tempUserId = await db.query(
 );
 
 const isTempUser = await isTemporaryUser(tempUserId.rows[0].user_id);
-console.log('Is temp user:', isTempUser); // Should be: true
 
 // Test with regular user
 const regularUserId = await db.query(
@@ -265,7 +264,6 @@ const regularUserId = await db.query(
 );
 
 const isRegularUser = await isTemporaryUser(regularUserId.rows[0].user_id);
-console.log('Is temp user:', isRegularUser); // Should be: false
 ```
 
 **Verification**:

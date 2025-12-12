@@ -34,7 +34,6 @@ function HoroscopeModal({ userId, token, isOpen, onClose }) {
                 const profileData = await profileResponse.json();
                 
                 if (!profileData.birth_date) {
-                    console.log('[HOROSCOPE] No birth date found - prompting user');
                     setNeedsBirthdate(true);
                     setError('Please complete your personal information with your birth date to generate a personalized horoscope.');
                     return;

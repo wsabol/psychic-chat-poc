@@ -194,7 +194,6 @@ router.post("/migrate-chat-history", authenticateToken, async (req, res) => {
  */
 router.post("/encrypt-remaining-pii", authenticateToken, async (req, res) => {
   try {
-    console.log('[ENCRYPTION] 🔐 Starting PII encryption migration...');
     const ENCRYPTION_KEY = getEncryptionKey();
     
     const results = {
@@ -212,7 +211,6 @@ router.post("/encrypt-remaining-pii", authenticateToken, async (req, res) => {
     };
 
     // 1. Encrypt audit_logs IPs
-    console.log('[ENCRYPTION] Step 1: Encrypting audit_logs IP addresses...');
     const auditResult = await db.query(
       `UPDATE audit_logs 
        SET ip_address_encrypted = pgp_sym_encrypt(host(ip_address)::text, $1)
@@ -220,10 +218,8 @@ router.post("/encrypt-remaining-pii", authenticateToken, async (req, res) => {
       [ENCRYPTION_KEY]
     );
     results.auditLogsIp = auditResult.rowCount;
-    console.log(`[ENCRYPTION] ✅ Encrypted ${results.auditLogsIp} audit_logs IP addresses`);
 
     // 2. Encrypt pending_migrations emails
-    console.log('[ENCRYPTION] Step 2: Encrypting pending_migrations emails...');
     const pendingResult = await db.query(
       `UPDATE pending_migrations
        SET email_encrypted = pgp_sym_encrypt(email::text, $1)
@@ -231,10 +227,8 @@ router.post("/encrypt-remaining-pii", authenticateToken, async (req, res) => {
       [ENCRYPTION_KEY]
     );
     results.pendingMigrationsEmail = pendingResult.rowCount;
-    console.log(`[ENCRYPTION] ✅ Encrypted ${results.pendingMigrationsEmail} pending_migrations emails`);
 
     // 3. Encrypt security_sessions IPs
-    console.log('[ENCRYPTION] Step 3: Encrypting security_sessions IP addresses...');
     const secSessionIpResult = await db.query(
       `UPDATE security_sessions
        SET ip_address_encrypted = pgp_sym_encrypt(ip_address::text, $1)
@@ -242,10 +236,8 @@ router.post("/encrypt-remaining-pii", authenticateToken, async (req, res) => {
       [ENCRYPTION_KEY]
     );
     results.securitySessionsIp = secSessionIpResult.rowCount;
-    console.log(`[ENCRYPTION] ✅ Encrypted ${results.securitySessionsIp} security_sessions IP addresses`);
 
     // 3b. Encrypt security_sessions device names
-    console.log('[ENCRYPTION] Step 3b: Encrypting security_sessions device names...');
     const secSessionDeviceResult = await db.query(
       `UPDATE security_sessions
        SET device_name_encrypted = pgp_sym_encrypt(device_name::text, $1)
@@ -253,10 +245,8 @@ router.post("/encrypt-remaining-pii", authenticateToken, async (req, res) => {
       [ENCRYPTION_KEY]
     );
     results.securitySessionsDevice = secSessionDeviceResult.rowCount;
-    console.log(`[ENCRYPTION] ✅ Encrypted ${results.securitySessionsDevice} security_sessions device names`);
 
     // 4. Encrypt user_sessions IPs
-    console.log('[ENCRYPTION] Step 4: Encrypting user_sessions IP addresses...');
     const userSessionResult = await db.query(
       `UPDATE user_sessions
        SET ip_address_encrypted = pgp_sym_encrypt(host(ip_address)::text, $1)
@@ -267,7 +257,6 @@ router.post("/encrypt-remaining-pii", authenticateToken, async (req, res) => {
     console.log(`[ENCRYPTION] ✅ Encrypted ${results.userSessionsIp} user_sessions IP addresses`);
 
     // 5. Encrypt user_account_lockouts
-    console.log('[ENCRYPTION] Step 5: Encrypting user_account_lockouts IP addresses...');
     const lockoutsResult = await db.query(
       `UPDATE user_account_lockouts
        SET ip_addresses_encrypted = pgp_sym_encrypt(
@@ -279,10 +268,8 @@ router.post("/encrypt-remaining-pii", authenticateToken, async (req, res) => {
       [ENCRYPTION_KEY]
     );
     results.accountLockoutsIp = lockoutsResult.rowCount;
-    console.log(`[ENCRYPTION] ✅ Encrypted ${results.accountLockoutsIp} user_account_lockouts IP addresses`);
 
     // 6. Encrypt verification_codes phone numbers
-    console.log('[ENCRYPTION] Step 6: Encrypting verification_codes phone numbers...');
     const verPhoneResult = await db.query(
       `UPDATE verification_codes
        SET phone_number_encrypted = pgp_sym_encrypt(phone_number::text, $1)
@@ -290,10 +277,8 @@ router.post("/encrypt-remaining-pii", authenticateToken, async (req, res) => {
       [ENCRYPTION_KEY]
     );
     results.verificationCodesPhone = verPhoneResult.rowCount;
-    console.log(`[ENCRYPTION] ✅ Encrypted ${results.verificationCodesPhone} verification_codes phone numbers`);
 
     // 7. Encrypt verification_codes emails
-    console.log('[ENCRYPTION] Step 7: Encrypting verification_codes emails...');
     const verEmailResult = await db.query(
       `UPDATE verification_codes
        SET email_encrypted = pgp_sym_encrypt(email::text, $1)

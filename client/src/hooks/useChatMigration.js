@@ -23,7 +23,6 @@ export function useChatMigration() {
     setMigrationError(null);
 
     try {
-      console.log('[CHAT-MIGRATION] Migrating chat from', tempUserId, 'to', permanentUserId);
       
       const response = await fetch(`${API_URL}/chat/migrate`, {
         method: 'POST',
@@ -43,7 +42,6 @@ export function useChatMigration() {
       }
 
       const data = await response.json();
-      console.log('[CHAT-MIGRATION] Migration successful:', data);
       return true;
     } catch (err) {
       console.error('[CHAT-MIGRATION] Error migrating chat:', err);
