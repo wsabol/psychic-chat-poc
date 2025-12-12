@@ -1,4 +1,4 @@
-import { db } from '../../shared/db.js';
+import { db } from '../../../shared/db.js';
 
 /**
  * Create user database records (personal info, 2FA settings, astrology)

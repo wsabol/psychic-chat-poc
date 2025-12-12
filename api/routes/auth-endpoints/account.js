@@ -2,145 +2,171 @@ import { Router } from 'express';
 import logger from '../../shared/logger.js';
 import { auth } from '../../shared/firebase-admin.js';
 import { db } from '../../shared/db.js';
-import { authenticateToken, authorizeUser } from '../../middleware/auth.js';
+import { migrateOnboardingData } from '../../shared/accountMigration.js';
 import { logAudit } from '../../shared/auditLog.js';
-import { getUserProfile, anonymizeUser } from './helpers/userCreation.js';
-import { unlockAccount } from './helpers/accountLockout.js';
+import { createUserDatabaseRecords } from './helpers/userCreation.js';
 
 const router = Router();
 
 /**
- * GET /auth/user
- * Get current user info
+ * POST /auth/register
+ * User registration via Firebase
  */
-router.get('/user', authenticateToken, async (req, res) => {
+router.post('/register', async (req, res) => {
   try {
-    const firebaseUser = await auth.getUser(req.user.uid);
-    const userProfile = await getUserProfile(req.user.uid);
+    const { email, password, firstName, lastName } = req.body;
     
-    return res.json({
-      uid: firebaseUser.uid,
-      email: firebaseUser.email,
-      displayName: firebaseUser.displayName,
-      emailVerified: firebaseUser.emailVerified,
-      profile: userProfile
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password required' });
+    }
+    
+    // Create user in Firebase
+    const userRecord = await auth.createUser({
+      email,
+      password,
+      displayName: `${firstName || ''} ${lastName || ''}`.trim()
     });
-  } catch (err) {
-    logger.error('Get user error:', err.message);
-    return res.status(500).json({ error: 'Failed to get user info' });
-  }
-});
+    
+    // Create user profile in database
+    await createUserDatabaseRecords(userRecord.uid, email, firstName, lastName);
 
-/**
- * POST /auth/log-email-verified
- * Log email verification
- */
-router.post('/log-email-verified', async (req, res) => {
-  try {
-    const { userId } = req.body;
-    if (!userId) return res.status(400).json({ error: 'userId required' });
-
+    // Log registration
     await logAudit(db, {
-      userId,
-      action: 'USER_EMAIL_VERIFIED',
+      userId: userRecord.uid,
+      action: 'USER_REGISTERED',
       resourceType: 'authentication',
       ipAddress: req.ip,
       userAgent: req.get('user-agent'),
       httpMethod: req.method,
       endpoint: req.path,
-      status: 'SUCCESS'
+      status: 'SUCCESS',
+      details: { email }
+    });
+    
+    return res.status(201).json({
+      success: true,
+      uid: userRecord.uid,
+      email: userRecord.email,
+      message: 'User registered successfully. Please sign in.'
+    });
+  } catch (err) {
+    logger.error('Registration error:', err.message);
+    if (err.code === 'auth/email-already-exists') {
+      return res.status(409).json({ error: 'Email already registered' });
+    }
+    return res.status(500).json({ error: 'Registration failed', details: err.message });
+  }
+});
+
+/**
+ * POST /auth/register-firebase-user
+ * Register user and create database record (called from client)
+ */
+router.post('/register-firebase-user', async (req, res) => {
+  try {
+    const { userId, email } = req.body;
+    if (!userId || !email) return res.status(400).json({ error: 'userId and email required' });
+
+    // Check if already exists
+    const exists = await db.query('SELECT user_id FROM user_personal_info WHERE user_id = $1', [userId]);
+    if (exists.rows.length > 0) return res.json({ success: true });
+
+    // Create records
+    await createUserDatabaseRecords(userId, email);
+
+    // Log
+    await logAudit(db, {
+      userId,
+      action: 'USER_REGISTERED',
+      resourceType: 'authentication',
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      httpMethod: req.method,
+      endpoint: req.path,
+      status: 'SUCCESS',
+      details: { email }
     });
 
-    return res.json({ success: true });
+    return res.json({ success: true, userId });
   } catch (err) {
-    logger.error('Email verified logging error:', err.message);
     return res.status(500).json({ error: err.message });
   }
 });
 
 /**
- * DELETE /auth/delete-account/:userId
- * Delete user account
+ * POST /auth/register-and-migrate
+ * Register account and migrate onboarding data from temp account
  */
-router.delete('/delete-account/:userId', authenticateToken, authorizeUser, async (req, res) => {
+router.post('/register-and-migrate', async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { 
+      email, 
+      password, 
+      firstName, 
+      lastName,
+      temp_user_id,
+      onboarding_first_message,
+      onboarding_horoscope
+    } = req.body;
     
-    // Delete from Firebase
-    await auth.deleteUser(userId);
-    
-    // Anonymize database
-    await anonymizeUser(userId);
+    if (!email || !password || !temp_user_id) {
+      return res.status(400).json({ 
+        error: 'Email, password, and temp_user_id required' 
+      });
+    }
 
-    await logAudit(db, {
-      userId,
-      action: 'USER_ACCOUNT_DELETED',
-      resourceType: 'authentication',
-      ipAddress: req.ip,
-      userAgent: req.get('user-agent'),
-      httpMethod: req.method,
-      endpoint: req.path,
-      status: 'SUCCESS'
+    // Step 1: Create permanent Firebase user
+    const userRecord = await auth.createUser({
+      email,
+      password,
+      displayName: `${firstName || ''} ${lastName || ''}`.trim()
     });
     
-    return res.json({
-      success: true,
-      message: 'Account deleted successfully'
-    });
+    const newUserId = userRecord.uid;
+
+    // Step 2: Create database records
+    await createUserDatabaseRecords(newUserId, email, firstName, lastName);
+
+    try {
+      // Step 3: Migrate onboarding data
+      const migrationResult = await migrateOnboardingData({
+        newUserId,
+        temp_user_id,
+        firstName: firstName || '',
+        lastName: lastName || '',
+        email,
+        onboarding_first_message,
+        onboarding_horoscope
+      });
+      
+      return res.status(201).json({
+        success: true,
+        uid: newUserId,
+        email: userRecord.email,
+        message: 'Account created and onboarding data migrated successfully',
+        migration: migrationResult
+      });
+      
+    } catch (migrationErr) {
+      logger.error('Migration failed after account creation:', migrationErr.message);
+      return res.status(201).json({
+        success: true,
+        uid: newUserId,
+        email: userRecord.email,
+        message: 'Account created but data migration encountered issues',
+        warning: migrationErr.message
+      });
+    }
+    
   } catch (err) {
-    logger.error('Delete account error:', err.message);
-    return res.status(500).json({ error: 'Failed to delete account' });
-  }
-});
-
-/**
- * POST /auth/send-password-reset
- * Request password reset email
- */
-router.post('/send-password-reset', async (req, res) => {
-  try {
-    const { email } = req.body;
-    
-    if (!email) {
-      return res.status(400).json({ error: 'Email required' });
+    logger.error('Registration with migration error:', err.message);
+    if (err.code === 'auth/email-already-exists') {
+      return res.status(409).json({ error: 'Email already registered' });
     }
-    
-    const resetLink = await auth.generatePasswordResetLink(email);
-    
-    // TODO: Send email with resetLink to user
-    // For now, return success
-    
-    return res.json({
-      success: true,
-      message: 'Password reset link sent'
+    return res.status(500).json({ 
+      error: 'Registration with migration failed', 
+      details: err.message 
     });
-  } catch (err) {
-    logger.error('Password reset error:', err.message);
-    if (err.code === 'auth/user-not-found') {
-      return res.status(404).json({ error: 'User not found' });
-    }
-    return res.status(500).json({ error: 'Failed to send reset link' });
-  }
-});
-
-/**
- * POST /auth/unlock-account/:userId
- * Manually unlock an account (user-initiated recovery)
- */
-router.post('/unlock-account/:userId', authenticateToken, authorizeUser, async (req, res) => {
-  try {
-    const { userId } = req.params;
-
-    // Only allow user to unlock their own account
-    if (req.userId !== userId) {
-      return res.status(403).json({ error: 'Unauthorized' });
-    }
-
-    const result = await unlockAccount(userId, req);
-    return res.json(result);
-  } catch (error) {
-    logger.error('Account unlock error:', error.message);
-    return res.status(500).json({ error: 'Failed to unlock account' });
   }
 });
 

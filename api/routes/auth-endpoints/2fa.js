@@ -97,8 +97,8 @@ router.post('/check-2fa/:userId', async (req, res) => {
     }
 
     // Generate and send 2FA code
-    const { generate6DigitCode } = await import('../../shared/authUtils.js');
-    const { send2FACodeEmail } = await import('../../shared/emailService.js');
+    const { generate6DigitCode } = await import('../../../shared/authUtils.js');
+    const { send2FACodeEmail } = await import('../../../shared/emailService.js');
     
     const code = generate6DigitCode();
     const codeExpires = new Date(Date.now() + 10 * 60000); // 10 minutes

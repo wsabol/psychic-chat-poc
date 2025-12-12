@@ -1,6 +1,6 @@
-import { db } from '../../shared/db.js';
-import { logAudit } from '../../shared/auditLog.js';
-import logger from '../../shared/logger.js';
+import { db } from '../../../shared/db.js';
+import { logAudit } from '../../../shared/auditLog.js';
+import logger from '../../../shared/logger.js';
 
 const LOCKOUT_THRESHOLD = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
