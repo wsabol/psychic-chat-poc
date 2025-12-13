@@ -12,9 +12,6 @@ export function useBilling(token) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  /**
-   * Create a SetupIntent for adding payment methods
-   */
   const createSetupIntent = useCallback(async () => {
     try {
       setError(null);
@@ -39,9 +36,6 @@ export function useBilling(token) {
     }
   }, [token]);
 
-  /**
-   * Fetch all payment methods
-   */
   const fetchPaymentMethods = useCallback(async () => {
     try {
       setError(null);
@@ -66,9 +60,6 @@ export function useBilling(token) {
     }
   }, [token]);
 
-  /**
-   * Delete a payment method
-   */
   const deletePaymentMethod = useCallback(async (paymentMethodId) => {
     try {
       setError(null);
@@ -85,7 +76,6 @@ export function useBilling(token) {
 
       if (!response.ok) throw new Error('Failed to delete payment method');
       
-      // Refresh payment methods after deletion
       await fetchPaymentMethods();
       return true;
     } catch (err) {
@@ -98,9 +88,101 @@ export function useBilling(token) {
     }
   }, [token, fetchPaymentMethods]);
 
+  const attachPaymentMethod = useCallback(async (paymentMethodId) => {
+    try {
+      setError(null);
+      setLoading(true);
+      const response = await fetchWithTokenRefresh(`${API_URL}/billing/attach-payment-method`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ paymentMethodId }),
+      });
+
+      if (!response.ok) throw new Error('Failed to attach payment method');
+      
+      const result = await response.json();
+      console.log('[BILLING] Attach result:', result);
+      
+      await fetchPaymentMethods();
+      return result;
+    } catch (err) {
+      const message = err.message || 'Failed to attach payment method';
+      setError(message);
+      console.error('[BILLING] Attach payment method error:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [token, fetchPaymentMethods]);
+
   /**
-   * Set default payment method
+   * Verify bank account with micro-deposit amounts
    */
+  const verifyBankSetupIntent = useCallback(async (setupIntentId, amounts) => {
+    try {
+      setError(null);
+      setLoading(true);
+      const response = await fetchWithTokenRefresh(`${API_URL}/billing/verify-bank-setup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ setupIntentId, amounts }),
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || 'Failed to verify bank account');
+      }
+      
+      const result = await response.json();
+      console.log('[BILLING] Bank verification result:', result);
+      
+      await fetchPaymentMethods();
+      return result;
+    } catch (err) {
+      const message = err.message || 'Failed to verify bank account';
+      setError(message);
+      console.error('[BILLING] Verify bank account error:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [token, fetchPaymentMethods]);
+
+  const cleanupUnverifiedBanks = useCallback(async () => {
+    try {
+      setError(null);
+      setLoading(true);
+      const response = await fetchWithTokenRefresh(`${API_URL}/billing/cleanup-unverified-banks`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) throw new Error('Failed to cleanup unverified banks');
+      
+      const result = await response.json();
+      console.log('[BILLING] Cleanup result:', result);
+      
+      await fetchPaymentMethods();
+      return result;
+    } catch (err) {
+      const message = err.message || 'Failed to cleanup unverified banks';
+      setError(message);
+      console.error('[BILLING] Cleanup unverified banks error:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [token, fetchPaymentMethods]);
+
   const setDefaultPaymentMethod = useCallback(async (paymentMethodId) => {
     try {
       setError(null);
@@ -116,7 +198,6 @@ export function useBilling(token) {
 
       if (!response.ok) throw new Error('Failed to set default payment method');
       
-      // Refresh payment methods after update
       await fetchPaymentMethods();
       return await response.json();
     } catch (err) {
@@ -129,9 +210,6 @@ export function useBilling(token) {
     }
   }, [token, fetchPaymentMethods]);
 
-  /**
-   * Create a subscription
-   */
   const createSubscription = useCallback(async (priceId) => {
     try {
       setError(null);
@@ -147,7 +225,6 @@ export function useBilling(token) {
 
       if (!response.ok) throw new Error('Failed to create subscription');
       
-      // Refresh subscriptions after creation
       await fetchSubscriptions();
       return await response.json();
     } catch (err) {
@@ -160,9 +237,6 @@ export function useBilling(token) {
     }
   }, [token]);
 
-  /**
-   * Fetch all subscriptions
-   */
   const fetchSubscriptions = useCallback(async () => {
     try {
       setError(null);
@@ -187,9 +261,6 @@ export function useBilling(token) {
     }
   }, [token]);
 
-  /**
-   * Cancel a subscription
-   */
   const cancelSubscription = useCallback(async (subscriptionId) => {
     try {
       setError(null);
@@ -206,7 +277,6 @@ export function useBilling(token) {
 
       if (!response.ok) throw new Error('Failed to cancel subscription');
       
-      // Refresh subscriptions after cancellation
       await fetchSubscriptions();
       return await response.json();
     } catch (err) {
@@ -219,9 +289,6 @@ export function useBilling(token) {
     }
   }, [token, fetchSubscriptions]);
 
-  /**
-   * Fetch all invoices
-   */
   const fetchInvoices = useCallback(async () => {
     try {
       setError(null);
@@ -246,9 +313,6 @@ export function useBilling(token) {
     }
   }, [token]);
 
-  /**
-   * Fetch all payments
-   */
   const fetchPayments = useCallback(async () => {
     try {
       setError(null);
@@ -273,9 +337,6 @@ export function useBilling(token) {
     }
   }, [token]);
 
-  /**
-   * Fetch available subscription plans
-   */
   const fetchAvailablePrices = useCallback(async () => {
     try {
       setError(null);
@@ -300,8 +361,60 @@ export function useBilling(token) {
     }
   }, [token]);
 
+  const verifyPaymentMethod = useCallback(async (paymentMethodId, amounts) => {
+    try {
+      setError(null);
+      setLoading(true);
+      const response = await fetchWithTokenRefresh(`${API_URL}/billing/verify-payment-method`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ paymentMethodId, amounts }),
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || 'Failed to verify payment method');
+      }
+      
+      const result = await response.json();
+      console.log('[BILLING] Payment method verification result:', result);
+      
+      await fetchPaymentMethods();
+      return result;
+    } catch (err) {
+      const message = err.message || 'Failed to verify payment method';
+      setError(message);
+      console.error('[BILLING] Verify payment method error:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [token, fetchPaymentMethods]);
+
+  const attachUnattachedMethods = useCallback(async () => {
+    try {
+      setError(null);
+      setLoading(true);
+      const response = await fetchWithTokenRefresh(`${API_URL}/billing/attach-unattached-methods`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error('Failed to attach');
+      const result = await response.json();
+      await fetchPaymentMethods();
+      return result;
+    } catch (err) {
+      setError(err.message || 'Failed to attach unattached methods');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [token, fetchPaymentMethods]);
+
   return {
-    // State
     paymentMethods,
     subscriptions,
     invoices,
@@ -309,11 +422,14 @@ export function useBilling(token) {
     availablePrices,
     loading,
     error,
-    
-    // Methods
     createSetupIntent,
     fetchPaymentMethods,
     deletePaymentMethod,
+    attachPaymentMethod,
+    verifyBankSetupIntent,
+    verifyPaymentMethod,
+    attachUnattachedMethods,
+    cleanupUnverifiedBanks,
     setDefaultPaymentMethod,
     createSubscription,
     fetchSubscriptions,

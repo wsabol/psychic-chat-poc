@@ -4,14 +4,11 @@ export function usePaymentHandlers({
   billing,
   setupIntent,
   billingForm,
-  bankForm,
   auth,
   setCardError,
   setCardSuccess,
   setLoading,
   setShowAddPaymentForm,
-  setPendingSetupIntent,
-  setShowBankVerificationModal,
   resetBillingForm,
   resetBankForm,
   stripeRef,
@@ -76,15 +73,6 @@ export function usePaymentHandlers({
         email: auth?.authEmail,
       };
 
-      if (billingForm.billingAddress && billingForm.billingCity && billingForm.billingState && billingForm.billingZip) {
-        billingDetails.address = {
-          line1: billingForm.billingAddress,
-          city: billingForm.billingCity,
-          state: billingForm.billingState,
-          postal_code: billingForm.billingZip,
-        };
-      }
-
       const paymentMethodResponse = await stripe.createPaymentMethod({
         type: 'card',
         card: cardElement,
@@ -127,108 +115,74 @@ export function usePaymentHandlers({
     }
   }, [setupIntent, billingForm, auth, setCardError, setCardSuccess, setLoading, setShowAddPaymentForm, resetBillingForm, billing, stripeRef]);
 
-  const handleBankSubmit = useCallback(async (e) => {
-    e.preventDefault();
-
-    if (!bankForm.routingNumber || !bankForm.accountNumber) {
-      setCardError('Please fill in routing and account numbers');
-      return;
-    }
-
-    if (!setupIntent || !stripeRef.current) {
-      setCardError('Payment system not ready');
-      return;
-    }
-
+  const handleBankSubmit = useCallback(async (formData) => {
     try {
       setLoading(true);
       setCardError(null);
-      const stripe = stripeRef.current;
 
-      const billingDetails = {
-        name: bankForm.accountHolderName,
-        email: auth?.authEmail,
-      };
-
-      if (bankForm.billingAddress && bankForm.billingCity && bankForm.billingState && bankForm.billingZip) {
-        billingDetails.address = {
-          line1: bankForm.billingAddress,
-          city: bankForm.billingCity,
-          state: bankForm.billingState,
-          postal_code: bankForm.billingZip,
-        };
+      if (!setupIntent || !stripeRef.current) {
+        throw new Error('Payment system not ready');
       }
 
+      const stripe = stripeRef.current;
+
+      console.log('[BANK] Creating payment method...');
+      
       const paymentMethodResponse = await stripe.createPaymentMethod({
         type: 'us_bank_account',
         us_bank_account: {
           account_holder_type: 'individual',
-          account_number: bankForm.accountNumber,
-          routing_number: bankForm.routingNumber,
-          account_type: bankForm.accountType,
+          account_number: formData.accountNumber,
+          routing_number: formData.routingNumber,
+          account_type: formData.accountType,
         },
-        billing_details: billingDetails,
+        billing_details: {
+          name: formData.accountHolderName,
+          email: auth?.authEmail,
+        },
       });
 
       if (paymentMethodResponse.error) {
-        setCardError(paymentMethodResponse.error.message || 'Failed to create bank account');
-        setLoading(false);
-        return;
+        throw new Error(paymentMethodResponse.error.message || 'Failed to create bank account');
       }
 
+      const paymentMethodId = paymentMethodResponse.paymentMethod.id;
+      console.log('[BANK] Payment method created:', paymentMethodId);
+
+      console.log('[BANK] Confirming setup intent...');
+      
       const response = await stripe.confirmUsBankAccountSetup(
         setupIntent.clientSecret,
         {
-          payment_method: paymentMethodResponse.paymentMethod.id,
+          payment_method: paymentMethodId,
+          mandate_data: {
+            customer_acceptance: {
+              type: 'online',
+              accepted_at: Math.floor(Date.now() / 1000),
+            },
+          },
         }
       );
 
       if (response.error) {
-        setCardError(response.error.message || 'Stripe error occurred');
-        setLoading(false);
-        return;
+        throw new Error(response.error.message || 'Stripe error occurred');
       }
 
-      const result = response.setupIntent;
+      console.log('[BANK] Setup intent status:', response.setupIntent?.status);
       
-      // Check if bank account needs micro-deposit verification
-      if (result && result.next_action?.type === 'verify_with_microdeposits') {
-        // Store the setup intent and show verification modal
-        setPendingSetupIntent(result);
-        setShowBankVerificationModal(true);
-        setShowAddPaymentForm(false);
-        resetBankForm();
-        return;
-      }
-
-      // For both 'succeeded' and 'requires_action' (without microdeposits)
-      if (result && (result.status === 'succeeded' || result.status === 'requires_action')) {
-        setCardSuccess(true);
-        setShowAddPaymentForm(false);
-        resetBankForm();
-        await billing.fetchPaymentMethods();
-        setTimeout(() => setCardSuccess(false), 3000);
-      } else {
-        setCardError('Failed to confirm bank account. Status: ' + (result?.status || 'unknown'));
-      }
-    } catch (err) {
-      setCardError(err.message || 'Bank account setup failed');
-    } finally {
-      setLoading(false);
-    }
-  }, [setupIntent, bankForm, auth, setCardError, setCardSuccess, setLoading, setShowAddPaymentForm, setPendingSetupIntent, setShowBankVerificationModal, resetBankForm, billing, stripeRef]);
-
-  const handleBankVerificationSuccess = useCallback(async (verifiedSetupIntent) => {
-    try {
+      // Success - account added (Stripe will handle verification automatically)
       setCardSuccess(true);
-      setShowBankVerificationModal(false);
-      setPendingSetupIntent(null);
+      setShowAddPaymentForm(false);
+      resetBankForm();
       await billing.fetchPaymentMethods();
       setTimeout(() => setCardSuccess(false), 3000);
     } catch (err) {
-      setCardError('Failed to process verified bank account');
+      console.error('[BANK] Error:', err);
+      setCardError(err.message || 'Failed to add bank account');
+    } finally {
+      setLoading(false);
     }
-  }, [billing, setCardSuccess, setShowBankVerificationModal, setPendingSetupIntent, setCardError]);
+  }, [setupIntent, auth, setCardError, setCardSuccess, setLoading, setShowAddPaymentForm, resetBankForm, billing, stripeRef]);
 
   return {
     handleAddPaymentMethod,
@@ -236,6 +190,6 @@ export function usePaymentHandlers({
     handleSetDefault,
     handleCardSubmit,
     handleBankSubmit,
-    handleBankVerificationSuccess,
   };
 }
+

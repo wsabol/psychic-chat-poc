@@ -11,6 +11,9 @@ export function usePaymentForm() {
   // Bank verification modal state
   const [showBankVerificationModal, setShowBankVerificationModal] = useState(false);
   const [pendingSetupIntent, setPendingSetupIntent] = useState(null);
+  
+  // Track if bank account creation is in progress to prevent duplicates
+  const [bankAccountCreating, setBankAccountCreating] = useState(false);
 
   // Billing form state (used for both card and bank)
   const [billingForm, setBillingForm] = useState({
@@ -93,5 +96,7 @@ export function usePaymentForm() {
     setShowBankVerificationModal,
     pendingSetupIntent,
     setPendingSetupIntent,
+    bankAccountCreating,
+    setBankAccountCreating,
   };
 }

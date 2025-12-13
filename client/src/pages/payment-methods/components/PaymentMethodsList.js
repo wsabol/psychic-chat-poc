@@ -4,6 +4,7 @@ export default function PaymentMethodsList({
   paymentMethods,
   onSetDefault,
   onDelete,
+  onVerify,
 }) {
   return (
     <>
@@ -38,28 +39,86 @@ export default function PaymentMethodsList({
         <div className="payment-methods-list">
           <h3>🏦 Saved Bank Accounts</h3>
           <div className="methods-grid">
-            {paymentMethods.bankAccounts.map((bank) => (
-              <div key={bank.id} className="payment-method-card">
-                <div className="card-header">
-                  <span className="card-brand">Bank Account</span>
-                  <span className="card-last4">●●●● {bank.us_bank_account?.last4}</span>
+            {paymentMethods.bankAccounts.map((bank) => {
+              // Get verification status
+              const status = bank.us_bank_account?.verification_status;
+              const isPending = status === 'pending_verification';
+              
+              // Display status badge
+              let statusDisplay = '✓ Verified';
+              let statusColor = '#4caf50';
+              
+              if (isPending) {
+                statusDisplay = '⏳ Pending Verification';
+                statusColor = '#ff9800';
+              }
+              
+              return (
+                <div key={bank.id} className="payment-method-card">
+                  <div className="card-header">
+                    <span className="card-brand">Bank Account</span>
+                    <span className="card-last4">●●●● {bank.us_bank_account?.last4}</span>
+                  </div>
+                  <div className="card-expiry">
+                    {bank.us_bank_account?.bank_name}
+                  </div>
+                  <div className="card-status" style={{ 
+                    color: statusColor,
+                    marginBottom: '10px',
+                    fontSize: '12px',
+                    fontWeight: 'bold'
+                  }}>
+                    {statusDisplay}
+                  </div>
+                  <div className="card-actions">
+                    {isPending && onVerify && (
+                      <button 
+                        className="btn-warning"
+                        onClick={() => onVerify(bank)}
+                        title="Enter the microdeposit amounts to verify"
+                      >
+                        🔐 Verify
+                      </button>
+                    )}
+                    <button className="btn-link" onClick={() => onSetDefault(bank.id)}>
+                      Set as Default
+                    </button>
+                    <button 
+                      className="btn-danger" 
+                      onClick={() => {
+                        if (window.confirm('Delete this bank account?')) {
+                          onDelete(bank.id);
+                        }
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
-                <div className="card-expiry">
-                  {bank.us_bank_account?.bank_name}
-                </div>
-                <div className="card-actions">
-                  <button className="btn-link" onClick={() => onSetDefault(bank.id)}>
-                    Set as Default
-                  </button>
-                  <button className="btn-danger" onClick={() => onDelete(bank.id)}>
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
+
+      <style>{`
+        .btn-warning {
+          background-color: #ff9800;
+          color: white;
+          padding: 8px 12px;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 12px;
+          font-weight: 600;
+          margin-right: 8px;
+          transition: all 0.2s;
+        }
+
+        .btn-warning:hover {
+          background-color: #f57c00;
+        }
+      `}</style>
     </>
   );
 }
