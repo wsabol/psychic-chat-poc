@@ -143,10 +143,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Add unique index to prevent duplicate active lockouts
+-- Add unique index to prevent duplicate lockouts
+-- Note: WHERE predicate removed because NOW() is not IMMUTABLE
 CREATE UNIQUE INDEX IF NOT EXISTS idx_user_account_lockouts_unique_active 
-  ON user_account_lockouts(user_id) 
-  WHERE unlock_at > NOW();
+  ON user_account_lockouts(user_id);
 
 -- ========== DOCUMENTATION ==========
 

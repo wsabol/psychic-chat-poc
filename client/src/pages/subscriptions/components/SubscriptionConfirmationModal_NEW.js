@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 
 /**
- * SubscriptionConfirmationModal - Complete incomplete subscriptions
+ * SubscriptionConfirmationModal - Complete subscriptions
  * Handles payment confirmation for subscriptions that require payment action
+ * For ACH (async) subscriptions, they go directly to 'active' and charge asynchronously (up to 4 business days)
  */
 export default function SubscriptionConfirmationModal({
   subscription,
@@ -13,12 +14,24 @@ export default function SubscriptionConfirmationModal({
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState(null);
 
+  // For ACH subscriptions, status will be 'active' immediately
+  const isACHSubscription = subscription.status === 'active';
+  
   const paymentIntent = subscription.latest_invoice?.payment_intent;
   const amount = subscription.latest_invoice?.amount_due || 0;
   const currency = subscription.latest_invoice?.currency?.toUpperCase() || 'USD';
+  const chargeDate = subscription.current_period_end 
+    ? new Date(subscription.current_period_end * 1000).toLocaleDateString()
+    : 'the scheduled date';
 
   const handleConfirmPayment = async (e) => {
     e.preventDefault();
+
+    // For ACH subscriptions that are already active, just close the modal
+    if (isACHSubscription) {
+      onSuccess({ status: 'succeeded', id: subscription.id });
+      return;
+    }
 
     if (!stripeRef.current) {
       setError('Stripe not ready');
@@ -72,8 +85,10 @@ export default function SubscriptionConfirmationModal({
         <h3>Complete Your Subscription</h3>
         
         <div className="modal-description">
-          {amount === 0 ? (
-            <p>Your subscription is ready to start. You will be charged at the end of your first billing period on {subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toLocaleDateString() : 'the scheduled date'}.</p>
+          {isACHSubscription ? (
+            <p>✅ Your subscription is active! Your bank account will be charged within 4 business days ({chargeDate}).</p>
+          ) : amount === 0 ? (
+            <p>Your subscription is ready to start. You will be charged at the end of your first billing period on {chargeDate}.</p>
           ) : (
             <p>Your subscription is ready, but payment needs to be confirmed.</p>
           )}
@@ -88,7 +103,9 @@ export default function SubscriptionConfirmationModal({
           </div>
           <div className="summary-row">
             <span>Status:</span>
-            <strong className="status-warning">Incomplete</strong>
+            <strong className={isACHSubscription ? "status-active" : "status-warning"}>
+              {isACHSubscription ? 'Active' : 'Incomplete'}
+            </strong>
           </div>
           <div className="summary-row">
             <span>Subscription ID:</span>
@@ -103,22 +120,42 @@ export default function SubscriptionConfirmationModal({
               className="btn-primary" 
               disabled={confirming}
             >
-              {confirming ? 'Processing...' : 'Confirm & Complete'}
+              {isACHSubscription 
+                ? (confirming ? 'Closing...' : 'Close') 
+                : (confirming ? 'Processing...' : 'Confirm & Complete')}
             </button>
-            <button 
-              type="button" 
-              className="btn-secondary" 
-              onClick={onCancel}
-              disabled={confirming}
-            >
-              Cancel
-            </button>
+            {!isACHSubscription && (
+              <button 
+                type="button" 
+                className="btn-secondary" 
+                onClick={onCancel}
+                disabled={confirming}
+              >
+                Cancel
+              </button>
+            )}
           </div>
         </form>
 
         <div className="modal-info">
-          <p>💳 Your saved payment method will be charged for this subscription.</p>
+          {isACHSubscription ? (
+            <p>🏦 Your bank account will be debited. This may take up to 4 business days to settle.</p>
+          ) : (
+            <p>💳 Your saved payment method will be charged for this subscription.</p>
+          )}
         </div>
+
+        <style>{`
+          .status-active {
+            color: #4caf50;
+            font-weight: bold;
+          }
+
+          .status-warning {
+            color: #ff9800;
+            font-weight: bold;
+          }
+        `}</style>
       </div>
     </div>
   );

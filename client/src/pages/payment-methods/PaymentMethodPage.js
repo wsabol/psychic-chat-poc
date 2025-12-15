@@ -3,7 +3,7 @@ import { useBilling } from '../../hooks/useBilling';
 import { usePaymentForm } from './hooks/usePaymentForm';
 import { usePaymentHandlers } from './hooks/usePaymentHandlers';
 import CardPaymentForm from './components/CardPaymentForm';
-import BankAccount from './components/BankAccount_CORRECT';
+import BankAccount from './components/BankAccount';
 import PaymentMethodsList from './components/PaymentMethodsList';
 import PaymentMethodsEmpty from './components/PaymentMethodsEmpty';
 import '../PaymentMethodPage.css';
@@ -12,6 +12,13 @@ export default function PaymentMethodPage({ userId, token, auth }) {
   const billing = useBilling(token);
   const form = usePaymentForm();
 
+  useEffect(() => {
+    billing.fetchPaymentMethods();
+  }, []);
+
+  useEffect(() => {
+    console.log('[PAGE] Payment methods updated:', billing.paymentMethods);
+  }, [billing.paymentMethods]);  
   useEffect(() => {
     billing.fetchPaymentMethods();
   }, []);
@@ -122,6 +129,7 @@ export default function PaymentMethodPage({ userId, token, auth }) {
 
       <PaymentMethodsList
         paymentMethods={billing.paymentMethods}
+        defaultPaymentMethodId={billing.paymentMethods?.defaultPaymentMethodId}
         onSetDefault={handlers.handleSetDefault}
         onDelete={handlers.handleDeletePaymentMethod}
       />

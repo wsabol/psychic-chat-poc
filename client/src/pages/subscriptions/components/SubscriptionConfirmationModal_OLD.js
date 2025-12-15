@@ -25,12 +25,6 @@ export default function SubscriptionConfirmationModal({
       return;
     }
 
-    // If amount due is $0, no payment needed - just confirm
-    if (amount === 0) {
-      onSuccess({ status: 'succeeded', id: subscription.id });
-      return;
-    }
-
     if (!paymentIntent?.client_secret) {
       setError('No payment intent found');
       return;
@@ -72,11 +66,7 @@ export default function SubscriptionConfirmationModal({
         <h3>Complete Your Subscription</h3>
         
         <div className="modal-description">
-          {amount === 0 ? (
-            <p>Your subscription is ready to start. You will be charged at the end of your first billing period on {subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toLocaleDateString() : 'the scheduled date'}.</p>
-          ) : (
-            <p>Your subscription is ready, but payment needs to be confirmed.</p>
-          )}
+          <p>Your subscription is ready, but payment needs to be confirmed.</p>
         </div>
 
         {error && <div className="alert alert-error">{error}</div>}

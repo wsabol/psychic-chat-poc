@@ -4,6 +4,7 @@ import { db } from "../shared/db.js";
 import { enqueueMessage } from "../shared/queue.js";
 import { validateAge } from "../shared/ageValidator.js";
 import { handleAgeViolation } from "../shared/violationHandler.js";
+import { hashUserId } from "../shared/hashUtils.js";
 
 const router = Router();
 
@@ -34,7 +35,7 @@ router.get("/:userId", authorizeUser, async (req, res) => {
     const { userId } = req.params;
     try {
         const { rows } = await db.query(
-            `SELECT pgp_sym_decrypt(first_name_encrypted, $1) as first_name, pgp_sym_decrypt(last_name_encrypted, $1) as last_name, pgp_sym_decrypt(email_encrypted, $1) as email, pgp_sym_decrypt(birth_date_encrypted, $1) as birth_date, pgp_sym_decrypt(birth_time_encrypted, $1) as birth_time, pgp_sym_decrypt(birth_country_encrypted, $1) as birth_country, pgp_sym_decrypt(birth_province_encrypted, $1) as birth_province, pgp_sym_decrypt(birth_city_encrypted, $1) as birth_city, pgp_sym_decrypt(birth_timezone_encrypted, $1) as birth_timezone, pgp_sym_decrypt(sex_encrypted, $1) as sex, pgp_sym_decrypt(address_preference_encrypted, $1) as address_preference FROM user_personal_info WHERE user_id = $2`,
+            `SELECT pgp_sym_decrypt(first_name_encrypted, $1) as first_name, pgp_sym_decrypt(last_name_encrypted, $1) as last_name, pgp_sym_decrypt(email_encrypted, $1) as email, pgp_sym_decrypt(birth_date_encrypted, $1) as birth_date, pgp_sym_decrypt(birth_time_encrypted, $1) as birth_time, pgp_sym_decrypt(birth_country_encrypted, $1) as birth_country, pgp_sym_decrypt(birth_province_encrypted, $1) as birth_province, pgp_sym_decrypt(birth_city_encrypted, $1) as birth_city, pgp_sym_decrypt(birth_timezone_encrypted, $1) as birth_timezone, pgp_sym_decrypt(sex_encrypted, $1) as sex, pgp_sym_decrypt(familiar_name_encrypted, $1) as address_preference FROM user_personal_info WHERE user_id = $2`,
             [process.env.ENCRYPTION_KEY, userId]
         );
         if (rows.length === 0) {
@@ -107,7 +108,7 @@ router.post("/:userId", authorizeUser, async (req, res) => {
         // Save personal info with encryption
         await db.query(
             `INSERT INTO user_personal_info 
-             (user_id, first_name_encrypted, last_name_encrypted, email_encrypted, birth_date_encrypted, birth_time_encrypted, birth_country_encrypted, birth_province_encrypted, birth_city_encrypted, birth_timezone_encrypted, sex_encrypted, address_preference_encrypted)
+             (user_id, first_name_encrypted, last_name_encrypted, email_encrypted, birth_date_encrypted, birth_time_encrypted, birth_country_encrypted, birth_province_encrypted, birth_city_encrypted, birth_timezone_encrypted, sex_encrypted, familiar_name_encrypted)
              VALUES ($2, pgp_sym_encrypt($3, $1), pgp_sym_encrypt($4, $1), pgp_sym_encrypt($5, $1), pgp_sym_encrypt($6, $1), pgp_sym_encrypt($7, $1), pgp_sym_encrypt($8, $1), pgp_sym_encrypt($9, $1), pgp_sym_encrypt($10, $1), pgp_sym_encrypt($11, $1), pgp_sym_encrypt($12, $1), pgp_sym_encrypt($13, $1))
              ON CONFLICT (user_id) DO UPDATE SET
              first_name_encrypted = EXCLUDED.first_name_encrypted,
@@ -120,7 +121,7 @@ router.post("/:userId", authorizeUser, async (req, res) => {
              birth_city_encrypted = EXCLUDED.birth_city_encrypted,
              birth_timezone_encrypted = EXCLUDED.birth_timezone_encrypted,
              sex_encrypted = EXCLUDED.sex_encrypted,
-             address_preference_encrypted = EXCLUDED.address_preference_encrypted,
+             familiar_name_encrypted = EXCLUDED.familiar_name_encrypted,
              updated_at = CURRENT_TIMESTAMP`,
             [process.env.ENCRYPTION_KEY, userId, firstName || 'Temporary', lastName || 'User', email, parsedBirthDate, safeTime, safeCountry, safeProvince, safeCity, safeTimezone, sex || 'Unspecified', safeAddressPreference]
         );
@@ -151,15 +152,16 @@ router.post("/:userId", authorizeUser, async (req, res) => {
 
         // Handle provided astrology data
         if (zodiacSign && astrologyData) {
+            const userIdHash = hashUserId(userId);
             await db.query(
                 `INSERT INTO user_astrology 
-                 (user_id, zodiac_sign, astrology_data)
-                 VALUES ($1, $2, $3)
+                 (user_id, user_id_hash, zodiac_sign, astrology_data)
+                 VALUES ($1, $2, $3, $4)
                  ON CONFLICT (user_id) DO UPDATE SET
                  zodiac_sign = EXCLUDED.zodiac_sign,
                  astrology_data = EXCLUDED.astrology_data,
                  updated_at = CURRENT_TIMESTAMP`,
-                [userId, zodiacSign, JSON.stringify(astrologyData)]
+                [userId, userIdHash, zodiacSign, JSON.stringify(astrologyData)]
             );
         }
 

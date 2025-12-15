@@ -1,5 +1,6 @@
 import { db } from '../../../shared/db.js';
 import { logAudit } from '../../../shared/auditLog.js';
+import { getEncryptionKey } from '../../../shared/decryptionHelper.js';
 import logger from '../../../shared/logger.js';
 
 const LOCKOUT_THRESHOLD = 5;
@@ -41,11 +42,27 @@ export async function isAccountLocked(userId) {
  */
 export async function recordLoginAttempt(userId, success, reason, req) {
   try {
-    // Record the attempt
+    const ENCRYPTION_KEY = getEncryptionKey();
+    
+    // Encrypt IP address
+    let encryptedIp = null;
+    if (req.ip) {
+      try {
+        const encResult = await db.query(
+          'SELECT pgp_sym_encrypt($1::text, $2) as encrypted',
+          [req.ip, ENCRYPTION_KEY]
+        );
+        encryptedIp = encResult.rows[0]?.encrypted;
+      } catch (encErr) {
+        logger.warn('Failed to encrypt IP for login attempt:', encErr.message);
+      }
+    }
+    
+    // Record the attempt with encrypted IP
     await db.query(
-      `INSERT INTO user_login_attempts (user_id, ip_address, user_agent, success, reason)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [userId, req.ip, req.get('user-agent'), success || false, reason || null]
+      `INSERT INTO user_login_attempts (user_id, ip_address, user_agent, success, reason, ip_address_encrypted)
+       VALUES ($1, NULL, $2, $3, $4, $5)`,
+      [userId, req.get('user-agent'), success || false, reason || null, encryptedIp]
     );
 
     // If failed attempt, check threshold

@@ -28,9 +28,10 @@ router.post('/setup-intent', async (req, res) => {
       return res.status(400).json({ error: 'Stripe is not configured. Please check your STRIPE_SECRET_KEY.' });
     }
 
-    const setupIntent = await createSetupIntent(customerId);
+        const setupIntent = await createSetupIntent(customerId);
 
     res.json({
+      setupIntentId: setupIntent.id,
       clientSecret: setupIntent.client_secret,
       customerId: customerId,
     });
@@ -50,8 +51,16 @@ router.get('/payment-methods', async (req, res) => {
       return res.json({ cards: [], bankAccounts: [] });
     }
     
-    const methods = await listPaymentMethods(customerId);
-    res.json(methods);
+        const methods = await listPaymentMethods(customerId);
+    
+    // Also fetch customer to get default payment method
+    const customer = await stripe.customers.retrieve(customerId);
+    const defaultPaymentMethodId = customer.invoice_settings?.default_payment_method || null;
+    
+    res.json({
+      ...methods,
+      defaultPaymentMethodId,
+    });
   } catch (error) {
     console.error('[BILLING] Get payment methods error:', error);
     res.status(500).json({ error: error.message });
@@ -499,15 +508,16 @@ router.post('/create-bank-account-from-financial', async (req, res) => {
     console.log('[BILLING] Creating payment method from financial account:', financialAccountId);
 
     const paymentMethod = await stripe.paymentMethods.create({
-      type: 'us_bank_account',
-      us_bank_account: {
-        financial_connections_account: financialAccountId,
-      },
-      billing_details: {
-        name: req.body.name || userEmail,
-        email: userEmail,
-      },
-    });
+  type: 'us_bank_account',
+  us_bank_account: {
+    financial_connections_account: financialAccountId,
+  },
+  billing_details: {
+    name: req.body.name || userEmail,
+    email: userEmail,
+  },
+  
+});
 
     console.log('[BILLING] Payment method created:', paymentMethod.id);
     console.log('[BILLING] Verification status:', paymentMethod.us_bank_account?.verification_status);
@@ -523,6 +533,53 @@ router.post('/create-bank-account-from-financial', async (req, res) => {
     });
   } catch (error) {
     console.error('[BILLING] Create bank account from financial error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/confirm-setup-intent', async (req, res) => {
+  try {
+    const { setupIntentId, paymentMethodId, ipAddress, userAgent } = req.body;
+
+    if (!setupIntentId || !paymentMethodId || !ipAddress || !userAgent) {
+      return res.status(400).json({ 
+        error: 'setupIntentId, paymentMethodId, ipAddress, and userAgent are required' 
+      });
+    }
+
+    console.log('[BILLING] Confirming SetupIntent with mandate data:', { setupIntentId, paymentMethodId });
+
+    // Confirm the SetupIntent with mandate_data for ACH
+    // Stripe requires ip_address and user_agent in the online customer_acceptance
+    const setupIntent = await stripe.setupIntents.confirm(setupIntentId, {
+      payment_method: paymentMethodId,
+      mandate_data: {
+        customer_acceptance: {
+          type: 'online',
+          online: {
+            ip_address: ipAddress,
+            user_agent: userAgent,
+          },
+        },
+      },
+    });
+    console.log('[BILLING] SetupIntent confirmed:', {
+      id: setupIntent.id,
+      status: setupIntent.status,
+      payment_method: setupIntent.payment_method,
+    });
+
+    res.json({
+      success: true,
+      setupIntent: {
+        id: setupIntent.id,
+        status: setupIntent.status,
+        client_secret: setupIntent.client_secret,
+        payment_method: setupIntent.payment_method,
+      },
+    });
+  } catch (error) {
+    console.error('[BILLING] Confirm SetupIntent error:', error);
     res.status(500).json({ error: error.message });
   }
 });

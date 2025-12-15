@@ -1,5 +1,6 @@
 import { db } from '../../shared/db.js';
 import { calculateBirthChart } from '../astrology.js';
+import { hashUserId } from '../../shared/hashUtils.js';
 
 /**
  * Handle system astrology calculation requests
@@ -61,14 +62,15 @@ export async function handleAstrologyCalculation(userId) {
         };
         
         // Store in database
+        const userIdHash = hashUserId(userId);
         await db.query(
-            `INSERT INTO user_astrology (user_id, zodiac_sign, astrology_data)
-             VALUES ($1, $2, $3)
-             ON CONFLICT (user_id) DO UPDATE SET
-             astrology_data = EXCLUDED.astrology_data,
-             updated_at = CURRENT_TIMESTAMP`,
-            [userId, calculatedChart.sun_sign, JSON.stringify(astrologyData)]
-        );
+            `INSERT INTO user_astrology (user_id, user_id_hash, zodiac_sign, astrology_data)
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT (user_id) DO UPDATE SET
+            astrology_data = EXCLUDED.astrology_data,
+            updated_at = CURRENT_TIMESTAMP`,
+            [userId, userIdHash, calculatedChart.sun_sign, JSON.stringify(astrologyData)]
+);
     } catch (err) {
         console.error('[ASTROLOGY-HANDLER] Error:', err.message);
     }

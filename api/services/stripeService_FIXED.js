@@ -100,22 +100,13 @@ export async function listPaymentMethods(customerId) {
           enrichedBanks.push(bank);
         }
       }
-
-
-
-
-
-
-
-            bankAccounts = enrichedBanks;
+      bankAccounts = enrichedBanks;
       
       console.log('[STRIPE] Bank account details:', bankAccounts.map(b => ({
         id: b.id,
         last4: b.us_bank_account?.last4,
         status: b.us_bank_account?.verification_status,
       })));
-      
-      
     }
 
     return {
@@ -169,16 +160,19 @@ export async function createSubscription(customerId, priceId) {
     const subscription = await stripe.subscriptions.create({
       customer: customerId,
       items: [{ price: priceId }],
-      payment_behavior: 'allow_incomplete',
+      payment_behavior: 'default_incomplete',
+      collection_method: 'charge_automatically',
       expand: ['latest_invoice.payment_intent'],
     });
     
-        console.log('[STRIPE] Subscription created:', {
+    console.log('[STRIPE] Subscription created:', {
       id: subscription.id,
       status: subscription.status,
-      default_payment_method: subscription.default_payment_method,
-      next_invoice: new Date(subscription.current_period_end * 1000).toLocaleDateString(),
+      amount_due: subscription.latest_invoice?.amount_due,
+      total: subscription.latest_invoice?.total,
+      currency: subscription.latest_invoice?.currency,
     });
+    
     return subscription;
   } catch (error) {
     console.error('[STRIPE] Error creating subscription:', error);
@@ -374,7 +368,3 @@ export async function verifyPaymentMethodMicrodeposits(paymentMethodId, amounts)
 }
 
 export default stripe;
-
-
-
-

@@ -8,6 +8,7 @@
  */
 
 import { getEncryptionKey } from './decryptionHelper.js';
+import { hashUserId } from './hashUtils.js';
 
 /**
  * Log an action to the audit_logs table
@@ -55,6 +56,7 @@ export async function logAudit(db, options) {
 
   try {
     const ENCRYPTION_KEY = getEncryptionKey();
+    const userIdHash = userId ? hashUserId(userId) : null;
     
     // Encrypt IP address using PostgreSQL
     let encryptedIp = null;
@@ -72,13 +74,14 @@ export async function logAudit(db, options) {
 
     await db.query(
       `INSERT INTO audit_logs 
-       (user_id, is_temp_account, action, resource_type, resource_id,
+       (user_id, user_id_hash, is_temp_account, action, resource_type, resource_id,
         ip_address_encrypted, user_agent, http_method, endpoint,
         status, error_code, error_message, details, duration_ms,
         created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW())`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW())`,
       [
         userId,
+        userIdHash,
         isTemp,
         action,
         resourceType,
@@ -113,16 +116,17 @@ export async function logAudit(db, options) {
 export async function getUserAuditLogs(db, userId, limit = 100) {
   try {
     const ENCRYPTION_KEY = getEncryptionKey();
+    const userIdHash = hashUserId(userId);
     
     const result = await db.query(
       `SELECT action, resource_type, status, 
               pgp_sym_decrypt(ip_address_encrypted, $1) as ip_address,
               user_agent, created_at, endpoint, duration_ms, details
        FROM audit_logs
-       WHERE user_id = $2
+       WHERE user_id_hash = $2
        ORDER BY created_at DESC
        LIMIT $3`,
-      [ENCRYPTION_KEY, userId, limit]
+      [ENCRYPTION_KEY, userIdHash, limit]
     );
     return result.rows;
   } catch (err) {
@@ -140,12 +144,12 @@ export async function getUserAuditLogs(db, userId, limit = 100) {
 export async function findBruteForceAttempts(db, threshold = 5) {
   try {
     const result = await db.query(
-      `SELECT user_id, COUNT(*) as failed_attempts, 
+      `SELECT user_id_hash, COUNT(*) as failed_attempts, 
               MAX(created_at) as latest_attempt
        FROM audit_logs
        WHERE action = 'USER_LOGIN_FAILED'
          AND created_at > NOW() - INTERVAL '1 hour'
-       GROUP BY user_id
+       GROUP BY user_id_hash
        HAVING COUNT(*) >= $1
        ORDER BY failed_attempts DESC`,
       [threshold]
@@ -231,6 +235,7 @@ export async function getDataAccessLogs(db, userId, daysBack = 30) {
 export async function exportUserAuditLogs(db, userId, daysBack = 365) {
   try {
     const ENCRYPTION_KEY = getEncryptionKey();
+    const userIdHash = hashUserId(userId);
     
     const result = await db.query(
       `SELECT id, action, resource_type, resource_id, 
@@ -238,10 +243,10 @@ export async function exportUserAuditLogs(db, userId, daysBack = 365) {
               user_agent, http_method, endpoint, status, error_code,
               error_message, details, duration_ms, created_at
        FROM audit_logs
-       WHERE user_id = $2
+       WHERE user_id_hash = $2
          AND created_at > NOW() - INTERVAL '1 day' * $3
        ORDER BY created_at DESC`,
-      [ENCRYPTION_KEY, userId, daysBack]
+      [ENCRYPTION_KEY, userIdHash, daysBack]
     );
     return result.rows;
   } catch (err) {

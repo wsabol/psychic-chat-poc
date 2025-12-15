@@ -110,12 +110,12 @@ export default function SubscriptionsPage({ userId, token, auth }) {
         billing={billing}
       />
 
-      {/* Available Plans (only if no active subscriptions) */}
+      {/* Available Plans - always show to allow plan changes */}
       <AvailablePlansSection
         pricesByProduct={pricesByProduct}
         onSubscribe={handlers.handleSubscribe}
         billing={billing}
-        showSection={activeSubscriptionsList.length === 0}
+        showSection={true}
       />
 
       {/* Past Subscriptions */}

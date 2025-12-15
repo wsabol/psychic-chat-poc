@@ -52,7 +52,7 @@ router.get("/opening/:userId", authorizeUser, verify2FA, async (req, res) => {
         let clientName = userId;
         try {
             const { rows: personalInfoRows } = await db.query(
-                "SELECT pgp_sym_decrypt(first_name_encrypted, $1) as first_name, pgp_sym_decrypt(address_preference_encrypted, $1) as address_preference FROM user_personal_info WHERE user_id = $2",
+                "SELECT pgp_sym_decrypt(first_name_encrypted, $1) as first_name, pgp_sym_decrypt(familiar_name_encrypted, $1) as address_preference FROM user_personal_info WHERE user_id = $2",
                 [process.env.ENCRYPTION_KEY, userId]
             );
             if (personalInfoRows.length > 0 && personalInfoRows[0]) {

@@ -1,4 +1,5 @@
 import { db } from '../shared/db.js';
+import { hashUserId } from '../shared/hashUtils.js';
 
 /**
  * Get message history for a user
@@ -49,9 +50,10 @@ export async function getMessageHistory(userId, limit = 10) {
  */
 export async function storeMessage(userId, role, content) {
     try {
+        const userIdHash = hashUserId(userId);
         await db.query(
-            "INSERT INTO messages(user_id, role, content) VALUES($1, $2, $3)",
-            [userId, role, JSON.stringify(content)]
+            "INSERT INTO messages(user_id, user_id_hash, role, content) VALUES($1, $2, $3, $4)",
+            [userId, userIdHash, role, JSON.stringify(content)]
         );
     } catch (err) {
         console.error('[MESSAGES] Error storing message:', err);

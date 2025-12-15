@@ -14,7 +14,8 @@ import consentRoutes from "./routes/consent.js";
 import userDataRoutes from "./routes/user-data.js";
 import cleanupRoutes from "./routes/cleanup.js";
 import securityRoutes from "./routes/security.js";
-import billingRoutes from "./routes/billing.js";
+import billingRoutes from "./routes/billing/index.js";
+import migrationRoutes from "./routes/migration.js";
 import { authenticateToken } from "./middleware/auth.js";
 import cors from "cors";
 import cleanupStatusRoutes from "./routes/cleanup-status.js";
@@ -90,6 +91,7 @@ app.use("/auth", authRoutes);
 app.use("/auth", consentRoutes);
 app.use("/cleanup", cleanupRoutes);
 app.use("/cleanup", cleanupStatusRoutes);
+app.use("/migration", migrationRoutes);
 
 // Protected routes (authentication required)
 app.use("/chat", authenticateToken, chatRoutes);

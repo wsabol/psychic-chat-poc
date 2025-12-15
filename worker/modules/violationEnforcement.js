@@ -1,4 +1,5 @@
 import { db } from '../shared/db.js';
+import { hashUserId } from '../shared/hashUtils.js';
 
 /**
  * Violation detection and enforcement service
@@ -256,21 +257,24 @@ export async function isAccountSuspended(userId) {
  */
 export async function recordViolationAndGetAction(userId, violationType, userMessage, isTemporaryUser) {
     try {
+        const userIdHash = hashUserId(userId);
+        
         // Get current violation count for this type
         const { rows: violationRows } = await db.query(
             `SELECT violation_count FROM user_violations 
-             WHERE user_id = $1 AND violation_type = $2 
+             WHERE user_id_hash = $1 AND violation_type = $2 
              ORDER BY created_at DESC LIMIT 1`,
-            [userId, violationType]
+            [userIdHash, violationType]
         );
         
         let violationCount = (violationRows.length > 0 ? violationRows[0].violation_count : 0) + 1;
         
         // Record the violation
+        const userIdHash = hashUserId(userId);
         await db.query(
-            `INSERT INTO user_violations (user_id, violation_type, violation_count, violation_message)
-             VALUES ($1, $2, $3, $4)`,
-            [userId, violationType, violationCount, userMessage.substring(0, 500)]
+            `INSERT INTO user_violations (user_id, user_id_hash, violation_type, violation_count, violation_message)
+            VALUES ($1, $2, $3, $4, $5)`,
+            [userId, userIdHash, violationType, violationCount, userMessage.substring(0, 500)]
         );
         
         // TEMP ACCOUNT: Delete immediately on any violation
@@ -330,9 +334,10 @@ export async function recordViolationAndGetAction(userId, violationType, userMes
  */
 export async function isAccountDisabled(userId) {
     try {
+        const userIdHash = hashUserId(userId);
         const { rows } = await db.query(
-            `SELECT is_account_disabled FROM user_violations WHERE user_id = $1 AND is_account_disabled = TRUE LIMIT 1`,
-            [userId]
+            `SELECT is_account_disabled FROM user_violations WHERE user_id_hash = $1 AND is_account_disabled = TRUE LIMIT 1`,
+            [userIdHash]
         );
         
         return rows.length > 0;

@@ -1,6 +1,7 @@
 /**
  * SubscriptionCard Component
  * Individual subscription display with toggle and actions
+ * ACH subscriptions will show 'active' status immediately and charge within 4 business days
  */
 
 import React from 'react';
@@ -18,6 +19,39 @@ export default function SubscriptionCard({
 }) {
   const planName = subscription.items?.data?.[0]?.price?.product?.name || 'Subscription';
   const interval = subscription.items?.data?.[0]?.price?.recurring?.interval || 'unknown';
+  
+  // Format status display
+  const getStatusDisplay = (status) => {
+    switch(status) {
+      case 'active':
+        return '✅ ACTIVE';
+      case 'incomplete':
+        return '⏳ INCOMPLETE';
+      case 'incomplete_expired':
+        return '❌ EXPIRED';
+      case 'past_due':
+        return '⚠️ PAST DUE';
+      case 'canceled':
+        return '🛑 CANCELED';
+      default:
+        return status.toUpperCase();
+    }
+  };
+  
+  const getStatusColor = (status) => {
+    switch(status) {
+      case 'active':
+        return '#4caf50';
+      case 'incomplete':
+        return '#ff9800';
+      case 'incomplete_expired':
+        return '#f44336';
+      case 'past_due':
+        return '#ff9800';
+      default:
+        return '#666';
+    }
+  };
 
   return (
     <div className={`subscription-card ${isCanceling ? 'canceling' : 'active'}`}>
@@ -25,11 +59,18 @@ export default function SubscriptionCard({
       <div className="sub-header-with-toggle">
         <div className="sub-header">
           <h4>{planName}</h4>
-          <span className={`status-badge status-${subscription.status}`}>
-            {subscription.status.toUpperCase()}
+          <span className={`status-badge status-${subscription.status}`} style={{
+            backgroundColor: getStatusColor(subscription.status),
+            color: 'white',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            fontSize: '12px',
+            fontWeight: 'bold'
+          }}>
+            {getStatusDisplay(subscription.status)}
           </span>
         </div>
-        {!isCanceling && (
+        {!isCanceling && subscription.status === 'active' && (
           <div className="subscription-toggle">
             <input
               type="checkbox"
@@ -62,6 +103,17 @@ export default function SubscriptionCard({
             {new Date(subscription.current_period_end * 1000).toLocaleDateString()}
           </span>
         </div>
+        
+        {/* ACH subscription info */}
+        {subscription.status === 'active' && (
+          <div className="detail-row ach-info">
+            <span className="detail-label">🏦 ACH Status:</span>
+            <span className="detail-value">
+              First charge will process within 4 business days by {new Date(subscription.current_period_end * 1000).toLocaleDateString()}
+            </span>
+          </div>
+        )}
+        
         {isCanceling && (
           <div className="detail-row cancellation-notice">
             <span className="detail-label">⚠️ Cancellation:</span>
@@ -75,16 +127,19 @@ export default function SubscriptionCard({
 
       {/* Actions */}
       <div className="sub-actions">
-        <button
-          className="btn-secondary btn-small"
-          onClick={() => onChangeClick(subscription.id)}
-        >
-          {expandedSub === subscription.id ? '✕ Close' : '📋 Change Plan'}
-        </button>
+        {onChangeClick && (
+          <button
+            className="btn-secondary btn-small"
+            onClick={() => onChangeClick(subscription.id)}
+            disabled={subscription.status !== 'active'}
+          >
+            {expandedSub === subscription.id ? '✕ Close' : '📋 Change Plan'}
+          </button>
+        )}
       </div>
 
       {/* Change Plan Options */}
-      {expandedSub === subscription.id && (
+      {expandedSub === subscription.id && subscription.status === 'active' && (
         <div className="change-plan-options">
           <h5>Switch to a Different Plan</h5>
           <div className="plan-options-grid">
@@ -119,6 +174,20 @@ export default function SubscriptionCard({
           </div>
         </div>
       )}
+      
+      <style>{`
+        .ach-info {
+          background-color: #f0f8ff;
+          padding: 8px;
+          border-radius: 4px;
+          border-left: 3px solid #4caf50;
+        }
+        
+        .btn-disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+      `}</style>
     </div>
   );
 }
