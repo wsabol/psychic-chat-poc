@@ -162,6 +162,12 @@ router.get("/:userId", authorizeUser, async (req, res) => {
             result.astrology_data = JSON.parse(result.astrology_data);
         }
         
+        // CRITICAL: Ensure sun_sign is in astrology_data for frontend compatibility
+        // The zodiac_sign column stores the sun sign from the original calculation
+        if (result.zodiac_sign && !result.astrology_data.sun_sign) {
+            result.astrology_data.sun_sign = result.zodiac_sign;
+        }
+        
         res.json(result);
     } catch (err) {
         console.error('Error fetching astrology info:', err);

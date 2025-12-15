@@ -267,10 +267,9 @@ export async function recordViolationAndGetAction(userId, violationType, userMes
             [userIdHash, violationType]
         );
         
-        let violationCount = (violationRows.length > 0 ? violationRows[0].violation_count : 0) + 1;
+                let violationCount = (violationRows.length > 0 ? violationRows[0].violation_count : 0) + 1;
         
         // Record the violation
-        const userIdHash = hashUserId(userId);
         await db.query(
             `INSERT INTO user_violations (user_id, user_id_hash, violation_type, violation_count, violation_message)
             VALUES ($1, $2, $3, $4, $5)`,
