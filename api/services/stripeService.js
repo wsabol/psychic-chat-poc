@@ -20,8 +20,9 @@ export async function getOrCreateStripeCustomer(userId, userEmail) {
       return null;
     }
     
-    const query = 'SELECT stripe_customer_id FROM user_personal_info WHERE user_id = $1';
-    const result = await db.query(query, [userId]);
+            const query = `SELECT pgp_sym_decrypt(stripe_customer_id_encrypted, $1) as stripe_customer_id 
+                   FROM user_personal_info WHERE user_id = $2`;
+    const result = await db.query(query, [process.env.ENCRYPTION_KEY, userId]);
     
     if (result.rows[0]?.stripe_customer_id) {
       return result.rows[0].stripe_customer_id;
@@ -34,8 +35,10 @@ export async function getOrCreateStripeCustomer(userId, userEmail) {
       },
     });
 
-    const updateQuery = 'UPDATE user_personal_info SET stripe_customer_id = $1 WHERE user_id = $2';
-    await db.query(updateQuery, [customer.id, userId]);
+                const updateQuery = `UPDATE user_personal_info 
+                         SET stripe_customer_id_encrypted = pgp_sym_encrypt($1, $2) 
+                         WHERE user_id = $3`;
+    await db.query(updateQuery, [customer.id, process.env.ENCRYPTION_KEY, userId]);
 
     return customer.id;
   } catch (error) {

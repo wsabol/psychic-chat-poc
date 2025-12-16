@@ -17,6 +17,7 @@ import securityRoutes from "./routes/security.js";
 import billingRoutes from "./routes/billing/index.js";
 import migrationRoutes from "./routes/migration.js";
 import { authenticateToken } from "./middleware/auth.js";
+import { validateUserHash } from "./middleware/userHashValidation.js";
 import cors from "cors";
 import cleanupStatusRoutes from "./routes/cleanup-status.js";
 import { initializeScheduler } from "./jobs/scheduler.js";
@@ -93,17 +94,18 @@ app.use("/cleanup", cleanupRoutes);
 app.use("/cleanup", cleanupStatusRoutes);
 app.use("/migration", migrationRoutes);
 
-// Protected routes (authentication required)
-app.use("/chat", authenticateToken, chatRoutes);
-app.use("/user-profile", authenticateToken, userProfileRoutes);
-app.use("/user", authenticateToken, userDataRoutes);
-app.use("/user-astrology", authenticateToken, astrologyRoutes);
-app.use("/horoscope", authenticateToken, horoscopeRoutes);
-app.use("/moon-phase", authenticateToken, moonPhaseRoutes);
-app.use("/astrology-insights", authenticateToken, astrologyInsightsRoutes);
+// Protected routes (authentication + user hash validation required)
+// validateUserHash ensures hashed user IDs in URLs match the authenticated user
+app.use("/chat", authenticateToken, validateUserHash, chatRoutes);
+app.use("/user-profile", authenticateToken, validateUserHash, userProfileRoutes);
+app.use("/user", authenticateToken, validateUserHash, userDataRoutes);
+app.use("/user-astrology", authenticateToken, validateUserHash, astrologyRoutes);
+app.use("/horoscope", authenticateToken, validateUserHash, horoscopeRoutes);
+app.use("/moon-phase", authenticateToken, validateUserHash, moonPhaseRoutes);
+app.use("/astrology-insights", authenticateToken, validateUserHash, astrologyInsightsRoutes);
 
-app.use("/security", authenticateToken, securityRoutes);
-app.use("/billing", authenticateToken, billingRoutes);
+app.use("/security", authenticateToken, validateUserHash, securityRoutes);
+app.use("/billing", authenticateToken, validateUserHash, billingRoutes);
 
 // Initialize scheduled jobs
 initializeScheduler();
