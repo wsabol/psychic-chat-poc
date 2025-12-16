@@ -27,15 +27,12 @@ router.post('/log-login-success', async (req, res) => {
       }
     }
 
-    // Log successful login
+    // Log successful login - audit_log schema: user_id_hash, action, details, ip_address_encrypted, user_agent, created_at
     await logAudit(db, {
       userId,
       action: 'USER_LOGIN_SUCCESS',
-      resourceType: 'authentication',
       ipAddress: req.ip,
       userAgent: req.get('user-agent'),
-      httpMethod: req.method,
-      endpoint: req.path,
       status: 'SUCCESS',
       details: { email }
     });
@@ -86,14 +83,12 @@ router.post('/check-account-lockout/:userId', async (req, res) => {
         (new Date(lockout.lock_expires_at) - new Date()) / 1000 / 60
       );
 
+      // Log blocked login attempt - audit_log schema: user_id_hash, action, details, ip_address_encrypted, user_agent, created_at
       await logAudit(db, {
         userId,
         action: 'LOGIN_BLOCKED_ACCOUNT_LOCKED',
-        resourceType: 'authentication',
         ipAddress: req.ip,
         userAgent: req.get('user-agent'),
-        httpMethod: req.method,
-        endpoint: req.path,
         status: 'BLOCKED',
         details: { minutesRemaining }
       });

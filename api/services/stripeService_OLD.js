@@ -15,51 +15,19 @@ function ensureStripeConfigured() {
 
 export async function getOrCreateStripeCustomer(userId, userEmail) {
   try {
-    console.log('[STRIPE] getOrCreateStripeCustomer called with userId:', userId);
-    
     if (!stripe) {
       console.warn('[STRIPE] Stripe not configured, returning null');
       return null;
     }
     
-    // Use encrypted stripe_customer_id_encrypted column with encryption key from .env
-    const query = `SELECT pgp_sym_decrypt(stripe_customer_id_encrypted, $1) as stripe_customer_id 
+            const query = `SELECT pgp_sym_decrypt(stripe_customer_id_encrypted, $1) as stripe_customer_id 
                    FROM user_personal_info WHERE user_id = $2`;
     const result = await db.query(query, [process.env.ENCRYPTION_KEY, userId]);
-    console.log('[STRIPE] Database query result:', result.rows[0]);
     
-    let storedCustomerId = result.rows[0]?.stripe_customer_id;
-    console.log('[STRIPE] Decrypted storedCustomerId:', storedCustomerId);
-    
-    if (storedCustomerId) {
-      console.log('[STRIPE] Found stored customer ID, verifying it exists on Stripe:', storedCustomerId);
-      try {
-        // Verify the customer still exists on Stripe
-        const customer = await stripe.customers.retrieve(storedCustomerId);
-        console.log('[STRIPE] Using existing customer:', storedCustomerId);
-        return storedCustomerId;
-      } catch (retrieveError) {
-        console.log('[STRIPE] Error retrieving customer:', retrieveError.type, retrieveError.raw?.code);
-        // Customer doesn't exist on Stripe anymore
-        if (retrieveError.type === 'StripeInvalidRequestError' && retrieveError.raw?.code === 'resource_missing') {
-          console.warn('[STRIPE] Stored customer ID', storedCustomerId, 'no longer exists on Stripe, clearing and creating new one');
-          // Clear the invalid customer ID from database
-          await db.query(
-            `UPDATE user_personal_info SET stripe_customer_id_encrypted = NULL WHERE user_id = $1`,
-            [userId]
-          );
-          console.log('[STRIPE] Cleared old customer ID from database');
-          storedCustomerId = null; // Clear the variable so we create a new one
-        } else {
-          console.error('[STRIPE] Unexpected error retrieving customer:', retrieveError);
-          throw retrieveError;
-        }
-      }
-    } else {
-      console.log('[STRIPE] No stored customer found for userId:', userId);
+    if (result.rows[0]?.stripe_customer_id) {
+      return result.rows[0].stripe_customer_id;
     }
 
-    console.log('[STRIPE] Creating new customer for userId:', userId, 'email:', userEmail);
     const customer = await stripe.customers.create({
       email: userEmail,
       metadata: {
@@ -67,18 +35,14 @@ export async function getOrCreateStripeCustomer(userId, userEmail) {
       },
     });
 
-    console.log('[STRIPE] Created customer:', customer.id);
-
-    // Store encrypted customer ID with encryption key from .env
-    const updateQuery = `UPDATE user_personal_info 
+                const updateQuery = `UPDATE user_personal_info 
                          SET stripe_customer_id_encrypted = pgp_sym_encrypt($1, $2) 
                          WHERE user_id = $3`;
     await db.query(updateQuery, [customer.id, process.env.ENCRYPTION_KEY, userId]);
 
-    console.log('[STRIPE] Stored encrypted customer ID for user:', userId);
     return customer.id;
   } catch (error) {
-    console.error('[STRIPE] Error getting/creating customer:', error.message || error);
+    console.error('[STRIPE] Error getting/creating customer:', error);
     throw error;
   }
 }
@@ -139,13 +103,22 @@ export async function listPaymentMethods(customerId) {
           enrichedBanks.push(bank);
         }
       }
-      bankAccounts = enrichedBanks;
+
+
+
+
+
+
+
+            bankAccounts = enrichedBanks;
       
       console.log('[STRIPE] Bank account details:', bankAccounts.map(b => ({
         id: b.id,
         last4: b.us_bank_account?.last4,
         status: b.us_bank_account?.verification_status,
       })));
+      
+      
     }
 
     return {
@@ -199,19 +172,16 @@ export async function createSubscription(customerId, priceId) {
     const subscription = await stripe.subscriptions.create({
       customer: customerId,
       items: [{ price: priceId }],
-      payment_behavior: 'default_incomplete',
-      collection_method: 'charge_automatically',
+      payment_behavior: 'allow_incomplete',
       expand: ['latest_invoice.payment_intent'],
     });
     
-    console.log('[STRIPE] Subscription created:', {
+        console.log('[STRIPE] Subscription created:', {
       id: subscription.id,
       status: subscription.status,
-      amount_due: subscription.latest_invoice?.amount_due,
-      total: subscription.latest_invoice?.total,
-      currency: subscription.latest_invoice?.currency,
+      default_payment_method: subscription.default_payment_method,
+      next_invoice: new Date(subscription.current_period_end * 1000).toLocaleDateString(),
     });
-    
     return subscription;
   } catch (error) {
     console.error('[STRIPE] Error creating subscription:', error);
@@ -509,3 +479,7 @@ export async function updateSubscriptionStatus(userId, statusUpdate) {
 }
 
 export default stripe;
+
+
+
+

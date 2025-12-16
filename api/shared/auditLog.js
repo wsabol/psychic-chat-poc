@@ -74,10 +74,9 @@ export async function logAudit(db, options) {
 
     await db.query(
       `INSERT INTO audit_log 
-       (user_id, user_id_hash, action, details, ip_address_encrypted, user_agent, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+       (user_id_hash, action, details, ip_address_encrypted, user_agent)
+       VALUES ($1, $2, $3, $4, $5)`,
       [
-        userId,
         userIdHash,
         action,
         JSON.stringify(details || {}),
@@ -161,7 +160,7 @@ export async function findSuspiciousIPs(db, requestThreshold = 100) {
     
     const result = await db.query(
       `SELECT ip_address_encrypted, COUNT(*) as request_count,
-              COUNT(DISTINCT user_id) as unique_users,
+              COUNT(DISTINCT user_id_hash) as unique_users,
               MIN(created_at) as first_seen,
               MAX(created_at) as last_seen,
               ARRAY_AGG(DISTINCT action) as action_types

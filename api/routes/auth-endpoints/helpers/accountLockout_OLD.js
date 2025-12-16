@@ -61,19 +61,18 @@ export async function recordLoginAttempt(userId, success, reason, req) {
       }
     }
     
-    // Record the attempt using login_attempts table (has encrypted IP field)
-    // login_attempts schema: user_id_hash, attempt_type, email_attempted_encrypted, ip_address_encrypted, created_at
+    // Record the attempt with encrypted IP and hashed user_id
     await db.query(
-      `INSERT INTO login_attempts (user_id_hash, attempt_type, ip_address_encrypted)
-       VALUES ($1, $2, $3)`,
-      [userIdHash, success ? 'success' : 'failed', encryptedIp]
+      `INSERT INTO user_login_attempts (user_id, user_id_hash, ip_address_encrypted, user_agent, success, reason)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [userId, userIdHash, encryptedIp, req.get('user-agent'), success || false, reason || null]
     );
 
     // If failed attempt, check threshold
     if (!success) {
       const countResult = await db.query(
-        `SELECT COUNT(*) as failed_count FROM login_attempts
-         WHERE user_id_hash = $1 AND attempt_type = 'failed'
+        `SELECT COUNT(*) as failed_count FROM user_login_attempts
+         WHERE user_id_hash = $1 AND success = FALSE
          AND created_at > NOW() - INTERVAL '60 minutes'`,
         [userIdHash]
       );
@@ -84,21 +83,22 @@ export async function recordLoginAttempt(userId, success, reason, req) {
         const unlockAt = new Date(Date.now() + LOCKOUT_DURATION_MS);
 
         try {
-          // user_account_lockouts schema: id, user_id_hash, reason, ip_addresses_encrypted, lock_expires_at, created_at
           await db.query(
-            `INSERT INTO user_account_lockouts (user_id_hash, reason, lock_expires_at)
-             VALUES ($1, $2, $3)
-             ON CONFLICT (user_id_hash) DO UPDATE SET reason = $2, lock_expires_at = $3`,
-            [userIdHash, `failed_attempts (${failedCount} failed)`, unlockAt]
+            `INSERT INTO user_account_lockouts (user_id_hash, reason, failed_attempt_count, lock_expires_at, ip_addresses_encrypted)
+             VALUES ($1, 'failed_attempts', $2, $3, NULL)
+             ON CONFLICT (user_id_hash) DO UPDATE SET failed_attempt_count = $2, lock_expires_at = $3`,
+            [userIdHash, failedCount, unlockAt]
           );
 
-          // Log audit - only use columns that exist in audit_log schema
-          // audit_log schema: id, user_id_hash, action, details, ip_address_encrypted, user_agent, created_at
+          // Log audit
           await logAudit(db, {
             userId,
             action: 'ACCOUNT_LOCKED_AUTO',
+            resourceType: 'authentication',
             ipAddress: req.ip,
             userAgent: req.get('user-agent'),
+            httpMethod: req.method,
+            endpoint: req.path,
             status: 'SUCCESS',
             details: { failedAttempts: failedCount, reason: 'Too many failed login attempts' }
           });
@@ -130,7 +130,6 @@ export async function recordLoginAttempt(userId, success, reason, req) {
  */
 export async function unlockAccount(userId, req) {
   try {
-    const ENCRYPTION_KEY = getEncryptionKey();
     const userIdHash = hashUserId(userId);
     const result = await db.query(
       `DELETE FROM user_account_lockouts 
@@ -146,34 +145,17 @@ export async function unlockAccount(userId, req) {
       };
     }
 
-    // Log audit - only use columns that exist in audit_log schema
-    // audit_log schema: id, user_id_hash, action, details, ip_address_encrypted, user_agent, created_at
+    // Log audit
     await logAudit(db, {
       userId,
       action: 'ACCOUNT_UNLOCKED_MANUAL',
+      resourceType: 'authentication',
       ipAddress: req.ip,
       userAgent: req.get('user-agent'),
+      httpMethod: req.method,
+      endpoint: req.path,
       status: 'SUCCESS'
     });
-    
-    // Also log to login_attempts for audit trail
-    let encryptedIp = null;
-    if (req.ip) {
-      try {
-        const encResult = await db.query(
-          'SELECT pgp_sym_encrypt($1::text, $2) as encrypted',
-          [req.ip, ENCRYPTION_KEY]
-        );
-        encryptedIp = encResult.rows[0]?.encrypted;
-      } catch (encErr) {
-        logger.warn('Failed to encrypt IP for unlock:', encErr.message);
-      }
-    }
-    await db.query(
-      `INSERT INTO login_attempts (user_id_hash, attempt_type, ip_address_encrypted)
-       VALUES ($1, $2, $3)`,
-      [userIdHash, 'unlocked_manual', encryptedIp]
-    );
 
     return {
       success: true,

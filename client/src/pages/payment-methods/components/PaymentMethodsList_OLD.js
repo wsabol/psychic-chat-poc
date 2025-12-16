@@ -2,7 +2,6 @@ import React from 'react';
 
 export default function PaymentMethodsList({
   paymentMethods,
-  defaultPaymentMethodId,
   onSetDefault,
   onDelete,
   onVerify,
@@ -13,31 +12,25 @@ export default function PaymentMethodsList({
         <div className="payment-methods-list">
           <h3>💳 Saved Cards</h3>
           <div className="methods-grid">
-            {paymentMethods.cards.map((card) => {
-              const isDefault = card.id === defaultPaymentMethodId;
-              return (
-                <div key={card.id} className="payment-method-card" style={isDefault ? { border: '2px solid #4caf50' } : {}}>
-                  <div className="card-header">
-                    <span className="card-brand">{card.card?.brand?.toUpperCase()}</span>
-                    <span className="card-last4">●●●● {card.card?.last4}</span>
-                    {isDefault && <span className="default-badge">⭐ Default</span>}
-                  </div>
-                  <div className="card-expiry">
-                    Expires {card.card?.exp_month}/{card.card?.exp_year}
-                  </div>
-                  <div className="card-actions">
-                    {!isDefault && (
-                      <button className="btn-link" onClick={() => onSetDefault(card.id)}>
-                        Set as Default
-                      </button>
-                    )}
-                    <button className="btn-danger" onClick={() => onDelete(card.id)}>
-                      Delete
-                    </button>
-                  </div>
+            {paymentMethods.cards.map((card) => (
+              <div key={card.id} className="payment-method-card">
+                <div className="card-header">
+                  <span className="card-brand">{card.card?.brand?.toUpperCase()}</span>
+                  <span className="card-last4">●●●● {card.card?.last4}</span>
                 </div>
-              );
-            })}
+                <div className="card-expiry">
+                  Expires {card.card?.exp_month}/{card.card?.exp_year}
+                </div>
+                <div className="card-actions">
+                  <button className="btn-link" onClick={() => onSetDefault(card.id)}>
+                    Set as Default
+                  </button>
+                  <button className="btn-danger" onClick={() => onDelete(card.id)}>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -50,7 +43,6 @@ export default function PaymentMethodsList({
               // Get verification status
               const status = bank.us_bank_account?.verification_status;
               const isPending = status === 'pending_verification';
-              const isDefault = bank.id === defaultPaymentMethodId;
               
               // Display status badge
               let statusDisplay = '✓ Verified';
@@ -62,11 +54,10 @@ export default function PaymentMethodsList({
               }
               
               return (
-                <div key={bank.id} className="payment-method-card" style={isDefault ? { border: '2px solid #4caf50' } : {}}>
+                <div key={bank.id} className="payment-method-card">
                   <div className="card-header">
                     <span className="card-brand">Bank Account</span>
                     <span className="card-last4">●●●● {bank.us_bank_account?.last4}</span>
-                    {isDefault && <span className="default-badge">⭐ Default</span>}
                   </div>
                   <div className="card-expiry">
                     {bank.us_bank_account?.bank_name}
@@ -89,11 +80,9 @@ export default function PaymentMethodsList({
                         🔐 Verify
                       </button>
                     )}
-                    {!isDefault && (
-                      <button className="btn-link" onClick={() => onSetDefault(bank.id)}>
-                        Set as Default
-                      </button>
-                    )}
+                    <button className="btn-link" onClick={() => onSetDefault(bank.id)}>
+                      Set as Default
+                    </button>
                     <button 
                       className="btn-danger" 
                       onClick={() => {
@@ -113,16 +102,6 @@ export default function PaymentMethodsList({
       )}
 
       <style>{`
-        .default-badge {
-          background-color: #4caf50;
-          color: white;
-          padding: 4px 8px;
-          border-radius: 3px;
-          font-size: 11px;
-          font-weight: 600;
-          margin-left: auto;
-        }
-
         .btn-warning {
           background-color: #ff9800;
           color: white;
