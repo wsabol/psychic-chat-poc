@@ -1,6 +1,6 @@
 /**
 * Audit Logging Utility
- * Logs all critical actions to audit_logs table for compliance and security analysis
+ * Logs all critical actions to audit_log table for compliance and security analysis
  * 
  * ALL SENSITIVE DATA IS ENCRYPTED BEFORE STORAGE:
  * - IP addresses are encrypted with pgp_sym_encrypt
@@ -11,7 +11,7 @@ import { getEncryptionKey } from './decryptionHelper.js';
 import { hashUserId } from './hashUtils.js';
 
 /**
- * Log an action to the audit_logs table
+ * Log an action to the audit_log table
  * @param {Object} db - Database connection pool
  * @param {Object} options - Audit log options
  * @returns {Promise<void>}
@@ -73,28 +73,16 @@ export async function logAudit(db, options) {
     }
 
     await db.query(
-      `INSERT INTO audit_logs 
-       (user_id, user_id_hash, is_temp_account, action, resource_type, resource_id,
-        ip_address_encrypted, user_agent, http_method, endpoint,
-        status, error_code, error_message, details, duration_ms,
-        created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW())`,
+      `INSERT INTO audit_log 
+       (user_id, user_id_hash, action, details, ip_address_encrypted, user_agent, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
       [
         userId,
         userIdHash,
-        isTemp,
         action,
-        resourceType,
-        resourceId,
-        encryptedIp,
-        userAgent ? String(userAgent).substring(0, 500) : null,
-        httpMethod,
-        endpoint,
-        status,
-        errorCode,
-        sanitizedErrorMessage,
         JSON.stringify(details || {}),
-        durationMs
+        encryptedIp,
+        userAgent ? String(userAgent).substring(0, 500) : null
       ]
     );
   } catch (err) {
@@ -119,10 +107,10 @@ export async function getUserAuditLogs(db, userId, limit = 100) {
     const userIdHash = hashUserId(userId);
     
     const result = await db.query(
-      `SELECT action, resource_type, status, 
+      `SELECT action, 
               pgp_sym_decrypt(ip_address_encrypted, $1) as ip_address,
-              user_agent, created_at, endpoint, duration_ms, details
-       FROM audit_logs
+              user_agent, created_at, details
+       FROM audit_log
        WHERE user_id_hash = $2
        ORDER BY created_at DESC
        LIMIT $3`,
@@ -146,7 +134,7 @@ export async function findBruteForceAttempts(db, threshold = 5) {
     const result = await db.query(
       `SELECT user_id_hash, COUNT(*) as failed_attempts, 
               MAX(created_at) as latest_attempt
-       FROM audit_logs
+       FROM audit_log
        WHERE action = 'USER_LOGIN_FAILED'
          AND created_at > NOW() - INTERVAL '1 hour'
        GROUP BY user_id_hash
@@ -177,7 +165,7 @@ export async function findSuspiciousIPs(db, requestThreshold = 100) {
               MIN(created_at) as first_seen,
               MAX(created_at) as last_seen,
               ARRAY_AGG(DISTINCT action) as action_types
-       FROM audit_logs
+       FROM audit_log
        WHERE created_at > NOW() - INTERVAL '24 hours'
          AND ip_address_encrypted IS NOT NULL
        GROUP BY ip_address_encrypted
@@ -212,9 +200,8 @@ export async function getDataAccessLogs(db, userId, daysBack = 30) {
       `SELECT action, 
               pgp_sym_decrypt(ip_address_encrypted, $1) as ip_address,
               user_agent, created_at, details
-       FROM audit_logs
-       WHERE resource_type IN ('messages', 'profile')
-         AND created_at > NOW() - INTERVAL '1 day' * $2
+       FROM audit_log
+       WHERE created_at > NOW() - INTERVAL '1 day' * $2
        ORDER BY created_at DESC`,
       [ENCRYPTION_KEY, daysBack]
     );
@@ -238,11 +225,10 @@ export async function exportUserAuditLogs(db, userId, daysBack = 365) {
     const userIdHash = hashUserId(userId);
     
     const result = await db.query(
-      `SELECT id, action, resource_type, resource_id, 
+      `SELECT id, action, 
               pgp_sym_decrypt(ip_address_encrypted, $1) as ip_address,
-              user_agent, http_method, endpoint, status, error_code,
-              error_message, details, duration_ms, created_at
-       FROM audit_logs
+              user_agent, created_at, details
+       FROM audit_log
        WHERE user_id_hash = $2
          AND created_at > NOW() - INTERVAL '1 day' * $3
        ORDER BY created_at DESC`,

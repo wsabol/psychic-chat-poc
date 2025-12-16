@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
+import { hashUserId } from "../shared/hashUtils.js";
 import { enqueueMessage } from "../shared/queue.js";
 import { validateAge } from "../shared/ageValidator.js";
 import { handleAgeViolation } from "../shared/violationHandler.js";
-import { hashUserId } from "../shared/hashUtils.js";
 
 const router = Router();
 
@@ -128,11 +128,12 @@ router.post("/:userId", authorizeUser, async (req, res) => {
 
         // Clear cached horoscopes and astrology insights since birth data changed
         try {
+            const userIdHash = hashUserId(userId);
             await db.query(
                 `DELETE FROM messages 
-                 WHERE user_id = $1 
+                 WHERE user_id_hash = $1 
                  AND role IN ('horoscope', 'moon_phase', 'cosmic_weather', 'void_of_course', 'lunar_nodes')`,
-                [userId]
+                [userIdHash]
             );
         } catch (err) {
             console.warn(`Failed to clear cached insights for user ${userId}:`, err.message);
@@ -155,13 +156,13 @@ router.post("/:userId", authorizeUser, async (req, res) => {
             const userIdHash = hashUserId(userId);
             await db.query(
                 `INSERT INTO user_astrology 
-                 (user_id, user_id_hash, zodiac_sign, astrology_data)
-                 VALUES ($1, $2, $3, $4)
-                 ON CONFLICT (user_id) DO UPDATE SET
+                 (user_id_hash, zodiac_sign, astrology_data)
+                 VALUES ($1, $2, $3)
+                 ON CONFLICT (user_id_hash) DO UPDATE SET
                  zodiac_sign = EXCLUDED.zodiac_sign,
                  astrology_data = EXCLUDED.astrology_data,
                  updated_at = CURRENT_TIMESTAMP`,
-                [userId, userIdHash, zodiacSign, JSON.stringify(astrologyData)]
+                [userIdHash, zodiacSign, JSON.stringify(astrologyData)]
             );
         }
 
@@ -175,9 +176,10 @@ router.post("/:userId", authorizeUser, async (req, res) => {
 router.delete("/:userId/astrology-cache", authorizeUser, async (req, res) => {
     const { userId } = req.params;
     try {
+        const userIdHash = hashUserId(userId);
         const result = await db.query(
-            `DELETE FROM messages WHERE user_id = $1 AND role IN ('horoscope', 'moon_phase', 'cosmic_weather', 'void_of_course', 'lunar_nodes')`,
-            [userId]
+            `DELETE FROM messages WHERE user_id_hash = $1 AND role IN ('horoscope', 'moon_phase', 'cosmic_weather', 'void_of_course', 'lunar_nodes')`,
+            [userIdHash]
         );
         res.json({ success: true, message: `Cleared astrology cache`, deletedRows: result.rowCount });
     } catch (err) {

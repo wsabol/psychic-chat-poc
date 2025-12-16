@@ -1,8 +1,19 @@
 import { createClient } from "redis";
 
-const client = createClient({ url: process.env.REDIS_URL || 'redis://redis:6379' });
-client.connect();
+let client = null;
+
+async function getClient() {
+    if (!client) {
+        client = createClient({ url: process.env.REDIS_URL || 'redis://redis:6379' });
+        client.on('error', (err) => console.error('Redis Client Error', err));
+        await client.connect();
+    }
+    return client;
+}
 
 export async function enqueueMessage(job) {
-    await client.rPush("chat-jobs", JSON.stringify(job));
+    const redisClient = await getClient();
+    await redisClient.rPush("chat-jobs", JSON.stringify(job));
 }
+
+export { getClient };

@@ -126,3 +126,21 @@ DROP COLUMN IF EXISTS familiar_name CASCADE;
 ALTER TABLE user_2fa_settings
 DROP COLUMN IF EXISTS phone_number CASCADE,
 DROP COLUMN IF EXISTS backup_phone_number CASCADE;
+
+-- ============================================
+-- PHASE 2.0: STRIPE SUBSCRIPTIONS
+-- Date: December 2025
+-- ============================================
+-- Add subscription tracking columns to user_personal_info
+ALTER TABLE user_personal_info
+ADD COLUMN IF NOT EXISTS stripe_subscription_id_encrypted BYTEA,
+ADD COLUMN IF NOT EXISTS subscription_status VARCHAR(50),
+ADD COLUMN IF NOT EXISTS current_period_start INTEGER,
+ADD COLUMN IF NOT EXISTS current_period_end INTEGER,
+ADD COLUMN IF NOT EXISTS plan_name VARCHAR(255),
+ADD COLUMN IF NOT EXISTS price_amount INTEGER,
+ADD COLUMN IF NOT EXISTS price_interval VARCHAR(50);
+
+-- Create indexes for subscription queries
+CREATE INDEX IF NOT EXISTS idx_subscription_status ON user_personal_info(subscription_status);
+CREATE INDEX IF NOT EXISTS idx_current_period_end ON user_personal_info(current_period_end);

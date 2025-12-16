@@ -1,4 +1,5 @@
 import { db } from '../../shared/db.js';
+import { hashUserId } from '../../shared/hashUtils.js';
 
 /**
  * Get user's 2FA settings (from user_2fa_settings table)
@@ -6,10 +7,11 @@ import { db } from '../../shared/db.js';
  */
 export async function get2FASettings(userId) {
   try {
+    const userIdHash = hashUserId(userId);
     const result = await db.query(
       `SELECT enabled, method, persistent_session 
-       FROM user_2fa_settings WHERE user_id = $1`,
-      [userId]
+       FROM user_2fa_settings WHERE user_id_hash = $1`,
+      [userIdHash]
     );
 
     if (result.rows.length === 0) {
@@ -29,12 +31,13 @@ export async function get2FASettings(userId) {
  */
 export async function update2FASettings(userId, { enabled, method }) {
   try {
+    const userIdHash = hashUserId(userId);
     const result = await db.query(
       `UPDATE user_2fa_settings 
        SET enabled = $1, method = $2, updated_at = NOW()
-       WHERE user_id = $3
+       WHERE user_id_hash = $3
        RETURNING enabled, method, persistent_session`,
-      [enabled, method, userId]
+      [enabled, method, userIdHash]
     );
 
     if (result.rows.length === 0) {
@@ -54,12 +57,13 @@ export async function update2FASettings(userId, { enabled, method }) {
  */
 export async function updateSessionPreference(userId, persistentSession) {
   try {
+    const userIdHash = hashUserId(userId);
     const result = await db.query(
       `UPDATE user_2fa_settings 
        SET persistent_session = $1, updated_at = NOW()
-       WHERE user_id = $2
+       WHERE user_id_hash = $2
        RETURNING persistent_session`,
-      [persistentSession === true, userId]
+      [persistentSession === true, userIdHash]
     );
 
     if (result.rows.length === 0) {

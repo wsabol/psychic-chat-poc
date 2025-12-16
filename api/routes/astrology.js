@@ -1,6 +1,7 @@
 import express from 'express';
 const router = express.Router();
 import { db } from '../shared/db.js';
+import { hashUserId } from '../shared/hashUtils.js';
 import { enqueueMessage } from '../shared/queue.js';
 import { authorizeUser } from '../middleware/auth.js';
 import { spawn } from 'child_process';
@@ -110,13 +111,14 @@ router.post('/sync-calculate/:userId', authorizeUser, async (req, res) => {
             calculated_at: new Date().toISOString()
         };
         
+        const userIdHash = hashUserId(userId);
         await db.query(
-            `INSERT INTO user_astrology (user_id, zodiac_sign, astrology_data)
+            `INSERT INTO user_astrology (user_id_hash, zodiac_sign, astrology_data)
              VALUES ($1, $2, $3)
-             ON CONFLICT (user_id) DO UPDATE SET
+             ON CONFLICT (user_id_hash) DO UPDATE SET
              astrology_data = EXCLUDED.astrology_data,
              updated_at = CURRENT_TIMESTAMP`,
-            [userId, calculatedChart.sun_sign, JSON.stringify(astrologyData)]
+            [userIdHash, calculatedChart.sun_sign, JSON.stringify(astrologyData)]
         );
         
         res.json({
@@ -149,9 +151,10 @@ router.post('/calculate/:userId', authorizeUser, async (req, res) => {
 router.get("/:userId", authorizeUser, async (req, res) => {
     const { userId } = req.params;
     try {
+        const userIdHash = hashUserId(userId);
         const { rows } = await db.query(
-            "SELECT zodiac_sign, astrology_data FROM user_astrology WHERE user_id = $1",
-            [userId]
+            "SELECT zodiac_sign, astrology_data FROM user_astrology WHERE user_id_hash = $1",
+            [userIdHash]
         );
         if (rows.length === 0) {
             return res.status(404).json({ error: 'No astrology data found for this user' });
@@ -180,9 +183,10 @@ router.post("/:userId", async (req, res) => {
     const { risingSign, moonSign, astrology_data } = req.body;
     
     try {
+        const userIdHash = hashUserId(userId);
         const { rows } = await db.query(
-            "SELECT astrology_data FROM user_astrology WHERE user_id = $1",
-            [userId]
+            "SELECT astrology_data FROM user_astrology WHERE user_id_hash = $1",
+            [userIdHash]
         );
         
         if (rows.length === 0) {
@@ -202,8 +206,8 @@ router.post("/:userId", async (req, res) => {
         }
         
         await db.query(
-            "UPDATE user_astrology SET astrology_data = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2",
-            [JSON.stringify(updatedData), userId]
+            "UPDATE user_astrology SET astrology_data = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id_hash = $2",
+            [JSON.stringify(updatedData), userIdHash]
         );
         
         res.json({ success: true, message: "Astrology data updated successfully", data: updatedData });

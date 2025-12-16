@@ -3,6 +3,7 @@ import { authenticateToken } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
 import { auth as firebaseAuth } from "../shared/firebase-admin.js";
 import { getEncryptionKey } from "../shared/decryptionHelper.js";
+import { hashTempUserId } from "../shared/hashUtils.js";
 
 const router = Router();
 
@@ -29,6 +30,7 @@ router.post("/register-migration", async (req, res) => {
 
     try {
         const ENCRYPTION_KEY = getEncryptionKey();
+        const tempUserIdHash = hashTempUserId(tempUserId);
         
         // Encrypt email before storing
         const encResult = await db.query(
@@ -38,10 +40,10 @@ router.post("/register-migration", async (req, res) => {
         const encryptedEmail = encResult.rows[0]?.encrypted;
 
         await db.query(
-            `INSERT INTO pending_migrations (temp_user_id, email_encrypted, migrated) 
-             VALUES ($1, $2, false)
-             ON CONFLICT (temp_user_id) DO UPDATE SET email_encrypted = $2, migrated = false`,
-            [tempUserId, encryptedEmail]
+            `INSERT INTO pending_migrations (temp_user_id, temp_user_id_hash, email_encrypted, migrated) 
+             VALUES ($1, $2, $3, false)
+             ON CONFLICT (temp_user_id) DO UPDATE SET email_encrypted = $3, migrated = false`,
+            [tempUserId, tempUserIdHash, encryptedEmail]
         );
 
         res.json({ 
@@ -98,6 +100,7 @@ router.post("/migrate-chat-history", authenticateToken, async (req, res) => {
         }
 
         const tempUserId = migrationRows[0].temp_user_id;
+        const tempUserIdHash = hashTempUserId(tempUserId);
 
         // Check if temp account has messages
         const { rows: tempMessages } = await client.query(
@@ -114,8 +117,8 @@ router.post("/migrate-chat-history", authenticateToken, async (req, res) => {
             }
             
             await client.query(
-                'UPDATE pending_migrations SET migrated = true, migrated_at = NOW() WHERE temp_user_id = $1',
-                [tempUserId]
+                'UPDATE pending_migrations SET migrated = true, migrated_at = NOW() WHERE temp_user_id_hash = $1',
+                [tempUserIdHash]
             );
             
             await client.query('COMMIT');
@@ -127,15 +130,16 @@ router.post("/migrate-chat-history", authenticateToken, async (req, res) => {
             });
         }
 
-        // Copy all messages
+        // Copy all messages - also update user_id_hash for new user
+        const newUserIdHash = require('../shared/hashUtils.js').hashUserId(newUserId);
         const { rows: migratedRows } = await client.query(
-            `INSERT INTO messages (role, content, content_encrypted, user_id, created_at)
-             SELECT role, content, content_encrypted, $1, created_at
+            `INSERT INTO messages (role, content, content_encrypted, user_id, user_id_hash, created_at)
+             SELECT role, content, content_encrypted, $1, $3, created_at
              FROM messages
              WHERE user_id = $2
              ORDER BY created_at ASC
              RETURNING id`,
-            [newUserId, tempUserId]
+            [newUserId, tempUserId, newUserIdHash]
         );
 
         const newMessageIds = migratedRows.map(row => row.id);
@@ -151,8 +155,8 @@ router.post("/migrate-chat-history", authenticateToken, async (req, res) => {
         );
 
         await client.query(
-            'UPDATE pending_migrations SET migrated = true, migrated_at = NOW() WHERE temp_user_id = $1',
-            [tempUserId]
+            'UPDATE pending_migrations SET migrated = true, migrated_at = NOW() WHERE temp_user_id_hash = $1',
+            [tempUserIdHash]
         );
 
         await client.query('COMMIT');
@@ -185,150 +189,6 @@ router.post("/migrate-chat-history", authenticateToken, async (req, res) => {
     } finally {
         client.release();
     }
-});
-
-/**
- * POST /migration/encrypt-remaining-pii
- * Encrypt all remaining plaintext PII across all tables
- * PROTECTED: Requires authentication
- */
-router.post("/encrypt-remaining-pii", authenticateToken, async (req, res) => {
-  try {
-    const ENCRYPTION_KEY = getEncryptionKey();
-    
-    const results = {
-      auditLogsIp: 0,
-      pendingMigrationsEmail: 0,
-      securitySessionsIp: 0,
-      securitySessionsDevice: 0,
-      userSessionsIp: 0,
-      accountLockoutsIp: 0,
-      verificationCodesPhone: 0,
-      verificationCodesEmail: 0,
-      loginAttemptsEmail: 0,
-      loginAttemptsIp: 0,
-      timestamp: new Date().toISOString()
-    };
-
-    // 1. Encrypt audit_logs IPs
-    const auditResult = await db.query(
-      `UPDATE audit_logs 
-       SET ip_address_encrypted = pgp_sym_encrypt(host(ip_address)::text, $1)
-       WHERE ip_address IS NOT NULL AND ip_address_encrypted IS NULL`,
-      [ENCRYPTION_KEY]
-    );
-    results.auditLogsIp = auditResult.rowCount;
-
-    // 2. Encrypt pending_migrations emails
-    const pendingResult = await db.query(
-      `UPDATE pending_migrations
-       SET email_encrypted = pgp_sym_encrypt(email::text, $1)
-       WHERE email IS NOT NULL AND email_encrypted IS NULL`,
-      [ENCRYPTION_KEY]
-    );
-    results.pendingMigrationsEmail = pendingResult.rowCount;
-
-    // 3. Encrypt security_sessions IPs
-    const secSessionIpResult = await db.query(
-      `UPDATE security_sessions
-       SET ip_address_encrypted = pgp_sym_encrypt(ip_address::text, $1)
-       WHERE ip_address IS NOT NULL AND ip_address_encrypted IS NULL`,
-      [ENCRYPTION_KEY]
-    );
-    results.securitySessionsIp = secSessionIpResult.rowCount;
-
-    // 3b. Encrypt security_sessions device names
-    const secSessionDeviceResult = await db.query(
-      `UPDATE security_sessions
-       SET device_name_encrypted = pgp_sym_encrypt(device_name::text, $1)
-       WHERE device_name IS NOT NULL AND device_name_encrypted IS NULL`,
-      [ENCRYPTION_KEY]
-    );
-    results.securitySessionsDevice = secSessionDeviceResult.rowCount;
-
-    // 4. Encrypt user_sessions IPs
-    const userSessionResult = await db.query(
-      `UPDATE user_sessions
-       SET ip_address_encrypted = pgp_sym_encrypt(host(ip_address)::text, $1)
-       WHERE ip_address IS NOT NULL AND ip_address_encrypted IS NULL`,
-      [ENCRYPTION_KEY]
-    );
-    results.userSessionsIp = userSessionResult.rowCount;
-    console.log(`[ENCRYPTION] ✅ Encrypted ${results.userSessionsIp} user_sessions IP addresses`);
-
-    // 5. Encrypt user_account_lockouts
-    const lockoutsResult = await db.query(
-      `UPDATE user_account_lockouts
-       SET ip_addresses_encrypted = pgp_sym_encrypt(
-         COALESCE(details->>'ip_addresses', '')::text, 
-         $1
-       )
-       WHERE details->>'ip_addresses' IS NOT NULL 
-         AND ip_addresses_encrypted IS NULL`,
-      [ENCRYPTION_KEY]
-    );
-    results.accountLockoutsIp = lockoutsResult.rowCount;
-
-    // 6. Encrypt verification_codes phone numbers
-    const verPhoneResult = await db.query(
-      `UPDATE verification_codes
-       SET phone_number_encrypted = pgp_sym_encrypt(phone_number::text, $1)
-       WHERE phone_number IS NOT NULL AND phone_number_encrypted IS NULL`,
-      [ENCRYPTION_KEY]
-    );
-    results.verificationCodesPhone = verPhoneResult.rowCount;
-
-    // 7. Encrypt verification_codes emails
-    const verEmailResult = await db.query(
-      `UPDATE verification_codes
-       SET email_encrypted = pgp_sym_encrypt(email::text, $1)
-       WHERE email IS NOT NULL AND email_encrypted IS NULL`,
-      [ENCRYPTION_KEY]
-    );
-    results.verificationCodesEmail = verEmailResult.rowCount;
-    console.log(`[ENCRYPTION] ✅ Encrypted ${results.verificationCodesEmail} verification_codes emails`);
-
-    // 8. Encrypt login_attempts emails
-    console.log('[ENCRYPTION] Step 8: Encrypting login_attempts emails...');
-    const loginEmailResult = await db.query(
-      `UPDATE login_attempts
-       SET email_attempted_encrypted = pgp_sym_encrypt(email_attempted::text, $1)
-       WHERE email_attempted IS NOT NULL AND email_attempted_encrypted IS NULL`,
-      [ENCRYPTION_KEY]
-    );
-    results.loginAttemptsEmail = loginEmailResult.rowCount;
-    console.log(`[ENCRYPTION] ✅ Encrypted ${results.loginAttemptsEmail} login_attempts emails`);
-
-    // 9. Encrypt login_attempts IPs
-    console.log('[ENCRYPTION] Step 9: Encrypting login_attempts IP addresses...');
-    const loginIpResult = await db.query(
-      `UPDATE login_attempts
-       SET ip_address_encrypted = pgp_sym_encrypt(host(ip_address)::text, $1)
-       WHERE ip_address IS NOT NULL AND ip_address_encrypted IS NULL`,
-      [ENCRYPTION_KEY]
-    );
-    results.loginAttemptsIp = loginIpResult.rowCount;
-    console.log(`[ENCRYPTION] ✅ Encrypted ${results.loginAttemptsIp} login_attempts IP addresses`);
-
-    const totalEncrypted = Object.values(results).filter(v => typeof v === 'number').reduce((a, b) => a + b, 0);
-
-    console.log('[ENCRYPTION] 🎉 Migration complete!');
-    console.log(`[ENCRYPTION] Total records encrypted: ${totalEncrypted}`);
-    
-    res.json({ 
-      success: true, 
-      message: 'PII encryption migration complete',
-      results,
-      totalEncrypted
-    });
-  } catch (error) {
-    console.error('[ENCRYPTION] ❌ Error:', error.message);
-    res.status(500).json({ 
-      success: false, 
-      error: error.message,
-      message: 'Encryption migration failed'
-    });
-  }
 });
 
 export default router;

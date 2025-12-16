@@ -1,6 +1,7 @@
 import { fetchUserAstrology, getOracleSystemPrompt, callOracle, getUserGreeting, fetchUserPersonalInfo } from '../oracle.js';
 import { storeMessage } from '../messages.js';
 import { db } from '../../shared/db.js';
+import { hashUserId } from '../../shared/hashUtils.js';
 import { spawn } from 'child_process';
 
 function getCosmicWeatherPlanets() {
@@ -28,11 +29,12 @@ function getCosmicWeatherPlanets() {
 export async function generateCosmicWeather(userId) {
     try {
         const today = new Date().toISOString().split('T')[0];
+        const userIdHash = hashUserId(userId);
         
         // Check if cosmic weather already exists for today
         const { rows } = await db.query(
-            `SELECT content FROM messages WHERE user_id = $1 AND role = 'cosmic_weather' ORDER BY created_at DESC LIMIT 1`,
-            [userId]
+            `SELECT content FROM messages WHERE user_id_hash = $1 AND role = 'cosmic_weather' ORDER BY created_at DESC LIMIT 1`,
+            [userIdHash]
         );
         
         if (rows.length > 0) {

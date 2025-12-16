@@ -376,6 +376,108 @@ export async function verifyPaymentMethodMicrodeposits(paymentMethodId, amounts)
   }
 }
 
+/**
+ * Store subscription data in database with encrypted subscription ID
+ * CRITICAL: stripe_subscription_id must be encrypted with process.env.ENCRYPTION_KEY
+ */
+export async function storeSubscriptionData(userId, stripeSubscriptionId, subscriptionData) {
+  try {
+    if (!process.env.ENCRYPTION_KEY) {
+      throw new Error('ENCRYPTION_KEY not configured!');
+    }
+
+    const query = `UPDATE user_personal_info SET 
+      stripe_subscription_id_encrypted = pgp_sym_encrypt($1, $2),
+      subscription_status = $3,
+      current_period_start = $4,
+      current_period_end = $5,
+      plan_name = $6,
+      price_amount = $7,
+      price_interval = $8
+      WHERE user_id = $9`;
+
+    const result = await db.query(query, [
+      stripeSubscriptionId,                           // $1 - encrypted
+      process.env.ENCRYPTION_KEY,                    // $2 - encryption key
+      subscriptionData.status,                        // $3 - subscription_status
+      subscriptionData.current_period_start,          // $4 - current_period_start
+      subscriptionData.current_period_end,            // $5 - current_period_end
+      subscriptionData.plan_name || null,             // $6 - plan_name
+      subscriptionData.price_amount || null,          // $7 - price_amount
+      subscriptionData.price_interval || null,        // $8 - price_interval
+      userId                                          // $9 - user_id
+    ]);
+
+    console.log('[STRIPE] Subscription data stored for user:', userId);
+    return result;
+  } catch (error) {
+    console.error('[STRIPE] Error storing subscription data:', error);
+    throw error;
+  }
+}
+
+/**
+ * Retrieve encrypted subscription data from database
+ */
+export async function getStoredSubscriptionData(userId) {
+  try {
+    if (!process.env.ENCRYPTION_KEY) {
+      throw new Error('ENCRYPTION_KEY not configured!');
+    }
+
+    const query = `SELECT 
+      pgp_sym_decrypt(stripe_subscription_id_encrypted, $1) as stripe_subscription_id,
+      subscription_status,
+      current_period_start,
+      current_period_end,
+      plan_name,
+      price_amount,
+      price_interval
+      FROM user_personal_info WHERE user_id = $2`;
+
+    const result = await db.query(query, [process.env.ENCRYPTION_KEY, userId]);
+    
+    if (result.rows.length === 0 || !result.rows[0].stripe_subscription_id) {
+      return null;
+    }
+
+    return result.rows[0];
+  } catch (error) {
+    console.error('[STRIPE] Error retrieving subscription data:', error);
+    return null;
+  }
+}
+
+/**
+ * Update subscription status in database (called by webhooks)
+ */
+export async function updateSubscriptionStatus(userId, statusUpdate) {
+  try {
+    if (!process.env.ENCRYPTION_KEY) {
+      throw new Error('ENCRYPTION_KEY not configured!');
+    }
+
+    const query = `UPDATE user_personal_info SET 
+      subscription_status = $1,
+      current_period_start = $2,
+      current_period_end = $3
+      WHERE user_id = $4`;
+
+    const result = await db.query(query, [
+      statusUpdate.status,                // $1 - subscription_status
+      statusUpdate.current_period_start,  // $2 - current_period_start
+      statusUpdate.current_period_end,    // $3 - current_period_end
+      userId                              // $4 - user_id
+    ]);
+
+    console.log('[STRIPE] Subscription status updated for user:', userId, 'status:', statusUpdate.status);
+    return result;
+  } catch (error) {
+    console.error('[STRIPE] Error updating subscription status:', error);
+    throw error;
+  }
+}
+
 export default stripe;
 
 

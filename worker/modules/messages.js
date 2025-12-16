@@ -6,9 +6,10 @@ import { hashUserId } from '../shared/hashUtils.js';
  */
 export async function getMessageHistory(userId, limit = 10) {
     try {
+        const userIdHash = hashUserId(userId);
         const { rows } = await db.query(
-            "SELECT role, content FROM messages WHERE user_id=$1 ORDER BY created_at ASC LIMIT $2",
-            [userId, limit]
+            "SELECT role, content FROM messages WHERE user_id_hash=$1 ORDER BY created_at ASC LIMIT $2",
+            [userIdHash, limit]
         );
         
         // Transform messages for OpenAI API
@@ -52,8 +53,8 @@ export async function storeMessage(userId, role, content) {
     try {
         const userIdHash = hashUserId(userId);
         await db.query(
-            "INSERT INTO messages(user_id, user_id_hash, role, content) VALUES($1, $2, $3, $4)",
-            [userId, userIdHash, role, JSON.stringify(content)]
+            "INSERT INTO messages(user_id_hash, role, content) VALUES($1, $2, $3)",
+            [userIdHash, role, JSON.stringify(content)]
         );
     } catch (err) {
         console.error('[MESSAGES] Error storing message:', err);

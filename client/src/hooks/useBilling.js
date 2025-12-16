@@ -88,11 +88,11 @@ export function useBilling(token) {
     }
   }, [token, fetchPaymentMethods]);
 
-  const attachPaymentMethod = useCallback(async (paymentMethodId) => {
+    const attachPaymentMethod = useCallback(async (paymentMethodId) => {
     try {
       setError(null);
       setLoading(true);
-      const response = await fetchWithTokenRefresh(`${API_URL}/billing/attach-payment-method`, {
+      const response = await fetchWithTokenRefresh(`${API_URL}/billing/payment-methods/attach`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -121,11 +121,11 @@ export function useBilling(token) {
   /**
    * Verify bank account with micro-deposit amounts
    */
-  const verifyBankSetupIntent = useCallback(async (setupIntentId, amounts) => {
+    const verifyBankSetupIntent = useCallback(async (setupIntentId, amounts) => {
     try {
       setError(null);
       setLoading(true);
-      const response = await fetchWithTokenRefresh(`${API_URL}/billing/verify-bank-setup`, {
+      const response = await fetchWithTokenRefresh(`${API_URL}/billing/verify-setup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -154,11 +154,11 @@ export function useBilling(token) {
     }
   }, [token, fetchPaymentMethods]);
 
-  const cleanupUnverifiedBanks = useCallback(async () => {
+    const cleanupUnverifiedBanks = useCallback(async () => {
     try {
       setError(null);
       setLoading(true);
-      const response = await fetchWithTokenRefresh(`${API_URL}/billing/cleanup-unverified-banks`, {
+      const response = await fetchWithTokenRefresh(`${API_URL}/billing/cleanup-unverified`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -183,11 +183,11 @@ export function useBilling(token) {
     }
   }, [token, fetchPaymentMethods]);
 
-  const setDefaultPaymentMethod = useCallback(async (paymentMethodId) => {
+    const setDefaultPaymentMethod = useCallback(async (paymentMethodId) => {
     try {
       setError(null);
       setLoading(true);
-      const response = await fetchWithTokenRefresh(`${API_URL}/billing/set-default-payment-method`, {
+      const response = await fetchWithTokenRefresh(`${API_URL}/billing/payment-methods/set-default`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -361,11 +361,11 @@ export function useBilling(token) {
     }
   }, [token]);
 
-  const verifyPaymentMethod = useCallback(async (paymentMethodId, amounts) => {
+    const verifyPaymentMethod = useCallback(async (paymentMethodId, amounts) => {
     try {
       setError(null);
       setLoading(true);
-      const response = await fetchWithTokenRefresh(`${API_URL}/billing/verify-payment-method`, {
+      const response = await fetchWithTokenRefresh(`${API_URL}/billing/verify-microdeposits`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -394,11 +394,11 @@ export function useBilling(token) {
     }
   }, [token, fetchPaymentMethods]);
 
-  const attachUnattachedMethods = useCallback(async () => {
+    const attachUnattachedMethods = useCallback(async () => {
     try {
       setError(null);
       setLoading(true);
-      const response = await fetchWithTokenRefresh(`${API_URL}/billing/attach-unattached-methods`, {
+      const response = await fetchWithTokenRefresh(`${API_URL}/billing/payment-methods/attach-unattached`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
       });

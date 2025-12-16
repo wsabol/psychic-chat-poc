@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { hashUserId } from "../shared/hashUtils.js";
 import { enqueueMessage } from "../shared/queue.js";
 import { authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
@@ -20,15 +21,16 @@ router.get("/:userId/:range", authorizeUser, async (req, res) => {
         }
         
         const today = new Date().toISOString().split('T')[0];
+        const userIdHash = hashUserId(userId);
         
         // Get recent horoscopes (limited to last 100 to avoid huge queries)
         const { rows } = await db.query(
             `SELECT content, created_at FROM messages 
-             WHERE user_id = $1 
+             WHERE user_id_hash = $1 
              AND role = 'horoscope'
              ORDER BY created_at DESC 
              LIMIT 100`,
-            [userId]
+            [userIdHash]
         );
         
         // Find the first horoscope that matches the range and is from today
@@ -58,10 +60,10 @@ router.get("/:userId/:range", authorizeUser, async (req, res) => {
         if (staleHoroscopesExist) {
             await db.query(
                 `DELETE FROM messages 
-                 WHERE user_id = $1 
+                 WHERE user_id_hash = $1 
                  AND role = 'horoscope'
                  AND created_at < CURRENT_DATE`,
-                [userId]
+                [userIdHash]
             );
         }
         

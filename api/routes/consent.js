@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { db } from '../shared/db.js';
 import { authenticateToken, authorizeUser } from '../middleware/auth.js';
 import { logAudit } from '../shared/auditLog.js';
+import { hashUserId } from '../shared/hashUtils.js';
 
 const router = Router();
 
@@ -13,25 +14,6 @@ const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
 /**
  * POST /auth/consents
  * Record or update user consent for data processing
- * 
- * Request body:
- * {
- *   userId: string,
- *   consent_astrology: boolean,
- *   consent_health_data: boolean,
- *   consent_chat_analysis: boolean
- * }
- * 
- * Response:
- * {
- *   success: true,
- *   message: "Consents recorded",
- *   userId: string,
- *   timestamp: ISO string
- * }
- */
-/**
- * PUBLIC ENDPOINT - No auth required (used during registration)
  */
 router.post('/consents', async (req, res) => {
   try {
@@ -45,6 +27,8 @@ router.post('/consents', async (req, res) => {
     if (!userId) {
       return res.status(400).json({ error: 'userId required' });
     }
+
+    const userIdHash = hashUserId(userId);
 
     // Validate that user exists
     const userExists = await db.query(
@@ -63,24 +47,25 @@ router.post('/consents', async (req, res) => {
     // Insert or update consent record
     const result = await db.query(
       `INSERT INTO user_consents (
-        user_id, 
+        user_id, user_id_hash,
         consent_astrology, 
         consent_health_data, 
         consent_chat_analysis,
         agreed_from_ip, 
         user_agent,
         agreed_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, NOW())
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
       ON CONFLICT (user_id) DO UPDATE SET
-        consent_astrology = $2,
-        consent_health_data = $3,
-        consent_chat_analysis = $4,
-        agreed_from_ip = $5,
-        user_agent = $6,
+        consent_astrology = $3,
+        consent_health_data = $4,
+        consent_chat_analysis = $5,
+        agreed_from_ip = $6,
+        user_agent = $7,
         updated_at = NOW()
       RETURNING *`,
       [
         userId,
+        userIdHash,
         consent_astrology,
         consent_health_data,
         consent_chat_analysis,
@@ -146,18 +131,6 @@ router.post('/consents', async (req, res) => {
 /**
  * GET /auth/consents/:userId
  * Retrieve user's current consent status
- * 
- * Response:
- * {
- *   success: true,
- *   userId: string,
- *   consents: {
- *     consent_astrology: boolean,
- *     consent_health_data: boolean,
- *     consent_chat_analysis: boolean,
- *     agreed_at: ISO string
- *   }
- * }
  */
 router.get('/consents/:userId', authenticateToken, authorizeUser, async (req, res) => {
   try {
@@ -166,6 +139,8 @@ router.get('/consents/:userId', authenticateToken, authorizeUser, async (req, re
     if (!userId) {
       return res.status(400).json({ error: 'userId required' });
     }
+
+    const userIdHash = hashUserId(userId);
 
     // Fetch consent record
     const result = await db.query(
@@ -177,8 +152,8 @@ router.get('/consents/:userId', authenticateToken, authorizeUser, async (req, re
         agreed_at,
         agreed_from_ip
       FROM user_consents 
-      WHERE user_id = $1`,
-      [userId]
+      WHERE user_id_hash = $1`,
+      [userIdHash]
     );
 
     if (result.rows.length === 0) {
@@ -233,20 +208,6 @@ router.get('/consents/:userId', authenticateToken, authorizeUser, async (req, re
 /**
  * POST /auth/verify-consent/:userId/:consentType
  * Check if user has specific consent before performing action
- * 
- * Params:
- *   userId: string
- *   consentType: 'astrology' | 'health_data' | 'chat_analysis'
- * 
- * Response:
- * {
- *   success: true,
- *   hasConsent: boolean,
- *   consentType: string
- * }
- */
-/**
- * PUBLIC ENDPOINT - No auth required (quick consent check)
  */
 router.post('/verify-consent/:userId/:consentType', async (req, res) => {
   try {
@@ -255,6 +216,8 @@ router.post('/verify-consent/:userId/:consentType', async (req, res) => {
     if (!userId || !consentType) {
       return res.status(400).json({ error: 'userId and consentType required' });
     }
+
+    const userIdHash = hashUserId(userId);
 
     // Validate consent type
     const validTypes = ['astrology', 'health_data', 'chat_analysis'];
@@ -277,8 +240,8 @@ router.post('/verify-consent/:userId/:consentType', async (req, res) => {
     const result = await db.query(
       `SELECT ${columnName} as has_consent 
        FROM user_consents 
-       WHERE user_id = $1`,
-      [userId]
+       WHERE user_id_hash = $1`,
+      [userIdHash]
     );
 
     const hasConsent = result.rows.length > 0 ? result.rows[0].has_consent : false;
@@ -302,14 +265,6 @@ router.post('/verify-consent/:userId/:consentType', async (req, res) => {
 /**
  * GET /auth/consent-summary/:userId
  * Get summary of user's consent status and audit trail
- * 
- * Response:
- * {
- *   success: true,
- *   userId: string,
- *   consents: {...},
- *   auditLog: [{action, timestamp, details}, ...]
- * }
  */
 router.get('/consent-summary/:userId', authenticateToken, authorizeUser, async (req, res) => {
   try {
@@ -318,6 +273,8 @@ router.get('/consent-summary/:userId', authenticateToken, authorizeUser, async (
     if (!userId) {
       return res.status(400).json({ error: 'userId required' });
     }
+
+    const userIdHash = hashUserId(userId);
 
     // Get current consent
     const consentResult = await db.query(
@@ -329,8 +286,8 @@ router.get('/consent-summary/:userId', authenticateToken, authorizeUser, async (
         agreed_at,
         agreed_from_ip
       FROM user_consents 
-      WHERE user_id = $1`,
-      [userId]
+      WHERE user_id_hash = $1`,
+      [userIdHash]
     );
 
     // Get consent audit history
@@ -339,12 +296,12 @@ router.get('/consent-summary/:userId', authenticateToken, authorizeUser, async (
         action,
         created_at,
         details,
-        ip_address
+        ip_address_encrypted
       FROM audit_log 
-      WHERE user_id = $1 AND action LIKE 'CONSENT%'
+      WHERE user_id_hash = $1 AND action LIKE 'CONSENT%'
       ORDER BY created_at DESC
       LIMIT 10`,
-      [userId]
+      [userIdHash]
     );
 
     const currentConsent = consentResult.rows[0] || null;
@@ -363,7 +320,7 @@ router.get('/consent-summary/:userId', authenticateToken, authorizeUser, async (
         action: row.action,
         timestamp: row.created_at,
         details: row.details,
-        ipAddress: row.ip_address
+        ipAddress: '[ENCRYPTED]'
       }))
     });
 

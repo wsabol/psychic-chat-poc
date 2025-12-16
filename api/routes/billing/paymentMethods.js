@@ -1,4 +1,5 @@
 import express from 'express';
+import { authenticateToken } from '../../middleware/auth.js';
 import stripe from '../../services/stripeService.js';
 import {
   getOrCreateStripeCustomer,
@@ -12,7 +13,7 @@ const router = express.Router();
 /**
  * Get user's payment methods
  */
-router.get('/payment-methods', async (req, res) => {
+router.get('/payment-methods', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
     const userEmail = req.user.email;
@@ -41,7 +42,7 @@ router.get('/payment-methods', async (req, res) => {
 /**
  * Attach payment method to customer
  */
-router.post('/payment-methods/attach', async (req, res) => {
+router.post('/payment-methods/attach', authenticateToken, async (req, res) => {
   try {
     const { paymentMethodId } = req.body;
     const userId = req.user.userId;
@@ -88,7 +89,7 @@ router.post('/payment-methods/attach', async (req, res) => {
 /**
  * Delete payment method
  */
-router.delete('/payment-methods/:id', async (req, res) => {
+router.delete('/payment-methods/:id', authenticateToken, async (req, res) => {
   try {
     const id = req.params.id;
     
@@ -117,7 +118,7 @@ router.delete('/payment-methods/:id', async (req, res) => {
 /**
  * Set default payment method
  */
-router.post('/payment-methods/set-default', async (req, res) => {
+router.post('/payment-methods/set-default', authenticateToken, async (req, res) => {
   try {
     const { paymentMethodId } = req.body;
     const userId = req.user.userId;
@@ -141,7 +142,7 @@ router.post('/payment-methods/set-default', async (req, res) => {
 /**
  * Attach unattached payment methods
  */
-router.post('/payment-methods/attach-unattached', async (req, res) => {
+router.post('/payment-methods/attach-unattached', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
     const userEmail = req.user.email;

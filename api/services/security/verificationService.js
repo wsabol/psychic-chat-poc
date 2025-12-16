@@ -1,4 +1,5 @@
 import { db } from '../../shared/db.js';
+import { hashUserId } from '../../shared/hashUtils.js';
 
 /**
  * Get verification methods (all from security table - all encrypted with pgp_sym_encrypt)
@@ -8,6 +9,8 @@ import { db } from '../../shared/db.js';
  */
 export async function getVerificationMethods(userId, userEmail) {
   try {
+    const userIdHash = hashUserId(userId);
+    
     // SECURITY: All phone/email fields are encrypted at database level
     // Decrypt them using pgp_sym_decrypt in the SQL query
     const securityResult = await db.query(
@@ -16,8 +19,8 @@ export async function getVerificationMethods(userId, userEmail) {
         pgp_sym_decrypt(recovery_phone_encrypted, $1) as recovery_phone,
         pgp_sym_decrypt(recovery_email_encrypted, $1) as recovery_email,
         phone_verified, recovery_phone_verified, recovery_email_verified
-       FROM security WHERE user_id = $2`,
-      [process.env.ENCRYPTION_KEY, userId]
+       FROM security WHERE user_id_hash = $2`,
+      [process.env.ENCRYPTION_KEY, userIdHash]
     );
 
     if (securityResult.rows.length === 0) {

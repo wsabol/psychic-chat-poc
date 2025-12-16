@@ -4,6 +4,7 @@ import { db } from '../../shared/db.js';
 import { logAudit } from '../../shared/auditLog.js';
 import { createUserDatabaseRecords, getUserProfile } from './helpers/userCreation.js';
 import { recordLoginAttempt } from './helpers/accountLockout.js';
+import { hashUserId } from '../../shared/hashUtils.js';
 
 const router = Router();
 
@@ -72,16 +73,17 @@ router.post('/check-account-lockout/:userId', async (req, res) => {
     const { userId } = req.params;
     if (!userId) return res.status(400).json({ error: 'userId required' });
 
+    const userIdHash = hashUserId(userId);
     const lockoutResult = await db.query(
-      `SELECT unlock_at FROM user_account_lockouts 
-       WHERE user_id = $1 AND unlock_at > NOW()`,
-      [userId]
+      `SELECT lock_expires_at FROM user_account_lockouts 
+       WHERE user_id_hash = $1 AND lock_expires_at > NOW()`,
+      [userIdHash]
     );
 
     if (lockoutResult.rows.length > 0) {
       const lockout = lockoutResult.rows[0];
       const minutesRemaining = Math.ceil(
-        (new Date(lockout.unlock_at) - new Date()) / 1000 / 60
+        (new Date(lockout.lock_expires_at) - new Date()) / 1000 / 60
       );
 
       await logAudit(db, {
@@ -100,7 +102,7 @@ router.post('/check-account-lockout/:userId', async (req, res) => {
         success: false,
         locked: true,
         message: `Account locked due to too many failed login attempts. Try again in ${minutesRemaining} minute${minutesRemaining !== 1 ? 's' : ''}.`,
-        unlockAt: lockout.unlock_at,
+        unlockAt: lockout.lock_expires_at,
         minutesRemaining
       });
     }

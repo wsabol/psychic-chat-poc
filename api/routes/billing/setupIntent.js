@@ -1,4 +1,5 @@
 import express from 'express';
+import { authenticateToken } from '../../middleware/auth.js';
 import { getOrCreateStripeCustomer, createSetupIntent } from '../../services/stripeService.js';
 
 const router = express.Router();
@@ -7,7 +8,7 @@ const router = express.Router();
  * POST /billing/setup-intent
  * Creates a SetupIntent for the customer
  */
-router.post('/setup-intent', async (req, res) => {
+router.post('/setup-intent', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
     const userEmail = req.user.email;

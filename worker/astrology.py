@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
 import json
+import time
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -11,7 +12,7 @@ except ImportError:
     sys.exit(1)
 
 try:
-    from geopy.geocoders import Nominatim
+    from geopy.geocoders import Photon, Nominatim
     from timezonefinder import TimezoneFinder
 except ImportError:
     print(json.dumps({"error": "geopy or timezonefinder not installed"}), file=sys.stdout)
@@ -23,6 +24,9 @@ ZODIAC_SIGNS = {
     "Sagittarius": (240, 270), "Capricorn": (270, 300), "Aquarius": (300, 330), "Pisces": (330, 360)
 }
 
+# Cache for geocoding results (survives worker process lifetime)
+GEOCACHE = {}
+
 def degrees_to_zodiac(longitude):
     longitude = longitude % 360
     for sign, (start, end) in ZODIAC_SIGNS.items():
@@ -30,27 +34,76 @@ def degrees_to_zodiac(longitude):
             return sign, longitude - start
     return "Pisces", longitude - 330
 
-def get_timezone_from_location(country, province, city):
+def get_timezone_from_location(lat, lng):
     try:
-        geolocator = Nominatim(user_agent="psychic_chat_astrology")
-        location = geolocator.geocode(f"{city}, {province}, {country}", timeout=10)
-        if not location:
-            return None
-        tz = TimezoneFinder().timezone_at(lat=location.latitude, lng=location.longitude)
+        tz = TimezoneFinder().timezone_at(lat=lat, lng=lng)
         return tz
     except Exception as e:
-        print(f"Error detecting timezone: {str(e)}", file=sys.stderr)
+        print(f"[TIMEZONE] Error detecting timezone: {str(e)}", file=sys.stderr)
         return None
 
 def get_coordinates(country, province, city):
     try:
-        geolocator = Nominatim(user_agent="psychic_chat_astrology")
-        location = geolocator.geocode(f"{city}, {province}, {country}", timeout=10)
-        if location:
-            return location.latitude, location.longitude
+        # Check cache first
+        cache_key = f"{city},{province},{country}".lower()
+        if cache_key in GEOCACHE:
+            print(f"[PHOTON] CACHE HIT: {cache_key}", file=sys.stderr)
+            return GEOCACHE[cache_key]
+        
+        address_string = f"{city}, {province}, {country}"
+        print(f"[PHOTON] Querying Photon for: {address_string}", file=sys.stderr)
+        
+        # PRIMARY: Use Photon (faster, no rate limiting)
+        try:
+            geolocator = Photon(user_agent="psychic_chat_astrology", timeout=10)
+            location = geolocator.geocode(address_string, timeout=10)
+            
+            if location:
+                result = (location.latitude, location.longitude)
+                GEOCACHE[cache_key] = result
+                print(f"[PHOTON] ✓ SUCCESS: {cache_key} => ({location.latitude}, {location.longitude})", file=sys.stderr)
+                return result
+            
+            print(f"[PHOTON] No result for: {address_string}", file=sys.stderr)
+        except Exception as e:
+            print(f"[PHOTON] Query failed: {str(e)}", file=sys.stderr)
+        
+        # FALLBACK 1: Try without province (Photon)
+        print(f"[PHOTON] Fallback 1: Trying without province", file=sys.stderr)
+        try:
+            address_no_province = f"{city}, {country}"
+            geolocator = Photon(user_agent="psychic_chat_astrology", timeout=10)
+            location = geolocator.geocode(address_no_province, timeout=10)
+            
+            if location:
+                result = (location.latitude, location.longitude)
+                GEOCACHE[cache_key] = result
+                print(f"[PHOTON] ✓ FALLBACK1 SUCCESS: {cache_key} => ({location.latitude}, {location.longitude})", file=sys.stderr)
+                return result
+        except Exception as e:
+            print(f"[PHOTON] Fallback 1 failed: {str(e)}", file=sys.stderr)
+        
+        # FALLBACK 2: Use Nominatim (OpenStreetMap official API, backup only)
+        print(f"[NOMINATIM] Using Nominatim as backup for: {address_string}", file=sys.stderr)
+        try:
+            time.sleep(2)  # Rate limiting for Nominatim
+            geolocator = Nominatim(user_agent="psychic_chat_astrology", timeout=10)
+            location = geolocator.geocode(address_string, timeout=10)
+            
+            if location:
+                result = (location.latitude, location.longitude)
+                GEOCACHE[cache_key] = result
+                print(f"[NOMINATIM] ✓ FALLBACK2 SUCCESS: {cache_key} => ({location.latitude}, {location.longitude})", file=sys.stderr)
+                return result
+        except Exception as e:
+            print(f"[NOMINATIM] Fallback 2 failed: {str(e)}", file=sys.stderr)
+        
+        # All geocoding failed
+        print(f"[GEOCODING] ✗ FAILED: Could not find coordinates for {city}, {province}, {country}", file=sys.stderr)
         return None, None
+        
     except Exception as e:
-        print(f"Error geocoding: {str(e)}", file=sys.stderr)
+        print(f"[GEOCODING] Unexpected error: {str(e)}", file=sys.stderr)
         return None, None
 
 def calculate_birth_chart(birth_data):
@@ -69,7 +122,7 @@ def calculate_birth_chart(birth_data):
         if lat is None or lng is None:
             return {"error": f"Could not find coordinates for {city}", "success": False}
         
-        timezone_str = provided_tz or get_timezone_from_location(country, province, city)
+        timezone_str = provided_tz or get_timezone_from_location(lat, lng)
         if not timezone_str:
             return {"error": f"Could not detect timezone", "success": False}
         

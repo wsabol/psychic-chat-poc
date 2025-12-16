@@ -1,11 +1,12 @@
 import express from 'express';
-import { authorizeUser } from '../../middleware/auth.js';
+import { authenticateToken } from '../../middleware/auth.js';
 import {
   getOrCreateStripeCustomer,
   createSubscription,
   getSubscriptions,
   cancelSubscription,
   getAvailablePrices,
+  storeSubscriptionData,
 } from '../../services/stripeService.js';
 
 const router = express.Router();
@@ -13,7 +14,7 @@ const router = express.Router();
 /**
  * Create subscription
  */
-router.post('/create-subscription', authorizeUser, async (req, res) => {
+router.post('/create-subscription', authenticateToken, async (req, res) => {
   try {
     const { priceId } = req.body;
     const userId = req.user.userId;
@@ -31,6 +32,21 @@ router.post('/create-subscription', authorizeUser, async (req, res) => {
     
     const subscription = await createSubscription(customerId, priceId);
 
+    // Store encrypted subscription data in database
+    try {
+      await storeSubscriptionData(userId, subscription.id, {
+        status: subscription.status,
+        current_period_start: subscription.current_period_start,
+        current_period_end: subscription.current_period_end,
+        plan_name: subscription.items?.data?.[0]?.plan?.product?.name,
+        price_amount: subscription.items?.data?.[0]?.price?.unit_amount,
+        price_interval: subscription.items?.data?.[0]?.price?.recurring?.interval,
+      });
+    } catch (storageError) {
+      console.error('[BILLING] Warning - failed to store subscription in DB:', storageError.message);
+      // Don't fail the response - subscription was created in Stripe
+    }
+
     res.json({
       subscriptionId: subscription.id,
       status: subscription.status,
@@ -45,7 +61,7 @@ router.post('/create-subscription', authorizeUser, async (req, res) => {
 /**
  * Get user's subscriptions
  */
-router.get('/subscriptions', authorizeUser, async (req, res) => {
+router.get('/subscriptions', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
     const userEmail = req.user.email;
@@ -67,7 +83,7 @@ router.get('/subscriptions', authorizeUser, async (req, res) => {
 /**
  * Cancel subscription
  */
-router.post('/cancel-subscription/:subscriptionId', async (req, res) => {
+router.post('/cancel-subscription/:subscriptionId', authenticateToken, async (req, res) => {
   try {
     const { subscriptionId } = req.params;
 

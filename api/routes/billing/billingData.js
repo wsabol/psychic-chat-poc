@@ -1,4 +1,5 @@
 import express from 'express';
+import { authenticateToken } from '../../middleware/auth.js';
 import {
   getOrCreateStripeCustomer,
   getInvoices,
@@ -11,7 +12,7 @@ const router = express.Router();
 /**
  * Get user's invoices
  */
-router.get('/invoices', async (req, res) => {
+router.get('/invoices', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
     const userEmail = req.user.email;
@@ -33,7 +34,7 @@ router.get('/invoices', async (req, res) => {
 /**
  * Get user's payments (charges)
  */
-router.get('/payments', async (req, res) => {
+router.get('/payments', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
     const userEmail = req.user.email;

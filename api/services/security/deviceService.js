@@ -1,4 +1,5 @@
 import { db } from '../../shared/db.js';
+import { hashUserId } from '../../shared/hashUtils.js';
 import admin from 'firebase-admin';
 
 /**
@@ -6,15 +7,16 @@ import admin from 'firebase-admin';
  */
 export async function getDevices(userId) {
   try {
+    const userIdHash = hashUserId(userId);
     const result = await db.query(
-      'SELECT id, device_name, ip_address, last_active, created_at FROM security_sessions WHERE user_id = $1 ORDER BY last_active DESC',
-      [userId]
+      'SELECT id, device_name, ip_address_encrypted, last_active, created_at FROM security_sessions WHERE user_id_hash = $1 ORDER BY last_active DESC',
+      [userIdHash]
     );
 
     const devices = result.rows.map(row => ({
       id: row.id,
       deviceName: row.device_name,
-      ipAddress: row.ip_address,
+      ipAddress: '[ENCRYPTED]',
       lastLogin: row.last_active,
       createdAt: row.created_at,
       isCurrent: false
@@ -32,9 +34,10 @@ export async function getDevices(userId) {
  */
 export async function logoutDevice(userId, deviceId) {
   try {
+    const userIdHash = hashUserId(userId);
     const result = await db.query(
-      'SELECT firebase_token FROM security_sessions WHERE id = $1 AND user_id = $2',
-      [deviceId, userId]
+      'SELECT id FROM security_sessions WHERE id = $1 AND user_id_hash = $2',
+      [deviceId, userIdHash]
     );
 
     if (result.rows.length === 0) {
@@ -42,8 +45,8 @@ export async function logoutDevice(userId, deviceId) {
     }
 
     await db.query(
-      'DELETE FROM security_sessions WHERE id = $1 AND user_id = $2',
-      [deviceId, userId]
+      'DELETE FROM security_sessions WHERE id = $1 AND user_id_hash = $2',
+      [deviceId, userIdHash]
     );
 
     try {

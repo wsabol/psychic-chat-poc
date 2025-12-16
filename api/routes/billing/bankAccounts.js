@@ -1,4 +1,5 @@
 import express from 'express';
+import { authenticateToken } from '../../middleware/auth.js';
 import stripe from '../../services/stripeService.js';
 import {
   getOrCreateStripeCustomer,
@@ -13,7 +14,7 @@ const router = express.Router();
 /**
  * Verify bank account via setup intent
  */
-router.post('/verify-setup', async (req, res) => {
+router.post('/verify-setup', authenticateToken, async (req, res) => {
   try {
     const { setupIntentId, amounts } = req.body;
 
@@ -52,7 +53,7 @@ router.post('/verify-setup', async (req, res) => {
 /**
  * Verify bank account via microdeposits
  */
-router.post('/verify-microdeposits', async (req, res) => {
+router.post('/verify-microdeposits', authenticateToken, async (req, res) => {
   try {
     const { paymentMethodId, amounts } = req.body;
 
@@ -91,7 +92,7 @@ router.post('/verify-microdeposits', async (req, res) => {
 /**
  * Cleanup unverified bank accounts
  */
-router.post('/cleanup-unverified', async (req, res) => {
+router.post('/cleanup-unverified', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
     const userEmail = req.user.email;
@@ -144,7 +145,7 @@ router.post('/cleanup-unverified', async (req, res) => {
 /**
  * Create Financial Connections session
  */
-router.post('/financial-connections-session', async (req, res) => {
+router.post('/financial-connections-session', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
     const userEmail = req.user.email;
@@ -181,7 +182,7 @@ router.post('/financial-connections-session', async (req, res) => {
 /**
  * Get financial accounts from session
  */
-router.post('/financial-accounts', async (req, res) => {
+router.post('/financial-accounts', authenticateToken, async (req, res) => {
   try {
     const { sessionId } = req.body;
     
@@ -211,7 +212,7 @@ router.post('/financial-accounts', async (req, res) => {
 /**
  * Create bank account payment method from financial account
  */
-router.post('/create-from-financial', async (req, res) => {
+router.post('/create-from-financial', authenticateToken, async (req, res) => {
   try {
     const { financialAccountId } = req.body;
     const userId = req.user.userId;
@@ -261,7 +262,7 @@ router.post('/create-from-financial', async (req, res) => {
  * Confirms a SetupIntent with ACH mandate data and customer acceptance info
  * Required for ACH debit authorization
  */
-router.post('/confirm-setup-intent', async (req, res) => {
+router.post('/confirm-setup-intent', authenticateToken, async (req, res) => {
   try {
     const { setupIntentId, paymentMethodId, ipAddress, userAgent } = req.body;
 

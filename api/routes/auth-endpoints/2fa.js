@@ -4,6 +4,8 @@ import { db } from '../../shared/db.js';
 import { authenticateToken } from '../../middleware/auth.js';
 import { logAudit } from '../../shared/auditLog.js';
 import { isAccountLocked } from './helpers/accountLockout.js';
+import { hashUserId } from '../../shared/hashUtils.js';
+import { insertVerificationCode, getVerificationCode } from '../../shared/encryptedQueries.js';
 
 const router = Router();
 
@@ -17,14 +19,11 @@ router.post('/verify-2fa', async (req, res) => {
     if (!userId || !code) return res.status(400).json({ error: 'userId and code required' });
     
     // Verify code exists and is valid
-    const codeResult = await db.query(
-      `SELECT * FROM user_2fa_codes WHERE user_id = $1 AND code = $2 AND code_type = 'login' AND expires_at > NOW() AND used = false`,
-      [userId, code]
-    );
+    const codeResult = await getVerificationCode(db, userId, code);
     if (codeResult.rows.length === 0) return res.status(400).json({ error: 'Invalid or expired 2FA code' });
     
     // Mark code as used
-    await db.query('UPDATE user_2fa_codes SET used = true WHERE id = $1', [codeResult.rows[0].id]);
+    await db.query('UPDATE verification_codes SET verified_at = NOW() WHERE id = $1', [codeResult.rows[0].id]);
     
     // Log success
     await logAudit(db, {
@@ -78,10 +77,11 @@ router.post('/check-2fa/:userId', async (req, res) => {
       });
     }
 
-    // Get 2FA settings
+    // Get 2FA settings using user_id_hash
+    const userIdHash = hashUserId(userId);
     const twoFAResult = await db.query(
-      'SELECT * FROM user_2fa_settings WHERE user_id = $1',
-      [userId]
+      'SELECT * FROM user_2fa_settings WHERE user_id_hash = $1',
+      [userIdHash]
     );
 
     const twoFASettings = twoFAResult.rows[0];
@@ -97,17 +97,10 @@ router.post('/check-2fa/:userId', async (req, res) => {
     }
 
     // Generate and send 2FA code
-    const { generate6DigitCode } = await import('../../../shared/authUtils.js');
-    const { send2FACodeEmail } = await import('../../../shared/emailService.js');
+    const { generate6DigitCode } = await import('../../shared/authUtils.js');
+    const { send2FACodeEmail } = await import('../../shared/emailService.js');
     
     const code = generate6DigitCode();
-    const codeExpires = new Date(Date.now() + 10 * 60000); // 10 minutes
-
-    await db.query(
-      `INSERT INTO user_2fa_codes (user_id, code, code_type, created_at, expires_at)
-       VALUES ($1, $2, 'login', NOW(), $3)`,
-      [userId, code, codeExpires]
-    );
 
     // Get user's email
     const userResult = await db.query(
@@ -120,6 +113,9 @@ router.post('/check-2fa/:userId', async (req, res) => {
     }
 
     const email = userResult.rows[0].email;
+
+    // Insert verification code with encryption
+    await insertVerificationCode(db, userId, email, null, code, 'email');
 
     // Send 2FA code via email
     const sendResult = await send2FACodeEmail(email, code);

@@ -1,4 +1,5 @@
 import { db } from '../../shared/db.js';
+import { hashUserId } from '../../shared/hashUtils.js';
 import { tarotDeck } from '../../tarotDeck.js';
 import { extractCardsFromResponse, formatCardsForStorage } from '../cards.js';
 import { 
@@ -216,15 +217,16 @@ async function handleHoroscopeInChat(userId, userInfo, astrologyInfo) {
     try {
         const today = new Date().toISOString().split('T')[0];
         const defaultRange = 'daily';
+        const userIdHash = hashUserId(userId);
         
         // Check if horoscope exists for today
         const { rows } = await db.query(
             `SELECT content FROM messages 
-             WHERE user_id = $1 
+             WHERE user_id_hash = $1 
              AND role = 'horoscope'
              ORDER BY created_at DESC 
              LIMIT 5`,
-            [userId]
+            [userIdHash]
         );
         
         // Find valid horoscope from today
@@ -269,6 +271,7 @@ async function handleMoonPhaseInChat(userId, userInfo, astrologyInfo, phase) {
     try {
         const today = new Date().toISOString().split('T')[0];
         const userGreeting = getUserGreeting(userInfo, userId);
+        const userIdHash = hashUserId(userId);
         
                 // If no specific phase mentioned, calculate current
         let currentPhase = phase;
@@ -286,11 +289,11 @@ async function handleMoonPhaseInChat(userId, userInfo, astrologyInfo, phase) {
         // Check if moon phase commentary exists for today
         const { rows } = await db.query(
             `SELECT content FROM messages 
-             WHERE user_id = $1 
+             WHERE user_id_hash = $1 
              AND role = 'moon_phase'
              ORDER BY created_at DESC 
              LIMIT 5`,
-            [userId]
+            [userIdHash]
         );
         
         // Find valid commentary from today
@@ -337,9 +340,10 @@ async function handleCosmicWeatherInChat(userId, userInfo) {
     try {
         const today = new Date().toISOString().split('T')[0];
         const userGreeting = getUserGreeting(userInfo, userId);
+        const userIdHash = hashUserId(userId);
         const { rows } = await db.query(
-            `SELECT content FROM messages WHERE user_id = $1 AND role = 'cosmic_weather' ORDER BY created_at DESC LIMIT 5`,
-            [userId]
+            `SELECT content FROM messages WHERE user_id_hash = $1 AND role = 'cosmic_weather' ORDER BY created_at DESC LIMIT 5`,
+            [userIdHash]
         );
         let validWeather = null;
         for (const row of rows) {
@@ -371,13 +375,14 @@ async function handleCosmicWeatherInChat(userId, userInfo) {
  */
 async function storeAstrologyData(userId, sunSign, astrologyData) {
     try {
+        const userIdHash = hashUserId(userId);
         await db.query(
-            `INSERT INTO user_astrology (user_id, zodiac_sign, astrology_data)
+            `INSERT INTO user_astrology (user_id_hash, zodiac_sign, astrology_data)
              VALUES ($1, $2, $3)
-             ON CONFLICT (user_id) DO UPDATE SET
+             ON CONFLICT (user_id_hash) DO UPDATE SET
              astrology_data = EXCLUDED.astrology_data,
              updated_at = CURRENT_TIMESTAMP`,
-            [userId, sunSign, JSON.stringify(astrologyData)]
+            [userIdHash, sunSign, JSON.stringify(astrologyData)]
         );
     } catch (err) {
         console.error('[CHAT-HANDLER] Error storing astrology:', err.message);

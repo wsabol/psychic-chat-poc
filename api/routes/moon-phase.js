@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { hashUserId } from "../shared/hashUtils.js";
 import { enqueueMessage } from "../shared/queue.js";
 import { authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
@@ -21,15 +22,16 @@ router.get("/:userId", authorizeUser, async (req, res) => {
         const today = new Date().toISOString().split('T')[0];
         const now = new Date();
         const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        const userIdHash = hashUserId(userId);
         
         // Get recent moon phase commentaries
         const { rows } = await db.query(
             `SELECT content, created_at FROM messages 
-             WHERE user_id = $1 
+             WHERE user_id_hash = $1 
              AND role = 'moon_phase'
              ORDER BY created_at DESC 
              LIMIT 10`,
-            [userId]
+            [userIdHash]
         );
         
         // Find one from today matching this phase that's less than 24 hours old
@@ -64,10 +66,10 @@ router.get("/:userId", authorizeUser, async (req, res) => {
         if (staleEntriesExist) {
             await db.query(
                 `DELETE FROM messages 
-                 WHERE user_id = $1 
+                 WHERE user_id_hash = $1 
                  AND role = 'moon_phase'
                  AND created_at < CURRENT_DATE`,
-                [userId]
+                [userIdHash]
             );
         }
         

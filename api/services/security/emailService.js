@@ -1,14 +1,17 @@
 import { db } from '../../shared/db.js';
+import { hashUserId } from '../../shared/hashUtils.js';
 import { encryptEmail, decryptEmail, generateVerificationCodeWithExpiry, logVerificationCode } from './helpers/securityHelpers.js';
+import { insertVerificationCode, getVerificationCode } from '../../shared/encryptedQueries.js';
 
 /**
  * Get email data
  */
 export async function getEmailData(userId) {
   try {
+    const userIdHash = hashUserId(userId);
     const result = await db.query(
-      'SELECT recovery_email, recovery_email_verified FROM security WHERE user_id = $1',
-      [userId]
+      'SELECT recovery_email_encrypted, recovery_email_verified FROM security WHERE user_id_hash = $1',
+      [userIdHash]
     );
 
     if (result.rows.length === 0) {
@@ -17,7 +20,7 @@ export async function getEmailData(userId) {
 
     const row = result.rows[0];
     return {
-      recoveryEmail: decryptEmail(row.recovery_email),
+      recoveryEmail: row.recovery_email_encrypted ? decryptEmail(row.recovery_email_encrypted) : null,
       recoveryEmailVerified: row.recovery_email_verified
     };
   } catch (err) {
@@ -31,26 +34,23 @@ export async function getEmailData(userId) {
  */
 export async function saveRecoveryEmail(userId, recoveryEmail) {
   try {
-    const encryptedEmail = encryptEmail(recoveryEmail);
+    const userIdHash = hashUserId(userId);
 
     await db.query(
-      `INSERT INTO security (user_id, recovery_email, recovery_email_verified)
-       VALUES ($1, $2, FALSE)
+      `INSERT INTO security (user_id, user_id_hash, recovery_email_encrypted, recovery_email_verified)
+       VALUES ($1, $2, pgp_sym_encrypt($3, $4), FALSE)
        ON CONFLICT (user_id) 
        DO UPDATE SET 
-         recovery_email = $2,
+         recovery_email_encrypted = pgp_sym_encrypt($3, $4),
          recovery_email_verified = FALSE,
          updated_at = CURRENT_TIMESTAMP`,
-      [userId, encryptedEmail]
+      [userId, userIdHash, recoveryEmail || '', process.env.ENCRYPTION_KEY]
     );
 
     const { code, expiresAt } = generateVerificationCodeWithExpiry();
 
-    await db.query(
-      `INSERT INTO verification_codes (user_id, email, code, code_type, expires_at)
-       VALUES ($1, $2, $3, 'email', $4)`,
-      [userId, recoveryEmail, code, expiresAt]
-    );
+    // Use encrypted queries for verification code
+    await insertVerificationCode(db, userId, recoveryEmail, null, code, 'email');
 
     logVerificationCode('email', code);
 
@@ -66,12 +66,9 @@ export async function saveRecoveryEmail(userId, recoveryEmail) {
  */
 export async function verifyEmailCode(userId, code) {
   try {
-    const result = await db.query(
-      `SELECT id, email FROM verification_codes 
-       WHERE user_id = $1 AND code = $2 AND code_type = 'email' 
-       AND expires_at > NOW() AND verified_at IS NULL`,
-      [userId, code]
-    );
+    const userIdHash = hashUserId(userId);
+    
+    const result = await getVerificationCode(db, userId, code);
 
     if (result.rows.length === 0) {
       throw new Error('Invalid or expired verification code');
@@ -84,11 +81,10 @@ export async function verifyEmailCode(userId, code) {
       [id]
     );
 
-    const encryptedEmail = encryptEmail(email);
     await db.query(
       `UPDATE security SET recovery_email_verified = TRUE 
-       WHERE user_id = $1 AND recovery_email = $2`,
-      [userId, encryptedEmail]
+       WHERE user_id_hash = $1 AND recovery_email_encrypted = pgp_sym_encrypt($2, $3)`,
+      [userIdHash, email || '', process.env.ENCRYPTION_KEY]
     );
 
     return { success: true, verified: true };
@@ -103,10 +99,12 @@ export async function verifyEmailCode(userId, code) {
  */
 export async function removeRecoveryEmail(userId) {
   try {
+    const userIdHash = hashUserId(userId);
+    
     await db.query(
-      `UPDATE security SET recovery_email = NULL, recovery_email_verified = FALSE
-       WHERE user_id = $1`,
-      [userId]
+      `UPDATE security SET recovery_email_encrypted = NULL, recovery_email_verified = FALSE
+       WHERE user_id_hash = $1`,
+      [userIdHash]
     );
 
     return { success: true };

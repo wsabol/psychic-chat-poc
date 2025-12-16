@@ -15,6 +15,7 @@ import userDataRoutes from "./routes/user-data.js";
 import cleanupRoutes from "./routes/cleanup.js";
 import securityRoutes from "./routes/security.js";
 import billingRoutes from "./routes/billing/index.js";
+import webhooksRouter from "./routes/billing/webhooks.js";
 import migrationRoutes from "./routes/migration.js";
 import { authenticateToken } from "./middleware/auth.js";
 import { validateUserHash } from "./middleware/userHashValidation.js";
@@ -59,6 +60,10 @@ app.use(cors({
     origin: process.env.CORS_ORIGIN || "http://localhost:3001",
     credentials: true,
 }));
+
+// IMPORTANT: Parse webhooks as raw body BEFORE express.json()
+// Stripe requires raw body for signature verification
+app.use("/webhooks", webhooksRouter);
 
 app.use(express.json());
 
@@ -105,7 +110,10 @@ app.use("/moon-phase", authenticateToken, validateUserHash, moonPhaseRoutes);
 app.use("/astrology-insights", authenticateToken, validateUserHash, astrologyInsightsRoutes);
 
 app.use("/security", authenticateToken, validateUserHash, securityRoutes);
-app.use("/billing", authenticateToken, validateUserHash, billingRoutes);
+
+// Billing routes: authenticateToken only (no validateUserHash - no user ID in URL)
+// Webhooks endpoint is /webhooks/stripe-webhook (public, no auth required)
+app.use("/billing", authenticateToken, billingRoutes);
 
 // Initialize scheduled jobs
 initializeScheduler();

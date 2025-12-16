@@ -1,4 +1,5 @@
 import { db } from '../shared/db.js';
+import { hashUserId } from '../shared/hashUtils.js';
 import OpenAI from 'openai';
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -18,7 +19,8 @@ export async function fetchUserPersonalInfo(userId) {
 
 export async function fetchUserAstrology(userId) {
     try {
-        const { rows } = await db.query("SELECT zodiac_sign, astrology_data FROM user_astrology WHERE user_id = $1", [userId]);
+        const userIdHash = hashUserId(userId);
+        const { rows } = await db.query("SELECT zodiac_sign, astrology_data FROM user_astrology WHERE user_id_hash = $1", [userIdHash]);
         if (rows.length > 0) {
             const astrologyInfo = rows[0];
             if (typeof astrologyInfo.astrology_data === 'string') {

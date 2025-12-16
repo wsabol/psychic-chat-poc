@@ -1,6 +1,7 @@
 import { db } from '../../../shared/db.js';
 import { logAudit } from '../../../shared/auditLog.js';
 import { getEncryptionKey } from '../../../shared/decryptionHelper.js';
+import { hashUserId } from '../../../shared/hashUtils.js';
 import logger from '../../../shared/logger.js';
 
 const LOCKOUT_THRESHOLD = 5;
@@ -11,10 +12,11 @@ const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
  */
 export async function isAccountLocked(userId) {
   try {
+    const userIdHash = hashUserId(userId);
     const result = await db.query(
-      `SELECT unlock_at FROM user_account_lockouts 
-       WHERE user_id = $1 AND unlock_at > NOW()`,
-      [userId]
+      `SELECT lock_expires_at FROM user_account_lockouts 
+       WHERE user_id_hash = $1 AND lock_expires_at > NOW()`,
+      [userIdHash]
     );
 
     if (result.rows.length === 0) {
@@ -23,12 +25,12 @@ export async function isAccountLocked(userId) {
 
     const lockout = result.rows[0];
     const minutesRemaining = Math.ceil(
-      (new Date(lockout.unlock_at) - new Date()) / 1000 / 60
+      (new Date(lockout.lock_expires_at) - new Date()) / 1000 / 60
     );
 
     return {
       locked: true,
-      unlockAt: lockout.unlock_at,
+      unlockAt: lockout.lock_expires_at,
       minutesRemaining
     };
   } catch (err) {
@@ -43,6 +45,7 @@ export async function isAccountLocked(userId) {
 export async function recordLoginAttempt(userId, success, reason, req) {
   try {
     const ENCRYPTION_KEY = getEncryptionKey();
+    const userIdHash = hashUserId(userId);
     
     // Encrypt IP address
     let encryptedIp = null;
@@ -58,20 +61,20 @@ export async function recordLoginAttempt(userId, success, reason, req) {
       }
     }
     
-    // Record the attempt with encrypted IP
+    // Record the attempt with encrypted IP and hashed user_id
     await db.query(
-      `INSERT INTO user_login_attempts (user_id, ip_address, user_agent, success, reason, ip_address_encrypted)
-       VALUES ($1, NULL, $2, $3, $4, $5)`,
-      [userId, req.get('user-agent'), success || false, reason || null, encryptedIp]
+      `INSERT INTO user_login_attempts (user_id, user_id_hash, ip_address_encrypted, user_agent, success, reason)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [userId, userIdHash, encryptedIp, req.get('user-agent'), success || false, reason || null]
     );
 
     // If failed attempt, check threshold
     if (!success) {
       const countResult = await db.query(
         `SELECT COUNT(*) as failed_count FROM user_login_attempts
-         WHERE user_id = $1 AND success = FALSE
+         WHERE user_id_hash = $1 AND success = FALSE
          AND created_at > NOW() - INTERVAL '60 minutes'`,
-        [userId]
+        [userIdHash]
       );
 
       const failedCount = parseInt(countResult.rows[0].failed_count);
@@ -81,11 +84,10 @@ export async function recordLoginAttempt(userId, success, reason, req) {
 
         try {
           await db.query(
-            `INSERT INTO user_account_lockouts (user_id, reason, failed_attempt_count, unlock_at, details)
-             VALUES ($1, 'failed_attempts', $2, $3, '{}' ::JSONB)
-             ON CONFLICT (user_id) WHERE (unlock_at > NOW())
-             DO UPDATE SET failed_attempt_count = $2, unlock_at = $3`,
-            [userId, failedCount, unlockAt]
+            `INSERT INTO user_account_lockouts (user_id_hash, reason, failed_attempt_count, lock_expires_at, ip_addresses_encrypted)
+             VALUES ($1, 'failed_attempts', $2, $3, NULL)
+             ON CONFLICT (user_id_hash) DO UPDATE SET failed_attempt_count = $2, lock_expires_at = $3`,
+            [userIdHash, failedCount, unlockAt]
           );
 
           // Log audit
@@ -128,11 +130,12 @@ export async function recordLoginAttempt(userId, success, reason, req) {
  */
 export async function unlockAccount(userId, req) {
   try {
+    const userIdHash = hashUserId(userId);
     const result = await db.query(
       `DELETE FROM user_account_lockouts 
-       WHERE user_id = $1 AND unlock_at > NOW()
+       WHERE user_id_hash = $1 AND lock_expires_at > NOW()
        RETURNING id`,
-      [userId]
+      [userIdHash]
     );
 
     if (result.rows.length === 0) {

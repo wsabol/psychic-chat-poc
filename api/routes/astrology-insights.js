@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { hashUserId } from "../shared/hashUtils.js";
 import { enqueueMessage } from "../shared/queue.js";
 import { authenticateToken, authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
@@ -10,6 +11,7 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
     const { userId } = req.params;
     const today = new Date().toISOString().split('T')[0];
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+    const userIdHash = hashUserId(userId);
     
     try {
         const { rows } = await db.query(
@@ -20,9 +22,9 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
                     ELSE content
                 END as content
              FROM messages 
-             WHERE user_id = $1 AND role = 'cosmic_weather' 
+             WHERE user_id_hash = $1 AND role = 'cosmic_weather' 
              ORDER BY created_at DESC LIMIT 5`,
-            [userId, ENCRYPTION_KEY]
+            [userIdHash, ENCRYPTION_KEY]
         );
         
         let todaysWeather = null;
@@ -65,6 +67,7 @@ router.post("/cosmic-weather/:userId", authorizeUser, async (req, res) => {
 router.get("/lunar-nodes/:userId", authorizeUser, async (req, res) => {
     const { userId } = req.params;
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+    const userIdHash = hashUserId(userId);
     
     try {
         const { rows } = await db.query(
@@ -75,9 +78,9 @@ router.get("/lunar-nodes/:userId", authorizeUser, async (req, res) => {
                     ELSE content
                 END as content
              FROM messages 
-             WHERE user_id = $1 AND role = 'lunar_nodes' 
+             WHERE user_id_hash = $1 AND role = 'lunar_nodes' 
              ORDER BY created_at DESC LIMIT 1`,
-            [userId, ENCRYPTION_KEY]
+            [userIdHash, ENCRYPTION_KEY]
         );
         
         if (rows.length === 0) {
@@ -108,6 +111,7 @@ router.get("/void-of-course/:userId", authorizeUser, async (req, res) => {
     const { userId } = req.params;
     const today = new Date().toISOString().split('T')[0];
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+    const userIdHash = hashUserId(userId);
     
     try {
         const { rows } = await db.query(
@@ -118,9 +122,9 @@ router.get("/void-of-course/:userId", authorizeUser, async (req, res) => {
                     ELSE content
                 END as content
              FROM messages 
-             WHERE user_id = $1 AND role = 'void_of_course' 
+             WHERE user_id_hash = $1 AND role = 'void_of_course' 
              ORDER BY created_at DESC LIMIT 5`,
-            [userId, ENCRYPTION_KEY]
+            [userIdHash, ENCRYPTION_KEY]
         );
         
         let todaysAlert = null;
