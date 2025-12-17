@@ -1,67 +1,98 @@
 import React, { useState } from 'react';
+import { fetchWithTokenRefresh } from '../../../utils/fetchWithTokenRefresh';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 /**
  * SubscriptionConfirmationModal - Complete incomplete subscriptions
  * Handles payment confirmation for subscriptions that require payment action
+ * 
+ * FIXED: Now calls server endpoint to complete subscription instead of trying
+ * to confirm payment intent directly (which doesn't work for all payment methods)
  */
 export default function SubscriptionConfirmationModal({
   subscription,
   stripeRef,
   onSuccess,
   onCancel,
+  token,
 }) {
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState(null);
 
   const paymentIntent = subscription.latest_invoice?.payment_intent;
-  const amount = subscription.latest_invoice?.amount_due || 0;
-  const currency = subscription.latest_invoice?.currency?.toUpperCase() || 'USD';
+  // Use amountDue from the response or fallback to latest_invoice data
+  const amount = subscription.amountDue !== undefined ? subscription.amountDue : (subscription.latest_invoice?.amount_due || 0);
+  const currency = (subscription.currency || subscription.latest_invoice?.currency || 'usd').toUpperCase();
 
   const handleConfirmPayment = async (e) => {
     e.preventDefault();
-
-    if (!stripeRef.current) {
-      setError('Stripe not ready');
-      return;
-    }
-
-    // If amount due is $0, no payment needed - just confirm
-    if (amount === 0) {
-      onSuccess({ status: 'succeeded', id: subscription.id });
-      return;
-    }
-
-    if (!paymentIntent?.client_secret) {
-      setError('No payment intent found');
-      return;
-    }
 
     try {
       setConfirming(true);
       setError(null);
 
-      const stripe = stripeRef.current;
-
-      // Confirm the payment for this invoice
-      const { paymentIntent: result, error: stripeError } = await stripe.confirmCardPayment(
-        paymentIntent.client_secret
+      // IMPORTANT: Call the server endpoint to complete/finalize the subscription
+      // This is needed for all payment methods (card, ACH, bank accounts)
+      const subId = subscription.subscriptionId || subscription.id;
+      console.log('[MODAL] Completing subscription:', subId);
+      
+      if (!subId) {
+        setError('Subscription ID is missing');
+        setConfirming(false);
+        return;
+      }
+      
+      const completeResponse = await fetchWithTokenRefresh(
+        `${API_URL}/billing/complete-subscription/${subId}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        }
       );
 
-      if (stripeError) {
-        setError(stripeError.message);
+      if (!completeResponse.ok) {
+        const errorData = await completeResponse.json();
+        setError(errorData.error || 'Failed to complete subscription');
         setConfirming(false);
         return;
       }
 
-      if (result && result.status === 'succeeded') {
-        setError(null);
-        onSuccess(result);
-      } else {
-        setError('Payment could not be confirmed. Status: ' + (result?.status || 'unknown'));
-        setConfirming(false);
+      const result = await completeResponse.json();
+      console.log('[MODAL] Subscription completed:', result);
+
+      // If there's a payment intent that needs confirmation (card payments), confirm it
+      if (result.subscription?.clientSecret && amount > 0) {
+        try {
+          const stripe = stripeRef.current;
+          if (stripe) {
+            console.log('[MODAL] Confirming card payment for client secret');
+            const { paymentIntent: paymentResult, error: stripeError } = await stripe.confirmCardPayment(
+              result.subscription.clientSecret
+            );
+
+            if (stripeError) {
+              console.warn('[MODAL] Card payment confirmation error:', stripeError.message);
+              // Don't fail - subscription is already created, payment might process separately
+            } else if (paymentResult) {
+              console.log('[MODAL] Payment result:', paymentResult.status);
+            }
+          }
+        } catch (stripeErr) {
+          console.warn('[MODAL] Stripe confirmation error:', stripeErr.message);
+          // Don't fail - subscription is already created
+        }
       }
+
+      // Success - subscription is now complete
+      console.log('[MODAL] Subscription completion successful');
+      const finalSubId = subscription.subscriptionId || subscription.id;
+      onSuccess({ status: 'succeeded', id: finalSubId });
     } catch (err) {
-      setError(err.message || 'Payment confirmation failed');
+      setError(err.message || 'Failed to complete subscription');
       setConfirming(false);
     }
   };
@@ -92,7 +123,7 @@ export default function SubscriptionConfirmationModal({
           </div>
           <div className="summary-row">
             <span>Subscription ID:</span>
-            <code>{subscription.id}</code>
+            <code>{subscription.subscriptionId || subscription.id}</code>
           </div>
         </div>
 

@@ -42,7 +42,12 @@ export function useSubscriptionHandlers({
       await billing.fetchSubscriptions();
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
-      setError(err.message || 'Failed to create subscription');
+      // Check if error is due to missing payment method
+      if (err.message && err.message.includes('No payment method')) {
+        setError('Please add a payment method before subscribing.');
+      } else {
+        setError(err.message || 'Failed to create subscription');
+      }
     }
   }, [billing, setError, setSuccess, setPendingSubscription, setShowSubscriptionConfirmationModal]);
 

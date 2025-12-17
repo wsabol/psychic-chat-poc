@@ -167,9 +167,27 @@ router.post('/attach-payment-method', async (req, res) => {
 
     console.log(`[BILLING] Successfully attached payment method ${paymentMethodId}`);
 
+    // Check if this is the first payment method
+    const existingMethods = await stripe.paymentMethods.list({
+      customer: customerId,
+      limit: 100,
+    });
+
+    // If this is the first payment method, set it as default
+    if (existingMethods.data.length <= 1) {
+      console.log(`[BILLING] Setting ${paymentMethodId} as default payment method (first method)`);
+      await stripe.customers.update(customerId, {
+        invoice_settings: {
+          default_payment_method: paymentMethodId,
+        },
+      });
+      console.log(`[BILLING] Set default payment method: ${paymentMethodId}`);
+    }
+
     res.json({ 
       success: true, 
-      paymentMethod: paymentMethod 
+      paymentMethod: paymentMethod,
+      isDefault: existingMethods.data.length <= 1
     });
   } catch (error) {
     console.error('[BILLING] Attach payment method error - Full error:', error);
@@ -299,12 +317,27 @@ router.post('/create-subscription', async (req, res) => {
       return res.status(400).json({ error: 'Stripe is not configured.' });
     }
     
+    // Check if customer has a default payment method
+    const customer = await stripe.customers.retrieve(customerId);
+    const hasDefaultPaymentMethod = !!customer.invoice_settings?.default_payment_method;
+    
+    if (!hasDefaultPaymentMethod) {
+      return res.status(400).json({ 
+        error: 'No payment method available',
+        code: 'NO_PAYMENT_METHOD',
+        message: 'Please add a payment method before subscribing.'
+      });
+    }
+    
     const subscription = await createSubscription(customerId, priceId);
 
     res.json({
       subscriptionId: subscription.id,
       status: subscription.status,
       clientSecret: subscription.latest_invoice?.payment_intent?.client_secret,
+      amountDue: subscription.latest_invoice?.amount_due || 0,
+      currency: subscription.latest_invoice?.currency || 'usd',
+      invoiceId: subscription.latest_invoice?.id,
     });
   } catch (error) {
     console.error('[BILLING] Create subscription error:', error);
@@ -595,5 +628,3 @@ router.get('/available-prices', async (req, res) => {
 });
 
 export default router;
-
-

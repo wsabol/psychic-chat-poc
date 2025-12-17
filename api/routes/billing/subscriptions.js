@@ -1,5 +1,6 @@
 import express from 'express';
 import { authenticateToken } from '../../middleware/auth.js';
+import stripe from '../../services/stripeService.js';
 import {
   getOrCreateStripeCustomer,
   createSubscription,
@@ -51,6 +52,9 @@ router.post('/create-subscription', authenticateToken, async (req, res) => {
       subscriptionId: subscription.id,
       status: subscription.status,
       clientSecret: subscription.latest_invoice?.payment_intent?.client_secret,
+      amountDue: subscription.latest_invoice?.amount_due || 0,
+      currency: subscription.latest_invoice?.currency || 'usd',
+      invoiceId: subscription.latest_invoice?.id,
     });
   } catch (error) {
     console.error('[BILLING] Create subscription error:', error);
@@ -76,6 +80,45 @@ router.get('/subscriptions', authenticateToken, async (req, res) => {
     res.json(subscriptions);
   } catch (error) {
     console.error('[BILLING] Get subscriptions error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Complete subscription - finalize incomplete subscription
+ */
+router.post('/complete-subscription/:subscriptionId', authenticateToken, async (req, res) => {
+  try {
+    const { subscriptionId } = req.params;
+
+    if (!subscriptionId) {
+      return res.status(400).json({ error: 'subscriptionId is required' });
+    }
+
+    // Retrieve subscription to finalize any pending invoices
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+      expand: ['latest_invoice.payment_intent'],
+    });
+
+    console.log('[BILLING] Completing subscription:', subscriptionId, 'status:', subscription.status);
+
+    // If subscription is incomplete and invoice exists, finalize it
+    if (subscription.latest_invoice && subscription.status === 'incomplete') {
+      const invoice = await stripe.invoices.finalizeInvoice(subscription.latest_invoice.id);
+      console.log('[BILLING] Finalized invoice:', invoice.id, 'status:', invoice.status);
+    }
+
+    res.json({
+      success: true,
+      subscription: {
+        id: subscription.id,
+        status: subscription.status,
+        clientSecret: subscription.latest_invoice?.payment_intent?.client_secret,
+        amountDue: subscription.latest_invoice?.amount_due || 0,
+      },
+    });
+  } catch (error) {
+    console.error('[BILLING] Complete subscription error:', error);
     res.status(500).json({ error: error.message });
   }
 });

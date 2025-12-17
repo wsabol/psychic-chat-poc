@@ -35,13 +35,14 @@ export default function SubscriptionsPage({ userId, token, auth }) {
     stripeRef.current = window.Stripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
   }
 
-  // Load available prices and subscriptions on mount
+  // Load available prices, subscriptions, and payment methods on mount
   useEffect(() => {
     const loadData = async () => {
       try {
         await Promise.all([
           billing.fetchAvailablePrices(),
           billing.fetchSubscriptions(),
+          billing.fetchPaymentMethods(),
         ]);
       } catch (err) {
         console.error('[SUBSCRIPTIONS] Failed to load data:', err);
@@ -116,6 +117,7 @@ export default function SubscriptionsPage({ userId, token, auth }) {
         onSubscribe={handlers.handleSubscribe}
         billing={billing}
         showSection={true}
+        defaultPaymentMethodId={billing.paymentMethods?.defaultPaymentMethodId}
       />
 
       {/* Past Subscriptions */}
@@ -126,6 +128,7 @@ export default function SubscriptionsPage({ userId, token, auth }) {
         <SubscriptionConfirmationModal
           subscription={state.pendingSubscription}
           stripeRef={stripeRef}
+          token={token}
           onSuccess={handlers.handleSubscriptionConfirmationSuccess}
           onCancel={() => {
             state.setShowSubscriptionConfirmationModal(false);

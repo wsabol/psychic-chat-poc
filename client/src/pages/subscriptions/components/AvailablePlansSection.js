@@ -21,15 +21,25 @@ export default function AvailablePlansSection({
   pricesByProduct,
   onSubscribe,
   billing,
-  showSection
+  showSection,
+  defaultPaymentMethodId
 }) {
   if (!showSection) {
     return null;
   }
 
+  const noPaymentMethod = !defaultPaymentMethodId;
+
   return (
     <div className="available-plans">
       <h3>Choose a Plan to Get Started</h3>
+      
+      {noPaymentMethod && (
+        <div className="alert alert-warning">
+          <strong>⚠️ Payment Method Required:</strong> Please add a payment method in your billing settings before subscribing to a plan.
+        </div>
+      )}
+
       <div className="plans-grid">
         {Object.keys(pricesByProduct).length > 0 ? (
           Object.entries(pricesByProduct).map(([productId, { product, prices }]) => (
@@ -51,9 +61,10 @@ export default function AvailablePlansSection({
                     <button
                       className="btn-primary"
                       onClick={() => onSubscribe(price.id)}
-                      disabled={billing.loading}
+                      disabled={billing.loading || noPaymentMethod}
+                      title={noPaymentMethod ? 'Please add a payment method first' : ''}
                     >
-                      {billing.loading ? 'Processing...' : 'Subscribe Now'}
+                      {billing.loading ? 'Processing...' : (noPaymentMethod ? 'Add Payment Method First' : 'Subscribe Now')}
                     </button>
                   </div>
                 ))}
