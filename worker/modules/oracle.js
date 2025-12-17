@@ -160,9 +160,9 @@ SPECIAL INSTRUCTIONS FOR TRIAL USERS:
     const establishedAccountAddition = `
 
 INTERACTION GUIDELINES FOR ESTABLISHED ACCOUNTS:
-- You may ask clarifying questions if the request is vague
-- Engage in meaningful dialogue to deepen understanding
-- Build relationships through conversational depth`;
+- Provide a compelling reading that deeply explores the user's question
+- You may use all available information (astrology, tarot, crystals and scents) as appropriate for the user's input in an integrated narrative
+- Ask clarifying questions if you are unclear about the issue engaging the user in an open conversation`;
 
     const guardRails = `
 

@@ -19,8 +19,102 @@ export function useAuth() {
     const [tempUserId, setTempUserId] = useState(null);
     const [twoFactorMethod, setTwoFactorMethod] = useState('email');
     const [error, setError] = useState(null);
+    const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
+    const [subscriptionChecking, setSubscriptionChecking] = useState(false);
+    const [hasValidPaymentMethod, setHasValidPaymentMethod] = useState(false);
+    const [paymentMethodChecking, setPaymentMethodChecking] = useState(false);
     
     const { trackDevice } = useDeviceSecurityTracking();
+
+    // Check if user has valid payment method (card or verified bank account)
+    const checkPaymentMethod = useCallback(async (idToken, userId) => {
+        try {
+            setPaymentMethodChecking(true);
+            const response = await fetch('http://localhost:3000/billing/payment-methods', {
+                headers: { 'Authorization': `Bearer ${idToken}` }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                // User has valid payment method if:
+                // - Has at least one card, OR
+                // - Has at least one VERIFIED bank account
+                const hasCard = data.cards && data.cards.length > 0;
+                const hasVerifiedBank = data.bankAccounts && data.bankAccounts.some(
+                    bank => bank.us_bank_account?.verification_status === 'verified'
+                );
+                const hasValid = hasCard || hasVerifiedBank;
+                
+                console.log('[AUTH] Payment method check - Has valid:', hasValid, 'Cards:', data.cards?.length || 0, 'Verified banks:', data.bankAccounts?.filter(b => b.us_bank_account?.verification_status === 'verified').length || 0);
+                setHasValidPaymentMethod(hasValid);
+                return hasValid;
+            } else {
+                console.warn('[AUTH] Could not fetch payment methods:', response.status);
+                setHasValidPaymentMethod(false);
+                return false;
+            }
+        } catch (err) {
+            console.error('[AUTH] Error checking payment method:', err);
+            setHasValidPaymentMethod(false);
+            return false;
+        } finally {
+            setPaymentMethodChecking(false);
+        }
+    }, []);
+
+    // Fetch subscription status when user authenticates
+    const checkSubscriptionStatus = useCallback(async (idToken, userId) => {
+        try {
+            setSubscriptionChecking(true);
+            const response = await fetch('http://localhost:3000/billing/subscriptions', {
+                headers: { 'Authorization': `Bearer ${idToken}` }
+            });
+
+            if (response.ok) {
+                const subscriptions = await response.json();
+                // Check if user has any active subscriptions (not cancelled, not cancelled at period end)
+                const hasActive = subscriptions.some(sub => sub.status === 'active' && !sub.cancel_at_period_end);
+                console.log('[AUTH] Subscription check - Has active:', hasActive, 'Subscriptions:', subscriptions.length);
+                setHasActiveSubscription(hasActive);
+                return hasActive;
+            } else {
+                console.warn('[AUTH] Could not fetch subscriptions:', response.status);
+                setHasActiveSubscription(false);
+                return false;
+            }
+        } catch (err) {
+            console.error('[AUTH] Error checking subscription status:', err);
+            setHasActiveSubscription(false);
+            return false;
+        } finally {
+            setSubscriptionChecking(false);
+        }
+    }, []);
+
+    // Check both payment method and subscription SEQUENTIALLY (not concurrently)
+    // This prevents duplicate Stripe customer creation from concurrent calls
+    const checkBillingStatus = useCallback(async (idToken, userId) => {
+        try {
+            console.log('[AUTH] Starting billing status checks (payment method first, then subscription)');
+            // Check payment method FIRST
+            const hasPayment = await checkPaymentMethod(idToken, userId);
+            // Then check subscription AFTER payment check completes
+            await checkSubscriptionStatus(idToken, userId);
+        } catch (err) {
+            console.error('[AUTH] Error checking billing status:', err);
+        }
+    }, [checkPaymentMethod, checkSubscriptionStatus]);
+
+    // Re-check only subscription (not payment method)
+    // Called when user returns from billing page after adding payment method
+    const recheckSubscriptionOnly = useCallback(async (idToken, userId) => {
+        try {
+            console.log('[AUTH] Re-checking subscription status only');
+            await checkSubscriptionStatus(idToken, userId);
+        } catch (err) {
+            console.error('[AUTH] Error re-checking subscription:', err);
+        }
+    }, [checkSubscriptionStatus]);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -63,9 +157,11 @@ export function useAuth() {
                     setIsEmailUser(isEmail);
                     
                     if (isTemp) {
-                        // Temporary accounts - authenticate immediately (no 2FA)
+                        // Temporary accounts - authenticate immediately (no 2FA, no subscription/payment checks)
                         setIsFirstTime(true);
                         setIsAuthenticated(true);
+                        setHasActiveSubscription(false);
+                        setHasValidPaymentMethod(false);
                         setLoading(false);
                     } else {
                         // Permanent accounts
@@ -76,6 +172,8 @@ export function useAuth() {
                         if (!firebaseUser.emailVerified) {
                           setShowTwoFactor(false);
                           setIsAuthenticated(true);
+                          // Check billing status (payment method then subscription) - SEQUENTIAL
+                          checkBillingStatus(idToken, firebaseUser.uid);
                           setLoading(false);
                           return;
                         }
@@ -96,6 +194,8 @@ export function useAuth() {
                         if (alreadyVerified) {
                           setShowTwoFactor(false);
                           setIsAuthenticated(true);
+                          // Check billing status sequentially
+                          checkBillingStatus(idToken, firebaseUser.uid);
                           setLoading(false);
                         } else {
                           try {
@@ -111,15 +211,19 @@ export function useAuth() {
                               setTempUserId(firebaseUser.uid);
                               setShowTwoFactor(true);
                               setTwoFactorMethod(twoFAData.method || 'email');
-                              setIsAuthenticated(false); // ← KEY: Don't authenticate until 2FA passes
+                              setIsAuthenticated(false);
                             } else {
                               // No 2FA required - authenticate now
                               setShowTwoFactor(false);
                               setIsAuthenticated(true);
+                              // Check billing status sequentially
+                              checkBillingStatus(idToken, firebaseUser.uid);
                             }
                           } catch (err) {
                               console.warn('[2FA-CHECK] Failed to check 2FA:', err);
                               setIsAuthenticated(true);
+                              // Still check billing status even if 2FA check fails
+                              checkBillingStatus(idToken, firebaseUser.uid);
                           } finally {
                               setLoading(false);
                           }
@@ -134,6 +238,8 @@ export function useAuth() {
                     setShowTwoFactor(false);
                     setTempToken(null);
                     setTempUserId(null);
+                    setHasActiveSubscription(false);
+                    setHasValidPaymentMethod(false);
                     const hasRegistered = localStorage.getItem('psychic_app_registered');
                     if (hasRegistered) {
                         setIsFirstTime(false);
@@ -148,7 +254,7 @@ export function useAuth() {
         });
 
         return unsubscribe;
-    }, [trackDevice]);
+    }, [checkBillingStatus]);
 
     const createTemporaryAccount = async () => {
         try {
@@ -244,7 +350,8 @@ export function useAuth() {
             setShowTwoFactor(false);
             setTempToken(null);
             setTempUserId(null);
-            setHasLoggedOut(true);
+            setHasActiveSubscription(false);
+            setHasValidPaymentMethod(false);
         } catch (err) {
             console.error('Logout error:', err);
         }
@@ -310,7 +417,13 @@ export function useAuth() {
             setTempToken(null);
             setTempUserId(null);
             setShowTwoFactor(false);
-            setIsAuthenticated(true); // ← KEY: Only authenticate after 2FA passes
+            setIsAuthenticated(true);
+            
+            // After 2FA, check billing status (payment method then subscription) - SEQUENTIAL
+            if (token) {
+                checkBillingStatus(token, tempUserId);
+            }
+            
             setError(null);
             return true;
         } catch (err) {
@@ -318,7 +431,7 @@ export function useAuth() {
             setError('Failed to verify 2FA code');
             return false;
         }
-    }, [tempUserId, tempToken]);
+    }, [tempUserId, tempToken, token, checkBillingStatus]);
 
     return {
         isAuthenticated,
@@ -351,5 +464,10 @@ export function useAuth() {
         error,
         setError,
         verify2FA,
+        hasActiveSubscription,
+        subscriptionChecking,
+        hasValidPaymentMethod,
+        paymentMethodChecking,
+        recheckSubscriptionOnly,
     };
 }

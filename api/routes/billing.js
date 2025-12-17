@@ -161,33 +161,43 @@ router.post('/attach-payment-method', async (req, res) => {
 
     console.log(`[BILLING] Attaching payment method ${paymentMethodId} to customer ${customerId}`);
 
+    // Check if customer already has a default payment method BEFORE attachment
+    const customerBefore = await stripe.customers.retrieve(customerId);
+    const hasExistingDefault = !!customerBefore.invoice_settings?.default_payment_method;
+    console.log(`[BILLING] Customer has existing default payment method:`, hasExistingDefault);
+
+    // Attach the payment method
     const paymentMethod = await stripe.paymentMethods.attach(paymentMethodId, {
       customer: customerId,
     });
 
     console.log(`[BILLING] Successfully attached payment method ${paymentMethodId}`);
 
-    // Check if this is the first payment method
-    const existingMethods = await stripe.paymentMethods.list({
-      customer: customerId,
-      limit: 100,
-    });
-
-    // If this is the first payment method, set it as default
-    if (existingMethods.data.length <= 1) {
-      console.log(`[BILLING] Setting ${paymentMethodId} as default payment method (first method)`);
-      await stripe.customers.update(customerId, {
-        invoice_settings: {
-          default_payment_method: paymentMethodId,
-        },
-      });
-      console.log(`[BILLING] Set default payment method: ${paymentMethodId}`);
+    // If customer does NOT have a default payment method, set this one as default
+    if (!hasExistingDefault) {
+      console.log(`[BILLING] Setting ${paymentMethodId} as default payment method (first payment method)`);
+      try {
+        await stripe.customers.update(customerId, {
+          invoice_settings: {
+            default_payment_method: paymentMethodId,
+          },
+        });
+        console.log(`[BILLING] ✓ Set default payment method: ${paymentMethodId}`);
+      } catch (defaultError) {
+        // If financial account ID, cannot set as default - this is acceptable
+        if (defaultError.message && (defaultError.message.includes('financial') || defaultError.message.includes('invalid_param'))) {
+          console.warn(`[BILLING] Cannot set ${paymentMethodId} as default (likely financial account). Payment method must be explicit pm_*`);
+        } else {
+          console.error(`[BILLING] Error setting default payment method:`, defaultError.message);
+          throw defaultError;
+        }
+      }
     }
 
     res.json({ 
       success: true, 
       paymentMethod: paymentMethod,
-      isDefault: existingMethods.data.length <= 1
+      isDefault: !hasExistingDefault
     });
   } catch (error) {
     console.error('[BILLING] Attach payment method error - Full error:', error);
@@ -540,6 +550,11 @@ router.post('/create-bank-account-from-financial', async (req, res) => {
 
     console.log('[BILLING] Creating payment method from financial account:', financialAccountId);
 
+    // Validate financial account ID format
+    if (!financialAccountId.startsWith('fa_')) {
+      console.warn('[BILLING] WARNING: financialAccountId does not start with fa_:', financialAccountId);
+    }
+
     const paymentMethod = await stripe.paymentMethods.create({
   type: 'us_bank_account',
   us_bank_account: {
@@ -552,8 +567,15 @@ router.post('/create-bank-account-from-financial', async (req, res) => {
   
 });
 
-    console.log('[BILLING] Payment method created:', paymentMethod.id);
+    // Validate payment method ID format (should be pm_*)
+    if (!paymentMethod.id.startsWith('pm_')) {
+      console.error('[BILLING] ERROR: Payment method ID does not start with pm_:', paymentMethod.id);
+      throw new Error('Unexpected payment method ID format from Stripe - expected pm_*');
+    }
+
+    console.log('[BILLING] ✓ Payment method created:', paymentMethod.id);
     console.log('[BILLING] Verification status:', paymentMethod.us_bank_account?.verification_status);
+    console.log('[BILLING] ID Format Check: financial (fa_) -> payment method (pm_) conversion successful');
 
     // Attach to customer
     await stripe.paymentMethods.attach(paymentMethod.id, { customer: customerId });
@@ -613,6 +635,52 @@ router.post('/confirm-setup-intent', async (req, res) => {
     });
   } catch (error) {
     console.error('[BILLING] Confirm SetupIntent error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/finalize-subscription/:subscriptionId', async (req, res) => {
+  try {
+    const { subscriptionId } = req.params;
+    const userId = req.user.userId;
+
+    if (!subscriptionId) {
+      return res.status(400).json({ error: 'subscriptionId is required' });
+    }
+
+    console.log('[BILLING] Finalizing subscription:', subscriptionId, 'for user:', userId);
+
+    // Get subscription to find invoice
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+      expand: ['latest_invoice'],
+    });
+
+    if (!subscription.latest_invoice) {
+      return res.status(400).json({ error: 'No invoice found for subscription' });
+    }
+
+    const invoiceId = subscription.latest_invoice.id;
+    console.log('[BILLING] Found invoice:', invoiceId, 'Status:', subscription.latest_invoice.status);
+
+    // Finalize the invoice (moves from draft to open, triggers payment)
+    const finalizedInvoice = await stripe.invoices.finalizeInvoice(invoiceId);
+
+    console.log('[BILLING] ✓ Invoice finalized:', {
+      id: finalizedInvoice.id,
+      status: finalizedInvoice.status,
+      amount_due: finalizedInvoice.amount_due,
+    });
+
+    res.json({
+      success: true,
+      subscriptionId: subscription.id,
+      invoiceId: finalizedInvoice.id,
+      invoiceStatus: finalizedInvoice.status,
+      amountDue: finalizedInvoice.amount_due,
+      clientSecret: finalizedInvoice.payment_intent?.client_secret || null,
+    });
+  } catch (error) {
+    console.error('[BILLING] Finalize subscription error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });

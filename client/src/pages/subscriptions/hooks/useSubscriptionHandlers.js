@@ -7,6 +7,7 @@ import { useCallback } from 'react';
 
 export function useSubscriptionHandlers({ 
   billing, 
+  auth,
   setError, 
   setSuccess, 
   setActiveSubscriptions,
@@ -40,6 +41,12 @@ export function useSubscriptionHandlers({
       // Subscription is already active
       setSuccess(true);
       await billing.fetchSubscriptions();
+      
+      // ✅ Update auth state to recognize the new subscription
+      if (auth?.token && auth?.authUserId) {
+        await auth.recheckSubscriptionOnly(auth.token, auth.authUserId);
+      }
+      
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       // Check if error is due to missing payment method
@@ -49,7 +56,7 @@ export function useSubscriptionHandlers({
         setError(err.message || 'Failed to create subscription');
       }
     }
-  }, [billing, setError, setSuccess, setPendingSubscription, setShowSubscriptionConfirmationModal]);
+  }, [billing, auth, setError, setSuccess, setPendingSubscription, setShowSubscriptionConfirmationModal]);
 
   /**
    * Handle subscription confirmation after modal
@@ -60,11 +67,17 @@ export function useSubscriptionHandlers({
       setPendingSubscription(null);
       setSuccess(true);
       await billing.fetchSubscriptions();
+      
+      // ✅ Update auth state to recognize the new subscription
+      if (auth?.token && auth?.authUserId) {
+        await auth.recheckSubscriptionOnly(auth.token, auth.authUserId);
+      }
+      
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       setError(err.message || 'Failed to process confirmation');
     }
-  }, [billing, setError, setSuccess, setShowSubscriptionConfirmationModal, setPendingSubscription]);
+  }, [billing, auth, setError, setSuccess, setShowSubscriptionConfirmationModal, setPendingSubscription]);
 
   /**
    * Toggle subscription active/inactive
@@ -88,6 +101,12 @@ export function useSubscriptionHandlers({
         await billing.cancelSubscription(subscriptionId);
         setSuccess(true);
         await billing.fetchSubscriptions();
+        
+        // ✅ Update auth state after cancellation
+        if (auth?.token && auth?.authUserId) {
+          await auth.recheckSubscriptionOnly(auth.token, auth.authUserId);
+        }
+        
         setTimeout(() => setSuccess(false), 3000);
       }
       setActiveSubscriptions(prev => ({
@@ -97,7 +116,7 @@ export function useSubscriptionHandlers({
     } catch (err) {
       setError(err.message || 'Failed to update subscription');
     }
-  }, [billing, setError, setSuccess, setActiveSubscriptions]);
+  }, [billing, auth, setError, setSuccess, setActiveSubscriptions]);
 
   /**
    * Change to a different plan
@@ -132,11 +151,17 @@ export function useSubscriptionHandlers({
 
       setSuccess(true);
       await billing.fetchSubscriptions();
+      
+      // ✅ Update auth state after plan change
+      if (auth?.token && auth?.authUserId) {
+        await auth.recheckSubscriptionOnly(auth.token, auth.authUserId);
+      }
+      
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       setError(err.message || 'Failed to change subscription');
     }
-  }, [billing, setError, setSuccess, setPendingSubscription, setShowSubscriptionConfirmationModal]);
+  }, [billing, auth, setError, setSuccess, setPendingSubscription, setShowSubscriptionConfirmationModal]);
 
   return {
     handleSubscribe,

@@ -85,10 +85,13 @@ export function usePaymentHandlers({
         return;
       }
 
+      const paymentMethodId = paymentMethodResponse.paymentMethod.id;
+      console.log('[CARD] Payment method created:', paymentMethodId);
+
       const response = await stripe.confirmCardSetup(
         setupIntent.clientSecret,
         {
-          payment_method: paymentMethodResponse.paymentMethod.id,
+          payment_method: paymentMethodId,
         }
       );
 
@@ -100,20 +103,36 @@ export function usePaymentHandlers({
 
       const result = response.setupIntent;
       if (result && result.status === 'succeeded') {
-        setCardSuccess(true);
-        setShowAddPaymentForm(false);
-        resetBillingForm();
-        await billing.fetchPaymentMethods();
-        setTimeout(() => setCardSuccess(false), 3000);
+        console.log('[CARD] Setup succeeded, attaching and setting as default...');
+        
+        try {
+          // Step 1: Attach to customer
+          await billing.attachPaymentMethod(paymentMethodId);
+          console.log('[CARD] Payment method attached');
+          
+          // Step 2: Set as default (using the same button function)
+          await handleSetDefault(paymentMethodId);
+          console.log('[CARD] Payment method set as default');
+          
+          // Success - form already closed and success message shown by handleSetDefault
+          setShowAddPaymentForm(false);
+          resetBillingForm();
+        } catch (err) {
+          console.error('[CARD] Error:', err.message);
+          setCardError('Payment method created but error finalizing: ' + err.message);
+          setLoading(false);
+          return;
+        }
       } else {
         setCardError('Failed to confirm payment method. Status: ' + (result?.status || 'unknown'));
       }
     } catch (err) {
+      console.error('[CARD] Error:', err.message);
       setCardError(err.message || 'Payment method setup failed');
     } finally {
       setLoading(false);
     }
-  }, [setupIntent, billingForm, auth, setCardError, setCardSuccess, setLoading, setShowAddPaymentForm, resetBillingForm, billing, stripeRef]);
+  }, [setupIntent, billingForm, auth, setCardError, setCardSuccess, setLoading, setShowAddPaymentForm, resetBillingForm, billing, stripeRef, handleSetDefault]);
 
   const handleBankSubmit = useCallback(async (formData) => {
     try {
@@ -170,19 +189,29 @@ export function usePaymentHandlers({
 
       console.log('[BANK] Setup intent status:', response.setupIntent?.status);
       
-      // Success - account added (Stripe will handle verification automatically)
-      setCardSuccess(true);
-      setShowAddPaymentForm(false);
-      resetBankForm();
-      await billing.fetchPaymentMethods();
-      setTimeout(() => setCardSuccess(false), 3000);
+      try {
+        // Step 1: Attach to customer
+        await billing.attachPaymentMethod(paymentMethodId);
+        console.log('[BANK] Payment method attached');
+        
+        // Step 2: Set as default (using the same button function)
+        await handleSetDefault(paymentMethodId);
+        console.log('[BANK] Payment method set as default');
+        
+        // Success - form already closed and success message shown by handleSetDefault
+        setShowAddPaymentForm(false);
+        resetBankForm();
+      } catch (err) {
+        console.error('[BANK] Error:', err.message);
+        throw new Error('Bank account created but error finalizing: ' + err.message);
+      }
     } catch (err) {
-      console.error('[BANK] Error:', err);
+      console.error('[BANK] Error:', err.message);
       setCardError(err.message || 'Failed to add bank account');
     } finally {
       setLoading(false);
     }
-  }, [setupIntent, auth, setCardError, setCardSuccess, setLoading, setShowAddPaymentForm, resetBankForm, billing, stripeRef]);
+  }, [setupIntent, auth, setCardError, setCardSuccess, setLoading, setShowAddPaymentForm, resetBankForm, billing, stripeRef, handleSetDefault]);
 
   return {
     handleAddPaymentMethod,
@@ -192,4 +221,3 @@ export function usePaymentHandlers({
     handleBankSubmit,
   };
 }
-

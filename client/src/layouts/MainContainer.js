@@ -31,11 +31,18 @@ const PAGES = [
   { id: 'billing', label: 'Billing & Subscriptions', component: BillingPage },
 ];
 
-export default function MainContainer({ auth, token, userId, onLogout, onExit }) {
-  const [currentPageIndex, setCurrentPageIndex] = useState(0);
+export default function MainContainer({ auth, token, userId, onLogout, onExit, startingPage = 0, onNavigateFromBilling }) {
+  const [currentPageIndex, setCurrentPageIndex] = useState(startingPage);
   const [swipeDirection, setSwipeDirection] = useState(0);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [navVisible, setNavVisible] = useState(true);
+
+  // Set starting page when it changes
+  useEffect(() => {
+    if (startingPage !== 0 && startingPage !== currentPageIndex) {
+      setCurrentPageIndex(startingPage);
+    }
+  }, [startingPage]);
 
   // Track scroll to hide/show nav on mobile
   useEffect(() => {
@@ -92,11 +99,15 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit })
   const goToPage = useCallback((index) => {
     const newIndex = Math.max(0, Math.min(index, PAGES.length - 1));
     if (newIndex !== currentPageIndex) {
+      // If leaving billing page and not going back to billing, notify App to re-check subscription
+      if (currentPageIndex === 7 && newIndex !== 7 && onNavigateFromBilling) {
+        onNavigateFromBilling();
+      }
       setSwipeDirection(newIndex > currentPageIndex ? 1 : -1);
       setCurrentPageIndex(newIndex);
       window.history.pushState({ pageIndex: newIndex }, '');
     }
-  }, [currentPageIndex]);
+  }, [currentPageIndex, onNavigateFromBilling]);
 
   const currentPage = PAGES[currentPageIndex];
   const PageComponent = currentPage.component;

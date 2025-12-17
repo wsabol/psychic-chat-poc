@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "./hooks/useAuth";
-
 import { useTokenRefresh } from "./hooks/useTokenRefresh";
-
 import { useModalState } from "./hooks/useModalState";
 import { useTempAccountFlow } from "./hooks/useTempAccountFlow";
 import { useAuthHandlers } from "./hooks/useAuthHandlers";
@@ -13,7 +11,8 @@ import { LoadingScreen } from "./screens/LoadingScreen";
 import { ThankYouScreen } from "./screens/ThankYouScreen";
 import { LandingScreenWrapper } from "./screens/LandingScreenWrapper";
 import { LoginScreenWrapper } from "./screens/LoginScreenWrapper";
-
+import PaymentMethodRequiredModal from "./components/PaymentMethodRequiredModal";
+import SubscriptionRequiredModal from "./components/SubscriptionRequiredModal";
 import { VerificationScreen } from "./screens/VerificationScreen";
 import TwoFAScreen from "./screens/TwoFAScreen";
 import { auth } from "./firebase";
@@ -21,15 +20,23 @@ import MainContainer from "./layouts/MainContainer";
 
 /**
  * Main App Component - With Auto-Navigation After Login
+ * 
+ * Authentication Flow:
+ * Landing/Login → 2FA → Email Verification → Payment Method Setup → Subscription → Chat
+ * 
+ * Temp accounts skip payment method and subscription checks (trial only)
  */
 function App() {
     useTokenRefresh();
+    const [skipPaymentCheck, setSkipPaymentCheck] = useState(false);
+    const [skipSubscriptionCheck, setSkipSubscriptionCheck] = useState(false);
+    const [startingPage, setStartingPage] = useState(0); // 0=chat, 7=billing
 
     const authState = useAuth();
     const modals = useModalState();
     const tempFlow = useTempAccountFlow(authState);
     const handlers = useAuthHandlers(authState, modals, tempFlow);
-    const { isLoading, isThankyou, isRegister, isVerification, isLanding, isLogin, isTwoFactor, isChat } = useAppRouting(authState, tempFlow.appExited, modals.showRegisterMode);
+    const { isLoading, isThankyou, isRegister, isVerification, isLanding, isLogin, isTwoFactor, isPaymentMethodRequired, isSubscriptionRequired, isChat } = useAppRouting(authState, tempFlow.appExited, modals.showRegisterMode, skipPaymentCheck, skipSubscriptionCheck);
     const emailVerification = useEmailVerification();
     
     const [verificationFailed, setVerificationFailed] = useState(false);
@@ -43,7 +50,7 @@ function App() {
         setPreviousAuthState(authState.isAuthenticated);
     }, [authState.isAuthenticated, previousAuthState, modals]);
 
-        // Start email verification polling when on verification screen
+    // Start email verification polling when on verification screen
     useEffect(() => {
         if (isVerification && auth.currentUser) {
             emailVerification.startVerificationPolling(
@@ -53,6 +60,15 @@ function App() {
             );
         }
     }, [isVerification, emailVerification, authState.refreshEmailVerificationStatus]);
+
+    // ✅ NEW: When subscription becomes active, reset skip flag AND return to chat page
+    useEffect(() => {
+        if (authState.hasActiveSubscription && skipSubscriptionCheck) {
+            console.log('[APP] Subscription is now active, resetting flags and returning to chat');
+            setSkipSubscriptionCheck(false);
+            setStartingPage(0); // Return to chat page (index 0)
+        }
+    }, [authState.hasActiveSubscription, skipSubscriptionCheck]);
 
     // Handle verification failure
     const handleVerificationFailed = () => {
@@ -71,12 +87,39 @@ function App() {
         await authState.handleLogout();
     };
 
+    // Modal callbacks - allow user to go to billing to add payment method
+    const handleNavigateToBilling = () => {
+        setSkipPaymentCheck(true);
+        setSkipSubscriptionCheck(true); // Allow to skip subscription check to reach billing page
+        setStartingPage(7); // Billing page is index 7
+    };
+
+    // When user tries to navigate away from billing page
+    // Re-check ONLY subscription (not payment method, since user just added it)
+    const handleNavigateFromBilling = async () => {
+        // Don't reset payment check - user just added it so it's valid
+        // Only re-check subscription status
+        setSkipPaymentCheck(true); // Keep skipping payment check since it's now valid
+        setSkipSubscriptionCheck(false); // Re-enable subscription check
+        
+        // Re-check subscription only
+        if (authState.token && authState.authUserId) {
+            await authState.recheckSubscriptionOnly(authState.token, authState.authUserId);
+        }
+    };
+
+    // Modal callbacks - allow user to go to billing to subscribe
+    const handleNavigateToSubscriptions = () => {
+        setSkipSubscriptionCheck(true);
+        setStartingPage(7); // Billing page is index 7
+    };
+
     // Loading
     if (isLoading) {
         return <ErrorBoundary><LoadingScreen /></ErrorBoundary>;
     }
 
-        // Thank you screen
+    // Thank you screen
     if (isThankyou || verificationFailed) {
         return (
             <ErrorBoundary>
@@ -122,7 +165,7 @@ function App() {
         return <ErrorBoundary><LoginScreenWrapper /></ErrorBoundary>;
     }
 
-        // Landing page
+    // Landing page
     if (isLanding) {
         return (
             <ErrorBoundary>
@@ -144,7 +187,7 @@ function App() {
         );
     }
 
-        // Login page
+    // Login page
     if (isLogin) {
         return <ErrorBoundary><LoginScreenWrapper /></ErrorBoundary>;
     }
@@ -157,9 +200,8 @@ function App() {
                     userId={authState.tempUserId}
                     tempToken={authState.tempToken}
                     method={authState.twoFactorMethod}
-                                        verify2FAFunc={authState.verify2FA}
-                    onVerified={() => {
-                    }}
+                    verify2FAFunc={authState.verify2FA}
+                    onVerified={() => {}}
                     onSignOut={authState.handleLogout}
                     isLoading={false}
                     error={authState.error}
@@ -168,22 +210,46 @@ function App() {
         );
     }
 
-    // Chat screen
+    // Payment method required - user must add payment method first
+    if (isPaymentMethodRequired) {
+        return (
+            <ErrorBoundary>
+                <PaymentMethodRequiredModal 
+                    onNavigateToBilling={handleNavigateToBilling}
+                />
+            </ErrorBoundary>
+        );
+    }
+
+    // Subscription required - user needs to subscribe
+    if (isSubscriptionRequired) {
+        return (
+            <ErrorBoundary>
+                <SubscriptionRequiredModal 
+                    onNavigateToSubscriptions={handleNavigateToSubscriptions}
+                />
+            </ErrorBoundary>
+        );
+    }
+
+    // Chat screen - user is fully authenticated and authorized
     if (isChat) {
-    return (
-        <ErrorBoundary>
-                        <MainContainer 
-                auth={authState}
-                token={authState.token}
-                userId={authState.authUserId}
-                onLogout={authState.handleLogout}
-                onExit={() => {
-                    tempFlow.setAppExited(true);
-                }}
-            />
-        </ErrorBoundary>
-    );
-}
+        return (
+            <ErrorBoundary>
+                <MainContainer 
+                    auth={authState}
+                    token={authState.token}
+                    userId={authState.authUserId}
+                    onLogout={authState.handleLogout}
+                    onExit={() => {
+                        tempFlow.setAppExited(true);
+                    }}
+                    startingPage={startingPage}
+                    onNavigateFromBilling={handleNavigateFromBilling}
+                />
+            </ErrorBoundary>
+        );
+    }
 
     return null;
 }

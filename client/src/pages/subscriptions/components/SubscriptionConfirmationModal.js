@@ -5,10 +5,10 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 /**
  * SubscriptionConfirmationModal - Complete incomplete subscriptions
- * Handles payment confirmation for subscriptions that require payment action
- * 
- * FIXED: Now calls server endpoint to complete subscription instead of trying
- * to confirm payment intent directly (which doesn't work for all payment methods)
+ * Implements correct Stripe flow:
+ * 1. Finalize invoice (DRAFT -> OPEN)
+ * 2. Confirm payment (client-side card confirmation if needed)
+ * 3. Wait for webhook (invoice.payment_succeeded transitions to active)
  */
 export default function SubscriptionConfirmationModal({
   subscription,
@@ -32,10 +32,8 @@ export default function SubscriptionConfirmationModal({
       setConfirming(true);
       setError(null);
 
-      // IMPORTANT: Call the server endpoint to complete/finalize the subscription
-      // This is needed for all payment methods (card, ACH, bank accounts)
       const subId = subscription.subscriptionId || subscription.id;
-      console.log('[MODAL] Completing subscription:', subId);
+      console.log('[MODAL] Starting subscription finalization:', subId);
       
       if (!subId) {
         setError('Subscription ID is missing');
@@ -43,7 +41,10 @@ export default function SubscriptionConfirmationModal({
         return;
       }
       
-      const completeResponse = await fetchWithTokenRefresh(
+      // STEP 1: Complete the subscription on server
+      // This finalizes invoice from DRAFT -> OPEN and triggers payment attempt
+      console.log('[MODAL] STEP 1: Completing subscription...');
+      const finalizeResponse = await fetchWithTokenRefresh(
         `${API_URL}/billing/complete-subscription/${subId}`,
         {
           method: 'POST',
@@ -54,41 +55,49 @@ export default function SubscriptionConfirmationModal({
         }
       );
 
-      if (!completeResponse.ok) {
-        const errorData = await completeResponse.json();
-        setError(errorData.error || 'Failed to complete subscription');
+      if (!finalizeResponse.ok) {
+        const errorData = await finalizeResponse.json();
+        setError(errorData.error || 'Failed to finalize subscription');
         setConfirming(false);
         return;
       }
 
-      const result = await completeResponse.json();
-      console.log('[MODAL] Subscription completed:', result);
+      const finalizeResult = await finalizeResponse.json();
+      console.log('[MODAL] ✓ STEP 1 Complete: Subscription completed', finalizeResult);
 
-      // If there's a payment intent that needs confirmation (card payments), confirm it
-      if (result.subscription?.clientSecret && amount > 0) {
+      // STEP 2: If there's a payment intent that needs confirmation (card payments), confirm it
+      if (finalizeResult.subscription?.clientSecret && amount > 0) {
         try {
+          console.log('[MODAL] STEP 2: Confirming card payment...');
           const stripe = stripeRef.current;
           if (stripe) {
-            console.log('[MODAL] Confirming card payment for client secret');
             const { paymentIntent: paymentResult, error: stripeError } = await stripe.confirmCardPayment(
-              result.subscription.clientSecret
+              finalizeResult.subscription.clientSecret
             );
 
             if (stripeError) {
-              console.warn('[MODAL] Card payment confirmation error:', stripeError.message);
-              // Don't fail - subscription is already created, payment might process separately
+              console.warn('[MODAL] Card payment confirmation warning:', stripeError.message);
+              // Don't fail - subscription is already finalized, payment might process separately
+              console.log('[MODAL] STEP 2: Invoice finalized, payment will process separately');
             } else if (paymentResult) {
-              console.log('[MODAL] Payment result:', paymentResult.status);
+              console.log('[MODAL] ✓ STEP 2 Complete: Payment confirmed, status:', paymentResult.status);
             }
+          } else {
+            console.log('[MODAL] STEP 2: Stripe not initialized, payment will process on server');
           }
         } catch (stripeErr) {
-          console.warn('[MODAL] Stripe confirmation error:', stripeErr.message);
-          // Don't fail - subscription is already created
+          console.warn('[MODAL] Stripe confirmation warning:', stripeErr.message);
+          // Don't fail - subscription is already finalized
+          console.log('[MODAL] STEP 2: Invoice finalized, payment will process via webhook');
         }
+      } else {
+        console.log('[MODAL] STEP 2 Skipped: No payment needed or no client secret');
       }
 
-      // Success - subscription is now complete
-      console.log('[MODAL] Subscription completion successful');
+      // STEP 3: Success - subscription is now completed
+      // Webhook will eventually transition it to 'active' when payment succeeds
+      console.log('[MODAL] ✓ STEP 3 Complete: Subscription completion successful');
+      console.log('[MODAL] Subscription will transition to active when payment webhook is received');
       const finalSubId = subscription.subscriptionId || subscription.id;
       onSuccess({ status: 'succeeded', id: finalSubId });
     } catch (err) {
@@ -106,7 +115,7 @@ export default function SubscriptionConfirmationModal({
           {amount === 0 ? (
             <p>Your subscription is ready to start. You will be charged at the end of your first billing period on {subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toLocaleDateString() : 'the scheduled date'}.</p>
           ) : (
-            <p>Your subscription is ready, but payment needs to be confirmed.</p>
+            <p>Your subscription is ready. Please click below to finalize and complete the setup.</p>
           )}
         </div>
 
@@ -134,7 +143,7 @@ export default function SubscriptionConfirmationModal({
               className="btn-primary" 
               disabled={confirming}
             >
-              {confirming ? 'Processing...' : 'Confirm & Complete'}
+              {confirming ? 'Completing Subscription...' : 'Complete Subscription'}
             </button>
             <button 
               type="button" 

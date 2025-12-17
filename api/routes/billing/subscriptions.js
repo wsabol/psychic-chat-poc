@@ -86,6 +86,15 @@ router.get('/subscriptions', authenticateToken, async (req, res) => {
 
 /**
  * Complete subscription - finalize incomplete subscription
+ * Per Stripe docs: https://stripe.com/docs/billing/subscriptions/fixed-price
+ * 
+ * Flow:
+ * 1. Subscription created with payment_behavior: 'default_incomplete'
+ * 2. Invoice is in 'draft' status
+ * 3. Call finalizeInvoice to move to 'open' (this triggers payment attempt)
+ * 4. If payment method exists, Stripe attempts to collect immediately
+ * 5. If 3DS required, paymentIntent.client_secret sent to client for confirmation
+ * 6. After payment succeeds, subscription automatically becomes 'active'
  */
 router.post('/complete-subscription/:subscriptionId', authenticateToken, async (req, res) => {
   try {
@@ -95,30 +104,78 @@ router.post('/complete-subscription/:subscriptionId', authenticateToken, async (
       return res.status(400).json({ error: 'subscriptionId is required' });
     }
 
-    // Retrieve subscription to finalize any pending invoices
+    console.log('[BILLING] Completing subscription:', subscriptionId);
+
+    // Retrieve subscription with latest invoice and payment intent
     const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
       expand: ['latest_invoice.payment_intent'],
     });
 
-    console.log('[BILLING] Completing subscription:', subscriptionId, 'status:', subscription.status);
+    console.log('[BILLING] Subscription status:', subscription.status);
 
-    // If subscription is incomplete and invoice exists, finalize it
-    if (subscription.latest_invoice && subscription.status === 'incomplete') {
-      const invoice = await stripe.invoices.finalizeInvoice(subscription.latest_invoice.id);
-      console.log('[BILLING] Finalized invoice:', invoice.id, 'status:', invoice.status);
+    // Only process if incomplete
+    if (subscription.status !== 'incomplete') {
+      console.log('[BILLING] ℹ️ Subscription already ' + subscription.status + ', returning current state');
+      return res.json({
+        success: true,
+        subscription: {
+          id: subscription.id,
+          status: subscription.status,
+          clientSecret: subscription.latest_invoice?.payment_intent?.client_secret,
+          amountDue: subscription.latest_invoice?.amount_due || 0,
+        },
+      });
     }
 
-    res.json({
-      success: true,
-      subscription: {
-        id: subscription.id,
-        status: subscription.status,
-        clientSecret: subscription.latest_invoice?.payment_intent?.client_secret,
-        amountDue: subscription.latest_invoice?.amount_due || 0,
-      },
-    });
+    if (!subscription.latest_invoice) {
+      return res.status(400).json({ error: 'No invoice found for subscription' });
+    }
+
+    const invoiceId = subscription.latest_invoice.id;
+    const invoice = await stripe.invoices.retrieve(invoiceId);
+
+    console.log('[BILLING] Invoice status:', invoice.status);
+
+    // Step 1: Finalize invoice if still in draft
+    if (invoice.status === 'draft') {
+      console.log('[BILLING] Finalizing draft invoice...');
+      const finalizedInvoice = await stripe.invoices.finalizeInvoice(invoiceId);
+      console.log('[BILLING] ✓ Invoice finalized, status:', finalizedInvoice.status);
+      
+      // After finalization, Stripe automatically attempts payment
+      // Get updated subscription and invoice to check payment status
+      const updatedSub = await stripe.subscriptions.retrieve(subscriptionId, {
+        expand: ['latest_invoice.payment_intent'],
+      });
+      
+      return res.json({
+        success: true,
+        subscription: {
+          id: updatedSub.id,
+          status: updatedSub.status,
+          clientSecret: updatedSub.latest_invoice?.payment_intent?.client_secret || null,
+          amountDue: updatedSub.latest_invoice?.amount_due || 0,
+        },
+      });
+    } else {
+      console.log('[BILLING] ℹ️ Invoice already ' + invoice.status + ', payment already in progress');
+      
+      const updatedSub = await stripe.subscriptions.retrieve(subscriptionId, {
+        expand: ['latest_invoice.payment_intent'],
+      });
+      
+      return res.json({
+        success: true,
+        subscription: {
+          id: updatedSub.id,
+          status: updatedSub.status,
+          clientSecret: updatedSub.latest_invoice?.payment_intent?.client_secret || null,
+          amountDue: updatedSub.latest_invoice?.amount_due || 0,
+        },
+      });
+    }
   } catch (error) {
-    console.error('[BILLING] Complete subscription error:', error);
+    console.error('[BILLING] Complete subscription error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });

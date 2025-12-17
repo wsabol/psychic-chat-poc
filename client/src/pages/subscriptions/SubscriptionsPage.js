@@ -2,13 +2,12 @@
  * SubscriptionsPage - With Subscription Confirmation Modal
  * Main container that orchestrates all subscription components
  * 
- * Features:
- * - Browse subscription plans
- * - Manage active subscriptions
- * - Toggle subscription on/off
- * - Change between plans
- * - Confirm incomplete subscriptions
- * - View past subscriptions
+ * LAYOUT PRIORITY (User must subscribe to use site):
+ * 1. Available Plans (FIRST - if no active subscription) OR (Active Subscriptions if already subscribed)
+ * 2. Active Subscriptions (if user has subscription)
+ * 3. Plan Change Options (if already subscribed)
+ * 4. Past/Expired Subscriptions (LAST - compact table)
+ * 5. Info Section
  */
 
 import React, { useEffect } from 'react';
@@ -56,6 +55,7 @@ export default function SubscriptionsPage({ userId, token, auth }) {
   // Event handlers
   const handlers = useSubscriptionHandlers({
     billing,
+    auth,
     setError: state.setError,
     setSuccess: state.setSuccess,
     setActiveSubscriptions: state.setActiveSubscriptions,
@@ -96,32 +96,51 @@ export default function SubscriptionsPage({ userId, token, auth }) {
       {state.error && <div className="alert alert-error">{state.error}</div>}
       {state.success && <div className="alert alert-success">✓ Changes saved successfully!</div>}
 
-      {/* Auto-Renewal Notice */}
-      <AutoRenewalNotice />
+      {/* LAYOUT: Show Available Plans FIRST if no subscription, otherwise show Active Subscriptions */}
+      {activeSubscriptionsList.length === 0 ? (
+        <>
+          {/* NO ACTIVE SUBSCRIPTION - Show products first */}
+          <div style={{ marginBottom: '2rem', padding: '1rem', backgroundColor: '#fff3e0', borderRadius: '8px', borderLeft: '4px solid #ff9800' }}>
+            <p style={{ margin: 0, fontWeight: 'bold', color: '#e65100' }}>
+              ⚠️ You need an active subscription to use this site. Choose a plan below to get started.
+            </p>
+          </div>
 
-      {/* Active Subscriptions */}
-      <ActiveSubscriptionsSection
-        subscriptions={activeSubscriptionsList}
-        activeSubscriptions={state.activeSubscriptions}
-        pricesByProduct={pricesByProduct}
-        expandedSub={state.expandedSub}
-        onToggle={handlers.handleToggleSubscription}
-        onChangeClick={state.setExpandedSub}
-        onChangeSubscription={handlers.handleChangeSubscription}
-        billing={billing}
-      />
+          <AvailablePlansSection
+            pricesByProduct={pricesByProduct}
+            onSubscribe={handlers.handleSubscribe}
+            billing={billing}
+            showSection={true}
+            defaultPaymentMethodId={billing.paymentMethods?.defaultPaymentMethodId}
+          />
+        </>
+      ) : (
+        <>
+          {/* HAS ACTIVE SUBSCRIPTION */}
+          <AutoRenewalNotice />
 
-      {/* Available Plans - always show to allow plan changes */}
-      <AvailablePlansSection
-        pricesByProduct={pricesByProduct}
-        onSubscribe={handlers.handleSubscribe}
-        billing={billing}
-        showSection={true}
-        defaultPaymentMethodId={billing.paymentMethods?.defaultPaymentMethodId}
-      />
+          {/* Active Subscriptions */}
+          <ActiveSubscriptionsSection
+            subscriptions={activeSubscriptionsList}
+            activeSubscriptions={state.activeSubscriptions}
+            pricesByProduct={pricesByProduct}
+            expandedSub={state.expandedSub}
+            onToggle={handlers.handleToggleSubscription}
+            onChangeClick={state.setExpandedSub}
+            onChangeSubscription={handlers.handleChangeSubscription}
+            billing={billing}
+          />
 
-      {/* Past Subscriptions */}
-      <PastSubscriptionsSection subscriptions={billing.subscriptions || []} />
+          {/* Available Plans - always show to allow plan changes */}
+          <AvailablePlansSection
+            pricesByProduct={pricesByProduct}
+            onSubscribe={handlers.handleSubscribe}
+            billing={billing}
+            showSection={true}
+            defaultPaymentMethodId={billing.paymentMethods?.defaultPaymentMethodId}
+          />
+        </>
+      )}
 
       {/* Subscription Confirmation Modal */}
       {state.showSubscriptionConfirmationModal && state.pendingSubscription && (
@@ -136,6 +155,9 @@ export default function SubscriptionsPage({ userId, token, auth }) {
           }}
         />
       )}
+
+      {/* Past Subscriptions - LAST, compact table */}
+      <PastSubscriptionsSection subscriptions={billing.subscriptions || []} />
 
       {/* Info Section */}
       <SubscriptionInfo />

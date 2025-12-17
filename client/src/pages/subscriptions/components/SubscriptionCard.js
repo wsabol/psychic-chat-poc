@@ -1,7 +1,7 @@
 /**
- * SubscriptionCard Component
- * Individual subscription display with toggle and actions
- * ACH subscriptions will show 'active' status immediately and charge within 4 business days
+ * SubscriptionCard Component - SIMPLIFIED
+ * Show: Plan name, Status (Active/Canceling), Expires date
+ * Keep it compact and clean - just the essentials
  */
 
 import React from 'react';
@@ -18,131 +18,66 @@ export default function SubscriptionCard({
   billing
 }) {
   const planName = subscription.items?.data?.[0]?.price?.product?.name || 'Subscription';
-  const interval = subscription.items?.data?.[0]?.price?.recurring?.interval || 'unknown';
-  
-  // Format status display
-  const getStatusDisplay = (status) => {
-    switch(status) {
-      case 'active':
-        return '✅ ACTIVE';
-      case 'incomplete':
-        return '⏳ INCOMPLETE';
-      case 'incomplete_expired':
-        return '❌ EXPIRED';
-      case 'past_due':
-        return '⚠️ PAST DUE';
-      case 'canceled':
-        return '🛑 CANCELED';
-      default:
-        return status.toUpperCase();
+  const interval = subscription.items?.data?.[0]?.price?.recurring?.interval || 'month';
+  const expiresDate = new Date(subscription.current_period_end * 1000).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+
+  // Status display
+  const getStatusBadge = () => {
+    if (isCanceling) {
+      return { text: '⏱️ Canceling', color: '#ff9800' };
     }
+    return { text: '✅ Active', color: '#4caf50' };
   };
-  
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'active':
-        return '#4caf50';
-      case 'incomplete':
-        return '#ff9800';
-      case 'incomplete_expired':
-        return '#f44336';
-      case 'past_due':
-        return '#ff9800';
-      default:
-        return '#666';
-    }
-  };
+
+  const statusBadge = getStatusBadge();
 
   return (
-    <div className={`subscription-card ${isCanceling ? 'canceling' : 'active'}`}>
-      {/* Header with Toggle */}
-      <div className="sub-header-with-toggle">
-        <div className="sub-header">
-          <h4>{planName}</h4>
-          <span className={`status-badge status-${subscription.status}`} style={{
-            backgroundColor: getStatusColor(subscription.status),
-            color: 'white',
-            padding: '4px 8px',
-            borderRadius: '4px',
-            fontSize: '12px',
-            fontWeight: 'bold'
-          }}>
-            {getStatusDisplay(subscription.status)}
+    <div className="subscription-card-simple">
+      <div className="sub-simple-main">
+        {/* Left: Plan info */}
+        <div className="sub-simple-left">
+          <div className="sub-simple-plan">
+            {planName} <span className="sub-simple-interval">({interval === 'month' ? 'Monthly' : 'Yearly'})</span>
+          </div>
+          {isCanceling && (
+            <div className="sub-simple-canceling">
+              ⚠️ This subscription ends on <strong>{expiresDate}</strong>
+            </div>
+          )}
+        </div>
+
+        {/* Center: Status */}
+        <div className="sub-simple-status">
+          <span className="sub-simple-badge" style={{ backgroundColor: statusBadge.color }}>
+            {statusBadge.text}
           </span>
         </div>
-        {!isCanceling && subscription.status === 'active' && (
-          <div className="subscription-toggle">
-            <input
-              type="checkbox"
-              id={`sub-toggle-${subscription.id}`}
-              checked={isActive}
-              onChange={() => onToggle(subscription.id, isActive)}
-              className="toggle-checkbox"
-            />
-            <label htmlFor={`sub-toggle-${subscription.id}`} className="toggle-label">
-              {isActive ? 'Active' : 'Paused'}
-            </label>
-          </div>
-        )}
-      </div>
 
-      {/* Details */}
-      <div className="sub-details">
-        <div className="detail-row">
-          <span className="detail-label">Price:</span>
-          <span className="detail-value">
-            ${(subscription.items?.data?.[0]?.price?.unit_amount / 100 || 0).toFixed(2)}
-            <span className="interval-badge">{interval === 'month' ? '/mo' : '/yr'}</span>
-          </span>
+        {/* Right: Expiry + Action */}
+        <div className="sub-simple-right">
+          <div className="sub-simple-expires">
+            Expires {expiresDate}
+          </div>
+          {!isCanceling && subscription.status === 'active' && (
+            <button
+              className="btn-secondary btn-small"
+              onClick={() => onChangeClick(subscription.id)}
+            >
+              {expandedSub === subscription.id ? '✕ Close' : '📋 Change'}
+            </button>
+          )}
         </div>
-        <div className="detail-row">
-          <span className="detail-label">Current Period:</span>
-          <span className="detail-value">
-            {new Date(subscription.current_period_start * 1000).toLocaleDateString()}
-            {' '} - {' '}
-            {new Date(subscription.current_period_end * 1000).toLocaleDateString()}
-          </span>
-        </div>
-        
-        {/* ACH subscription info */}
-        {subscription.status === 'active' && (
-          <div className="detail-row ach-info">
-            <span className="detail-label">🏦 ACH Status:</span>
-            <span className="detail-value">
-              First charge will process within 4 business days by {new Date(subscription.current_period_end * 1000).toLocaleDateString()}
-            </span>
-          </div>
-        )}
-        
-        {isCanceling && (
-          <div className="detail-row cancellation-notice">
-            <span className="detail-label">⚠️ Cancellation:</span>
-            <span className="detail-value">
-              This subscription will stop on{' '}
-              <strong>{new Date(subscription.current_period_end * 1000).toLocaleDateString()}</strong>
-            </span>
-          </div>
-        )}
       </div>
 
-      {/* Actions */}
-      <div className="sub-actions">
-        {onChangeClick && (
-          <button
-            className="btn-secondary btn-small"
-            onClick={() => onChangeClick(subscription.id)}
-            disabled={subscription.status !== 'active'}
-          >
-            {expandedSub === subscription.id ? '✕ Close' : '📋 Change Plan'}
-          </button>
-        )}
-      </div>
-
-      {/* Change Plan Options */}
-      {expandedSub === subscription.id && subscription.status === 'active' && (
-        <div className="change-plan-options">
+      {/* Change Plan Options - Expanded */}
+      {expandedSub === subscription.id && subscription.status === 'active' && !isCanceling && (
+        <div className="sub-simple-expand">
           <h5>Switch to a Different Plan</h5>
-          <div className="plan-options-grid">
+          <div className="sub-simple-plans-grid">
             {Object.entries(pricesByProduct).map(([productId, { product, prices }]) => (
               prices.map(price => {
                 const newInterval = price.recurring?.interval;
@@ -150,22 +85,19 @@ export default function SubscriptionCard({
                 const isSamePrice = price.id === currentPrice?.id;
 
                 return (
-                  <div key={price.id} className="plan-option-card">
-                    <div className="plan-option-name">
-                      {product?.name} ({newInterval === 'month' ? 'Monthly' : 'Yearly'})
+                  <div key={price.id} className="sub-simple-plan-option">
+                    <div className="sub-simple-plan-name">
+                      {product?.name} ({newInterval === 'month' ? 'Mo' : 'Yr'})
                     </div>
-                    <div className="plan-option-price">
+                    <div className="sub-simple-plan-price">
                       ${(price.unit_amount / 100).toFixed(2)}
-                      <span className="plan-option-interval">
-                        /{newInterval === 'month' ? 'mo' : 'yr'}
-                      </span>
                     </div>
                     <button
                       className={`btn-small ${isSamePrice ? 'btn-disabled' : 'btn-primary'}`}
                       onClick={() => onChangeSubscription(subscription, price.id)}
                       disabled={isSamePrice || billing.loading}
                     >
-                      {isSamePrice ? 'Current Plan' : 'Switch'}
+                      {isSamePrice ? 'Current' : 'Switch'}
                     </button>
                   </div>
                 );
@@ -174,18 +106,165 @@ export default function SubscriptionCard({
           </div>
         </div>
       )}
-      
+
       <style>{`
-        .ach-info {
-          background-color: #f0f8ff;
-          padding: 8px;
-          border-radius: 4px;
-          border-left: 3px solid #4caf50;
+        .subscription-card-simple {
+          background: white;
+          border: 1px solid #e0e0e0;
+          border-radius: 8px;
+          margin-bottom: 1rem;
+          overflow: hidden;
         }
-        
+
+        .sub-simple-main {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 1rem 1.5rem;
+          gap: 1.5rem;
+        }
+
+        .sub-simple-left {
+          flex: 1;
+        }
+
+        .sub-simple-plan {
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: #333;
+          margin-bottom: 0.25rem;
+        }
+
+        .sub-simple-interval {
+          font-size: 0.9rem;
+          font-weight: normal;
+          color: #666;
+        }
+
+        .sub-simple-canceling {
+          font-size: 0.9rem;
+          color: #ff6f00;
+          margin-top: 0.5rem;
+        }
+
+        .sub-simple-status {
+          flex: 0 0 auto;
+        }
+
+        .sub-simple-badge {
+          display: inline-block;
+          color: white;
+          padding: 0.5rem 1rem;
+          border-radius: 20px;
+          font-weight: bold;
+          font-size: 0.9rem;
+          white-space: nowrap;
+        }
+
+        .sub-simple-right {
+          flex: 0 0 auto;
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .sub-simple-expires {
+          font-size: 0.9rem;
+          color: #666;
+          white-space: nowrap;
+        }
+
+        .btn-small {
+          padding: 0.5rem 1rem;
+          font-size: 0.85rem;
+          border-radius: 4px;
+          border: none;
+          cursor: pointer;
+          font-weight: 600;
+        }
+
+        .btn-secondary {
+          background-color: #f5f5f5;
+          color: #333;
+          border: 1px solid #ccc;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+          background-color: #e8e8e8;
+        }
+
         .btn-disabled {
           opacity: 0.5;
           cursor: not-allowed;
+        }
+
+        .sub-simple-expand {
+          background-color: #fafafa;
+          padding: 1.5rem;
+          border-top: 1px solid #e0e0e0;
+        }
+
+        .sub-simple-expand h5 {
+          margin: 0 0 1rem 0;
+          font-size: 1rem;
+          color: #333;
+        }
+
+        .sub-simple-plans-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+          gap: 1rem;
+        }
+
+        .sub-simple-plan-option {
+          background: white;
+          padding: 1rem;
+          border: 1px solid #ddd;
+          border-radius: 6px;
+          text-align: center;
+        }
+
+        .sub-simple-plan-name {
+          font-size: 0.9rem;
+          font-weight: 600;
+          color: #333;
+          margin-bottom: 0.5rem;
+        }
+
+        .sub-simple-plan-price {
+          font-size: 1.2rem;
+          font-weight: bold;
+          color: #4caf50;
+          margin-bottom: 0.75rem;
+        }
+
+        .btn-primary {
+          background-color: #7c63d8;
+          color: white;
+          border: none;
+          width: 100%;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+          background-color: #6a52b8;
+        }
+
+        @media (max-width: 768px) {
+          .sub-simple-main {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 1rem;
+            gap: 0.75rem;
+          }
+
+          .sub-simple-right {
+            width: 100%;
+            justify-content: space-between;
+          }
+
+          .sub-simple-plans-grid {
+            grid-template-columns: 1fr 1fr;
+          }
         }
       `}</style>
     </div>

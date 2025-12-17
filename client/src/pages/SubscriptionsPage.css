@@ -45,6 +45,13 @@
   margin-bottom: 3rem;
 }
 
+/* Past Subscriptions - Positioned last in JSX, ensure proper spacing */
+.past-subscriptions {
+  margin-top: 4rem;
+  padding-top: 2rem;
+  border-top: 2px solid #e0e0e0;
+}
+
 .current-subscriptions h3,
 .available-plans h3,
 .past-subscriptions h3 {

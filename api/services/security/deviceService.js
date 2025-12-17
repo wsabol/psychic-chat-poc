@@ -3,20 +3,32 @@ import { hashUserId } from '../../shared/hashUtils.js';
 import admin from 'firebase-admin';
 
 /**
- * Get all active devices for user (from Firebase sessions)
+ * Get all active devices for user (from security_sessions table)
+ * Decrypts encrypted device names
  */
 export async function getDevices(userId) {
   try {
     const userIdHash = hashUserId(userId);
+    console.log('[SECURITY] Fetching devices for user:', userId);
+    
     const result = await db.query(
-      'SELECT id, device_name, ip_address_encrypted, last_active, created_at FROM security_sessions WHERE user_id_hash = $1 ORDER BY last_active DESC',
-      [userIdHash]
+      `SELECT 
+        id, 
+        pgp_sym_decrypt(device_name_encrypted, $1) as device_name,
+        last_active, 
+        created_at 
+       FROM security_sessions 
+       WHERE user_id_hash = $2 
+       ORDER BY last_active DESC`,
+      [process.env.ENCRYPTION_KEY, userIdHash]
     );
+
+    console.log('[SECURITY] Found', result.rows.length, 'devices for user:', userId);
 
     const devices = result.rows.map(row => ({
       id: row.id,
-      deviceName: row.device_name,
-      ipAddress: '[ENCRYPTED]',
+      deviceName: row.device_name || 'Unknown Device',
+      ipAddress: '[ENCRYPTED]',  // Don't expose encrypted IP data
       lastLogin: row.last_active,
       createdAt: row.created_at,
       isCurrent: false
