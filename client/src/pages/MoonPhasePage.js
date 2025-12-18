@@ -202,15 +202,15 @@ export default function MoonPhasePage({ userId, token, auth }) {
         </section>
       )}
 
-      {/* Birth Chart Info */}
+      {/* Birth Chart Info - REORDERED: Rising, Moon, Sun */}
       {astro.sun_sign && (
         <section className="moon-phase-birth-chart">
           <div className="birth-chart-cards">
-            {astro.sun_sign && (
-              <div className="chart-card sun-card">
-                <span className="chart-icon">☀️</span>
-                <p className="chart-sign">{astro.sun_sign}</p>
-                {astro.sun_degree && <p className="chart-degree">{astro.sun_degree}°</p>}
+            {astro.rising_sign && (
+              <div className="chart-card rising-card">
+                <span className="chart-icon">↗️</span>
+                <p className="chart-sign">{astro.rising_sign}</p>
+                {astro.rising_degree && <p className="chart-degree">{astro.rising_degree}°</p>}
               </div>
             )}
             {astro.moon_sign && (
@@ -220,11 +220,11 @@ export default function MoonPhasePage({ userId, token, auth }) {
                 {astro.moon_degree && <p className="chart-degree">{astro.moon_degree}°</p>}
               </div>
             )}
-            {astro.rising_sign && (
-              <div className="chart-card rising-card">
-                <span className="chart-icon">↗️</span>
-                <p className="chart-sign">{astro.rising_sign}</p>
-                {astro.rising_degree && <p className="chart-degree">{astro.rising_degree}°</p>}
+            {astro.sun_sign && (
+              <div className="chart-card sun-card">
+                <span className="chart-icon">☀️</span>
+                <p className="chart-sign">{astro.sun_sign}</p>
+                {astro.sun_degree && <p className="chart-degree">{astro.sun_degree}°</p>}
               </div>
             )}
           </div>

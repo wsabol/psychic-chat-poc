@@ -140,16 +140,16 @@ export default function CosmicWeatherPage({ userId, token, auth }) {
               {cosmicData.birthChart && (
                 <div className="birth-chart-simple">
                   <div className="chart-item">
-                    <span className="chart-icon">☀️</span>
-                    <span className="chart-sign">{cosmicData.birthChart.sun_sign}</span>
+                    <span className="chart-icon">↗️</span>
+                    <span className="chart-sign">{cosmicData.birthChart.rising_sign}</span>
                   </div>
                   <div className="chart-item">
                     <span className="chart-icon">🌙</span>
                     <span className="chart-sign">{cosmicData.birthChart.moon_sign}</span>
                   </div>
                   <div className="chart-item">
-                    <span className="chart-icon">↗️</span>
-                    <span className="chart-sign">{cosmicData.birthChart.rising_sign}</span>
+                    <span className="chart-icon">☀️</span>
+                    <span className="chart-sign">{cosmicData.birthChart.sun_sign}</span>
                   </div>
                 </div>
               )}
@@ -184,16 +184,16 @@ export default function CosmicWeatherPage({ userId, token, auth }) {
               {cosmicData.birthChart && (
                 <div className="birth-chart-simple">
                   <div className="chart-item">
-                    <span className="chart-icon">☀️</span>
-                    <span className="chart-sign">{cosmicData.birthChart.sun_sign}</span>
+                    <span className="chart-icon">↗️</span>
+                    <span className="chart-sign">{cosmicData.birthChart.rising_sign}</span>
                   </div>
                   <div className="chart-item">
                     <span className="chart-icon">🌙</span>
                     <span className="chart-sign">{cosmicData.birthChart.moon_sign}</span>
                   </div>
                   <div className="chart-item">
-                    <span className="chart-icon">↗️</span>
-                    <span className="chart-sign">{cosmicData.birthChart.rising_sign}</span>
+                    <span className="chart-icon">☀️</span>
+                    <span className="chart-sign">{cosmicData.birthChart.sun_sign}</span>
                   </div>
                 </div>
               )}

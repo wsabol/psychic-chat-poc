@@ -34,8 +34,8 @@ export const menuStructure = [
     type: 'category',
     submenu: [
       { id: 'mySign', label: 'My Sign', icon: '♈', pageId: 'sign' },
-      { id: 'moonPhase', label: 'Moon Phase', icon: '🌙', pageId: 'moon' },
       { id: 'horoscope', label: 'Horoscope', icon: '🔮', pageId: 'horoscope' },
+      { id: 'moonPhase', label: 'Moon Phase', icon: '🌙', pageId: 'moon' },
       { id: 'cosmicWeather', label: 'Cosmic Weather', icon: '🌌', pageId: 'cosmic' },
     ],
   },
