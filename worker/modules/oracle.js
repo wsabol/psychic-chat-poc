@@ -182,11 +182,81 @@ Guardrails:
 
 export async function callOracle(systemPrompt, messageHistory, userMessage) {
     try {
+        // Create reversed copy without mutating original array
+
+        const reversedHistory = messageHistory.slice().reverse();
+        console.log('[ORACLE] API call:', { historyLen: reversedHistory.length, userMsg: userMessage.substring(0, 50) });
+        
         const completion = await client.chat.completions.create({
             model: "gpt-4o-mini",
             messages: [
                 { role: "system", content: systemPrompt },
-                ...messageHistory, // Already in DESC order from getMessageHistory
+                ...reversedHistory,
+                { role: "user", content: userMessage },
+
+
+            ]
+        });
+
+        
+        const response = completion.choices[0]?.message?.content || "";
+        console.log('[ORACLE] Response received:', response.substring(0, 100));
+        return response;
+    } catch (err) {
+
+        console.error('[ORACLE] Error calling API:', err.message);
+        throw err;
+    }
+}
+
+export function getUserGreeting(userInfo, userId) {
+    if (!userInfo) return userId;
+    return userInfo.address_preference || userInfo.first_name || userId;
+}
+
+/**
+ * Extract scent recommendations from oracle response
+ * Utility function for potential future use (logging, analytics, etc.)
+ * @param {string} responseText - The oracle's HTML response
+ * @returns {object} Scent data found in response
+ */
+export function extractScentDataFromResponse(responseText) {
+    if (!responseText) return null;
+
+    const scentSectionRegex = /<h3>Aromatherapy Support<\/h3>([\s\S]*?)(?=<h3>|$)/i;
+    const match = responseText.match(scentSectionRegex);
+
+    if (match) {
+        return {
+            hasScentGuidance: true,
+            content: match[1].trim()
+        };
+    }
+
+    return {
+        hasScentGuidance: false,
+        content: null
+    };
+}
+
+    if (isTemporaryUser) {
+        return basePrompt + tempAccountAddition + guardRails;
+    } else {
+        return basePrompt + establishedAccountAddition + guardRails;
+    }
+}
+
+export async function callOracle(systemPrompt, messageHistory, userMessage) {
+    try {
+        // Create reversed copy without mutating original array
+        // History comes in ASC order (oldest first), reverse to DESC (most recent context closer to current message)
+        const reversedHistory = messageHistory.slice().reverse();
+        
+        const completion = await client.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [
+                { role: "system", content: systemPrompt },
+                ...reversedHistory,
                 { role: "user", content: userMessage },
             ],
             timeout: 30000, // 30 second timeout to prevent hanging

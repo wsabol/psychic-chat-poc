@@ -3,13 +3,13 @@ import { hashUserId } from '../shared/hashUtils.js';
 
 /**
  * Get message history for a user
- * Returns messages in DESC order (most recent first) for efficient OpenAI API usage
+ * Returns messages in ASC order (oldest first) for proper conversation context
  */
 export async function getMessageHistory(userId, limit = 10) {
     try {
         const userIdHash = hashUserId(userId);
         const { rows } = await db.query(
-            "SELECT role, content FROM messages WHERE user_id_hash=$1 ORDER BY created_at DESC LIMIT $2",
+            "SELECT role, content FROM messages WHERE user_id_hash=$1 ORDER BY created_at ASC LIMIT $2",
             [userIdHash, limit]
         );
         
