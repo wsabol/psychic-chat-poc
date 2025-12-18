@@ -5,7 +5,6 @@ import { getAuth, updatePassword } from 'firebase/auth';
  * PasswordTab - Change password via Firebase
  */
 export default function PasswordTab({ userId, token, apiUrl }) {
-  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -69,7 +68,6 @@ export default function PasswordTab({ userId, token, apiUrl }) {
       setSuccess('✓ Password changed successfully!');
       
       // Clear form
-      setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useAuth } from "./hooks/useAuth";
 import { useTokenRefresh } from "./hooks/useTokenRefresh";
 import { useModalState } from "./hooks/useModalState";
@@ -59,7 +59,7 @@ function App() {
                 () => authState.refreshEmailVerificationStatus()
             );
         }
-    }, [isVerification, emailVerification, authState.refreshEmailVerificationStatus]);
+    }, [isVerification, emailVerification, authState]);
 
     // ✅ NEW: When subscription becomes active, reset skip flag AND return to chat page
     useEffect(() => {
@@ -87,15 +87,15 @@ function App() {
     };
 
     // Modal callbacks - allow user to go to billing to add payment method
-    const handleNavigateToBilling = () => {
+    const handleNavigateToBilling = useCallback(() => {
         setSkipPaymentCheck(true);
         setSkipSubscriptionCheck(true); // Allow to skip subscription check to reach billing page
         setStartingPage(7); // Billing page is index 7
-    };
+    }, []);
 
     // When user tries to navigate away from billing page
     // Re-check ONLY subscription (not payment method, since user just added it)
-    const handleNavigateFromBilling = async () => {
+    const handleNavigateFromBilling = useCallback(async () => {
         // Don't reset payment check - user just added it so it's valid
         // Only re-check subscription status
         setSkipPaymentCheck(true); // Keep skipping payment check since it's now valid
@@ -105,13 +105,13 @@ function App() {
         if (authState.token && authState.authUserId) {
             await authState.recheckSubscriptionOnly(authState.token, authState.authUserId);
         }
-    };
+    }, [authState]);
 
     // Modal callbacks - allow user to go to billing to subscribe
-    const handleNavigateToSubscriptions = () => {
+    const handleNavigateToSubscriptions = useCallback(() => {
         setSkipSubscriptionCheck(true);
         setStartingPage(7); // Billing page is index 7
-    };
+    }, []);
 
     // Loading
     if (isLoading) {

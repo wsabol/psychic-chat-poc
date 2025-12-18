@@ -13,13 +13,6 @@ import BillingPage from '../pages/BillingPage';
 import './MainContainer.css';
 
 // Define all pages in order (matches menu order)
-const PlaceholderPage = ({ pageId }) => (
-  <div style={{ padding: '2rem', textAlign: 'center' }}>
-    <h2>{pageId}</h2>
-    <p>Coming soon...</p>
-  </div>
-);
-
 const PAGES = [
   { id: 'chat', label: 'Chat', component: ChatPage },
   { id: 'personal', label: 'Personal Info', component: PersonalInfoPage },
@@ -42,7 +35,7 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
     if (startingPage !== 0 && startingPage !== currentPageIndex) {
       setCurrentPageIndex(startingPage);
     }
-  }, [startingPage]);
+  }, [startingPage, currentPageIndex]);
 
   // Track scroll to hide/show nav on mobile
   useEffect(() => {

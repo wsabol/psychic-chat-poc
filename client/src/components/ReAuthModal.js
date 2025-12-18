@@ -14,6 +14,7 @@ import { auth } from '../firebase';
  */
 export default function ReAuthModal({ isOpen, email, onSuccess, onCancel }) {
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showPasswordReset, setShowPasswordReset] = useState(false);
@@ -33,6 +34,8 @@ export default function ReAuthModal({ isOpen, email, onSuccess, onCancel }) {
       const googleProvider = new GoogleAuthProvider();
       await reauthenticateWithPopup(user, googleProvider);
 
+      // ✅ Call onSuccess after successful Google re-auth
+      onSuccess();
     } catch (err) {
       console.error('[REAUTH] Google re-auth failed:', err);
       
@@ -234,22 +237,49 @@ export default function ReAuthModal({ isOpen, email, onSuccess, onCancel }) {
                 }}>
                   Password
                 </label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  autoFocus
-                  disabled={loading}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    borderRadius: '4px',
-                    border: '1px solid #ccc',
-                    boxSizing: 'border-box',
-                    opacity: loading ? 0.6 : 1
-                  }}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    autoFocus
+                    disabled={loading}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      paddingRight: '2.5rem',
+                      borderRadius: '4px',
+                      border: '1px solid #ccc',
+                      boxSizing: 'border-box',
+                      opacity: loading ? 0.6 : 1
+                    }}
+                  />
+                  {/* Eye Icon Toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    disabled={loading}
+                    style={{
+                      position: 'absolute',
+                      right: '0.75rem',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      fontSize: '18px',
+                      padding: '0.25rem',
+                      opacity: loading ? 0.5 : 0.7,
+                      transition: 'opacity 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.target.style.opacity = loading ? '0.5' : '1'}
+                    onMouseLeave={(e) => e.target.style.opacity = loading ? '0.5' : '0.7'}
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? '👁️' : '👁️‍🗨️'}
+                  </button>
+                </div>
               </div>
 
               <button

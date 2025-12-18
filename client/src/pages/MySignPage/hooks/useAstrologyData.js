@@ -1,8 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { fetchWithTokenRefresh } from '../../../utils/fetchWithTokenRefresh';
 import { zodiacSigns } from '../../../data/ZodiacSigns';
-
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
 /**
  * Hook to fetch and merge astrology data with zodiac enrichment
@@ -12,10 +10,12 @@ export function useAstrologyData(userId, token) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchAstrologyData = async () => {
+  const fetchAstrologyData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
+      const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
+      
       const response = await fetchWithTokenRefresh(`${API_URL}/user-astrology/${userId}`, { 
         headers: {
           'Authorization': token ? `Bearer ${token}` : ''
@@ -53,11 +53,11 @@ export function useAstrologyData(userId, token) {
       setError('Unable to load your birth chart. Please try again.');
       setLoading(false);
     }
-  };
+  }, [userId, token]);
 
   useEffect(() => {
     fetchAstrologyData();
-  }, [userId, token, API_URL]);
+  }, [fetchAstrologyData]);
 
   return {
     astroData,

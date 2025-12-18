@@ -20,7 +20,6 @@ export function useRegistrationFlow() {
       // Retrieve onboarding data from sessionStorage (for temp account migration)
       let onboarding_first_message = null;
       let onboarding_horoscope = null;
-      let temp_user_id = null;
 
       try {
         const storedMessage = sessionStorage.getItem('onboarding_first_message');
@@ -33,14 +32,8 @@ export function useRegistrationFlow() {
         if (storedHoroscope) {
           onboarding_horoscope = JSON.parse(storedHoroscope);
         }
-
-        const currentUser = auth.currentUser;
-        if (currentUser && currentUser.email && currentUser.email.startsWith('temp_')) {
-          temp_user_id = currentUser.uid;
-        }
       } catch (storageErr) {
         console.warn('[MIGRATION] Could not retrieve onboarding data:', storageErr);
-        temp_user_id = null;
       }
 
       // Check if user is upgrading from temp account

@@ -20,7 +20,6 @@ export default function SubscriptionConfirmationModal({
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState(null);
 
-  const paymentIntent = subscription.latest_invoice?.payment_intent;
   // Use amountDue from the response or fallback to latest_invoice data
   const amount = subscription.amountDue !== undefined ? subscription.amountDue : (subscription.latest_invoice?.amount_due || 0);
   const currency = (subscription.currency || subscription.latest_invoice?.currency || 'usd').toUpperCase();
@@ -67,7 +66,7 @@ export default function SubscriptionConfirmationModal({
         try {
           const stripe = stripeRef.current;
           if (stripe) {
-            const { paymentIntent: paymentResult, error: stripeError } = await stripe.confirmCardPayment(
+            const { error: stripeError } = await stripe.confirmCardPayment(
               finalizeResult.subscription.clientSecret
             );
 

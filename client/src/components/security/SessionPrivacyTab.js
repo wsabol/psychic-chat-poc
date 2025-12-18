@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 
 /**
  * SessionPrivacyTab - Manage "Stay Logged In" preference
@@ -11,11 +11,7 @@ export default function SessionPrivacyTab({ userId, token, apiUrl }) {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
-  useEffect(() => {
-    loadSessionPreference();
-  }, [userId]);
-
-  const loadSessionPreference = async () => {
+  const loadSessionPreference = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`${apiUrl}/security/2fa-settings/${userId}`, {
@@ -32,7 +28,11 @@ export default function SessionPrivacyTab({ userId, token, apiUrl }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiUrl, userId, token]);
+
+  useEffect(() => {
+    loadSessionPreference();
+  }, [loadSessionPreference]);
 
   const handleTogglePersistentSession = async () => {
     try {

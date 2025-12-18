@@ -21,7 +21,6 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
     useChat(userId, token, !!token, userId);
   
   // Onboarding flow state
-  const [greetingShown, setGreetingShown] = useState(false);
   const [firstMessageSent, setFirstMessageSent] = useState(false);
   const [timerActive, setTimerActive] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(60);
@@ -37,23 +36,7 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
     msg.role === 'user' || msg.role === 'assistant'
   );
 
-  // Show oracle greeting once per day for temp account users
-  useEffect(() => {
-    if (isTemporaryAccount && !greetingShown && displayMessages.length === 0) {
-      // Get today's date (YYYY-MM-DD format)
-      const today = new Date().toISOString().split('T')[0];
-      const lastGreetingDate = localStorage.getItem(`oracle_greeting_date_${userId}`);
-      
-      // Only show greeting if we haven't shown it today
-      if (lastGreetingDate !== today) {
-        setGreetingShown(true);
-        // Store today's date in localStorage
-        localStorage.setItem(`oracle_greeting_date_${userId}`, today);
-      } 
-    }
-  }, [isTemporaryAccount, greetingShown, displayMessages.length, userId]);
-
-  // Check for first user message sent and start 60 second timer
+  // Check for first user message sent and start 60 second timer (temp accounts only)
   useEffect(() => {
     if (isTemporaryAccount && !firstMessageSent) {
       const userMessages = displayMessages.filter(msg => msg.role === 'user');

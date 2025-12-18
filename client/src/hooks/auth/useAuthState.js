@@ -31,9 +31,15 @@ export function useAuthState(checkBillingStatus) {
           // Check session persistence preference and set Firebase persistence
           if (!isTemp) {
             try {
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 5000);
+              
               const persistenceResponse = await fetch(`http://localhost:3000/security/2fa-settings/${firebaseUser.uid}`, {
-                headers: { 'Authorization': `Bearer ${idToken}` }
+                headers: { 'Authorization': `Bearer ${idToken}` },
+                signal: controller.signal
               });
+
+              clearTimeout(timeoutId);
 
               if (persistenceResponse.ok) {
                 const persistenceData = await persistenceResponse.json();
@@ -48,7 +54,12 @@ export function useAuthState(checkBillingStatus) {
                 }
               }
             } catch (err) {
-              console.warn('[AUTH-PERSISTENCE] Could not fetch settings:', err.message);
+              // Silently ignore persistence errors - not critical, just log at debug level
+              if (err.name === 'AbortError') {
+                console.debug('[AUTH-PERSISTENCE] Settings fetch timed out (expected on slow networks)');
+              } else {
+                console.debug('[AUTH-PERSISTENCE] Settings fetch failed (non-critical):', err.message);
+              }
             }
           }
 
@@ -88,7 +99,7 @@ export function useAuthState(checkBillingStatus) {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ userId: firebaseUser.uid, email: firebaseUser.email })
-            }).catch(err => console.warn('[AUDIT] Login log skipped'));
+            }).catch(err => console.debug('[AUDIT] Login log skipped:', err.message));
 
             // Check if 2FA was already verified in THIS SESSION
             const twoFAVerifiedKey = `2fa_verified_${firebaseUser.uid}`;
@@ -102,10 +113,16 @@ export function useAuthState(checkBillingStatus) {
               setLoading(false);
             } else {
               try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                
                 const twoFAResponse = await fetch(`http://localhost:3000/auth/check-2fa/${firebaseUser.uid}`, {
                   method: 'POST',
-                  headers: { 'Content-Type': 'application/json' }
+                  headers: { 'Content-Type': 'application/json' },
+                  signal: controller.signal
                 });
+
+                clearTimeout(timeoutId);
                 const twoFAData = await twoFAResponse.json();
 
                 if (twoFAData.requires2FA) {
@@ -123,7 +140,11 @@ export function useAuthState(checkBillingStatus) {
                   checkBillingStatus(idToken, firebaseUser.uid);
                 }
               } catch (err) {
-                console.warn('[2FA-CHECK] Failed to check 2FA:', err);
+                if (err.name === 'AbortError') {
+                  console.debug('[2FA-CHECK] 2FA check timed out (expected on slow networks), proceeding with authentication');
+                } else {
+                  console.warn('[2FA-CHECK] Failed to check 2FA:', err.message);
+                }
                 setIsAuthenticated(true);
                 // Still check billing status even if 2FA check fails
                 checkBillingStatus(idToken, firebaseUser.uid);

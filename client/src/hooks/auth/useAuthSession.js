@@ -32,7 +32,6 @@ export function useAuthSession() {
     try {
       if (isTemporaryAccount && auth.currentUser) {
         const uid = auth.currentUser.uid;
-        const email = auth.currentUser.email;
 
         let userToken = null;
 

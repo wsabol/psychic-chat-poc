@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useDeviceLocation } from '../../hooks/useDeviceLocation';
+import React, { useState, useCallback, useEffect } from 'react';
 
 /**
  * DevicesTab - Show all logged-in devices and allow logout from specific device
@@ -9,13 +8,8 @@ export default function DevicesTab({ userId, token, apiUrl }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [loggingOut, setLoggingOut] = useState(null);
-  const { getDeviceInfo } = useDeviceLocation();
 
-  useEffect(() => {
-    loadDevices();
-  }, [userId]);
-
-  const loadDevices = async () => {
+  const loadDevices = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -34,7 +28,11 @@ export default function DevicesTab({ userId, token, apiUrl }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiUrl, userId, token]);
+
+  useEffect(() => {
+    loadDevices();
+  }, [loadDevices]);
 
   const handleLogoutDevice = async (deviceId) => {
     if (!window.confirm('Log out this device? You will need to sign in again on that device.')) {

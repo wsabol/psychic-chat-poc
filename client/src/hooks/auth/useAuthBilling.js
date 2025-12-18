@@ -77,7 +77,7 @@ export function useAuthBilling() {
   const checkBillingStatus = useCallback(async (idToken, userId) => {
     try {
       // Check payment method FIRST
-      const hasPayment = await checkPaymentMethod(idToken, userId);
+      await checkPaymentMethod(idToken, userId);
       // Then check subscription AFTER payment check completes
       await checkSubscriptionStatus(idToken, userId);
     } catch (err) {

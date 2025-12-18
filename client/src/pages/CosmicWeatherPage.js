@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import '../styles/responsive.css';
 import './CosmicWeatherPage.css';
 
@@ -19,7 +19,7 @@ export default function CosmicWeatherPage({ userId, token, auth }) {
     };
   }, []);
 
-  const loadCosmicWeather = async () => {
+  const loadCosmicWeather = useCallback(async () => {
     setLoading(true);
     setError(null);
     setCosmicData(null);
@@ -95,11 +95,11 @@ export default function CosmicWeatherPage({ userId, token, auth }) {
       setError('Unable to load today\'s cosmic weather. Please try again.');
       setLoading(false);
     }
-  };
+  }, [userId, token, API_URL]);
 
   useEffect(() => {
     loadCosmicWeather();
-  }, [userId, token, API_URL]);
+  }, [loadCosmicWeather]);
 
   return (
     <div className="page-safe-area cosmic-weather-page">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 
 /**
  * TwoFactorAuthTab - Manage 2FA on/off and method selection
@@ -19,11 +19,7 @@ export default function TwoFactorAuthTab({ userId, token, apiUrl }) {
   const [enabled, setEnabled] = useState(true);
   const [method, setMethod] = useState('email');
 
-  useEffect(() => {
-    loadTwoFASettings();
-  }, [userId]);
-
-  const loadTwoFASettings = async () => {
+  const loadTwoFASettings = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`${apiUrl}/security/2fa-settings/${userId}`, {
@@ -42,7 +38,11 @@ export default function TwoFactorAuthTab({ userId, token, apiUrl }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiUrl, userId, token]);
+
+  useEffect(() => {
+    loadTwoFASettings();
+  }, [loadTwoFASettings]);
 
   const handleSaveTwoFA = async () => {
     try {

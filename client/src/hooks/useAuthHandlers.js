@@ -41,7 +41,7 @@ export function useAuthHandlers(auth, modals, tempFlow) {
         // Register pending migration so backend knows to expect this temp user's data
         if (auth.authUserId) {
             try {
-                const migrationRes = await fetch('http://localhost:3000/migration/register-migration', {
+                await fetch('http://localhost:3000/migration/register-migration', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -88,7 +88,7 @@ export function useAuthHandlers(auth, modals, tempFlow) {
         try {
             // Delete temp account from Firebase and database
             const deleteUrl = `http://localhost:3000/cleanup/delete-temp-account/${auth.authUserId}`;
-            const response = await fetch(deleteUrl, {
+            await fetch(deleteUrl, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${auth.token}` }
             });

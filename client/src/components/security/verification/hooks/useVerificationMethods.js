@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 /**
  * useVerificationMethods - Load and manage verification methods data
@@ -8,7 +8,7 @@ export function useVerificationMethods(userId, token, apiUrl) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const loadMethods = async () => {
+  const loadMethods = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -30,11 +30,11 @@ export function useVerificationMethods(userId, token, apiUrl) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiUrl, userId, token]);
 
   useEffect(() => {
     loadMethods();
-  }, [userId]);
+  }, [loadMethods]);
 
   return { methods, loading, error, reload: loadMethods };
 }

@@ -63,13 +63,6 @@ export function useAppRouting(auth, appExited, showRegisterMode = false, skipPay
             return 'login';
         }
 
-        // ✅ PAYMENT METHOD CHECK - User must have valid payment method BEFORE subscribing
-        // Exception: Temp accounts skip this (trial only)
-        // Exception: If skipPaymentCheck flag set, bypass this check
-        if (!skipPaymentCheck && !auth.isTemporaryAccount && !auth.paymentMethodChecking) {
-            // Payment method check is complete
-        }
-
         // ✅ SUBSCRIPTION CHECK - User must have active subscription
         // Exception: Temp accounts don't need subscriptions (trial only)
         // Exception: If skipSubscriptionCheck flag set, bypass this check
@@ -85,7 +78,7 @@ export function useAppRouting(auth, appExited, showRegisterMode = false, skipPay
 
         // Authenticated, verified, has payment method (or skipping check), and has active subscription (or skipping check) - show chat
         return 'chat';
-    }, [auth.loading, auth.isAuthenticated, auth.isFirstTime, auth.isTemporaryAccount, auth.isEmailUser, auth.emailVerified, auth.hasLoggedOut, auth.hasValidPaymentMethod, auth.paymentMethodChecking, auth.hasActiveSubscription, auth.subscriptionChecking, appExited, showRegisterMode, skipPaymentCheck, skipSubscriptionCheck, hasExitedBefore]);
+    }, [auth.loading, auth.isAuthenticated, auth.isFirstTime, auth.isTemporaryAccount, auth.isEmailUser, auth.emailVerified, auth.hasLoggedOut, auth.hasActiveSubscription, auth.subscriptionChecking, auth.showTwoFactor, auth.tempUserId, auth.tempToken, appExited, showRegisterMode, skipSubscriptionCheck, hasExitedBefore]);
 
     return {
         currentScreen,

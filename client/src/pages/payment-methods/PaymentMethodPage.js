@@ -33,7 +33,7 @@ export default function PaymentMethodPage({ userId, token, auth }) {
 
   useEffect(() => {
     billing.fetchPaymentMethods();
-  }, []);
+  }, [billing]);
 
   const handleAddClick = async () => {
     try {
@@ -44,38 +44,6 @@ export default function PaymentMethodPage({ userId, token, auth }) {
     } catch (err) {
       setCardError(err.message || 'Failed to prepare payment form');
     }
-  };
-
-  const handlePaymentSuccess = async (result) => {
-    
-    try {
-      setLoading(true);
-      const paymentMethodId = result.paymentMethodId;
-
-      // Attach to customer
-      await billing.attachPaymentMethod(paymentMethodId);
-
-      // Set as default
-      await billing.setDefaultPaymentMethod(paymentMethodId);
-
-      // Refresh list
-      await billing.fetchPaymentMethods();
-
-      // Show success
-      setShowAddPaymentForm(false);
-      setCardSuccess(true);
-      setTimeout(() => setCardSuccess(false), 3000);
-    } catch (err) {
-      console.error('[PAGE] Error finalizing payment method:', err);
-      setCardError(err.message || 'Failed to finalize payment method');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePaymentError = (error) => {
-    console.error('[PAGE] Payment error:', error);
-    setCardError(error.message || 'Payment failed');
   };
 
   const handleCardSubmit = async (cardElement) => {
@@ -107,7 +75,7 @@ export default function PaymentMethodPage({ userId, token, auth }) {
 
       const paymentMethodId = paymentMethod.id;
 
-      const { setupIntent: si, error: confirmError } = await stripeRef.current.confirmCardSetup(
+      const { error: confirmError } = await stripeRef.current.confirmCardSetup(
         setupIntent.clientSecret,
         { payment_method: paymentMethodId }
       );
@@ -222,4 +190,3 @@ export default function PaymentMethodPage({ userId, token, auth }) {
     </div>
   );
 }
-
