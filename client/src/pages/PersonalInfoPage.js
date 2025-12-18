@@ -63,6 +63,7 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
+    const [fieldErrors, setFieldErrors] = useState({}); // Track per-field errors
 
     const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
     const isTemporaryAccount = auth?.isTemporaryAccount;
@@ -118,56 +119,61 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
             ...prev,
             [name]: value
         }));
+        // Clear error for this field when user starts typing
+        if (fieldErrors[name]) {
+            setFieldErrors(prev => ({
+                ...prev,
+                [name]: null
+            }));
+        }
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError(null);
+    const validateFields = () => {
+        const errors = {};
 
         if (!isTemporaryAccount) {
             if (!formData.firstName.trim()) {
-                setError('First name is required');
-                setLoading(false);
-                return;
+                errors.firstName = 'First name is required';
             }
             if (!formData.lastName.trim()) {
-                setError('Last name is required');
-                setLoading(false);
-                return;
+                errors.lastName = 'Last name is required';
             }
             if (!formData.sex) {
-                setError('Sex is required');
-                setLoading(false);
-                return;
+                errors.sex = 'Sex is required';
             }
         }
         
         if (!formData.email.trim()) {
-            setError('Email is required');
-            setLoading(false);
-            return;
+            errors.email = 'Email is required';
         }
         if (!formData.birthDate) {
-            setError('Date of birth is required (format: dd-mmm-yyyy, e.g., 09-Feb-1956)');
-            setLoading(false);
+            errors.birthDate = 'Date of birth is required (format: dd-mmm-yyyy, e.g., 09-Feb-1956)';
+        } else {
+            // ✅ Validate birth date format and check age
+            const dateValidation = validateBirthDate(formData.birthDate);
+            if (!dateValidation.isValid) {
+                errors.birthDate = dateValidation.error;
+            } else if (!dateValidation.isAdult) {
+                errors.birthDate = dateValidation.error;
+            }
+        }
+
+        return errors;
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError(null);
+
+        const errors = validateFields();
+        if (Object.keys(errors).length > 0) {
+            setFieldErrors(errors);
+            setError('Please complete all required fields marked in red');
             return;
         }
 
-        // ✅ Validate birth date format and check age
-        const dateValidation = validateBirthDate(formData.birthDate);
-        if (!dateValidation.isValid) {
-            setError(dateValidation.error);
-            setLoading(false);
-            return;
-        }
-
-        // ✅ Check if user is 18+
-        if (!dateValidation.isAdult) {
-            setError(dateValidation.error);
-            setLoading(false);
-            return;
-        }
+        setLoading(true);
+        setFieldErrors({});
 
         try {
             const storageBirthDate = parseDateForStorage(formData.birthDate);
@@ -221,6 +227,8 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
         }
     };
 
+    const hasFieldError = (fieldName) => !!fieldErrors[fieldName];
+
     return (
         <div className="page-safe-area personal-info-page">
             <div className="info-header">
@@ -238,7 +246,7 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
                     
                     {!isTemporaryAccount && (
                         <div className="form-grid">
-                            <div className="form-group">
+                            <div className={`form-group ${hasFieldError('firstName') ? 'form-group-error' : ''}`}>
                                 <label className="form-label">
                                     First Name <span className="required">*</span>
                                 </label>
@@ -248,12 +256,15 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
                                     value={formData.firstName}
                                     onChange={handleChange}
                                     required
-                                    className="form-input"
+                                    className={`form-input ${hasFieldError('firstName') ? 'form-input-error' : ''}`}
                                     placeholder="John"
                                 />
+                                {hasFieldError('firstName') && (
+                                    <span className="field-error-message">{fieldErrors.firstName}</span>
+                                )}
                             </div>
 
-                            <div className="form-group">
+                            <div className={`form-group ${hasFieldError('lastName') ? 'form-group-error' : ''}`}>
                                 <label className="form-label">
                                     Last Name <span className="required">*</span>
                                 </label>
@@ -263,14 +274,17 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
                                     value={formData.lastName}
                                     onChange={handleChange}
                                     required
-                                    className="form-input"
+                                    className={`form-input ${hasFieldError('lastName') ? 'form-input-error' : ''}`}
                                     placeholder="Doe"
                                 />
+                                {hasFieldError('lastName') && (
+                                    <span className="field-error-message">{fieldErrors.lastName}</span>
+                                )}
                             </div>
                         </div>
                     )}
 
-                    <div className="form-group">
+                    <div className={`form-group ${hasFieldError('email') ? 'form-group-error' : ''}`}>
                         <label className="form-label">
                             Email <span className="required">*</span>
                         </label>
@@ -280,21 +294,24 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
                             value={formData.email}
                             onChange={handleChange}
                             required
-                            className="form-input"
+                            className={`form-input ${hasFieldError('email') ? 'form-input-error' : ''}`}
                             placeholder="you@example.com"
                         />
-                        {isTemporaryAccount && (
+                        {hasFieldError('email') && (
+                            <span className="field-error-message">{fieldErrors.email}</span>
+                        )}
+                        {isTemporaryAccount && !hasFieldError('email') && (
                             <p className="form-hint">This temporary email can be changed when you create an account</p>
                         )}
                     </div>
                 </section>
 
-                {/* Date & Time of Birth Section - MOVED BEFORE Place of Birth */}
+                {/* Date & Time of Birth Section */}
                 <section className="form-section">
                     <h3 className="heading-secondary">⏰ Date & Time of Birth</h3>
                     
                     <div className="form-grid">
-                        <div className="form-group">
+                        <div className={`form-group ${hasFieldError('birthDate') ? 'form-group-error' : ''}`}>
                             <label className="form-label">
                                 Date of Birth <span className="required">*</span>
                             </label>
@@ -304,9 +321,12 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
                                 value={formData.birthDate}
                                 onChange={handleChange}
                                 required
-                                className="form-input"
+                                className={`form-input ${hasFieldError('birthDate') ? 'form-input-error' : ''}`}
                                 placeholder="dd-mmm-yyyy (e.g., 09-Feb-1956)"
                             />
+                            {hasFieldError('birthDate') && (
+                                <span className="field-error-message">{fieldErrors.birthDate}</span>
+                            )}
                         </div>
 
                         <div className="form-group">
@@ -381,7 +401,7 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
                     <h3 className="heading-secondary">✨ Additional Information</h3>
                     
                     <div className="form-grid">
-                        <div className="form-group">
+                        <div className={`form-group ${hasFieldError('sex') ? 'form-group-error' : ''}`}>
                             <label className="form-label">
                                 Sex {!isTemporaryAccount && <span className="required">*</span>} {isTemporaryAccount && <span className="optional">(Optional)</span>}
                             </label>
@@ -390,7 +410,7 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
                                 value={formData.sex}
                                 onChange={handleChange}
                                 required={!isTemporaryAccount}
-                                className="form-input form-select"
+                                className={`form-input form-select ${hasFieldError('sex') ? 'form-input-error' : ''}`}
                             >
                                 <option value="">Select...</option>
                                 <option value="Male">Male</option>
@@ -399,6 +419,9 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
                                 <option value="Prefer not to say">Prefer not to say</option>
                                 <option value="Unspecified">Unspecified</option>
                             </select>
+                            {hasFieldError('sex') && (
+                                <span className="field-error-message">{fieldErrors.sex}</span>
+                            )}
                         </div>
 
                         <div className="form-group">
@@ -416,18 +439,26 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
                         </div>
                     </div>
                 </section>
-
-                {/* Form Actions */}
-                <div className="form-actions">
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="btn-primary"
-                    >
-                        {loading ? 'Saving...' : 'Save Information'}
-                    </button>
-                </div>
             </form>
+
+            {/* Floating Save Button Bubble */}
+            <button
+                type="submit"
+                onClick={handleSubmit}
+                disabled={loading}
+                className="floating-save-button"
+                title={loading ? 'Saving...' : 'Save Information'}
+            >
+                <span className="bubble-icon">💾</span>
+                <span className="bubble-text">{loading ? 'Saving...' : 'Save'}</span>
+            </button>
+
+            {/* Floating Success/Error Bubble */}
+            {success && (
+                <div className="floating-feedback-bubble floating-success">
+                    ✓ Saved!
+                </div>
+            )}
         </div>
     );
 }

@@ -70,6 +70,10 @@
   gap: var(--spacing-sm);
 }
 
+.form-group-error {
+  /* Error state - highlights entire field group */
+}
+
 .form-label {
   font-weight: 600;
   font-size: 0.95rem;
@@ -103,6 +107,36 @@
   outline: none;
   border-color: #9370db;
   box-shadow: 0 0 0 3px rgba(147, 112, 219, 0.1);
+}
+
+/* ✅ ERROR STATE - Red border and background */
+.form-input-error {
+  border-color: #f44336 !important;
+  border-width: 2px;
+  background-color: #ffebee;
+  box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1) !important;
+}
+
+.form-input-error:focus {
+  border-color: #d32f2f !important;
+  box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.2) !important;
+}
+
+/* ✅ ERROR MESSAGE - Display under field */
+.field-error-message {
+  color: #f44336;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-top: -0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  animation: slideInDown 0.2s ease;
+}
+
+.field-error-message::before {
+  content: '⚠️';
+  font-size: 0.75rem;
 }
 
 .form-select {
@@ -161,19 +195,91 @@
 }
 
 /* ============================================
-   FORM ACTIONS
+   FLOATING SAVE BUTTON - Bubble Style
    ============================================ */
 
-.form-actions {
+.floating-save-button {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7c63d8 0%, #9370db 100%);
+  color: white;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(124, 99, 216, 0.4);
+  font-weight: bold;
+  font-size: 0.75rem;
+  transition: all 0.3s ease;
   display: flex;
-  gap: var(--spacing-md);
-  padding-top: var(--spacing-lg);
-  border-top: 1px solid var(--color-border);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  z-index: 100;
+  touch-action: manipulation;
 }
 
-.form-actions .btn-primary {
-  flex: 1;
-  min-height: 48px;
+.floating-save-button:hover:not(:disabled) {
+  transform: scale(1.1);
+  box-shadow: 0 6px 28px rgba(124, 99, 216, 0.6);
+}
+
+.floating-save-button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.floating-save-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.bubble-icon {
+  font-size: 1.5rem;
+}
+
+.bubble-text {
+  font-size: 0.7rem;
+  line-height: 1;
+  max-width: 60px;
+  text-align: center;
+}
+
+/* ============================================
+   FLOATING FEEDBACK BUBBLE
+   ============================================ */
+
+.floating-feedback-bubble {
+  position: fixed;
+  bottom: 100px;
+  right: 2rem;
+  padding: 1rem 1.5rem;
+  background: white;
+  color: #2e7d32;
+  border-radius: 50px;
+  box-shadow: 0 4px 20px rgba(46, 125, 50, 0.3);
+  font-weight: 600;
+  font-size: 0.9rem;
+  animation: slideInUp 0.3s ease;
+  z-index: 99;
+}
+
+.floating-feedback-bubble.floating-success {
+  background: #e8f5e9;
+  border: 2px solid #4caf50;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ============================================
@@ -182,7 +288,7 @@
 
 @media (max-width: 767px) {
   .personal-info-page {
-    padding-bottom: var(--spacing-lg);
+    padding-bottom: 120px; /* Space for floating button */
   }
 
   .form-section {
@@ -200,6 +306,41 @@
   .form-label {
     font-size: 0.9rem;
   }
+
+  .floating-save-button {
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 70px;
+    height: 70px;
+  }
+
+  .bubble-icon {
+    font-size: 1.25rem;
+  }
+
+  .bubble-text {
+    font-size: 0.65rem;
+  }
+
+  .floating-feedback-bubble {
+    bottom: 85px;
+    right: 1.5rem;
+  }
+}
+
+/* ============================================
+   TABLET ADJUSTMENTS
+   ============================================ */
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .personal-info-page {
+    padding-bottom: var(--spacing-xl);
+  }
+
+  .floating-save-button {
+    width: 75px;
+    height: 75px;
+  }
 }
 
 /* ============================================
@@ -212,9 +353,32 @@
   outline-offset: 2px;
 }
 
+.floating-save-button:focus {
+  outline: 3px solid #9370db;
+  outline-offset: 2px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .form-error-alert,
-  .form-success-alert {
+  .form-success-alert,
+  .field-error-message,
+  .floating-feedback-bubble,
+  .floating-save-button {
     animation: none;
+    transition: none;
+  }
+}
+
+/* ============================================
+   HIGH CONTRAST MODE
+   ============================================ */
+
+@media (prefers-contrast: more) {
+  .form-input-error {
+    border-width: 3px;
+  }
+
+  .floating-save-button {
+    border: 3px solid white;
   }
 }
