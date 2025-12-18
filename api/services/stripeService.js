@@ -7,12 +7,6 @@ const stripe = process.env.STRIPE_SECRET_KEY
     })
   : null;
 
-function ensureStripeConfigured() {
-  if (!stripe) {
-    throw new Error('Stripe is not configured. Set STRIPE_SECRET_KEY in environment variables.');
-  }
-}
-
 export async function getOrCreateStripeCustomer(userId, userEmail) {
   try {
     console.log('[STRIPE] getOrCreateStripeCustomer called with userId:', userId);
@@ -22,63 +16,44 @@ export async function getOrCreateStripeCustomer(userId, userEmail) {
       return null;
     }
     
-    // Use encrypted stripe_customer_id_encrypted column with encryption key from .env
     const query = `SELECT pgp_sym_decrypt(stripe_customer_id_encrypted, $1) as stripe_customer_id 
                    FROM user_personal_info WHERE user_id = $2`;
     const result = await db.query(query, [process.env.ENCRYPTION_KEY, userId]);
-    console.log('[STRIPE] Database query result:', result.rows[0]);
     
     let storedCustomerId = result.rows[0]?.stripe_customer_id;
-    console.log('[STRIPE] Decrypted storedCustomerId:', storedCustomerId);
     
     if (storedCustomerId) {
-      console.log('[STRIPE] Found stored customer ID, verifying it exists on Stripe:', storedCustomerId);
       try {
-        // Verify the customer still exists on Stripe
         const customer = await stripe.customers.retrieve(storedCustomerId);
         console.log('[STRIPE] Using existing customer:', storedCustomerId);
         return storedCustomerId;
       } catch (retrieveError) {
-        console.log('[STRIPE] Error retrieving customer:', retrieveError.type, retrieveError.raw?.code);
-        // Customer doesn't exist on Stripe anymore
         if (retrieveError.type === 'StripeInvalidRequestError' && retrieveError.raw?.code === 'resource_missing') {
-          console.warn('[STRIPE] Stored customer ID', storedCustomerId, 'no longer exists on Stripe, clearing and creating new one');
-          // Clear the invalid customer ID from database
           await db.query(
             `UPDATE user_personal_info SET stripe_customer_id_encrypted = NULL WHERE user_id = $1`,
             [userId]
           );
-          console.log('[STRIPE] Cleared old customer ID from database');
-          storedCustomerId = null; // Clear the variable so we create a new one
+          storedCustomerId = null;
         } else {
-          console.error('[STRIPE] Unexpected error retrieving customer:', retrieveError);
           throw retrieveError;
         }
       }
-    } else {
-      console.log('[STRIPE] No stored customer found for userId:', userId);
     }
 
     console.log('[STRIPE] Creating new customer for userId:', userId, 'email:', userEmail);
     const customer = await stripe.customers.create({
       email: userEmail,
-      metadata: {
-        userId: userId,
-      },
+      metadata: { userId: userId },
     });
 
-    console.log('[STRIPE] Created customer:', customer.id);
-
-    // Store encrypted customer ID with encryption key from .env
     const updateQuery = `UPDATE user_personal_info 
                          SET stripe_customer_id_encrypted = pgp_sym_encrypt($1, $2) 
                          WHERE user_id = $3`;
     await db.query(updateQuery, [customer.id, process.env.ENCRYPTION_KEY, userId]);
 
-    console.log('[STRIPE] Stored encrypted customer ID for user:', userId);
     return customer.id;
   } catch (error) {
-    console.error('[STRIPE] Error getting/creating customer:', error.message || error);
+    console.error('[STRIPE] Error getting/creating customer:', error.message);
     throw error;
   }
 }
@@ -86,20 +61,17 @@ export async function getOrCreateStripeCustomer(userId, userEmail) {
 export async function createSetupIntent(customerId) {
   try {
     if (!stripe) {
-      console.warn('[STRIPE] Not configured - cannot create setup intent');
       throw new Error('Stripe is not configured. Please check your STRIPE_SECRET_KEY.');
     }
 
     const intent = await stripe.setupIntents.create({
       customer: customerId,
-      payment_method_types: ['card', 'us_bank_account'],
+      payment_method_types: ['card'],
     });
     return intent;
   } catch (error) {
     console.error('[STRIPE] Error creating setup intent');
     console.error('[STRIPE] Error message:', error.message);
-    console.error('[STRIPE] Status code:', error.statusCode);
-    console.error('[STRIPE] Error type:', error.type);
     throw error;
   }
 }
@@ -108,50 +80,20 @@ export async function listPaymentMethods(customerId) {
   try {
     if (!stripe) {
       console.warn('[STRIPE] Not configured - returning empty methods');
-      return { cards: [], bankAccounts: [] };
+      return [];
     }
 
-    console.log('[STRIPE] Listing ATTACHED payment methods for customer:', customerId);
+    console.log('[STRIPE] Listing payment methods for customer:', customerId);
 
     const pmResponse = await stripe.paymentMethods.list({
       customer: customerId,
       limit: 100,
     });
     
-    const allPaymentMethods = pmResponse.data;
-    console.log(`[STRIPE] Found ${allPaymentMethods.length} attached payment methods`);
-
-    const cards = allPaymentMethods.filter(pm => pm.type === 'card');
-    let bankAccounts = allPaymentMethods.filter(pm => pm.type === 'us_bank_account');
-
+    const cards = pmResponse.data.filter(pm => pm.type === 'card');
     console.log('[STRIPE] Attached cards:', cards.length);
-    console.log('[STRIPE] Attached bank accounts:', bankAccounts.length);
-    
-    if (bankAccounts.length > 0) {
-      console.log('[STRIPE] Fetching full details for bank accounts');
-      const enrichedBanks = [];
-      for (const bank of bankAccounts) {
-        try {
-          const fullDetails = await stripe.paymentMethods.retrieve(bank.id);
-          enrichedBanks.push(fullDetails);
-        } catch (err) {
-          console.error(`[STRIPE] Error retrieving ${bank.id}:`, err.message);
-          enrichedBanks.push(bank);
-        }
-      }
-      bankAccounts = enrichedBanks;
-      
-      console.log('[STRIPE] Bank account details:', bankAccounts.map(b => ({
-        id: b.id,
-        last4: b.us_bank_account?.last4,
-        status: b.us_bank_account?.verification_status,
-      })));
-    }
 
-    return {
-      cards: cards,
-      bankAccounts: bankAccounts,
-    };
+    return cards;
   } catch (error) {
     console.error('[STRIPE] Error listing payment methods:', error);
     throw error;
@@ -164,8 +106,8 @@ export async function deletePaymentMethod(paymentMethodId) {
       throw new Error('Stripe is not configured.');
     }
 
-    const result = await stripe.paymentMethods.detach(paymentMethodId);
-    return result;
+    await stripe.paymentMethods.detach(paymentMethodId);
+    return { success: true };
   } catch (error) {
     console.error('[STRIPE] Error deleting payment method:', error);
     throw error;
@@ -207,9 +149,6 @@ export async function createSubscription(customerId, priceId) {
     console.log('[STRIPE] Subscription created:', {
       id: subscription.id,
       status: subscription.status,
-      amount_due: subscription.latest_invoice?.amount_due,
-      total: subscription.latest_invoice?.total,
-      currency: subscription.latest_invoice?.currency,
     });
     
     return subscription;
@@ -222,7 +161,6 @@ export async function createSubscription(customerId, priceId) {
 export async function getSubscriptions(customerId) {
   try {
     if (!stripe) {
-      console.warn('[STRIPE] Not configured - returning empty subscriptions');
       return [];
     }
 
@@ -256,7 +194,6 @@ export async function cancelSubscription(subscriptionId) {
 export async function getInvoices(customerId) {
   try {
     if (!stripe) {
-      console.warn('[STRIPE] Not configured - returning empty invoices');
       return [];
     }
 
@@ -274,7 +211,6 @@ export async function getInvoices(customerId) {
 export async function getCharges(customerId) {
   try {
     if (!stripe) {
-      console.warn('[STRIPE] Not configured - returning empty charges');
       return [];
     }
 
@@ -292,7 +228,6 @@ export async function getCharges(customerId) {
 export async function getAvailablePrices() {
   try {
     if (!stripe) {
-      console.warn('[STRIPE] Not configured - returning empty prices list');
       return [];
     }
     const prices = await stripe.prices.list({
@@ -321,95 +256,6 @@ export function verifyWebhookSignature(body, signature) {
   }
 }
 
-/**
- * FIXED: Verify bank account by getting payment method from setup intent
- * then calling verifyMicrodeposits on the payment method
- */
-export async function verifyBankSetupIntent(setupIntentId, amounts) {
-  try {
-    if (!stripe) {
-      throw new Error('Stripe is not configured.');
-    }
-
-    if (!setupIntentId || !amounts || amounts.length !== 2) {
-      throw new Error('Invalid setup intent ID or amounts');
-    }
-
-    console.log(`[STRIPE] Verifying setup intent ${setupIntentId} with amounts:`, amounts);
-
-    // Get the setup intent and extract the payment method ID
-    const setupIntent = await stripe.setupIntents.retrieve(setupIntentId);
-    const paymentMethodId = setupIntent.payment_method;
-
-    if (!paymentMethodId) {
-      throw new Error('No payment method found in setup intent');
-    }
-
-    console.log(`[STRIPE] Found payment method in setup intent: ${paymentMethodId}`);
-
-    // Use the CORRECT Stripe API: verifyMicrodeposits on the payment method
-    const result = await stripe.paymentMethods.verifyMicrodeposits(
-      paymentMethodId,
-      { amounts: amounts }
-    );
-
-    console.log(`[STRIPE] Microdeposit verification result - Status:`, result.us_bank_account?.verification_status);
-    return result;
-  } catch (error) {
-    console.error('[STRIPE] Error verifying bank setup intent:', error.message);
-    throw error;
-  }
-}
-
-export async function getPaymentMethodDetails(paymentMethodId) {
-  try {
-    if (!stripe) {
-      throw new Error('Stripe is not configured.');
-    }
-
-    const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
-    
-    console.log(`[STRIPE] Retrieved payment method ${paymentMethodId}:`, {
-      type: paymentMethod.type,
-      status: paymentMethod.us_bank_account?.verification_status,
-    });
-
-    return paymentMethod;
-  } catch (error) {
-    console.error('[STRIPE] Error retrieving payment method:', error.message);
-    throw error;
-  }
-}
-
-export async function verifyPaymentMethodMicrodeposits(paymentMethodId, amounts) {
-  try {
-    if (!stripe) {
-      throw new Error('Stripe is not configured.');
-    }
-
-    if (!paymentMethodId || !amounts || amounts.length !== 2) {
-      throw new Error('Payment method ID and two amounts are required');
-    }
-
-    console.log(`[STRIPE] Verifying payment method ${paymentMethodId} with amounts:`, amounts);
-
-    const result = await stripe.paymentMethods.verifyMicrodeposits(
-      paymentMethodId,
-      { amounts: amounts }
-    );
-
-    console.log(`[STRIPE] Verification result - Status:`, result.us_bank_account?.verification_status);
-    return result;
-  } catch (error) {
-    console.error('[STRIPE] Error verifying payment method:', error.message);
-    throw error;
-  }
-}
-
-/**
- * Store subscription data in database with encrypted subscription ID
- * CRITICAL: stripe_subscription_id must be encrypted with process.env.ENCRYPTION_KEY
- */
 export async function storeSubscriptionData(userId, stripeSubscriptionId, subscriptionData) {
   try {
     if (!process.env.ENCRYPTION_KEY) {
@@ -427,15 +273,15 @@ export async function storeSubscriptionData(userId, stripeSubscriptionId, subscr
       WHERE user_id = $9`;
 
     const result = await db.query(query, [
-      stripeSubscriptionId,                           // $1 - encrypted
-      process.env.ENCRYPTION_KEY,                    // $2 - encryption key
-      subscriptionData.status,                        // $3 - subscription_status
-      subscriptionData.current_period_start,          // $4 - current_period_start
-      subscriptionData.current_period_end,            // $5 - current_period_end
-      subscriptionData.plan_name || null,             // $6 - plan_name
-      subscriptionData.price_amount || null,          // $7 - price_amount
-      subscriptionData.price_interval || null,        // $8 - price_interval
-      userId                                          // $9 - user_id
+      stripeSubscriptionId,
+      process.env.ENCRYPTION_KEY,
+      subscriptionData.status,
+      subscriptionData.current_period_start,
+      subscriptionData.current_period_end,
+      subscriptionData.plan_name || null,
+      subscriptionData.price_amount || null,
+      subscriptionData.price_interval || null,
+      userId
     ]);
 
     console.log('[STRIPE] Subscription data stored for user:', userId);
@@ -446,9 +292,6 @@ export async function storeSubscriptionData(userId, stripeSubscriptionId, subscr
   }
 }
 
-/**
- * Retrieve encrypted subscription data from database
- */
 export async function getStoredSubscriptionData(userId) {
   try {
     if (!process.env.ENCRYPTION_KEY) {
@@ -478,9 +321,6 @@ export async function getStoredSubscriptionData(userId) {
   }
 }
 
-/**
- * Update subscription status in database (called by webhooks)
- */
 export async function updateSubscriptionStatus(userId, statusUpdate) {
   try {
     if (!process.env.ENCRYPTION_KEY) {
@@ -494,13 +334,13 @@ export async function updateSubscriptionStatus(userId, statusUpdate) {
       WHERE user_id = $4`;
 
     const result = await db.query(query, [
-      statusUpdate.status,                // $1 - subscription_status
-      statusUpdate.current_period_start,  // $2 - current_period_start
-      statusUpdate.current_period_end,    // $3 - current_period_end
-      userId                              // $4 - user_id
+      statusUpdate.status,
+      statusUpdate.current_period_start,
+      statusUpdate.current_period_end,
+      userId
     ]);
 
-    console.log('[STRIPE] Subscription status updated for user:', userId, 'status:', statusUpdate.status);
+    console.log('[STRIPE] Subscription status updated for user:', userId);
     return result;
   } catch (error) {
     console.error('[STRIPE] Error updating subscription status:', error);

@@ -30,7 +30,7 @@ router.get('/payment-methods', authenticateToken, async (req, res) => {
     const defaultPaymentMethodId = customer.invoice_settings?.default_payment_method || null;
     
     res.json({
-      ...methods,
+      cards: methods,
       defaultPaymentMethodId,
     });
   } catch (error) {
