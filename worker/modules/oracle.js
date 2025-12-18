@@ -186,9 +186,10 @@ export async function callOracle(systemPrompt, messageHistory, userMessage) {
             model: "gpt-4o-mini",
             messages: [
                 { role: "system", content: systemPrompt },
-                ...messageHistory.reverse(),
+                ...messageHistory, // Already in DESC order from getMessageHistory
                 { role: "user", content: userMessage },
             ],
+            timeout: 30000, // 30 second timeout to prevent hanging
         });
         return completion.choices[0]?.message?.content || "";
     } catch (err) {
