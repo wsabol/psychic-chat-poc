@@ -104,18 +104,13 @@ router.post('/complete-subscription/:subscriptionId', authenticateToken, async (
       return res.status(400).json({ error: 'subscriptionId is required' });
     }
 
-    console.log('[BILLING] Completing subscription:', subscriptionId);
-
     // Retrieve subscription with latest invoice and payment intent
     const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
       expand: ['latest_invoice.payment_intent'],
     });
 
-    console.log('[BILLING] Subscription status:', subscription.status);
-
     // Only process if incomplete
     if (subscription.status !== 'incomplete') {
-      console.log('[BILLING] ℹ️ Subscription already ' + subscription.status + ', returning current state');
       return res.json({
         success: true,
         subscription: {
@@ -134,13 +129,9 @@ router.post('/complete-subscription/:subscriptionId', authenticateToken, async (
     const invoiceId = subscription.latest_invoice.id;
     const invoice = await stripe.invoices.retrieve(invoiceId);
 
-    console.log('[BILLING] Invoice status:', invoice.status);
-
     // Step 1: Finalize invoice if still in draft
     if (invoice.status === 'draft') {
-      console.log('[BILLING] Finalizing draft invoice...');
       const finalizedInvoice = await stripe.invoices.finalizeInvoice(invoiceId);
-      console.log('[BILLING] ✓ Invoice finalized, status:', finalizedInvoice.status);
       
       // After finalization, Stripe automatically attempts payment
       // Get updated subscription and invoice to check payment status
@@ -157,9 +148,7 @@ router.post('/complete-subscription/:subscriptionId', authenticateToken, async (
           amountDue: updatedSub.latest_invoice?.amount_due || 0,
         },
       });
-    } else {
-      console.log('[BILLING] ℹ️ Invoice already ' + invoice.status + ', payment already in progress');
-      
+    } else { 
       const updatedSub = await stripe.subscriptions.retrieve(subscriptionId, {
         expand: ['latest_invoice.payment_intent'],
       });

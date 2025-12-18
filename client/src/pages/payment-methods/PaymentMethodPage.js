@@ -47,7 +47,6 @@ export default function PaymentMethodPage({ userId, token, auth }) {
   };
 
   const handlePaymentSuccess = async (result) => {
-    console.log('[PAGE] Payment method added successfully:', result);
     
     try {
       setLoading(true);
@@ -55,11 +54,9 @@ export default function PaymentMethodPage({ userId, token, auth }) {
 
       // Attach to customer
       await billing.attachPaymentMethod(paymentMethodId);
-      console.log('[PAGE] Payment method attached');
 
       // Set as default
       await billing.setDefaultPaymentMethod(paymentMethodId);
-      console.log('[PAGE] Payment method set as default');
 
       // Refresh list
       await billing.fetchPaymentMethods();
@@ -109,7 +106,6 @@ export default function PaymentMethodPage({ userId, token, auth }) {
       }
 
       const paymentMethodId = paymentMethod.id;
-      console.log('[CARD] Payment method created:', paymentMethodId);
 
       const { setupIntent: si, error: confirmError } = await stripeRef.current.confirmCardSetup(
         setupIntent.clientSecret,
@@ -122,15 +118,11 @@ export default function PaymentMethodPage({ userId, token, auth }) {
         return;
       }
 
-      console.log('[CARD] Setup succeeded');
-
       // Attach to customer
       await billing.attachPaymentMethod(paymentMethodId);
-      console.log('[CARD] Payment method attached');
 
       // Set as default
       await billing.setDefaultPaymentMethod(paymentMethodId);
-      console.log('[CARD] Payment method set as default');
 
       // Refresh list
       await billing.fetchPaymentMethods();

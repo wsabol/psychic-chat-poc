@@ -59,7 +59,6 @@ async function calculateBirthChart(birthData) {
  */
 async function fixAstrologyData() {
     try {
-        console.log('[FIX-ASTROLOGY] Starting astrology data fix...');
         
         // Get all users with astrology data but missing birth chart data
         const { rows } = await db.query(
@@ -67,11 +66,8 @@ async function fixAstrologyData() {
              WHERE astrology_data ->> 'sun_sign' IS NULL`
         );
         
-        console.log(`[FIX-ASTROLOGY] Found ${rows.length} users with incomplete astrology data`);
-        
         for (const row of rows) {
             const userId = row.user_id;
-            console.log(`\n[FIX-ASTROLOGY] Processing user: ${userId}`);
             
             try {
                 // Fetch user's personal information (encrypted)
@@ -88,20 +84,12 @@ async function fixAstrologyData() {
                     [process.env.ENCRYPTION_KEY, userId]
                 );
                 
-                if (!personalInfoRows.length) {
-                    console.log(`[FIX-ASTROLOGY] No personal info found for ${userId}, skipping`);
-                    continue;
-                }
-                
                 const info = personalInfoRows[0];
                 
                 // Validate complete birth data
                 if (!info.birth_date || !info.birth_time || !info.birth_country || !info.birth_province || !info.birth_city) {
-                    console.log(`[FIX-ASTROLOGY] Incomplete birth information for ${userId}, skipping`);
                     continue;
                 }
-                
-                console.log(`[FIX-ASTROLOGY] Calculating birth chart for ${userId}...`);
                 
                 // Calculate birth chart
                 const calculatedChart = await calculateBirthChart({
@@ -148,18 +136,10 @@ async function fixAstrologyData() {
                     [JSON.stringify(mergedData), userId]
                 );
                 
-                console.log(`[FIX-ASTROLOGY] ✅ Fixed ${userId}:`);
-                console.log(`  - Sun: ${calculatedChart.sun_sign} (${calculatedChart.sun_degree}°)`);
-                console.log(`  - Moon: ${calculatedChart.moon_sign} (${calculatedChart.moon_degree}°)`);
-                console.log(`  - Rising: ${calculatedChart.rising_sign} (${calculatedChart.rising_degree}°)`);
-                
             } catch (err) {
                 console.error(`[FIX-ASTROLOGY] Error processing user ${userId}:`, err.message);
             }
         }
-        
-        console.log(`\n[FIX-ASTROLOGY] ✅ Astrology data fix completed!`);
-        process.exit(0);
         
     } catch (err) {
         console.error('[FIX-ASTROLOGY] Fatal error:', err.message);

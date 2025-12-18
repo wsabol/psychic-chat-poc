@@ -68,17 +68,6 @@ export function useAppRouting(auth, appExited, showRegisterMode = false, skipPay
         // Exception: If skipPaymentCheck flag set, bypass this check
         if (!skipPaymentCheck && !auth.isTemporaryAccount && !auth.paymentMethodChecking) {
             // Payment method check is complete
-            if (!auth.hasValidPaymentMethod) {
-                // No valid payment method - show payment setup screen
-                console.log('[ROUTING] Blocking - No valid payment method');
-                return 'paymentMethodRequired';
-            }
-        }
-        
-        // If still checking payment method and not skipping, show loading
-        if (!skipPaymentCheck && !auth.isTemporaryAccount && auth.paymentMethodChecking) {
-            console.log('[ROUTING] Loading - Checking payment method');
-            return 'loading';
         }
 
         // ✅ SUBSCRIPTION CHECK - User must have active subscription
@@ -86,26 +75,14 @@ export function useAppRouting(auth, appExited, showRegisterMode = false, skipPay
         // Exception: If skipSubscriptionCheck flag set, bypass this check
         if (!skipSubscriptionCheck && !auth.isTemporaryAccount && !auth.subscriptionChecking) {
             // Subscription check is complete (not checking)
-            console.log('[ROUTING] Subscription check complete:', {
-                skipSubscriptionCheck,
-                isTemporaryAccount: auth.isTemporaryAccount,
-                hasActiveSubscription: auth.hasActiveSubscription,
-                subscriptionChecking: auth.subscriptionChecking
-            });
             if (!auth.hasActiveSubscription) {
                 // No active subscription - show subscription required screen
-                console.log('[ROUTING] Blocking - No active subscription');
                 return 'subscriptionRequired';
             }
         }
         
         // If still checking subscription and not skipping, show loading
-        if (!skipSubscriptionCheck && !auth.isTemporaryAccount && auth.subscriptionChecking) {
-            console.log('[ROUTING] Loading - Checking subscription');
-            return 'loading';
-        }
 
-        console.log('[ROUTING] Allowing chat access');
         // Authenticated, verified, has payment method (or skipping check), and has active subscription (or skipping check) - show chat
         return 'chat';
     }, [auth.loading, auth.isAuthenticated, auth.isFirstTime, auth.isTemporaryAccount, auth.isEmailUser, auth.emailVerified, auth.hasLoggedOut, auth.hasValidPaymentMethod, auth.paymentMethodChecking, auth.hasActiveSubscription, auth.subscriptionChecking, appExited, showRegisterMode, skipPaymentCheck, skipSubscriptionCheck, hasExitedBefore]);

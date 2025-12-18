@@ -37,7 +37,6 @@ export default function BankVerificationModal({
         return;
       }
 
-      console.log('[BANK-VERIFY] Verifying with amounts:', [amt1, amt2]);
       if (onVerify) {
         await onVerify([amt1, amt2]);
       }

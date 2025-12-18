@@ -34,8 +34,6 @@ export default function PaymentVerificationModal({
         setError('Amounts must be valid numbers');
         return;
       }
-
-      console.log('[VERIFY-MODAL] Verifying with amounts:', [amt1, amt2]);
       await onVerify([amt1, amt2]);
     } catch (err) {
       console.error('[VERIFY-MODAL] Error:', err);

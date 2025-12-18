@@ -72,24 +72,17 @@ export async function listPaymentMethods(customerId) {
       return { cards: [], bankAccounts: [] };
     }
 
-    console.log('[STRIPE] Listing ATTACHED payment methods for customer:', customerId);
-
     const pmResponse = await stripe.paymentMethods.list({
       customer: customerId,
       limit: 100,
     });
     
     const allPaymentMethods = pmResponse.data;
-    console.log(`[STRIPE] Found ${allPaymentMethods.length} attached payment methods`);
 
     const cards = allPaymentMethods.filter(pm => pm.type === 'card');
     let bankAccounts = allPaymentMethods.filter(pm => pm.type === 'us_bank_account');
-
-    console.log('[STRIPE] Attached cards:', cards.length);
-    console.log('[STRIPE] Attached bank accounts:', bankAccounts.length);
     
     if (bankAccounts.length > 0) {
-      console.log('[STRIPE] Fetching full details for bank accounts');
       const enrichedBanks = [];
       for (const bank of bankAccounts) {
         try {
@@ -102,11 +95,6 @@ export async function listPaymentMethods(customerId) {
       }
       bankAccounts = enrichedBanks;
       
-      console.log('[STRIPE] Bank account details:', bankAccounts.map(b => ({
-        id: b.id,
-        last4: b.us_bank_account?.last4,
-        status: b.us_bank_account?.verification_status,
-      })));
     }
 
     return {
@@ -163,14 +151,6 @@ export async function createSubscription(customerId, priceId) {
       payment_behavior: 'default_incomplete',
       collection_method: 'charge_automatically',
       expand: ['latest_invoice.payment_intent'],
-    });
-    
-    console.log('[STRIPE] Subscription created:', {
-      id: subscription.id,
-      status: subscription.status,
-      amount_due: subscription.latest_invoice?.amount_due,
-      total: subscription.latest_invoice?.total,
-      currency: subscription.latest_invoice?.currency,
     });
     
     return subscription;
@@ -296,8 +276,6 @@ export async function verifyBankSetupIntent(setupIntentId, amounts) {
       throw new Error('Invalid setup intent ID or amounts');
     }
 
-    console.log(`[STRIPE] Verifying setup intent ${setupIntentId} with amounts:`, amounts);
-
     // Get the setup intent and extract the payment method ID
     const setupIntent = await stripe.setupIntents.retrieve(setupIntentId);
     const paymentMethodId = setupIntent.payment_method;
@@ -306,15 +284,12 @@ export async function verifyBankSetupIntent(setupIntentId, amounts) {
       throw new Error('No payment method found in setup intent');
     }
 
-    console.log(`[STRIPE] Found payment method in setup intent: ${paymentMethodId}`);
-
     // Use the CORRECT Stripe API: verifyMicrodeposits on the payment method
     const result = await stripe.paymentMethods.verifyMicrodeposits(
       paymentMethodId,
       { amounts: amounts }
     );
 
-    console.log(`[STRIPE] Microdeposit verification result - Status:`, result.us_bank_account?.verification_status);
     return result;
   } catch (error) {
     console.error('[STRIPE] Error verifying bank setup intent:', error.message);
@@ -329,11 +304,6 @@ export async function getPaymentMethodDetails(paymentMethodId) {
     }
 
     const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
-    
-    console.log(`[STRIPE] Retrieved payment method ${paymentMethodId}:`, {
-      type: paymentMethod.type,
-      status: paymentMethod.us_bank_account?.verification_status,
-    });
 
     return paymentMethod;
   } catch (error) {
@@ -352,14 +322,12 @@ export async function verifyPaymentMethodMicrodeposits(paymentMethodId, amounts)
       throw new Error('Payment method ID and two amounts are required');
     }
 
-    console.log(`[STRIPE] Verifying payment method ${paymentMethodId} with amounts:`, amounts);
 
     const result = await stripe.paymentMethods.verifyMicrodeposits(
       paymentMethodId,
       { amounts: amounts }
     );
 
-    console.log(`[STRIPE] Verification result - Status:`, result.us_bank_account?.verification_status);
     return result;
   } catch (error) {
     console.error('[STRIPE] Error verifying payment method:', error.message);

@@ -26,8 +26,6 @@ export function useBankAccountFlow(token) {
       setStep('connecting');
       setGlobalError(null);
 
-      console.log('[FLOW] Starting bank account connection...');
-
       // Step 1: Create SetupIntent
       const setupIntentData = await setupIntent.createSetupIntent();
 
@@ -50,7 +48,6 @@ export function useBankAccountFlow(token) {
       });
 
       setStep('mandate');
-      console.log('[FLOW] Ready for mandate acceptance');
     } catch (err) {
       const message = err.message || 'Failed to connect bank account';
       setGlobalError(message);
@@ -68,8 +65,6 @@ export function useBankAccountFlow(token) {
         throw new Error('Mandate data missing');
       }
 
-      console.log('[FLOW] User accepted mandate, confirming...');
-
       // Step 5: Create payment method
       const paymentMethodId = await mandateConfirmation.createPaymentMethod(
         mandateData.financialAccountId
@@ -82,7 +77,6 @@ export function useBankAccountFlow(token) {
       );
 
       setStep('success');
-      console.log('[FLOW] Bank account successfully added with mandate!');
 
       return {
         success: true,

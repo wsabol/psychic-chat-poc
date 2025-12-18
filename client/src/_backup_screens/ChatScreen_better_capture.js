@@ -73,7 +73,6 @@ export function ChatScreen({
                             // If this message has cards, it's probably the good one
                             if (parsed.cards && parsed.cards.length > 0) {
                                 bestOracleResponse = msg;
-                                console.log('[ONBOARDING] ✓ Found oracle response with cards');
                                 break;
                             }
                         } catch (e) {
@@ -103,7 +102,6 @@ export function ChatScreen({
                             content: bestOracleResponse.content,
                             timestamp: new Date().toISOString()
                         }));
-                        console.log('[ONBOARDING] ✓ Saved first message to sessionStorage');
                     } catch (e) {
                         console.warn('[ONBOARDING] Could not save to sessionStorage:', e);
                     }
@@ -153,7 +151,6 @@ export function ChatScreen({
                     data: personalInfo.horoscope,
                     timestamp: new Date().toISOString()
                 }));
-                console.log('[ONBOARDING] ✓ Saved horoscope to sessionStorage');
             } catch (e) {
                 console.warn('[ONBOARDING] Could not save horoscope to sessionStorage:', e);
             }

@@ -17,30 +17,22 @@ async function routeJob(job) {
     const { userId, message } = job;
     
     try {
-        console.log(`[PROCESSOR] Routing message: ${message.substring(0, 50)}...`);
         
         if (isAstrologyRequest(message)) {
-            console.log('[PROCESSOR] ➜ ASTROLOGY');
             await handleAstrologyCalculation(userId);
         } else if (isHoroscopeRequest(message)) {
-            console.log('[PROCESSOR] ➜ HOROSCOPE');
             const range = extractHoroscopeRange(message);
             await generateHoroscope(userId, range);
         } else if (isMoonPhaseRequest(message)) {
-            console.log('[PROCESSOR] ➜ MOON PHASE');
             const phase = extractMoonPhase(message);
             await generateMoonPhaseCommentary(userId, phase);
         } else if (isLunarNodesRequest(message)) {
-            console.log('[PROCESSOR] ➜ LUNAR NODES');
             await generateLunarNodesInsight(userId);
         } else if (isCosmicWeatherRequest(message)) {
-            console.log('[PROCESSOR] ➜ COSMIC WEATHER');
             await generateCosmicWeather(userId);
         } else if (isVoidOfCourseRequest(message)) {
-            console.log('[PROCESSOR] ➜ VOID OF COURSE');
             await generateVoidOfCourseMoonAlert(userId);
         } else {
-            console.log('[PROCESSOR] ➜ CHAT MESSAGE');
             await handleChatMessage(userId, message);
         }
     } catch (err) {

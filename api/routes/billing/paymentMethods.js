@@ -62,13 +62,9 @@ router.post('/payment-methods/attach', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Stripe is not configured' });
     }
 
-    console.log(`[BILLING] Attaching payment method ${paymentMethodId} to customer ${customerId}`);
-
     const paymentMethod = await stripe.paymentMethods.attach(paymentMethodId, {
       customer: customerId,
     });
-
-    console.log(`[BILLING] Successfully attached payment method ${paymentMethodId}`);
 
     res.json({ 
       success: true, 
@@ -92,16 +88,12 @@ router.post('/payment-methods/attach', authenticateToken, async (req, res) => {
 router.delete('/payment-methods/:id', authenticateToken, async (req, res) => {
   try {
     const id = req.params.id;
-    
-    console.log(`[BILLING] DELETE request for payment method: ${id}`);
 
     if (!id) {
       return res.status(400).json({ error: 'Payment method ID is required' });
     }
 
     const result = await deletePaymentMethod(id);
-    
-    console.log(`[BILLING] Successfully deleted payment method: ${id}`);
 
     res.json({ success: true, message: 'Payment method deleted' });
   } catch (error) {
@@ -149,7 +141,6 @@ router.post('/payment-methods/attach-unattached', authenticateToken, async (req,
     const customerId = await getOrCreateStripeCustomer(userId, userEmail);
     if (!customerId) return res.status(400).json({ error: 'No Stripe customer found' });
 
-    console.log('[BILLING] Attaching unattached payment methods');
     const attachedMethods = await stripe.paymentMethods.list({ customer: customerId, limit: 100 });
     const attachedIds = new Set(attachedMethods.data.map(m => m.id));
 
@@ -161,7 +152,6 @@ router.post('/payment-methods/attach-unattached', authenticateToken, async (req,
       }
     }
 
-    console.log(`[BILLING] Found ${unattachedMethods.length} unattached methods`);
     const attached = [];
     const errors = [];
 
@@ -169,7 +159,6 @@ router.post('/payment-methods/attach-unattached', authenticateToken, async (req,
       try {
         await stripe.paymentMethods.attach(method.id, { customer: customerId });
         attached.push(method.id);
-        console.log(`[BILLING] Attached: ${method.id}`);
       } catch (err) {
         console.error(`[BILLING] Error attaching ${method.id}:`, err.message);
         errors.push({ id: method.id, error: err.message });

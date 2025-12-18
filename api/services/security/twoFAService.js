@@ -33,7 +33,6 @@ export async function get2FASettings(userId) {
 export async function update2FASettings(userId, { enabled, method }) {
   try {
     const userIdHash = hashUserId(userId);
-    console.log('[SECURITY] Updating 2FA settings for user:', userId);
     
     const result = await db.query(
       `INSERT INTO user_2fa_settings (user_id, user_id_hash, enabled, method, created_at, updated_at)
@@ -49,8 +48,6 @@ export async function update2FASettings(userId, { enabled, method }) {
     if (result.rows.length === 0) {
       throw new Error('Failed to update 2FA settings');
     }
-
-    console.log('[SECURITY] 2FA settings updated successfully');
     return result.rows[0];
   } catch (err) {
     console.error('[SECURITY] Error updating 2FA settings:', err);
@@ -66,7 +63,6 @@ export async function update2FASettings(userId, { enabled, method }) {
 export async function updateSessionPreference(userId, persistentSession) {
   try {
     const userIdHash = hashUserId(userId);
-    console.log('[SECURITY] Updating session preference for user:', userId);
     
     const result = await db.query(
       `INSERT INTO user_2fa_settings (user_id, user_id_hash, persistent_session, created_at, updated_at)
@@ -81,8 +77,6 @@ export async function updateSessionPreference(userId, persistentSession) {
     if (result.rows.length === 0) {
       throw new Error('Failed to update session preference');
     }
-
-    console.log('[SECURITY] Session preference updated successfully');
     return result.rows[0];
   } catch (err) {
     console.error('[SECURITY] Error updating session preference:', err);

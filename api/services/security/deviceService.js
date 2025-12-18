@@ -9,7 +9,6 @@ import admin from 'firebase-admin';
 export async function getDevices(userId) {
   try {
     const userIdHash = hashUserId(userId);
-    console.log('[SECURITY] Fetching devices for user:', userId);
     
     const result = await db.query(
       `SELECT 
@@ -22,8 +21,6 @@ export async function getDevices(userId) {
        ORDER BY last_active DESC`,
       [process.env.ENCRYPTION_KEY, userIdHash]
     );
-
-    console.log('[SECURITY] Found', result.rows.length, 'devices for user:', userId);
 
     const devices = result.rows.map(row => ({
       id: row.id,

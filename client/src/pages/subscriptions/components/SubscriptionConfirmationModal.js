@@ -33,7 +33,6 @@ export default function SubscriptionConfirmationModal({
       setError(null);
 
       const subId = subscription.subscriptionId || subscription.id;
-      console.log('[MODAL] Starting subscription finalization:', subId);
       
       if (!subId) {
         setError('Subscription ID is missing');
@@ -43,7 +42,6 @@ export default function SubscriptionConfirmationModal({
       
       // STEP 1: Complete the subscription on server
       // This finalizes invoice from DRAFT -> OPEN and triggers payment attempt
-      console.log('[MODAL] STEP 1: Completing subscription...');
       const finalizeResponse = await fetchWithTokenRefresh(
         `${API_URL}/billing/complete-subscription/${subId}`,
         {
@@ -63,12 +61,10 @@ export default function SubscriptionConfirmationModal({
       }
 
       const finalizeResult = await finalizeResponse.json();
-      console.log('[MODAL] ✓ STEP 1 Complete: Subscription completed', finalizeResult);
 
       // STEP 2: If there's a payment intent that needs confirmation (card payments), confirm it
       if (finalizeResult.subscription?.clientSecret && amount > 0) {
         try {
-          console.log('[MODAL] STEP 2: Confirming card payment...');
           const stripe = stripeRef.current;
           if (stripe) {
             const { paymentIntent: paymentResult, error: stripeError } = await stripe.confirmCardPayment(
@@ -78,26 +74,16 @@ export default function SubscriptionConfirmationModal({
             if (stripeError) {
               console.warn('[MODAL] Card payment confirmation warning:', stripeError.message);
               // Don't fail - subscription is already finalized, payment might process separately
-              console.log('[MODAL] STEP 2: Invoice finalized, payment will process separately');
-            } else if (paymentResult) {
-              console.log('[MODAL] ✓ STEP 2 Complete: Payment confirmed, status:', paymentResult.status);
-            }
-          } else {
-            console.log('[MODAL] STEP 2: Stripe not initialized, payment will process on server');
-          }
+            } 
+          } 
         } catch (stripeErr) {
           console.warn('[MODAL] Stripe confirmation warning:', stripeErr.message);
           // Don't fail - subscription is already finalized
-          console.log('[MODAL] STEP 2: Invoice finalized, payment will process via webhook');
         }
-      } else {
-        console.log('[MODAL] STEP 2 Skipped: No payment needed or no client secret');
       }
 
       // STEP 3: Success - subscription is now completed
       // Webhook will eventually transition it to 'active' when payment succeeds
-      console.log('[MODAL] ✓ STEP 3 Complete: Subscription completion successful');
-      console.log('[MODAL] Subscription will transition to active when payment webhook is received');
       const finalSubId = subscription.subscriptionId || subscription.id;
       onSuccess({ status: 'succeeded', id: finalSubId });
     } catch (err) {

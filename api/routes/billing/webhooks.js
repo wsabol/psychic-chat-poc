@@ -28,8 +28,6 @@ const router = express.Router();
  */
 router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   try {
-    console.log('[WEBHOOK] Received event, verifying signature...');
-
     let event;
     try {
       event = verifyWebhookSignature(req.body, req.headers['stripe-signature']);
@@ -37,8 +35,6 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
       console.error('[WEBHOOK] Signature verification failed:', error.message);
       return res.status(400).json({ error: 'Webhook signature verification failed' });
     }
-
-    console.log('[WEBHOOK] Verified event type:', event.type);
 
     // Extract user ID from Stripe metadata
     const extractUserIdFromSubscription = async (subscriptionId) => {
@@ -69,7 +65,6 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
     // Handle different event types
     switch (event.type) {
       case 'customer.subscription.created': {
-        console.log('[WEBHOOK] Processing: customer.subscription.created');
         const subscription = event.data.object;
         const userId = await extractUserIdFromSubscription(subscription.id);
 
@@ -87,7 +82,6 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
             price_amount: subscription.items?.data?.[0]?.price?.unit_amount,
             price_interval: subscription.items?.data?.[0]?.price?.recurring?.interval,
           });
-          console.log('[WEBHOOK] Stored subscription for user:', userId);
         } catch (error) {
           console.error('[WEBHOOK] Error storing subscription:', error);
         }
@@ -95,7 +89,6 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
       }
 
       case 'customer.subscription.updated': {
-        console.log('[WEBHOOK] Processing: customer.subscription.updated');
         const subscription = event.data.object;
         const userId = await extractUserIdFromSubscription(subscription.id);
 
@@ -110,7 +103,6 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
             current_period_start: subscription.current_period_start,
             current_period_end: subscription.current_period_end,
           });
-          console.log('[WEBHOOK] Updated subscription status for user:', userId);
         } catch (error) {
           console.error('[WEBHOOK] Error updating subscription:', error);
         }
@@ -118,7 +110,6 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
       }
 
       case 'customer.subscription.deleted': {
-        console.log('[WEBHOOK] Processing: customer.subscription.deleted');
         const subscription = event.data.object;
         const userId = await extractUserIdFromSubscription(subscription.id);
 
@@ -133,7 +124,6 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
             current_period_start: subscription.current_period_start,
             current_period_end: subscription.current_period_end,
           });
-          console.log('[WEBHOOK] Marked subscription as canceled for user:', userId);
         } catch (error) {
           console.error('[WEBHOOK] Error canceling subscription:', error);
         }
@@ -141,7 +131,6 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
       }
 
       case 'invoice.payment_succeeded': {
-        console.log('[WEBHOOK] Processing: invoice.payment_succeeded');
         const invoice = event.data.object;
         
         if (invoice.subscription) {
@@ -153,7 +142,7 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
                 current_period_start: invoice.period_start,
                 current_period_end: invoice.period_end,
               });
-              console.log('[WEBHOOK] Marked subscription as active for user:', userId);
+
             } catch (error) {
               console.error('[WEBHOOK] Error updating subscription to active:', error);
             }
@@ -163,7 +152,6 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
       }
 
       case 'invoice.payment_failed': {
-        console.log('[WEBHOOK] Processing: invoice.payment_failed');
         const invoice = event.data.object;
         
         if (invoice.subscription) {
@@ -175,7 +163,6 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
                 current_period_start: invoice.period_start,
                 current_period_end: invoice.period_end,
               });
-              console.log('[WEBHOOK] Marked subscription as past_due for user:', userId);
             } catch (error) {
               console.error('[WEBHOOK] Error updating subscription to past_due:', error);
             }
@@ -185,7 +172,6 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
       }
 
       default:
-        console.log('[WEBHOOK] Unhandled event type:', event.type);
     }
 
     res.json({ received: true });

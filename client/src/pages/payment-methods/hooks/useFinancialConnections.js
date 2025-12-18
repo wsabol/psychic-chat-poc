@@ -20,8 +20,6 @@ export function useFinancialConnections(token) {
       setLoading(true);
       setError(null);
 
-      console.log('[FC] Creating Financial Connections session...');
-
       const response = await fetchWithTokenRefresh(
         `${API_URL}/billing/financial-connections-session`,
         {
@@ -40,8 +38,6 @@ export function useFinancialConnections(token) {
       const data = await response.json();
       const validatedData = validateFinancialConnectionsResponse(data);
 
-      console.log('[FC] Session created:', validatedData.sessionId);
-
       return validatedData;
     } catch (err) {
       const message = err.message || 'Failed to create Financial Connections session';
@@ -58,8 +54,6 @@ export function useFinancialConnections(token) {
       setLoading(true);
       setError(null);
 
-      console.log('[FC] Collecting accounts from Financial Connections...');
-
       if (!window.Stripe) {
         throw new Error('Stripe not initialized');
       }
@@ -69,8 +63,6 @@ export function useFinancialConnections(token) {
       const result = await stripe.collectFinancialConnectionsAccounts({
         clientSecret: sessionClientSecret,
       });
-
-      console.log('[FC] Collection result:', result);
 
       if (result.error) {
         throw new Error(result.error.message || 'Financial Connections failed');
@@ -97,8 +89,6 @@ export function useFinancialConnections(token) {
       setLoading(true);
       setError(null);
 
-      console.log('[FC] Fetching linked accounts from session...');
-
       const response = await fetchWithTokenRefresh(
         `${API_URL}/billing/financial-accounts`,
         {
@@ -118,8 +108,6 @@ export function useFinancialConnections(token) {
 
       const data = await response.json();
       const accounts = validateAccountsResponse(data);
-
-      console.log('[FC] Found accounts:', accounts.length);
 
       // Return first account with extracted details
       const account = accounts[0];

@@ -64,7 +64,6 @@ function App() {
     // ✅ NEW: When subscription becomes active, reset skip flag AND return to chat page
     useEffect(() => {
         if (authState.hasActiveSubscription && skipSubscriptionCheck) {
-            console.log('[APP] Subscription is now active, resetting flags and returning to chat');
             setSkipSubscriptionCheck(false);
             setStartingPage(0); // Return to chat page (index 0)
         }

@@ -21,8 +21,6 @@ export function useMandateConfirmation(token) {
       setLoading(true);
       setError(null);
 
-      console.log('[MANDATE] Creating payment method...');
-
       const response = await fetchWithTokenRefresh(
         `${API_URL}/billing/create-from-financial`,
         {
@@ -43,8 +41,6 @@ export function useMandateConfirmation(token) {
       const data = await response.json();
       const paymentMethodId = validatePaymentMethodResponse(data);
 
-      console.log('[MANDATE] Payment method created:', paymentMethodId);
-
       return paymentMethodId;
     } catch (err) {
       const message = err.message || 'Failed to create payment method';
@@ -61,13 +57,9 @@ export function useMandateConfirmation(token) {
       setLoading(true);
       setError(null);
 
-      console.log('[MANDATE] Confirming SetupIntent with mandate acceptance...');
-
       // Gather client info for mandate
       const userAgent = getClientUserAgent();
       const ipAddress = await getClientIpAddress();
-
-      console.log('[MANDATE] Client info - IP:', ipAddress);
 
       const response = await fetchWithTokenRefresh(
         `${API_URL}/billing/confirm-setup-intent`,
@@ -93,8 +85,6 @@ export function useMandateConfirmation(token) {
 
       const data = await response.json();
       const setupIntent = validateConfirmationResponse(data);
-
-      console.log('[MANDATE] SetupIntent confirmed - mandate recorded!');
 
       return setupIntent;
     } catch (err) {

@@ -8,8 +8,6 @@ import { hashUserId } from '../../shared/hashUtils.js';
  */
 export async function handleAstrologyCalculation(userId) {
     try {
-        console.log('[ASTROLOGY-HANDLER] Starting calculation for user:', userId);
-        console.log('[ASTROLOGY-HANDLER] Using ENCRYPTION_KEY:', process.env.ENCRYPTION_KEY ? 'SET' : 'NOT SET');
         
         // Fetch user's personal information
         const { rows: personalInfoRows } = await db.query(`
@@ -23,14 +21,6 @@ export async function handleAstrologyCalculation(userId) {
         }
         
         const info = personalInfoRows[0];
-        console.log('[ASTROLOGY-HANDLER] Decrypted birth data:', {
-            birth_date: info.birth_date,
-            birth_time: info.birth_time,
-            birth_country: info.birth_country,
-            birth_province: info.birth_province,
-            birth_city: info.birth_city,
-            birth_timezone: info.birth_timezone
-        });
         
         // Check if we have complete birth data (timezone is optional)
         if (!info.birth_date || !info.birth_time || !info.birth_country || !info.birth_province || !info.birth_city) {
@@ -58,20 +48,14 @@ export async function handleAstrologyCalculation(userId) {
             chartData.birth_timezone = info.birth_timezone;
         }
         
-        console.log('[ASTROLOGY-HANDLER] Passing to Python script:', JSON.stringify(chartData));
-        
         // Calculate birth chart
         const calculatedChart = await calculateBirthChart(chartData);
-        
-        console.log('[ASTROLOGY-HANDLER] Python returned:', JSON.stringify(calculatedChart));
         
         // Verify calculation was successful
         if (!calculatedChart.success || !calculatedChart.rising_sign || !calculatedChart.moon_sign) {
             console.warn('[ASTROLOGY-HANDLER] Birth chart calculation failed:', calculatedChart.error);
             return;
         }
-        
-        console.log('[ASTROLOGY-HANDLER] Calculation successful! Storing data...');
         
         // Store calculated birth chart data only
         const astrologyData = {
@@ -101,8 +85,6 @@ export async function handleAstrologyCalculation(userId) {
             updated_at = CURRENT_TIMESTAMP`,
             [userIdHash, calculatedChart.sun_sign, JSON.stringify(astrologyData)]
         );
-        
-        console.log('[ASTROLOGY-HANDLER] ✅ Astrology data stored successfully for user:', userId);
         
     } catch (err) {
         console.error('[ASTROLOGY-HANDLER] Error:', err.message, err);

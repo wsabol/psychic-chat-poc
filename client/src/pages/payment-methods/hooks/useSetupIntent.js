@@ -16,8 +16,6 @@ export function useSetupIntent(token) {
       setLoading(true);
       setError(null);
 
-      console.log('[SETUP_INTENT] Creating SetupIntent...');
-
       const response = await fetchWithTokenRefresh(
         `${API_URL}/billing/setup-intent`,
         {
@@ -35,8 +33,6 @@ export function useSetupIntent(token) {
 
       const data = await response.json();
       const validatedData = validateSetupIntentResponse(data);
-
-      console.log('[SETUP_INTENT] SetupIntent created:', validatedData.setupIntentId);
 
       return validatedData;
     } catch (err) {
