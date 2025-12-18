@@ -63,7 +63,18 @@ export function useAppRouting(auth, appExited, showRegisterMode = false, skipPay
             return 'login';
         }
 
-        // ✅ SUBSCRIPTION CHECK - User must have active subscription
+        // ✅ PAYMENT METHOD CHECK - User must have valid payment method FIRST
+        // Exception: Temp accounts don't need payment method (trial only)
+        // Exception: If skipPaymentCheck flag set, bypass this check
+        if (!skipPaymentCheck && !auth.isTemporaryAccount && !auth.paymentMethodChecking) {
+            // Payment method check is complete (not checking)
+            if (!auth.hasValidPaymentMethod) {
+                // No valid payment method - show payment method required screen
+                return 'paymentMethodRequired';
+            }
+        }
+        
+        // ✅ SUBSCRIPTION CHECK - User must have active subscription (AFTER payment method)
         // Exception: Temp accounts don't need subscriptions (trial only)
         // Exception: If skipSubscriptionCheck flag set, bypass this check
         if (!skipSubscriptionCheck && !auth.isTemporaryAccount && !auth.subscriptionChecking) {
@@ -74,11 +85,11 @@ export function useAppRouting(auth, appExited, showRegisterMode = false, skipPay
             }
         }
         
-        // If still checking subscription and not skipping, show loading
+        // If still checking payment or subscription and not skipping, show loading
 
         // Authenticated, verified, has payment method (or skipping check), and has active subscription (or skipping check) - show chat
         return 'chat';
-    }, [auth.loading, auth.isAuthenticated, auth.isFirstTime, auth.isTemporaryAccount, auth.isEmailUser, auth.emailVerified, auth.hasLoggedOut, auth.hasActiveSubscription, auth.subscriptionChecking, auth.showTwoFactor, auth.tempUserId, auth.tempToken, appExited, showRegisterMode, skipSubscriptionCheck, hasExitedBefore]);
+    }, [auth.loading, auth.isAuthenticated, auth.isFirstTime, auth.isTemporaryAccount, auth.isEmailUser, auth.emailVerified, auth.hasLoggedOut, auth.hasValidPaymentMethod, auth.paymentMethodChecking, auth.hasActiveSubscription, auth.subscriptionChecking, auth.showTwoFactor, auth.tempUserId, auth.tempToken, appExited, showRegisterMode, skipPaymentCheck, skipSubscriptionCheck, hasExitedBefore]);
 
     return {
         currentScreen,

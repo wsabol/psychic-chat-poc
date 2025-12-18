@@ -50,6 +50,7 @@ export function useAuth() {
     loading: stateHook.loading,
     isFirstTime: stateHook.isFirstTime,
     emailVerified: stateHook.emailVerified,
+    setEmailVerified: stateHook.setEmailVerified,  // ✅ NEW: Expose for email verification polling
     isEmailUser: stateHook.isEmailUser,
 
     // 2FA

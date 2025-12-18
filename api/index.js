@@ -38,7 +38,16 @@ app.use(helmet({
             styleSrc: ["'self'", "'unsafe-inline'"],
             imgSrc: ["'self'", "data:", "https:"],
             fontSrc: ["'self'", "data:"],
-            connectSrc: ["'self'", "https:"],
+            // ✅ FIXED: Allow Stripe API connections
+            connectSrc: [
+                "'self'",
+                "https:",
+                "https://m.stripe.network",    // Stripe fraud detection
+                "https://m.stripe.com",         // Stripe API
+                "https://stripe.com",           // Stripe API
+                "https://api.stripe.com",       // Stripe API
+                "https://q.stripe.com",         // Stripe analytics
+            ],
             frameSrc: ["'none'"],  // Prevent embedding in iframes
             objectSrc: ["'none'"],
             upgradeInsecureRequests: []

@@ -56,7 +56,11 @@ function App() {
             emailVerification.startVerificationPolling(
                 auth.currentUser,
                 40,
-                () => authState.refreshEmailVerificationStatus()
+                // ✅ FIXED: Update authState.emailVerified when verification completes
+                () => {
+                    authState.setEmailVerified(true);
+                    authState.refreshEmailVerificationStatus();
+                }
             );
         }
     }, [isVerification, emailVerification, authState]);

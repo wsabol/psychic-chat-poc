@@ -63,12 +63,11 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
-    const [fieldErrors, setFieldErrors] = useState({}); // Track per-field errors
+    const [fieldErrors, setFieldErrors] = useState({});
 
     const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
     const isTemporaryAccount = auth?.isTemporaryAccount;
 
-    // Load personal info on mount
     useEffect(() => {
         fetchPersonalInfo();
     }, [userId, token]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -119,7 +118,6 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
             ...prev,
             [name]: value
         }));
-        // Clear error for this field when user starts typing
         if (fieldErrors[name]) {
             setFieldErrors(prev => ({
                 ...prev,
@@ -149,7 +147,6 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
         if (!formData.birthDate) {
             errors.birthDate = 'Date of birth is required (format: dd-mmm-yyyy, e.g., 09-Feb-1956)';
         } else {
-            // ✅ Validate birth date format and check age
             const dateValidation = validateBirthDate(formData.birthDate);
             if (!dateValidation.isValid) {
                 errors.birthDate = dateValidation.error;
@@ -221,6 +218,7 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
                 setTimeout(() => setSuccess(false), 3000);
             }
         } catch (err) {
+            console.error('[SUBMIT] Error:', err);
             setError(err.message);
         } finally {
             setLoading(false);
@@ -447,13 +445,13 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
                 onClick={handleSubmit}
                 disabled={loading}
                 className="floating-save-button"
-                title={loading ? 'Saving...' : 'Save Information'}
+                title={loading ? 'Processing...' : 'Save Information'}
             >
-                <span className="bubble-icon">💾</span>
+                <span className="bubble-icon">{loading ? '⏳' : '💾'}</span>
                 <span className="bubble-text">{loading ? 'Saving...' : 'Save'}</span>
             </button>
 
-            {/* Floating Success/Error Bubble */}
+            {/* Floating Success Bubble */}
             {success && (
                 <div className="floating-feedback-bubble floating-success">
                     ✓ Saved!

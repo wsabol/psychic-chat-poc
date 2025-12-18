@@ -52,6 +52,80 @@ export async function calculateBirthChartSync(birthData) {
     });
 }
 
+// ✅ NEW: POST endpoint to validate location before saving personal info
+// Tests if the location can be geocoded without full calculation
+router.post('/validate-location', authorizeUser, async (req, res) => {
+    try {
+        const { birth_city, birth_province, birth_country, birth_date, birth_time } = req.body;
+        
+        // Validate required fields
+        if (!birth_city || !birth_province || !birth_country || !birth_date) {
+            return res.status(400).json({ 
+                error: 'Missing required fields for location validation',
+                success: false
+            });
+        }
+        
+        console.log('[LOCATION-VALIDATE] Testing location:', { birth_city, birth_province, birth_country });
+        
+        // Call Python to validate location
+        const result = await calculateBirthChartSync({
+            birth_date: birth_date,
+            birth_time: birth_time || '12:00:00',
+            birth_country: birth_country,
+            birth_province: birth_province,
+            birth_city: birth_city
+        });
+        
+        // Check if location was found (result will have warnings if location couldn't be found)
+        if (result.location_error) {
+            console.warn('[LOCATION-VALIDATE] Location not found:', result.location_error);
+            return res.json({
+                success: false,
+                location_error: result.location_error,
+                warnings: result.warnings || []
+            });
+        }
+        
+        if (result.warnings && result.warnings.length > 0) {
+            console.debug('[LOCATION-VALIDATE] Location found with warnings:', result.warnings);
+            return res.json({
+                success: true,
+                warnings: result.warnings,
+                latitude: result.latitude,
+                longitude: result.longitude
+            });
+        }
+        
+        if (result.success && result.latitude && result.longitude) {
+            console.log('[LOCATION-VALIDATE] Location validated successfully');
+            return res.json({
+                success: true,
+                latitude: result.latitude,
+                longitude: result.longitude,
+                timezone: result.timezone
+            });
+        }
+        
+        // Fallback error
+        console.warn('[LOCATION-VALIDATE] Unexpected result:', result);
+        return res.json({
+            success: false,
+            location_error: result.error || 'Could not verify location',
+            warnings: result.warnings || []
+        });
+        
+    } catch (err) {
+        console.error('[LOCATION-VALIDATE] Error validating location:', err);
+        // Return error but don't block user
+        return res.json({
+            success: false,
+            error: 'Location validation service unavailable',
+            details: err.message
+        });
+    }
+});
+
 // POST endpoint to calculate astrology for user (synchronous)
 // Called when personal info is saved
 router.post('/sync-calculate/:userId', authorizeUser, async (req, res) => {

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { auth } from '../../firebase';
 import { onAuthStateChanged, setPersistence, browserLocalPersistence, browserSessionPersistence } from 'firebase/auth';
 
@@ -19,6 +19,9 @@ export function useAuthState(checkBillingStatus) {
   const [tempToken, setTempToken] = useState(null);
   const [tempUserId, setTempUserId] = useState(null);
   const [twoFactorMethod, setTwoFactorMethod] = useState('email');
+  
+  // ✅ FIX: Use ref to track if billing check was already done for this user
+  const billingCheckedRef = useRef(new Set());
 
   // Setup Firebase auth listener
   useEffect(() => {
@@ -54,7 +57,6 @@ export function useAuthState(checkBillingStatus) {
                 }
               }
             } catch (err) {
-              // Silently ignore persistence errors - not critical, just log at debug level
               if (err.name === 'AbortError') {
                 console.debug('[AUTH-PERSISTENCE] Settings fetch timed out (expected on slow networks)');
               } else {
@@ -86,8 +88,11 @@ export function useAuthState(checkBillingStatus) {
             if (!firebaseUser.emailVerified) {
               setShowTwoFactor(false);
               setIsAuthenticated(true);
-              // Check billing status (payment method then subscription) - SEQUENTIAL
-              checkBillingStatus(idToken, firebaseUser.uid);
+              // ✅ FIX: Only check billing ONCE per user
+              if (!billingCheckedRef.current.has(firebaseUser.uid)) {
+                billingCheckedRef.current.add(firebaseUser.uid);
+                checkBillingStatus(idToken, firebaseUser.uid);
+              }
               setLoading(false);
               return;
             }
@@ -108,8 +113,11 @@ export function useAuthState(checkBillingStatus) {
             if (alreadyVerified) {
               setShowTwoFactor(false);
               setIsAuthenticated(true);
-              // Check billing status sequentially
-              checkBillingStatus(idToken, firebaseUser.uid);
+              // ✅ FIX: Only check billing ONCE per user
+              if (!billingCheckedRef.current.has(firebaseUser.uid)) {
+                billingCheckedRef.current.add(firebaseUser.uid);
+                checkBillingStatus(idToken, firebaseUser.uid);
+              }
               setLoading(false);
             } else {
               try {
@@ -136,8 +144,11 @@ export function useAuthState(checkBillingStatus) {
                   // No 2FA required - authenticate now
                   setShowTwoFactor(false);
                   setIsAuthenticated(true);
-                  // Check billing status sequentially
-                  checkBillingStatus(idToken, firebaseUser.uid);
+                  // ✅ FIX: Only check billing ONCE per user
+                  if (!billingCheckedRef.current.has(firebaseUser.uid)) {
+                    billingCheckedRef.current.add(firebaseUser.uid);
+                    checkBillingStatus(idToken, firebaseUser.uid);
+                  }
                 }
               } catch (err) {
                 if (err.name === 'AbortError') {
@@ -146,8 +157,11 @@ export function useAuthState(checkBillingStatus) {
                   console.warn('[2FA-CHECK] Failed to check 2FA:', err.message);
                 }
                 setIsAuthenticated(true);
-                // Still check billing status even if 2FA check fails
-                checkBillingStatus(idToken, firebaseUser.uid);
+                // ✅ FIX: Only check billing ONCE per user
+                if (!billingCheckedRef.current.has(firebaseUser.uid)) {
+                  billingCheckedRef.current.add(firebaseUser.uid);
+                  checkBillingStatus(idToken, firebaseUser.uid);
+                }
               } finally {
                 setLoading(false);
               }
@@ -176,7 +190,9 @@ export function useAuthState(checkBillingStatus) {
     });
 
     return unsubscribe;
-  }, [checkBillingStatus]);
+    // ✅ FIX: Don't include checkBillingStatus in dependency array
+    // The function reference changes on every render, causing infinite loops
+  }, []);
 
   const resetAuthState = useCallback(() => {
     setIsAuthenticated(false);
@@ -187,6 +203,8 @@ export function useAuthState(checkBillingStatus) {
     setShowTwoFactor(false);
     setTempToken(null);
     setTempUserId(null);
+    // ✅ FIX: Reset the billing checked set on logout
+    billingCheckedRef.current.clear();
   }, []);
 
   return {

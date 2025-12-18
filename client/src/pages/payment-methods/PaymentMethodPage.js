@@ -32,6 +32,7 @@ export default function PaymentMethodPage({ userId, token, auth }) {
   const stripeRef = useRef(null);
 
   useEffect(() => {
+    // Fetch payment methods on mount
     billing.fetchPaymentMethods();
   }, [billing]);
 
@@ -43,6 +44,8 @@ export default function PaymentMethodPage({ userId, token, auth }) {
       setShowAddPaymentForm(true);
     } catch (err) {
       setCardError(err.message || 'Failed to prepare payment form');
+      // ✅ Still show form even if setup intent fails
+      setShowAddPaymentForm(true);
     }
   };
 
@@ -74,6 +77,12 @@ export default function PaymentMethodPage({ userId, token, auth }) {
       }
 
       const paymentMethodId = paymentMethod.id;
+
+      if (!setupIntent?.clientSecret) {
+        setCardError('Setup intent not available. Please try again.');
+        setLoading(false);
+        return;
+      }
 
       const { error: confirmError } = await stripeRef.current.confirmCardSetup(
         setupIntent.clientSecret,
@@ -115,17 +124,32 @@ export default function PaymentMethodPage({ userId, token, auth }) {
       </div>
 
       {cardError && <div className="alert alert-error">{cardError}</div>}
+      {billing.error && !cardError && (
+        <div className="alert alert-error">
+          ⚠️ {billing.error}
+          <br/>
+          <small style={{marginTop: '0.5rem', display: 'block'}}>
+            If the issue persists, please refresh the page or contact support.
+          </small>
+        </div>
+      )}
       {cardSuccess && (
         <div className="alert alert-success">✓ Payment method added successfully!</div>
       )}
 
+      {/* ✅ ALWAYS CLICKABLE: Button is NEVER disabled, only shows loading text */}
       {!showAddPaymentForm && (
         <button
           className="btn-primary"
           onClick={handleAddClick}
-          disabled={billing.loading}
+          disabled={false}
+          style={{
+            opacity: loading ? 0.7 : 1,
+            cursor: 'pointer',
+            pointerEvents: loading ? 'auto' : 'auto',
+          }}
         >
-          + Add Payment Method
+          {loading ? '⏳ Processing...' : '+ Add Payment Method'}
         </button>
       )}
 

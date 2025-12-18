@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import sys
 import json
-import time
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -12,7 +11,7 @@ except ImportError:
     sys.exit(1)
 
 try:
-    from geopy.geocoders import Photon, Nominatim
+    from geopy.geocoders import Photon
     from timezonefinder import TimezoneFinder
 except ImportError:
     print(json.dumps({"error": "geopy or timezonefinder not installed"}), file=sys.stdout)
@@ -47,9 +46,9 @@ def get_timezone_from_location(lat, lng):
 
 def get_coordinates(country, province, city):
     """
-    Attempt to geocode a city/province/country combination.
+    Attempt to geocode a city/province/country combination using Photon ONLY.
+    Photon is much more reliable than Nominatim for common cities like New York.
     Returns (lat, lng) on success, or (None, None) on failure.
-    Does NOT raise exceptions - catches and logs them instead.
     """
     try:
         # Create cache key for this location
@@ -65,57 +64,57 @@ def get_coordinates(country, province, city):
             print(f"[GEOCODING] SKIP: Already failed for {cache_key}, not retrying", file=sys.stderr)
             return None, None
         
-        address_string = f"{city}, {province}, {country}"
-        print(f"[GEOCODING] Attempting to geocode: {address_string}", file=sys.stderr)
+        print(f"[GEOCODING] Attempting to geocode: {city}, {province}, {country}", file=sys.stderr)
         
-        # PRIMARY: Use Photon (faster, no rate limiting)
+        geolocator = Photon(user_agent="psychic_chat_astrology", timeout=10)
+        
+        # TRY 1: Full address
         try:
-            geolocator = Photon(user_agent="psychic_chat_astrology", timeout=10)
+            address_string = f"{city}, {province}, {country}"
+            print(f"[GEOCODING] Try 1: {address_string}", file=sys.stderr)
             location = geolocator.geocode(address_string, timeout=10)
             
             if location:
                 result = (location.latitude, location.longitude)
                 GEOCACHE[cache_key] = result
-                print(f"[GEOCODING] ✓ SUCCESS via Photon: {cache_key} => ({location.latitude}, {location.longitude})", file=sys.stderr)
+                print(f"[GEOCODING] ✓ SUCCESS (Try 1): ({location.latitude}, {location.longitude})", file=sys.stderr)
                 return result
-            
-            print(f"[GEOCODING] Photon: No result for full address", file=sys.stderr)
+            print(f"[GEOCODING] Try 1 failed: No result", file=sys.stderr)
         except Exception as e:
-            print(f"[GEOCODING] Photon failed: {str(e)}", file=sys.stderr)
+            print(f"[GEOCODING] Try 1 exception: {str(e)}", file=sys.stderr)
         
-        # FALLBACK 1: Try without province (Photon)
-        print(f"[GEOCODING] Fallback 1: Trying without province", file=sys.stderr)
+        # TRY 2: Without province (simpler query)
         try:
-            address_no_province = f"{city}, {country}"
-            geolocator = Photon(user_agent="psychic_chat_astrology", timeout=10)
-            location = geolocator.geocode(address_no_province, timeout=10)
-            
-            if location:
-                result = (location.latitude, location.longitude)
-                GEOCACHE[cache_key] = result
-                print(f"[GEOCODING] ✓ SUCCESS via Photon (no province): {cache_key} => ({location.latitude}, {location.longitude})", file=sys.stderr)
-                return result
-        except Exception as e:
-            print(f"[GEOCODING] Fallback 1 failed: {str(e)}", file=sys.stderr)
-        
-        # FALLBACK 2: Use Nominatim (OpenStreetMap official API, backup only)
-        print(f"[GEOCODING] Fallback 2: Using Nominatim", file=sys.stderr)
-        try:
-            time.sleep(2)  # Rate limiting for Nominatim
-            geolocator = Nominatim(user_agent="psychic_chat_astrology", timeout=10)
+            address_string = f"{city}, {country}"
+            print(f"[GEOCODING] Try 2: {address_string}", file=sys.stderr)
             location = geolocator.geocode(address_string, timeout=10)
             
             if location:
                 result = (location.latitude, location.longitude)
                 GEOCACHE[cache_key] = result
-                print(f"[GEOCODING] ✓ SUCCESS via Nominatim: {cache_key} => ({location.latitude}, {location.longitude})", file=sys.stderr)
+                print(f"[GEOCODING] ✓ SUCCESS (Try 2): ({location.latitude}, {location.longitude})", file=sys.stderr)
                 return result
+            print(f"[GEOCODING] Try 2 failed: No result", file=sys.stderr)
         except Exception as e:
-            print(f"[GEOCODING] Fallback 2 failed: {str(e)}", file=sys.stderr)
+            print(f"[GEOCODING] Try 2 exception: {str(e)}", file=sys.stderr)
         
-        # All geocoding attempts failed - mark this location as unfound
+        # TRY 3: Just city name (broadest search)
+        try:
+            print(f"[GEOCODING] Try 3: {city}", file=sys.stderr)
+            location = geolocator.geocode(city, timeout=10)
+            
+            if location:
+                result = (location.latitude, location.longitude)
+                GEOCACHE[cache_key] = result
+                print(f"[GEOCODING] ✓ SUCCESS (Try 3): ({location.latitude}, {location.longitude})", file=sys.stderr)
+                return result
+            print(f"[GEOCODING] Try 3 failed: No result", file=sys.stderr)
+        except Exception as e:
+            print(f"[GEOCODING] Try 3 exception: {str(e)}", file=sys.stderr)
+        
+        # All attempts failed
         GEOCODING_FAILURES[cache_key] = True
-        print(f"[GEOCODING] ✗ FAILED: Could not find coordinates for {address_string}", file=sys.stderr)
+        print(f"[GEOCODING] ✗ FAILED: Could not find coordinates for {city}, {province}, {country}", file=sys.stderr)
         return None, None
         
     except Exception as e:
@@ -176,7 +175,6 @@ def calculate_birth_chart(birth_data):
             if lat is None or lng is None:
                 # Geocoding failed - user-friendly message
                 warning_msg = f"I am having trouble locating {city}. Please check the spelling or select another larger city nearby. Your rising, moon, and sun signs will not be available, but I can still provide general guidance."
-                result["warnings"].append(warning_msg)
                 result["location_error"] = warning_msg
                 print(f"[BIRTH-CHART] Location geocoding failed for {city}, {province}, {country}", file=sys.stderr)
                 # Continue without location data
@@ -187,7 +185,6 @@ def calculate_birth_chart(birth_data):
                 print(f"[BIRTH-CHART] Location geocoded: {city}, {province}, {country} => ({lat}, {lng})", file=sys.stderr)
         else:
             lat = lng = None
-            result["warnings"].append("Birth location not provided. Your rising, moon, and sun signs cannot be calculated.")
         
         # If timezone not provided and we have coordinates, try to detect it
         if lat and lng and not provided_tz:
@@ -233,7 +230,8 @@ def calculate_birth_chart(birth_data):
                 result["warnings"].append(f"Could not calculate all astrological signs: {str(e)}")
                 print(f"[BIRTH-CHART] Error calculating signs: {str(e)}", file=sys.stderr)
         else:
-            result["warnings"].append("Location not available. Rising, moon, and sun signs cannot be calculated.")
+            if location_provided:
+                result["warnings"].append("Location could not be found. Rising, moon, and sun signs cannot be calculated.")
         
         return result
         
