@@ -6,6 +6,17 @@
     <title>Oracle chat</title>
     <!-- Stripe.js is loaded by @stripe/stripe-js npm package in PaymentMethodPage.js -->
     <!-- Do NOT load https://js.stripe.com/v3/ here as it conflicts with the npm package version -->
+    <script>
+        // Suppress hCaptcha non-passive event listener warnings
+        // These warnings originate from third-party iframe code and don't affect functionality
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+            if (args[0] && typeof args[0] === 'string' && args[0].includes('[Violation]') && args[0].includes('hcaptcha')) {
+                return; // Suppress hCaptcha violations
+            }
+            originalWarn.apply(console, args);
+        };
+    </script>
 </head>
 <body>
 <noscript>You need to enable JavaScript to run this app.</noscript>
