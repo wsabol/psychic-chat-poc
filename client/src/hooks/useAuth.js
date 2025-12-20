@@ -66,6 +66,8 @@ export function useAuth() {
     // Session & Logout
     hasLoggedOut: sessionHook.hasLoggedOut,
     setHasLoggedOut: sessionHook.setHasLoggedOut,
+    isDevUserLogout: sessionHook.isDevUserLogout,
+    setIsDevUserLogout: sessionHook.setIsDevUserLogout,
     handleLogout,
     refreshEmailVerificationStatus: sessionHook.refreshEmailVerificationStatus,
     createTemporaryAccount: () => sessionHook.createTemporaryAccount(stateHook.setLoading),

@@ -45,9 +45,17 @@ export function useAppRouting(auth, appExited, showRegisterMode = false, skipPay
             return 'verification';
         }
 
-        // User explicitly logged out - show landing page
+                        // User explicitly logged out
         if (!auth.isAuthenticated && auth.hasLoggedOut) {
-            return 'landing';
+            console.log('[ROUTING-DEBUG] User logged out. isDevUserLogout:', auth.isDevUserLogout);
+            // ✅ NEW: Dev users see landing page for testing, others see login page
+            if (auth.isDevUserLogout) {
+                console.log('[ROUTING-DEBUG] -> Showing LANDING page (dev user)');
+                return 'landing';
+            } else {
+                console.log('[ROUTING-DEBUG] -> Showing LOGIN page (non-dev user)');
+                return 'login';
+            }
         }
 
         // First time user or not authenticated
@@ -89,7 +97,7 @@ export function useAppRouting(auth, appExited, showRegisterMode = false, skipPay
 
         // Authenticated, verified, has payment method (or skipping check), and has active subscription (or skipping check) - show chat
         return 'chat';
-    }, [auth.loading, auth.isAuthenticated, auth.isFirstTime, auth.isTemporaryAccount, auth.isEmailUser, auth.emailVerified, auth.hasLoggedOut, auth.hasValidPaymentMethod, auth.paymentMethodChecking, auth.hasActiveSubscription, auth.subscriptionChecking, auth.showTwoFactor, auth.tempUserId, auth.tempToken, appExited, showRegisterMode, skipPaymentCheck, skipSubscriptionCheck, hasExitedBefore]);
+    }, [auth.loading, auth.isAuthenticated, auth.isFirstTime, auth.isTemporaryAccount, auth.isEmailUser, auth.emailVerified, auth.hasLoggedOut, auth.isDevUserLogout, auth.hasValidPaymentMethod, auth.paymentMethodChecking, auth.hasActiveSubscription, auth.subscriptionChecking, auth.showTwoFactor, auth.tempUserId, auth.tempToken, appExited, showRegisterMode, skipPaymentCheck, skipSubscriptionCheck, hasExitedBefore]);
 
     return {
         currentScreen,

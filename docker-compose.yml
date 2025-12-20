@@ -83,6 +83,7 @@ services:
       args:
         - REACT_APP_API_URL=http://localhost:3000
         - REACT_APP_STRIPE_PUBLIC_KEY=${STRIPE_PUBLIC_KEY}
+        - REACT_APP_DEV_EMAIL=${REACT_APP_DEV_EMAIL}
     command: npm start
     volumes:
       - ./client:/app
@@ -95,6 +96,7 @@ services:
       - CHOKIDAR_USEPOLLING=true
       - REACT_APP_API_URL=http://localhost:3000
       - REACT_APP_STRIPE_PUBLIC_KEY=${STRIPE_PUBLIC_KEY}
+      - REACT_APP_DEV_EMAIL=${REACT_APP_DEV_EMAIL}
 
 volumes:
   postgres_data:

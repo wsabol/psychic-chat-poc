@@ -2,11 +2,15 @@ import { useCallback, useState } from 'react';
 import { auth } from '../../firebase';
 import { signOut, createUserWithEmailAndPassword } from 'firebase/auth';
 
+// ✅ Set your dev email here for developer testing
+const DEV_EMAIL = 'stuathome87@gmail.com';
+
 /**
  * Session and account management - temporary accounts, logout, etc.
  */
 export function useAuthSession() {
   const [hasLoggedOut, setHasLoggedOut] = useState(false);
+  const [isDevUserLogout, setIsDevUserLogout] = useState(false); // ✅ NEW: Track if dev user logged out
 
   const createTemporaryAccount = useCallback(async (setLoading) => {
     try {
@@ -79,8 +83,36 @@ export function useAuthSession() {
     }
   }, []);
 
-  const handleLogout = useCallback(async () => {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            const handleLogout = useCallback(async () => {
     try {
+      // ✅ Check if current user is the dev user before signing out
+      const userEmail = auth.currentUser?.email || null;
+      const isDev = userEmail === DEV_EMAIL;
+      setIsDevUserLogout(isDev);
+      
       await signOut(auth);
     } catch (err) {
       console.error('Logout error:', err);
@@ -112,9 +144,11 @@ export function useAuthSession() {
     await handleLogout();
   }, [deleteTemporaryAccount, handleLogout]);
 
-  return {
+      return {
     hasLoggedOut,
     setHasLoggedOut,
+    isDevUserLogout,
+    setIsDevUserLogout,
     createTemporaryAccount,
     deleteTemporaryAccount,
     handleLogout,
