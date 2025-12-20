@@ -10,6 +10,7 @@ const router = Router();
  * GET /horoscope/:userId/:range
  * Fetch the cached horoscope for the user matching the range and today's date
  * Auto-clears if generated on a different date
+ * Handles both encrypted and plain text content
  */
 router.get("/:userId/:range", authorizeUser, async (req, res) => {
     const { userId, range } = req.params;
@@ -24,13 +25,21 @@ router.get("/:userId/:range", authorizeUser, async (req, res) => {
         const userIdHash = hashUserId(userId);
         
         // Get recent horoscopes (limited to last 100 to avoid huge queries)
+        // Decrypt encrypted messages using pgp_sym_decrypt, fall back to plain text
         const { rows } = await db.query(
-            `SELECT content, created_at FROM messages 
+            `SELECT 
+                CASE 
+                    WHEN content_encrypted IS NOT NULL 
+                    THEN pgp_sym_decrypt(content_encrypted, $2)::text
+                    ELSE content
+                END as content,
+                created_at 
+             FROM messages 
              WHERE user_id_hash = $1 
              AND role = 'horoscope'
              ORDER BY created_at DESC 
              LIMIT 100`,
-            [userIdHash]
+            [userIdHash, process.env.ENCRYPTION_KEY]
         );
         
         // Find the first horoscope that matches the range and is from today
@@ -38,11 +47,24 @@ router.get("/:userId/:range", authorizeUser, async (req, res) => {
         let staleHoroscopesExist = false;
         
         for (const row of rows) {
-            const horoscope = typeof row.content === 'string' 
-                ? JSON.parse(row.content) 
-                : row.content;
+            // Skip null/empty content
+            if (!row.content) continue;
             
-            const generatedDate = horoscope.generated_at?.split('T')[0];
+            let horoscope;
+            try {
+                horoscope = typeof row.content === 'string' 
+                    ? JSON.parse(row.content) 
+                    : row.content;
+            } catch (e) {
+                // Skip unparseable content
+                console.warn('[HOROSCOPE] Failed to parse horoscope:', e.message);
+                continue;
+            }
+            
+            // Skip if horoscope is null or missing generated_at
+            if (!horoscope || !horoscope.generated_at) continue;
+            
+            const generatedDate = horoscope.generated_at.split('T')[0];
             
             // Check if this horoscope is from today and matches the requested range
             if (generatedDate === today && horoscope.range === range.toLowerCase()) {

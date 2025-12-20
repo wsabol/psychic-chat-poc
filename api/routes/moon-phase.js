@@ -9,6 +9,7 @@ const router = Router();
 /**
  * GET /moon-phase/:userId
  * Fetch the cached moon phase commentary for today
+ * Handles both encrypted and plain text content
  */
 router.get("/:userId", authorizeUser, async (req, res) => {
     const { userId } = req.params;
@@ -25,13 +26,21 @@ router.get("/:userId", authorizeUser, async (req, res) => {
         const userIdHash = hashUserId(userId);
         
         // Get recent moon phase commentaries
+        // Decrypt encrypted messages using pgp_sym_decrypt, fall back to plain text
         const { rows } = await db.query(
-            `SELECT content, created_at FROM messages 
+            `SELECT 
+                CASE 
+                    WHEN content_encrypted IS NOT NULL 
+                    THEN pgp_sym_decrypt(content_encrypted, $2)::text
+                    ELSE content
+                END as content,
+                created_at 
+             FROM messages 
              WHERE user_id_hash = $1 
              AND role = 'moon_phase'
              ORDER BY created_at DESC 
              LIMIT 10`,
-            [userIdHash]
+            [userIdHash, process.env.ENCRYPTION_KEY]
         );
         
         // Find one from today matching this phase that's less than 24 hours old
@@ -40,11 +49,21 @@ router.get("/:userId", authorizeUser, async (req, res) => {
         let needsRefresh = false;
         
         for (const row of rows) {
-            const commentary = typeof row.content === 'string' 
-                ? JSON.parse(row.content) 
-                : row.content;
+            if (!row.content) continue;
             
-            const generatedDate = commentary.generated_at?.split('T')[0];
+            let commentary;
+            try {
+                commentary = typeof row.content === 'string' 
+                    ? JSON.parse(row.content) 
+                    : row.content;
+            } catch (e) {
+                console.warn('[MOON-PHASE] Failed to parse commentary:', e.message);
+                continue;
+            }
+            
+            if (!commentary || !commentary.generated_at) continue;
+            
+            const generatedDate = commentary.generated_at.split('T')[0];
             const generatedTime = new Date(commentary.generated_at);
             
             if (generatedDate === today && commentary.phase === phase) {

@@ -13,7 +13,7 @@ const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
  * SecurityPage - User security settings with re-authentication
  * Displays: Devices, Passkeys, Phone, Email, Password
  */
-export default function SecurityPage({ userId, token, auth }) {
+export default function SecurityPage({ userId, token, auth, onboarding }) {
   const [showReAuthModal, setShowReAuthModal] = useState(true);
   const [isVerified, setIsVerified] = useState(false);
   const [userEmail, setUserEmail] = useState('');
