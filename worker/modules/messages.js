@@ -3,14 +3,19 @@ import { hashUserId } from '../shared/hashUtils.js';
 
 /**
  * Get message history for a user
+ * ✅ ENCRYPTED: Decrypts content_encrypted column
  * Returns messages in ASC order (oldest first) for proper conversation context
  */
 export async function getMessageHistory(userId, limit = 10) {
     try {
         const userIdHash = hashUserId(userId);
         const { rows } = await db.query(
-            "SELECT role, content FROM messages WHERE user_id_hash=$1 ORDER BY created_at ASC LIMIT $2",
-            [userIdHash, limit]
+            `SELECT role, pgp_sym_decrypt(content_encrypted, $1) as content 
+             FROM messages 
+             WHERE user_id_hash=$2 
+             ORDER BY created_at ASC 
+             LIMIT $3`,
+            [process.env.ENCRYPTION_KEY, userIdHash, limit]
         );
         
         // Transform messages for OpenAI API
@@ -49,13 +54,15 @@ export async function getMessageHistory(userId, limit = 10) {
 
 /**
  * Store a message in database
+ * ✅ ENCRYPTED: Stores content_encrypted using ENCRYPTION_KEY from .env
  */
 export async function storeMessage(userId, role, content) {
     try {
         const userIdHash = hashUserId(userId);
         await db.query(
-            "INSERT INTO messages(user_id_hash, role, content) VALUES($1, $2, $3)",
-            [userIdHash, role, JSON.stringify(content)]
+            `INSERT INTO messages(user_id_hash, role, content_encrypted) 
+             VALUES($1, $2, pgp_sym_encrypt($3, $4))`,
+            [userIdHash, role, JSON.stringify(content), process.env.ENCRYPTION_KEY]
         );
     } catch (err) {
         console.error('[MESSAGES] Error storing message:', err);

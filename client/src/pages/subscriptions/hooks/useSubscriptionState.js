@@ -5,6 +5,7 @@ export function useSubscriptionState() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [activeSubscriptions, setActiveSubscriptions] = useState({});
+  const [expandedSub, setExpandedSub] = useState(null);
   
   // Modal state for incomplete subscriptions
   const [showSubscriptionConfirmationModal, setShowSubscriptionConfirmationModal] = useState(false);
@@ -24,6 +25,8 @@ export function useSubscriptionState() {
     setSuccess,
     activeSubscriptions,
     setActiveSubscriptions,
+    expandedSub,
+    setExpandedSub,
     clearMessages,
     showSubscriptionConfirmationModal,
     setShowSubscriptionConfirmationModal,

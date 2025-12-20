@@ -1,6 +1,6 @@
 /**
- * useSubscriptionHandlers Hook - With Confirmation Modal Support
- * Handles incomplete subscriptions and payment confirmation
+ * useSubscriptionHandlers Hook - Fast, Non-Blocking
+ * ✅ OPTIMIZED: All async operations happen in background, button is responsive immediately
  */
 
 import { useCallback } from 'react';
@@ -16,6 +16,7 @@ export function useSubscriptionHandlers({
 }) {
   /**
    * Subscribe to a plan - Handle incomplete subscriptions
+   * ✅ OPTIMIZED: Returns immediately, refreshes happen in background
    */
   const handleSubscribe = useCallback(async (priceId) => {
     try {
@@ -40,11 +41,17 @@ export function useSubscriptionHandlers({
 
       // Subscription is already active
       setSuccess(true);
-      await billing.fetchSubscriptions();
       
-      // ✅ Update auth state to recognize the new subscription
-      if (auth?.token && auth?.authUserId) {
-        await auth.recheckSubscriptionOnly(auth.token, auth.authUserId);
+      // ✅ OPTIMIZED: Background refreshes (don't wait/don't await)
+      // Button becomes responsive immediately
+      billing.fetchSubscriptions().catch(err => {
+        console.error('[SUBSCRIPTIONS] Background refresh failed:', err.message);
+      });
+      
+      if (auth?.token && auth?.authUserId && auth.recheckSubscriptionOnly) {
+        auth.recheckSubscriptionOnly(auth.token, auth.authUserId).catch(err => {
+          console.error('[AUTH] Background recheck failed:', err.message);
+        });
       }
       
       setTimeout(() => setSuccess(false), 3000);
@@ -60,17 +67,23 @@ export function useSubscriptionHandlers({
 
   /**
    * Handle subscription confirmation after modal
+   * ✅ OPTIMIZED: Returns immediately after confirmation
    */
   const handleSubscriptionConfirmationSuccess = useCallback(async (paymentIntent) => {
     try {
       setShowSubscriptionConfirmationModal(false);
       setPendingSubscription(null);
       setSuccess(true);
-      await billing.fetchSubscriptions();
       
-      // ✅ Update auth state to recognize the new subscription
-      if (auth?.token && auth?.authUserId) {
-        await auth.recheckSubscriptionOnly(auth.token, auth.authUserId);
+      // ✅ OPTIMIZED: Background refreshes (don't wait/don't await)
+      billing.fetchSubscriptions().catch(err => {
+        console.error('[SUBSCRIPTIONS] Background refresh failed:', err.message);
+      });
+      
+      if (auth?.token && auth?.authUserId && auth.recheckSubscriptionOnly) {
+        auth.recheckSubscriptionOnly(auth.token, auth.authUserId).catch(err => {
+          console.error('[AUTH] Background recheck failed:', err.message);
+        });
       }
       
       setTimeout(() => setSuccess(false), 3000);
@@ -100,11 +113,16 @@ export function useSubscriptionHandlers({
       if (newState === false) {
         await billing.cancelSubscription(subscriptionId);
         setSuccess(true);
-        await billing.fetchSubscriptions();
         
-        // ✅ Update auth state after cancellation
-        if (auth?.token && auth?.authUserId) {
-          await auth.recheckSubscriptionOnly(auth.token, auth.authUserId);
+        // ✅ OPTIMIZED: Background refreshes
+        billing.fetchSubscriptions().catch(err => {
+          console.error('[SUBSCRIPTIONS] Background refresh failed:', err.message);
+        });
+        
+        if (auth?.token && auth?.authUserId && auth.recheckSubscriptionOnly) {
+          auth.recheckSubscriptionOnly(auth.token, auth.authUserId).catch(err => {
+            console.error('[AUTH] Background recheck failed:', err.message);
+          });
         }
         
         setTimeout(() => setSuccess(false), 3000);
@@ -150,11 +168,16 @@ export function useSubscriptionHandlers({
       }
 
       setSuccess(true);
-      await billing.fetchSubscriptions();
       
-      // ✅ Update auth state after plan change
-      if (auth?.token && auth?.authUserId) {
-        await auth.recheckSubscriptionOnly(auth.token, auth.authUserId);
+      // ✅ OPTIMIZED: Background refreshes
+      billing.fetchSubscriptions().catch(err => {
+        console.error('[SUBSCRIPTIONS] Background refresh failed:', err.message);
+      });
+      
+      if (auth?.token && auth?.authUserId && auth.recheckSubscriptionOnly) {
+        auth.recheckSubscriptionOnly(auth.token, auth.authUserId).catch(err => {
+          console.error('[AUTH] Background recheck failed:', err.message);
+        });
       }
       
       setTimeout(() => setSuccess(false), 3000);

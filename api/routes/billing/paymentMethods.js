@@ -1,6 +1,7 @@
 import express from 'express';
 import { authenticateToken } from '../../middleware/auth.js';
 import stripe from '../../services/stripeService.js';
+import redis from '../../shared/redis.js';
 import {
   getOrCreateStripeCustomer,
   listPaymentMethods,
@@ -10,31 +11,75 @@ import {
 
 const router = express.Router();
 
+// ✅ REQUEST DEDUPLICATION: Map of in-flight requests
+const inflightRequests = new Map();
+
 /**
  * Get user's payment methods
+ * ✅ OPTIMIZED: Caches result for 10 seconds to avoid repeated Stripe queries
+ * ✅ REQUEST DEDUPLICATION: Multiple simultaneous requests share one Stripe call
  */
 router.get('/payment-methods', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
     const userEmail = req.user.email;
-    const customerId = await getOrCreateStripeCustomer(userId, userEmail);
-    
-    if (!customerId) {
-      return res.json({ cards: [], bankAccounts: [] });
+
+    // ✅ REQUEST DEDUPLICATION: If another request is already fetching for this user, wait for it
+    const requestKey = `payment-methods:${userId}`;
+    if (inflightRequests.has(requestKey)) {
+      const result = await inflightRequests.get(requestKey);
+      return res.json(result);
     }
-    
-    const methods = await listPaymentMethods(customerId);
-    
-    // Also fetch customer to get default payment method
-    const customer = await stripe.customers.retrieve(customerId);
-    const defaultPaymentMethodId = customer.invoice_settings?.default_payment_method || null;
-    
-    res.json({
-      cards: methods,
-      defaultPaymentMethodId,
-    });
+
+    // ✅ CACHE: Check Redis cache first (10 second TTL)
+    const cacheKey = `billing:payment-methods:${userId}`;
+    const cachedResult = await redis.get(cacheKey);
+    if (cachedResult) {
+      console.log('[BILLING] Cache HIT for payment methods');
+      return res.json(JSON.parse(cachedResult));
+    }
+
+    console.log('[BILLING] Cache MISS for payment methods - querying Stripe');
+
+    // Create a promise for this request so others can wait for it
+    const fetchPromise = (async () => {
+      const customerId = await getOrCreateStripeCustomer(userId, userEmail);
+      
+      if (!customerId) {
+        return { cards: [], defaultPaymentMethodId: null };
+      }
+      
+      // ✅ OPTIMIZED: Make both Stripe calls in parallel
+      const [methods, customer] = await Promise.all([
+        listPaymentMethods(customerId),
+        stripe.customers.retrieve(customerId),
+      ]);
+      
+      const defaultPaymentMethodId = customer.invoice_settings?.default_payment_method || null;
+      
+      const result = {
+        cards: methods,
+        defaultPaymentMethodId,
+      };
+
+      // ✅ CACHE: Store in Redis for 10 seconds
+      await redis.setEx(cacheKey, 10, JSON.stringify(result));
+      
+      return result;
+    })();
+
+    // Store in-flight request
+    inflightRequests.set(requestKey, fetchPromise);
+
+    // Wait for result and send response
+    const result = await fetchPromise;
+    res.json(result);
+
+    // Remove from in-flight map after short delay
+    setTimeout(() => inflightRequests.delete(requestKey), 100);
   } catch (error) {
     console.error('[BILLING] Get payment methods error:', error);
+    inflightRequests.delete(`payment-methods:${req.user.userId}`);
     res.status(500).json({ error: error.message });
   }
 });
@@ -66,6 +111,10 @@ router.post('/payment-methods/attach', authenticateToken, async (req, res) => {
       customer: customerId,
     });
 
+    // ✅ CLEAR CACHE: Invalidate payment methods cache so next fetch gets fresh data
+    const cacheKey = `billing:payment-methods:${userId}`;
+    await redis.del(cacheKey);
+
     res.json({ 
       success: true, 
       paymentMethod: paymentMethod 
@@ -88,12 +137,17 @@ router.post('/payment-methods/attach', authenticateToken, async (req, res) => {
 router.delete('/payment-methods/:id', authenticateToken, async (req, res) => {
   try {
     const id = req.params.id;
+    const userId = req.user.userId;
 
     if (!id) {
       return res.status(400).json({ error: 'Payment method ID is required' });
     }
 
     const result = await deletePaymentMethod(id);
+
+    // ✅ CLEAR CACHE: Invalidate payment methods cache
+    const cacheKey = `billing:payment-methods:${userId}`;
+    await redis.del(cacheKey);
 
     res.json({ success: true, message: 'Payment method deleted' });
   } catch (error) {
@@ -109,6 +163,7 @@ router.delete('/payment-methods/:id', authenticateToken, async (req, res) => {
 
 /**
  * Set default payment method
+ * ✅ OPTIMIZED: Clears cache immediately so next fetch is fresh
  */
 router.post('/payment-methods/set-default', authenticateToken, async (req, res) => {
   try {
@@ -123,6 +178,10 @@ router.post('/payment-methods/set-default', authenticateToken, async (req, res) 
     }
     
     const customer = await setDefaultPaymentMethod(customerId, paymentMethodId);
+
+    // ✅ CLEAR CACHE: Invalidate payment methods cache so next fetch is fresh
+    const cacheKey = `billing:payment-methods:${userId}`;
+    await redis.del(cacheKey);
 
     res.json({ success: true, defaultPaymentMethod: customer.invoice_settings?.default_payment_method });
   } catch (error) {
@@ -164,6 +223,10 @@ router.post('/payment-methods/attach-unattached', authenticateToken, async (req,
         errors.push({ id: method.id, error: err.message });
       }
     }
+
+    // ✅ CLEAR CACHE: Invalidate payment methods cache
+    const cacheKey = `billing:payment-methods:${userId}`;
+    await redis.del(cacheKey);
 
     res.json({ success: true, attachedCount: attached.length, attachedIds: attached, errors: errors.length > 0 ? errors : undefined });
   } catch (error) {

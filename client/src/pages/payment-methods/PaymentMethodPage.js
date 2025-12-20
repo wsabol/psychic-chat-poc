@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import { useBilling } from '../../hooks/useBilling';
@@ -11,8 +11,8 @@ const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
 
 /**
  * PaymentMethodPage - Manage payment methods
- * Supported: Credit/Debit Cards, Apple Pay, Google Pay, Amazon Pay
- * (ACH bank accounts removed due to Sandbox settlement limitations)
+ * ✅ FIXED: Only fetch on mount, not on every render
+ * ✅ DEBOUNCED: Refresh only on explicit user actions
  */
 export default function PaymentMethodPage({ userId, token, auth }) {
   const billing = useBilling(token);
@@ -30,11 +30,22 @@ export default function PaymentMethodPage({ userId, token, auth }) {
   });
   const cardElementRef = useRef(null);
   const stripeRef = useRef(null);
+  const refreshTimeoutRef = useRef(null);
+  const hasInitialized = useRef(false);
 
+  // ✅ FIXED: Only fetch once on mount, not on every render
   useEffect(() => {
-    // Fetch payment methods on mount
-    billing.fetchPaymentMethods();
-  }, [billing]);
+    if (!hasInitialized.current) {
+      hasInitialized.current = true;
+      billing.fetchPaymentMethods();
+    }
+    
+    return () => {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+    };
+  }, []); // Empty dependency array - run only once
 
   const handleAddClick = async () => {
     try {
@@ -44,10 +55,19 @@ export default function PaymentMethodPage({ userId, token, auth }) {
       setShowAddPaymentForm(true);
     } catch (err) {
       setCardError(err.message || 'Failed to prepare payment form');
-      // ✅ Still show form even if setup intent fails
       setShowAddPaymentForm(true);
     }
   };
+
+  // ✅ Debounced refresh - prevents hammering backend
+  const debouncedRefreshPaymentMethods = useCallback(() => {
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current);
+    }
+    refreshTimeoutRef.current = setTimeout(() => {
+      billing.fetchPaymentMethods();
+    }, 500);
+  }, [billing]);
 
   const handleCardSubmit = async (cardElement) => {
     if (!stripeRef.current) {
@@ -101,10 +121,10 @@ export default function PaymentMethodPage({ userId, token, auth }) {
       // Set as default
       await billing.setDefaultPaymentMethod(paymentMethodId);
 
-      // Refresh list
-      await billing.fetchPaymentMethods();
+      // ✅ DEBOUNCED: Refresh in background (500ms) - don't wait
+      debouncedRefreshPaymentMethods();
 
-      // Show success
+      // Show success immediately
       setShowAddPaymentForm(false);
       setCardSuccess(true);
       setTimeout(() => setCardSuccess(false), 3000);
@@ -137,17 +157,11 @@ export default function PaymentMethodPage({ userId, token, auth }) {
         <div className="alert alert-success">✓ Payment method added successfully!</div>
       )}
 
-      {/* ✅ ALWAYS CLICKABLE: Button is NEVER disabled, only shows loading text */}
       {!showAddPaymentForm && (
         <button
           className="btn-primary"
           onClick={handleAddClick}
           disabled={false}
-          style={{
-            opacity: loading ? 0.7 : 1,
-            cursor: 'pointer',
-            pointerEvents: loading ? 'auto' : 'auto',
-          }}
         >
           {loading ? '⏳ Processing...' : '+ Add Payment Method'}
         </button>
@@ -188,11 +202,14 @@ export default function PaymentMethodPage({ userId, token, auth }) {
         onSetDefault={async (paymentMethodId) => {
           try {
             await billing.setDefaultPaymentMethod(paymentMethodId);
-            await billing.fetchPaymentMethods();
+            // ✅ DEBOUNCED: Refresh in background
+            debouncedRefreshPaymentMethods();
             setCardSuccess(true);
             setTimeout(() => setCardSuccess(false), 3000);
           } catch (err) {
             setCardError(err.message || 'Failed to set default payment method');
+            // Refresh to show true state
+            billing.fetchPaymentMethods();
           }
         }}
         onDelete={async (paymentMethodId) => {
@@ -201,11 +218,14 @@ export default function PaymentMethodPage({ userId, token, auth }) {
           }
           try {
             await billing.deletePaymentMethod(paymentMethodId);
-            await billing.fetchPaymentMethods();
+            // ✅ DEBOUNCED: Refresh in background
+            debouncedRefreshPaymentMethods();
             setCardSuccess(true);
             setTimeout(() => setCardSuccess(false), 3000);
           } catch (err) {
             setCardError(err.message || 'Failed to delete payment method');
+            // Refresh to show true state
+            billing.fetchPaymentMethods();
           }
         }}
       />

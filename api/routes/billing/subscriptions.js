@@ -14,8 +14,10 @@ const router = express.Router();
 
 /**
  * Create subscription
+ * ✅ OPTIMIZED: Database storage happens in background (fire-and-forget)
  */
 router.post('/create-subscription', authenticateToken, async (req, res) => {
+  const startTime = Date.now();
   try {
     const { priceId } = req.body;
     const userId = req.user.userId;
@@ -25,29 +27,34 @@ router.post('/create-subscription', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'priceId is required' });
     }
 
+    console.log(`[BILLING] Starting subscription creation for ${userId}`);
+    const customerStart = Date.now();
     const customerId = await getOrCreateStripeCustomer(userId, userEmail);
+    console.log(`[BILLING] Got customer ${customerId} in ${Date.now() - customerStart}ms`);
     
     if (!customerId) {
       return res.status(400).json({ error: 'Stripe is not configured.' });
     }
     
+    const stripeStart = Date.now();
     const subscription = await createSubscription(customerId, priceId);
+    console.log(`[BILLING] Stripe createSubscription took ${Date.now() - stripeStart}ms`);
 
-    // Store encrypted subscription data in database
-    try {
-      await storeSubscriptionData(userId, subscription.id, {
-        status: subscription.status,
-        current_period_start: subscription.current_period_start,
-        current_period_end: subscription.current_period_end,
-        plan_name: subscription.items?.data?.[0]?.plan?.product?.name,
-        price_amount: subscription.items?.data?.[0]?.price?.unit_amount,
-        price_interval: subscription.items?.data?.[0]?.price?.recurring?.interval,
-      });
-    } catch (storageError) {
-      console.error('[BILLING] Warning - failed to store subscription in DB:', storageError.message);
-      // Don't fail the response - subscription was created in Stripe
-    }
+    // ✅ OPTIMIZED: Store subscription data in background (don't wait)
+    // Return response immediately while database update happens in parallel
+    storeSubscriptionData(userId, subscription.id, {
+      status: subscription.status,
+      current_period_start: subscription.current_period_start,
+      current_period_end: subscription.current_period_end,
+      plan_name: subscription.items?.data?.[0]?.plan?.product?.name,
+      price_amount: subscription.items?.data?.[0]?.price?.unit_amount,
+      price_interval: subscription.items?.data?.[0]?.price?.recurring?.interval,
+    }).catch(err => {
+      console.error('[BILLING] Warning - failed to store subscription in DB:', err.message);
+      // Don't fail - subscription was created in Stripe
+    });
 
+    console.log(`[BILLING] Total time: ${Date.now() - startTime}ms`);
     res.json({
       subscriptionId: subscription.id,
       status: subscription.status,

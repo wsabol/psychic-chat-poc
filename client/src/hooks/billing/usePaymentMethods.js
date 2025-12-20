@@ -8,15 +8,16 @@ export function usePaymentMethods(token) {
   const timeoutRef = useRef(null);
 
   // ✅ FIXED: Helper to set loading with timeout safety
+  // Timeout now 30 seconds (increased from 10) - Stripe operations can be slow
   const setLoadingWithTimeout = (isLoading) => {
     setLoading(isLoading);
     if (isLoading) {
-      // If loading takes more than 10 seconds, force reset
+      // If loading takes more than 30 seconds, force reset
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(() => {
-        console.warn('[BILLING] Loading timeout - forcing reset');
+        console.warn('[BILLING] Loading timeout (30s) - forcing reset');
         setLoading(false);
-      }, 10000);
+      }, 30000); // Increased to 30 seconds
     } else {
       // Clear timeout when loading completes
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -32,6 +33,7 @@ export function usePaymentMethods(token) {
         errorContext: 'fetch payment methods',
       });
       setPaymentMethods(data);
+      setLoadingWithTimeout(false);
       return data;
     } catch (err) {
       console.error('[PAYMENT-METHODS] Error:', err.message);

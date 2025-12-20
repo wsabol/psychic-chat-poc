@@ -34,7 +34,7 @@ export function useSubscriptions(token) {
         token,
         errorContext: 'create subscription',
       });
-      await fetchSubscriptions();
+      
       return data;
     } catch (err) {
       setError(err.message);
@@ -42,7 +42,7 @@ export function useSubscriptions(token) {
     } finally {
       setLoading(false);
     }
-  }, [token, fetchSubscriptions]);
+  }, [token]);
 
   const cancelSubscription = useCallback(async (subscriptionId) => {
     try {
@@ -53,7 +53,7 @@ export function useSubscriptions(token) {
         token,
         errorContext: 'cancel subscription',
       });
-      await fetchSubscriptions();
+      
       return data;
     } catch (err) {
       setError(err.message);
@@ -61,7 +61,7 @@ export function useSubscriptions(token) {
     } finally {
       setLoading(false);
     }
-  }, [token, fetchSubscriptions]);
+  }, [token]);
 
   return {
     subscriptions,
