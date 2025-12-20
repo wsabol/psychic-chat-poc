@@ -3,6 +3,9 @@ import { db } from '../../../shared/db.js';
 /**
  * Create user database records (personal info, 2FA settings, astrology)
  * Used in registration and login flows
+ * 
+ * New users start with onboarding_step='create_account' and onboarding_completed=FALSE
+ * Established users have onboarding_completed=TRUE (set by migration)
  */
 export async function createUserDatabaseRecords(userId, email, firstName = '', lastName = '') {
   try {
@@ -13,11 +16,25 @@ export async function createUserDatabaseRecords(userId, email, firstName = '', l
     );
 
     if (existsCheck.rows.length === 0) {
-      // Create personal info only if doesn't exist
+      // Create personal info for new user - mark as in onboarding
       await db.query(
-        `INSERT INTO user_personal_info (user_id, email_encrypted, first_name_encrypted, last_name_encrypted, created_at, updated_at)
-         VALUES ($1, pgp_sym_encrypt($2, $3), pgp_sym_encrypt($4, $5), pgp_sym_encrypt($6, $7), NOW(), NOW())`,
-        [userId, email, process.env.ENCRYPTION_KEY, firstName, process.env.ENCRYPTION_KEY, lastName, process.env.ENCRYPTION_KEY]
+        `INSERT INTO user_personal_info (
+          user_id, email_encrypted, first_name_encrypted, last_name_encrypted,
+          onboarding_step, onboarding_completed, onboarding_started_at,
+          created_at, updated_at
+        ) VALUES (
+          $1, pgp_sym_encrypt($2, $3), pgp_sym_encrypt($4, $5), pgp_sym_encrypt($6, $7),
+          $8, $9, NOW(),
+          NOW(), NOW()
+        )`,
+        [
+          userId, 
+          email, process.env.ENCRYPTION_KEY, 
+          firstName, process.env.ENCRYPTION_KEY, 
+          lastName, process.env.ENCRYPTION_KEY,
+          'create_account', // New users start at step 1
+          false  // Not yet completed onboarding
+        ]
       );
     }
 

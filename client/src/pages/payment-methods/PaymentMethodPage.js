@@ -14,7 +14,7 @@ const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
  * ✅ FIXED: Only fetch on mount, not on every render
  * ✅ DEBOUNCED: Refresh only on explicit user actions
  */
-export default function PaymentMethodPage({ userId, token, auth }) {
+export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
   const billing = useBilling(token);
   const [showAddPaymentForm, setShowAddPaymentForm] = useState(false);
   const [cardError, setCardError] = useState(null);
@@ -123,6 +123,15 @@ export default function PaymentMethodPage({ userId, token, auth }) {
 
       // ✅ DEBOUNCED: Refresh in background (500ms) - don't wait
       debouncedRefreshPaymentMethods();
+
+            // ✅ ONBOARDING: Update progress if in onboarding
+      if (onboarding?.updateOnboardingStep) {
+        try {
+          await onboarding.updateOnboardingStep('payment_method');
+        } catch (err) {
+          console.warn('[ONBOARDING] Failed to update payment method step:', err);
+        }
+      }
 
       // Show success immediately
       setShowAddPaymentForm(false);

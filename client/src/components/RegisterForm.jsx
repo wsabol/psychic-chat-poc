@@ -1,6 +1,46 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { PasswordInput } from './PasswordInput';
 import { TermsCheckbox } from './TermsCheckbox';
+
+/**
+ * Password Validation Rules
+ */
+const PASSWORD_REQUIREMENTS = {
+  minLength: { regex: /.{8,}/, label: 'At least 8 characters' },
+  hasUpperCase: { regex: /[A-Z]/, label: 'One uppercase letter (A-Z)' },
+  hasLowerCase: { regex: /[a-z]/, label: 'One lowercase letter (a-z)' },
+  hasNumber: { regex: /[0-9]/, label: 'One number (0-9)' },
+  hasSpecialChar: { regex: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, label: 'One special character (!@#$%...)' },
+};
+
+function validatePassword(pwd) {
+  const results = {};
+  Object.entries(PASSWORD_REQUIREMENTS).forEach(([key, { regex }]) => {
+    results[key] = regex.test(pwd);
+  });
+  return results;
+}
+
+function getPasswordStrength(pwd) {
+  if (!pwd) return 0;
+  const validation = validatePassword(pwd);
+  const passedChecks = Object.values(validation).filter(Boolean).length;
+  return passedChecks;
+}
+
+function getStrengthColor(strength) {
+  if (strength < 2) return '#d32f2f'; // Red
+  if (strength < 4) return '#f57c00'; // Orange
+  return '#388e3c'; // Green
+}
+
+function getStrengthLabel(strength) {
+  if (strength === 0) return 'No requirements met';
+  if (strength < 2) return 'Weak';
+  if (strength < 4) return 'Fair';
+  if (strength < 5) return 'Good';
+  return 'Strong';
+}
 
 /**
  * RegisterForm Component
@@ -21,7 +61,14 @@ export function RegisterForm({
   onSubmit,
   onSwitchToLogin
 }) {
-  const isFormValid = termsAccepted && privacyAccepted && password === confirmPassword && password.length >= 6;
+  const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
+  
+  const passwordValidation = useMemo(() => validatePassword(password), [password]);
+  const passwordStrength = useMemo(() => getPasswordStrength(password), [password]);
+  const allRequirementsMet = Object.values(passwordValidation).every(Boolean);
+  const passwordsMatch = password === confirmPassword && password.length > 0;
+  
+  const isFormValid = termsAccepted && privacyAccepted && allRequirementsMet && passwordsMatch;
 
   return (
     <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -40,19 +87,94 @@ export function RegisterForm({
         }}
       />
       
-      <PasswordInput
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        placeholder="Password (min 6 characters)"
-        autoComplete="new-password"
-      />
+      <div>
+        <PasswordInput
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          onFocus={() => setShowPasswordRequirements(true)}
+          placeholder="Password (8+ chars, uppercase, number, special char)"
+          autoComplete="new-password"
+        />
+        
+        {/* Password Strength Indicator */}
+        {password && (
+          <div style={{ marginTop: '0.5rem' }}>
+            <div style={{ display: 'flex', gap: '0.25rem', marginBottom: '0.5rem' }}>
+              {[1, 2, 3, 4, 5].map((idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    flex: 1,
+                    height: '4px',
+                    borderRadius: '2px',
+                    backgroundColor: idx <= passwordStrength ? getStrengthColor(passwordStrength) : '#ddd',
+                    transition: 'all 0.3s',
+                  }}
+                />
+              ))}
+            </div>
+            <small style={{ color: getStrengthColor(passwordStrength), fontWeight: '600' }}>
+              {getStrengthLabel(passwordStrength)}
+            </small>
+          </div>
+        )}
+        
+        {/* Password Requirements Checklist */}
+        {(showPasswordRequirements || password) && (
+          <div style={{
+            marginTop: '0.75rem',
+            padding: '0.75rem',
+            backgroundColor: '#f5f5f5',
+            borderRadius: '5px',
+            fontSize: '0.85rem',
+          }}>
+            <div style={{ fontWeight: '600', marginBottom: '0.5rem', color: '#333' }}>
+              Password Requirements:
+            </div>
+            {Object.entries(PASSWORD_REQUIREMENTS).map(([key, { label }]) => {
+              const isMet = passwordValidation[key];
+              return (
+                <div
+                  key={key}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    marginBottom: '0.4rem',
+                    color: isMet ? '#388e3c' : '#999',
+                  }}
+                >
+                  <span style={{ fontWeight: 'bold' }}>
+                    {isMet ? '✓' : '○'}
+                  </span>
+                  <span>{label}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
       
-      <PasswordInput
-        value={confirmPassword}
-        onChange={(e) => setConfirmPassword(e.target.value)}
-        placeholder="Confirm Password"
-        autoComplete="new-password"
-      />
+      <div>
+        <PasswordInput
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          placeholder="Confirm Password"
+          autoComplete="new-password"
+        />
+        
+        {/* Password Match Indicator */}
+        {confirmPassword && (
+          <small style={{
+            marginTop: '0.25rem',
+            display: 'block',
+            color: passwordsMatch ? '#388e3c' : '#d32f2f',
+            fontWeight: '600',
+          }}>
+            {passwordsMatch ? '✓ Passwords match' : '✗ Passwords do not match'}
+          </small>
+        )}
+      </div>
 
       {/* T&C Checkboxes */}
       <TermsCheckbox
@@ -70,10 +192,12 @@ export function RegisterForm({
           padding: '0.75rem',
           borderRadius: '5px',
           border: 'none',
-          backgroundColor: (loading || !isFormValid) ? '#666' : '#4CAF50',
+          backgroundColor: (loading || !isFormValid) ? '#999' : '#4CAF50',
           color: 'white',
           fontSize: '1rem',
-          cursor: (loading || !isFormValid) ? 'not-allowed' : 'pointer'
+          fontWeight: '600',
+          cursor: (loading || !isFormValid) ? 'not-allowed' : 'pointer',
+          transition: 'all 0.3s',
         }}
       >
         {loading ? 'Creating account...' : 'Create Account'}

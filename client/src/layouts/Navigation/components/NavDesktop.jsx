@@ -7,6 +7,7 @@ export function NavDesktop({
   onNavigate,
   onLogout,
   isTemporaryAccount,
+  isDisabled = false,
   menuStructure,
   expandedSubmenu,
   setExpandedSubmenu
@@ -17,7 +18,7 @@ export function NavDesktop({
   };
 
   const handlePageClick = (pageId) => {
-    if (isTemporaryAccount) return;
+    if (isTemporaryAccount || isDisabled) return; // Don't navigate during onboarding
     const index = pages.findIndex(p => p.id === pageId);
     if (index !== -1) {
       onNavigate(index);

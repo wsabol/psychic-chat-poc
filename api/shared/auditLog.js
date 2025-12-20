@@ -58,6 +58,14 @@ export async function logAudit(db, options) {
     const ENCRYPTION_KEY = getEncryptionKey();
     const userIdHash = userId ? hashUserId(userId) : null;
     
+    // Extract email from details if present (to encrypt separately)
+    let emailToEncrypt = null;
+    let cleanDetails = { ...details };
+    if (cleanDetails.email) {
+      emailToEncrypt = cleanDetails.email;
+      delete cleanDetails.email;  // Remove from details JSONB - now stored in email_encrypted
+    }
+    
     // Encrypt IP address using PostgreSQL
     let encryptedIp = null;
     if (ipAddress) {
@@ -72,15 +80,30 @@ export async function logAudit(db, options) {
       }
     }
 
+    // Encrypt email using PostgreSQL (NEW - separate column for PII)
+    let encryptedEmail = null;
+    if (emailToEncrypt) {
+      try {
+        const encResult = await db.query(
+          'SELECT pgp_sym_encrypt($1::text, $2) as encrypted',
+          [emailToEncrypt, ENCRYPTION_KEY]
+        );
+        encryptedEmail = encResult.rows[0]?.encrypted;
+      } catch (encErr) {
+        console.warn('[AUDIT] WARNING: Failed to encrypt email:', encErr.message);
+      }
+    }
+
     await db.query(
       `INSERT INTO audit_log 
-       (user_id_hash, action, details, ip_address_encrypted, user_agent)
-       VALUES ($1, $2, $3, $4, $5)`,
+       (user_id_hash, action, details, ip_address_encrypted, email_encrypted, user_agent)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
       [
         userIdHash,
         action,
-        JSON.stringify(details || {}),
+        JSON.stringify(cleanDetails || {}),
         encryptedIp,
+        encryptedEmail,
         userAgent ? String(userAgent).substring(0, 500) : null
       ]
     );

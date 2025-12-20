@@ -41,16 +41,16 @@ export async function savePhoneNumber(userId, phoneNumber, recoveryPhone) {
     const encryptedRecovery = encryptPhone(recoveryPhone);
 
     await db.query(
-      `INSERT INTO security (user_id, user_id_hash, phone_number_encrypted, recovery_phone_encrypted, phone_verified, recovery_phone_verified)
-       VALUES ($1, $2, pgp_sym_encrypt($3, $4), pgp_sym_encrypt($5, $4), FALSE, FALSE)
-       ON CONFLICT (user_id) 
+      `INSERT INTO security (user_id, user_id_hash, phone_number, recovery_phone, phone_verified, recovery_phone_verified)
+       VALUES ($1, $2, $3, $4, FALSE, FALSE)
+       ON CONFLICT (user_id_hash) 
        DO UPDATE SET 
-         phone_number_encrypted = pgp_sym_encrypt($3, $4),
-         recovery_phone_encrypted = pgp_sym_encrypt($5, $4),
+         phone_number = EXCLUDED.phone_number,
+         recovery_phone = EXCLUDED.recovery_phone,
          phone_verified = FALSE,
          recovery_phone_verified = FALSE,
          updated_at = CURRENT_TIMESTAMP`,
-      [userId, userIdHash, phoneNumber || '', process.env.ENCRYPTION_KEY, recoveryPhone || '']
+      [userId, userIdHash, encryptedPhone, encryptedRecovery]
     );
 
     const { code, expiresAt } = generateVerificationCodeWithExpiry();

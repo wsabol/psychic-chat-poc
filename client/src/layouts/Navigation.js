@@ -14,7 +14,8 @@ export default function Navigation({
   onNavigate,
   isVisible,
   onLogout,
-  isTemporaryAccount
+  isTemporaryAccount,
+  isDisabled = false
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [expandedSubmenu, setExpandedSubmenu] = useState(null);
@@ -27,6 +28,7 @@ export default function Navigation({
         onNavigate={onNavigate}
         onLogout={onLogout}
         isTemporaryAccount={isTemporaryAccount}
+        isDisabled={isDisabled}
         menuStructure={menuStructure}
         mobileMenuOpen={mobileMenuOpen}
         setMobileMenuOpen={setMobileMenuOpen}
@@ -40,6 +42,7 @@ export default function Navigation({
         onNavigate={onNavigate}
         onLogout={onLogout}
         isTemporaryAccount={isTemporaryAccount}
+        isDisabled={isDisabled}
         menuStructure={menuStructure}
         expandedSubmenu={expandedSubmenu}
         setExpandedSubmenu={setExpandedSubmenu}

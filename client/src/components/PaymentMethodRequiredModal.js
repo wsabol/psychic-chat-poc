@@ -2,10 +2,14 @@ import React, { useState, useEffect } from 'react';
 
 /**
  * PaymentMethodRequiredModal - Full screen modal requiring payment method setup
- * Shows when user has no valid payment method (no cards, no verified bank accounts)
+ * Shows when ESTABLISHED user has no valid payment method (no cards, no verified bank accounts)
  * Cannot be dismissed - user must add a payment method
+ * 
+ * HIDDEN during onboarding - new users see OnboardingModal instead
  */
-export default function PaymentMethodRequiredModal({ onNavigateToBilling }) {
+export default function PaymentMethodRequiredModal({ onNavigateToBilling, isOnboarding = false }) {
+  // Don't show during onboarding - user sees OnboardingModal instead
+  if (isOnboarding) return null;
   const [fadeIn, setFadeIn] = useState(false);
 
   useEffect(() => {

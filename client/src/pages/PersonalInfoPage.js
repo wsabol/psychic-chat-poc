@@ -47,7 +47,7 @@ function parseDateForStorage(dateString) {
     }
 }
 
-export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage }) {
+export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage, onboarding }) {
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -209,7 +209,14 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
                 throw new Error(errData.error || 'Failed to save personal information');
             }
             
-            setSuccess(true);
+                        setSuccess(true);
+            if (onboarding?.updateOnboardingStep) {
+                try {
+                    await onboarding.updateOnboardingStep('personal_info');
+                } catch (err) {
+                    console.warn('[ONBOARDING] Failed to update personal info step:', err);
+                }
+            }
             if (isTemporaryAccount && onNavigateToPage) {
                 setTimeout(() => {
                     onNavigateToPage(4);

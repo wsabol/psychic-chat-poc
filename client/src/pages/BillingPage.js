@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PaymentMethodPage from './PaymentMethodPage';
 import SubscriptionsPage from './SubscriptionsPage';
 import InvoicesPage from './InvoicesPage';
@@ -9,8 +9,15 @@ import './BillingPage.css';
  * BillingPage - Main billing container with tabs for different sections
  * Displays: Payment Methods, Subscriptions, Invoices, Payments
  */
-export default function BillingPage({ userId, token, auth }) {
-  const [activeTab, setActiveTab] = useState('payment-methods');
+export default function BillingPage({ userId, token, auth, onboarding, defaultTab = 'payment-methods' }) {
+  const [activeTab, setActiveTab] = useState(defaultTab);
+
+  // Update active tab when defaultTab prop changes
+  useEffect(() => {
+    if (defaultTab) {
+      setActiveTab(defaultTab);
+    }
+  }, [defaultTab]);
 
   const tabs = [
     { id: 'payment-methods', label: '💳 Payment Methods', icon: '💳' },
@@ -46,8 +53,8 @@ export default function BillingPage({ userId, token, auth }) {
 
         {/* Tab Content */}
         <div className="billing-content">
-          {activeTab === 'payment-methods' && (
-            <PaymentMethodPage userId={userId} token={token} auth={auth} />
+                    {activeTab === 'payment-methods' && (
+            <PaymentMethodPage userId={userId} token={token} auth={auth} onboarding={onboarding} />
           )}
           {activeTab === 'subscriptions' && (
             <SubscriptionsPage userId={userId} token={token} auth={auth} />

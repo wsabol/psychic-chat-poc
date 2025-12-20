@@ -2,10 +2,14 @@ import React, { useState, useEffect } from 'react';
 
 /**
  * SubscriptionRequiredModal - Full screen modal blocking access until subscription
- * Shows when user has no active subscription
+ * Shows when ESTABLISHED user has no active subscription
  * Cannot be dismissed - user must go to subscriptions page to renew
+ * 
+ * HIDDEN during onboarding - new users see OnboardingModal instead
  */
-export default function SubscriptionRequiredModal({ onNavigateToSubscriptions }) {
+export default function SubscriptionRequiredModal({ onNavigateToSubscriptions, isOnboarding = false }) {
+  // Don't show during onboarding - user sees OnboardingModal instead
+  if (isOnboarding) return null;
   const [fadeIn, setFadeIn] = useState(false);
 
   useEffect(() => {

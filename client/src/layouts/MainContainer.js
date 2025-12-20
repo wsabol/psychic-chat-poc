@@ -24,18 +24,20 @@ const PAGES = [
   { id: 'billing', label: 'Billing & Subscriptions', component: BillingPage },
 ];
 
-export default function MainContainer({ auth, token, userId, onLogout, onExit, startingPage = 0, onNavigateFromBilling }) {
+export default function MainContainer({ auth, token, userId, onLogout, onExit, startingPage = 0, billingTab = 'payment-methods', onNavigateFromBilling, onboarding }) {
   const [currentPageIndex, setCurrentPageIndex] = useState(startingPage);
   const [swipeDirection, setSwipeDirection] = useState(0);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [navVisible, setNavVisible] = useState(true);
 
-  // Set starting page when it changes
+    // Set starting page when it changes
   useEffect(() => {
+    console.log('[MC] useEffect: startingPage=', startingPage, 'currentPageIndex=', currentPageIndex);
     if (startingPage !== 0 && startingPage !== currentPageIndex) {
+      console.log('[MC] Setting currentPageIndex to:', startingPage);
       setCurrentPageIndex(startingPage);
     }
-  }, [startingPage, currentPageIndex]);
+  }, [startingPage]);
 
   // Track scroll to hide/show nav on mobile
   useEffect(() => {
@@ -114,6 +116,7 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
         isVisible={navVisible}
         onLogout={onLogout}
         isTemporaryAccount={auth?.isTemporaryAccount}
+        isDisabled={onboarding?.onboardingStatus?.isOnboarding === true}
       />
 
       <div className="pages-container" {...swipeHandlers}>
@@ -126,13 +129,15 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
             transition={{ duration: 0.3, ease: 'easeInOut' }}
             className="page-wrapper"
           >
-            <PageComponent 
+                                    <PageComponent
               userId={userId}
               token={token}
               auth={auth}
               onNavigateToPage={goToPage}
               onLogout={onLogout}
               onExit={onExit}
+              onboarding={onboarding}
+              billingTab={currentPage.id === 'billing' ? billingTab : undefined}
             />
           </motion.div>
         </AnimatePresence>

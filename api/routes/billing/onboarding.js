@@ -1,0 +1,115 @@
+import express from 'express';
+import { authenticateToken } from '../../middleware/auth.js';
+import { db } from '../../shared/db.js';
+
+const router = express.Router();
+
+/**
+ * GET /billing/onboarding-status
+ * Get user's onboarding progress
+ * 
+ * Returns:
+ * - currentStep: Current onboarding step
+ * - isOnboarding: Whether user is still in onboarding (true if NULL or FALSE)
+ * - completedSteps: Object showing which steps are complete
+ * - subscriptionStatus: Current subscription status
+ */
+router.get('/onboarding-status', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    
+    const result = await db.query(
+      `SELECT 
+        onboarding_step, 
+        onboarding_completed, 
+        subscription_status
+       FROM user_personal_info 
+       WHERE user_id = $1`,
+      [userId]
+    );
+    
+    if (!result.rows[0]) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const { onboarding_step, onboarding_completed, subscription_status } = result.rows[0];
+    
+    // Determine which steps are complete based on onboarding_step progression
+    // A step is complete if we've reached or passed it in the step order
+    const stepOrder = ['create_account', 'payment_method', 'subscription', 'personal_info', 'security_settings'];
+    const currentStepIndex = onboarding_step ? stepOrder.indexOf(onboarding_step) : -1;
+    
+    const steps = {
+      create_account: true, // Always complete for users in the system
+      payment_method: currentStepIndex >= stepOrder.indexOf('payment_method'),
+      subscription: currentStepIndex >= stepOrder.indexOf('subscription'),
+      personal_info: currentStepIndex >= stepOrder.indexOf('personal_info'),
+      security_settings: currentStepIndex >= stepOrder.indexOf('security_settings'),
+    };
+    
+    // isOnboarding = true if onboarding_completed is NULL or FALSE (not finished)
+    // Only FALSE if onboarding_completed = true
+    const isOnboarding = onboarding_completed !== true;
+    
+    console.log(`[ONBOARDING] Status check for ${userId}: step=${onboarding_step}, completed=${onboarding_completed}, isOnboarding=${isOnboarding}`);
+    
+    res.json({
+      currentStep: onboarding_step,
+      isOnboarding: isOnboarding,
+      completedSteps: steps,
+      subscriptionStatus: subscription_status
+    });
+  } catch (error) {
+    console.error('[ONBOARDING] Get status error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /billing/onboarding-step/:step
+ * Update onboarding progress
+ * 
+ * Marks a step as complete and updates onboarding status
+ * Onboarding is COMPLETE when subscription step is reached (all required steps done)
+ * Optional steps don't affect completion
+ */
+router.post('/onboarding-step/:step', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { step } = req.params;
+    
+    const validSteps = ['create_account', 'payment_method', 'subscription', 'personal_info', 'security_settings'];
+    if (!validSteps.includes(step)) {
+      return res.status(400).json({ error: 'Invalid step' });
+    }
+    
+    // Onboarding is COMPLETE when subscription step is reached (all required steps done)
+    // Optional steps (personal_info, security_settings) don't affect completion, but keep tracking
+    const isOnboardingComplete = step === 'subscription' || step === 'personal_info' || step === 'security_settings';
+    
+    const query = `
+      UPDATE user_personal_info SET 
+        onboarding_step = $1,
+        onboarding_completed = $2,
+        onboarding_completed_at = ${isOnboardingComplete ? 'NOW()' : 'onboarding_completed_at'},
+        updated_at = NOW()
+      WHERE user_id = $3
+    `;
+    
+    await db.query(query, [step, isOnboardingComplete, userId]);
+    
+    console.log(`[ONBOARDING] User ${userId} completed step: ${step}, onboarding_completed=${isOnboardingComplete}`);
+    
+    res.json({ 
+      success: true, 
+      step, 
+      completed: isOnboardingComplete,
+      message: isOnboardingComplete ? 'Required onboarding steps complete!' : `Step ${step} updated`
+    });
+  } catch (error) {
+    console.error('[ONBOARDING] Update step error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+export default router;
