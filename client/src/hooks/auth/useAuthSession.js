@@ -83,29 +83,6 @@ export function useAuthSession() {
     }
   }, []);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             const handleLogout = useCallback(async () => {
     try {
       // ✅ Check if current user is the dev user before signing out

@@ -45,17 +45,10 @@ export function useAppRouting(auth, appExited, showRegisterMode = false, skipPay
             return 'verification';
         }
 
-                        // User explicitly logged out
+                                // User explicitly logged out
+        // ✅ Dev users see landing page for testing, others see login page
         if (!auth.isAuthenticated && auth.hasLoggedOut) {
-            console.log('[ROUTING-DEBUG] User logged out. isDevUserLogout:', auth.isDevUserLogout);
-            // ✅ NEW: Dev users see landing page for testing, others see login page
-            if (auth.isDevUserLogout) {
-                console.log('[ROUTING-DEBUG] -> Showing LANDING page (dev user)');
-                return 'landing';
-            } else {
-                console.log('[ROUTING-DEBUG] -> Showing LOGIN page (non-dev user)');
-                return 'login';
-            }
+            return auth.isDevUserLogout ? 'landing' : 'login';
         }
 
         // First time user or not authenticated
