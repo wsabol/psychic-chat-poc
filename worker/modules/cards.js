@@ -1,8 +1,9 @@
 /**
- * Card Extraction - Match only cards in the Tarot section
+ * Card Extraction - Match only cards in "The Cards Drawn" section
  * 
- * CRITICAL: Cards only appear in the initial Tarot section.
- * Once we reach other sections (Astrology, Crystal Guidance, etc.), STOP looking.
+ * CRITICAL: Extract cards ONLY from the dedicated "The Cards Drawn" section.
+ * Stop extracting when we reach the next section header (Card Reading Summary, Deeper Interpretation, etc).
+ * This prevents picking up card names mentioned in later interpretation sections.
  * 
  * Uses word boundaries and strict matching to avoid false positives.
  */
@@ -10,29 +11,49 @@
 export function extractCardsFromResponse(responseText, deck) {
     let searchText = responseText;
     
-    // Find where the TAROT SECTION ENDS - these markers signal we've moved past cards
-    const endOfCardSectionMarkers = [
-        '<h3>astrology',
-        '<h3>crystal',
-        '<h3>astrological',
-        'astrology reflection',
-        'astrology insight',
-        'astrological reflection',
-        'crystal guidance',
-        'crystal insight',
-        '<h3>conclusion',
-    ];
+    // Find "The Cards Drawn" section specifically
+    const cardsDrawnStart = responseText.toLowerCase().indexOf('<h3>the cards drawn</h3>');
     
-    let cutoffIndex = -1;
-    for (const marker of endOfCardSectionMarkers) {
-        const idx = responseText.toLowerCase().indexOf(marker);
-        if (idx !== -1 && (cutoffIndex === -1 || idx < cutoffIndex)) {
-            cutoffIndex = idx;
+    if (cardsDrawnStart !== -1) {
+        // Found the cards section - now find where it ends
+        const searchFromIndex = cardsDrawnStart + 24; // skip past the opening tag
+        
+        // Look for the next section header (this marks the end of cards section)
+        const nextSectionPatterns = [
+            '<h3>card reading summary</h3>',
+            '<h3>deeper interpretation</h3>',
+            '<h3>astrological alignment</h3>',
+            '<h3>crystal guidance</h3>',
+            '<h3>path forward</h3>',
+            '<h3>aromatherapy',
+        ];
+        
+        let sectionEnd = responseText.length; // default to end of text
+        
+        for (const pattern of nextSectionPatterns) {
+            const idx = responseText.toLowerCase().indexOf(pattern, searchFromIndex);
+            if (idx !== -1 && idx < sectionEnd) {
+                sectionEnd = idx;
+            }
         }
-    }
-    
-    if (cutoffIndex !== -1) {
-        searchText = responseText.substring(0, cutoffIndex);
+        
+        // Extract ONLY the "The Cards Drawn" section
+        searchText = responseText.substring(searchFromIndex, sectionEnd);
+    } else {
+        // Fallback: no dedicated cards section header found
+        // Use conservative approach - cut at first major section header
+        const endMarkers = [
+            '<h3>',
+        ];
+        
+        let firstHeaderIndex = responseText.toLowerCase().indexOf('<h3>');
+        if (firstHeaderIndex !== -1) {
+            // Find the second h3 tag (skip the first one if it's the cards section)
+            let secondHeaderIndex = responseText.toLowerCase().indexOf('<h3>', firstHeaderIndex + 4);
+            if (secondHeaderIndex !== -1) {
+                searchText = responseText.substring(firstHeaderIndex, secondHeaderIndex);
+            }
+        }
     }
     
     const allMatches = [];
