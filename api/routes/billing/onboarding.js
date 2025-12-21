@@ -85,7 +85,14 @@ router.post('/onboarding-step/:step', authenticateToken, async (req, res) => {
     
     // Onboarding is COMPLETE when subscription step is reached (all required steps done)
     // Optional steps (personal_info, security_settings) don't affect completion, but keep tracking
-    const isOnboardingComplete = step === 'subscription' || step === 'personal_info' || step === 'security_settings';
+    // Fetch current onboarding_completed status to preserve it
+    const currentResult = await db.query(
+      'SELECT onboarding_completed FROM user_personal_info WHERE user_id = $1',
+      [userId]
+    );
+    
+    const currentCompleted = currentResult.rows[0]?.onboarding_completed;
+    const isOnboardingComplete = step === 'subscription' ? true : currentCompleted;
     
     const query = `
       UPDATE user_personal_info SET 

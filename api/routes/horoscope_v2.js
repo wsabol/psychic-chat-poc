@@ -2,6 +2,7 @@ import { Router } from "express";
 import { enqueueMessage } from "../shared/queue.js";
 import { authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
+import { hashUserId } from "../shared/hashUtils.js";
 
 const router = Router();
 
@@ -20,24 +21,25 @@ router.get("/:userId/:range", authorizeUser, async (req, res) => {
         }
         
         const today = new Date().toISOString().split('T')[0];
+        const userIdHash = hashUserId(userId);
         
-        // Get most recent horoscope
+        // Get most recent horoscope - uses user_id_hash now
         const { rows } = await db.query(
-            `SELECT content FROM messages 
-             WHERE user_id = $1 
+            `SELECT content_encrypted FROM messages 
+             WHERE user_id_hash = $1 
              AND role = 'horoscope'
              ORDER BY created_at DESC 
              LIMIT 1`,
-            [userId]
+            [userIdHash]
         );
         
         if (rows.length === 0) {
             return res.status(404).json({ error: 'No horoscope found. Generating now...' });
         }
         
-        const horoscope = typeof rows[0].content === 'string' 
-            ? JSON.parse(rows[0].content) 
-            : rows[0].content;
+        const horoscope = typeof rows[0].content_encrypted === 'string' 
+            ? JSON.parse(rows[0].content_encrypted) 
+            : rows[0].content_encrypted;
         
         // Check if range matches
         if (horoscope.range !== range.toLowerCase()) {
@@ -51,9 +53,9 @@ router.get("/:userId/:range", authorizeUser, async (req, res) => {
             // Delete stale horoscope from previous day
             await db.query(
                 `DELETE FROM messages 
-                 WHERE user_id = $1 
+                 WHERE user_id_hash = $1 
                  AND role = 'horoscope'`,
-                [userId]
+                [userIdHash]
             );
             return res.status(404).json({ error: 'Horoscope from previous day. Generating fresh one...' });
         }

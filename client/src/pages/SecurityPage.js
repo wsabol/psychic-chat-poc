@@ -29,9 +29,18 @@ export default function SecurityPage({ userId, token, auth, onboarding }) {
     }
   }, []);
 
-  const handleReAuthSuccess = () => {
+    const handleReAuthSuccess = async () => {
     setShowReAuthModal(false);
     setIsVerified(true);
+    
+    // Mark security_settings as complete
+    if (onboarding?.updateOnboardingStep) {
+      try {
+        await onboarding.updateOnboardingStep('security_settings');
+      } catch (err) {
+        console.warn('[SECURITY] Failed to update onboarding:', err);
+      }
+    }
   };
 
   const handleReAuthCancel = () => {

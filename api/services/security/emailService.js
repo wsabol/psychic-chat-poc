@@ -69,6 +69,10 @@ export async function verifyEmailCode(userId, code) {
     const userIdHash = hashUserId(userId);
     
     const result = await getVerificationCode(db, userId, code);
+    
+    if (!result) {
+      throw new Error('getVerificationCode returned null or undefined');
+    }
 
     if (result.rows.length === 0) {
       throw new Error('Invalid or expired verification code');

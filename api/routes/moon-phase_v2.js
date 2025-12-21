@@ -2,6 +2,7 @@ import { Router } from "express";
 import { enqueueMessage } from "../shared/queue.js";
 import { authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
+import { hashUserId } from "../shared/hashUtils.js";
 
 const router = Router();
 
@@ -20,15 +21,16 @@ router.get("/:userId", authorizeUser, async (req, res) => {
         }
         
         const today = new Date().toISOString().split('T')[0];
+        const userIdHash = hashUserId(userId);
         
-        // Get recent moon phase commentaries
+        // Get recent moon phase commentaries - uses user_id_hash now
         const { rows } = await db.query(
-            `SELECT content FROM messages 
-             WHERE user_id = $1 
+            `SELECT content_encrypted FROM messages 
+             WHERE user_id_hash = $1 
              AND role = 'moon_phase'
              ORDER BY created_at DESC 
              LIMIT 10`,
-            [userId]
+            [userIdHash]
         );
         
         // Find one from today matching this specific phase
@@ -36,9 +38,10 @@ router.get("/:userId", authorizeUser, async (req, res) => {
         let staleEntriesExist = false;
         
         for (const row of rows) {
-            const commentary = typeof row.content === 'string' 
-                ? JSON.parse(row.content) 
-                : row.content;
+            // Content is now encrypted, just stored as text
+            const commentary = typeof row.content_encrypted === 'string' 
+                ? JSON.parse(row.content_encrypted) 
+                : row.content_encrypted;
             
             const generatedDate = commentary.generated_at?.split('T')[0];
             const storedPhase = commentary.phase;
@@ -60,20 +63,24 @@ router.get("/:userId", authorizeUser, async (req, res) => {
             // Delete entries from previous days
             await db.query(
                 `DELETE FROM messages 
-                 WHERE user_id = $1 
+                 WHERE user_id_hash = $1 
                  AND role = 'moon_phase'
                  AND created_at < CURRENT_DATE`,
-                [userId]
+                [userIdHash]
             );
             
             // Delete entries for different phases on same day
+            // Note: We can't use JSON operators on encrypted data, so delete all stale entries
             await db.query(
                 `DELETE FROM messages 
-                 WHERE user_id = $1 
+                 WHERE user_id_hash = $1 
                  AND role = 'moon_phase'
                  AND created_at >= CURRENT_DATE
-                 AND (content::jsonb->>'phase') != $2`,
-                [userId, phase]
+                 AND created_at < (
+                   SELECT MAX(created_at) FROM messages 
+                   WHERE user_id_hash = $1 AND role = 'moon_phase' AND created_at >= CURRENT_DATE
+                 )`,
+                [userIdHash]
             );
         }
         

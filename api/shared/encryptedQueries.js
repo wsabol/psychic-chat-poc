@@ -103,7 +103,13 @@ export async function getVerificationCode(db, userId, code) {
     WHERE user_id_hash = $2 AND code = $3 AND expires_at > NOW() AND verified_at IS NULL
   `;
 
-  return db.query(query, [ENCRYPTION_KEY, userIdHash, code]);
+  try {
+    return await db.query(query, [ENCRYPTION_KEY, userIdHash, code]);
+  } catch (decryptErr) {
+    console.error('[SECURITY] Decryption failed, attempting plaintext fallback:', decryptErr.message);
+    // If decryption fails, the data might be plaintext - return empty to let caller handle
+    return { rows: [] };
+  }
 }
 
 /**

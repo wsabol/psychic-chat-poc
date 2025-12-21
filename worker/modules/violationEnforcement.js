@@ -32,3 +32,12 @@ export { isAccountSuspended, isAccountDisabled } from './violation/violationStat
 
 // Enforcement
 export { recordViolationAndGetAction } from './violation/violationEnforcementCore.js';
+
+// Redemption
+export {
+  checkViolationRedemption,
+  resetViolationCount,
+  getRedemptionMessage,
+  getRedemptionConfig,
+  applyPendingRedemptions
+} from './violation/violationRedemption.js';
