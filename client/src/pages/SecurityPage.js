@@ -90,16 +90,17 @@ export default function SecurityPage({ userId, token, auth, onboarding }) {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              style={{
+                            style={{
                 padding: '0.75rem 1rem',
-                backgroundColor: activeTab === tab.id ? '#7c63d8' : 'transparent',
+                backgroundColor: activeTab === tab.id ? '#7c63d8' : 'rgba(255, 255, 255, 0.9)',
                 color: activeTab === tab.id ? 'white' : '#333',
-                border: 'none',
+                border: activeTab === tab.id ? 'none' : '1px solid rgba(200, 200, 200, 0.5)',
                 borderRadius: '4px',
                 cursor: 'pointer',
                 fontWeight: activeTab === tab.id ? 'bold' : 'normal',
                 whiteSpace: 'nowrap',
-                fontSize: '14px'
+                fontSize: '14px',
+                transition: 'all 0.2s ease'
               }}
             >
               {tab.label}
@@ -107,9 +108,9 @@ export default function SecurityPage({ userId, token, auth, onboarding }) {
           ))}
         </div>
 
-        {/* Tab Content */}
+                {/* Tab Content */}
         <div style={{
-          backgroundColor: '#f9f9f9',
+          backgroundColor: 'rgba(255, 255, 255, 0.97)',
           padding: '2rem',
           borderRadius: '8px'
         }}>

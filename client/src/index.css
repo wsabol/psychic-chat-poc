@@ -26,3 +26,33 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* ============================================
+   STARFIELD BACKGROUND VISIBILITY
+   Make all white backgrounds semi-transparent
+   to allow starfield to show through
+*/
+
+.chart-card,
+.birth-chart-cards .chart-card,
+.chat-input-form,
+.horoscope-toggle,
+.horoscope-content,
+.horoscope-content.loading,
+.horoscope-content.error,
+.loading-container,
+.error-container,
+.sign-card,
+.zodiac-details-section,
+.cosmic-content,
+.cosmic-content.loading,
+.cosmic-content.error,
+.billing-content,
+.moon-phase-display,
+.moon-phase-content,
+.moon-phase-content.loading,
+.moon-phase-content.error,
+.form-section,
+.lunar-cycle {
+  background: rgba(255, 255, 255, 0.97) !important;
+}

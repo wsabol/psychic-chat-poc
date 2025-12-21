@@ -11,7 +11,7 @@
   align-items: center;
   margin-bottom: 2rem;
   padding: 1.5rem;
-  background: #f9f9f9;
+  background: rgba(249, 249, 249, 0.7);
   border-radius: 6px;
 }
 
@@ -37,7 +37,7 @@
 .invoices-table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
+  background: rgba(255, 255, 255, 0.97);
 }
 
 .invoices-table thead {

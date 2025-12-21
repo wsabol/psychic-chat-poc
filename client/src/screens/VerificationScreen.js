@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import StarField from '../components/StarField';
 
 /**
  * Email verification screen shown after sign-up
@@ -68,7 +67,6 @@ export function VerificationScreen({
                 backgroundColor: 'rgba(0, 0, 0, 0.9)',
                 padding: '2rem'
             }}>
-                <StarField />
                 <div style={{
                     backgroundColor: 'rgba(30, 30, 60, 0.95)',
                     padding: '3rem',
@@ -111,7 +109,6 @@ export function VerificationScreen({
             backgroundColor: 'rgba(0, 0, 0, 0.9)',
             padding: '2rem'
         }}>
-            <StarField />
             <div style={{
                 backgroundColor: 'rgba(30, 30, 60, 0.95)',
                 padding: '3rem',

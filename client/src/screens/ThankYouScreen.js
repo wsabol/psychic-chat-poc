@@ -1,5 +1,4 @@
 import React from 'react';
-import StarField from '../components/StarField';
 
 export function ThankYouScreen({ onCreateAccount, onContinue, onExit }) {
     return (
@@ -11,7 +10,6 @@ export function ThankYouScreen({ onCreateAccount, onContinue, onExit }) {
             backgroundColor: 'rgba(0, 0, 0, 0.9)',
             padding: '2rem'
         }}>
-            <StarField />
             <div style={{
                 backgroundColor: 'rgba(30, 30, 60, 0.95)',
                 padding: '3rem',

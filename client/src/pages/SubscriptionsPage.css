@@ -69,7 +69,7 @@
 
 /* Subscription Card */
 .subscription-card {
-  background: white;
+  background: rgba(255, 255, 255, 0.97);
   border: 2px solid #e0e0e0;
   border-radius: 8px;
   padding: 1.5rem;
@@ -244,7 +244,7 @@
 }
 
 .plan-option-card {
-  background: white;
+  background: rgba(255, 255, 255, 0.97);
   border: 1px solid #ddd;
   border-radius: 6px;
   padding: 1rem;
@@ -282,7 +282,7 @@
 
 /* Plan Card (for new subscribers) */
 .plan-card {
-  background: white;
+  background: rgba(255, 255, 255, 0.97);
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   padding: 2rem;
@@ -317,7 +317,7 @@
 .plan-pricing {
   margin-bottom: 1.5rem;
   padding: 1.5rem;
-  background: #f9f9f9;
+  background: rgba(249, 249, 249, 0.7);
   border-radius: 6px;
 }
 

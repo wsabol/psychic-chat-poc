@@ -2,6 +2,7 @@ import React from 'react';
 import { useAppState } from './hooks/useAppState';
 import { AppShells } from './screens/AppShells';
 import { AppChat } from './screens/AppChat';
+import StarField from './components/StarField';
 
 /**
  * App - Main application component
@@ -15,11 +16,21 @@ function App() {
 
   // Check if we should show pre-auth shells
   if (state.isLoading || state.isThankyou || state.isVerification || state.isRegister || state.isLanding || state.isLogin || state.isTwoFactor) {
-    return <AppShells state={state} />;
+    return (
+      <>
+        <StarField />
+        <AppShells state={state} />
+      </>
+    );
   }
 
   // Otherwise show authenticated chat flow
-  return <AppChat state={state} />;
+  return (
+    <>
+      <StarField />
+      <AppChat state={state} />
+    </>
+  );
 }
 
 export default App;
