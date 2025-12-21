@@ -31,10 +31,11 @@ export async function generateCosmicWeather(userId) {
         const today = new Date().toISOString().split('T')[0];
         const userIdHash = hashUserId(userId);
         
-        // Check if cosmic weather already exists for today
+                // Check if cosmic weather already exists for today
+        const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
         const { rows } = await db.query(
-            `SELECT content FROM messages WHERE user_id_hash = $1 AND role = 'cosmic_weather' ORDER BY created_at DESC LIMIT 1`,
-            [userIdHash]
+            `SELECT pgp_sym_decrypt(content_encrypted, $2)::text as content FROM messages WHERE user_id_hash = $1 AND role = 'cosmic_weather' ORDER BY created_at DESC LIMIT 1`,
+            [userIdHash, ENCRYPTION_KEY]
         );
         
         if (rows.length > 0) {

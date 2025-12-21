@@ -14,13 +14,9 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
     const userIdHash = hashUserId(userId);
     
     try {
-        const { rows } = await db.query(
+                const { rows } = await db.query(
             `SELECT 
-                CASE 
-                    WHEN content_encrypted IS NOT NULL 
-                    THEN pgp_sym_decrypt(content_encrypted, $2)::text
-                    ELSE content
-                END as content
+                pgp_sym_decrypt(content_encrypted, $2)::text as content
              FROM messages 
              WHERE user_id_hash = $1 AND role = 'cosmic_weather' 
              ORDER BY created_at DESC LIMIT 5`,
@@ -52,7 +48,7 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
 });
 
 // Cosmic Weather Endpoint - POST (trigger generation)
-router.post("/cosmic-weather/:userId", authorizeUser, async (req, res) => {
+router.post("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (req, res) => {
     const { userId } = req.params;
     try {
         await enqueueMessage({ userId, message: '[SYSTEM] Generate cosmic weather' });
@@ -64,19 +60,15 @@ router.post("/cosmic-weather/:userId", authorizeUser, async (req, res) => {
 });
 
 // Lunar Nodes Endpoint
-router.get("/lunar-nodes/:userId", authorizeUser, async (req, res) => {
+router.get("/lunar-nodes/:userId", authenticateToken, authorizeUser, async (req, res) => {
     const { userId } = req.params;
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
     const userIdHash = hashUserId(userId);
     
     try {
-        const { rows } = await db.query(
+                const { rows } = await db.query(
             `SELECT 
-                CASE 
-                    WHEN content_encrypted IS NOT NULL 
-                    THEN pgp_sym_decrypt(content_encrypted, $2)::text
-                    ELSE content
-                END as content
+                pgp_sym_decrypt(content_encrypted, $2)::text as content
              FROM messages 
              WHERE user_id_hash = $1 AND role = 'lunar_nodes' 
              ORDER BY created_at DESC LIMIT 1`,
@@ -95,7 +87,7 @@ router.get("/lunar-nodes/:userId", authorizeUser, async (req, res) => {
     }
 });
 
-router.post("/lunar-nodes/:userId", authorizeUser, async (req, res) => {
+router.post("/lunar-nodes/:userId", authenticateToken, authorizeUser, async (req, res) => {
     const { userId } = req.params;
     try {
         await enqueueMessage({ userId, message: '[SYSTEM] Generate lunar nodes insight' });
@@ -107,20 +99,16 @@ router.post("/lunar-nodes/:userId", authorizeUser, async (req, res) => {
 });
 
 // Void of Course Moon Endpoint
-router.get("/void-of-course/:userId", authorizeUser, async (req, res) => {
+router.get("/void-of-course/:userId", authenticateToken, authorizeUser, async (req, res) => {
     const { userId } = req.params;
     const today = new Date().toISOString().split('T')[0];
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
     const userIdHash = hashUserId(userId);
     
     try {
-        const { rows } = await db.query(
+                const { rows } = await db.query(
             `SELECT 
-                CASE 
-                    WHEN content_encrypted IS NOT NULL 
-                    THEN pgp_sym_decrypt(content_encrypted, $2)::text
-                    ELSE content
-                END as content
+                pgp_sym_decrypt(content_encrypted, $2)::text as content
              FROM messages 
              WHERE user_id_hash = $1 AND role = 'void_of_course' 
              ORDER BY created_at DESC LIMIT 5`,
@@ -152,7 +140,7 @@ router.get("/void-of-course/:userId", authorizeUser, async (req, res) => {
     }
 });
 
-router.post("/void-of-course/:userId", authorizeUser, async (req, res) => {
+router.post("/void-of-course/:userId", authenticateToken, authorizeUser, async (req, res) => {
     const { userId } = req.params;
     try {
         await enqueueMessage({ userId, message: '[SYSTEM] Generate void of course alert' });

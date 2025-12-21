@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { hashUserId } from "../shared/hashUtils.js";
 import { enqueueMessage } from "../shared/queue.js";
-import { authorizeUser } from "../middleware/auth.js";
+import { authenticateToken, authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
 
 const router = Router();
@@ -11,7 +11,7 @@ const router = Router();
  * Fetch the cached moon phase commentary for today
  * Handles both encrypted and plain text content
  */
-router.get("/:userId", authorizeUser, async (req, res) => {
+router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
     const { userId } = req.params;
     const { phase } = req.query; // Current moon phase name
     
@@ -27,13 +27,9 @@ router.get("/:userId", authorizeUser, async (req, res) => {
         
         // Get recent moon phase commentaries
         // Decrypt encrypted messages using pgp_sym_decrypt, fall back to plain text
-        const { rows } = await db.query(
+                const { rows } = await db.query(
             `SELECT 
-                CASE 
-                    WHEN content_encrypted IS NOT NULL 
-                    THEN pgp_sym_decrypt(content_encrypted, $2)::text
-                    ELSE content
-                END as content,
+                pgp_sym_decrypt(content_encrypted, $2)::text as content,
                 created_at 
              FROM messages 
              WHERE user_id_hash = $1 
@@ -115,7 +111,7 @@ router.get("/:userId", authorizeUser, async (req, res) => {
  * POST /moon-phase/:userId
  * Generate new moon phase commentary
  */
-router.post("/:userId", authorizeUser, async (req, res) => {
+router.post("/:userId", authenticateToken, authorizeUser, async (req, res) => {
     const { userId } = req.params;
     const { phase } = req.body;
     

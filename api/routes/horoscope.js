@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { hashUserId } from "../shared/hashUtils.js";
 import { enqueueMessage } from "../shared/queue.js";
-import { authorizeUser } from "../middleware/auth.js";
+import { authenticateToken, authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
 
 const router = Router();
@@ -12,7 +12,7 @@ const router = Router();
  * Auto-clears if generated on a different date
  * Handles both encrypted and plain text content
  */
-router.get("/:userId/:range", authorizeUser, async (req, res) => {
+router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res) => {
     const { userId, range } = req.params;
     
     try {
@@ -26,13 +26,9 @@ router.get("/:userId/:range", authorizeUser, async (req, res) => {
         
         // Get recent horoscopes (limited to last 100 to avoid huge queries)
         // Decrypt encrypted messages using pgp_sym_decrypt, fall back to plain text
-        const { rows } = await db.query(
+                const { rows } = await db.query(
             `SELECT 
-                CASE 
-                    WHEN content_encrypted IS NOT NULL 
-                    THEN pgp_sym_decrypt(content_encrypted, $2)::text
-                    ELSE content
-                END as content,
+                pgp_sym_decrypt(content_encrypted, $2)::text as content,
                 created_at 
              FROM messages 
              WHERE user_id_hash = $1 
@@ -112,7 +108,7 @@ router.get("/:userId/:range", authorizeUser, async (req, res) => {
  * - Same horoscope shown in Chat when user asks
  * - No conflicting guidance within a 24-hour period
  */
-router.post("/:userId/:range", authorizeUser, async (req, res) => {
+router.post("/:userId/:range", authenticateToken, authorizeUser, async (req, res) => {
     const { userId, range } = req.params;
     
     try {

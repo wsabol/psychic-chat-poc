@@ -7,11 +7,7 @@ export async function getRecentMessages(userId) {
     const userIdHash = hashUserId(userId);
     const { rows: history } = await db.query(
         `SELECT 
-            CASE 
-                WHEN content_encrypted IS NOT NULL 
-                THEN pgp_sym_decrypt(content_encrypted, $2)::text
-                ELSE content
-            END as content
+            pgp_sym_decrypt(content_encrypted, $2)::text as content
         FROM messages 
         WHERE user_id_hash=$1 AND role='user' 
         ORDER BY created_at DESC 
