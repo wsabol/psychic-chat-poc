@@ -1,6 +1,8 @@
 /**
  * Violation detection service
  * Detects policy violations based on keywords and patterns
+ * 
+ * FIXED: More conservative approach - only detect clearly intentional violations
  */
 
 export const VIOLATION_TYPES = {
@@ -10,57 +12,30 @@ export const VIOLATION_TYPES = {
   ABUSIVE_LANGUAGE: 'abusive_language'
 };
 
+// Self-harm keywords - clear intent required
 const SELF_HARM_KEYWORDS = [
   'suicide', 'kill myself', 'end my life', 'hurt myself', 'self harm',
-  'self-harm', 'cut myself', 'overdose', 'jump', 'hang myself', 'die',
-  'no point living', 'better off dead', 'want to die'
+  'self-harm', 'cut myself', 'overdose', 'jump off', 'hang myself'
 ];
 
+// Sexual keywords - explicit content only
 const SEXUAL_KEYWORDS = [
-  'sex', 'sexual', 'porn', 'xxx', 'naked', 'nude', 'horny', 'orgasm',
-  'penetrate', 'fuck', 'cum', 'blow job', 'handjob', 'escort', 'prostitute'
+  'porn', 'xxx', 'sexually explicit', 'orgy', 'escort service'
 ];
 
+// Harm to others - clear intent
 const HARM_OTHERS_KEYWORDS = [
-  'hurt someone', 'kill someone', 'harm', 'violence', 'attack', 'assault',
-  'revenge', 'get back at', 'murder', 'shoot', 'stab', 'poison'
+  'kill someone', 'murder', 'assault someone', 'torture', 'rape'
 ];
 
-// Profane keywords - only those that can't be substring matched safely
-const PROFANE_KEYWORDS = [
-  'fuck', 'shit', 'bitch', 'damn', 'hell', 'crap', 'piss',
-  'pussy', 'bastard', 'motherfucker',
-  'bullshit', 'fuckhead', 'twat', 'wanker',
-  'bollocks', 'cunt'
-];
-
-// Patterns for problematic words that need word boundaries to avoid false positives
-// Examples of false positives avoided:
-// - ass → assistant, pass, bypass, compass, class
-// - cock → cockpit, cocktail
-// - dick → dictionary, prediction, predict
-// - arse → parse, sparse, arsehole
-const PROFANE_PATTERNS = [
-  /\bass\b/i,           // ass (but not: assistant, pass, compass, class)
-  /\bare\b/i,           // are (but not: care, share, stare)
-  /\barse\b/i,          // arse (but not: parse, sparse)
-  /\bcock\b/i,          // cock (but not: cockpit, cocktail)
-  /\bdick\b/i,          // dick (but not: dictionary, prediction)
-  /\basshole\b/i,       // asshole (but not: compound words)
-  /\bdumbass\b/i,       // dumbass
-  /\barsehole\b/i       // arsehole
-];
-
-const ABUSIVE_PATTERNS = [
-  /you (suck|'re (stupid|dumb|retarded))/i,
-  /i (hate|despise) (you|this)/i,
-  /(you|this) is (trash|garbage|worthless)/i,
-  /go (fuck|kill) yourself/i,
-  /(stupid|dumb|idiot|moron)\s*(oracle|bot|you)/i
+// Only the most egregious profanity - common single words that are clearly profane
+const SEVERE_PROFANITY = [
+  'fuck', 'shit', 'motherfucker', 'cunt'
 ];
 
 /**
  * Detect if message contains rule violations
+ * Takes conservative approach to avoid false positives
  */
 export function detectViolation(userMessage) {
   const messageLower = userMessage.toLowerCase();
@@ -76,7 +51,7 @@ export function detectViolation(userMessage) {
     }
   }
 
-  // Check for sexual content
+  // Check for sexual content (explicit only)
   for (const keyword of SEXUAL_KEYWORDS) {
     if (messageLower.includes(keyword)) {
       return {
@@ -98,35 +73,13 @@ export function detectViolation(userMessage) {
     }
   }
 
-  // Check for profane/abusive language (simple keywords - safe from false positives)
-  for (const keyword of PROFANE_KEYWORDS) {
+  // Check for severe profanity only (not medium-level language)
+  for (const keyword of SEVERE_PROFANITY) {
     if (messageLower.includes(keyword)) {
       return {
         type: VIOLATION_TYPES.ABUSIVE_LANGUAGE,
         severity: 'MEDIUM',
         keyword: keyword
-      };
-    }
-  }
-
-  // Check for profane patterns (word boundaries to avoid false positives like "assistant")
-  for (const pattern of PROFANE_PATTERNS) {
-    if (pattern.test(userMessage)) {
-      return {
-        type: VIOLATION_TYPES.ABUSIVE_LANGUAGE,
-        severity: 'MEDIUM',
-        keyword: 'profane language'
-      };
-    }
-  }
-
-  // Check for abusive patterns
-  for (const pattern of ABUSIVE_PATTERNS) {
-    if (pattern.test(userMessage)) {
-      return {
-        type: VIOLATION_TYPES.ABUSIVE_LANGUAGE,
-        severity: 'MEDIUM',
-        keyword: 'abusive pattern'
       };
     }
   }
