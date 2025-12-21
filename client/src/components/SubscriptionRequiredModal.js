@@ -8,14 +8,15 @@ import React, { useState, useEffect } from 'react';
  * HIDDEN during onboarding - new users see OnboardingModal instead
  */
 export default function SubscriptionRequiredModal({ onNavigateToSubscriptions, isOnboarding = false }) {
-  // Don't show during onboarding - user sees OnboardingModal instead
-  if (isOnboarding) return null;
   const [fadeIn, setFadeIn] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setFadeIn(true), 100);
     return () => clearTimeout(timer);
   }, []);
+
+  // Don't show during onboarding - user sees OnboardingModal instead
+  if (isOnboarding) return null;
 
   return (
     <div style={styles.overlay} className={fadeIn ? 'fade-in' : ''}>

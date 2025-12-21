@@ -33,7 +33,8 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
   const refreshTimeoutRef = useRef(null);
   const hasInitialized = useRef(false);
 
-  // ✅ FIXED: Only fetch once on mount, not on every render
+    // ✅ FIXED: Only fetch once on mount, not on every render
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!hasInitialized.current) {
       hasInitialized.current = true;
@@ -45,7 +46,7 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
         clearTimeout(refreshTimeoutRef.current);
       }
     };
-  }, []); // Empty dependency array - run only once
+  }, []); // Empty dependency array - run only once (billing is stable via useBilling hook)
 
   const handleAddClick = async () => {
     try {

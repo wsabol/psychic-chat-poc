@@ -30,14 +30,15 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
   const [lastScrollY, setLastScrollY] = useState(0);
   const [navVisible, setNavVisible] = useState(true);
 
-    // Set starting page when it changes
+        // Set starting page when it changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     console.log('[MC] useEffect: startingPage=', startingPage, 'currentPageIndex=', currentPageIndex);
     if (startingPage !== 0 && startingPage !== currentPageIndex) {
       console.log('[MC] Setting currentPageIndex to:', startingPage);
       setCurrentPageIndex(startingPage);
     }
-  }, [startingPage]);
+  }, [startingPage]); // currentPageIndex intentionally not in deps - we only care about startingPage changes
 
   // Track scroll to hide/show nav on mobile
   useEffect(() => {

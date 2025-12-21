@@ -4,16 +4,18 @@ import admin from 'firebase-admin';
 
 /**
  * Get all active devices for user (from security_sessions table)
- * Decrypts encrypted device names
+ * Decrypts encrypted device names and IP addresses
  */
 export async function getDevices(userId) {
   try {
     const userIdHash = hashUserId(userId);
     
+    // Query: Decrypt encrypted device_name and ip_address
     const result = await db.query(
       `SELECT 
-        id, 
-        pgp_sym_decrypt(device_name_encrypted, $1) as device_name,
+        id,
+        COALESCE(pgp_sym_decrypt(device_name_encrypted, $1), 'Unknown Device') as device_name,
+        COALESCE(pgp_sym_decrypt(ip_address_encrypted, $1), '[Encrypted]') as ip_address,
         last_active, 
         created_at 
        FROM security_sessions 
@@ -25,7 +27,7 @@ export async function getDevices(userId) {
     const devices = result.rows.map(row => ({
       id: row.id,
       deviceName: row.device_name || 'Unknown Device',
-      ipAddress: '[ENCRYPTED]',  // Don't expose encrypted IP data
+      ipAddress: row.ip_address || '[ENCRYPTED]',  // Show IP if available, otherwise indicate encryption
       lastLogin: row.last_active,
       createdAt: row.created_at,
       isCurrent: false

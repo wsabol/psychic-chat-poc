@@ -10,7 +10,7 @@ const PASSWORD_REQUIREMENTS = {
   hasUpperCase: { regex: /[A-Z]/, label: 'One uppercase letter (A-Z)' },
   hasLowerCase: { regex: /[a-z]/, label: 'One lowercase letter (a-z)' },
   hasNumber: { regex: /[0-9]/, label: 'One number (0-9)' },
-  hasSpecialChar: { regex: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, label: 'One special character (!@#$%...)' },
+  hasSpecialChar: { regex: /[!@#$%^&*()_+\-=\[\]{};':"\\|,./<>?]/, label: 'One special character (!@#$%...)' },
 };
 
 function validatePassword(pwd) {

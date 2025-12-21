@@ -139,11 +139,21 @@ function App() {
         }
     }, []);
 
-    // FIX: Simply close the modal
-    const handleOnboardingClose = useCallback(() => {
-        console.log('[ONBOARDING] Closing modal');
-        setOnboardingClosed(true);
-    }, []);
+    // FIX: Mark onboarding as complete when user closes the modal
+    const handleOnboardingClose = useCallback(async () => {
+        console.log('[ONBOARDING] Closing modal - marking onboarding as complete');
+        try {
+            // Mark subscription step as complete (all required steps done)
+            // Existing logic ensures payment method and subscription exist
+            if (onboarding.updateOnboardingStep) {
+                await onboarding.updateOnboardingStep('subscription');
+            }
+        } catch (err) {
+            console.warn('[ONBOARDING] Failed to mark onboarding complete on close:', err);
+        } finally {
+            setOnboardingClosed(true);
+        }
+    }, [onboarding]);
 
     if (isLoading) {
         return <ErrorBoundary><LoadingScreen /></ErrorBoundary>;
@@ -261,7 +271,7 @@ function App() {
     if (isChat) {
         return (
             <ErrorBoundary>
-                {onboarding.onboardingStatus && !onboardingClosed && (
+                {onboarding.onboardingStatus?.isOnboarding && !onboardingClosed && (
                     <OnboardingModal
                         currentStep={onboarding.onboardingStatus.currentStep}
                         completedSteps={onboarding.onboardingStatus.completedSteps}

@@ -80,9 +80,26 @@ export function useAuthState(checkBillingStatus) {
             setIsAuthenticated(true);
             setLoading(false);
           } else {
-            // Permanent accounts
+            // Permanent accounts - track device
             setIsFirstTime(false);
             localStorage.setItem('psychic_app_registered', 'true');
+            
+            // Track device on login (non-blocking)
+            (async () => {
+              try {
+                let deviceName = 'Unknown Device', ipAddress = 'unknown';
+                try {
+                  const geo = await fetch('https://ipapi.co/json/').then(r => r.json());
+                  ipAddress = geo.ip || 'unknown';
+                  deviceName = geo.city && geo.country_name ? `${geo.city}, ${geo.country_name}` : (geo.country_name || deviceName);
+                } catch (e) { }
+                fetch(`http://localhost:3000/security/track-device/${firebaseUser.uid}`, {
+                  method: 'POST',
+                  headers: { 'Authorization': `Bearer ${idToken}`, 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ deviceName, ipAddress })
+                }).catch(() => {});
+              } catch (e) { }
+            })();
 
             // ✅ OPTION B: Skip 2FA if email NOT verified (brand new account)
             if (!firebaseUser.emailVerified) {
@@ -190,6 +207,7 @@ export function useAuthState(checkBillingStatus) {
     });
 
     return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     // ✅ FIX: Don't include checkBillingStatus in dependency array
     // The function reference changes on every render, causing infinite loops
   }, []);

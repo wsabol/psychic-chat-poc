@@ -25,15 +25,19 @@ router.post('/track-device/:userId', async (req, res) => {
       return res.status(400).json({ error: 'deviceName and ipAddress required' });
     }
 
-    // Get the current device entry
+    // Import hashUserId
+    const { hashUserId } = await import('../shared/hashUtils.js');
+    
+    // Get the current device entry and hash the user ID
     const userAgent = req.get('user-agent') || 'Unknown';
     const token = req.get('authorization')?.split(' ')[1] || 'unknown';
+    const userIdHash = hashUserId(userId);
 
     const result = await db.query(
-      `INSERT INTO security_sessions (user_id, firebase_token, device_name, ip_address, user_agent, last_active, created_at)
-       VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
-       RETURNING *`,
-      [userId, token, deviceName, ipAddress, userAgent]
+      `INSERT INTO security_sessions (user_id_hash, firebase_token_encrypted, device_name_encrypted, ip_address_encrypted, user_agent_encrypted, last_active, created_at)
+       VALUES ($1, pgp_sym_encrypt($2, $6), pgp_sym_encrypt($3, $6), pgp_sym_encrypt($4, $6), pgp_sym_encrypt($5, $6), NOW(), NOW())
+       RETURNING id, last_active, created_at`,
+      [userIdHash, token, deviceName, ipAddress, userAgent, process.env.ENCRYPTION_KEY]
     );
 
     res.json({ success: true, device: result.rows[0] });
