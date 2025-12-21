@@ -271,7 +271,7 @@ function App() {
     if (isChat) {
         return (
             <ErrorBoundary>
-                {onboarding.onboardingStatus?.isOnboarding && !onboardingClosed && (
+                {!onboardingClosed && (
                     <OnboardingModal
                         currentStep={onboarding.onboardingStatus.currentStep}
                         completedSteps={onboarding.onboardingStatus.completedSteps}

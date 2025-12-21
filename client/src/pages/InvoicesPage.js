@@ -14,7 +14,7 @@ export default function InvoicesPage({ userId, token, auth }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetchWithTokenRefresh(`${API_URL}/billing/invoices/${userId}`, { 
+      const response = await fetchWithTokenRefresh(`${API_URL}/billing/invoices`, { 
         headers: {
           'Authorization': token ? `Bearer ${token}` : ''
         }

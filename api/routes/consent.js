@@ -3,6 +3,7 @@ import { db } from '../shared/db.js';
 import { authenticateToken, authorizeUser } from '../middleware/auth.js';
 import { logAudit } from '../shared/auditLog.js';
 import { hashUserId } from '../shared/hashUtils.js';
+import { getEncryptionKey } from '../shared/decryptionHelper.js';
 
 const router = Router();
 
@@ -43,34 +44,60 @@ router.post('/consents', async (req, res) => {
     // Get client IP and user agent for consent proof
     const clientIp = req.ip || req.connection.remoteAddress;
     const userAgent = req.get('user-agent') || '';
+    const ENCRYPTION_KEY = getEncryptionKey();
+    
+    // Encrypt user_agent and ip_address
+    let encryptedUserAgent = null;
+    let encryptedIpAddress = null;
+    if (userAgent) {
+      try {
+        const encResult = await db.query(
+          'SELECT pgp_sym_encrypt($1::text, $2) as encrypted',
+          [userAgent, ENCRYPTION_KEY]
+        );
+        encryptedUserAgent = encResult.rows[0]?.encrypted;
+      } catch (encErr) {
+        console.warn('[CONSENT] Failed to encrypt user_agent:', encErr.message);
+      }
+    }
+    if (clientIp) {
+      try {
+        const encResult = await db.query(
+          'SELECT pgp_sym_encrypt($1::text, $2) as encrypted',
+          [clientIp, ENCRYPTION_KEY]
+        );
+        encryptedIpAddress = encResult.rows[0]?.encrypted;
+      } catch (encErr) {
+        console.warn('[CONSENT] Failed to encrypt agreed_from_ip:', encErr.message);
+      }
+    }
 
     // Insert or update consent record
     const result = await db.query(
       `INSERT INTO user_consents (
-        user_id, user_id_hash,
+        user_id_hash,
         consent_astrology, 
         consent_health_data, 
         consent_chat_analysis,
-        agreed_from_ip, 
-        user_agent,
+        agreed_from_ip_encrypted, 
+        user_agent_encrypted,
         agreed_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
-      ON CONFLICT (user_id) DO UPDATE SET
-        consent_astrology = $3,
-        consent_health_data = $4,
-        consent_chat_analysis = $5,
-        agreed_from_ip = $6,
-        user_agent = $7,
+      ) VALUES ($1, $2, $3, $4, $5, $6, NOW())
+      ON CONFLICT (user_id_hash) DO UPDATE SET
+        consent_astrology = $2,
+        consent_health_data = $3,
+        consent_chat_analysis = $4,
+        agreed_from_ip_encrypted = $5,
+        user_agent_encrypted = $6,
         updated_at = NOW()
       RETURNING *`,
       [
-        userId,
         userIdHash,
         consent_astrology,
         consent_health_data,
         consent_chat_analysis,
-        clientIp,
-        userAgent
+        encryptedIpAddress,
+        encryptedUserAgent
       ]
     );
 
@@ -102,7 +129,8 @@ router.post('/consents', async (req, res) => {
         consent_astrology: consentRecord.consent_astrology,
         consent_health_data: consentRecord.consent_health_data,
         consent_chat_analysis: consentRecord.consent_chat_analysis,
-        agreed_at: consentRecord.agreed_at
+        agreed_at: consentRecord.agreed_at,
+        agreed_from_ip: '[ENCRYPTED]'
       }
     });
 
@@ -145,12 +173,10 @@ router.get('/consents/:userId', authenticateToken, authorizeUser, async (req, re
     // Fetch consent record
     const result = await db.query(
       `SELECT 
-        user_id,
         consent_astrology,
         consent_health_data,
         consent_chat_analysis,
-        agreed_at,
-        agreed_from_ip
+        agreed_at
       FROM user_consents 
       WHERE user_id_hash = $1`,
       [userIdHash]
@@ -192,7 +218,8 @@ router.get('/consents/:userId', authenticateToken, authorizeUser, async (req, re
         consent_astrology: consentRecord.consent_astrology,
         consent_health_data: consentRecord.consent_health_data,
         consent_chat_analysis: consentRecord.consent_chat_analysis,
-        agreed_at: consentRecord.agreed_at
+        agreed_at: consentRecord.agreed_at,
+        agreed_from_ip: '[ENCRYPTED]'
       }
     });
 
@@ -279,12 +306,10 @@ router.get('/consent-summary/:userId', authenticateToken, authorizeUser, async (
     // Get current consent
     const consentResult = await db.query(
       `SELECT 
-        user_id,
         consent_astrology,
         consent_health_data,
         consent_chat_analysis,
-        agreed_at,
-        agreed_from_ip
+        agreed_at
       FROM user_consents 
       WHERE user_id_hash = $1`,
       [userIdHash]
@@ -314,7 +339,7 @@ router.get('/consent-summary/:userId', authenticateToken, authorizeUser, async (
         consent_health_data: currentConsent.consent_health_data,
         consent_chat_analysis: currentConsent.consent_chat_analysis,
         agreed_at: currentConsent.agreed_at,
-        agreed_from_ip: currentConsent.agreed_from_ip
+        agreed_from_ip: '[ENCRYPTED]'
       } : null,
       auditTrail: auditResult.rows.map(row => ({
         action: row.action,

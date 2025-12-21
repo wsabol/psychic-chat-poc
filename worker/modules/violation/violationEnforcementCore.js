@@ -32,9 +32,9 @@ export async function recordViolationAndGetAction(userId, violationType, userMes
 
     // Record the violation
     await db.query(
-      `INSERT INTO user_violations (user_id, user_id_hash, violation_type, violation_count, violation_message)
-      VALUES ($1, $2, $3, $4, $5)`,
-      [userId, userIdHash, violationType, violationCount, userMessage.substring(0, 500)]
+      `INSERT INTO user_violations (user_id_hash, violation_type, violation_count, violation_message)
+      VALUES ($1, $2, $3, $4)`,
+      [userIdHash, violationType, violationCount, userMessage.substring(0, 500)]
     );
 
     // TEMP ACCOUNT: Delete immediately on any violation
@@ -73,8 +73,8 @@ export async function recordViolationAndGetAction(userId, violationType, userMes
       // Third+ offense: Permanent ban
       // Mark as disabled in database
       await db.query(
-        `UPDATE user_violations SET is_account_disabled = TRUE WHERE user_id = $1`,
-        [userId]
+        `UPDATE user_violations SET is_account_disabled = TRUE WHERE user_id_hash = $1`,
+        [userIdHash]
       );
 
       return {

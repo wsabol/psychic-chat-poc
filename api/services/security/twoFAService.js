@@ -35,14 +35,14 @@ export async function update2FASettings(userId, { enabled, method }) {
     const userIdHash = hashUserId(userId);
     
     const result = await db.query(
-      `INSERT INTO user_2fa_settings (user_id, user_id_hash, enabled, method, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, NOW(), NOW())
+      `INSERT INTO user_2fa_settings (user_id_hash, enabled, method, created_at, updated_at)
+       VALUES ($1, $2, $3, NOW(), NOW())
        ON CONFLICT (user_id_hash) DO UPDATE SET
-         enabled = $3,
-         method = $4,
+         enabled = $2,
+         method = $3,
          updated_at = NOW()
        RETURNING enabled, method, persistent_session`,
-      [userId, userIdHash, enabled, method]
+      [userIdHash, enabled, method]
     );
 
     if (result.rows.length === 0) {
@@ -65,13 +65,13 @@ export async function updateSessionPreference(userId, persistentSession) {
     const userIdHash = hashUserId(userId);
     
     const result = await db.query(
-      `INSERT INTO user_2fa_settings (user_id, user_id_hash, persistent_session, created_at, updated_at)
-       VALUES ($1, $2, $3, NOW(), NOW())
+      `INSERT INTO user_2fa_settings (user_id_hash, persistent_session, created_at, updated_at)
+       VALUES ($1, $2, NOW(), NOW())
        ON CONFLICT (user_id_hash) DO UPDATE SET
-         persistent_session = $3,
+         persistent_session = $2,
          updated_at = NOW()
        RETURNING persistent_session`,
-      [userId, userIdHash, persistentSession === true]
+      [userIdHash, persistentSession === true]
     );
 
     if (result.rows.length === 0) {

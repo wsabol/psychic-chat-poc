@@ -36,6 +36,12 @@ router.post('/track-device/:userId', async (req, res) => {
     const result = await db.query(
       `INSERT INTO security_sessions (user_id_hash, firebase_token_encrypted, device_name_encrypted, ip_address_encrypted, user_agent_encrypted, last_active, created_at)
        VALUES ($1, pgp_sym_encrypt($2, $6), pgp_sym_encrypt($3, $6), pgp_sym_encrypt($4, $6), pgp_sym_encrypt($5, $6), NOW(), NOW())
+       ON CONFLICT (user_id_hash) DO UPDATE SET
+         firebase_token_encrypted = pgp_sym_encrypt($2, $6),
+         device_name_encrypted = pgp_sym_encrypt($3, $6),
+         ip_address_encrypted = pgp_sym_encrypt($4, $6),
+         user_agent_encrypted = pgp_sym_encrypt($5, $6),
+         last_active = NOW()
        RETURNING id, last_active, created_at`,
       [userIdHash, token, deviceName, ipAddress, userAgent, process.env.ENCRYPTION_KEY]
     );

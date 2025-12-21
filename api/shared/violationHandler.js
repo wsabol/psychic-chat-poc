@@ -4,6 +4,7 @@
  */
 
 import { db } from './db.js';
+import { hashUserId } from './hashUtils.js';
 
 /**
  * Log a violation for a user
@@ -14,11 +15,12 @@ import { db } from './db.js';
  */
 export async function logViolation(userId, violationType, severity = 'warning', reason = '') {
   try {
+    const userIdHash = hashUserId(userId);
     const result = await db.query(
-      `INSERT INTO user_violations (user_id, violation_type, severity, reason, is_active)
+      `INSERT INTO user_violations (user_id_hash, violation_type, severity, reason, is_active)
        VALUES ($1, $2, $3, $4, true)
        RETURNING id, violation_type, severity, created_at`,
-      [userId, violationType, severity, reason]
+      [userIdHash, violationType, severity, reason]
     );
 
     return result.rows[0];
@@ -36,10 +38,11 @@ export async function logViolation(userId, violationType, severity = 'warning', 
  */
 export async function getActiveViolationCount(userId, violationType) {
   try {
+    const userIdHash = hashUserId(userId);
     const result = await db.query(
       `SELECT COUNT(*) as count FROM user_violations
-       WHERE user_id = $1 AND violation_type = $2 AND is_active = true`,
-      [userId, violationType]
+       WHERE user_id_hash = $1 AND violation_type = $2 AND is_active = true`,
+      [userIdHash, violationType]
     );
 
     return parseInt(result.rows[0].count, 10) || 0;
@@ -56,12 +59,13 @@ export async function getActiveViolationCount(userId, violationType) {
  */
 export async function getUserViolations(userId) {
   try {
+    const userIdHash = hashUserId(userId);
     const result = await db.query(
       `SELECT id, violation_type, severity, reason, created_at
        FROM user_violations
-       WHERE user_id = $1 AND is_active = true
+       WHERE user_id_hash = $1 AND is_active = true
        ORDER BY created_at DESC`,
-      [userId]
+      [userIdHash]
     );
 
     return result.rows;
@@ -112,16 +116,17 @@ export async function deleteUserAccount(userId) {
     );
 
     // Mark all violations as handled
+    const userIdHash = hashUserId(userId);
     await db.query(
-      `UPDATE user_violations SET is_active = false WHERE user_id = $1`,
-      [userId]
+      `UPDATE user_violations SET is_active = false WHERE user_id_hash = $1`,
+      [userIdHash]
     );
 
     // Log the deletion
     await db.query(
-      `INSERT INTO user_violations (user_id, violation_type, severity, reason, is_active)
+      `INSERT INTO user_violations (user_id_hash, violation_type, severity, reason, is_active)
        VALUES ($1, 'account_deleted', 'critical', 'Account deleted due to policy violation', false)`,
-      [userId]
+      [userIdHash]
     );
 
     return true;

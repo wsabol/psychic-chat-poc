@@ -94,9 +94,23 @@ export async function logAudit(db, options) {
       }
     }
 
+    // Encrypt user_agent using PostgreSQL
+    let encryptedUserAgent = null;
+    if (userAgent) {
+      try {
+        const encResult = await db.query(
+          'SELECT pgp_sym_encrypt($1::text, $2) as encrypted',
+          [String(userAgent).substring(0, 500), ENCRYPTION_KEY]
+        );
+        encryptedUserAgent = encResult.rows[0]?.encrypted;
+      } catch (encErr) {
+        console.warn('[AUDIT] WARNING: Failed to encrypt user_agent:', encErr.message);
+      }
+    }
+
     await db.query(
       `INSERT INTO audit_log 
-       (user_id_hash, action, details, ip_address_encrypted, email_encrypted, user_agent)
+       (user_id_hash, action, details, ip_address_encrypted, email_encrypted, user_agent_encrypted)
        VALUES ($1, $2, $3, $4, $5, $6)`,
       [
         userIdHash,
@@ -104,7 +118,7 @@ export async function logAudit(db, options) {
         JSON.stringify(cleanDetails || {}),
         encryptedIp,
         encryptedEmail,
-        userAgent ? String(userAgent).substring(0, 500) : null
+        encryptedUserAgent
       ]
     );
   } catch (err) {
@@ -131,7 +145,8 @@ export async function getUserAuditLogs(db, userId, limit = 100) {
     const result = await db.query(
       `SELECT action, 
               pgp_sym_decrypt(ip_address_encrypted, $1) as ip_address,
-              user_agent, created_at, details
+              COALESCE(pgp_sym_decrypt(user_agent_encrypted, $1), user_agent, 'Unknown') as user_agent,
+              created_at, details
        FROM audit_log
        WHERE user_id_hash = $2
        ORDER BY created_at DESC
@@ -221,7 +236,8 @@ export async function getDataAccessLogs(db, userId, daysBack = 30) {
     const result = await db.query(
       `SELECT action, 
               pgp_sym_decrypt(ip_address_encrypted, $1) as ip_address,
-              user_agent, created_at, details
+              COALESCE(pgp_sym_decrypt(user_agent_encrypted, $1), user_agent, 'Unknown') as user_agent,
+              created_at, details
        FROM audit_log
        WHERE created_at > NOW() - INTERVAL '1 day' * $2
        ORDER BY created_at DESC`,
@@ -249,7 +265,8 @@ export async function exportUserAuditLogs(db, userId, daysBack = 365) {
     const result = await db.query(
       `SELECT id, action, 
               pgp_sym_decrypt(ip_address_encrypted, $1) as ip_address,
-              user_agent, created_at, details
+              COALESCE(pgp_sym_decrypt(user_agent_encrypted, $1), user_agent, 'Unknown') as user_agent,
+              created_at, details
        FROM audit_log
        WHERE user_id_hash = $2
          AND created_at > NOW() - INTERVAL '1 day' * $3

@@ -121,7 +121,10 @@ router.post('/payment-methods/attach', authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error('[BILLING] Attach payment method error:', error);
-    if (error.message && error.message.includes('already attached')) {
+    // Check for Stripe error about payment method already attached to customer
+    const errorMsg = error.message || '';
+    const alreadyAttached = errorMsg.includes('already been attached') || errorMsg.includes('already attached');
+    if (alreadyAttached) {
       return res.json({ 
         success: true, 
         message: 'Payment method already attached' 

@@ -95,11 +95,7 @@ router.get("/history/:userId", authorizeUser, verify2FA, async (req, res) => {
             `SELECT 
                 id, 
                 role, 
-                CASE 
-                    WHEN content_encrypted IS NOT NULL 
-                    THEN pgp_sym_decrypt(content_encrypted, $2)::text
-                    ELSE content
-                END as content
+                pgp_sym_decrypt(content_encrypted, $2)::text as content
             FROM messages 
             WHERE user_id_hash=$1 
             ORDER BY created_at ASC`,

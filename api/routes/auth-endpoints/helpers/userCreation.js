@@ -1,4 +1,5 @@
 import { db } from '../../../shared/db.js';
+import { hashUserId } from '../../../shared/hashUtils.js';
 
 /**
  * Create user database records (personal info, 2FA settings, astrology)
@@ -38,31 +39,32 @@ export async function createUserDatabaseRecords(userId, email, firstName = '', l
       );
     }
 
-    // Create 2FA settings (check if exists first)
+    // Create 2FA settings (check if exists first) - uses user_id_hash
+    const userIdHash = hashUserId(userId);
     const twoFAExists = await db.query(
-      'SELECT user_id FROM user_2fa_settings WHERE user_id = $1',
-      [userId]
+      'SELECT user_id_hash FROM user_2fa_settings WHERE user_id_hash = $1',
+      [userIdHash]
     );
     
     if (twoFAExists.rows.length === 0) {
       await db.query(
-        `INSERT INTO user_2fa_settings (user_id, enabled, method, created_at, updated_at)
+        `INSERT INTO user_2fa_settings (user_id_hash, enabled, method, created_at, updated_at)
          VALUES ($1, true, 'email', NOW(), NOW())`,
-        [userId]
+        [userIdHash]
       );
     }
 
-    // Create astrology profile (check if exists first)
+    // Create astrology profile (check if exists first) - uses user_id_hash only
     const astrologyExists = await db.query(
-      'SELECT user_id FROM user_astrology WHERE user_id = $1',
-      [userId]
+      'SELECT user_id_hash FROM user_astrology WHERE user_id_hash = $1',
+      [userIdHash]
     );
     
     if (astrologyExists.rows.length === 0) {
       await db.query(
-        `INSERT INTO user_astrology (user_id, created_at, updated_at)
+        `INSERT INTO user_astrology (user_id_hash, created_at, updated_at)
          VALUES ($1, NOW(), NOW())`,
-        [userId]
+        [userIdHash]
       );
     }
 
@@ -106,8 +108,9 @@ export async function anonymizeUser(userId) {
     );
 
     // Delete associated data
-    await db.query('DELETE FROM messages WHERE user_id = $1', [userId]);
-    await db.query('DELETE FROM user_astrology WHERE user_id = $1', [userId]);
+    const userIdHash = hashUserId(userId);
+    await db.query('DELETE FROM messages WHERE user_id_hash = $1', [userIdHash]);
+    await db.query('DELETE FROM user_astrology WHERE user_id_hash = $1', [userIdHash]);
 
     return { success: true };
   } catch (err) {
