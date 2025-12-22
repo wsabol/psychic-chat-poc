@@ -40,9 +40,17 @@ export function AppShells({ state }) {
     return (
       <ErrorBoundary>
         <ThankYouScreen
-          onCreateAccount={() => {
+          onCreateAccount={async () => {
+            console.log('[THANKYOU] onCreateAccount clicked - deleting temp account and showing register');
+            // Delete the temporary account first
+            if (authState.isTemporaryAccount) {
+              await authState.deleteTemporaryAccount();
+            }
             tempFlow.setAppExited(false);
             setVerificationFailed(false);
+            // Reset auth state to ensure clean login state for Google sign-in
+            authState.resetAuthState();
+            authState.setHasLoggedOut(false);
             modals.setShowRegisterMode(true);
           }}
           onContinue={() => {

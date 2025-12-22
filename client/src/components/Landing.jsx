@@ -2,13 +2,13 @@ import React from 'react';
 
 export function Landing({ onTryFree, onCreateAccount, onSignIn }) {
   return (
-    <div style={{
+        <div style={{
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
       minHeight: '100vh',
-      backgroundColor: 'rgba(0, 0, 0, 0.9)',
+      backgroundColor: 'transparent',
       color: 'white',
       textAlign: 'center',
       padding: '2rem'

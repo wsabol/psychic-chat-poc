@@ -28,6 +28,7 @@ export function AppChat({ state }) {
     handleOnboardingNavigate,
     handleOnboardingClose,
     handleNavigateFromBilling,
+    tempFlow,
   } = state;
 
   const isUserOnboarding = onboarding.onboardingStatus?.isOnboarding === true;
@@ -65,7 +66,7 @@ export function AppChat({ state }) {
   if (isChat) {
     return (
       <ErrorBoundary>
-        {onboarding.onboardingStatus?.isOnboarding === true && (
+        {!authState.isTemporaryAccount && onboarding.onboardingStatus?.isOnboarding === true && (
           <OnboardingModal
             currentStep={onboarding.onboardingStatus.currentStep}
             completedSteps={onboarding.onboardingStatus.completedSteps}
@@ -85,7 +86,8 @@ export function AppChat({ state }) {
           userId={authState.authUserId}
           onLogout={authState.handleLogout}
           onExit={() => {
-            // Handle exit logic here
+            console.log('[APPCHAT] onExit called - setting appExited to true to show ThankYouScreen');
+            tempFlow.setAppExited(true);
           }}
           startingPage={startingPage}
           billingTab={billingTab}

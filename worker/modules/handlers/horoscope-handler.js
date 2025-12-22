@@ -2,6 +2,7 @@ import { db } from '../../shared/db.js';
 import { 
     fetchUserPersonalInfo, 
     fetchUserAstrology, 
+    isTemporaryUser,
     getOracleSystemPrompt,
     callOracle,
     getUserGreeting
@@ -26,9 +27,12 @@ export async function generateHoroscope(userId, range = 'daily') {
             throw new Error('User astrology data not found');
         }
         
+        // Check if user is temporary/trial account
+        const isTemporary = await isTemporaryUser(userId);
+        
         // Get oracle base prompt and user greeting
-        const baseSystemPrompt = getOracleSystemPrompt();
-        const userGreeting = getUserGreeting(userInfo, userId);
+        const baseSystemPrompt = getOracleSystemPrompt(isTemporary);
+        const userGreeting = getUserGreeting(userInfo, userId, isTemporary);
         const generatedAt = new Date().toISOString();
         
         // Generate daily and weekly horoscopes (monthly kept in DB but removed from UI for now)

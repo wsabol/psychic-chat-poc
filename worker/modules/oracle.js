@@ -200,7 +200,13 @@ export async function callOracle(systemPrompt, messageHistory, userMessage) {
     }
 }
 
-export function getUserGreeting(userInfo, userId) {
+export function getUserGreeting(userInfo, userId, isTemporaryUser = false) {
+    // For temporary/trial accounts, use the default familiar name "Seaker"
+    if (isTemporaryUser) {
+        return "Seaker";
+    }
+    
+    // For established accounts, use their preference or first name
     if (!userInfo) return userId;
     return userInfo.address_preference || userInfo.first_name || userId;
 }

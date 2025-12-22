@@ -144,36 +144,54 @@ export default function HoroscopePage({ userId, token, auth, onExit }) {
   const sunSignData = getSunSignInfo();
   const astro = astroInfo?.astrology_data || {};
 
-  const handleClose = () => {
+    const handleClose = () => {
+    console.log('[HOROSCOPE] handleClose called, onExit:', typeof onExit);
     if (onExit) {
+      console.log('[HOROSCOPE] Calling onExit()');
       onExit();
+    } else {
+      console.warn('[HOROSCOPE] onExit prop not provided!');
     }
   };
 
   return (
     <div className="page-safe-area horoscope-page" style={{ position: 'relative' }}>
-      {/* Close button - top right for temp accounts during onboarding */}
+            {/* Close button - top right for temp accounts during onboarding */}
       {auth?.isTemporaryAccount && (
-        <button
-          onClick={handleClose}
-          style={{
-            position: 'absolute',
-            top: '1rem',
-            right: '1rem',
-            background: 'transparent',
-            border: 'none',
-            fontSize: '1.5rem',
-            cursor: 'pointer',
-            zIndex: 100,
-            opacity: 0.7,
-            transition: 'opacity 0.2s'
-          }}
-          onMouseEnter={(e) => e.target.style.opacity = '1'}
-          onMouseLeave={(e) => e.target.style.opacity = '0.7'}
-          title="Close and complete onboarding"
-        >
-          ✕
-        </button>
+        <>
+                    <button
+            type="button"
+            onClick={handleClose}
+            style={{
+              position: 'absolute',
+              top: '1rem',
+              right: '1rem',
+              background: 'transparent',
+              border: 'none',
+              fontSize: '1.5rem',
+              cursor: 'pointer',
+              zIndex: 100,
+              opacity: 0.7,
+              transition: 'opacity 0.2s'
+            }}
+            onMouseEnter={(e) => e.target.style.opacity = '1'}
+            onMouseLeave={(e) => e.target.style.opacity = '0.7'}
+            title="Close and complete onboarding"
+          >
+            ✕
+          </button>
+          
+                              {/* Exit prompt with green arrow - clickable */}
+          <button
+            type="button"
+            onClick={handleClose}
+            className="exit-prompt"
+            title="Click to register and continue"
+          >
+            <span className="exit-arrow">👉</span>
+            <span className="exit-message">Click exit to continue</span>
+          </button>
+        </>
       )}
 
       {/* Header */}

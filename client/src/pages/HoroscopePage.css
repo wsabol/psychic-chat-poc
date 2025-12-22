@@ -439,3 +439,72 @@
     animation: none;
   }
 }
+
+/* ============================================
+   EXIT PROMPT (Temp Accounts)
+   ============================================ */
+
+.exit-prompt {
+  position: absolute;
+  top: 4rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #d4edda;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  border: 2px solid #28a745;
+  font-size: 0.9rem;
+  color: #155724;
+  font-weight: 600;
+  z-index: 99;
+  animation: fadeInDown 0.6s ease-out;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.exit-prompt:hover {
+  background: #c3e6cb;
+  border-color: #1e7e34;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.35);
+  transform: translateY(-2px);
+}
+
+.exit-prompt:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(40, 167, 69, 0.25);
+}
+
+.exit-prompt:focus {
+  outline: 2px solid #155724;
+  outline-offset: 2px;
+}
+
+.exit-arrow {
+  display: inline-block;
+  animation: pulse 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(4px);
+  }
+}
