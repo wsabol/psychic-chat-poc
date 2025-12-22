@@ -1,11 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { getAstrologyData } from '../utils/astroUtils';
-import { isBirthInfoError, isBirthInfoMissing } from '../utils/birthInfoErrorHandler';
-import BirthInfoMissingPrompt from '../components/BirthInfoMissingPrompt';
 import '../styles/responsive.css';
 import './MoonPhasePage.css';
 
-export default function MoonPhasePage({ userId, token, auth, onNavigateToPage }) {
+export default function MoonPhasePage({ userId, token, auth }) {
   const [moonPhaseData, setMoonPhaseData] = useState(null);
   const [currentPhase, setCurrentPhase] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -122,14 +120,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
 
       if (!generateResponse.ok) {
         const errorData = await generateResponse.json();
-        const errorMsg = errorData.error || 'Could not generate moon phase commentary';
-        
-        // Check if this is a birth info error
-        if (isBirthInfoError(errorMsg)) {
-          setError('BIRTH_INFO_MISSING');
-        } else {
-          setError(errorMsg);
-        }
+        setError(errorData.error || 'Could not generate moon phase commentary');
         setLoading(false);
         return;
       }
@@ -196,42 +187,8 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
         <p className="moon-phase-subtitle">Current lunar energy and its effect on you</p>
       </div>
 
-      {/* Birth Info Missing State */}
-      {!loading && !error && isBirthInfoMissing(astroInfo) && (
-        <BirthInfoMissingPrompt 
-          onNavigateToPersonalInfo={() => onNavigateToPage && onNavigateToPage(2)}
-        />
-      )}
-
-      {/* Error State - Birth Info Missing */}
-      {error && error === 'BIRTH_INFO_MISSING' && (
-        <BirthInfoMissingPrompt 
-          onNavigateToPersonalInfo={() => onNavigateToPage && onNavigateToPage(2)}
-        />
-      )}
-
-      {/* Error State - Other Errors */}
-      {error && error !== 'BIRTH_INFO_MISSING' && (
-        <div className="moon-phase-content error">
-          <p className="error-message">⚠️ {error}</p>
-          <button onClick={loadMoonPhaseData} className="btn-secondary">
-            Try Again
-          </button>
-        </div>
-      )}
-
-      {/* Loading State */}
-      {loading && (
-        <div className="moon-phase-content loading">
-          <div className="spinner">🌙</div>
-          <p>
-            {generating ? 'The Oracle is sensing the lunar energy for you...' : 'Loading moon phase insight...'}
-          </p>
-        </div>
-      )}
-
       {/* Current Moon Phase Display */}
-      {currentPhase && !isBirthInfoMissing(astroInfo) && (
+      {currentPhase && (
         <section className="moon-phase-display">
           <div className="moon-phase-emoji">
             {moonPhaseEmojis[currentPhase]}
@@ -246,7 +203,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
       )}
 
       {/* Birth Chart Info - REORDERED: Rising, Moon, Sun */}
-      {astro.sun_sign && !isBirthInfoMissing(astroInfo) && (
+      {astro.sun_sign && (
         <section className="moon-phase-birth-chart">
           <div className="birth-chart-cards">
             {astro.rising_sign && (
@@ -272,6 +229,26 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
             )}
           </div>
         </section>
+      )}
+
+      {/* Loading State */}
+      {loading && (
+        <div className="moon-phase-content loading">
+          <div className="spinner">🌙</div>
+          <p>
+            {generating ? 'The Oracle is sensing the lunar energy for you...' : 'Loading moon phase insight...'}
+          </p>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div className="moon-phase-content error">
+          <p className="error-message">⚠️ {error}</p>
+          <button onClick={loadMoonPhaseData} className="btn-secondary">
+            Try Again
+          </button>
+        </div>
       )}
 
       {/* Moon Phase Content */}

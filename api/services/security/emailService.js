@@ -2,6 +2,7 @@ import { db } from '../../shared/db.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { encryptEmail, decryptEmail, generateVerificationCodeWithExpiry, logVerificationCode } from './helpers/securityHelpers.js';
 import { insertVerificationCode, getVerificationCode } from '../../shared/encryptedQueries.js';
+import { sendEmailVerificationCode } from '../../shared/emailService.js';
 
 /**
  * Get email data
@@ -51,6 +52,13 @@ export async function saveRecoveryEmail(userId, recoveryEmail) {
 
     // Use encrypted queries for verification code
     await insertVerificationCode(db, userId, recoveryEmail, null, code, 'email');
+
+    // FIXED: Actually send the verification email
+    const sendResult = await sendEmailVerificationCode(recoveryEmail, code);
+    if (!sendResult.success) {
+      console.error('[SECURITY] Failed to send recovery email verification code:', sendResult.error);
+      throw new Error('Failed to send verification email: ' + sendResult.error);
+    }
 
     logVerificationCode('email', code);
 

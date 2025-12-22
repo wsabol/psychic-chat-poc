@@ -86,7 +86,7 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
         headers
       });
 
-      if (!generateResponse.ok) {
+            if (!generateResponse.ok) {
         const errorData = await generateResponse.json();
         const errorMsg = errorData.error || 'Could not generate horoscope';
         
@@ -153,7 +153,7 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
   const sunSignData = getSunSignInfo();
   const astro = astroInfo?.astrology_data || {};
 
-  const handleClose = () => {
+    const handleClose = () => {
     console.log('[HOROSCOPE] handleClose called, onExit:', typeof onExit);
     if (onExit) {
       console.log('[HOROSCOPE] Calling onExit()');
@@ -165,10 +165,10 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
 
   return (
     <div className="page-safe-area horoscope-page" style={{ position: 'relative' }}>
-      {/* Close button - top right for temp accounts during onboarding */}
+            {/* Close button - top right for temp accounts during onboarding */}
       {auth?.isTemporaryAccount && (
         <>
-          <button
+                    <button
             type="button"
             onClick={handleClose}
             style={{
@@ -190,7 +190,7 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
             ✕
           </button>
           
-          {/* Exit prompt with green arrow - clickable */}
+                              {/* Exit prompt with green arrow - clickable */}
           <button
             type="button"
             onClick={handleClose}
@@ -223,42 +223,8 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
         ))}
       </div>
 
-      {/* Birth Info Missing State */}
-      {!loading && !error && isBirthInfoMissing(astroInfo) && (
-        <BirthInfoMissingPrompt 
-          onNavigateToPersonalInfo={() => onNavigateToPage && onNavigateToPage(2)}
-        />
-      )}
-
-      {/* Error State - Birth Info Missing */}
-      {error && error === 'BIRTH_INFO_MISSING' && (
-        <BirthInfoMissingPrompt 
-          onNavigateToPersonalInfo={() => onNavigateToPage && onNavigateToPage(2)}
-        />
-      )}
-      
-      {/* Error State - Other Errors */}
-      {error && error !== 'BIRTH_INFO_MISSING' && (
-        <div className="horoscope-content error">
-          <p className="error-message">⚠️ {error}</p>
-          <button onClick={loadHoroscope} className="btn-secondary">
-            Try Again
-          </button>
-        </div>
-      )}
-
-      {/* Loading State */}
-      {loading && (
-        <div className="horoscope-content loading">
-          <div className="spinner">🔮</div>
-          <p>
-            {generating ? 'Your cosmic guidance is being woven by The Oracle...' : 'Loading your horoscope...'}
-          </p>
-        </div>
-      )}
-
       {/* Birth Chart Info - REORDERED: Rising, Moon, Sun */}
-      {astro.sun_sign && !isBirthInfoMissing(astroInfo) && (
+      {astro.sun_sign && (
         <section className="horoscope-birth-chart">
           <div className="birth-chart-cards">
             {astro.rising_sign && (
@@ -284,6 +250,26 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
             )}
           </div>
         </section>
+      )}
+
+      {/* Loading State */}
+      {loading && (
+        <div className="horoscope-content loading">
+          <div className="spinner">🔮</div>
+          <p>
+            {generating ? 'Your cosmic guidance is being woven by The Oracle...' : 'Loading your horoscope...'}
+          </p>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div className="horoscope-content error">
+          <p className="error-message">⚠️ {error}</p>
+          <button onClick={loadHoroscope} className="btn-secondary">
+            Try Again
+          </button>
+        </div>
       )}
 
       {/* Horoscope Content */}

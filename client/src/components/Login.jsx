@@ -136,7 +136,7 @@ export function Login() {
       alignItems: 'center',
       justifyContent: 'center',
       minHeight: '100vh',
-      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      backgroundColor: 'transparent',
       color: 'white'
     }}>
       <div style={{

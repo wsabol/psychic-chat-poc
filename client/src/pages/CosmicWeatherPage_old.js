@@ -1,15 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { isBirthInfoError, isBirthInfoMissing } from '../utils/birthInfoErrorHandler';
-import BirthInfoMissingPrompt from '../components/BirthInfoMissingPrompt';
 import '../styles/responsive.css';
 import './CosmicWeatherPage.css';
 
-export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPage }) {
+export default function CosmicWeatherPage({ userId, token, auth }) {
   const [cosmicData, setCosmicData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState(null);
-  const [astroInfo, setAstroInfo] = useState(null);
   const pollIntervalRef = useRef(null);
 
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
@@ -22,27 +19,6 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
     };
   }, []);
 
-  const fetchAstroInfo = async (headers) => {
-    try {
-      const response = await fetch(`${API_URL}/user-astrology/${userId}`, { headers });
-      if (response.ok) {
-        const data = await response.json();
-        let astroDataObj = data.astrology_data;
-        if (typeof astroDataObj === 'string') {
-          astroDataObj = JSON.parse(astroDataObj);
-        }
-        setAstroInfo({
-          ...data,
-          astrology_data: astroDataObj
-        });
-        return astroDataObj;
-      }
-    } catch (err) {
-      console.error('[COSMIC-WEATHER] Error fetching astro info:', err);
-    }
-    return null;
-  };
-
   const loadCosmicWeather = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -51,11 +27,6 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
 
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-
-      // Fetch astro info if not already loaded
-      if (!astroInfo) {
-        await fetchAstroInfo(headers);
-      }
 
       const response = await fetch(`${API_URL}/astrology-insights/cosmic-weather/${userId}`, { headers });
 
@@ -78,14 +49,7 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
 
       if (!generateResponse.ok) {
         const errorData = await generateResponse.json();
-        const errorMsg = errorData.error || 'Could not generate cosmic weather';
-        
-        // Check if this is a birth info error
-        if (isBirthInfoError(errorMsg)) {
-          setError('BIRTH_INFO_MISSING');
-        } else {
-          setError(errorMsg);
-        }
+        setError(errorData.error || 'Could not generate cosmic weather');
         setLoading(false);
         return;
       }
@@ -131,7 +95,7 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
       setError('Unable to load today\'s cosmic weather. Please try again.');
       setLoading(false);
     }
-  }, [userId, token, API_URL, astroInfo]);
+  }, [userId, token, API_URL]);
 
   useEffect(() => {
     loadCosmicWeather();
@@ -144,32 +108,17 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
         <p className="cosmic-subtitle">Current planetary positions and their influence</p>
       </div>
 
-      {/* Birth Info Missing State */}
-      {!loading && !error && isBirthInfoMissing(astroInfo) && (
-        <BirthInfoMissingPrompt 
-          onNavigateToPersonalInfo={() => onNavigateToPage && onNavigateToPage(2)}
-        />
-      )}
-
-      {/* Error State - Birth Info Missing */}
-      {error && error === 'BIRTH_INFO_MISSING' && (
-        <BirthInfoMissingPrompt 
-          onNavigateToPersonalInfo={() => onNavigateToPage && onNavigateToPage(2)}
-        />
-      )}
-
-      {/* Error State - Other Errors */}
-      {error && error !== 'BIRTH_INFO_MISSING' && (
-        <div className="cosmic-content error">
-          <p className="error-message">⚠️ {error}</p>
-          <button onClick={loadCosmicWeather} className="btn-secondary">Try Again</button>
-        </div>
-      )}
-
       {loading && (
         <div className="cosmic-content loading">
           <div className="spinner">🌍</div>
           <p>{generating ? 'Reading today\'s planetary energies...' : 'Loading cosmic weather...'}</p>
+        </div>
+      )}
+
+      {error && (
+        <div className="cosmic-content error">
+          <p className="error-message">⚠️ {error}</p>
+          <button onClick={loadCosmicWeather} className="btn-secondary">Try Again</button>
         </div>
       )}
 

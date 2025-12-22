@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { fetchWithTokenRefresh } from '../../../utils/fetchWithTokenRefresh';
+import { isBirthInfoError } from '../../../utils/birthInfoErrorHandler';
 import { zodiacSigns } from '../../../data/ZodiacSigns';
 
 /**
@@ -23,7 +24,15 @@ export function useAstrologyData(userId, token) {
       });
       
       if (!response.ok) {
-        setError('Your birth chart is being calculated. Please refresh in a moment.');
+        const errorData = await response.json();
+        const errorMsg = errorData.error || 'Your birth chart is being calculated. Please refresh in a moment.';
+        
+        // Check if this is a birth info error
+        if (isBirthInfoError(errorMsg)) {
+          setError('BIRTH_INFO_MISSING');
+        } else {
+          setError(errorMsg);
+        }
         setLoading(false);
         return;
       }

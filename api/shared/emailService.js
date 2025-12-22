@@ -95,6 +95,48 @@ export async function sendPasswordResetEmail(userEmail, resetCode) {
 }
 
 /**
+ * Send email verification code (for recovery email setup, phone verification, etc)
+ */
+export async function sendEmailVerificationCode(userEmail, code) {
+    try {
+        if (!process.env.SENDGRID_API_KEY) {
+            console.error('[EMAIL] SendGrid API key missing');
+            throw new Error('Email service not configured');
+        }
+
+        const msg = {
+            to: userEmail,
+            from: fromEmail,
+            subject: 'Verification Code - Psychic Chat',
+            html: `
+                <h2>Verification Code</h2>
+                <p>Your verification code is:</p>
+                <h1 style="font-family: monospace; letter-spacing: 5px; font-size: 32px; color: #667eea;">
+                    ${code}
+                </h1>
+                <p>This code will expire in 15 minutes.</p>
+                <p>If you did not request this code, please ignore this email.</p>
+                <hr>
+                <p style="color: #999; font-size: 12px;">Psychic Chat - Your Personal Astrology Guide</p>
+            `
+        };
+
+        const result = await sgMail.send(msg);
+
+        return {
+            success: true,
+            messageId: result[0].headers['x-message-id']
+        };
+    } catch (error) {
+        console.error('[EMAIL] Verification code error:', error.message);
+        return {
+            success: false,
+            error: error.message
+        };
+    }
+}
+
+/**
  * Send 2FA code via email
  */
 export async function send2FACodeEmail(userEmail, code) {

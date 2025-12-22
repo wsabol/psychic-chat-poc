@@ -1,6 +1,7 @@
 import { useAstrologyData } from './MySignPage/hooks/useAstrologyData';
 import { SignCards } from './MySignPage/components/SignCards';
 import { SignDetails } from './MySignPage/components/SignDetails';
+import BirthInfoMissingPrompt from '../components/BirthInfoMissingPrompt';
 import './MySignPage.css';
 import '../styles/responsive.css';
 
@@ -8,7 +9,7 @@ import '../styles/responsive.css';
  * MySignPage - Display user's birth chart (Sun, Moon, Rising signs)
  * Refactored to use modular components and hooks
  */
-export default function MySignPage({ userId, token, auth }) {
+export default function MySignPage({ userId, token, auth, onNavigateToPage }) {
   const { astroData, loading, error, fetchAstrologyData } = useAstrologyData(userId, token);
 
   if (loading) {
@@ -17,6 +18,16 @@ export default function MySignPage({ userId, token, auth }) {
         <div className="loading-container">
           <p>Loading your birth chart...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (error === 'BIRTH_INFO_MISSING') {
+    return (
+      <div className="page-safe-area sign-page">
+        <BirthInfoMissingPrompt 
+          onNavigateToPersonalInfo={() => onNavigateToPage && onNavigateToPage(2)}
+        />
       </div>
     );
   }
