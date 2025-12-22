@@ -37,14 +37,14 @@ export async function saveRecoveryEmail(userId, recoveryEmail) {
     const userIdHash = hashUserId(userId);
 
     await db.query(
-      `INSERT INTO security (user_id, user_id_hash, recovery_email_encrypted, recovery_email_verified)
-       VALUES ($1, $2, pgp_sym_encrypt($3, $4), FALSE)
-       ON CONFLICT (user_id) 
+      `INSERT INTO security (user_id_hash, recovery_email_encrypted, recovery_email_verified, created_at)
+       VALUES ($1, pgp_sym_encrypt($2, $3), FALSE, CURRENT_TIMESTAMP)
+       ON CONFLICT (user_id_hash) 
        DO UPDATE SET 
-         recovery_email_encrypted = pgp_sym_encrypt($3, $4),
+         recovery_email_encrypted = pgp_sym_encrypt($2, $3),
          recovery_email_verified = FALSE,
          updated_at = CURRENT_TIMESTAMP`,
-      [userId, userIdHash, recoveryEmail || '', process.env.ENCRYPTION_KEY]
+      [userIdHash, recoveryEmail || '', process.env.ENCRYPTION_KEY]
     );
 
     const { code, expiresAt } = generateVerificationCodeWithExpiry();

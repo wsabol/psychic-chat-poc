@@ -4,6 +4,7 @@ import { onAuthStateChanged, setPersistence, browserLocalPersistence, browserSes
 
 /**
  * Core auth state management and Firebase listener
+ * WITH DEBUG LOGGING
  */
 export function useAuthState(checkBillingStatus) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -20,7 +21,6 @@ export function useAuthState(checkBillingStatus) {
   const [tempUserId, setTempUserId] = useState(null);
   const [twoFactorMethod, setTwoFactorMethod] = useState('email');
   
-  // ✅ FIX: Use ref to track if billing check was already done for this user
   const billingCheckedRef = useRef(new Set());
 
   // Setup Firebase auth listener
@@ -28,42 +28,9 @@ export function useAuthState(checkBillingStatus) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
         if (firebaseUser) {
+          console.log('[AUTH-LISTENER] Firebase user logged in:', firebaseUser.uid);
           const isTemp = firebaseUser.email.startsWith('temp_');
           const idToken = await firebaseUser.getIdToken();
-
-          // Check session persistence preference and set Firebase persistence
-          if (!isTemp) {
-            try {
-              const controller = new AbortController();
-              const timeoutId = setTimeout(() => controller.abort(), 5000);
-              
-              const persistenceResponse = await fetch(`http://localhost:3000/security/2fa-settings/${firebaseUser.uid}`, {
-                headers: { 'Authorization': `Bearer ${idToken}` },
-                signal: controller.signal
-              });
-
-              clearTimeout(timeoutId);
-
-              if (persistenceResponse.ok) {
-                const persistenceData = await persistenceResponse.json();
-                const persistentSession = persistenceData.settings?.persistent_session || false;
-
-                // Set Firebase persistence based on user preference
-                const persistence = persistentSession ? browserLocalPersistence : browserSessionPersistence;
-                try {
-                  await setPersistence(auth, persistence);
-                } catch (err) {
-                  console.warn('[AUTH-PERSISTENCE] Could not set persistence:', err.message);
-                }
-              }
-            } catch (err) {
-              if (err.name === 'AbortError') {
-                console.debug('[AUTH-PERSISTENCE] Settings fetch timed out (expected on slow networks)');
-              } else {
-                console.debug('[AUTH-PERSISTENCE] Settings fetch failed (non-critical):', err.message);
-              }
-            }
-          }
 
           // Set auth state
           setAuthUserId(firebaseUser.uid);
@@ -74,13 +41,20 @@ export function useAuthState(checkBillingStatus) {
           const isEmail = firebaseUser.providerData.some(p => p.providerId === 'password');
           setIsEmailUser(isEmail);
 
+          console.log('[AUTH-LISTENER] Firebase user details:', {
+            isTemp,
+            emailVerified: firebaseUser.emailVerified,
+            isEmailUser: isEmail,
+            email: firebaseUser.email
+          });
+
           if (isTemp) {
-            // Temporary accounts - authenticate immediately (no 2FA, no subscription/payment checks)
+            console.log('[AUTH-LISTENER] Temporary account - authenticating immediately');
             setIsFirstTime(true);
             setIsAuthenticated(true);
             setLoading(false);
           } else {
-            // Permanent accounts - track device
+            console.log('[AUTH-LISTENER] Permanent account - checking email verification and 2FA');
             setIsFirstTime(false);
             localStorage.setItem('psychic_app_registered', 'true');
             
@@ -101,11 +75,11 @@ export function useAuthState(checkBillingStatus) {
               } catch (e) { }
             })();
 
-            // ✅ OPTION B: Skip 2FA if email NOT verified (brand new account)
+            // Check email verification
             if (!firebaseUser.emailVerified) {
+              console.log('[AUTH-LISTENER] EMAIL NOT VERIFIED - skipping 2FA, authenticating');
               setShowTwoFactor(false);
               setIsAuthenticated(true);
-              // ✅ FIX: Only check billing ONCE per user
               if (!billingCheckedRef.current.has(firebaseUser.uid)) {
                 billingCheckedRef.current.add(firebaseUser.uid);
                 checkBillingStatus(idToken, firebaseUser.uid);
@@ -114,7 +88,7 @@ export function useAuthState(checkBillingStatus) {
               return;
             }
 
-            // Email IS verified - existing user logging in
+            console.log('[AUTH-LISTENER] EMAIL IS VERIFIED - checking 2FA');
 
             // Log login to audit
             fetch('http://localhost:3000/auth/log-login-success', {
@@ -128,15 +102,16 @@ export function useAuthState(checkBillingStatus) {
             const alreadyVerified = sessionStorage.getItem(twoFAVerifiedKey);
 
             if (alreadyVerified) {
+              console.log('[AUTH-LISTENER] 2FA already verified in session - authenticating');
               setShowTwoFactor(false);
               setIsAuthenticated(true);
-              // ✅ FIX: Only check billing ONCE per user
               if (!billingCheckedRef.current.has(firebaseUser.uid)) {
                 billingCheckedRef.current.add(firebaseUser.uid);
                 checkBillingStatus(idToken, firebaseUser.uid);
               }
               setLoading(false);
             } else {
+              console.log('[AUTH-LISTENER] Calling /auth/check-2fa endpoint');
               try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -150,41 +125,44 @@ export function useAuthState(checkBillingStatus) {
                 clearTimeout(timeoutId);
                 const twoFAData = await twoFAResponse.json();
 
+                console.log('[AUTH-LISTENER] /auth/check-2fa response:', twoFAData);
+
                 if (twoFAData.requires2FA) {
-                  // 2FA required - show 2FA screen, DON'T authenticate
+                  console.log('[AUTH-LISTENER] 2FA REQUIRED - setting showTwoFactor=true');
                   setTempToken(twoFAData.tempToken);
                   setTempUserId(firebaseUser.uid);
                   setShowTwoFactor(true);
                   setTwoFactorMethod(twoFAData.method || 'email');
                   setIsAuthenticated(false);
+                  setLoading(false);
                 } else {
-                  // No 2FA required - authenticate now
+                  console.log('[AUTH-LISTENER] No 2FA required - authenticating');
                   setShowTwoFactor(false);
                   setIsAuthenticated(true);
-                  // ✅ FIX: Only check billing ONCE per user
                   if (!billingCheckedRef.current.has(firebaseUser.uid)) {
                     billingCheckedRef.current.add(firebaseUser.uid);
                     checkBillingStatus(idToken, firebaseUser.uid);
                   }
+                  setLoading(false);
                 }
               } catch (err) {
+                console.error('[AUTH-LISTENER] /auth/check-2fa FAILED:', err.message, err.name);
+                
                 if (err.name === 'AbortError') {
-                  console.debug('[2FA-CHECK] 2FA check timed out (expected on slow networks), proceeding with authentication');
+                  console.warn('[AUTH-LISTENER] 2FA check timed out - assuming 2FA required');
+                  setShowTwoFactor(true);
+                  setIsAuthenticated(false);
                 } else {
-                  console.warn('[2FA-CHECK] Failed to check 2FA:', err.message);
+                  console.error('[AUTH-LISTENER] 2FA check error - keeping unauthenticated');
+                  setShowTwoFactor(false);
+                  setIsAuthenticated(false);
                 }
-                setIsAuthenticated(true);
-                // ✅ FIX: Only check billing ONCE per user
-                if (!billingCheckedRef.current.has(firebaseUser.uid)) {
-                  billingCheckedRef.current.add(firebaseUser.uid);
-                  checkBillingStatus(idToken, firebaseUser.uid);
-                }
-              } finally {
                 setLoading(false);
               }
             }
           }
         } else {
+          console.log('[AUTH-LISTENER] No Firebase user - logging out');
           setIsAuthenticated(false);
           setAuthUserId(null);
           setAuthEmail(null);
@@ -200,17 +178,27 @@ export function useAuthState(checkBillingStatus) {
           setLoading(false);
         }
       } catch (err) {
-        console.error('[AUTH-LISTENER] Error:', err);
+        console.error('[AUTH-LISTENER] FATAL ERROR:', err);
         setIsAuthenticated(false);
         setLoading(false);
       }
     });
 
     return unsubscribe;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    // ✅ FIX: Don't include checkBillingStatus in dependency array
-    // The function reference changes on every render, causing infinite loops
   }, []);
+
+  const complete2FA = useCallback((userId, idToken) => {
+    console.log('[2FA-COMPLETE] Completing 2FA login for user:', userId);
+    setShowTwoFactor(false);
+    setTempToken(null);
+    setTempUserId(null);
+    setIsAuthenticated(true);
+    
+    if (!billingCheckedRef.current.has(userId)) {
+      billingCheckedRef.current.add(userId);
+      checkBillingStatus(idToken, userId);
+    }
+  }, [checkBillingStatus]);
 
   const resetAuthState = useCallback(() => {
     setIsAuthenticated(false);
@@ -221,7 +209,6 @@ export function useAuthState(checkBillingStatus) {
     setShowTwoFactor(false);
     setTempToken(null);
     setTempUserId(null);
-    // ✅ FIX: Reset the billing checked set on logout
     billingCheckedRef.current.clear();
   }, []);
 
@@ -253,5 +240,6 @@ export function useAuthState(checkBillingStatus) {
     twoFactorMethod,
     setTwoFactorMethod,
     resetAuthState,
+    complete2FA,
   };
 }

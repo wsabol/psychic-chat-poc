@@ -16,17 +16,17 @@ export async function insertSecurityRecord(db, userId, phoneNumber, recoveryEmai
   const userIdHash = hashUserId(userId);
 
   const query = `
-    INSERT INTO security (user_id, user_id_hash, phone_number_encrypted, recovery_email_encrypted, recovery_phone_encrypted)
-    VALUES ($1, $2, pgp_sym_encrypt($3, $4), pgp_sym_encrypt($5, $4), pgp_sym_encrypt($6, $4))
-    ON CONFLICT (user_id) DO UPDATE SET
-      phone_number_encrypted = pgp_sym_encrypt($3, $4),
-      recovery_email_encrypted = pgp_sym_encrypt($5, $4),
-      recovery_phone_encrypted = pgp_sym_encrypt($6, $4)
-    RETURNING user_id
+    INSERT INTO security (user_id_hash, phone_number_encrypted, recovery_email_encrypted, recovery_phone_encrypted, created_at)
+    VALUES ($1, pgp_sym_encrypt($2, $3), pgp_sym_encrypt($4, $3), pgp_sym_encrypt($5, $3), CURRENT_TIMESTAMP)
+    ON CONFLICT (user_id_hash) DO UPDATE SET
+      phone_number_encrypted = pgp_sym_encrypt($2, $3),
+      recovery_email_encrypted = pgp_sym_encrypt($4, $3),
+      recovery_phone_encrypted = pgp_sym_encrypt($5, $3),
+      updated_at = CURRENT_TIMESTAMP
+    RETURNING user_id_hash
   `;
 
   return db.query(query, [
-    userId,
     userIdHash,
     phoneNumber || '',
     ENCRYPTION_KEY,
@@ -44,7 +44,7 @@ export async function getSecurityRecord(db, userId) {
 
   const query = `
     SELECT 
-      user_id,
+      user_id_hash,
       pgp_sym_decrypt(phone_number_encrypted, $1) as phone_number,
       pgp_sym_decrypt(recovery_email_encrypted, $1) as recovery_email,
       pgp_sym_decrypt(recovery_phone_encrypted, $1) as recovery_phone,
@@ -58,6 +58,8 @@ export async function getSecurityRecord(db, userId) {
 
 /**
  * Insert into verification_codes with encrypted email/phone and hashed user_id
+ * 
+ * FIXED: Now uses user_id_hash instead of non-existent user_id column
  */
 export async function insertVerificationCode(db, userId, email, phoneNumber, code, codeType) {
   const ENCRYPTION_KEY = getEncryptionKey();
@@ -65,15 +67,14 @@ export async function insertVerificationCode(db, userId, email, phoneNumber, cod
 
   const query = `
     INSERT INTO verification_codes (
-      user_id, user_id_hash, email_encrypted, phone_number_encrypted, code, code_type, expires_at
+      user_id_hash, email_encrypted, phone_number_encrypted, code, code_type, expires_at, created_at
     ) VALUES (
-      $1, $2, pgp_sym_encrypt($3, $4), pgp_sym_encrypt($5, $4), $6, $7, NOW() + INTERVAL '15 minutes'
+      $1, pgp_sym_encrypt($2, $3), pgp_sym_encrypt($4, $3), $5, $6, NOW() + INTERVAL '15 minutes', CURRENT_TIMESTAMP
     )
     RETURNING id, code
   `;
 
   return db.query(query, [
-    userId,
     userIdHash,
     email || '',
     ENCRYPTION_KEY,
@@ -122,15 +123,14 @@ export async function insertUserSession(db, userId, sessionToken, ipAddress, use
 
   const query = `
     INSERT INTO user_sessions (
-      user_id, user_id_hash, session_token_encrypted, ip_address, user_agent, expires_at
+      user_id_hash, session_token_encrypted, ip_address, user_agent, expires_at, created_at
     ) VALUES (
-      $1, $2, pgp_sym_encrypt($3, $4), $5, $6, $7
+      $1, pgp_sym_encrypt($2, $3), $4, $5, $6, CURRENT_TIMESTAMP
     )
     RETURNING id
   `;
 
   return db.query(query, [
-    userId,
     userIdHash,
     sessionToken,
     ENCRYPTION_KEY,
@@ -153,7 +153,7 @@ export async function getUserSession(db, userId, sessionTokenHash) {
   const query = `
     SELECT 
       id,
-      user_id,
+      user_id_hash,
       pgp_sym_decrypt(session_token_encrypted, $1) as session_token,
       expires_at,
       last_activity
@@ -175,18 +175,17 @@ export async function insertSecuritySession(db, userId, firebaseToken, deviceNam
 
   const query = `
     INSERT INTO security_sessions (
-      user_id, user_id_hash, firebase_token_encrypted, device_name, ip_address, user_agent, last_active
+      user_id_hash, firebase_token_encrypted, device_name, ip_address, user_agent, last_active, created_at
     ) VALUES (
-      $1, $2, pgp_sym_encrypt($3, $4), $5, $6, $7, NOW()
+      $1, pgp_sym_encrypt($2, $3), $4, $5, $6, NOW(), CURRENT_TIMESTAMP
     )
-    ON CONFLICT (user_id) DO UPDATE SET
-      firebase_token_encrypted = pgp_sym_encrypt($3, $4),
+    ON CONFLICT (user_id_hash) DO UPDATE SET
+      firebase_token_encrypted = pgp_sym_encrypt($2, $3),
       last_active = NOW()
     RETURNING id
   `;
 
   return db.query(query, [
-    userId,
     userIdHash,
     firebaseToken,
     ENCRYPTION_KEY,
@@ -230,14 +229,13 @@ export async function recordLoginAttempt(db, userId, emailAttempted, success, ip
 
   const query = `
     INSERT INTO login_attempts (
-      user_id, user_id_hash, email_attempted_encrypted, success, ip_address_encrypted, user_agent, attempted_at
+      user_id_hash, email_attempted_encrypted, success, ip_address_encrypted, user_agent, attempted_at, created_at
     ) VALUES (
-      $1, $2, pgp_sym_encrypt($3, $4), $5, pgp_sym_encrypt($6, $4), $7, NOW()
+      $1, pgp_sym_encrypt($2, $3), $4, pgp_sym_encrypt($5, $3), $6, NOW(), CURRENT_TIMESTAMP
     )
   `;
 
   return db.query(query, [
-    userId,
     userIdHash,
     emailAttempted || '',
     ENCRYPTION_KEY,
@@ -271,12 +269,12 @@ export async function insertMessage(db, userId, role, content, contentEncrypted)
   const userIdHash = hashUserId(userId);
 
   const query = `
-    INSERT INTO messages (user_id, user_id_hash, role, content, content_encrypted, created_at)
-    VALUES ($1, $2, $3, $4, $5, NOW())
+    INSERT INTO messages (user_id_hash, role, content, content_encrypted, created_at)
+    VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
     RETURNING id
   `;
 
-  return db.query(query, [userId, userIdHash, role, content, contentEncrypted]);
+  return db.query(query, [userIdHash, role, content, contentEncrypted]);
 }
 
 /**

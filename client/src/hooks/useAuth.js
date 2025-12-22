@@ -24,9 +24,11 @@ export function useAuth() {
   const verify2FA = async (code) => {
     return await twoFAHook.verify2FA(
       code,
-      twoFAHook.tempToken,
-      twoFAHook.tempUserId,
-      billingHook.checkBillingStatus
+      stateHook.tempToken,  // ✅ FIXED: Should use stateHook.tempToken
+      stateHook.tempUserId,  // ✅ FIXED: Should use stateHook.tempUserId
+      stateHook.complete2FA,
+      stateHook.token,
+      stateHook.authUserId
     );
   };
 
@@ -56,8 +58,8 @@ export function useAuth() {
     // 2FA
     showTwoFactor: stateHook.showTwoFactor,
     setShowTwoFactor: stateHook.setShowTwoFactor,
-    tempToken: twoFAHook.tempToken,
-    tempUserId: twoFAHook.tempUserId,
+    tempToken: stateHook.tempToken,  // ✅ FIXED: Should come from stateHook, not twoFAHook
+    tempUserId: stateHook.tempUserId,  // ✅ FIXED: Should come from stateHook, not twoFAHook
     twoFactorMethod: stateHook.twoFactorMethod,
     error: twoFAHook.error,
     setError: twoFAHook.setError,

@@ -1,7 +1,12 @@
 import { useCallback, useState } from 'react';
+import { auth } from '../../firebase';
 
 /**
  * Two-factor authentication logic
+ * 
+ * CRITICAL FIX: After 2FA code is verified, we call complete2FA() to immediately
+ * set isAuthenticated = true and trigger billing checks. We don't rely on 
+ * onAuthStateChanged listener re-running because it doesn't fire automatically.
  */
 export function useAuthTwoFactor() {
   const [showTwoFactor, setShowTwoFactor] = useState(false);
@@ -10,7 +15,7 @@ export function useAuthTwoFactor() {
   const [twoFactorMethod, setTwoFactorMethod] = useState('email');
   const [error, setError] = useState(null);
 
-  const verify2FA = useCallback(async (code, token, userId, checkBillingStatus) => {
+  const verify2FA = useCallback(async (code, token, userId, complete2FA, authToken, authUserId) => {
     try {
       if (!userId || !token) {
         setError('2FA session expired. Please log in again.');
@@ -37,6 +42,7 @@ export function useAuthTwoFactor() {
       }
 
       // 2FA verified - NOW authenticate
+      console.log('[2FA] Code verified successfully, completing login flow');
 
       // Mark 2FA as verified in this session so page refreshes don't require it again
       sessionStorage.setItem(`2fa_verified_${userId}`, 'true');
@@ -45,9 +51,22 @@ export function useAuthTwoFactor() {
       setTempUserId(null);
       setShowTwoFactor(false);
 
-      // After 2FA, check billing status (payment method then subscription) - SEQUENTIAL
-      if (checkBillingStatus) {
-        await checkBillingStatus(token, userId);
+      // CRITICAL FIX: Call complete2FA to immediately authenticate and trigger billing check
+      // This is the proper way to complete 2FA - don't rely on onAuthStateChanged listener
+      // because it doesn't fire automatically when auth state hasn't changed
+      if (complete2FA && authToken && authUserId) {
+        console.log('[2FA] Calling complete2FA to finalize authentication');
+        complete2FA(authUserId, authToken);
+      } else {
+        console.warn('[2FA] Missing complete2FA or auth tokens, falling back to reload');
+        // Fallback: Force auth state to re-run listener if complete2FA not available
+        if (auth.currentUser) {
+          try {
+            await auth.currentUser.reload();
+          } catch (reloadErr) {
+            console.warn('[2FA] Failed to reload auth user:', reloadErr.message);
+          }
+        }
       }
 
       setError(null);

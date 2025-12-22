@@ -11,13 +11,7 @@ import { auth } from '../firebase';
 
 /**
  * Consolidates all app state management into one hook
- * Handles:
- * - Authentication state
- * - Routing decisions
- * - Navigation state
- * - Onboarding flow
- * - Email verification
- * - Billing flow
+ * WITH DEBUG LOGGING
  */
 export function useAppState() {
   useTokenRefresh();
@@ -36,7 +30,18 @@ export function useAppState() {
   const modals = useModalState();
   const tempFlow = useTempAccountFlow(authState);
   const handlers = useAuthHandlers(authState, modals, tempFlow);
+  
+  console.log('[APP-STATE] authState received:', {
+    showTwoFactor: authState.showTwoFactor,
+    tempUserId: authState.tempUserId,
+    tempToken: authState.tempToken ? 'SET' : 'MISSING',
+    isAuthenticated: authState.isAuthenticated
+  });
+  
   const { isLoading, isThankyou, isRegister, isVerification, isLanding, isLogin, isTwoFactor, isPaymentMethodRequired, isSubscriptionRequired, isChat } = useAppRouting(authState, tempFlow.appExited, modals.showRegisterMode, skipPaymentCheck, skipSubscriptionCheck);
+  
+  console.log('[APP-STATE] Routing result:', { isLoading, isTwoFactor, isLogin });
+  
   const emailVerification = useEmailVerification();
   const onboarding = useOnboarding(authState.token);
 

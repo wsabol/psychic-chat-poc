@@ -37,15 +37,23 @@ function encrypt(text) {
 
 /**
  * Decrypt sensitive data
+ * 
+ * FIXED: Properly handles NULL, undefined, empty strings, and non-string types
+ * Returns null instead of throwing on invalid data
  */
 function decrypt(encryptedData) {
-  if (!encryptedData) return null;
+  // Handle NULL, undefined, empty strings, and non-string types
+  if (!encryptedData || typeof encryptedData !== 'string') {
+    return null;
+  }
 
   try {
     // Split the data
     const parts = encryptedData.split(':');
     if (parts.length !== 3) {
-      throw new Error('Invalid encrypted data format');
+      // Invalid format - return null instead of throwing
+      console.warn('[ENCRYPTION] Invalid encrypted data format, returning null');
+      return null;
     }
 
     const iv = Buffer.from(parts[0], 'hex');
@@ -67,8 +75,8 @@ function decrypt(encryptedData) {
 
     return decrypted;
   } catch (err) {
-    console.error('[ENCRYPTION] Error decrypting:', err);
-    throw new Error('Decryption failed');
+    console.warn('[ENCRYPTION] Error decrypting (returning null):', err.message);
+    return null;
   }
 }
 

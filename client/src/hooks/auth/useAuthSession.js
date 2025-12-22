@@ -83,12 +83,26 @@ export function useAuthSession() {
     }
   }, []);
 
-            const handleLogout = useCallback(async () => {
+  const handleLogout = useCallback(async () => {
     try {
       // ✅ Check if current user is the dev user before signing out
       const userEmail = auth.currentUser?.email || null;
+      const userId = auth.currentUser?.uid || null;
       const isDev = userEmail === DEV_EMAIL;
       setIsDevUserLogout(isDev);
+      
+      // ✅ CRITICAL FIX: Clear 2FA verification flag from sessionStorage
+      // This ensures that on next login, 2FA check will be performed again
+      if (userId) {
+        sessionStorage.removeItem(`2fa_verified_${userId}`);
+      }
+      
+      // Also clear all 2FA-related sessionStorage items as a safety measure
+      for (let key in sessionStorage) {
+        if (key && key.includes('2fa_verified')) {
+          sessionStorage.removeItem(key);
+        }
+      }
       
       await signOut(auth);
     } catch (err) {
@@ -121,7 +135,7 @@ export function useAuthSession() {
     await handleLogout();
   }, [deleteTemporaryAccount, handleLogout]);
 
-      return {
+  return {
     hasLoggedOut,
     setHasLoggedOut,
     isDevUserLogout,

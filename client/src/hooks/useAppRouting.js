@@ -30,7 +30,10 @@ export function useAppRouting(auth, appExited, showRegisterMode = false, skipPay
         if (appExited) return 'thankYou';
 
         // 2FA verification - CHECK THIS EARLY (before payment/subscription check)
-        if (auth.showTwoFactor && auth.tempUserId && auth.tempToken) {
+        // 2FA can apply to both temp accounts (during registration) and established accounts (after login)
+        // For established accounts: auth.authUserId is set, not auth.tempUserId
+        // For temp accounts: auth.tempUserId is set
+        if (auth.showTwoFactor && (auth.tempUserId || auth.authUserId) && auth.tempToken) {
             return 'twoFactor';
         }
 
@@ -45,7 +48,7 @@ export function useAppRouting(auth, appExited, showRegisterMode = false, skipPay
             return 'verification';
         }
 
-                                // User explicitly logged out
+        // User explicitly logged out
         // ✅ Dev users see landing page for testing, others see login page
         if (!auth.isAuthenticated && auth.hasLoggedOut) {
             return auth.isDevUserLogout ? 'landing' : 'login';
@@ -90,7 +93,7 @@ export function useAppRouting(auth, appExited, showRegisterMode = false, skipPay
 
         // Authenticated, verified, has payment method (or skipping check), and has active subscription (or skipping check) - show chat
         return 'chat';
-    }, [auth.loading, auth.isAuthenticated, auth.isFirstTime, auth.isTemporaryAccount, auth.isEmailUser, auth.emailVerified, auth.hasLoggedOut, auth.isDevUserLogout, auth.hasValidPaymentMethod, auth.paymentMethodChecking, auth.hasActiveSubscription, auth.subscriptionChecking, auth.showTwoFactor, auth.tempUserId, auth.tempToken, appExited, showRegisterMode, skipPaymentCheck, skipSubscriptionCheck, hasExitedBefore]);
+    }, [auth.loading, auth.isAuthenticated, auth.isFirstTime, auth.isTemporaryAccount, auth.isEmailUser, auth.emailVerified, auth.hasLoggedOut, auth.isDevUserLogout, auth.hasValidPaymentMethod, auth.paymentMethodChecking, auth.hasActiveSubscription, auth.subscriptionChecking, auth.showTwoFactor, auth.tempUserId, auth.authUserId, auth.tempToken, appExited, showRegisterMode, skipPaymentCheck, skipSubscriptionCheck, hasExitedBefore]);
 
     return {
         currentScreen,

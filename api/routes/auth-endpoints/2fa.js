@@ -53,9 +53,12 @@ router.post('/check-2fa/:userId', async (req, res) => {
     const { userId } = req.params;
     if (!userId) return res.status(400).json({ error: 'userId required' });
 
+    console.log('[2FA-CHECK] Starting 2FA check for userId:', userId);
+
     // Check if account is locked
     const lockStatus = await isAccountLocked(userId);
     if (lockStatus.locked) {
+      console.log('[2FA-CHECK] Account is locked');
       await logAudit(db, {
         userId,
         action: 'LOGIN_BLOCKED_ACCOUNT_LOCKED',
@@ -79,15 +82,19 @@ router.post('/check-2fa/:userId', async (req, res) => {
 
     // Get 2FA settings using user_id_hash
     const userIdHash = hashUserId(userId);
+    console.log('[2FA-CHECK] userIdHash:', userIdHash);
+    
     const twoFAResult = await db.query(
       'SELECT * FROM user_2fa_settings WHERE user_id_hash = $1',
       [userIdHash]
     );
 
     const twoFASettings = twoFAResult.rows[0];
+    console.log('[2FA-CHECK] 2FA settings found:', !!twoFASettings, twoFASettings);
 
     // If 2FA disabled, allow access
     if (!twoFASettings || !twoFASettings.enabled) {
+      console.log('[2FA-CHECK] 2FA is disabled or not configured');
       return res.json({
         success: true,
         userId,
@@ -96,11 +103,14 @@ router.post('/check-2fa/:userId', async (req, res) => {
       });
     }
 
+    console.log('[2FA-CHECK] 2FA is ENABLED - generating code');
+
     // Generate and send 2FA code
     const { generate6DigitCode } = await import('../../shared/authUtils.js');
     const { send2FACodeEmail } = await import('../../shared/emailService.js');
     
     const code = generate6DigitCode();
+    console.log('[2FA-CHECK] Generated code:', code);
 
     // Get user's email
     const userResult = await db.query(
@@ -109,20 +119,30 @@ router.post('/check-2fa/:userId', async (req, res) => {
     );
 
     if (userResult.rows.length === 0) {
+      console.log('[2FA-CHECK] User not found in user_personal_info');
       return res.status(404).json({ error: 'User not found' });
     }
 
     const email = userResult.rows[0].email;
+    console.log('[2FA-CHECK] User email:', email);
 
     // Insert verification code with encryption
-    await insertVerificationCode(db, userId, email, null, code, 'email');
+    try {
+      const insertResult = await insertVerificationCode(db, userId, email, null, code, 'email');
+      console.log('[2FA-CHECK] Code inserted successfully:', insertResult.rows[0]);
+    } catch (insertErr) {
+      console.error('[2FA-CHECK] FAILED TO INSERT VERIFICATION CODE:', insertErr);
+      return res.status(500).json({ error: 'Failed to save 2FA code', details: insertErr.message });
+    }
 
     // Send 2FA code via email
     const sendResult = await send2FACodeEmail(email, code);
     if (!sendResult.success) {
-      logger.error('Failed to send 2FA code:', sendResult.error);
-      return res.status(500).json({ error: 'Failed to send 2FA code' });
+      console.error('[2FA-CHECK] Email send failed:', sendResult.error);
+      return res.status(500).json({ error: 'Failed to send 2FA code', details: sendResult.error });
     }
+
+    console.log('[2FA-CHECK] 2FA code sent to email:', email);
 
     // Generate temporary JWT token
     const jwt = await import('jsonwebtoken');
@@ -145,6 +165,8 @@ router.post('/check-2fa/:userId', async (req, res) => {
       details: { method: 'email', email }
     });
 
+    console.log('[2FA-CHECK] 2FA check complete - returning requires2FA=true');
+
     return res.json({
       success: true,
       userId,
@@ -154,6 +176,7 @@ router.post('/check-2fa/:userId', async (req, res) => {
       message: '2FA code sent to your email'
     });
   } catch (error) {
+    console.error('[2FA-CHECK] FATAL ERROR:', error);
     logger.error('2FA check error:', error.message);
     return res.status(500).json({ error: 'Failed to check 2FA', details: error.message });
   }
