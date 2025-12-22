@@ -28,27 +28,9 @@ function StarField() {
             });
         }
 
-                // Nebula colors
-        const nebulaColors = [
-            { r: 147, g: 112, b: 219 },
-            { r: 75, g: 0, b: 130 },
-            { r: 255, g: 20, b: 147 },
-            { r: 70, g: 130, b: 180 },
-        ];
+                                
 
-        // Create nebulas
-        const nebulas = [];
-        for (let i = 0; i < 3; i++) {
-            const color = nebulaColors[Math.floor(Math.random() * nebulaColors.length)];
-            nebulas.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                z: Math.random() * canvas.width * 0.5 + canvas.width * 0.3,
-                radius: Math.random() * 150 + 100,
-                opacity: Math.random() * 0.3 + 0.1,
-                color: color,
-            });
-        }
+        
 
         // Create solar systems
         const solarSystems = [];
@@ -77,30 +59,7 @@ function StarField() {
         let animationId;
         const speed = 2;
 
-        function drawNebulas() {
-            for (let i = 0; i < nebulas.length; i++) {
-                const nebula = nebulas[i];
-                nebula.z -= speed * 0.3;
-                if (nebula.z <= 0) {
-                    nebula.z = canvas.width;
-                    nebula.x = Math.random() * canvas.width;
-                    nebula.y = Math.random() * canvas.height;
-                }
-                const scale = canvas.width / (nebula.z + canvas.width);
-                const screenX = (nebula.x - centerX) * scale + centerX;
-                const screenY = (nebula.y - centerY) * scale + centerY;
-                const radius = nebula.radius * scale;
-                const opacity = (nebula.z / canvas.width) * nebula.opacity;
-                const gradient = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, radius);
-                gradient.addColorStop(0, `rgba(${nebula.color.r}, ${nebula.color.g}, ${nebula.color.b}, ${opacity * 0.4})`);
-                gradient.addColorStop(0.5, `rgba(${nebula.color.r}, ${nebula.color.g}, ${nebula.color.b}, ${opacity * 0.2})`);
-                gradient.addColorStop(1, `rgba(${nebula.color.r}, ${nebula.color.g}, ${nebula.color.b}, 0)`);
-                ctx.fillStyle = gradient;
-                ctx.beginPath();
-                ctx.arc(screenX, screenY, radius, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
+        
 
         function drawSolarSystems() {
             for (let i = 0; i < solarSystems.length; i++) {
@@ -145,8 +104,7 @@ function StarField() {
             ctx.fillStyle = 'rgba(10, 10, 25, 0.1)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Draw nebulas and solar systems
-            drawNebulas();
+                                                            // Draw solar systems
             drawSolarSystems();
 
             // Draw and update stars
