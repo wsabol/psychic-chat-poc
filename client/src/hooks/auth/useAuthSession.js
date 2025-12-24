@@ -3,7 +3,7 @@ import { auth } from '../../firebase';
 import { signOut, createUserWithEmailAndPassword } from 'firebase/auth';
 
 // ✅ Set your dev email here for developer testing
-const DEV_EMAIL = 'stuathome87@gmail.com';
+const DEV_EMAIL = 'starshiptechnology1@gmail.com';
 
 /**
  * Session and account management - temporary accounts, logout, etc.

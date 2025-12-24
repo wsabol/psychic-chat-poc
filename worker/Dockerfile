@@ -8,7 +8,6 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 ENV OPENAI_API_KEY=${OPENAI_API_KEY}
-ENV XAI_API_KEY=${XAI_API_KEY}
 ENV REDIS_URL=${REDIS_URL}
 ENV DATABASE_URL=${DATABASE_URL}
 
