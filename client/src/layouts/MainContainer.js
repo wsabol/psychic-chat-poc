@@ -2,6 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { useSwipeable } from 'react-swipeable';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navigation from './Navigation';
+import { HelpIcon } from '../components/help/HelpIcon';
+import { HelpChatWindow } from '../components/help/HelpChatWindow';
+import { useHelpChat } from '../hooks/useHelpChat';
 import ChatPage from '../pages/ChatPage';
 import PersonalInfoPage from '../pages/PersonalInfoPage';
 import MySignPage from '../pages/MySignPage';
@@ -30,7 +33,21 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
   const [lastScrollY, setLastScrollY] = useState(0);
   const [navVisible, setNavVisible] = useState(true);
 
-        // Set starting page when it changes
+  // Help chat state (persistent across pages)
+  const {
+    isHelpOpen,
+    setIsHelpOpen,
+    isMinimized,
+    setIsMinimized,
+    toggleHelp,
+    closeHelp,
+    minimizeHelp
+  } = useHelpChat();
+
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+  const currentPage = PAGES[currentPageIndex];
+
+  // Set starting page when it changes
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     console.log('[MC] useEffect: startingPage=', startingPage, 'currentPageIndex=', currentPageIndex);
@@ -105,7 +122,6 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
     }
   }, [currentPageIndex, onNavigateFromBilling]);
 
-  const currentPage = PAGES[currentPageIndex];
   const PageComponent = currentPage.component;
 
   return (
@@ -130,7 +146,7 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
             transition={{ duration: 0.3, ease: 'easeInOut' }}
             className="page-wrapper"
           >
-                                    <PageComponent
+            <PageComponent
               userId={userId}
               token={token}
               auth={auth}
@@ -143,6 +159,27 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
           </motion.div>
         </AnimatePresence>
       </div>
+
+      {/* Help Icon - Show when chat is closed */}
+      {!isHelpOpen && (
+        <HelpIcon 
+          isOpen={isHelpOpen} 
+          onToggle={toggleHelp}
+        />
+      )}
+
+      {/* Help Chat Window - Persistent across pages */}
+      {isHelpOpen && (
+        <HelpChatWindow
+          isOpen={isHelpOpen}
+          onClose={closeHelp}
+          userId={userId}
+          token={token}
+          apiUrl={API_URL}
+          currentPage={currentPage.label}
+          onMinimize={minimizeHelp}
+        />
+      )}
     </div>
   );
 }

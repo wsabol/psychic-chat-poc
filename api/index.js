@@ -17,6 +17,7 @@ import securityRoutes from "./routes/security.js";
 import billingRoutes from "./routes/billing/index.js";
 import webhooksRouter from "./routes/billing/webhooks.js";
 import migrationRoutes from "./routes/migration.js";
+import helpRoutes from "./routes/help.js";
 import { authenticateToken } from "./middleware/auth.js";
 import { validateUserHash } from "./middleware/userHashValidation.js";
 import cors from "cors";
@@ -119,6 +120,9 @@ app.use("/moon-phase", authenticateToken, validateUserHash, moonPhaseRoutes);
 app.use("/astrology-insights", authenticateToken, validateUserHash, astrologyInsightsRoutes);
 
 app.use("/security", authenticateToken, validateUserHash, securityRoutes);
+
+// Help routes (authentication required)
+app.use("/help", authenticateToken, helpRoutes);
 
 // Billing routes: authenticateToken only (no validateUserHash - no user ID in URL)
 // Webhooks endpoint is /webhooks/stripe-webhook (public, no auth required)
