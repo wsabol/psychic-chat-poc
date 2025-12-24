@@ -3,10 +3,7 @@ import { auth } from '../../firebase';
 
 /**
  * Two-factor authentication logic
- * 
- * CRITICAL FIX: After 2FA code is verified, we call complete2FA() to immediately
- * set isAuthenticated = true and trigger billing checks. We don't rely on 
- * onAuthStateChanged listener re-running because it doesn't fire automatically.
+ * Supports trusted device functionality (30-day trust)
  */
 export function useAuthTwoFactor() {
   const [showTwoFactor, setShowTwoFactor] = useState(false);
@@ -15,7 +12,7 @@ export function useAuthTwoFactor() {
   const [twoFactorMethod, setTwoFactorMethod] = useState('email');
   const [error, setError] = useState(null);
 
-  const verify2FA = useCallback(async (code, token, userId, complete2FA, authToken, authUserId) => {
+  const verify2FA = useCallback(async (code, token, userId, complete2FA, authToken, authUserId, trustDevice = false) => {
     try {
       if (!userId || !token) {
         setError('2FA session expired. Please log in again.');
@@ -30,7 +27,8 @@ export function useAuthTwoFactor() {
         },
         body: JSON.stringify({
           userId: userId,
-          code: code
+          code: code,
+          trustDevice: trustDevice
         })
       });
 
@@ -42,7 +40,7 @@ export function useAuthTwoFactor() {
       }
 
       // 2FA verified - NOW authenticate
-      console.log('[2FA] Code verified successfully, completing login flow');
+      console.log('[2FA] Code verified successfully, completing login flow', { deviceTrusted: data.deviceTrusted });
 
       // Mark 2FA as verified in this session so page refreshes don't require it again
       sessionStorage.setItem(`2fa_verified_${userId}`, 'true');

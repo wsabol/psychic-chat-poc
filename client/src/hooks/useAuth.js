@@ -21,14 +21,15 @@ export function useAuth() {
   const sessionHook = useAuthSession();
 
   // Enhance verify2FA with additional dependencies
-  const verify2FA = async (code) => {
+  const verify2FA = async (code, trustDevice = false) => {
     return await twoFAHook.verify2FA(
       code,
       stateHook.tempToken,  // ✅ FIXED: Should use stateHook.tempToken
       stateHook.tempUserId,  // ✅ FIXED: Should use stateHook.tempUserId
       stateHook.complete2FA,
       stateHook.token,
-      stateHook.authUserId
+      stateHook.authUserId,
+      trustDevice  // ✅ NEW: Pass trustDevice flag through
     );
   };
 

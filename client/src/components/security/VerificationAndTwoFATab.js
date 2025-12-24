@@ -6,11 +6,12 @@ import { useVerificationFlow } from './verification/hooks/useVerificationFlow';
 import { use2FASettings } from './verification/hooks/use2FASettings';
 import { TwoFASection } from './verification/TwoFASection';
 import { VerificationMethodsSection } from './verification/VerificationMethodsSection';
+import { TrustCurrentDeviceSection } from './verification/TrustCurrentDeviceSection';
+import { TrustedDevicesSection } from './verification/TrustedDevicesSection';
 
 /**
  * VerificationAndTwoFATab - Orchestrator component
- * Composes 2FA and Verification Methods sections
- * Clean and focused on orchestration only
+ * Composes 2FA, Verification Methods, Trust Current Device, and Trusted Devices sections
  */
 export default function VerificationAndTwoFATab({ userId, token, apiUrl, userEmail }) {
   // Verification methods
@@ -93,6 +94,24 @@ export default function VerificationAndTwoFATab({ userId, token, apiUrl, userEma
         onVerifyCode={handleVerifyCode}
         onEnterEditMode={flow.enterEditMode}
       />
+
+      {/* Section 3: Trust This Device (Current) */}
+      {twoFA.twoFAEnabled && (
+        <TrustCurrentDeviceSection
+          userId={userId}
+          token={token}
+          apiUrl={apiUrl}
+        />
+      )}
+
+      {/* Section 4: Trusted Devices List */}
+      {twoFA.twoFAEnabled && (
+        <TrustedDevicesSection
+          userId={userId}
+          token={token}
+          apiUrl={apiUrl}
+        />
+      )}
     </div>
   );
 }

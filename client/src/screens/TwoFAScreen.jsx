@@ -3,7 +3,7 @@ import '../styles/screens/TwoFAScreen.css';
 
 /**
  * TwoFAScreen - Full screen 2FA verification
- * Similar to VerificationScreen but for 2FA code entry
+ * Includes option to trust device for 30 days
  */
 export default function TwoFAScreen({
   userId,
@@ -18,6 +18,7 @@ export default function TwoFAScreen({
   const [code, setCode] = useState('');
   const [error, setError] = useState(initialError);
   const [verifying, setVerifying] = useState(false);
+  const [trustDevice, setTrustDevice] = useState(false);
 
   const handleCodeChange = (e) => {
     // Only allow digits, max 6
@@ -41,7 +42,7 @@ export default function TwoFAScreen({
       
       if (verify2FAFunc) {
         // Use verify2FA from authState - this updates auth state directly
-        success = await verify2FAFunc(code);
+        success = await verify2FAFunc(code, trustDevice);
         if (!success) {
           // Error is already set by verify2FA
           setCode('');
@@ -57,7 +58,8 @@ export default function TwoFAScreen({
           },
           body: JSON.stringify({
             userId,
-            code
+            code,
+            trustDevice
           })
         });
 
@@ -139,6 +141,33 @@ export default function TwoFAScreen({
             <p className="twofa-code-expiry">
               Code expires in 10 minutes
             </p>
+
+            {/* Trust Device Checkbox */}
+            <label style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+              marginTop: '1rem',
+              padding: '0.75rem',
+              backgroundColor: '#f5f5f5',
+              borderRadius: '4px',
+              userSelect: 'none'
+            }}>
+              <input
+                type="checkbox"
+                checked={trustDevice}
+                onChange={(e) => setTrustDevice(e.target.checked)}
+                disabled={verifying || isLoading}
+                style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+              />
+              <span>
+                <strong>Trust this device for 30 days</strong>
+                <br />
+                <span style={{ fontSize: '0.85rem', color: '#666' }}>Skip 2FA on this device</span>
+              </span>
+            </label>
           </form>
         </div>
 

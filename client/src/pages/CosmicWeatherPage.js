@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
 import { isBirthInfoError, isBirthInfoMissing } from '../utils/birthInfoErrorHandler';
 import BirthInfoMissingPrompt from '../components/BirthInfoMissingPrompt';
 import '../styles/responsive.css';
@@ -24,7 +25,7 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
 
   const fetchAstroInfo = async (headers) => {
     try {
-      const response = await fetch(`${API_URL}/user-astrology/${userId}`, { headers });
+      const response = await fetchWithTokenRefresh(`${API_URL}/user-astrology/${userId}`, { headers });
       if (response.ok) {
         const data = await response.json();
         let astroDataObj = data.astrology_data;
@@ -57,7 +58,7 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
         await fetchAstroInfo(headers);
       }
 
-      const response = await fetch(`${API_URL}/astrology-insights/cosmic-weather/${userId}`, { headers });
+      const response = await fetchWithTokenRefresh(`${API_URL}/astrology-insights/cosmic-weather/${userId}`, { headers });
 
       if (response.ok) {
         const data = await response.json();
@@ -71,7 +72,7 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
       }
 
       setGenerating(true);
-      const generateResponse = await fetch(`${API_URL}/astrology-insights/cosmic-weather/${userId}`, {
+      const generateResponse = await fetchWithTokenRefresh(`${API_URL}/astrology-insights/cosmic-weather/${userId}`, {
         method: 'POST',
         headers
       });
@@ -101,7 +102,7 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
         pollCount++;
 
         try {
-          const pollResponse = await fetch(`${API_URL}/astrology-insights/cosmic-weather/${userId}`, { headers });
+          const pollResponse = await fetchWithTokenRefresh(`${API_URL}/astrology-insights/cosmic-weather/${userId}`, { headers });
 
           if (pollResponse.ok) {
             const data = await pollResponse.json();
