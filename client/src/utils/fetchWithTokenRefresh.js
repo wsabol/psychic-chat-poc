@@ -1,5 +1,8 @@
 import { auth } from '../firebase';
 
+// Prevent multiple simultaneous token refresh attempts
+let tokenRefreshPromise = null;
+
 /**
  * Wrapper around fetch that handles Firebase token refresh on 401/403
  * Firebase tokens expire after 1 hour - this automatically refreshes them
@@ -30,35 +33,67 @@ export async function fetchWithTokenRefresh(url, options = {}) {
         // Get fresh Firebase ID token from current user
         const currentUser = auth.currentUser;
         if (!currentUser) {
-          // No user logged in
-          console.warn('[FETCH] No user logged in, redirecting to login');
-          localStorage.clear();
-          window.location.href = '/';
-          return response;
+          // No user logged in - log them out completely
+          console.warn('[FETCH] No user logged in, clearing session and redirecting');
+          // Use a redirect flag to prevent race conditions
+          sessionStorage.setItem('redirecting', 'true');
+          setTimeout(() => {
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.href = '/';
+          }, 100);
+          // Return a proper error response
+          return new Response(JSON.stringify({ error: 'Session expired. Please log in again.' }), {
+            status: 401,
+            headers: { 'Content-Type': 'application/json' }
+          });
         }
         
-        // Force token refresh from Firebase
-        const freshToken = await currentUser.getIdToken(true); // 'true' forces refresh
+        // Use a shared promise to prevent multiple simultaneous refresh attempts
+        if (!tokenRefreshPromise) {
+          tokenRefreshPromise = currentUser.getIdToken(true); // 'true' forces refresh
+          
+          tokenRefreshPromise
+            .finally(() => {
+              tokenRefreshPromise = null; // Reset after completion
+            });
+        }
+        
+        const freshToken = await tokenRefreshPromise;
         
         if (!freshToken) {
           // Failed to get fresh token
           console.error('[FETCH] Failed to get fresh token from Firebase');
-          localStorage.clear();
-          window.location.href = '/';
-          return response;
+          sessionStorage.setItem('redirecting', 'true');
+          setTimeout(() => {
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.href = '/';
+          }, 100);
+          return new Response(JSON.stringify({ error: 'Failed to refresh session. Please log in again.' }), {
+            status: 401,
+            headers: { 'Content-Type': 'application/json' }
+          });
         }
         
         // Retry original request with fresh token
-        const headers = options.headers || {};
+        const headers = { ...(options.headers || {}) };
         headers['Authorization'] = `Bearer ${freshToken}`;
         response = await fetch(url, { ...options, headers });
         return response;
       } catch (err) {
         console.error('[FETCH] Token refresh failed:', err.message);
         // Token refresh failed, redirect to login
-        localStorage.clear();
-        window.location.href = '/';
-        return response;
+        sessionStorage.setItem('redirecting', 'true');
+        setTimeout(() => {
+          localStorage.clear();
+          sessionStorage.clear();
+          window.location.href = '/';
+        }, 100);
+        return new Response(JSON.stringify({ error: 'Session refresh failed. Please log in again.' }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' }
+        });
       }
     }
 

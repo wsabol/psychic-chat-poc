@@ -21,6 +21,13 @@ function HoroscopeModal({ userId, token, isOpen, onClose }) {
         setLoading(true);
         setError(null);
         try {
+            // Prevent operations if redirecting
+            if (sessionStorage.getItem('redirecting')) {
+                setLoading(false);
+                onClose && onClose();
+                return;
+            }
+
             const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
             
             // Try to fetch existing horoscope
@@ -42,6 +49,13 @@ function HoroscopeModal({ userId, token, isOpen, onClose }) {
                 setLoading(false);
                 return;
             }
+
+            // Check for session expiration
+            if (fetchResponse.status === 401) {
+                setError('Your session has expired. Please log in again.');
+                setLoading(false);
+                return;
+            }
             
             // If no cached horoscope, request generation
             const generateResponse = await fetchWithTokenRefresh(
@@ -51,7 +65,12 @@ function HoroscopeModal({ userId, token, isOpen, onClose }) {
             
             if (!generateResponse.ok) {
                 const errorData = await generateResponse.json();
-                setError(errorData.error || 'Could not generate horoscope');
+                const errorMsg = errorData.error || 'Could not generate horoscope';
+                if (errorMsg.includes('Session') || generateResponse.status === 401) {
+                    setError('Your session has expired. Please log in again.');
+                } else {
+                    setError(errorMsg);
+                }
                 setLoading(false);
                 return;
             }
@@ -74,7 +93,11 @@ function HoroscopeModal({ userId, token, isOpen, onClose }) {
             }, 1000);
             
         } catch (err) {
-            setError(err.message);
+            if (err.message && err.message.includes('Session')) {
+                setError('Your session has expired. Please log in again.');
+            } else {
+                setError(err.message || 'Failed to load horoscope');
+            }
             setLoading(false);
         }
     };
@@ -124,6 +147,13 @@ function HoroscopeModal({ userId, token, isOpen, onClose }) {
                 });
                 setLoading(false);
                 return true;
+            }
+
+            // Check for session expiration
+            if (retryResponse.status === 401) {
+                setError('Your session has expired. Please log in again.');
+                setLoading(false);
+                return true; // Stop polling
             }
         } catch (err) {
             console.warn('Polling failed:', err);
