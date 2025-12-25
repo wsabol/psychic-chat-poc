@@ -26,11 +26,8 @@ router.post('/create-subscription', authenticateToken, async (req, res) => {
     if (!priceId) {
       return res.status(400).json({ error: 'priceId is required' });
     }
-
-    console.log(`[BILLING] Starting subscription creation for ${userId}`);
     const customerStart = Date.now();
     const customerId = await getOrCreateStripeCustomer(userId, userEmail);
-    console.log(`[BILLING] Got customer ${customerId} in ${Date.now() - customerStart}ms`);
     
     if (!customerId) {
       return res.status(400).json({ error: 'Stripe is not configured.' });
@@ -38,7 +35,6 @@ router.post('/create-subscription', authenticateToken, async (req, res) => {
     
     const stripeStart = Date.now();
     const subscription = await createSubscription(customerId, priceId);
-    console.log(`[BILLING] Stripe createSubscription took ${Date.now() - stripeStart}ms`);
 
     // ✅ OPTIMIZED: Store subscription data in background (don't wait)
     // Return response immediately while database update happens in parallel
@@ -53,8 +49,6 @@ router.post('/create-subscription', authenticateToken, async (req, res) => {
       console.error('[BILLING] Warning - failed to store subscription in DB:', err.message);
       // Don't fail - subscription was created in Stripe
     });
-
-    console.log(`[BILLING] Total time: ${Date.now() - startTime}ms`);
     res.json({
       subscriptionId: subscription.id,
       status: subscription.status,

@@ -19,8 +19,6 @@ router.post('/verify-2fa', async (req, res) => {
     const { userId, code, trustDevice: shouldTrustDevice } = req.body;
     if (!userId || !code) return res.status(400).json({ error: 'userId and code required' });
     
-    console.log('[2FA-VERIFY] Request received:', { userId, trustDevice: shouldTrustDevice, hasCode: !!code });
-    
     // Verify code exists and is valid
     const codeResult = await getVerificationCode(db, userId, code);
     if (codeResult.rows.length === 0) return res.status(400).json({ error: 'Invalid or expired 2FA code' });
@@ -36,8 +34,6 @@ router.post('/verify-2fa', async (req, res) => {
         const ipAddress = req.ip || '';
         const deviceName = extractDeviceName(userAgent);
         const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
-        
-        console.log('[2FA-VERIFY] Trusting device:', { userIdHash, deviceName, shouldTrustDevice });
         
         // Update existing security_sessions row (UPSERT pattern)
         const updateResult = await db.query(
@@ -62,7 +58,6 @@ router.post('/verify-2fa', async (req, res) => {
           );
         }
         
-        console.log('[2FA-VERIFY] Device marked as trusted:', deviceName);
       } catch (trustErr) {
         console.error('[2FA-VERIFY] Error trusting device:', trustErr.message);
       }
@@ -99,12 +94,9 @@ router.post('/check-2fa/:userId', async (req, res) => {
     const { userId } = req.params;
     if (!userId) return res.status(400).json({ error: 'userId required' });
 
-    console.log('[2FA-CHECK] Starting 2FA check for userId:', userId);
-
     // Check if account is locked
     const lockStatus = await isAccountLocked(userId);
     if (lockStatus.locked) {
-      console.log('[2FA-CHECK] Account is locked');
       await logAudit(db, {
         userId,
         action: 'LOGIN_BLOCKED_ACCOUNT_LOCKED',
@@ -128,7 +120,6 @@ router.post('/check-2fa/:userId', async (req, res) => {
 
     // Get 2FA settings using user_id_hash
     const userIdHash = hashUserId(userId);
-    console.log('[2FA-CHECK] userIdHash:', userIdHash);
     
     const twoFAResult = await db.query(
       'SELECT * FROM user_2fa_settings WHERE user_id_hash = $1',
@@ -136,11 +127,9 @@ router.post('/check-2fa/:userId', async (req, res) => {
     );
 
     const twoFASettings = twoFAResult.rows[0];
-    console.log('[2FA-CHECK] 2FA settings found:', !!twoFASettings);
 
     // If 2FA disabled, allow access
     if (!twoFASettings || !twoFASettings.enabled) {
-      console.log('[2FA-CHECK] 2FA is disabled or not configured');
       return res.json({
         success: true,
         userId,
@@ -150,13 +139,10 @@ router.post('/check-2fa/:userId', async (req, res) => {
     }
 
     // 2FA is enabled - check if device is trusted
-    console.log('[2FA-CHECK] 2FA is ENABLED - checking for trusted device');
     
     const ipAddress = req.ip || '';
     const userAgent = req.get('user-agent') || '';
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
-    
-    console.log('[2FA-CHECK] Current device:', { ipAddress, userAgent });
     
     // Fetch the session and decrypt to compare
     const deviceCheckResult = await db.query(
@@ -167,34 +153,20 @@ router.post('/check-2fa/:userId', async (req, res) => {
        WHERE user_id_hash = $2`,
       [ENCRYPTION_KEY, userIdHash]
     );
-
-    console.log('[2FA-CHECK] Session check result rows:', deviceCheckResult.rows.length);
     
     // Check if device matches and is trusted
     let deviceIsTrusted = false;
     if (deviceCheckResult.rows.length > 0) {
       const session = deviceCheckResult.rows[0];
-      console.log('[2FA-CHECK] Stored session:', { 
-        is_trusted: session.is_trusted,
-        trust_expiry: session.trust_expiry,
-        stored_ip: session.stored_ip,
-        stored_ua: session.stored_ua
-      });
       
       if (session.is_trusted && session.trust_expiry && new Date(session.trust_expiry) > new Date()) {
         if (session.stored_ip === ipAddress && session.stored_ua === userAgent) {
           deviceIsTrusted = true;
-          console.log('[2FA-CHECK] Device matches and is trusted!');
-        } else {
-          console.log('[2FA-CHECK] Device does not match stored device');
-        }
-      } else {
-        console.log('[2FA-CHECK] Device not trusted or trust expired');
-      }
+        } 
+      } 
     }
 
     if (deviceIsTrusted) {
-      console.log('[2FA-CHECK] Device is trusted - skipping 2FA');
       await logAudit(db, {
         userId,
         action: 'LOGIN_2FA_SKIPPED_TRUSTED_DEVICE',
@@ -215,14 +187,11 @@ router.post('/check-2fa/:userId', async (req, res) => {
       });
     }
 
-    console.log('[2FA-CHECK] Device is not trusted - generating code');
-
     // Generate and send 2FA code
     const { generate6DigitCode } = await import('../../shared/authUtils.js');
     const { send2FACodeEmail } = await import('../../shared/emailService.js');
     
     const code = generate6DigitCode();
-    console.log('[2FA-CHECK] Generated code:', code);
 
     // Get user's email
     const userResult = await db.query(
@@ -231,17 +200,14 @@ router.post('/check-2fa/:userId', async (req, res) => {
     );
 
     if (userResult.rows.length === 0) {
-      console.log('[2FA-CHECK] User not found in user_personal_info');
       return res.status(404).json({ error: 'User not found' });
     }
 
     const email = userResult.rows[0].email;
-    console.log('[2FA-CHECK] User email:', email);
 
     // Insert verification code with encryption
     try {
       const insertResult = await insertVerificationCode(db, userId, email, null, code, 'email');
-      console.log('[2FA-CHECK] Code inserted successfully');
     } catch (insertErr) {
       console.error('[2FA-CHECK] FAILED TO INSERT VERIFICATION CODE:', insertErr);
       return res.status(500).json({ error: 'Failed to save 2FA code', details: insertErr.message });
@@ -253,8 +219,6 @@ router.post('/check-2fa/:userId', async (req, res) => {
       console.error('[2FA-CHECK] Email send failed:', sendResult.error);
       return res.status(500).json({ error: 'Failed to send 2FA code', details: sendResult.error });
     }
-
-    console.log('[2FA-CHECK] 2FA code sent to email:', email);
 
     // Generate temporary JWT token
     const jwt = await import('jsonwebtoken');
@@ -276,8 +240,6 @@ router.post('/check-2fa/:userId', async (req, res) => {
       status: 'SUCCESS',
       details: { method: 'email', email }
     });
-
-    console.log('[2FA-CHECK] 2FA check complete - returning requires2FA=true');
 
     return res.json({
       success: true,

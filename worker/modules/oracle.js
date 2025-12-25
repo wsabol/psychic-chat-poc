@@ -44,11 +44,9 @@ export async function isTemporaryUser(userId) {
         if (rows.length > 0 && rows[0].email) {
             // Temporary accounts have emails starting with 'temp_' (matches Firebase auth logic)
             const isTemp = rows[0].email.startsWith('temp_');
-            console.log(`[ORACLE] User ${userId} is ${isTemp ? 'TEMPORARY' : 'ESTABLISHED'}`);
             return isTemp;
         }
         // If no personal info found, assume established (premium) user
-        console.log(`[ORACLE] No personal info for user ${userId}, treating as ESTABLISHED`);
         return false;
     } catch (err) {
         console.error('[ORACLE] Error checking if user is temporary:', err);

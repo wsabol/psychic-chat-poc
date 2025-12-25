@@ -51,8 +51,6 @@ router.get('/onboarding-status', authenticateToken, async (req, res) => {
     // Only FALSE if onboarding_completed = true
     const isOnboarding = onboarding_completed !== true;
     
-    console.log(`[ONBOARDING] Status check for ${userId}: step=${onboarding_step}, completed=${onboarding_completed}, isOnboarding=${isOnboarding}`);
-    
     res.json({
       currentStep: onboarding_step,
       isOnboarding: isOnboarding,
@@ -104,8 +102,6 @@ router.post('/onboarding-step/:step', authenticateToken, async (req, res) => {
     `;
     
     await db.query(query, [step, isOnboardingComplete, userId]);
-    
-    console.log(`[ONBOARDING] User ${userId} completed step: ${step}, onboarding_completed=${isOnboardingComplete}`);
     
     res.json({ 
       success: true, 

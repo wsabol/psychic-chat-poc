@@ -160,10 +160,6 @@ export async function cleanupExpiredTrustedDevices(db) {
        AND trust_expiry < NOW()`
     );
 
-    if (result.rowCount > 0) {
-      console.log(`[DEVICE] Cleaned up ${result.rowCount} expired trusted devices`);
-    }
-
     return result.rowCount;
   } catch (err) {
     console.error('[DEVICE] Error cleaning up expired devices:', err);

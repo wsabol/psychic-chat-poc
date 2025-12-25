@@ -23,7 +23,6 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 async function removePlainTextMessages() {
-    console.log('🔄 Starting plain text removal...');
     
     try {
         // Step 1: Verify encrypted data exists
@@ -37,8 +36,6 @@ async function removePlainTextMessages() {
             process.exit(1);
         }
         
-        console.log(`✅ Verified ${totalEncrypted} encrypted messages exist`);
-        
         // Step 2: Get count of plain text to remove
         const plainCount = await db.query(
             `SELECT COUNT(*) as total FROM messages WHERE content IS NOT NULL`
@@ -46,11 +43,8 @@ async function removePlainTextMessages() {
         const totalPlain = parseInt(plainCount.rows[0].total);
         
         if (totalPlain === 0) {
-            console.log('ℹ️  No plain text messages found to remove.');
             process.exit(0);
         }
-        
-        console.log(`📝 Found ${totalPlain} plain text messages to remove...`);
         
         // Step 3: Clear plain text content
         const result = await db.query(
@@ -58,11 +52,6 @@ async function removePlainTextMessages() {
              SET content = NULL 
              WHERE content IS NOT NULL AND content_encrypted IS NOT NULL`
         );
-        
-        console.log(`\n✅ REMOVAL COMPLETE!`);
-        console.log(`📊 Plain text rows cleared: ${result.rowCount}`);
-        console.log(`🔒 Encrypted content preserved in content_encrypted`);
-        console.log(`📍 content column: Now NULL (structure preserved)`);
         
         process.exit(0);
     } catch (err) {

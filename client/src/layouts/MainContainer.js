@@ -50,9 +50,7 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
   // Set starting page when it changes
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    console.log('[MC] useEffect: startingPage=', startingPage, 'currentPageIndex=', currentPageIndex);
     if (startingPage !== 0 && startingPage !== currentPageIndex) {
-      console.log('[MC] Setting currentPageIndex to:', startingPage);
       setCurrentPageIndex(startingPage);
     }
   }, [startingPage]); // currentPageIndex intentionally not in deps - we only care about startingPage changes

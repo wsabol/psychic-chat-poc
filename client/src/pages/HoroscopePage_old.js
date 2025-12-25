@@ -154,9 +154,7 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
   const astro = astroInfo?.astrology_data || {};
 
     const handleClose = () => {
-    console.log('[HOROSCOPE] handleClose called, onExit:', typeof onExit);
     if (onExit) {
-      console.log('[HOROSCOPE] Calling onExit()');
       onExit();
     } else {
       console.warn('[HOROSCOPE] onExit prop not provided!');

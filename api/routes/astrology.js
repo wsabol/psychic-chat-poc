@@ -66,8 +66,6 @@ router.post('/validate-location', authorizeUser, async (req, res) => {
             });
         }
         
-        console.log('[LOCATION-VALIDATE] Testing location:', { birth_city, birth_province, birth_country });
-        
         // Call Python to validate location
         const result = await calculateBirthChartSync({
             birth_date: birth_date,
@@ -98,7 +96,6 @@ router.post('/validate-location', authorizeUser, async (req, res) => {
         }
         
         if (result.success && result.latitude && result.longitude) {
-            console.log('[LOCATION-VALIDATE] Location validated successfully');
             return res.json({
                 success: true,
                 latitude: result.latitude,

@@ -28,7 +28,6 @@ export function useAuthState(checkBillingStatus) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
         if (firebaseUser) {
-          console.log('[AUTH-LISTENER] Firebase user logged in:', firebaseUser.uid);
           const isTemp = firebaseUser.email.startsWith('temp_');
           const idToken = await firebaseUser.getIdToken();
 
@@ -41,20 +40,11 @@ export function useAuthState(checkBillingStatus) {
           const isEmail = firebaseUser.providerData.some(p => p.providerId === 'password');
           setIsEmailUser(isEmail);
 
-          console.log('[AUTH-LISTENER] Firebase user details:', {
-            isTemp,
-            emailVerified: firebaseUser.emailVerified,
-            isEmailUser: isEmail,
-            email: firebaseUser.email
-          });
-
           if (isTemp) {
-            console.log('[AUTH-LISTENER] Temporary account - authenticating immediately');
             setIsFirstTime(true);
             setIsAuthenticated(true);
             setLoading(false);
           } else {
-            console.log('[AUTH-LISTENER] Permanent account - checking email verification and 2FA');
             setIsFirstTime(false);
             localStorage.setItem('psychic_app_registered', 'true');
             
@@ -77,7 +67,6 @@ export function useAuthState(checkBillingStatus) {
 
             // Check email verification
             if (!firebaseUser.emailVerified) {
-              console.log('[AUTH-LISTENER] EMAIL NOT VERIFIED - skipping 2FA, authenticating');
               setShowTwoFactor(false);
               setIsAuthenticated(true);
               if (!billingCheckedRef.current.has(firebaseUser.uid)) {
@@ -87,8 +76,6 @@ export function useAuthState(checkBillingStatus) {
               setLoading(false);
               return;
             }
-
-            console.log('[AUTH-LISTENER] EMAIL IS VERIFIED - checking 2FA');
 
             // Log login to audit
             fetch('http://localhost:3000/auth/log-login-success', {
@@ -102,7 +89,6 @@ export function useAuthState(checkBillingStatus) {
             const alreadyVerified = sessionStorage.getItem(twoFAVerifiedKey);
 
             if (alreadyVerified) {
-              console.log('[AUTH-LISTENER] 2FA already verified in session - authenticating');
               setShowTwoFactor(false);
               setIsAuthenticated(true);
               if (!billingCheckedRef.current.has(firebaseUser.uid)) {
@@ -111,7 +97,6 @@ export function useAuthState(checkBillingStatus) {
               }
               setLoading(false);
             } else {
-              console.log('[AUTH-LISTENER] Calling /auth/check-2fa endpoint');
               try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -125,10 +110,7 @@ export function useAuthState(checkBillingStatus) {
                 clearTimeout(timeoutId);
                 const twoFAData = await twoFAResponse.json();
 
-                console.log('[AUTH-LISTENER] /auth/check-2fa response:', twoFAData);
-
                 if (twoFAData.requires2FA) {
-                  console.log('[AUTH-LISTENER] 2FA REQUIRED - setting showTwoFactor=true');
                   setTempToken(twoFAData.tempToken);
                   setTempUserId(firebaseUser.uid);
                   setShowTwoFactor(true);
@@ -136,7 +118,6 @@ export function useAuthState(checkBillingStatus) {
                   setIsAuthenticated(false);
                   setLoading(false);
                 } else {
-                  console.log('[AUTH-LISTENER] No 2FA required - authenticating');
                   setShowTwoFactor(false);
                   setIsAuthenticated(true);
                   if (!billingCheckedRef.current.has(firebaseUser.uid)) {
@@ -162,7 +143,6 @@ export function useAuthState(checkBillingStatus) {
             }
           }
         } else {
-          console.log('[AUTH-LISTENER] No Firebase user - logging out');
           setIsAuthenticated(false);
           setAuthUserId(null);
           setAuthEmail(null);
@@ -188,7 +168,6 @@ export function useAuthState(checkBillingStatus) {
   }, []);
 
   const complete2FA = useCallback((userId, idToken) => {
-    console.log('[2FA-COMPLETE] Completing 2FA login for user:', userId);
     setShowTwoFactor(false);
     setTempToken(null);
     setTempUserId(null);

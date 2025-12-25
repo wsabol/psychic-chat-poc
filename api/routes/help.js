@@ -70,8 +70,6 @@ router.post('/ask', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Question cannot be empty' });
     }
 
-    console.log('[HELP] User question:', { userId, question, currentPage });
-
     // Build context message with current page
     const pageContext = currentPage ? `\n\n[User is currently viewing: ${currentPage} page]` : '';
 

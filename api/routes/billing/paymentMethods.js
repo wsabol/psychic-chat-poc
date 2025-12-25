@@ -35,11 +35,8 @@ router.get('/payment-methods', authenticateToken, async (req, res) => {
     const cacheKey = `billing:payment-methods:${userId}`;
     const cachedResult = await redis.get(cacheKey);
     if (cachedResult) {
-      console.log('[BILLING] Cache HIT for payment methods');
       return res.json(JSON.parse(cachedResult));
     }
-
-    console.log('[BILLING] Cache MISS for payment methods - querying Stripe');
 
     // Create a promise for this request so others can wait for it
     const fetchPromise = (async () => {

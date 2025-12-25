@@ -86,7 +86,6 @@ export function AppChat({ state }) {
           userId={authState.authUserId}
           onLogout={authState.handleLogout}
           onExit={() => {
-            console.log('[APPCHAT] onExit called - setting appExited to true to show ThankYouScreen');
             tempFlow.setAppExited(true);
           }}
           startingPage={startingPage}

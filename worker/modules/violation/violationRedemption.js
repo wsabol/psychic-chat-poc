@@ -162,10 +162,8 @@ export async function resetViolationCount(userId, violationType) {
     );
 
     if (rowCount > 0) {
-      console.log(`[VIOLATION-REDEMPTION] Reset ${violationType} violation count for user ${userId}`);
       return true;
     } else {
-      console.log(`[VIOLATION-REDEMPTION] No violation found to reset for user ${userId}`);
       return false;
     }
 
@@ -226,10 +224,6 @@ export async function applyPendingRedemptions(userId) {
           redeemedViolations.push(violationType);
         }
       }
-    }
-
-    if (redeemedViolations.length > 0) {
-      console.log(`[VIOLATION-REDEMPTION] Redeemed violations for user ${userId}:`, redeemedViolations);
     }
 
     return redeemedViolations;

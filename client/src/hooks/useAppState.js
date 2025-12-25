@@ -31,16 +31,7 @@ export function useAppState() {
   const tempFlow = useTempAccountFlow(authState);
   const handlers = useAuthHandlers(authState, modals, tempFlow);
   
-  console.log('[APP-STATE] authState received:', {
-    showTwoFactor: authState.showTwoFactor,
-    tempUserId: authState.tempUserId,
-    tempToken: authState.tempToken ? 'SET' : 'MISSING',
-    isAuthenticated: authState.isAuthenticated
-  });
-  
   const { isLoading, isThankyou, isRegister, isVerification, isLanding, isLogin, isTwoFactor, isPaymentMethodRequired, isSubscriptionRequired, isChat } = useAppRouting(authState, tempFlow.appExited, modals.showRegisterMode, skipPaymentCheck, skipSubscriptionCheck);
-  
-  console.log('[APP-STATE] Routing result:', { isLoading, isTwoFactor, isLogin });
   
   const emailVerification = useEmailVerification();
   const onboarding = useOnboarding(authState.token);
@@ -70,7 +61,6 @@ export function useAppState() {
   // Effect: Auto-navigate new users to payment methods
   useEffect(() => {
     if (authState.emailVerified && !authState.isTemporaryAccount && onboarding.onboardingStatus?.isOnboarding) {
-      console.log('[ONBOARDING] Auto-navigating new user to payment methods');
       setSkipPaymentCheck(true);
       setSkipSubscriptionCheck(true);
       setStartingPage(7);
@@ -151,7 +141,6 @@ export function useAppState() {
   }, []);
 
   const handleOnboardingClose = useCallback(async () => {
-    console.log('[ONBOARDING] Closing modal - marking onboarding as complete');
     try {
       if (onboarding.updateOnboardingStep) {
         await onboarding.updateOnboardingStep('subscription');

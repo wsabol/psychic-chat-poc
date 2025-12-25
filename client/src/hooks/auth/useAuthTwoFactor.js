@@ -40,7 +40,6 @@ export function useAuthTwoFactor() {
       }
 
       // 2FA verified - NOW authenticate
-      console.log('[2FA] Code verified successfully, completing login flow', { deviceTrusted: data.deviceTrusted });
 
       // Mark 2FA as verified in this session so page refreshes don't require it again
       sessionStorage.setItem(`2fa_verified_${userId}`, 'true');
@@ -53,7 +52,6 @@ export function useAuthTwoFactor() {
       // This is the proper way to complete 2FA - don't rely on onAuthStateChanged listener
       // because it doesn't fire automatically when auth state hasn't changed
       if (complete2FA && authToken && authUserId) {
-        console.log('[2FA] Calling complete2FA to finalize authentication');
         complete2FA(authUserId, authToken);
       } else {
         console.warn('[2FA] Missing complete2FA or auth tokens, falling back to reload');

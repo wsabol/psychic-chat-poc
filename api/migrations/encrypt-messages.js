@@ -30,8 +30,6 @@ if (!ENCRYPTION_KEY) {
 }
 
 async function encryptExistingMessages() {
-    console.log('🔐 Starting message encryption migration...');
-    console.log(`Using encryption key: ${ENCRYPTION_KEY.substring(0, 5)}...`);
     
     try {
         // Step 1: Get count of messages to encrypt
@@ -41,18 +39,14 @@ async function encryptExistingMessages() {
         const totalMessages = parseInt(countResult.rows[0].total);
         
         if (totalMessages === 0) {
-            console.log('✅ All messages are already encrypted or no plain text messages found.');
             process.exit(0);
         }
-        
-        console.log(`📝 Found ${totalMessages} messages to encrypt...`);
         
         // Step 2: Encrypt messages in batches
         const batchSize = 100;
         let processedCount = 0;
         
         for (let offset = 0; offset < totalMessages; offset += batchSize) {
-            console.log(`Processing batch: ${offset + 1} to ${Math.min(offset + batchSize, totalMessages)}...`);
             
             const result = await db.query(
                 `UPDATE messages 
@@ -68,13 +62,7 @@ async function encryptExistingMessages() {
             );
             
             processedCount += result.rowCount;
-            console.log(`✓ Encrypted ${processedCount} messages so far...`);
         }
-        
-        console.log(`\n✅ MIGRATION COMPLETE!`);
-        console.log(`📊 Total messages encrypted: ${processedCount}`);
-        console.log(`📍 Plain text 'content' column: Preserved (kept for reference)`);
-        console.log(`🔒 Encrypted 'content_encrypted' column: Ready for use`);
         
         process.exit(0);
     } catch (err) {

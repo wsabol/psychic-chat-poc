@@ -41,7 +41,6 @@ export function AppShells({ state }) {
       <ErrorBoundary>
         <ThankYouScreen
           onCreateAccount={async () => {
-            console.log('[THANKYOU] onCreateAccount clicked - deleting temp account and showing register');
             // Delete the temporary account first
             if (authState.isTemporaryAccount) {
               await authState.deleteTemporaryAccount();
