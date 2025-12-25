@@ -1,0 +1,85 @@
+/* ============================================
+   HOROSCOPE CONTROLS
+   Buttons, toggles, and interactive elements
+   ============================================ */
+
+/* ============================================
+   RANGE TOGGLE
+   ============================================ */
+
+.horoscope-toggle {
+  display: flex;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: var(--color-bg-white);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.toggle-btn {
+  flex: 1;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--color-bg-light);
+  color: var(--color-text-light);
+  border: var(--border-btn) solid transparent;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  transition: var(--transition-fast);
+  min-height: var(--touch-target);
+}
+
+.toggle-btn:hover:not(:disabled) {
+  background: var(--color-btn-hover);
+  color: var(--color-text);
+}
+
+.toggle-btn.active {
+  background: var(--color-primary-gradient);
+  color: white;
+  border-color: var(--color-primary-light);
+}
+
+.toggle-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ============================================
+   SECONDARY BUTTON
+   ============================================ */
+
+.btn-secondary {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--color-bg-lightest);
+  color: var(--color-accent-info);
+  border: var(--border-btn) solid var(--color-accent-info);
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: var(--font-size-base);
+  transition: var(--transition-fast);
+  min-height: var(--touch-target);
+}
+
+.btn-secondary:hover {
+  background: var(--color-accent-info);
+  color: white;
+}
+
+/* ============================================
+   ACCESSIBILITY: CONTROLS
+   ============================================ */
+
+.toggle-btn:focus,
+.btn-secondary:focus {
+  outline: 2px solid var(--color-accent-purple);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toggle-btn {
+    transition: none;
+  }
+}

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { auth } from '../../firebase';
-import { onAuthStateChanged, setPersistence, browserLocalPersistence, browserSessionPersistence } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 
 /**
  * Core auth state management and Firebase listener
@@ -25,6 +25,8 @@ export function useAuthState(checkBillingStatus) {
 
   // Setup Firebase auth listener
   useEffect(() => {
+    if (!checkBillingStatus) return;
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
         if (firebaseUser) {
@@ -165,7 +167,7 @@ export function useAuthState(checkBillingStatus) {
     });
 
     return unsubscribe;
-  }, []);
+  }, [checkBillingStatus]);
 
   const complete2FA = useCallback((userId, idToken) => {
     setShowTwoFactor(false);
@@ -173,7 +175,7 @@ export function useAuthState(checkBillingStatus) {
     setTempUserId(null);
     setIsAuthenticated(true);
     
-    if (!billingCheckedRef.current.has(userId)) {
+    if (checkBillingStatus && !billingCheckedRef.current.has(userId)) {
       billingCheckedRef.current.add(userId);
       checkBillingStatus(idToken, userId);
     }
@@ -222,3 +224,4 @@ export function useAuthState(checkBillingStatus) {
     complete2FA,
   };
 }
+

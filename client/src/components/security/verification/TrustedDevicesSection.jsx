@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 /**
  * TrustedDevicesSection - Manage trusted devices
@@ -11,9 +11,9 @@ export function TrustedDevicesSection({ userId, token, apiUrl }) {
 
   useEffect(() => {
     loadTrustedDevices();
-  }, []);
+  }, [loadTrustedDevices]);
 
-  const loadTrustedDevices = async () => {
+  const loadTrustedDevices = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -35,7 +35,7 @@ export function TrustedDevicesSection({ userId, token, apiUrl }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId, token, apiUrl]);
 
   const handleRevoke = async (deviceId) => {
     try {
@@ -137,3 +137,4 @@ export function TrustedDevicesSection({ userId, token, apiUrl }) {
     </div>
   );
 }
+

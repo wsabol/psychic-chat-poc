@@ -36,9 +36,6 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
   // Help chat state (persistent across pages)
   const {
     isHelpOpen,
-    setIsHelpOpen,
-    isMinimized,
-    setIsMinimized,
     toggleHelp,
     closeHelp,
     minimizeHelp
@@ -48,12 +45,11 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
   const currentPage = PAGES[currentPageIndex];
 
   // Set starting page when it changes
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (startingPage !== 0 && startingPage !== currentPageIndex) {
       setCurrentPageIndex(startingPage);
     }
-  }, [startingPage]); // currentPageIndex intentionally not in deps - we only care about startingPage changes
+  }, [startingPage, currentPageIndex]);
 
   // Track scroll to hide/show nav on mobile
   useEffect(() => {

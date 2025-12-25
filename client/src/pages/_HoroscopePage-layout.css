@@ -1,0 +1,72 @@
+/* ============================================
+   HOROSCOPE PAGE LAYOUT
+   Page structure, header, and metadata display
+   ============================================ */
+
+.horoscope-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  padding-bottom: var(--spacing-xl);
+}
+
+.horoscope-header {
+  margin-bottom: var(--spacing-md);
+}
+
+.horoscope-header h2 {
+  margin-bottom: var(--spacing-xs);
+}
+
+.horoscope-subtitle {
+  margin: 0;
+  font-size: var(--font-size-base);
+  color: var(--color-text-light);
+}
+
+/* ============================================
+   HOROSCOPE CONTENT CONTAINER
+   ============================================ */
+
+.horoscope-content {
+  background: var(--color-bg-white);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.horoscope-metadata {
+  margin-bottom: var(--spacing-lg);
+  text-align: center;
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.horoscope-range {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.horoscope-date {
+  margin: var(--spacing-xs) 0 0 0;
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+}
+
+/* ============================================
+   RESPONSIVE: LAYOUT
+   ============================================ */
+
+@media (max-width: 767px) {
+  .horoscope-page {
+    padding-bottom: var(--spacing-lg);
+  }
+
+  .horoscope-content {
+    padding: var(--spacing-md);
+  }
+}

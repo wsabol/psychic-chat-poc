@@ -1,510 +1,89 @@
 /* ============================================
-   HOROSCOPE PAGE STYLES
+   HOROSCOPE PAGE - MAIN IMPORT
+   Modular CSS structure with focused concerns
    ============================================ */
 
-.horoscope-page {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-lg);
-  padding-bottom: var(--spacing-xl);
-}
+/* ============================================
+   CSS CUSTOM PROPERTIES
+   ============================================ */
 
-.horoscope-header {
-  margin-bottom: var(--spacing-md);
-}
+:root {
+  /* Colors - Accents & Branding */
+  --color-primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --color-primary-light: #667eea;
+  --color-primary-dark: #764ba2;
+  --color-accent-purple: #9370db;
+  --color-accent-sun: #ffc107;
+  --color-accent-moon: #9c27b0;
+  --color-accent-rising: #2196f3;
+  --color-accent-error: #d32f2f;
+  --color-accent-success: #28a745;
+  --color-accent-success-dark: #1e7e34;
+  --color-accent-info: #4a90e2;
 
-.horoscope-header h2 {
-  margin-bottom: var(--spacing-xs);
-}
+  /* Colors - Backgrounds & UI */
+  --color-bg-white: white;
+  --color-bg-light: #f5f5f5;
+  --color-bg-lighter: #f8f8f8;
+  --color-bg-lightest: #f0f4ff;
+  --color-bg-purple-light: #f8f3ff;
+  --color-bg-sun-light: #fffbf0;
+  --color-bg-moon-light: #f3e5f5;
+  --color-bg-rising-light: #f0f7ff;
+  --color-bg-success-light: #d4edda;
 
-.horoscope-subtitle {
-  margin: 0;
-  font-size: 0.95rem;
-  color: var(--color-text-light);
+  /* Colors - Text & Borders */
+  --color-border-light: #eee;
+  --color-btn-hover: #efefef;
+  --color-success-text: #155724;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-success-sm: 0 2px 8px rgba(40, 167, 69, 0.2);
+  --shadow-success-md: 0 4px 12px rgba(40, 167, 69, 0.35);
+  --shadow-success-sm-active: 0 2px 6px rgba(40, 167, 69, 0.25);
+
+  /* Border Radius */
+  --border-radius-sm: 4px;
+  --border-radius-md: 6px;
+  --border-radius-lg: 8px;
+
+  /* Transitions */
+  --transition-fast: all 0.2s ease;
+  --transition-smooth: all 0.6s ease-out;
+
+  /* Font Sizes */
+  --font-size-xs: 0.85rem;
+  --font-size-sm: 0.9rem;
+  --font-size-base: 0.95rem;
+  --font-size-body: 1rem;
+  --font-size-md: 1.1rem;
+  --font-size-lg: 1.2rem;
+  --font-size-xl: 1.3rem;
+  --font-size-icon: 1.8rem;
+  --font-size-spinner: 3rem;
+
+  /* Line Heights */
+  --line-height-normal: 1.6;
+  --line-height-relaxed: 1.8;
+
+  /* Border Widths */
+  --border-accent: 3px;
+  --border-card: 4px;
+  --border-btn: 2px;
+
+  /* Other */
+  --exit-prompt-gap: 0.5rem;
 }
 
 /* ============================================
-   RANGE TOGGLE
+   MODULAR IMPORTS
+   Each file handles a specific concern
    ============================================ */
 
-.horoscope-toggle {
-  display: flex;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md);
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.toggle-btn {
-  flex: 1;
-  padding: var(--spacing-md) var(--spacing-lg);
-  background: #f5f5f5;
-  color: var(--color-text-light);
-  border: 2px solid transparent;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.95rem;
-  font-weight: 600;
-  transition: all 0.2s ease;
-  min-height: var(--touch-target);
-}
-
-.toggle-btn:hover:not(:disabled) {
-  background: #efefef;
-  color: var(--color-text);
-}
-
-.toggle-btn.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-color: #667eea;
-}
-
-.toggle-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* ============================================
-   BIRTH CHART DISPLAY
-   ============================================ */
-
-.horoscope-birth-chart {
-  margin-bottom: var(--spacing-lg);
-}
-
-.birth-chart-cards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--spacing-md);
-}
-
-.chart-card {
-  padding: var(--spacing-md);
-  border-radius: 8px;
-  text-align: center;
-  background: white;
-  border-left: 4px solid transparent;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s ease;
-}
-
-.chart-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.chart-icon {
-  font-size: 1.8rem;
-  display: block;
-  margin-bottom: var(--spacing-sm);
-}
-
-.chart-sign {
-  margin: 0 0 var(--spacing-xs) 0;
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: var(--color-text);
-}
-
-.chart-degree {
-  margin: 0;
-  font-size: 0.95rem;
-  color: #9370db;
-  font-weight: 600;
-}
-
-.sun-card {
-  border-left-color: #ffc107;
-  background: #fffbf0;
-}
-
-.moon-card {
-  border-left-color: #9c27b0;
-  background: #f3e5f5;
-}
-
-.rising-card {
-  border-left-color: #2196f3;
-  background: #f0f7ff;
-}
-
-/* ============================================
-   LOADING STATE
-   ============================================ */
-
-.horoscope-content.loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--spacing-xl);
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  min-height: 300px;
-}
-
-.spinner {
-  font-size: 3rem;
-  animation: spin 2s linear infinite;
-  margin-bottom: var(--spacing-md);
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.horoscope-content.loading p {
-  text-align: center;
-  color: var(--color-text-light);
-  font-size: 1rem;
-}
-
-/* ============================================
-   ERROR STATE
-   ============================================ */
-
-.horoscope-content.error {
-  padding: var(--spacing-lg);
-  background: white;
-  border-radius: 8px;
-  text-align: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.error-message {
-  color: #d32f2f;
-  font-weight: 500;
-  margin-bottom: var(--spacing-md);
-}
-
-.btn-secondary {
-  padding: var(--spacing-md) var(--spacing-lg);
-  background: #f0f4ff;
-  color: #4a90e2;
-  border: 2px solid #4a90e2;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.95rem;
-  transition: all 0.2s ease;
-  min-height: var(--touch-target);
-}
-
-.btn-secondary:hover {
-  background: #4a90e2;
-  color: white;
-}
-
-/* ============================================
-   HOROSCOPE CONTENT
-   ============================================ */
-
-.horoscope-content {
-  background: white;
-  border-radius: 8px;
-  padding: var(--spacing-lg);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.horoscope-metadata {
-  margin-bottom: var(--spacing-lg);
-  text-align: center;
-  padding-bottom: var(--spacing-md);
-  border-bottom: 1px solid #eee;
-}
-
-.horoscope-range {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--color-text-light);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 600;
-}
-
-.horoscope-date {
-  margin: var(--spacing-xs) 0 0 0;
-  font-size: 0.95rem;
-  color: var(--color-text);
-}
-
-/* ============================================
-   MARKDOWN CONTENT
-   ============================================ */
-
-.horoscope-text {
-  margin-bottom: var(--spacing-lg);
-  padding: var(--spacing-lg);
-  background: #f8f3ff;
-  border-radius: 8px;
-  border-left: 4px solid #9c27b0;
-}
-
-.markdown-p {
-  margin: var(--spacing-md) 0;
-  font-size: 0.95rem;
-  line-height: 1.8;
-  color: var(--color-text);
-}
-
-.markdown-p:first-child {
-  margin-top: 0;
-}
-
-.markdown-p:last-child {
-  margin-bottom: 0;
-}
-
-.markdown-strong {
-  font-weight: 600;
-  color: #9370db;
-}
-
-.markdown-em {
-  font-style: italic;
-  color: var(--color-text-light);
-}
-
-.markdown-ul,
-.markdown-ol {
-  margin: var(--spacing-md) 0;
-  padding-left: 1.5rem;
-}
-
-.markdown-li {
-  margin: var(--spacing-sm) 0;
-  font-size: 0.95rem;
-  line-height: 1.8;
-  color: var(--color-text);
-}
-
-/* ============================================
-   SUN SIGN INFO SECTION
-   ============================================ */
-
-.sun-sign-info {
-  margin-top: var(--spacing-lg);
-  padding-top: var(--spacing-lg);
-  border-top: 2px solid #eee;
-}
-
-.sun-sign-header h3 {
-  margin: 0 0 var(--spacing-md) 0;
-  font-size: 1.3rem;
-  color: var(--color-text);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
-
-.sun-info-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-lg);
-  padding: var(--spacing-md);
-  background: #f8f8f8;
-  border-radius: 6px;
-}
-
-.info-item {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-}
-
-.info-item strong {
-  font-size: 0.85rem;
-  color: var(--color-text-light);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.info-item span {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.sun-detail {
-  margin-bottom: var(--spacing-md);
-}
-
-.sun-detail h4 {
-  margin: 0 0 var(--spacing-sm) 0;
-  font-size: 1rem;
-  color: var(--color-text);
-}
-
-.sun-detail p {
-  margin: 0;
-  font-size: 0.95rem;
-  color: var(--color-text-light);
-  line-height: 1.6;
-  font-style: italic;
-}
-
-/* ============================================
-   DISCLAIMER
-   ============================================ */
-
-.horoscope-disclaimer {
-  margin-top: var(--spacing-lg);
-  padding: var(--spacing-md);
-  background: #f5f5f5;
-  border-radius: 6px;
-  border-left: 3px solid #9370db;
-}
-
-.horoscope-disclaimer p {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--color-text-light);
-  font-style: italic;
-}
-
-/* ============================================
-   MOBILE ADJUSTMENTS
-   ============================================ */
-
-@media (max-width: 767px) {
-  .horoscope-page {
-    padding-bottom: var(--spacing-lg);
-  }
-
-  .birth-chart-cards {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-sm);
-  }
-
-  .sun-info-grid {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-sm);
-  }
-
-  .horoscope-content {
-    padding: var(--spacing-md);
-  }
-
-  .horoscope-text {
-    padding: var(--spacing-md);
-  }
-
-  .markdown-content {
-    font-size: 0.9rem;
-  }
-
-  .sun-sign-header h3 {
-    font-size: 1.1rem;
-  }
-}
-
-/* ============================================
-   TABLET ADJUSTMENTS
-   ============================================ */
-
-@media (min-width: 768px) and (max-width: 1023px) {
-  .birth-chart-cards {
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--spacing-md);
-  }
-
-  .sun-info-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* ============================================
-   ACCESSIBILITY
-   ============================================ */
-
-.toggle-btn:focus,
-.btn-secondary:focus {
-  outline: 2px solid #9370db;
-  outline-offset: 2px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .spinner,
-  .chart-card {
-    transition: none;
-    animation: none;
-  }
-}
-
-/* ============================================
-   EXIT PROMPT (Temp Accounts)
-   ============================================ */
-
-.exit-prompt {
-  position: absolute;
-  top: 4rem;
-  right: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: #d4edda;
-  padding: 0.75rem 1rem;
-  border-radius: 6px;
-  border: 2px solid #28a745;
-  font-size: 0.9rem;
-  color: #155724;
-  font-weight: 600;
-  z-index: 99;
-  animation: fadeInDown 0.6s ease-out;
-  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: inherit;
-}
-
-.exit-prompt:hover {
-  background: #c3e6cb;
-  border-color: #1e7e34;
-  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.35);
-  transform: translateY(-2px);
-}
-
-.exit-prompt:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(40, 167, 69, 0.25);
-}
-
-.exit-prompt:focus {
-  outline: 2px solid #155724;
-  outline-offset: 2px;
-}
-
-.exit-arrow {
-  display: inline-block;
-  animation: pulse 1.5s ease-in-out infinite;
-  flex-shrink: 0;
-}
-
-@keyframes fadeInDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    transform: translateX(0);
-  }
-  50% {
-    transform: translateX(4px);
-  }
-}
+@import './_HoroscopePage-layout.css';
+@import './_HoroscopePage-controls.css';
+@import './_HoroscopePage-cards.css';
+@import './_HoroscopePage-content.css';
+@import './_HoroscopePage-states.css';

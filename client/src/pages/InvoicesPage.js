@@ -34,7 +34,7 @@ export default function InvoicesPage({ userId, token, auth }) {
       setError('Unable to load your invoices. Please try again.');
       setLoading(false);
     }
-  }, [userId, token, API_URL]);
+  }, [token, API_URL]);
 
   useEffect(() => {
     fetchInvoices();

@@ -6,21 +6,21 @@ import { useState, useCallback, useEffect } from 'react';
  * FIXED: Returns default empty data instead of error if loading fails
  * This prevents showing error messages when database is empty
  */
+// Default empty verification methods object
+const DEFAULT_METHODS = {
+  primaryEmail: null,
+  phoneNumber: null,
+  recoveryPhone: null,
+  recoveryEmail: null,
+  phoneVerified: false,
+  recoveryPhoneVerified: false,
+  recoveryEmailVerified: false
+};
+
 export function useVerificationMethods(userId, token, apiUrl) {
   const [methods, setMethods] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Default empty verification methods object
-  const DEFAULT_METHODS = {
-    primaryEmail: null,
-    phoneNumber: null,
-    recoveryPhone: null,
-    recoveryEmail: null,
-    phoneVerified: false,
-    recoveryPhoneVerified: false,
-    recoveryEmailVerified: false
-  };
 
   const loadMethods = useCallback(async () => {
     try {

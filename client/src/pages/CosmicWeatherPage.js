@@ -23,7 +23,7 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
     };
   }, []);
 
-  const fetchAstroInfo = async (headers) => {
+  const fetchAstroInfo = useCallback(async (headers) => {
     try {
       const response = await fetchWithTokenRefresh(`${API_URL}/user-astrology/${userId}`, { headers });
       if (response.ok) {
@@ -41,8 +41,8 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
     } catch (err) {
       console.error('[COSMIC-WEATHER] Error fetching astro info:', err);
     }
-    return null;
-  };
+        return null;
+  }, [API_URL, userId]);
 
   const loadCosmicWeather = useCallback(async () => {
     setLoading(true);
@@ -132,7 +132,7 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
       setError('Unable to load today\'s cosmic weather. Please try again.');
       setLoading(false);
     }
-  }, [userId, token, API_URL, astroInfo]);
+  }, [userId, token, API_URL, astroInfo, fetchAstroInfo]);
 
   useEffect(() => {
     loadCosmicWeather();

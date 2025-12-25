@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 /**
  * TrustCurrentDeviceSection - Trust the current device
@@ -12,9 +12,9 @@ export function TrustCurrentDeviceSection({ userId, token, apiUrl }) {
 
   useEffect(() => {
     checkCurrentDeviceTrust();
-  }, []);
+  }, [checkCurrentDeviceTrust]);
 
-  const checkCurrentDeviceTrust = async () => {
+  const checkCurrentDeviceTrust = useCallback(async () => {
     try {
       const response = await fetch(`${apiUrl}/auth/check-current-device-trust/${userId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -27,7 +27,7 @@ export function TrustCurrentDeviceSection({ userId, token, apiUrl }) {
     } catch (err) {
       console.error('[TRUST-DEVICE] Error checking trust status:', err);
     }
-  };
+  }, [apiUrl, userId, token]);
 
   const handleTrustDevice = async () => {
     try {
@@ -135,3 +135,4 @@ export function TrustCurrentDeviceSection({ userId, token, apiUrl }) {
     </div>
   );
 }
+

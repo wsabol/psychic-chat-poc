@@ -1,0 +1,91 @@
+/* ============================================
+   HOROSCOPE CONTENT
+   Markdown rendering, text formatting, and disclaimer
+   ============================================ */
+
+/* ============================================
+   HOROSCOPE TEXT BOX
+   ============================================ */
+
+.horoscope-text {
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  background: var(--color-bg-purple-light);
+  border-radius: var(--border-radius-lg);
+  border-left: var(--border-card) solid var(--color-accent-moon);
+}
+
+/* ============================================
+   MARKDOWN CONTENT STYLING
+   ============================================ */
+
+.markdown-p {
+  margin: var(--spacing-md) 0;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-relaxed);
+  color: var(--color-text);
+}
+
+.markdown-p:first-child {
+  margin-top: 0;
+}
+
+.markdown-p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-strong {
+  font-weight: 600;
+  color: var(--color-accent-purple);
+}
+
+.markdown-em {
+  font-style: italic;
+  color: var(--color-text-light);
+}
+
+.markdown-ul,
+.markdown-ol {
+  margin: var(--spacing-md) 0;
+  padding-left: 1.5rem;
+}
+
+.markdown-li {
+  margin: var(--spacing-sm) 0;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-relaxed);
+  color: var(--color-text);
+}
+
+/* ============================================
+   DISCLAIMER SECTION
+   ============================================ */
+
+.horoscope-disclaimer {
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background: var(--color-bg-light);
+  border-radius: var(--border-radius-md);
+  border-left: var(--border-accent) solid var(--color-accent-purple);
+}
+
+.horoscope-disclaimer p {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-light);
+  font-style: italic;
+}
+
+/* ============================================
+   RESPONSIVE: CONTENT
+   ============================================ */
+
+@media (max-width: 767px) {
+  .horoscope-text {
+    padding: var(--spacing-md);
+  }
+
+  .markdown-content {
+    font-size: 0.9rem;
+  }
+}
