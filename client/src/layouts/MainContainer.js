@@ -7,6 +7,7 @@ import { HelpChatWindow } from '../components/help/HelpChatWindow';
 import { useHelpChat } from '../hooks/useHelpChat';
 import ChatPage from '../pages/ChatPage';
 import PersonalInfoPage from '../pages/PersonalInfoPage';
+import PreferencesPage from '../pages/PreferencesPage';
 import MySignPage from '../pages/MySignPage';
 import MoonPhasePage from '../pages/MoonPhasePage';
 import HoroscopePage from '../pages/HoroscopePage';
@@ -19,6 +20,7 @@ import './MainContainer.css';
 const PAGES = [
   { id: 'chat', label: 'Chat', component: ChatPage },
   { id: 'personal', label: 'Personal Info', component: PersonalInfoPage },
+  { id: 'preferences', label: 'Preferences', component: PreferencesPage },
   { id: 'sign', label: 'My Sign', component: MySignPage },
   { id: 'moon', label: 'Moon Phase', component: MoonPhasePage },
   { id: 'horoscope', label: 'Horoscope', component: HoroscopePage },
@@ -107,7 +109,7 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
     const newIndex = Math.max(0, Math.min(index, PAGES.length - 1));
     if (newIndex !== currentPageIndex) {
       // If leaving billing page and not going back to billing, notify App to re-check subscription
-      if (currentPageIndex === 7 && newIndex !== 7 && onNavigateFromBilling) {
+      if (currentPageIndex === 8 && newIndex !== 8 && onNavigateFromBilling) {
         onNavigateFromBilling();
       }
       setSwipeDirection(newIndex > currentPageIndex ? 1 : -1);

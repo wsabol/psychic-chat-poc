@@ -5,6 +5,7 @@ import { logAudit } from '../../shared/auditLog.js';
 import { createUserDatabaseRecords, getUserProfile } from './helpers/userCreation.js';
 import { recordLoginAttempt } from './helpers/accountLockout.js';
 import { hashUserId } from '../../shared/hashUtils.js';
+import { encrypt } from '../../utils/encryption.js';
 
 const router = Router();
 
@@ -25,6 +26,19 @@ router.post('/log-login-success', async (req, res) => {
       } catch (createErr) {
         logger.error('Failed to create user records:', createErr.message);
       }
+    }
+
+    // Create default preferences if they don't exist
+    try {
+      const encryptedUserId = encrypt(userId);
+      await db.query(
+        `INSERT INTO user_preferences (user_id_encrypted, language, response_type, voice_enabled)
+         VALUES ($1, 'en-US', 'full', true)
+         ON CONFLICT (user_id_encrypted) DO NOTHING`,
+        [encryptedUserId]
+      );
+    } catch (prefErr) {
+      logger.warn('Failed to create default preferences:', prefErr.message);
     }
 
     // Log successful login - audit_log schema: user_id_hash, action, details, ip_address_encrypted, user_agent, created_at

@@ -287,3 +287,16 @@ CREATE TABLE IF NOT EXISTS account_deletion_audit (
 CREATE INDEX IF NOT EXISTS idx_account_deletion_audit_hash ON account_deletion_audit(user_id_hash);
 
 -- user_astrology_enriched NOT USED - REMOVED
+
+-- ===== user_preferences - Language, response type, voice settings =====
+CREATE TABLE IF NOT EXISTS user_preferences (
+    id SERIAL PRIMARY KEY,
+    user_id_encrypted BYTEA NOT NULL UNIQUE,
+    language VARCHAR(10) DEFAULT 'en-US',
+    response_type VARCHAR(20) DEFAULT 'full',
+    voice_enabled BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_preferences_encrypted_id ON user_preferences(user_id_encrypted);

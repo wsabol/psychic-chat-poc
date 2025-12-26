@@ -5,6 +5,7 @@ import { hashUserId } from "../shared/hashUtils.js";
 import { enqueueMessage } from "../shared/queue.js";
 import { validateAge } from "../shared/ageValidator.js";
 import { handleAgeViolation } from "../shared/violationHandler.js";
+import { encrypt } from "../utils/encryption.js";
 
 const router = Router();
 
@@ -185,6 +186,76 @@ router.delete("/:userId/astrology-cache", authorizeUser, async (req, res) => {
     } catch (err) {
         console.error('Error clearing astrology cache:', err);
         res.status(500).json({ error: 'Failed to clear astrology cache', details: err.message });
+    }
+});
+
+// Get user preferences
+router.get("/:userId/preferences", authorizeUser, async (req, res) => {
+    const { userId } = req.params;
+    try {
+        // Encrypt user_id for storage lookup
+        const encryptedUserId = encrypt(userId);
+        
+        const { rows } = await db.query(
+            `SELECT language, response_type, voice_enabled FROM user_preferences WHERE user_id_encrypted = $1`,
+            [encryptedUserId]
+        );
+        
+        if (rows.length === 0) {
+            // Return defaults if no preferences exist yet
+            return res.json({
+                language: 'en-US',
+                response_type: 'full',
+                voice_enabled: true
+            });
+        }
+        
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('Error fetching preferences:', err);
+        res.status(500).json({ error: 'Failed to fetch preferences' });
+    }
+});
+
+// Save user preferences
+router.post("/:userId/preferences", authorizeUser, async (req, res) => {
+    const { userId } = req.params;
+    const { language, response_type, voice_enabled } = req.body;
+    
+    try {
+        // Validate input
+        if (!language || !response_type) {
+            return res.status(400).json({ error: 'Missing required fields: language, response_type' });
+        }
+        
+        if (!['en-US', 'es-ES', 'fr-FR', 'de-DE', 'it-IT', 'pt-BR', 'ja-JP', 'zh-CN'].includes(language)) {
+            return res.status(400).json({ error: 'Invalid language' });
+        }
+        
+        if (!['full', 'brief'].includes(response_type)) {
+            return res.status(400).json({ error: 'Invalid response_type' });
+        }
+        
+        // Encrypt user_id for storage
+        const encryptedUserId = encrypt(userId);
+        
+        // Upsert preferences
+        const { rows } = await db.query(
+            `INSERT INTO user_preferences (user_id_encrypted, language, response_type, voice_enabled)
+             VALUES ($1, $2, $3, $4)
+             ON CONFLICT (user_id_encrypted) DO UPDATE SET
+             language = EXCLUDED.language,
+             response_type = EXCLUDED.response_type,
+             voice_enabled = EXCLUDED.voice_enabled,
+             updated_at = CURRENT_TIMESTAMP
+             RETURNING language, response_type, voice_enabled`,
+            [encryptedUserId, language, response_type, voice_enabled !== false]
+        );
+        
+        res.json({ success: true, preferences: rows[0] });
+    } catch (err) {
+        console.error('Error saving preferences:', err);
+        res.status(500).json({ error: 'Failed to save preferences', details: err.message });
     }
 });
 

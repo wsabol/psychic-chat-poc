@@ -8,6 +8,7 @@ import { db } from "../shared/db.js";
 import { containsHealthContent, detectHealthKeywords, getBlockedResponse } from "../shared/healthGuardrail.js";
 import { logAudit } from "../shared/auditLog.js";
 import { hashUserId } from "../shared/hashUtils.js";
+import { encrypt } from "../utils/encryption.js";
 
 const router = Router();
 
@@ -87,20 +88,21 @@ router.get("/opening/:userId", authorizeUser, verify2FA, async (req, res) => {
 
 router.get("/history/:userId", authorizeUser, verify2FA, async (req, res) => {
     const userId = req.userId;
-    // ✅ Using real encryption key from environment (re-encrypted in database)
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
     try {
         const userIdHash = hashUserId(userId);
-        const { rows } = await db.query(
-            `SELECT 
-                id, 
-                role, 
-                pgp_sym_decrypt(content_encrypted, $2)::text as content
-            FROM messages 
-            WHERE user_id_hash=$1 
-            ORDER BY created_at ASC`,
-            [userIdHash, ENCRYPTION_KEY]
+        const encryptedUserId = encrypt(userId);
+        const prefResult = await db.query(
+            `SELECT response_type FROM user_preferences WHERE user_id_encrypted = $1`,
+            [encryptedUserId]
         );
+        const userPreference = prefResult.rows[0]?.response_type || 'full';
+        let contentColumn = 'content_full_encrypted';
+        if (userPreference === 'brief') {
+            contentColumn = 'COALESCE(content_brief_encrypted, content_full_encrypted)';
+        }
+        const query = `SELECT id, role, pgp_sym_decrypt(${contentColumn}, $2)::text as content FROM messages WHERE user_id_hash=$1 ORDER BY created_at ASC`;
+        const { rows } = await db.query(query, [userIdHash, ENCRYPTION_KEY]);
         res.json(rows);
     } catch (err) {
         logger.error('Chat history query error:', err.message);

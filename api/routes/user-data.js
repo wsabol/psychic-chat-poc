@@ -9,6 +9,7 @@ import { Router } from 'express';
 import { db } from '../shared/db.js';
 import { authenticateToken, authorizeUser } from '../middleware/auth.js';
 import { logAudit } from '../shared/auditLog.js';
+import { hashUserId } from '../shared/hashUtils.js';
 
 const router = Router();
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
@@ -59,11 +60,8 @@ router.get('/export-data/:userId', authenticateToken, authorizeUser, async (req,
     // Fetch chat messages
     const messages = await db.query(
       `SELECT created_at, role,
-              CASE WHEN content_encrypted IS NOT NULL 
-                   THEN pgp_sym_decrypt(content_encrypted, $2)::text
-                   ELSE content 
-              END as content
-       FROM messages WHERE user_id = $1 ORDER BY created_at ASC`,
+              pgp_sym_decrypt(content_full_encrypted, $2)::text as content
+       FROM messages WHERE user_id_hash = $3 ORDER BY created_at ASC`,
       [userId, ENCRYPTION_KEY]
     );
 

@@ -10,7 +10,7 @@ export async function getMessageHistory(userId, limit = 10) {
     try {
         const userIdHash = hashUserId(userId);
         const { rows } = await db.query(
-            `SELECT role, pgp_sym_decrypt(content_encrypted, $1) as content 
+            `SELECT role, pgp_sym_decrypt(content_full_encrypted, $1) as content 
              FROM messages 
              WHERE user_id_hash=$2 
              ORDER BY created_at ASC 
@@ -60,8 +60,8 @@ export async function storeMessage(userId, role, content) {
     try {
         const userIdHash = hashUserId(userId);
         await db.query(
-            `INSERT INTO messages(user_id_hash, role, content_encrypted) 
-             VALUES($1, $2, pgp_sym_encrypt($3, $4))`,
+            `INSERT INTO messages(user_id_hash, role, content_full_encrypted, response_type) 
+             VALUES($1, $2, pgp_sym_encrypt($3, $4), 'full')`,
             [userIdHash, role, JSON.stringify(content), process.env.ENCRYPTION_KEY]
         );
     } catch (err) {

@@ -221,7 +221,7 @@ async function handleHoroscopeInChat(userId, userInfo, astrologyInfo) {
         
         // Check if horoscope exists for today
         const { rows } = await db.query(
-            `SELECT pgp_sym_decrypt(content_encrypted, $2)::text as content FROM messages 
+            `SELECT pgp_sym_decrypt(content_full_encrypted, $2)::text as content FROM messages 
              WHERE user_id_hash = $1 
              AND role = 'horoscope'
              ORDER BY created_at DESC 
@@ -288,7 +288,7 @@ async function handleMoonPhaseInChat(userId, userInfo, astrologyInfo, phase) {
         
         // Check if moon phase commentary exists for today
         const { rows } = await db.query(
-            `SELECT pgp_sym_decrypt(content_encrypted, $2)::text as content FROM messages 
+            `SELECT pgp_sym_decrypt(content_full_encrypted, $2)::text as content FROM messages 
              WHERE user_id_hash = $1 
              AND role = 'moon_phase'
              ORDER BY created_at DESC 
@@ -342,7 +342,7 @@ async function handleCosmicWeatherInChat(userId, userInfo) {
         const userGreeting = getUserGreeting(userInfo, userId);
         const userIdHash = hashUserId(userId);
         const { rows } = await db.query(
-            `SELECT pgp_sym_decrypt(content_encrypted, $2)::text as content FROM messages WHERE user_id_hash = $1 AND role = 'cosmic_weather' ORDER BY created_at DESC LIMIT 5`,
+            `SELECT pgp_sym_decrypt(content_full_encrypted, $2)::text as content FROM messages WHERE user_id_hash = $1 AND role = 'cosmic_weather' ORDER BY created_at DESC LIMIT 5`,
             [userIdHash, process.env.ENCRYPTION_KEY]
         );
         let validWeather = null;

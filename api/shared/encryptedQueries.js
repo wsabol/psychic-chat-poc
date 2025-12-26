@@ -249,32 +249,34 @@ export async function recordLoginAttempt(db, userId, emailAttempted, success, ip
  * Get user messages from messages table using user_id_hash
  */
 export async function getUserMessages(db, userId, limit = 100) {
+  const ENCRYPTION_KEY = getEncryptionKey();
   const userIdHash = hashUserId(userId);
 
   const query = `
-    SELECT id, role, content, content_encrypted, created_at
+    SELECT id, role, pgp_sym_decrypt(content_full_encrypted, $3)::text as content, created_at
     FROM messages
     WHERE user_id_hash = $1
     ORDER BY created_at DESC
     LIMIT $2
   `;
 
-  return db.query(query, [userIdHash, limit]);
+  return db.query(query, [userIdHash, limit, ENCRYPTION_KEY]);
 }
 
 /**
  * Insert message with user_id_hash
  */
-export async function insertMessage(db, userId, role, content, contentEncrypted) {
+export async function insertMessage(db, userId, role, content) {
+  const ENCRYPTION_KEY = getEncryptionKey();
   const userIdHash = hashUserId(userId);
 
   const query = `
-    INSERT INTO messages (user_id_hash, role, content, content_encrypted, created_at)
-    VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
+    INSERT INTO messages (user_id_hash, role, content_full_encrypted, response_type, created_at)
+    VALUES ($1, $2, pgp_sym_encrypt($3, $4), 'full', CURRENT_TIMESTAMP)
     RETURNING id
   `;
 
-  return db.query(query, [userIdHash, role, content, contentEncrypted]);
+  return db.query(query, [userIdHash, role, JSON.stringify(content), ENCRYPTION_KEY]);
 }
 
 /**

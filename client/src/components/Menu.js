@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-function Menu({ menuOpen, setMenuOpen, isAuthenticated, onPersonalInfoClick, onMySignClick, onMoonPhaseClick, onHoroscopeClick, onCosmicWeatherClick, onSecurityClick, onLogoutClick }) {
+function Menu({ menuOpen, setMenuOpen, isAuthenticated, onPersonalInfoClick, onPreferencesClick, onMySignClick, onMoonPhaseClick, onHoroscopeClick, onCosmicWeatherClick, onSecurityClick, onLogoutClick }) {
     const menuRef = useRef(null);
     const [expandedSubmenu, setExpandedSubmenu] = useState(null);
 
@@ -129,7 +129,7 @@ function Menu({ menuOpen, setMenuOpen, isAuthenticated, onPersonalInfoClick, onM
                                         >
                                             Security
                                         </button>
-                                        <button
+                                                                                <button
                                             onClick={() =>
                                                 handleMenuItemClick(() => {
                                                     onPersonalInfoClick && onPersonalInfoClick();
@@ -148,6 +148,26 @@ function Menu({ menuOpen, setMenuOpen, isAuthenticated, onPersonalInfoClick, onM
                                             }}
                                         >
                                             Personal Information
+                                        </button>
+                                        <button
+                                            onClick={() =>
+                                                handleMenuItemClick(() => {
+                                                    onPreferencesClick && onPreferencesClick();
+                                                })
+                                            }
+                                            style={{
+                                                display: "block",
+                                                width: "100%",
+                                                padding: "10px 32px",
+                                                border: "none",
+                                                background: "none",
+                                                textAlign: "left",
+                                                cursor: "pointer",
+                                                fontSize: "13px",
+                                                borderBottom: "1px solid #eee",
+                                            }}
+                                        >
+                                            Preferences
                                         </button>
                                         <button
                                             onClick={() =>

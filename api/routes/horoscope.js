@@ -3,6 +3,7 @@ import { hashUserId } from "../shared/hashUtils.js";
 import { enqueueMessage } from "../shared/queue.js";
 import { authenticateToken, authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
+import { encrypt } from "../utils/encryption.js";
 
 const router = Router();
 
@@ -23,18 +24,16 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
         
         const today = new Date().toISOString().split('T')[0];
         const userIdHash = hashUserId(userId);
-        
+        const encryptedUserId = encrypt(userId);
+        const prefResult = await db.query(`SELECT response_type FROM user_preferences WHERE user_id_encrypted = $1`, [encryptedUserId]);
+        const userPreference = prefResult.rows[0]?.response_type || 'full';
+        let contentColumn = 'content_full_encrypted';
+                if (userPreference === 'brief') contentColumn = 'COALESCE(content_brief_encrypted, content_full_encrypted)';
+        const query = `SELECT pgp_sym_decrypt(${contentColumn}, $2)::text as content, created_at FROM messages WHERE user_id_hash = $1 AND role = 'horoscope' ORDER BY created_at DESC LIMIT 100`;
         // Get recent horoscopes (limited to last 100 to avoid huge queries)
         // Decrypt encrypted messages using pgp_sym_decrypt, fall back to plain text
                 const { rows } = await db.query(
-            `SELECT 
-                pgp_sym_decrypt(content_encrypted, $2)::text as content,
-                created_at 
-             FROM messages 
-             WHERE user_id_hash = $1 
-             AND role = 'horoscope'
-             ORDER BY created_at DESC 
-             LIMIT 100`,
+           query,
             [userIdHash, process.env.ENCRYPTION_KEY]
         );
         
