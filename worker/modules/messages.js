@@ -56,13 +56,13 @@ export async function getMessageHistory(userId, limit = 10) {
  * Store a message in database
  * ✅ ENCRYPTED: Stores content_encrypted using ENCRYPTION_KEY from .env
  */
-export async function storeMessage(userId, role, content) {
+export async function storeMessage(userId, role, contentFull, contentBrief = null) {
     try {
         const userIdHash = hashUserId(userId);
         await db.query(
-            `INSERT INTO messages(user_id_hash, role, content_full_encrypted, response_type) 
-             VALUES($1, $2, pgp_sym_encrypt($3, $4), 'full')`,
-            [userIdHash, role, JSON.stringify(content), process.env.ENCRYPTION_KEY]
+            `INSERT INTO messages(user_id_hash, role, content_full_encrypted, content_brief_encrypted, response_type) 
+             VALUES($1, $2, pgp_sym_encrypt($3, $4), ${contentBrief ? 'pgp_sym_encrypt($5, $4)' : 'NULL'}, ${contentBrief ? "'both'" : "'full'"})`,
+            contentBrief ? [userIdHash, role, JSON.stringify(contentFull), process.env.ENCRYPTION_KEY, JSON.stringify(contentBrief)] : [userIdHash, role, JSON.stringify(contentFull), process.env.ENCRYPTION_KEY]
         );
     } catch (err) {
         console.error('[MESSAGES] Error storing message:', err);

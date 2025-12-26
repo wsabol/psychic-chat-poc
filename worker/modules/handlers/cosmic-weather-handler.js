@@ -84,10 +84,10 @@ Do NOT include tarot cards - this is pure astrological forecasting enriched by t
         
         const prompt = buildCosmicWeatherPrompt(userInfo, astrologyInfo, planets, planetsDetailed, userGreeting);
         
-        const oracleResponse = await callOracle(systemPrompt, [], prompt);
+        const oracleResponses = await callOracle(systemPrompt, [], prompt, true);
         
-        await storeMessage(userId, 'cosmic_weather', {
-            text: oracleResponse,
+        const cosmicWeatherDataFull = {
+            text: oracleResponses.full,
             birth_chart: {
                 sun_sign: astro.sun_sign,
                 sun_degree: astro.sun_degree,

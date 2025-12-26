@@ -266,7 +266,7 @@ export async function getUserMessages(db, userId, limit = 100) {
 /**
  * Insert message with user_id_hash
  */
-export async function insertMessage(db, userId, role, content) {
+export async function insertMessage(db, userId, role, content, contentBrief = null) {
   const ENCRYPTION_KEY = getEncryptionKey();
   const userIdHash = hashUserId(userId);
 

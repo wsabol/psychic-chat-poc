@@ -177,13 +177,12 @@ You are reading for a valued, established member. Engage authentically:
     }
 }
 
-export async function callOracle(systemPrompt, messageHistory, userMessage) {
+export async function callOracle(systemPrompt, messageHistory, userMessage, generateBrief = true) {
     try {
         // Create reversed copy without mutating original array
         // History comes in ASC order (oldest first), reverse to DESC (most recent context closer to current message)
         const reversedHistory = messageHistory.slice().reverse();
-        
-        const completion = await client.chat.completions.create({
+        const fullCompletion = await client.chat.completions.create({
             model: "gpt-4o-mini",
             messages: [
                 { role: "system", content: systemPrompt },
@@ -191,7 +190,17 @@ export async function callOracle(systemPrompt, messageHistory, userMessage) {
                 { role: "user", content: userMessage },
             ]
         });
-        return completion.choices[0]?.message?.content || "";
+        const fullResponse = fullCompletion.choices[0]?.message?.content || "";
+        if (!generateBrief) return { full: fullResponse, brief: null };
+        const briefSystemPrompt = systemPrompt + "\n\nBRIEF MODE: Create 20% synopsis with core insight and card names. Keep HTML format.";
+        const briefCompletion = await client.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [
+                { role: "system", content: briefSystemPrompt },
+                { role: "user", content: "Brief synopsis (20% length): " + fullResponse },
+            ]
+        });
+        return { full: fullResponse, brief: briefCompletion.choices[0]?.message?.content || "" };
     } catch (err) {
         console.error('[ORACLE] Error calling API:', err);
         throw err;

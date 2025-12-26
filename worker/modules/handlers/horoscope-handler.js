@@ -55,18 +55,19 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
 `;
                 
                 // Call Oracle with just the user's birth data (no chat history for horoscopes)
-                const oracleResponse = await callOracle(systemPrompt, [], horoscopePrompt);
+                const oracleResponses = await callOracle(systemPrompt, [], horoscopePrompt, true);
                 
                 // Store horoscope in database with metadata
-                const horoscopeData = {
-                    text: oracleResponse,
+                const horoscopeDataFull = {
+                    text: oracleResponses.full,
                     range: currentRange,
                     generated_at: generatedAt,
                     zodiac_sign: astrologyInfo.zodiac_sign
                 };
                 
                 // Store as a system message for record-keeping
-                await storeMessage(userId, 'horoscope', horoscopeData);
+                const horoscopeDataBrief = { text: oracleResponses.brief, range: currentRange, generated_at: generatedAt, zodiac_sign: astrologyInfo.zodiac_sign };
+                await storeMessage(userId, 'horoscope', horoscopeDataFull, horoscopeDataBrief);
                 
             } catch (err) {
                 console.error(`[HOROSCOPE-HANDLER] Error generating ${currentRange} horoscope:`, err.message);

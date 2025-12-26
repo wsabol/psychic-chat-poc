@@ -17,12 +17,12 @@ export async function getRecentMessages(userId) {
     return history.map(msg => msg.content);
 }
 
-export async function insertMessage(userId, role, content) {
+export async function insertMessage(userId, role, content, contentBrief = null) {
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
     const userIdHash = hashUserId(userId);
     await db.query(
-        `INSERT INTO messages(user_id_hash, role, content_full_encrypted, response_type) 
-         VALUES($1, $2, pgp_sym_encrypt($3, $4), 'full')`,
-        [userIdHash, role, content, ENCRYPTION_KEY]
+        `INSERT INTO messages(user_id_hash, role, content_full_encrypted, content_brief_encrypted, response_type) 
+         VALUES($1, $2, pgp_sym_encrypt($3, $4), ${contentBrief ? 'pgp_sym_encrypt($5, $4)' : 'NULL'}, ${contentBrief ? "'both'" : "'full'"})`,
+        contentBrief ? [userIdHash, role, content, ENCRYPTION_KEY, contentBrief] : [userIdHash, role, content, ENCRYPTION_KEY]
     );
 }

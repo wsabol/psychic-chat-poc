@@ -44,18 +44,18 @@ Do NOT include tarot cards - this is purely lunar + astrological insight enriche
 `;
         
         // Call Oracle
-        const oracleResponse = await callOracle(systemPrompt, [], moonPhasePrompt);
+        const oracleResponses = await callOracle(systemPrompt, [], moonPhasePrompt, true);
         
-        // Store moon phase commentary
+        // Store moon phase commentary - BOTH full and brief
         const moonPhaseData = {
-            text: oracleResponse,
+            text: oracleResponses.full,
             phase: phase,
             generated_at: new Date().toISOString(),
             zodiac_sign: astrologyInfo.zodiac_sign
         };
         
         // Store as a system message
-        await storeMessage(userId, 'moon_phase', moonPhaseData);
+        const moonPhaseDataBrief = { text: oracleResponses.brief, phase: phase, generated_at: new Date().toISOString(), zodiac_sign: astrologyInfo.zodiac_sign }; await storeMessage(userId, 'moon_phase', moonPhaseData, moonPhaseDataBrief);
         
     } catch (err) {
         console.error('[MOON-PHASE-HANDLER] Error generating commentary:', err.message);

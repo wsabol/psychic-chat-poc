@@ -157,15 +157,16 @@ IMPORTANT: Use the above personal and astrological information to:
         const systemPrompt = getOracleSystemPrompt(tempUser) + "\n\n" + combinedContext;
         
         // Call Oracle
-        const oracleResponse = await callOracle(systemPrompt, history, message);
+        const oracleResponses = await callOracle(systemPrompt, history, message, true);
         
-        // Extract cards from response
-        const cards = extractCardsFromResponse(oracleResponse, tarotDeck);
+        // Extract cards from FULL response only
+        const cards = extractCardsFromResponse(oracleResponses.full, tarotDeck);
         const formattedCards = formatCardsForStorage(cards);
         
-        // Format and store response
-        const messageContent = formatMessageContent(oracleResponse, formattedCards);
-        await storeMessage(userId, 'assistant', messageContent);
+        // Format both full and brief
+        const fullContent = formatMessageContent(oracleResponses.full, formattedCards);
+        const briefContent = formatMessageContent(oracleResponses.brief, formattedCards);
+        await storeMessage(userId, 'assistant', fullContent, briefContent);
         
     } catch (err) {
         console.error('[CHAT-HANDLER] Error handling chat message:', err.message);
