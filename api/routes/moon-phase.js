@@ -10,7 +10,7 @@ const router = Router();
 /**
  * GET /moon-phase/:userId
  * Fetch the cached moon phase commentary for today
- * Handles both encrypted and plain text content
+ * Returns appropriate language version based on user preference
  */
 router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
     const { userId } = req.params;
@@ -26,10 +26,20 @@ router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
         const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
         const userIdHash = hashUserId(userId);
         
-        // Fetch BOTH full and brief content
+        // Fetch user's language preference
+        const { rows: prefRows } = await db.query(
+            `SELECT language FROM user_preferences WHERE user_id_hash = $1`,
+            [userIdHash]
+        );
+        const userLanguage = prefRows.length > 0 ? prefRows[0].language : 'en-US';
+        
+        // Fetch messages with language versions
         const query = `SELECT 
                 pgp_sym_decrypt(content_full_encrypted, $2)::text as content_full,
                 pgp_sym_decrypt(content_brief_encrypted, $2)::text as content_brief,
+                pgp_sym_decrypt(content_full_lang_encrypted, $2)::text as content_lang,
+                pgp_sym_decrypt(content_brief_lang_encrypted, $2)::text as content_brief_lang,
+                language_code,
                 created_at 
             FROM messages 
             WHERE user_id_hash = $1 AND role = 'moon_phase' 
@@ -43,17 +53,26 @@ router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
         let needsRefresh = false;
         
         for (const row of rows) {
-            if (!row.content_full) continue;
+            // Try to use language version if available and matches user preference
+            let content = row.content_full;
+            let brief = row.content_brief;
+            
+            if (row.language_code === userLanguage && row.content_lang) {
+                content = row.content_lang;
+                brief = row.content_brief_lang || row.content_brief;
+            }
+            
+            if (!content) continue;
             
             let commentary, briefContent;
             try {
-                commentary = typeof row.content_full === 'string' 
-                    ? JSON.parse(row.content_full) 
-                    : row.content_full;
-                if (row.content_brief) {
-                    briefContent = typeof row.content_brief === 'string'
-                        ? JSON.parse(row.content_brief)
-                        : row.content_brief;
+                commentary = typeof content === 'string' 
+                    ? JSON.parse(content) 
+                    : content;
+                if (brief) {
+                    briefContent = typeof brief === 'string'
+                        ? JSON.parse(brief)
+                        : brief;
                 }
             } catch (e) {
                 console.warn('[MOON-PHASE] Failed to parse commentary:', e.message);

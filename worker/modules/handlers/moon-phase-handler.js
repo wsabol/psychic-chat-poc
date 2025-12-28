@@ -1,20 +1,24 @@
 import { 
     fetchUserPersonalInfo, 
-    fetchUserAstrology, 
+    fetchUserAstrology,
+    fetchUserLanguagePreference,
     getOracleSystemPrompt,
     callOracle,
     getUserGreeting
 } from '../oracle.js';
 import { storeMessage } from '../messages.js';
+import { translateContentObject } from '../translator.js';
 
 /**
  * Generate personalized moon phase commentary based on user's birth chart
+ * Translates to user's preferred language if not English US
  */
 export async function generateMoonPhaseCommentary(userId, phase) {
     try {
         // Fetch user context
         const userInfo = await fetchUserPersonalInfo(userId);
         const astrologyInfo = await fetchUserAstrology(userId);
+        const userLanguage = await fetchUserLanguagePreference(userId);
         
         if (!userInfo) {
             throw new Error('User personal info not found');
@@ -43,10 +47,10 @@ Include crystal recommendations aligned with their chart and this lunar phase.
 Do NOT include tarot cards - this is purely lunar + astrological insight enriched by their unique birth chart.
 `;
         
-        // Call Oracle
+        // Call Oracle (always in English first)
         const oracleResponses = await callOracle(systemPrompt, [], moonPhasePrompt, true);
         
-        // Store moon phase commentary - BOTH full and brief
+        // Store moon phase commentary - BOTH full and brief (in English)
         const moonPhaseData = {
             text: oracleResponses.full,
             phase: phase,
@@ -54,8 +58,33 @@ Do NOT include tarot cards - this is purely lunar + astrological insight enriche
             zodiac_sign: astrologyInfo.zodiac_sign
         };
         
-        // Store as a system message
-        const moonPhaseDataBrief = { text: oracleResponses.brief, phase: phase, generated_at: new Date().toISOString(), zodiac_sign: astrologyInfo.zodiac_sign }; await storeMessage(userId, 'moon_phase', moonPhaseData, moonPhaseDataBrief);
+        const moonPhaseDataBrief = { 
+            text: oracleResponses.brief, 
+            phase: phase, 
+            generated_at: new Date().toISOString(), 
+            zodiac_sign: astrologyInfo.zodiac_sign 
+        };
+        
+        // Translate if user prefers non-English language
+        let moonPhaseDataLang = null;
+        let moonPhaseDataBriefLang = null;
+        
+        if (userLanguage && userLanguage !== 'en-US') {
+            moonPhaseDataLang = await translateContentObject(moonPhaseData, userLanguage);
+            moonPhaseDataBriefLang = await translateContentObject(moonPhaseDataBrief, userLanguage);
+        }
+        
+        // Store message with both English and translated versions (if applicable)
+        // Always pass userLanguage (even if en-US) so it's tracked
+        await storeMessage(
+            userId, 
+            'moon_phase', 
+            moonPhaseData, 
+            moonPhaseDataBrief,
+            userLanguage,
+            userLanguage !== 'en-US' ? moonPhaseDataLang : null,
+            userLanguage !== 'en-US' ? moonPhaseDataBriefLang : null
+        );
         
     } catch (err) {
         console.error('[MOON-PHASE-HANDLER] Error generating commentary:', err.message);

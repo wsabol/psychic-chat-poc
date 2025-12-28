@@ -6,7 +6,6 @@ import { createUserDatabaseRecords, getUserProfile } from './helpers/userCreatio
 import { recordLoginAttempt } from './helpers/accountLockout.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { encrypt } from '../../utils/encryption.js';
-import { savePreferences } from '../preferences-fix.js';
 
 const router = Router();
 
@@ -29,13 +28,21 @@ router.post('/log-login-success', async (req, res) => {
       }
     }
 
-    // Create default preferences if they don't exist
+    // Create default preferences if they don't exist (DON'T overwrite existing)
     try {
-      // Create default preferences (upsert won't overwrite existing)
-      try {
-        await savePreferences(userId, 'en-US', 'full', true, db);
-      } catch (err) {
-        logger.warn('Could not create default preferences:', err.message);
+      const userIdHash = hashUserId(userId);
+      const prefExists = await db.query(
+        'SELECT user_id_hash FROM user_preferences WHERE user_id_hash = $1',
+        [userIdHash]
+      );
+      
+      // Only create if doesn't exist - never overwrite saved preferences
+      if (prefExists.rows.length === 0) {
+        await db.query(
+          `INSERT INTO user_preferences (user_id_hash, language, response_type, voice_enabled)
+           VALUES ($1, $2, $3, $4)`,
+          [userIdHash, 'en-US', 'full', true]
+        );
       }
     } catch (prefErr) {
       logger.warn('Failed to create default preferences:', prefErr.message);

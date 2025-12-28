@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
 import { LANGUAGES, translations, t } from '../data/translations';
 
 function PreferencesPage({ userId, token, onNavigateToPage }) {
@@ -18,24 +19,32 @@ function PreferencesPage({ userId, token, onNavigateToPage }) {
     // Fetch preferences on mount
     useEffect(() => {
         fetchPreferences();
-    }, [userId, token]);
+    }, [userId, token, API_URL]);
 
     const fetchPreferences = async () => {
         try {
             setLoading(true);
             setError(null);
             
+            if (!token) {
+                console.log('[PREFERENCES] No token available yet');
+                setLoading(false);
+                return;
+            }
+            
             const headers = {
                 'Authorization': `Bearer ${token}`
             };
 
-            const response = await fetch(`${API_URL}/user-profile/${userId}/preferences`, { headers });
+            const response = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}/preferences`, { headers });
+            console.log('[PREFERENCES] GET response status:', response.status);
             
             if (!response.ok) {
                 throw new Error('Failed to fetch preferences');
             }
 
             const data = await response.json();
+            console.log('[PREFERENCES] Fetched preferences:', data);
             setPreferences({
                 language: data.language || 'en-US',
                 response_type: data.response_type || 'full',
@@ -56,7 +65,7 @@ function PreferencesPage({ userId, token, onNavigateToPage }) {
         setSuccess(false);
 
         try {
-            const response = await fetch(`${API_URL}/user-profile/${userId}/preferences`, {
+            const response = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}/preferences`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -65,12 +74,16 @@ function PreferencesPage({ userId, token, onNavigateToPage }) {
                 body: JSON.stringify(preferences)
             });
 
+            console.log('[PREFERENCES] POST response status:', response.status);
+
             if (!response.ok) {
                 const errData = await response.json();
                 throw new Error(errData.error || 'Failed to save preferences');
             }
 
             const data = await response.json();
+            console.log('[PREFERENCES] Saved preferences:', data);
+            
             if (data.preferences) {
                 setPreferences({
                     language: data.preferences.language,

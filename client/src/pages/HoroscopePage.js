@@ -12,13 +12,13 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState(null);
   const [astroInfo, setAstroInfo] = useState(null);
-  const [showingBrief, setShowingBrief] = useState(true);
+    const [showingBrief, setShowingBrief] = useState(false); // Default to full
   const [userPreference, setUserPreference] = useState('full');
   const pollIntervalRef = useRef(null);
 
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
-    // Fetch user preferences once on mount
+      // Fetch user preferences once on mount
   useEffect(() => {
     const fetchPreferences = async () => {
       try {
@@ -37,12 +37,14 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
       }
     };
     fetchPreferences();
-  }, [userId, token]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userId, token, API_URL]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Load horoscope when range changes
+    // Load horoscope when range changes OR after preferences load
   useEffect(() => {
-    loadHoroscope();
-  }, [horoscopeRange]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!loading) {
+      loadHoroscope();
+    }
+  }, [horoscopeRange, userPreference]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Cleanup polling on unmount
   useEffect(() => {
@@ -74,11 +76,12 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
     return null;
   };
 
-  const loadHoroscope = async () => {
+    const loadHoroscope = async () => {
     setLoading(true);
     setError(null);
     setHoroscopeData(null);
     setGenerating(false);
+    // Don't reset showingBrief here - keep user's preference
 
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
@@ -93,13 +96,13 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
 
             if (response.ok) {
         const data = await response.json();
-        setHoroscopeData({
+                setHoroscopeData({
           text: data.horoscope,
           brief: data.brief,
           generatedAt: data.generated_at,
           range: horoscopeRange
         });
-        setShowingBrief(false);
+        // Keep the user's preference for showing brief/full
         setLoading(false);
         return;
       }
@@ -141,13 +144,13 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
 
           if (pollResponse.ok) {
             const data = await pollResponse.json();
-                        setHoroscopeData({
+                                    setHoroscopeData({
               text: data.horoscope,
               brief: data.brief,
               generatedAt: data.generated_at,
               range: horoscopeRange
             });
-            setShowingBrief(false);
+            // Keep the user's preference for showing brief/full
             setGenerating(false);
             setLoading(false);
             clearInterval(pollIntervalRef.current);

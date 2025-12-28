@@ -11,10 +11,32 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState(null);
   const [astroInfo, setAstroInfo] = useState(null);
-  const [showingBrief, setShowingBrief] = useState(true);
+  const [showingBrief, setShowingBrief] = useState(false); // Default to full
+  const [userPreference, setUserPreference] = useState('full');
   const pollIntervalRef = useRef(null);
 
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
+
+  // Fetch user preferences once on mount
+  useEffect(() => {
+    const fetchPreferences = async () => {
+      try {
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const response = await fetch(`${API_URL}/user-profile/${userId}/preferences`, { headers });
+        if (response.ok) {
+          const data = await response.json();
+          setUserPreference(data.response_type || 'full');
+          // Set initial showing state based on preference
+          // If preference is 'full', show full (showingBrief = false)
+          // If preference is 'brief', show brief (showingBrief = true)
+          setShowingBrief(data.response_type === 'brief');
+        }
+      } catch (err) {
+        console.error('[COSMIC-WEATHER] Error fetching preferences:', err);
+      }
+    };
+    fetchPreferences();
+  }, [userId, token, API_URL]);
 
   useEffect(() => {
     return () => {
@@ -50,7 +72,6 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
     setError(null);
     setCosmicData(null);
     setGenerating(false);
-    setShowingBrief(true);
 
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
@@ -138,9 +159,12 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
     }
   }, [userId, token, API_URL, astroInfo, fetchAstroInfo]);
 
+  // Load cosmic weather AFTER preferences are loaded
   useEffect(() => {
-    loadCosmicWeather();
-  }, [loadCosmicWeather]);
+    if (!loading) {
+      loadCosmicWeather();
+    }
+  }, [userPreference]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="page-safe-area cosmic-weather-page">

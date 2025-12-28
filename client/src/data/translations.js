@@ -5,6 +5,7 @@
 
 export const LANGUAGES = {
     'en-US': 'English (USA)',
+    'en-GB': 'English (UK)',
     'es-ES': 'Español',
     'fr-FR': 'Français',
     'de-DE': 'Deutsch',
@@ -166,6 +167,25 @@ export const translations = {
         saved: '偏好设置保存成功!',
         error: '保存偏好设置时出错',
         loading: '正在加载偏好设置...'
+    },
+    'en-GB': {
+        preferences: 'Preferences',
+        language: 'Language',
+        languageDescription: 'Choose your preferred interface language',
+        responseType: 'Response Type',
+        responseTypeDescription: 'Full responses include detailed analysis; Brief responses are concise',
+        fullResponses: 'Full Responses',
+        briefResponses: 'Brief Responses',
+        voice: 'Voice Responses',
+        voiceDescription: 'Enable audio responses from the oracle',
+        voiceOn: 'On',
+        voiceOff: 'Off',
+        save: 'Save',
+        cancel: 'Cancel',
+        saving: 'Saving...',
+        saved: 'Preferences saved successfully!',
+        error: 'Error saving preferences',
+        loading: 'Loading preferences...'
     }
 };
 

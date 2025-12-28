@@ -55,6 +55,23 @@ export async function isTemporaryUser(userId) {
     }
 }
 
+export async function fetchUserLanguagePreference(userId) {
+    try {
+        const userIdHash = hashUserId(userId);
+        const { rows } = await db.query(
+            `SELECT language FROM user_preferences WHERE user_id_hash = $1`,
+            [userIdHash]
+        );
+        if (rows.length > 0 && rows[0].language) {
+            return rows[0].language;
+        }
+        return 'en-US'; // Default to English US
+    } catch (err) {
+        console.error('[ORACLE] Error fetching language preference:', err);
+        return 'en-US'; // Default to English US on error
+    }
+}
+
 export function buildPersonalInfoContext(userInfo) {
     if (!userInfo || Object.keys(userInfo).length === 0) return '';
     return `

@@ -1,5 +1,6 @@
-import { fetchUserAstrology, getOracleSystemPrompt, callOracle, getUserGreeting, fetchUserPersonalInfo } from '../oracle.js';
+import { fetchUserAstrology, fetchUserLanguagePreference, getOracleSystemPrompt, callOracle, getUserGreeting, fetchUserPersonalInfo } from '../oracle.js';
 import { storeMessage } from '../messages.js';
+import { translateContentObject } from '../translator.js';
 import { db } from '../../shared/db.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { spawn } from 'child_process';
@@ -31,7 +32,7 @@ export async function generateCosmicWeather(userId) {
         const today = new Date().toISOString().split('T')[0];
         const userIdHash = hashUserId(userId);
         
-                // Check if cosmic weather already exists for today
+        // Check if cosmic weather already exists for today
         const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
         const { rows } = await db.query(
             `SELECT pgp_sym_decrypt(content_full_encrypted, $2)::text as content FROM messages WHERE user_id_hash = $1 AND role = 'cosmic_weather' ORDER BY created_at DESC LIMIT 1`,
@@ -48,6 +49,7 @@ export async function generateCosmicWeather(userId) {
         
         const userInfo = await fetchUserPersonalInfo(userId);
         const astrologyInfo = await fetchUserAstrology(userId);
+        const userLanguage = await fetchUserLanguagePreference(userId);
         
         if (!astrologyInfo?.astrology_data) {
             throw new Error('No astrology data found');
@@ -84,6 +86,7 @@ Do NOT include tarot cards - this is pure astrological forecasting enriched by t
         
         const prompt = buildCosmicWeatherPrompt(userInfo, astrologyInfo, planets, planetsDetailed, userGreeting);
         
+        // Call Oracle (always in English first)
         const oracleResponses = await callOracle(systemPrompt, [], prompt, true);
         
         const cosmicWeatherDataFull = {
@@ -104,14 +107,36 @@ Do NOT include tarot cards - this is pure astrological forecasting enriched by t
             },
             planets: planets,
             generated_at: new Date().toISOString(),
-                        date: today
+            date: today
         };
+        
         const cosmicWeatherDataBrief = {
             text: oracleResponses.brief,
             generated_at: new Date().toISOString(),
             date: today
         };
-        await storeMessage(userId, 'cosmic_weather', cosmicWeatherDataFull, cosmicWeatherDataBrief);
+        
+        // Translate if user prefers non-English language
+        let cosmicWeatherDataLang = null;
+        let cosmicWeatherDataBriefLang = null;
+        
+        if (userLanguage && userLanguage !== 'en-US') {
+            cosmicWeatherDataLang = await translateContentObject(cosmicWeatherDataFull, userLanguage);
+            cosmicWeatherDataBriefLang = await translateContentObject(cosmicWeatherDataBrief, userLanguage);
+        }
+        
+        // Store message with both English and translated versions (if applicable)
+        // Always pass userLanguage (even if en-US) so it's tracked
+        await storeMessage(
+            userId, 
+            'cosmic_weather', 
+            cosmicWeatherDataFull, 
+            cosmicWeatherDataBrief,
+            userLanguage,
+            userLanguage !== 'en-US' ? cosmicWeatherDataLang : null,
+            userLanguage !== 'en-US' ? cosmicWeatherDataBriefLang : null
+        );
+        
     } catch (err) {
         console.error('[COSMIC-WEATHER-HANDLER] Error:', err.message);
         throw err;

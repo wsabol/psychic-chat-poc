@@ -13,7 +13,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
   const [error, setError] = useState(null);
   const [astroInfo, setAstroInfo] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
-  const [showingBrief, setShowingBrief] = useState(true);
+    const [showingBrief, setShowingBrief] = useState(false); // Default to full
   const [userPreference, setUserPreference] = useState('full');
   const pollIntervalRef = useRef(null);
 
@@ -46,7 +46,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
     return moonPhaseOrder[phaseIndex];
   };
 
-    // Fetch user preferences once on mount
+      // Fetch user preferences once on mount
   useEffect(() => {
     const fetchPreferences = async () => {
       try {
@@ -56,6 +56,8 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
           const data = await response.json();
           setUserPreference(data.response_type || 'full');
           // Set initial showing state based on preference
+          // If preference is 'full', show full (showingBrief = false)
+          // If preference is 'brief', show brief (showingBrief = true)
           setShowingBrief(data.response_type === 'brief');
         }
       } catch (err) {
@@ -63,12 +65,14 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
       }
     };
     fetchPreferences();
-  }, [userId, token]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userId, token, API_URL]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Load moon phase data on mount
+    // Load moon phase data AFTER preferences are loaded
   useEffect(() => {
-    loadMoonPhaseData();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!loading) {
+      loadMoonPhaseData();
+    }
+  }, [userPreference]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Cleanup polling on unmount
   useEffect(() => {

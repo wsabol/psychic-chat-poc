@@ -15,10 +15,21 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
     const userIdHash = hashUserId(userId);
     
     try {
-        // Fetch BOTH full and brief content
+        // Fetch user's language preference and response type preference
+        const { rows: prefRows } = await db.query(
+            `SELECT language, response_type FROM user_preferences WHERE user_id_hash = $1`,
+            [userIdHash]
+        );
+        const userLanguage = prefRows.length > 0 ? prefRows[0].language : 'en-US';
+        const responseType = prefRows.length > 0 ? prefRows[0].response_type : 'full';
+        
+        // Fetch cosmic weather with language versions
         const query = `SELECT 
                 pgp_sym_decrypt(content_full_encrypted, $2)::text as content_full,
-                pgp_sym_decrypt(content_brief_encrypted, $2)::text as content_brief
+                pgp_sym_decrypt(content_brief_encrypted, $2)::text as content_brief,
+                pgp_sym_decrypt(content_full_lang_encrypted, $2)::text as content_lang,
+                pgp_sym_decrypt(content_brief_lang_encrypted, $2)::text as content_brief_lang,
+                language_code
             FROM messages 
             WHERE user_id_hash = $1 AND role = 'cosmic_weather' 
             ORDER BY created_at DESC LIMIT 5`;
@@ -26,12 +37,22 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
         
         let todaysWeather = null;
         let briefWeather = null;
+        
         for (const row of rows) {
-            const data = typeof row.content_full === 'string' ? JSON.parse(row.content_full) : row.content_full;
+            // Select correct language version
+            let fullContent = row.content_full;
+            let briefContent = row.content_brief;
+            
+            if (row.language_code === userLanguage && row.content_lang) {
+                fullContent = row.content_lang;
+                briefContent = row.content_brief_lang || row.content_brief;
+            }
+            
+            const data = typeof fullContent === 'string' ? JSON.parse(fullContent) : fullContent;
             if (data.date === today) {
                 todaysWeather = data;
-                if (row.content_brief) {
-                    briefWeather = typeof row.content_brief === 'string' ? JSON.parse(row.content_brief) : row.content_brief;
+                if (briefContent) {
+                    briefWeather = typeof briefContent === 'string' ? JSON.parse(briefContent) : briefContent;
                 }
                 break;
             }
@@ -41,8 +62,11 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
             return res.status(404).json({ error: 'Generating today\'s cosmic weather...' });
         }
         
+        // Return based on user preference (full vs brief)
+        const textToReturn = responseType === 'brief' && briefWeather?.text ? briefWeather.text : todaysWeather.text;
+        
         res.json({
-            weather: todaysWeather.text,
+            weather: textToReturn,
             brief: briefWeather?.text || null,
             birthChart: todaysWeather.birth_chart,
             currentPlanets: todaysWeather.planets
@@ -110,19 +134,41 @@ router.get("/void-of-course/:userId", authenticateToken, authorizeUser, async (r
     const today = new Date().toISOString().split('T')[0];
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
     const userIdHash = hashUserId(userId);
-          // Use user_id_hash for preferences
-    const prefResult = await db.query(`SELECT response_type FROM user_preferences WHERE user_id_hash = $1`, [userIdHash]);
-    const userPreference = prefResult.rows[0]?.response_type || 'full';
-    let contentColumn = 'content_full_encrypted';
-    if (userPreference === 'brief') contentColumn = 'COALESCE(content_brief_encrypted, content_full_encrypted)';
-    const query = `SELECT pgp_sym_decrypt(${contentColumn}, $2)::text as content FROM messages WHERE user_id_hash = $1 AND role = 'void_of_course' ORDER BY created_at DESC LIMIT 5`;
     
     try {
+        // Fetch user preferences
+        const { rows: prefRows } = await db.query(
+            `SELECT language, response_type FROM user_preferences WHERE user_id_hash = $1`,
+            [userIdHash]
+        );
+        const userLanguage = prefRows.length > 0 ? prefRows[0].language : 'en-US';
+        const responseType = prefRows.length > 0 ? prefRows[0].response_type : 'full';
+        
+        // Fetch void of course with language versions
+        const query = `SELECT 
+                pgp_sym_decrypt(content_full_encrypted, $2)::text as content_full,
+                pgp_sym_decrypt(content_brief_encrypted, $2)::text as content_brief,
+                pgp_sym_decrypt(content_full_lang_encrypted, $2)::text as content_lang,
+                pgp_sym_decrypt(content_brief_lang_encrypted, $2)::text as content_brief_lang,
+                language_code
+            FROM messages 
+            WHERE user_id_hash = $1 AND role = 'void_of_course' 
+            ORDER BY created_at DESC LIMIT 5`;
+        
         const { rows } = await db.query(query, [userIdHash, ENCRYPTION_KEY]);
         
         let todaysAlert = null;
         for (const row of rows) {
-            const data = typeof row.content === 'string' ? JSON.parse(row.content) : row.content;
+            // Select correct language version
+            let fullContent = row.content_full;
+            let briefContent = row.content_brief;
+            
+            if (row.language_code === userLanguage && row.content_lang) {
+                fullContent = row.content_lang;
+                briefContent = row.content_brief_lang || row.content_brief;
+            }
+            
+            const data = typeof fullContent === 'string' ? JSON.parse(fullContent) : fullContent;
             const dataDate = data.generated_at?.split('T')[0];
             if (dataDate === today) {
                 todaysAlert = data;
@@ -154,19 +200,6 @@ router.post("/void-of-course/:userId", authenticateToken, authorizeUser, async (
         console.error('[ASTROLOGY-INSIGHTS] Error queuing void of course:', err);
         res.status(500).json({ error: 'Failed to queue void of course' });
     }
-});
-
-// Retrogrades Calendar (static data)
-router.get("/retrogrades", (req, res) => {
-    const retrogrades = [
-        { planet: "Mercury", start: "2025-01-15", end: "2025-02-03", icon: "☿️" },
-        { planet: "Mercury", start: "2025-05-14", end: "2025-06-08", icon: "☿️" },
-        { planet: "Mercury", start: "2025-09-09", end: "2025-10-03", icon: "☿️" },
-        { planet: "Venus", start: "2025-12-25", end: "2026-02-02", icon: "♀" },
-        { planet: "Mars", start: "2025-06-16", end: "2025-08-23", icon: "♂" },
-        { planet: "Jupiter", start: "2025-10-04", end: "2026-02-06", icon: "♃" },
-    ];
-    res.json({ retrogrades });
 });
 
 export default router;

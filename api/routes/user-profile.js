@@ -12,7 +12,6 @@ const router = Router();
 function parseDateForStorage(dateString) {
     if (!dateString) return null;
     try {
-        // Frontend sends ISO format (YYYY-MM-DD). Just validate and return it.
         const isoRegex = /^\d{4}-\d{2}-\d{2}$/;
         const trimmed = dateString.trim();
         if (isoRegex.test(trimmed)) {
@@ -63,27 +62,21 @@ router.post("/:userId", authorizeUser, async (req, res) => {
             return res.status(400).json({ error: 'Invalid birth date format' });
         }
 
-        // ✅ ENFORCE: Validate birth date format and age
         const ageValidation = validateAge(parsedBirthDate);
         if (!ageValidation.isValid) {
             return res.status(400).json({ error: ageValidation.error });
         }
 
-        // ✅ ENFORCE: Check if user is 18+ (CRITICAL RULE)
         if (!ageValidation.isAdult) {
-            
-            // Handle the age violation
             const violationResult = await handleAgeViolation(userId, ageValidation.age);
 
             if (violationResult.deleted) {
-                // Account has been deleted
                 return res.status(403).json({
                     error: 'Account has been terminated due to policy violation.',
                     reason: 'Users must be 18 years or older',
                     deleted: true
                 });
             } else {
-                // First violation warning
                 return res.status(403).json({
                     error: ageValidation.error,
                     warning: 'This is your first age restriction warning. A second violation will result in account deletion.',
@@ -99,7 +92,6 @@ router.post("/:userId", authorizeUser, async (req, res) => {
         const safeTimezone = birthTimezone && birthTimezone.trim() ? birthTimezone : null;
         const safeAddressPreference = addressPreference && addressPreference.trim() ? addressPreference : null;
 
-        // Save personal info with encryption
         await db.query(
             `INSERT INTO user_personal_info 
              (user_id, first_name_encrypted, last_name_encrypted, email_encrypted, birth_date_encrypted, birth_time_encrypted, birth_country_encrypted, birth_province_encrypted, birth_city_encrypted, birth_timezone_encrypted, sex_encrypted, familiar_name_encrypted)
@@ -120,7 +112,6 @@ router.post("/:userId", authorizeUser, async (req, res) => {
             [process.env.ENCRYPTION_KEY, userId, firstName || 'Temporary', lastName || 'User', email, parsedBirthDate, safeTime, safeCountry, safeProvince, safeCity, safeTimezone, sex || 'Unspecified', safeAddressPreference]
         );
 
-        // Clear cached horoscopes and astrology insights since birth data changed
         try {
             const userIdHash = hashUserId(userId);
             await db.query(
@@ -133,7 +124,6 @@ router.post("/:userId", authorizeUser, async (req, res) => {
             console.warn(`Failed to clear cached insights for user ${userId}:`, err.message);
         }
         
-        // Trigger astrology calculation via worker if complete birth data
         if (safeTime && safeCountry && safeProvince && safeCity && parsedBirthDate) {
             try {
                 await enqueueMessage({
@@ -145,7 +135,6 @@ router.post("/:userId", authorizeUser, async (req, res) => {
             }
         }
 
-        // Handle provided astrology data
         if (zodiacSign && astrologyData) {
             const userIdHash = hashUserId(userId);
             await db.query(
@@ -185,16 +174,15 @@ router.delete("/:userId/astrology-cache", authorizeUser, async (req, res) => {
 // Get user preferences
 router.get("/:userId/preferences", authorizeUser, async (req, res) => {
     const { userId } = req.params;
+    const userIdHash = hashUserId(userId);
+    
     try {
-        const userIdHash = hashUserId(userId);
-        
         const { rows } = await db.query(
             `SELECT language, response_type, voice_enabled FROM user_preferences WHERE user_id_hash = $1`,
             [userIdHash]
         );
         
         if (rows.length === 0) {
-            // Return defaults if no preferences exist yet
             return res.json({
                 language: 'en-US',
                 response_type: 'full',
@@ -213,14 +201,14 @@ router.get("/:userId/preferences", authorizeUser, async (req, res) => {
 router.post("/:userId/preferences", authorizeUser, async (req, res) => {
     const { userId } = req.params;
     const { language, response_type, voice_enabled } = req.body;
+    const userIdHash = hashUserId(userId);
     
     try {
-        // Validate input
         if (!language || !response_type) {
             return res.status(400).json({ error: 'Missing required fields: language, response_type' });
         }
         
-        if (!['en-US', 'es-ES', 'fr-FR', 'de-DE', 'it-IT', 'pt-BR', 'ja-JP', 'zh-CN'].includes(language)) {
+        if (!['en-US', 'en-GB', 'es-ES', 'fr-FR', 'de-DE', 'it-IT', 'pt-BR', 'ja-JP', 'zh-CN'].includes(language)) {
             return res.status(400).json({ error: 'Invalid language' });
         }
         
@@ -228,9 +216,6 @@ router.post("/:userId/preferences", authorizeUser, async (req, res) => {
             return res.status(400).json({ error: 'Invalid response_type' });
         }
         
-                const userIdHash = hashUserId(userId);
-        
-        // Upsert preferences
         const { rows } = await db.query(
             `INSERT INTO user_preferences (user_id_hash, language, response_type, voice_enabled)
              VALUES ($1, $2, $3, $4)

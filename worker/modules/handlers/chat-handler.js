@@ -5,6 +5,7 @@ import { extractCardsFromResponse, formatCardsForStorage } from '../cards.js';
 import { 
     fetchUserPersonalInfo, 
     fetchUserAstrology,
+    fetchUserLanguagePreference,
     isTemporaryUser,
     buildPersonalInfoContext, 
     buildAstrologyContext,
@@ -13,6 +14,7 @@ import {
     getUserGreeting
 } from '../oracle.js';
 import { getMessageHistory, storeMessage, formatMessageContent } from '../messages.js';
+import { translateContentObject } from '../translator.js';
 import { calculateBirthChart } from '../astrology.js';
 import {
     detectViolation,
@@ -31,6 +33,9 @@ export async function handleChatMessage(userId, message) {
         const userInfo = await fetchUserPersonalInfo(userId);
         let astrologyInfo = await fetchUserAstrology(userId);
         
+        // Fetch user's language preference
+        const userLanguage = await fetchUserLanguagePreference(userId);
+        
         // Check if user is temporary
         const tempUser = await isTemporaryUser(userId);
         
@@ -39,14 +44,14 @@ export async function handleChatMessage(userId, message) {
             const disabled = await isAccountDisabled(userId);
                         if (disabled) {
                 const response = `Your account has been permanently disabled due to repeated violations of our community guidelines. If you wish to appeal, please contact support.`;
-                await storeMessage(userId, 'assistant', response);
+                await storeMessage(userId, 'assistant', { text: response });
                 return;
             }
             
             const suspended = await isAccountSuspended(userId);
                         if (suspended) {
                 const response = `Your account is currently suspended. Please try again after the suspension period ends.`;
-                await storeMessage(userId, 'assistant', response);
+                await storeMessage(userId, 'assistant', { text: response });
                 return;
             }
         }
@@ -65,7 +70,7 @@ export async function handleChatMessage(userId, message) {
             }
             
             // Store response
-            await storeMessage(userId, 'assistant', responseToUser);
+            await storeMessage(userId, 'assistant', { text: responseToUser });
             
                         // For temp accounts, account has been deleted
             
@@ -156,17 +161,36 @@ IMPORTANT: Use the above personal and astrological information to:
         // Get oracle prompt - MODIFIED to pass isTemporaryUser flag
         const systemPrompt = getOracleSystemPrompt(tempUser) + "\n\n" + combinedContext;
         
-        // Call Oracle
+        // Call Oracle (always in English first)
         const oracleResponses = await callOracle(systemPrompt, history, message, true);
         
         // Extract cards from FULL response only
         const cards = extractCardsFromResponse(oracleResponses.full, tarotDeck);
         const formattedCards = formatCardsForStorage(cards);
         
-        // Format both full and brief
+        // Format both full and brief in English
         const fullContent = formatMessageContent(oracleResponses.full, formattedCards);
         const briefContent = formatMessageContent(oracleResponses.brief, formattedCards);
-        await storeMessage(userId, 'assistant', fullContent, briefContent);
+        
+        // Translate if user prefers non-English language
+        let fullContentLang = null;
+        let briefContentLang = null;
+        
+        if (userLanguage && userLanguage !== 'en-US') {
+            fullContentLang = await translateContentObject(fullContent, userLanguage);
+            briefContentLang = await translateContentObject(briefContent, userLanguage);
+        }
+        
+        // Store message with both English and translated versions (if applicable)
+        await storeMessage(
+            userId, 
+            'assistant', 
+            fullContent, 
+            briefContent,
+            userLanguage !== 'en-US' ? userLanguage : null,
+            fullContentLang,
+            briefContentLang
+        );
         
     } catch (err) {
         console.error('[CHAT-HANDLER] Error handling chat message:', err.message);
@@ -245,12 +269,12 @@ async function handleHoroscopeInChat(userId, userInfo, astrologyInfo) {
             // Horoscope exists - present it in chat
             const userGreeting = getUserGreeting(userInfo, userId);
             const response = `✨ Your personalized horoscope is available in the Horoscope page. Would you like me to help with something else?`;
-            await storeMessage(userId, 'assistant', response);
+            await storeMessage(userId, 'assistant', { text: response });
         } else {
             // Horoscope doesn't exist - trigger generation and notify user
             const userGreeting = getUserGreeting(userInfo, userId);
             const response = `✨ I'm preparing your horoscope. Please visit the Horoscope page to see it when it's ready.`;
-            await storeMessage(userId, 'assistant', response);
+            await storeMessage(userId, 'assistant', { text: response });
             
                                     // Trigger horoscope generation directly
             const { generateHoroscope } = await import('./horoscope-handler.js');
@@ -261,7 +285,7 @@ async function handleHoroscopeInChat(userId, userInfo, astrologyInfo) {
     } catch (err) {
         console.error('[CHAT-HANDLER] Error handling horoscope in chat:', err.message);
         const response = `I encountered an error retrieving your horoscope. Please try again in a moment.`;
-        await storeMessage(userId, 'assistant', response);
+        await storeMessage(userId, 'assistant', { text: response });
     }
 }
 
@@ -312,11 +336,11 @@ async function handleMoonPhaseInChat(userId, userInfo, astrologyInfo, phase) {
             // Commentary exists - acknowledge but don't display the oracle response here
             // User should visit the Moon Phase page to see the commentary
             const response = `🌙 Your personalized moon phase insight is available in the Moon Phase page. Would you like me to help with something else?`;
-            await storeMessage(userId, 'assistant', response);
+            await storeMessage(userId, 'assistant', { text: response });
                 } else {
             // Commentary doesn't exist - trigger generation without showing oracle response
             const response = `🌙 I'm preparing your lunar insight. Please visit the Moon Phase page to see it when it's ready.`;
-            await storeMessage(userId, 'assistant', response);
+            await storeMessage(userId, 'assistant', { text: response });
             
                                     // Trigger moon phase generation directly
             const { generateMoonPhaseCommentary } = await import('./moon-phase-handler.js');
@@ -327,13 +351,10 @@ async function handleMoonPhaseInChat(userId, userInfo, astrologyInfo, phase) {
     } catch (err) {
         console.error('[CHAT-HANDLER] Error handling moon phase in chat:', err.message);
         const response = `I encountered an error retrieving the lunar insight. Please try again in a moment.`;
-        await storeMessage(userId, 'assistant', response);
+        await storeMessage(userId, 'assistant', { text: response });
     }
 }
 
-/**
- * Store astrology data in database
- */
 /**
  * Handle cosmic weather request in chat
  */
@@ -357,17 +378,17 @@ async function handleCosmicWeatherInChat(userId, userInfo) {
         }
                 if (validWeather) {
             const response = `✨ Today's cosmic weather is available in the Cosmic Weather page. Would you like me to help with something else?`;
-            await storeMessage(userId, 'assistant', response);
+            await storeMessage(userId, 'assistant', { text: response });
         } else {
             const response = `✨ I'm reading today's planetary energies. Please visit the Cosmic Weather page to see them when ready.`;
-            await storeMessage(userId, 'assistant', response);
+            await storeMessage(userId, 'assistant', { text: response });
             const { generateCosmicWeather } = await import('./cosmic-weather-handler.js');
                         generateCosmicWeather(userId).catch(err => console.error('[CHAT-HANDLER] Error triggering cosmic weather:', err.message));
         }
     } catch (err) {
         console.error('[CHAT-HANDLER] Error handling cosmic weather in chat:', err.message);
         const response = `I encountered an error reading the cosmic energy. Please try again in a moment.`;
-        await storeMessage(userId, 'assistant', response);
+        await storeMessage(userId, 'assistant', { text: response });
     }
 }
 

@@ -1,23 +1,27 @@
 import { db } from '../../shared/db.js';
 import { 
     fetchUserPersonalInfo, 
-    fetchUserAstrology, 
+    fetchUserAstrology,
+    fetchUserLanguagePreference,
     isTemporaryUser,
     getOracleSystemPrompt,
     callOracle,
     getUserGreeting
 } from '../oracle.js';
-import { storeMessage } from '../messages.js';
+import { storeMessage, formatMessageContent } from '../messages.js';
+import { translateContentObject } from '../translator.js';
 
 /**
  * Generate daily and weekly horoscopes for the user at once
  * This way, switching between ranges doesn't require regeneration
+ * Translates to user's preferred language if not English US
  */
 export async function generateHoroscope(userId, range = 'daily') {
     try {
         // Fetch user context
         const userInfo = await fetchUserPersonalInfo(userId);
         const astrologyInfo = await fetchUserAstrology(userId);
+        const userLanguage = await fetchUserLanguagePreference(userId);
         
         if (!userInfo) {
             throw new Error('User personal info not found');
@@ -55,9 +59,10 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
 `;
                 
                 // Call Oracle with just the user's birth data (no chat history for horoscopes)
+                // Always generate in English first
                 const oracleResponses = await callOracle(systemPrompt, [], horoscopePrompt, true);
                 
-                // Store horoscope in database with metadata
+                // Store horoscope in database with metadata (in English)
                 const horoscopeDataFull = {
                     text: oracleResponses.full,
                     range: currentRange,
@@ -65,9 +70,33 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
                     zodiac_sign: astrologyInfo.zodiac_sign
                 };
                 
-                // Store as a system message for record-keeping
-                const horoscopeDataBrief = { text: oracleResponses.brief, range: currentRange, generated_at: generatedAt, zodiac_sign: astrologyInfo.zodiac_sign };
-                await storeMessage(userId, 'horoscope', horoscopeDataFull, horoscopeDataBrief);
+                const horoscopeDataBrief = { 
+                    text: oracleResponses.brief, 
+                    range: currentRange, 
+                    generated_at: generatedAt, 
+                    zodiac_sign: astrologyInfo.zodiac_sign 
+                };
+                
+                // Translate if user prefers non-English language
+                let horoscopeDataFullLang = null;
+                let horoscopeDataBriefLang = null;
+                
+                if (userLanguage && userLanguage !== 'en-US') {
+                    horoscopeDataFullLang = await translateContentObject(horoscopeDataFull, userLanguage);
+                    horoscopeDataBriefLang = await translateContentObject(horoscopeDataBrief, userLanguage);
+                }
+                
+                // Store message with both English and translated versions (if applicable)
+                // Always pass userLanguage (even if en-US) so it's tracked
+                await storeMessage(
+                    userId, 
+                    'horoscope', 
+                    horoscopeDataFull, 
+                    horoscopeDataBrief,
+                    userLanguage,
+                    userLanguage !== 'en-US' ? horoscopeDataFullLang : null,
+                    userLanguage !== 'en-US' ? horoscopeDataBriefLang : null
+                );
                 
             } catch (err) {
                 console.error(`[HOROSCOPE-HANDLER] Error generating ${currentRange} horoscope:`, err.message);
