@@ -6,16 +6,38 @@ import '../styles/responsive.css';
 import './HoroscopePage.css';
 
 export default function HoroscopePage({ userId, token, auth, onExit, onNavigateToPage }) {
-  const [horoscopeRange, setHoroscopeRange] = useState('daily');
+    const [horoscopeRange, setHoroscopeRange] = useState('daily');
   const [horoscopeData, setHoroscopeData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState(null);
   const [astroInfo, setAstroInfo] = useState(null);
   const [showingBrief, setShowingBrief] = useState(true);
+  const [userPreference, setUserPreference] = useState('full');
   const pollIntervalRef = useRef(null);
 
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
+
+    // Fetch user preferences once on mount
+  useEffect(() => {
+    const fetchPreferences = async () => {
+      try {
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const response = await fetch(`${API_URL}/user-profile/${userId}/preferences`, { headers });
+        if (response.ok) {
+          const data = await response.json();
+          setUserPreference(data.response_type || 'full');
+          // Set initial showing state based on preference
+          // If preference is 'full', show full (showingBrief = false)
+          // If preference is 'brief', show brief (showingBrief = true)
+          setShowingBrief(data.response_type === 'brief');
+        }
+      } catch (err) {
+        console.error('[HOROSCOPE] Error fetching preferences:', err);
+      }
+    };
+    fetchPreferences();
+  }, [userId, token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load horoscope when range changes
   useEffect(() => {
@@ -103,9 +125,9 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
         return;
       }
 
-      // Start polling for generated horoscope
+                  // Start polling for generated horoscope
       let pollCount = 0;
-      const maxPolls = 30;
+      const maxPolls = 30;  // 30 seconds polling
 
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current);
@@ -135,7 +157,7 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
           console.error('[HOROSCOPE] Polling error:', err);
         }
 
-        if (pollCount >= maxPolls) {
+                        if (pollCount >= maxPolls) {
           setError('Horoscope generation is taking longer than expected. Please try again.');
           setGenerating(false);
           setLoading(false);
@@ -301,11 +323,9 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
             </p>
           </div>
 
-                              <div className="horoscope-text">
+                                        <div className="horoscope-text">
             <div dangerouslySetInnerHTML={{ __html: showingBrief && horoscopeData.brief ? horoscopeData.brief : horoscopeData.text }} />
-            {horoscopeData.brief && (
-              <button onClick={() => setShowingBrief(!showingBrief)} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', backgroundColor: '#7c63d8', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '1rem', fontWeight: '500' }} onMouseEnter={(e) => e.target.style.backgroundColor = '#6b52c1'} onMouseLeave={(e) => e.target.style.backgroundColor = '#7c63d8'}>{showingBrief ? '📖 Tell me more' : '📋 Show less'}</button>
-            )}
+            <button onClick={() => setShowingBrief(!showingBrief)} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', backgroundColor: '#7c63d8', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '1rem', fontWeight: '500' }} onMouseEnter={(e) => e.target.style.backgroundColor = '#6b52c1'} onMouseLeave={(e) => e.target.style.backgroundColor = '#7c63d8'}>{showingBrief ? '📖 Tell me more' : '📋 Show less'}</button>
           </div>
 
           {/* Sun Sign Info Below Horoscope */}

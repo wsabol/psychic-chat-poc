@@ -36,8 +36,9 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
             [userIdHash, process.env.ENCRYPTION_KEY]
         );
         
-        // Find the first horoscope that matches the range and is from today
+                // Find the first horoscope that matches the range and is from today
         let validHoroscope = null;
+        let briefHoroscope = null;
         let staleHoroscopesExist = false;
         
                 for (const row of rows) {

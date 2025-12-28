@@ -15,6 +15,32 @@ import './ChatPage.css';
  */
 export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogout }) {
   const isTemporaryAccount = auth?.isTemporaryAccount;
+  const [defaultShowBrief, setDefaultShowBrief] = useState(true);
+  
+  // Fetch user preferences once on mount
+  useEffect(() => {
+    if (!userId || !token) return;
+    
+    const fetchPreferences = async () => {
+      try {
+        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+        const response = await fetch(`${API_URL}/user-profile/${userId}/preferences`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          const responseType = data.response_type || 'full';
+          // If preference is 'full', show full first (defaultShowBrief = false)
+          // If preference is 'brief', show brief first (defaultShowBrief = true)
+          setDefaultShowBrief(responseType === 'brief');
+        }
+      } catch (err) {
+        console.error('[CHAT-PAGE] Error fetching preferences:', err);
+      }
+    };
+    
+    fetchPreferences();
+  }, [userId, token]);
   
   // Chat hook
   const { chat, message, setMessage, sendMessage } = 
@@ -179,6 +205,7 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
         <ChatMessageList
           messages={displayMessages}
           messagesEndRef={messagesEndRef}
+          defaultShowBrief={defaultShowBrief}
         />
 
         {/* Input form - grayed out after first message for temp accounts */}

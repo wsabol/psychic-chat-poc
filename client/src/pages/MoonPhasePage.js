@@ -6,13 +6,15 @@ import '../styles/responsive.css';
 import './MoonPhasePage.css';
 
 export default function MoonPhasePage({ userId, token, auth, onNavigateToPage }) {
-  const [moonPhaseData, setMoonPhaseData] = useState(null);
+      const [moonPhaseData, setMoonPhaseData] = useState(null);
   const [currentPhase, setCurrentPhase] = useState(null);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState(null);
   const [astroInfo, setAstroInfo] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [showingBrief, setShowingBrief] = useState(true);
+  const [userPreference, setUserPreference] = useState('full');
   const pollIntervalRef = useRef(null);
 
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
@@ -43,6 +45,25 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
     
     return moonPhaseOrder[phaseIndex];
   };
+
+    // Fetch user preferences once on mount
+  useEffect(() => {
+    const fetchPreferences = async () => {
+      try {
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const response = await fetch(`${API_URL}/user-profile/${userId}/preferences`, { headers });
+        if (response.ok) {
+          const data = await response.json();
+          setUserPreference(data.response_type || 'full');
+          // Set initial showing state based on preference
+          setShowingBrief(data.response_type === 'brief');
+        }
+      } catch (err) {
+        console.error('[MOON-PHASE] Error fetching preferences:', err);
+      }
+    };
+    fetchPreferences();
+  }, [userId, token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load moon phase data on mount
   useEffect(() => {
@@ -79,11 +100,12 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
     return null;
   };
 
-  const loadMoonPhaseData = async () => {
+    const loadMoonPhaseData = async () => {
     setLoading(true);
     setError(null);
     setMoonPhaseData(null);
     setGenerating(false);
+    setShowingBrief(true);
 
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
@@ -100,10 +122,11 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
       // Try to fetch cached moon phase commentary
       const response = await fetch(`${API_URL}/moon-phase/${userId}?phase=${calculatedPhase}`, { headers });
 
-      if (response.ok) {
+            if (response.ok) {
         const data = await response.json();
         setMoonPhaseData({
           text: data.commentary,
+          brief: data.brief,
           generatedAt: data.generated_at,
           phase: calculatedPhase
         });
@@ -134,9 +157,9 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
         return;
       }
 
-      // Start polling for generated commentary
+                  // Start polling for generated commentary
       let pollCount = 0;
-      const maxPolls = 30;
+      const maxPolls = 30;  // 30 seconds polling
 
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current);
@@ -148,10 +171,11 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
         try {
           const pollResponse = await fetch(`${API_URL}/moon-phase/${userId}?phase=${calculatedPhase}`, { headers });
 
-          if (pollResponse.ok) {
+                    if (pollResponse.ok) {
             const data = await pollResponse.json();
             setMoonPhaseData({
               text: data.commentary,
+              brief: data.brief,
               generatedAt: data.generated_at,
               phase: calculatedPhase
             });
@@ -165,7 +189,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
           console.error('[MOON-PHASE] Polling error:', err);
         }
 
-        if (pollCount >= maxPolls) {
+                        if (pollCount >= maxPolls) {
           setError('Moon phase commentary generation is taking longer than expected. Please try again.');
           setGenerating(false);
           setLoading(false);
@@ -274,11 +298,12 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
         </section>
       )}
 
-      {/* Moon Phase Content */}
+                  {/* Moon Phase Content */}
       {moonPhaseData && !loading && (
         <section className="moon-phase-content">
-          <div className="moon-phase-insight">
-            <div dangerouslySetInnerHTML={{ __html: moonPhaseData.text }} />
+                    <div className="moon-phase-insight">
+            <div dangerouslySetInnerHTML={{ __html: showingBrief && moonPhaseData.brief ? moonPhaseData.brief : moonPhaseData.text }} />
+            <button onClick={() => setShowingBrief(!showingBrief)} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', backgroundColor: '#7c63d8', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '1rem', fontWeight: '500' }} onMouseEnter={(e) => e.target.style.backgroundColor = '#6b52c1'} onMouseLeave={(e) => e.target.style.backgroundColor = '#7c63d8'}>{showingBrief ? '📖 Tell me more' : '📋 Show less'}</button>
           </div>
 
           {lastUpdated && (

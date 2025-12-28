@@ -12,9 +12,29 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
   const [error, setError] = useState(null);
   const [astroInfo, setAstroInfo] = useState(null);
   const [showingBrief, setShowingBrief] = useState(true);
+  const [userPreference, setUserPreference] = useState('full');
   const pollIntervalRef = useRef(null);
 
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
+
+  // Fetch user preferences once on mount
+  useEffect(() => {
+    const fetchPreferences = async () => {
+      try {
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const response = await fetch(`${API_URL}/user-profile/${userId}/preferences`, { headers });
+        if (response.ok) {
+          const data = await response.json();
+          setUserPreference(data.response_type || 'full');
+          // Set initial showing state based on preference
+          setShowingBrief(data.response_type === 'brief');
+        }
+      } catch (err) {
+        console.error('[COSMIC-WEATHER] Error fetching preferences:', err);
+      }
+    };
+    fetchPreferences();
+  }, [userId, token, API_URL]);
 
   useEffect(() => {
     return () => {
@@ -45,12 +65,12 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
         return null;
   }, [API_URL, userId]);
 
-    const loadCosmicWeather = useCallback(async () => {
+  const loadCosmicWeather = useCallback(async () => {
     setLoading(true);
     setError(null);
     setCosmicData(null);
     setGenerating(false);
-    setShowingBrief(true);
+    setShowingBrief(userPreference === 'brief');
 
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
@@ -62,7 +82,7 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
 
       const response = await fetchWithTokenRefresh(`${API_URL}/astrology-insights/cosmic-weather/${userId}`, { headers });
 
-            if (response.ok) {
+      if (response.ok) {
         const data = await response.json();
         setCosmicData({
           text: data.weather,
@@ -94,8 +114,8 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
         return;
       }
 
-                  let pollCount = 0;
-      const maxPolls = 30;  // 30 seconds polling
+      let pollCount = 0;
+      const maxPolls = 30;
 
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current);
@@ -107,7 +127,7 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
         try {
           const pollResponse = await fetchWithTokenRefresh(`${API_URL}/astrology-insights/cosmic-weather/${userId}`, { headers });
 
-                    if (pollResponse.ok) {
+          if (pollResponse.ok) {
             const data = await pollResponse.json();
             setCosmicData({
               text: data.weather,
@@ -124,7 +144,7 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
           console.error('[COSMIC-WEATHER] Polling error:', err);
         }
 
-                        if (pollCount >= maxPolls) {
+        if (pollCount >= maxPolls) {
           setError('Cosmic weather generation is taking longer than expected. Please try again.');
           setGenerating(false);
           setLoading(false);
@@ -136,7 +156,7 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
       setError('Unable to load today\'s cosmic weather. Please try again.');
       setLoading(false);
     }
-  }, [userId, token, API_URL, astroInfo, fetchAstroInfo]);
+  }, [userId, token, API_URL, astroInfo, fetchAstroInfo, userPreference]);
 
   useEffect(() => {
     loadCosmicWeather();
@@ -184,9 +204,11 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
             {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
           </div>
 
-                              <div className="cosmic-weather-text">
+          <div className="cosmic-weather-text">
             <div dangerouslySetInnerHTML={{ __html: showingBrief && cosmicData.brief ? cosmicData.brief : cosmicData.text }} />
-            <button onClick={() => setShowingBrief(!showingBrief)} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', backgroundColor: '#7c63d8', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '1rem', fontWeight: '500' }} onMouseEnter={(e) => e.target.style.backgroundColor = '#6b52c1'} onMouseLeave={(e) => e.target.style.backgroundColor = '#7c63d8'}>{showingBrief ? '📖 Tell me more' : '📋 Show less'}</button>
+            {cosmicData.brief && (
+              <button onClick={() => setShowingBrief(!showingBrief)} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', backgroundColor: '#7c63d8', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '1rem', fontWeight: '500' }} onMouseEnter={(e) => e.target.style.backgroundColor = '#6b52c1'} onMouseLeave={(e) => e.target.style.backgroundColor = '#7c63d8'}>{showingBrief ? '📖 Tell me more' : '📋 Show less'}</button>
+            )}
           </div>
 
           {/* Desktop: Two Columns */}

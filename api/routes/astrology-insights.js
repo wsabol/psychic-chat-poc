@@ -12,22 +12,27 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
     const { userId } = req.params;
     const today = new Date().toISOString().split('T')[0];
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
-        const userIdHash = hashUserId(userId);
-          // Use user_id_hash for preferences
-    const prefResult = await db.query(`SELECT response_type FROM user_preferences WHERE user_id_hash = $1`, [userIdHash]);
-    const userPreference = prefResult.rows[0]?.response_type || 'full';
-    let contentColumn = 'content_full_encrypted';
-    if (userPreference === 'brief') contentColumn = 'COALESCE(content_brief_encrypted, content_full_encrypted)';
-    const query = `SELECT pgp_sym_decrypt(${contentColumn}, $2)::text as content FROM messages WHERE user_id_hash = $1 AND role = 'cosmic_weather' ORDER BY created_at DESC LIMIT 5`;
+    const userIdHash = hashUserId(userId);
     
     try {
+        // Fetch BOTH full and brief content
+        const query = `SELECT 
+                pgp_sym_decrypt(content_full_encrypted, $2)::text as content_full,
+                pgp_sym_decrypt(content_brief_encrypted, $2)::text as content_brief
+            FROM messages 
+            WHERE user_id_hash = $1 AND role = 'cosmic_weather' 
+            ORDER BY created_at DESC LIMIT 5`;
         const { rows } = await db.query(query, [userIdHash, ENCRYPTION_KEY]);
         
         let todaysWeather = null;
+        let briefWeather = null;
         for (const row of rows) {
-            const data = typeof row.content === 'string' ? JSON.parse(row.content) : row.content;
+            const data = typeof row.content_full === 'string' ? JSON.parse(row.content_full) : row.content_full;
             if (data.date === today) {
                 todaysWeather = data;
+                if (row.content_brief) {
+                    briefWeather = typeof row.content_brief === 'string' ? JSON.parse(row.content_brief) : row.content_brief;
+                }
                 break;
             }
         }
@@ -38,6 +43,7 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
         
         res.json({
             weather: todaysWeather.text,
+            brief: briefWeather?.text || null,
             birthChart: todaysWeather.birth_chart,
             currentPlanets: todaysWeather.planets
         });
@@ -66,7 +72,7 @@ router.get("/lunar-nodes/:userId", authenticateToken, authorizeUser, async (req,
     const userIdHash = hashUserId(userId);
     
     try {
-                const { rows } = await db.query(
+        const { rows } = await db.query(
             `SELECT 
                 pgp_sym_decrypt(content_full_encrypted, $2)::text as content
              FROM messages 

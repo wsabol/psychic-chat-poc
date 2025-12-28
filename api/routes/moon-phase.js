@@ -24,28 +24,37 @@ router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
         const today = new Date().toISOString().split('T')[0];
         const now = new Date();
         const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-                const userIdHash = hashUserId(userId);
-                  const prefResult = await db.query(`SELECT response_type FROM user_preferences WHERE user_id_hash = $1`, [userIdHash]);
-        const userPreference = prefResult.rows[0]?.response_type || 'full';
-        let contentColumn = 'content_full_encrypted';
-        if (userPreference === 'brief') contentColumn = 'COALESCE(content_brief_encrypted, content_full_encrypted)';
-        const query = `SELECT pgp_sym_decrypt(${contentColumn}, $2)::text as content, created_at FROM messages WHERE user_id_hash = $1 AND role = 'moon_phase' ORDER BY created_at DESC LIMIT 10`;
-                // Get recent moon phase commentaries
+        const userIdHash = hashUserId(userId);
+        
+        // Fetch BOTH full and brief content
+        const query = `SELECT 
+                pgp_sym_decrypt(content_full_encrypted, $2)::text as content_full,
+                pgp_sym_decrypt(content_brief_encrypted, $2)::text as content_brief,
+                created_at 
+            FROM messages 
+            WHERE user_id_hash = $1 AND role = 'moon_phase' 
+            ORDER BY created_at DESC LIMIT 10`;
         const { rows } = await db.query(query, [userIdHash, process.env.ENCRYPTION_KEY]);
         
         // Find one from today matching this phase that's less than 24 hours old
         let validCommentary = null;
+        let briefCommentary = null;
         let staleEntriesExist = false;
         let needsRefresh = false;
         
         for (const row of rows) {
-            if (!row.content) continue;
+            if (!row.content_full) continue;
             
-            let commentary;
+            let commentary, briefContent;
             try {
-                commentary = typeof row.content === 'string' 
-                    ? JSON.parse(row.content) 
-                    : row.content;
+                commentary = typeof row.content_full === 'string' 
+                    ? JSON.parse(row.content_full) 
+                    : row.content_full;
+                if (row.content_brief) {
+                    briefContent = typeof row.content_brief === 'string'
+                        ? JSON.parse(row.content_brief)
+                        : row.content_brief;
+                }
             } catch (e) {
                 console.warn('[MOON-PHASE] Failed to parse commentary:', e.message);
                 continue;
@@ -62,6 +71,7 @@ router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
                     needsRefresh = true;
                 } else {
                     validCommentary = commentary;
+                    briefCommentary = briefContent;
                     break;
                 }
             }
@@ -93,7 +103,11 @@ router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
             return res.status(404).json({ error: 'No moon phase commentary found. Generating now...' });
         }
         
-        res.json({ commentary: validCommentary.text, generated_at: validCommentary.generated_at });
+        res.json({ 
+            commentary: validCommentary.text, 
+            brief: briefCommentary?.text || null,
+            generated_at: validCommentary.generated_at 
+        });
         
     } catch (err) {
         console.error('[MOON-PHASE API] Error fetching commentary:', err);

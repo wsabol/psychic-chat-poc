@@ -8,7 +8,8 @@ export default function ChatMessageList({
   messages = [], 
   messagesEndRef, 
   timerActive, 
-  timeRemaining 
+  timeRemaining,
+  defaultShowBrief = true
 }) {
   return (
     <div className="chat-messages" style={{ position: 'relative' }}>
@@ -18,7 +19,7 @@ export default function ChatMessageList({
         </div>
       ) : (
         messages.map((msg, idx) => (
-          <ChatMessage key={idx} msg={msg} />
+          <ChatMessage key={idx} msg={msg} defaultShowBrief={defaultShowBrief} />
         ))
       )}
       <div ref={messagesEndRef} />

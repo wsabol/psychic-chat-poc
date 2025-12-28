@@ -68,8 +68,8 @@ function cleanMarkdownToHTML(text) {
   return paragraphs;
 }
 
-export default function ChatMessage({ msg }) {
-  const [showingBrief, setShowingBrief] = useState(true);
+export default function ChatMessage({ msg, defaultShowBrief = true }) {
+  const [showingBrief, setShowingBrief] = useState(defaultShowBrief);
   let fullText = msg.content;
   let briefText = null;
   let cards = null;
