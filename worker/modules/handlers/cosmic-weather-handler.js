@@ -104,8 +104,14 @@ Do NOT include tarot cards - this is pure astrological forecasting enriched by t
             },
             planets: planets,
             generated_at: new Date().toISOString(),
+                        date: today
+        };
+        const cosmicWeatherDataBrief = {
+            text: oracleResponses.brief,
+            generated_at: new Date().toISOString(),
             date: today
-        });
+        };
+        await storeMessage(userId, 'cosmic_weather', cosmicWeatherDataFull, cosmicWeatherDataBrief);
     } catch (err) {
         console.error('[COSMIC-WEATHER-HANDLER] Error:', err.message);
         throw err;

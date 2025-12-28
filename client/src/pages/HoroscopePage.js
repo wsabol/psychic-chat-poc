@@ -12,6 +12,7 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState(null);
   const [astroInfo, setAstroInfo] = useState(null);
+  const [showingBrief, setShowingBrief] = useState(true);
   const pollIntervalRef = useRef(null);
 
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
@@ -68,13 +69,15 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
       // Try to fetch cached horoscope
       const response = await fetch(`${API_URL}/horoscope/${userId}/${horoscopeRange}`, { headers });
 
-      if (response.ok) {
+            if (response.ok) {
         const data = await response.json();
         setHoroscopeData({
           text: data.horoscope,
+          brief: data.brief,
           generatedAt: data.generated_at,
           range: horoscopeRange
         });
+        setShowingBrief(false);
         setLoading(false);
         return;
       }
@@ -116,11 +119,13 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
 
           if (pollResponse.ok) {
             const data = await pollResponse.json();
-            setHoroscopeData({
+                        setHoroscopeData({
               text: data.horoscope,
+              brief: data.brief,
               generatedAt: data.generated_at,
               range: horoscopeRange
             });
+            setShowingBrief(false);
             setGenerating(false);
             setLoading(false);
             clearInterval(pollIntervalRef.current);
@@ -296,8 +301,11 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
             </p>
           </div>
 
-          <div className="horoscope-text">
-            <div dangerouslySetInnerHTML={{ __html: horoscopeData.text }} />
+                              <div className="horoscope-text">
+            <div dangerouslySetInnerHTML={{ __html: showingBrief && horoscopeData.brief ? horoscopeData.brief : horoscopeData.text }} />
+            {horoscopeData.brief && (
+              <button onClick={() => setShowingBrief(!showingBrief)} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', backgroundColor: '#7c63d8', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '1rem', fontWeight: '500' }} onMouseEnter={(e) => e.target.style.backgroundColor = '#6b52c1'} onMouseLeave={(e) => e.target.style.backgroundColor = '#7c63d8'}>{showingBrief ? '📖 Tell me more' : '📋 Show less'}</button>
+            )}
           </div>
 
           {/* Sun Sign Info Below Horoscope */}

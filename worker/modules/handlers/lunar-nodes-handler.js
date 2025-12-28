@@ -30,17 +30,18 @@ Do NOT include tarot cards.
 
 Provide insight into their soul's journey and purpose.`;
         
-        const oracleResponse = await callOracle(systemPrompt, [], prompt);
+        const oracleResponses = await callOracle(systemPrompt, [], prompt, true);
         
-        await storeMessage(userId, 'lunar_nodes', {
-            text: oracleResponse,
+        const lunarNodesDataFull = {
+            text: oracleResponses.full,
             north_node_sign: astro.north_node_sign,
             north_node_degree: astro.north_node_degree,
             south_node_sign: astro.south_node_sign,
             south_node_degree: astro.south_node_degree,
             generated_at: new Date().toISOString()
-        });
-        
+        };
+        const lunarNodesDataBrief = { text: oracleResponses.brief, generated_at: new Date().toISOString() };
+        await storeMessage(userId, 'lunar_nodes', lunarNodesDataFull, lunarNodesDataBrief);
     } catch (err) {
         console.error('[LUNAR-NODES-HANDLER] Error:', err.message);
         throw err;

@@ -8,7 +8,6 @@ import { db } from "../shared/db.js";
 import { containsHealthContent, detectHealthKeywords, getBlockedResponse } from "../shared/healthGuardrail.js";
 import { logAudit } from "../shared/auditLog.js";
 import { hashUserId } from "../shared/hashUtils.js";
-import { encrypt } from "../utils/encryption.js";
 
 const router = Router();
 
@@ -91,17 +90,14 @@ router.get("/history/:userId", authorizeUser, verify2FA, async (req, res) => {
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
     try {
         const userIdHash = hashUserId(userId);
-        const encryptedUserId = encrypt(userId);
-        const prefResult = await db.query(
-            `SELECT response_type FROM user_preferences WHERE user_id_encrypted = $1`,
-            [encryptedUserId]
-        );
-        const userPreference = prefResult.rows[0]?.response_type || 'full';
-        let contentColumn = 'content_full_encrypted';
-        if (userPreference === 'brief') {
-            contentColumn = 'COALESCE(content_brief_encrypted, content_full_encrypted)';
-        }
-        const query = `SELECT id, role, pgp_sym_decrypt(${contentColumn}, $2)::text as content FROM messages WHERE user_id_hash=$1 ORDER BY created_at ASC`;
+        // Return BOTH full and brief content so frontend can toggle between them
+        const query = `SELECT id, role, 
+            pgp_sym_decrypt(content_full_encrypted, $2)::text as content, 
+            pgp_sym_decrypt(content_brief_encrypted, $2)::text as brief_content 
+        FROM messages 
+        WHERE user_id_hash=$1 
+        ORDER BY created_at ASC`;
+        
         const { rows } = await db.query(query, [userIdHash, ENCRYPTION_KEY]);
         res.json(rows);
     } catch (err) {

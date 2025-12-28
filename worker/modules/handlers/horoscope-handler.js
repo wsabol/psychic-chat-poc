@@ -36,7 +36,7 @@ export async function generateHoroscope(userId, range = 'daily') {
         const generatedAt = new Date().toISOString();
         
         // Generate daily and weekly horoscopes (monthly kept in DB but removed from UI for now)
-        const ranges = ['daily', 'weekly'];
+        const ranges = [range];
         
         for (const currentRange of ranges) {
             try {

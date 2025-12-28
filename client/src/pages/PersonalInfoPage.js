@@ -27,21 +27,20 @@ function parseDateForStorage(dateString) {
     if (!dateString) return '';
     try {
         const months = {
-            'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '06',
-            'Jul': '07', 'Aug': '08', 'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'
+            'jan': '01', 'january': '01', 'feb': '02', 'february': '02', 'mar': '03', 'march': '03',
+            'apr': '04', 'april': '04', 'may': '05', 'jun': '06', 'june': '06', 'jul': '07', 'july': '07',
+            'aug': '08', 'august': '08', 'sep': '09', 'sept': '09', 'september': '09',
+            'oct': '10', 'october': '10', 'nov': '11', 'november': '11', 'dec': '12', 'december': '12'
         };
-        const parts = dateString.trim().split('-');
+        const parts = dateString.trim().split(/[\s\-\/]+/);
         if (parts.length !== 3) return dateString;
-        
-        const day = parts[0].trim().padStart(2, '0');
-        const monthStr = parts[1].trim();
+        const day = parseInt(parts[0].trim(), 10);
+        const monthStr = parts[1].trim().toLowerCase();
         const month = months[monthStr];
-        const year = parts[2].trim();
-        
-        if (!month) {
-            return dateString;
-        }
-        return `${year}-${month}-${day}`;
+        const year = parseInt(parts[2].trim(), 10);
+        if (!month) return dateString;
+        const paddedDay = day.toString().padStart(2, '0');
+        return `${year}-${month}-${paddedDay}`;
     } catch (e) {
         return dateString;
     }

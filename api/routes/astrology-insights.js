@@ -3,7 +3,7 @@ import { hashUserId } from "../shared/hashUtils.js";
 import { enqueueMessage } from "../shared/queue.js";
 import { authenticateToken, authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
-import { encrypt } from "../utils/encryption.js";
+
 
 const router = Router();
 
@@ -13,8 +13,8 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
     const today = new Date().toISOString().split('T')[0];
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
         const userIdHash = hashUserId(userId);
-    const encryptedUserId = encrypt(userId);
-    const prefResult = await db.query(`SELECT response_type FROM user_preferences WHERE user_id_encrypted = $1`, [encryptedUserId]);
+          // Use user_id_hash for preferences
+    const prefResult = await db.query(`SELECT response_type FROM user_preferences WHERE user_id_hash = $1`, [userIdHash]);
     const userPreference = prefResult.rows[0]?.response_type || 'full';
     let contentColumn = 'content_full_encrypted';
     if (userPreference === 'brief') contentColumn = 'COALESCE(content_brief_encrypted, content_full_encrypted)';
@@ -104,8 +104,8 @@ router.get("/void-of-course/:userId", authenticateToken, authorizeUser, async (r
     const today = new Date().toISOString().split('T')[0];
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
     const userIdHash = hashUserId(userId);
-    const encryptedUserId = encrypt(userId);
-    const prefResult = await db.query(`SELECT response_type FROM user_preferences WHERE user_id_encrypted = $1`, [encryptedUserId]);
+          // Use user_id_hash for preferences
+    const prefResult = await db.query(`SELECT response_type FROM user_preferences WHERE user_id_hash = $1`, [userIdHash]);
     const userPreference = prefResult.rows[0]?.response_type || 'full';
     let contentColumn = 'content_full_encrypted';
     if (userPreference === 'brief') contentColumn = 'COALESCE(content_brief_encrypted, content_full_encrypted)';

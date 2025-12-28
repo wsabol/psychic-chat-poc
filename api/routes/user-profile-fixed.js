@@ -6,21 +6,79 @@ import { enqueueMessage } from "../shared/queue.js";
 import { validateAge } from "../shared/ageValidator.js";
 import { handleAgeViolation } from "../shared/violationHandler.js";
 import { encrypt } from "../utils/encryption.js";
+import { savePreferences } from "./preferences-fix.js";
 
 const router = Router();
 
 function parseDateForStorage(dateString) {
     if (!dateString) return null;
     try {
-        // Frontend sends ISO format (YYYY-MM-DD). Just validate and return it.
-        const isoRegex = /^\d{4}-\d{2}-\d{2}$/;
-        const trimmed = dateString.trim();
-        if (isoRegex.test(trimmed)) {
-            return trimmed;
+        const months = { 
+            'jan': '01', 'january': '01',
+            'feb': '02', 'february': '02',
+            'mar': '03', 'march': '03',
+            'apr': '04', 'april': '04',
+            'may': '05',
+            'jun': '06', 'june': '06',
+            'jul': '07', 'july': '07',
+            'aug': '08', 'august': '08',
+            'sep': '09', 'sept': '09', 'september': '09',
+            'oct': '10', 'october': '10',
+            'nov': '11', 'november': '11',
+            'dec': '12', 'december': '12'
+        };
+        
+        const normalized = dateString.trim();
+        let day, monthStr, year;
+        const separators = ['-', ' ', '/'];
+        
+        for (const sep of separators) {
+            if (normalized.includes(sep)) {
+                const parts = normalized.split(sep).filter(p => p.trim().length > 0);
+                if (parts.length === 3) {
+                    day = parts[0].trim();
+                    monthStr = parts[1].trim().toLowerCase();
+                    year = parts[2].trim();
+                    break;
+                }
+            }
         }
-        return null;
+        
+        if (!day || !monthStr || !year) {
+            console.error('[DATE] Could not parse:', dateString);
+            return null;
+        }
+        
+        const month = months[monthStr];
+        if (!month) {
+            console.error('[DATE] Unknown month:', monthStr);
+            return null;
+        }
+        
+        const dayNum = parseInt(day, 10);
+        const yearNum = parseInt(year, 10);
+        
+        if (isNaN(dayNum) || isNaN(yearNum)) {
+            console.error('[DATE] NaN parsing day/year');
+            return null;
+        }
+        
+        if (dayNum < 1 || dayNum > 31) {
+            console.error('[DATE] Day out of range:', dayNum);
+            return null;
+        }
+        
+        if (yearNum < 1800 || yearNum > 2100) {
+            console.error('[DATE] Year out of range:', yearNum);
+            return null;
+        }
+        
+        const paddedDay = dayNum.toString().padStart(2, '0');
+        const result = `${yearNum}-${month}-${paddedDay}`;
+        console.log('[DATE] Parsed successfully:', dateString, '→', result);
+        return result;
     } catch (e) {
-        console.error('Date parsing error:', e, dateString);
+        console.error('[DATE] Exception:', e.message);
         return null;
     }
 }
@@ -60,7 +118,7 @@ router.post("/:userId", authorizeUser, async (req, res) => {
         const parsedBirthDate = parseDateForStorage(birthDate);
         
         if (!parsedBirthDate || parsedBirthDate === 'Invalid Date') {
-            return res.status(400).json({ error: 'Invalid birth date format' });
+            return res.status(400).json({ error: 'Invalid birth date format. Accepted formats: dd-mmm-yyyy, dd mmm yyyy, dd/mmm/yyyy (e.g., 01 Sep 1976 or 01-sep-1976)' });
         }
 
         // ✅ ENFORCE: Validate birth date format and age
@@ -186,11 +244,9 @@ router.delete("/:userId/astrology-cache", authorizeUser, async (req, res) => {
 router.get("/:userId/preferences", authorizeUser, async (req, res) => {
     const { userId } = req.params;
     try {
-        const userIdHash = hashUserId(userId);
-        
-        const { rows } = await db.query(
-            `SELECT language, response_type, voice_enabled FROM user_preferences WHERE user_id_hash = $1`,
-            [userIdHash]
+                        const { rows } = await db.query(
+                        `SELECT language, response_type, voice_enabled FROM user_preferences WHERE user_id_hash = $1`,
+            [hashUserId(userId)]
         );
         
         if (rows.length === 0) {
@@ -228,22 +284,10 @@ router.post("/:userId/preferences", authorizeUser, async (req, res) => {
             return res.status(400).json({ error: 'Invalid response_type' });
         }
         
-                const userIdHash = hashUserId(userId);
+                        // Use savePreferences helper that properly checks before insert/update
         
-        // Upsert preferences
-        const { rows } = await db.query(
-            `INSERT INTO user_preferences (user_id_hash, language, response_type, voice_enabled)
-             VALUES ($1, $2, $3, $4)
-             ON CONFLICT (user_id_hash) DO UPDATE SET
-             language = EXCLUDED.language,
-             response_type = EXCLUDED.response_type,
-             voice_enabled = EXCLUDED.voice_enabled,
-             updated_at = CURRENT_TIMESTAMP
-             RETURNING language, response_type, voice_enabled`,
-            [userIdHash, language, response_type, voice_enabled !== false]
-        );
-        
-        res.json({ success: true, preferences: rows[0] });
+        const prefs = await savePreferences(userId, language, response_type, voice_enabled, db, db);
+        res.json({ success: true, preferences: prefs });
     } catch (err) {
         console.error('Error saving preferences:', err);
         res.status(500).json({ error: 'Failed to save preferences', details: err.message });

@@ -3,7 +3,7 @@ import { hashUserId } from "../shared/hashUtils.js";
 import { enqueueMessage } from "../shared/queue.js";
 import { authenticateToken, authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
-import { encrypt } from "../utils/encryption.js";
+
 
 const router = Router();
 
@@ -22,18 +22,17 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
             return res.status(400).json({ error: 'Invalid range. Must be daily or weekly.' });
         }
         
-        const today = new Date().toISOString().split('T')[0];
+                const today = new Date().toISOString().split('T')[0];
         const userIdHash = hashUserId(userId);
-        const encryptedUserId = encrypt(userId);
-        const prefResult = await db.query(`SELECT response_type FROM user_preferences WHERE user_id_encrypted = $1`, [encryptedUserId]);
-        const userPreference = prefResult.rows[0]?.response_type || 'full';
-        let contentColumn = 'content_full_encrypted';
-                if (userPreference === 'brief') contentColumn = 'COALESCE(content_brief_encrypted, content_full_encrypted)';
-        const query = `SELECT pgp_sym_decrypt(${contentColumn}, $2)::text as content, created_at FROM messages WHERE user_id_hash = $1 AND role = 'horoscope' ORDER BY created_at DESC LIMIT 100`;
-        // Get recent horoscopes (limited to last 100 to avoid huge queries)
-        // Decrypt encrypted messages using pgp_sym_decrypt, fall back to plain text
-                const { rows } = await db.query(
-           query,
+                // Fetch BOTH full and brief horoscopes
+        const { rows } = await db.query(
+            `SELECT 
+                pgp_sym_decrypt(content_full_encrypted, $2)::text as content_full,
+                pgp_sym_decrypt(content_brief_encrypted, $2)::text as content_brief,
+                created_at 
+                FROM messages 
+                WHERE user_id_hash = $1 AND role = 'horoscope' 
+                ORDER BY created_at DESC LIMIT 100`,
             [userIdHash, process.env.ENCRYPTION_KEY]
         );
         
@@ -41,33 +40,34 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
         let validHoroscope = null;
         let staleHoroscopesExist = false;
         
-        for (const row of rows) {
-            // Skip null/empty content
-            if (!row.content) continue;
+                for (const row of rows) {
+            if (!row.content_full) continue;
             
-            let horoscope;
+            let horoscope, briefContent;
             try {
-                horoscope = typeof row.content === 'string' 
-                    ? JSON.parse(row.content) 
-                    : row.content;
+                horoscope = typeof row.content_full === 'string' 
+                    ? JSON.parse(row.content_full) 
+                    : row.content_full;
+                if (row.content_brief) {
+                    briefContent = typeof row.content_brief === 'string'
+                        ? JSON.parse(row.content_brief)
+                        : row.content_brief;
+                }
             } catch (e) {
-                // Skip unparseable content
                 console.warn('[HOROSCOPE] Failed to parse horoscope:', e.message);
                 continue;
             }
             
-            // Skip if horoscope is null or missing generated_at
             if (!horoscope || !horoscope.generated_at) continue;
             
             const generatedDate = horoscope.generated_at.split('T')[0];
             
-            // Check if this horoscope is from today and matches the requested range
             if (generatedDate === today && horoscope.range === range.toLowerCase()) {
                 validHoroscope = horoscope;
+                briefHoroscope = briefContent;
                 break;
             }
             
-            // Mark that we have old horoscopes
             if (generatedDate !== today) {
                 staleHoroscopesExist = true;
             }
@@ -88,7 +88,11 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
             return res.status(404).json({ error: `No ${range} horoscope found. Generating now...` });
         }
         
-        res.json({ horoscope: validHoroscope.text, generated_at: validHoroscope.generated_at });
+        res.json({ 
+            horoscope: validHoroscope.text, 
+            brief: briefHoroscope?.text || null,
+            generated_at: validHoroscope.generated_at 
+        });
         
     } catch (err) {
         console.error('[HOROSCOPE] Error fetching horoscope:', err);
@@ -116,7 +120,7 @@ router.post("/:userId/:range", authenticateToken, authorizeUser, async (req, res
             return res.status(400).json({ error: 'Invalid range. Must be daily or weekly.' });
         }
         
-        // Enqueue horoscope generation job (generates all ranges)
+                // Enqueue horoscope generation job
         await enqueueMessage({
             userId,
             message: `[SYSTEM] Generate horoscope for ${range.toLowerCase()}`

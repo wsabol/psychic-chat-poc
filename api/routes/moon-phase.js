@@ -3,7 +3,7 @@ import { hashUserId } from "../shared/hashUtils.js";
 import { enqueueMessage } from "../shared/queue.js";
 import { authenticateToken, authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
-import { encrypt } from "../utils/encryption.js";
+
 
 const router = Router();
 
@@ -25,8 +25,7 @@ router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
         const now = new Date();
         const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
                 const userIdHash = hashUserId(userId);
-        const encryptedUserId = encrypt(userId);
-        const prefResult = await db.query(`SELECT response_type FROM user_preferences WHERE user_id_encrypted = $1`, [encryptedUserId]);
+                  const prefResult = await db.query(`SELECT response_type FROM user_preferences WHERE user_id_hash = $1`, [userIdHash]);
         const userPreference = prefResult.rows[0]?.response_type || 'full';
         let contentColumn = 'content_full_encrypted';
         if (userPreference === 'brief') contentColumn = 'COALESCE(content_brief_encrypted, content_full_encrypted)';

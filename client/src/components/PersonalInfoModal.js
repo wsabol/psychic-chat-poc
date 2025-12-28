@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getAstrologyFromBirthDate, getZodiacSignFromDate } from '../utils/astroUtils';
 import { COUNTRIES } from '../data/countries';
+import { parseDateForStorage } from '../utils/dateParser';
 
 function formatDateForDisplay(dateString) {
     if (!dateString) return '';
@@ -19,27 +20,6 @@ function formatDateForDisplay(dateString) {
     }
 }
 
-function parseDateForStorage(dateString) {
-    if (!dateString) return '';
-    try {
-        const months = { 'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '06',
-                        'Jul': '07', 'Aug': '08', 'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12' };
-        const parts = dateString.trim().split('-');
-        if (parts.length !== 3) return dateString;
-        
-        const day = parts[0].trim().padStart(2, '0');
-        const monthStr = parts[1].trim();
-        const month = months[monthStr];
-        const year = parts[2].trim();
-        
-        if (!month) {
-            return dateString;
-        }
-        return `${year}-${month}-${day}`;
-    } catch (e) {
-        return dateString;
-    }
-}
 
 function PersonalInfoModal({ userId, token, isOpen, isTemporaryAccount, onClose, onSave }) {
     const [formData, setFormData] = useState({
@@ -151,7 +131,7 @@ function PersonalInfoModal({ userId, token, isOpen, isTemporaryAccount, onClose,
             return;
         }
         if (!formData.birthDate) {
-            setError('Date of birth is required (format: dd-mmm-yyyy, e.g., 09-Feb-1956)');
+            setError('Date of birth is required (format: dd-mmm-yyyy, dd mmm yyyy, or dd/mmm/yyyy)');
             setLoading(false);
             return;
         }
@@ -308,7 +288,7 @@ function PersonalInfoModal({ userId, token, isOpen, isTemporaryAccount, onClose,
                                 name="birthDate"
                                 value={formData.birthDate}
                                 onChange={handleChange}
-                                placeholder="dd-mmm-yyyy (e.g., 09-Feb-1956)"
+                                placeholder="dd-mmm-yyyy, dd mmm yyyy, or dd/mmm/yyyy (e.g., 26-Jun-1995 or 26 jun 1995)"
                                 required
                                 style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
                             />

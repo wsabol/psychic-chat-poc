@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { getCardImageByID, getCardImageByName } from '../utils/cardImageMap.js';
 
 function TarotCard({ card }) {
@@ -68,38 +69,82 @@ function cleanMarkdownToHTML(text) {
 }
 
 export default function ChatMessage({ msg }) {
-  let messageText = msg.content;
+  const [showingBrief, setShowingBrief] = useState(true);
+  let fullText = msg.content;
+  let briefText = null;
   let cards = null;
 
+  // Parse full content
   if (typeof msg.content === 'string') {
     try {
       const parsed = JSON.parse(msg.content);
       if (parsed.text && parsed.cards) {
-        messageText = parsed.text;
+        fullText = parsed.text;
         cards = parsed.cards;
       } else {
-        messageText = msg.content;
+        fullText = msg.content;
       }
     } catch {
-      messageText = msg.content;
+      fullText = msg.content;
     }
   } else if (typeof msg.content === 'object' && msg.content !== null) {
     if (msg.content.text) {
-      messageText = msg.content.text;
+      fullText = msg.content.text;
       cards = msg.content.cards || null;
     }
   }
+
+  // Parse brief content if it exists
+  if (msg.brief_content) {
+    if (typeof msg.brief_content === 'string') {
+      try {
+        const parsed = JSON.parse(msg.brief_content);
+        briefText = parsed.text || msg.brief_content;
+      } catch {
+        briefText = msg.brief_content;
+      }
+    } else if (typeof msg.brief_content === 'object' && msg.brief_content.text) {
+      briefText = msg.brief_content.text;
+    }
+  }
+
+  // Check if we have both brief and full (determines if toggle should show)
+  const hasToggle = msg.role === 'assistant' && briefText;
+  const displayText = (showingBrief && briefText) ? briefText : fullText;
 
   return (
     <div className={`chat-message chat-message-${msg.role}`}>
       <div className="message-content">
         {msg.role === 'assistant' ? (
           <>
-            <div dangerouslySetInnerHTML={{ __html: cleanMarkdownToHTML(messageText) }} />
+            <div dangerouslySetInnerHTML={{ __html: cleanMarkdownToHTML(displayText) }} />
             {cards && <CardsDisplay cards={cards} />}
+            
+            {/* Toggle button for brief/full responses */}
+            {hasToggle && (
+              <button
+                onClick={() => setShowingBrief(!showingBrief)}
+                style={{
+                  marginTop: '1rem',
+                  padding: '0.5rem 1rem',
+                  backgroundColor: '#7c63d8',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                  fontWeight: '500',
+                  transition: 'background-color 0.3s'
+                }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#6b52c1'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = '#7c63d8'}
+              >
+                {showingBrief ? '📖 Tell me more' : '📋 Show less'}
+              </button>
+            )}
           </>
         ) : (
-          <div>{messageText}</div>
+          <div>{fullText}</div>
         )}
       </div>
     </div>

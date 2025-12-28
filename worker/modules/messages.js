@@ -59,10 +59,23 @@ export async function getMessageHistory(userId, limit = 10) {
 export async function storeMessage(userId, role, contentFull, contentBrief = null) {
     try {
         const userIdHash = hashUserId(userId);
+        const fullStr = JSON.stringify(contentFull).substring(0, 200);
+        const briefStr = contentBrief ? JSON.stringify(contentBrief).substring(0, 200) : 'NULL';
+        console.log('[MESSAGES] Storing:', { role, fullLength: JSON.stringify(contentFull).length, briefLength: contentBrief ? JSON.stringify(contentBrief).length : 0, fullPreview: fullStr, briefPreview: briefStr });
+        
+        // Always store both full and brief with proper parameter handling
+        const query = `INSERT INTO messages(user_id_hash, role, content_full_encrypted, content_brief_encrypted, response_type) 
+                       VALUES($1, $2, pgp_sym_encrypt($3, $4), pgp_sym_encrypt($5, $4), 'both')`;
+        
         await db.query(
-            `INSERT INTO messages(user_id_hash, role, content_full_encrypted, content_brief_encrypted, response_type) 
-             VALUES($1, $2, pgp_sym_encrypt($3, $4), ${contentBrief ? 'pgp_sym_encrypt($5, $4)' : 'NULL'}, ${contentBrief ? "'both'" : "'full'"})`,
-            contentBrief ? [userIdHash, role, JSON.stringify(contentFull), process.env.ENCRYPTION_KEY, JSON.stringify(contentBrief)] : [userIdHash, role, JSON.stringify(contentFull), process.env.ENCRYPTION_KEY]
+            query,
+            [
+                userIdHash,
+                role,
+                JSON.stringify(contentFull),
+                process.env.ENCRYPTION_KEY,
+                JSON.stringify(contentBrief || { text: '', cards: [] })
+            ]
         );
     } catch (err) {
         console.error('[MESSAGES] Error storing message:', err);

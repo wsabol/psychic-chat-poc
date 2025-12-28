@@ -13,7 +13,7 @@ export function validateDateFormat(dateString) {
     return { isValid: false, error: 'Date is required' };
   }
 
-  const dateRegex = /^(\d{1,2})-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(\d{4})$/i;
+  const dateRegex = /^(\d{1,2})[\s\-\/](Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[\s\-\/](\d{4})$/i;
   const match = dateString.trim().match(dateRegex);
 
   if (!match) {
@@ -80,7 +80,8 @@ export function checkAge(dateString) {
       'jul': 6, 'aug': 7, 'sep': 8, 'oct': 9, 'nov': 10, 'dec': 11
     };
 
-    const parts = dateString.trim().split('-');
+    // Split by any separator (dash, space, or slash)
+    const parts = dateString.trim().split(/[\s\-\/]+/);
     const day = parseInt(parts[0], 10);
     const month = months[parts[1].toLowerCase()];
     const year = parseInt(parts[2], 10);

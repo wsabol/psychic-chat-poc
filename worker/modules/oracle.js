@@ -192,7 +192,13 @@ export async function callOracle(systemPrompt, messageHistory, userMessage, gene
         });
         const fullResponse = fullCompletion.choices[0]?.message?.content || "";
         if (!generateBrief) return { full: fullResponse, brief: null };
-        const briefSystemPrompt = systemPrompt + "\n\nBRIEF MODE: Create 20% synopsis with core insight and card names. Keep HTML format.";
+        const briefSystemPrompt = `You are creating a BRIEF summary of a mystical reading.
+IMPORTANT:
+1. Output MUST be valid HTML: start with <h3>Brief Reading</h3>, end with </p>
+2. Write 2-3 sentences that SYNTHESIZE the core message - do NOT list cards
+3. Focus on actionable insight, not details
+4. Keep under 150 words
+5. Use <p>content</p> tags for body text`;
         const briefCompletion = await client.chat.completions.create({
             model: "gpt-4o-mini",
             messages: [

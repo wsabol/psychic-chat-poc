@@ -160,7 +160,8 @@ router.post('/check-2fa/:userId', async (req, res) => {
       const session = deviceCheckResult.rows[0];
       
       if (session.is_trusted && session.trust_expiry && new Date(session.trust_expiry) > new Date()) {
-        if (session.stored_ip === ipAddress && session.stored_ua === userAgent) {
+        // Only check user-agent, not IP (IP changes frequently on mobile)
+        if (session.stored_ua === userAgent) {
           deviceIsTrusted = true;
         } 
       } 
@@ -286,7 +287,8 @@ router.get('/check-current-device-trust/:userId', authenticateToken, async (req,
     if (result.rows.length > 0) {
       const session = result.rows[0];
       if (session.is_trusted && session.trust_expiry && new Date(session.trust_expiry) > new Date()) {
-        if (session.stored_ip === ipAddress && session.stored_ua === userAgent) {
+        // Only check user-agent, not IP (IP changes frequently on mobile)
+        if (session.stored_ua === userAgent) {
           isTrusted = true;
         }
       }

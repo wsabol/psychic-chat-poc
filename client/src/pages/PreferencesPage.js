@@ -71,9 +71,19 @@ function PreferencesPage({ userId, token, onNavigateToPage }) {
             }
 
             const data = await response.json();
-            setPreferences(data.preferences);
+            if (data.preferences) {
+                setPreferences({
+                    language: data.preferences.language,
+                    response_type: data.preferences.response_type,
+                    voice_enabled: data.preferences.voice_enabled
+                });
+            }
             setSuccess(true);
-            setTimeout(() => setSuccess(false), 3000);
+            // Close preferences panel after 1.5 seconds
+            setTimeout(() => {
+                setSuccess(false);
+                onNavigateToPage(0);
+            }, 1500);
         } catch (err) {
             console.error('Error saving preferences:', err);
             setError(err.message);

@@ -153,13 +153,12 @@ CREATE INDEX IF NOT EXISTS idx_current_period_end ON user_personal_info(current_
 
 CREATE TABLE IF NOT EXISTS user_preferences (
     id SERIAL PRIMARY KEY,
-    user_id_encrypted BYTEA NOT NULL UNIQUE,
+    user_id_hash VARCHAR(255) NOT NULL UNIQUE,
     language VARCHAR(10) DEFAULT 'en-US',
     response_type VARCHAR(20) DEFAULT 'full', -- 'full' or 'brief'
     voice_enabled BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id_encrypted) REFERENCES user_personal_info(user_id) ON DELETE CASCADE
-);
-
-CREATE INDEX IF NOT EXISTS idx_user_preferences_user_id ON user_preferences(user_id_encrypted);
+        );
+    
+    CREATE INDEX IF NOT EXISTS idx_user_preferences_user_id_hash ON user_preferences(user_id_hash);
