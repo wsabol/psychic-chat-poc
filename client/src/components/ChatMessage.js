@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSpeech } from '../hooks/useSpeech';
+import VoiceBar from './VoiceBar';
 import { getCardImageByID, getCardImageByName } from '../utils/cardImageMap.js';
 
 function TarotCard({ card }) {
@@ -68,8 +70,12 @@ function cleanMarkdownToHTML(text) {
   return paragraphs;
 }
 
-export default function ChatMessage({ msg, defaultShowBrief = true }) {
+export default function ChatMessage({ msg, defaultShowBrief = true, voiceEnabled = false, userId, token }) {
   const [showingBrief, setShowingBrief] = useState(defaultShowBrief);
+  const { speak, stop, pause, resume, isPlaying, isPaused, isLoading, error, isSupported, volume, setVolume, progress, updateProgress } = useSpeech();
+  const [hasAutoPlayed, setHasAutoPlayed] = useState(false);
+  const progressIntervalRef = useRef(null);
+  
   let fullText = msg.content;
   let briefText = null;
   let cards = null;
@@ -112,6 +118,45 @@ export default function ChatMessage({ msg, defaultShowBrief = true }) {
   const hasToggle = msg.role === 'assistant' && briefText;
   const displayText = (showingBrief && briefText) ? briefText : fullText;
 
+  // Auto-play if voice_enabled and this is a new assistant message
+  useEffect(() => {
+    if (voiceEnabled && isSupported && msg.role === 'assistant' && !hasAutoPlayed && displayText && !isPlaying) {
+      setHasAutoPlayed(true);
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        speak(displayText, { rate: 0.95, pitch: 1.2 });
+      }, 500);
+    }
+  }, [voiceEnabled, isSupported, msg.role, displayText, hasAutoPlayed, isPlaying, speak]);
+
+  // Update progress regularly while playing
+  useEffect(() => {
+    if (isPlaying) {
+      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = setInterval(() => {
+        updateProgress();
+      }, 100);
+    } else {
+      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+    }
+    
+    return () => {
+      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+    };
+  }, [isPlaying, updateProgress]);
+
+  const handlePlayVoice = () => {
+    speak(displayText, { rate: 0.95, pitch: 1.2 });
+  };
+
+  const handleTogglePause = () => {
+    if (isPlaying) {
+      pause();
+    } else if (isPaused) {
+      resume();
+    }
+  };
+
   return (
     <div className={`chat-message chat-message-${msg.role}`}>
       <div className="message-content">
@@ -119,6 +164,24 @@ export default function ChatMessage({ msg, defaultShowBrief = true }) {
           <>
             <div dangerouslySetInnerHTML={{ __html: cleanMarkdownToHTML(displayText) }} />
             {cards && <CardsDisplay cards={cards} />}
+            
+            {/* Voice Bar - Always visible for assistant messages if voice is supported */}
+            {isSupported && (
+              <VoiceBar
+                isPlaying={isPlaying}
+                isPaused={isPaused}
+                isLoading={isLoading}
+                error={error}
+                onPlay={handlePlayVoice}
+                onTogglePause={handleTogglePause}
+                onStop={stop}
+                isSupported={isSupported}
+                volume={volume}
+                onVolumeChange={setVolume}
+                progress={progress}
+                onUpdateProgress={updateProgress}
+              />
+            )}
             
             {/* Toggle button for brief/full responses */}
             {hasToggle && (

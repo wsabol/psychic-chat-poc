@@ -178,7 +178,7 @@ router.get("/:userId/preferences", authorizeUser, async (req, res) => {
     
     try {
         const { rows } = await db.query(
-            `SELECT language, response_type, voice_enabled FROM user_preferences WHERE user_id_hash = $1`,
+            `SELECT language, response_type, voice_enabled, COALESCE(voice_selected, 'sophia') as voice_selected FROM user_preferences WHERE user_id_hash = $1`,
             [userIdHash]
         );
         
@@ -186,7 +186,8 @@ router.get("/:userId/preferences", authorizeUser, async (req, res) => {
             return res.json({
                 language: 'en-US',
                 response_type: 'full',
-                voice_enabled: true
+                voice_enabled: true,
+                voice_selected: 'sophia'
             });
         }
         
@@ -200,7 +201,7 @@ router.get("/:userId/preferences", authorizeUser, async (req, res) => {
 // Save user preferences
 router.post("/:userId/preferences", authorizeUser, async (req, res) => {
     const { userId } = req.params;
-    const { language, response_type, voice_enabled } = req.body;
+    const { language, response_type, voice_enabled, voice_selected } = req.body;
     const userIdHash = hashUserId(userId);
     
     try {
@@ -215,17 +216,21 @@ router.post("/:userId/preferences", authorizeUser, async (req, res) => {
         if (!['full', 'brief'].includes(response_type)) {
             return res.status(400).json({ error: 'Invalid response_type' });
         }
+
+        const validVoices = ['sophia', 'cassandra', 'meridian', 'leo'];
+        const selectedVoice = validVoices.includes(voice_selected) ? voice_selected : 'sophia';
         
         const { rows } = await db.query(
-            `INSERT INTO user_preferences (user_id_hash, language, response_type, voice_enabled)
-             VALUES ($1, $2, $3, $4)
+            `INSERT INTO user_preferences (user_id_hash, language, response_type, voice_enabled, voice_selected)
+             VALUES ($1, $2, $3, $4, $5)
              ON CONFLICT (user_id_hash) DO UPDATE SET
              language = EXCLUDED.language,
              response_type = EXCLUDED.response_type,
              voice_enabled = EXCLUDED.voice_enabled,
+             voice_selected = EXCLUDED.voice_selected,
              updated_at = CURRENT_TIMESTAMP
-             RETURNING language, response_type, voice_enabled`,
-            [userIdHash, language, response_type, voice_enabled !== false]
+             RETURNING language, response_type, voice_enabled, voice_selected`,
+            [userIdHash, language, response_type, voice_enabled !== false, selectedVoice]
         );
         
         res.json({ success: true, preferences: rows[0] });

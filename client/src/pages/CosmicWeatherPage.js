@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useSpeech } from '../hooks/useSpeech';
+import VoiceBar from '../components/VoiceBar';
 import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
 import { isBirthInfoError, isBirthInfoMissing } from '../utils/birthInfoErrorHandler';
 import BirthInfoMissingPrompt from '../components/BirthInfoMissingPrompt';
@@ -11,13 +13,15 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState(null);
   const [astroInfo, setAstroInfo] = useState(null);
-  const [showingBrief, setShowingBrief] = useState(false); // Default to full
+  const [showingBrief, setShowingBrief] = useState(false);
   const [userPreference, setUserPreference] = useState('full');
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [hasAutoPlayed, setHasAutoPlayed] = useState(false);
   const pollIntervalRef = useRef(null);
+  const { speak, stop, pause, resume, isPlaying, isPaused, isLoading: isSpeechLoading, error: speechError, isSupported, volume, setVolume } = useSpeech();
 
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
-  // Fetch user preferences once on mount
   useEffect(() => {
     const fetchPreferences = async () => {
       try {
@@ -26,9 +30,7 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
         if (response.ok) {
           const data = await response.json();
           setUserPreference(data.response_type || 'full');
-          // Set initial showing state based on preference
-          // If preference is 'full', show full (showingBrief = false)
-          // If preference is 'brief', show brief (showingBrief = true)
+          setVoiceEnabled(data.voice_enabled !== false);
           setShowingBrief(data.response_type === 'brief');
         }
       } catch (err) {
@@ -45,6 +47,17 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
       }
     };
   }, []);
+
+  // Auto-play when cosmic weather data arrives
+  useEffect(() => {
+    if (voiceEnabled && isSupported && cosmicData && !hasAutoPlayed && !isPlaying) {
+      setHasAutoPlayed(true);
+      const textToRead = showingBrief && cosmicData?.brief ? cosmicData.brief : cosmicData?.text;
+      setTimeout(() => {
+        speak(textToRead, { rate: 0.95, pitch: 1.2 });
+      }, 500);
+    }
+  }, [voiceEnabled, isSupported, cosmicData, hasAutoPlayed, isPlaying, showingBrief, speak]);
 
   const fetchAstroInfo = useCallback(async (headers) => {
     try {
@@ -64,26 +77,26 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
     } catch (err) {
       console.error('[COSMIC-WEATHER] Error fetching astro info:', err);
     }
-        return null;
+    return null;
   }, [API_URL, userId]);
 
-    const loadCosmicWeather = useCallback(async () => {
+  const loadCosmicWeather = useCallback(async () => {
     setLoading(true);
     setError(null);
     setCosmicData(null);
     setGenerating(false);
+    setHasAutoPlayed(false);
 
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
 
-      // Fetch astro info if not already loaded
       if (!astroInfo) {
         await fetchAstroInfo(headers);
       }
 
       const response = await fetchWithTokenRefresh(`${API_URL}/astrology-insights/cosmic-weather/${userId}`, { headers });
 
-            if (response.ok) {
+      if (response.ok) {
         const data = await response.json();
         setCosmicData({
           text: data.weather,
@@ -105,7 +118,6 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
         const errorData = await generateResponse.json();
         const errorMsg = errorData.error || 'Could not generate cosmic weather';
         
-        // Check if this is a birth info error
         if (isBirthInfoError(errorMsg)) {
           setError('BIRTH_INFO_MISSING');
         } else {
@@ -115,8 +127,8 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
         return;
       }
 
-                  let pollCount = 0;
-      const maxPolls = 30;  // 30 seconds polling
+      let pollCount = 0;
+      const maxPolls = 30;
 
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current);
@@ -128,7 +140,7 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
         try {
           const pollResponse = await fetchWithTokenRefresh(`${API_URL}/astrology-insights/cosmic-weather/${userId}`, { headers });
 
-                    if (pollResponse.ok) {
+          if (pollResponse.ok) {
             const data = await pollResponse.json();
             setCosmicData({
               text: data.weather,
@@ -145,7 +157,7 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
           console.error('[COSMIC-WEATHER] Polling error:', err);
         }
 
-                        if (pollCount >= maxPolls) {
+        if (pollCount >= maxPolls) {
           setError('Cosmic weather generation is taking longer than expected. Please try again.');
           setGenerating(false);
           setLoading(false);
@@ -159,12 +171,24 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
     }
   }, [userId, token, API_URL, astroInfo, fetchAstroInfo]);
 
-  // Load cosmic weather AFTER preferences are loaded
   useEffect(() => {
     if (!loading) {
       loadCosmicWeather();
     }
-  }, [userPreference]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userPreference]);
+
+  const handleTogglePause = () => {
+    if (isPlaying) {
+      pause();
+    } else if (isPaused) {
+      resume();
+    }
+  };
+
+  const handlePlayVoice = () => {
+    const textToRead = showingBrief && cosmicData?.brief ? cosmicData.brief : cosmicData?.text;
+    speak(textToRead, { rate: 0.95, pitch: 1.2 });
+  };
 
   return (
     <div className="page-safe-area cosmic-weather-page">
@@ -173,21 +197,18 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
         <p className="cosmic-subtitle">Current planetary positions and their influence</p>
       </div>
 
-      {/* Birth Info Missing State */}
       {!loading && !error && isBirthInfoMissing(astroInfo) && (
         <BirthInfoMissingPrompt 
           onNavigateToPersonalInfo={() => onNavigateToPage && onNavigateToPage(2)}
         />
       )}
 
-      {/* Error State - Birth Info Missing */}
       {error && error === 'BIRTH_INFO_MISSING' && (
         <BirthInfoMissingPrompt 
           onNavigateToPersonalInfo={() => onNavigateToPage && onNavigateToPage(2)}
         />
       )}
 
-      {/* Error State - Other Errors */}
       {error && error !== 'BIRTH_INFO_MISSING' && (
         <div className="cosmic-content error">
           <p className="error-message">⚠️ {error}</p>
@@ -208,14 +229,29 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
             {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
           </div>
 
-                              <div className="cosmic-weather-text">
+          <div className="cosmic-weather-text">
             <div dangerouslySetInnerHTML={{ __html: showingBrief && cosmicData.brief ? cosmicData.brief : cosmicData.text }} />
+            
+            {/* Voice Bar */}
+            {isSupported && (
+              <VoiceBar
+                isPlaying={isPlaying}
+                isPaused={isPaused}
+                isLoading={isSpeechLoading}
+                error={speechError}
+                onPlay={handlePlayVoice}
+                onTogglePause={handleTogglePause}
+                onStop={stop}
+                isSupported={isSupported}
+                volume={volume}
+                onVolumeChange={setVolume}
+              />
+            )}
+            
             <button onClick={() => setShowingBrief(!showingBrief)} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', backgroundColor: '#7c63d8', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '1rem', fontWeight: '500' }} onMouseEnter={(e) => e.target.style.backgroundColor = '#6b52c1'} onMouseLeave={(e) => e.target.style.backgroundColor = '#7c63d8'}>{showingBrief ? '📖 Tell me more' : '📋 Show less'}</button>
           </div>
 
-          {/* Desktop: Two Columns */}
           <div className="cosmic-columns">
-            {/* Column 1: Birth Chart */}
             <div className="cosmic-column">
               <h3 className="column-title">Your Birth Chart</h3>
               {cosmicData.birthChart && (
@@ -236,7 +272,6 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
               )}
             </div>
 
-            {/* Column 2: Planets */}
             <div className="cosmic-column">
               <h3 className="column-title">Current Planets</h3>
               {cosmicData.planets && cosmicData.planets.length > 0 ? (
@@ -257,9 +292,7 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
             </div>
           </div>
 
-          {/* Mobile: Single Column */}
           <div className="cosmic-mobile">
-            {/* Birth Chart */}
             <div className="mobile-section">
               <h3>Your Birth Chart</h3>
               {cosmicData.birthChart && (
@@ -280,7 +313,6 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
               )}
             </div>
 
-            {/* Planets */}
             <div className="mobile-section">
               <h3>Current Planets</h3>
               {cosmicData.planets && cosmicData.planets.length > 0 ? (

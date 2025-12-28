@@ -1,27 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
-import { LANGUAGES, translations, t } from '../data/translations';
+import { useSpeech } from '../hooks/useSpeech';
+import { t } from '../data/translations';
+import LanguageSection from './PreferencesPage/LanguageSection';
+import ResponseTypeSection from './PreferencesPage/ResponseTypeSection';
+import VoiceSection from './PreferencesPage/VoiceSection';
+import ActionButtons from './PreferencesPage/ActionButtons';
 
 function PreferencesPage({ userId, token, onNavigateToPage }) {
     const [preferences, setPreferences] = useState({
         language: 'en-US',
         response_type: 'full',
-        voice_enabled: true
+        voice_enabled: true,
+        voice_selected: 'sophia'
     });
-
+    const [personalInfo, setPersonalInfo] = useState({ familiar_name: '' });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
+    const [previewingVoice, setPreviewingVoice] = useState(null);
 
+    const { speak, voiceGreetings, isSupported: isSpeechSupported } = useSpeech();
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
-    // Fetch preferences on mount
     useEffect(() => {
-        fetchPreferences();
+        fetchData();
     }, [userId, token, API_URL]);
 
-    const fetchPreferences = async () => {
+    const fetchData = async () => {
         try {
             setLoading(true);
             setError(null);
@@ -32,26 +39,26 @@ function PreferencesPage({ userId, token, onNavigateToPage }) {
                 return;
             }
             
-            const headers = {
-                'Authorization': `Bearer ${token}`
-            };
+            const headers = { 'Authorization': `Bearer ${token}` };
 
-            const response = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}/preferences`, { headers });
-            console.log('[PREFERENCES] GET response status:', response.status);
+            const prefResponse = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}/preferences`, { headers });
+            if (!prefResponse.ok) throw new Error('Failed to fetch preferences');
             
-            if (!response.ok) {
-                throw new Error('Failed to fetch preferences');
-            }
-
-            const data = await response.json();
-            console.log('[PREFERENCES] Fetched preferences:', data);
+            const prefData = await prefResponse.json();
             setPreferences({
-                language: data.language || 'en-US',
-                response_type: data.response_type || 'full',
-                voice_enabled: data.voice_enabled !== false
+                language: prefData.language || 'en-US',
+                response_type: prefData.response_type || 'full',
+                voice_enabled: prefData.voice_enabled !== false,
+                voice_selected: prefData.voice_selected || 'sophia'
             });
+
+            const personalResponse = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}`, { headers });
+            if (personalResponse.ok) {
+                const personalData = await personalResponse.json();
+                setPersonalInfo({ familiar_name: personalData.address_preference || 'Friend' });
+            }
         } catch (err) {
-            console.error('Error fetching preferences:', err);
+            console.error('Error fetching data:', err);
             setError(err.message);
         } finally {
             setLoading(false);
@@ -74,25 +81,21 @@ function PreferencesPage({ userId, token, onNavigateToPage }) {
                 body: JSON.stringify(preferences)
             });
 
-            console.log('[PREFERENCES] POST response status:', response.status);
-
             if (!response.ok) {
                 const errData = await response.json();
                 throw new Error(errData.error || 'Failed to save preferences');
             }
 
             const data = await response.json();
-            console.log('[PREFERENCES] Saved preferences:', data);
-            
             if (data.preferences) {
                 setPreferences({
                     language: data.preferences.language,
                     response_type: data.preferences.response_type,
-                    voice_enabled: data.preferences.voice_enabled
+                    voice_enabled: data.preferences.voice_enabled,
+                    voice_selected: data.preferences.voice_selected
                 });
             }
             setSuccess(true);
-            // Close preferences panel after 1.5 seconds
             setTimeout(() => {
                 setSuccess(false);
                 onNavigateToPage(0);
@@ -105,23 +108,30 @@ function PreferencesPage({ userId, token, onNavigateToPage }) {
         }
     };
 
-    const currentLang = preferences.language;
-    const currentTranslations = translations[currentLang] || translations['en-US'];
+    const handlePreviewVoice = (voiceName) => {
+        if (!isSpeechSupported) {
+            setError('Voice preview not supported in your browser');
+            return;
+        }
 
-    // Get translation function
-    const getString = (key) => t(currentLang, key);
+        setPreviewingVoice(voiceName);
+        const greeting = voiceGreetings[voiceName]?.[preferences.language];
+        if (greeting) {
+            const greetingText = greeting(personalInfo.familiar_name);
+            speak(greetingText, { voiceName, rate: 0.95, pitch: 1.2 });
+            setTimeout(() => setPreviewingVoice(null), 3000);
+        }
+    };
+
+    const getString = (key) => t(preferences.language, key);
 
     if (loading) {
-        return (
-            <div style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>
-                {getString('loading')}
-            </div>
-        );
+        return <div style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>{getString('loading')}</div>;
     }
 
     return (
         <div style={{
-            maxWidth: '600px',
+            maxWidth: '700px',
             margin: '0 auto',
             padding: '2rem',
             backgroundColor: '#fff',
@@ -165,271 +175,34 @@ function PreferencesPage({ userId, token, onNavigateToPage }) {
             )}
 
             <form onSubmit={handleSave}>
-                {/* Language Preference */}
-                <div style={{
-                    marginBottom: '2rem',
-                    paddingBottom: '2rem',
-                    borderBottom: '1px solid #eee'
-                }}>
-                    <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'flex-start',
-                        gap: '1rem'
-                    }}>
-                        <div style={{ flex: 1 }}>
-                            <label style={{
-                                display: 'block',
-                                marginBottom: '0.5rem',
-                                fontWeight: '600',
-                                color: '#333',
-                                fontSize: '16px'
-                            }}>
-                                {getString('language')}
-                            </label>
-                            <select
-                                value={preferences.language}
-                                onChange={(e) => setPreferences({
-                                    ...preferences,
-                                    language: e.target.value
-                                })}
-                                style={{
-                                    width: '100%',
-                                    padding: '8px 12px',
-                                    borderRadius: '6px',
-                                    border: '1px solid #ccc',
-                                    fontSize: '14px',
-                                    backgroundColor: '#fff',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                {Object.entries(LANGUAGES).map(([code, name]) => (
-                                    <option key={code} value={code}>{name}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div style={{
-                            flex: 0.6,
-                            fontSize: '13px',
-                            color: '#666',
-                            paddingTop: '26px',
-                            lineHeight: '1.4'
-                        }}>
-                            {getString('languageDescription')}
-                        </div>
-                    </div>
-                </div>
+                <LanguageSection
+                    value={preferences.language}
+                    onChange={(lang) => setPreferences({ ...preferences, language: lang })}
+                    getString={getString}
+                />
 
-                {/* Response Type */}
-                <div style={{
-                    marginBottom: '2rem',
-                    paddingBottom: '2rem',
-                    borderBottom: '1px solid #eee'
-                }}>
-                    <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'flex-start',
-                        gap: '1rem'
-                    }}>
-                        <div style={{ flex: 1 }}>
-                            <label style={{
-                                display: 'block',
-                                marginBottom: '0.75rem',
-                                fontWeight: '600',
-                                color: '#333',
-                                fontSize: '16px'
-                            }}>
-                                {getString('responseType')}
-                            </label>
-                            <div style={{ display: 'flex', gap: '1rem' }}>
-                                <label style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    cursor: 'pointer',
-                                    fontSize: '14px'
-                                }}>
-                                    <input
-                                        type="radio"
-                                        name="response_type"
-                                        value="full"
-                                        checked={preferences.response_type === 'full'}
-                                        onChange={(e) => setPreferences({
-                                            ...preferences,
-                                            response_type: e.target.value
-                                        })}
-                                        style={{
-                                            marginRight: '8px',
-                                            cursor: 'pointer'
-                                        }}
-                                    />
-                                    {getString('fullResponses')}
-                                </label>
-                                <label style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    cursor: 'pointer',
-                                    fontSize: '14px'
-                                }}>
-                                    <input
-                                        type="radio"
-                                        name="response_type"
-                                        value="brief"
-                                        checked={preferences.response_type === 'brief'}
-                                        onChange={(e) => setPreferences({
-                                            ...preferences,
-                                            response_type: e.target.value
-                                        })}
-                                        style={{
-                                            marginRight: '8px',
-                                            cursor: 'pointer'
-                                        }}
-                                    />
-                                    {getString('briefResponses')}
-                                </label>
-                            </div>
-                        </div>
-                        <div style={{
-                            flex: 0.6,
-                            fontSize: '13px',
-                            color: '#666',
-                            paddingTop: '36px',
-                            lineHeight: '1.4'
-                        }}>
-                            {getString('responseTypeDescription')}
-                        </div>
-                    </div>
-                </div>
+                <ResponseTypeSection
+                    value={preferences.response_type}
+                    onChange={(type) => setPreferences({ ...preferences, response_type: type })}
+                    getString={getString}
+                />
 
-                {/* Voice Responses */}
-                <div style={{
-                    marginBottom: '2rem',
-                    paddingBottom: '2rem'
-                }}>
-                    <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'flex-start',
-                        gap: '1rem'
-                    }}>
-                        <div style={{ flex: 1 }}>
-                            <label style={{
-                                display: 'block',
-                                marginBottom: '0.75rem',
-                                fontWeight: '600',
-                                color: '#333',
-                                fontSize: '16px'
-                            }}>
-                                {getString('voice')}
-                            </label>
-                            <div style={{ display: 'flex', gap: '1rem' }}>
-                                <label style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    cursor: 'pointer',
-                                    fontSize: '14px'
-                                }}>
-                                    <input
-                                        type="radio"
-                                        name="voice_enabled"
-                                        value="true"
-                                        checked={preferences.voice_enabled === true}
-                                        onChange={(e) => setPreferences({
-                                            ...preferences,
-                                            voice_enabled: e.target.value === 'true'
-                                        })}
-                                        style={{
-                                            marginRight: '8px',
-                                            cursor: 'pointer'
-                                        }}
-                                    />
-                                    {getString('voiceOn')}
-                                </label>
-                                <label style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    cursor: 'pointer',
-                                    fontSize: '14px'
-                                }}>
-                                    <input
-                                        type="radio"
-                                        name="voice_enabled"
-                                        value="false"
-                                        checked={preferences.voice_enabled === false}
-                                        onChange={(e) => setPreferences({
-                                            ...preferences,
-                                            voice_enabled: e.target.value === 'true'
-                                        })}
-                                        style={{
-                                            marginRight: '8px',
-                                            cursor: 'pointer'
-                                        }}
-                                    />
-                                    {getString('voiceOff')}
-                                </label>
-                            </div>
-                        </div>
-                        <div style={{
-                            flex: 0.6,
-                            fontSize: '13px',
-                            color: '#666',
-                            paddingTop: '36px',
-                            lineHeight: '1.4'
-                        }}>
-                            {getString('voiceDescription')}
-                        </div>
-                    </div>
-                </div>
+                <VoiceSection
+                    voiceEnabled={preferences.voice_enabled}
+                    voiceSelected={preferences.voice_selected}
+                    previewingVoice={previewingVoice}
+                    onVoiceEnabledChange={(enabled) => setPreferences({ ...preferences, voice_enabled: enabled })}
+                    onVoiceSelectedChange={(voice) => setPreferences({ ...preferences, voice_selected: voice })}
+                    onPreviewVoice={handlePreviewVoice}
+                    getString={getString}
+                />
 
-                {/* Action Buttons */}
-                <div style={{
-                    display: 'flex',
-                    gap: '1rem',
-                    marginTop: '2rem',
-                    paddingTop: '1.5rem',
-                    borderTop: '1px solid #eee'
-                }}>
-                    <button
-                        type="submit"
-                        disabled={saving}
-                        style={{
-                            flex: 1,
-                            padding: '12px',
-                            backgroundColor: '#9370db',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '6px',
-                            cursor: saving ? 'not-allowed' : 'pointer',
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            transition: 'background-color 0.3s'
-                        }}
-                        onMouseEnter={(e) => !saving && (e.target.style.backgroundColor = '#7b5bb5')}
-                        onMouseLeave={(e) => (e.target.style.backgroundColor = '#9370db')}
-                    >
-                        {saving ? getString('saving') : getString('save')}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => onNavigateToPage(0)}
-                        style={{
-                            flex: 1,
-                            padding: '12px',
-                            backgroundColor: '#ddd',
-                            color: '#333',
-                            border: 'none',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            transition: 'background-color 0.3s'
-                        }}
-                        onMouseEnter={(e) => (e.target.style.backgroundColor = '#ccc')}
-                        onMouseLeave={(e) => (e.target.style.backgroundColor = '#ddd')}
-                    >
-                        {getString('cancel')}
-                    </button>
-                </div>
+                <ActionButtons
+                    saving={saving}
+                    onSubmit={handleSave}
+                    onCancel={() => onNavigateToPage(0)}
+                    getString={getString}
+                />
             </form>
         </div>
     );

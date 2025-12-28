@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import { useSpeech } from '../hooks/useSpeech';
+import VoiceBar from '../components/VoiceBar';
 import { getAstrologyData } from '../utils/astroUtils';
 import { isBirthInfoError, isBirthInfoMissing } from '../utils/birthInfoErrorHandler';
 import BirthInfoMissingPrompt from '../components/BirthInfoMissingPrompt';
@@ -6,20 +8,22 @@ import '../styles/responsive.css';
 import './MoonPhasePage.css';
 
 export default function MoonPhasePage({ userId, token, auth, onNavigateToPage }) {
-      const [moonPhaseData, setMoonPhaseData] = useState(null);
+  const [moonPhaseData, setMoonPhaseData] = useState(null);
   const [currentPhase, setCurrentPhase] = useState(null);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState(null);
   const [astroInfo, setAstroInfo] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
-    const [showingBrief, setShowingBrief] = useState(false); // Default to full
+  const [showingBrief, setShowingBrief] = useState(false);
   const [userPreference, setUserPreference] = useState('full');
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [hasAutoPlayed, setHasAutoPlayed] = useState(false);
   const pollIntervalRef = useRef(null);
+  const { speak, stop, pause, resume, isPlaying, isPaused, isLoading: isSpeechLoading, error: speechError, isSupported, volume, setVolume } = useSpeech();
 
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
-  // Moon phase emojis and display info
   const moonPhaseEmojis = {
     newMoon: '🌑',
     waxingCrescent: '🌒',
@@ -33,7 +37,6 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
 
   const moonPhaseOrder = ['newMoon', 'waxingCrescent', 'firstQuarter', 'waxingGibbous', 'fullMoon', 'waningGibbous', 'lastQuarter', 'waningCrescent'];
 
-  // Calculate current moon phase (client-side as fallback)
   const calculateMoonPhase = () => {
     const now = new Date();
     const knownNewMoonDate = new Date(2025, 0, 29).getTime();
@@ -46,7 +49,6 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
     return moonPhaseOrder[phaseIndex];
   };
 
-      // Fetch user preferences once on mount
   useEffect(() => {
     const fetchPreferences = async () => {
       try {
@@ -55,9 +57,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
         if (response.ok) {
           const data = await response.json();
           setUserPreference(data.response_type || 'full');
-          // Set initial showing state based on preference
-          // If preference is 'full', show full (showingBrief = false)
-          // If preference is 'brief', show brief (showingBrief = true)
+          setVoiceEnabled(data.voice_enabled !== false);
           setShowingBrief(data.response_type === 'brief');
         }
       } catch (err) {
@@ -65,16 +65,14 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
       }
     };
     fetchPreferences();
-  }, [userId, token, API_URL]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userId, token, API_URL]);
 
-    // Load moon phase data AFTER preferences are loaded
   useEffect(() => {
     if (!loading) {
       loadMoonPhaseData();
     }
-  }, [userPreference]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userPreference]);
 
-  // Cleanup polling on unmount
   useEffect(() => {
     return () => {
       if (pollIntervalRef.current) {
@@ -82,6 +80,17 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
       }
     };
   }, []);
+
+  // Auto-play when moon phase data arrives
+  useEffect(() => {
+    if (voiceEnabled && isSupported && moonPhaseData && !hasAutoPlayed && !isPlaying) {
+      setHasAutoPlayed(true);
+      const textToRead = showingBrief && moonPhaseData?.brief ? moonPhaseData.brief : moonPhaseData?.text;
+      setTimeout(() => {
+        speak(textToRead, { rate: 0.95, pitch: 1.2 });
+      }, 500);
+    }
+  }, [voiceEnabled, isSupported, moonPhaseData, hasAutoPlayed, isPlaying, showingBrief, speak]);
 
   const fetchAstroInfo = async (headers) => {
     try {
@@ -104,29 +113,26 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
     return null;
   };
 
-    const loadMoonPhaseData = async () => {
+  const loadMoonPhaseData = async () => {
     setLoading(true);
     setError(null);
     setMoonPhaseData(null);
     setGenerating(false);
-    setShowingBrief(true);
+    setHasAutoPlayed(false);
 
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
 
-      // Fetch astro info if not already loaded
       if (!astroInfo) {
         await fetchAstroInfo(headers);
       }
 
-      // Determine current moon phase (use Python calculation if available)
       const calculatedPhase = calculateMoonPhase();
       setCurrentPhase(calculatedPhase);
 
-      // Try to fetch cached moon phase commentary
       const response = await fetch(`${API_URL}/moon-phase/${userId}?phase=${calculatedPhase}`, { headers });
 
-            if (response.ok) {
+      if (response.ok) {
         const data = await response.json();
         setMoonPhaseData({
           text: data.commentary,
@@ -139,7 +145,6 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
         return;
       }
 
-      // No cached commentary - trigger generation
       setGenerating(true);
       const generateResponse = await fetch(`${API_URL}/moon-phase/${userId}`, {
         method: 'POST',
@@ -151,7 +156,6 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
         const errorData = await generateResponse.json();
         const errorMsg = errorData.error || 'Could not generate moon phase commentary';
         
-        // Check if this is a birth info error
         if (isBirthInfoError(errorMsg)) {
           setError('BIRTH_INFO_MISSING');
         } else {
@@ -161,9 +165,8 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
         return;
       }
 
-                  // Start polling for generated commentary
       let pollCount = 0;
-      const maxPolls = 30;  // 30 seconds polling
+      const maxPolls = 30;
 
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current);
@@ -175,7 +178,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
         try {
           const pollResponse = await fetch(`${API_URL}/moon-phase/${userId}?phase=${calculatedPhase}`, { headers });
 
-                    if (pollResponse.ok) {
+          if (pollResponse.ok) {
             const data = await pollResponse.json();
             setMoonPhaseData({
               text: data.commentary,
@@ -193,7 +196,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
           console.error('[MOON-PHASE] Polling error:', err);
         }
 
-                        if (pollCount >= maxPolls) {
+        if (pollCount >= maxPolls) {
           setError('Moon phase commentary generation is taking longer than expected. Please try again.');
           setGenerating(false);
           setLoading(false);
@@ -216,29 +219,38 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
   const sunSignData = getSunSignInfo();
   const astro = astroInfo?.astrology_data || {};
 
+  const handleTogglePause = () => {
+    if (isPlaying) {
+      pause();
+    } else if (isPaused) {
+      resume();
+    }
+  };
+
+  const handlePlayVoice = () => {
+    const textToRead = showingBrief && moonPhaseData?.brief ? moonPhaseData.brief : moonPhaseData?.text;
+    speak(textToRead, { rate: 0.95, pitch: 1.2 });
+  };
+
   return (
     <div className="page-safe-area moon-phase-page">
-      {/* Header */}
       <div className="moon-phase-header">
         <h2 className="heading-primary">🌙 Moon Phase Insight</h2>
         <p className="moon-phase-subtitle">Current lunar energy and its effect on you</p>
       </div>
 
-      {/* Birth Info Missing State */}
       {!loading && !error && isBirthInfoMissing(astroInfo) && (
         <BirthInfoMissingPrompt 
           onNavigateToPersonalInfo={() => onNavigateToPage && onNavigateToPage(2)}
         />
       )}
 
-      {/* Error State - Birth Info Missing */}
       {error && error === 'BIRTH_INFO_MISSING' && (
         <BirthInfoMissingPrompt 
           onNavigateToPersonalInfo={() => onNavigateToPage && onNavigateToPage(2)}
         />
       )}
 
-      {/* Error State - Other Errors */}
       {error && error !== 'BIRTH_INFO_MISSING' && (
         <div className="moon-phase-content error">
           <p className="error-message">⚠️ {error}</p>
@@ -248,7 +260,6 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
         </div>
       )}
 
-      {/* Loading State */}
       {loading && (
         <div className="moon-phase-content loading">
           <div className="spinner">🌙</div>
@@ -258,7 +269,6 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
         </div>
       )}
 
-      {/* Current Moon Phase Display */}
       {currentPhase && !isBirthInfoMissing(astroInfo) && (
         <section className="moon-phase-display">
           <div className="moon-phase-emoji">
@@ -273,7 +283,6 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
         </section>
       )}
 
-      {/* Birth Chart Info - REORDERED: Rising, Moon, Sun */}
       {astro.sun_sign && !isBirthInfoMissing(astroInfo) && (
         <section className="moon-phase-birth-chart">
           <div className="birth-chart-cards">
@@ -302,11 +311,27 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
         </section>
       )}
 
-                  {/* Moon Phase Content */}
       {moonPhaseData && !loading && (
         <section className="moon-phase-content">
-                    <div className="moon-phase-insight">
+          <div className="moon-phase-insight">
             <div dangerouslySetInnerHTML={{ __html: showingBrief && moonPhaseData.brief ? moonPhaseData.brief : moonPhaseData.text }} />
+            
+            {/* Voice Bar */}
+            {isSupported && (
+              <VoiceBar
+                isPlaying={isPlaying}
+                isPaused={isPaused}
+                isLoading={isSpeechLoading}
+                error={speechError}
+                onPlay={handlePlayVoice}
+                onTogglePause={handleTogglePause}
+                onStop={stop}
+                isSupported={isSupported}
+                volume={volume}
+                onVolumeChange={setVolume}
+              />
+            )}
+            
             <button onClick={() => setShowingBrief(!showingBrief)} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', backgroundColor: '#7c63d8', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '1rem', fontWeight: '500' }} onMouseEnter={(e) => e.target.style.backgroundColor = '#6b52c1'} onMouseLeave={(e) => e.target.style.backgroundColor = '#7c63d8'}>{showingBrief ? '📖 Tell me more' : '📋 Show less'}</button>
           </div>
 
@@ -316,7 +341,6 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
             </div>
           )}
 
-          {/* Lunar Cycle Visualization */}
           <section className="lunar-cycle">
             <h3>Lunar Cycle</h3>
             <div className="moon-phases-grid">
@@ -334,7 +358,6 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
             </div>
           </section>
 
-          {/* Sun Sign Info Below */}
           {sunSignData && (
             <section className="sun-sign-info">
               <div className="sun-sign-header">
@@ -367,12 +390,10 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
             </section>
           )}
 
-          {/* Info Box */}
           <div className="moon-phase-info">
             <p>🌙 The moon completes a full cycle approximately every 29.5 days. Each phase carries unique energy that influences all zodiac signs differently based on your personal birth chart.</p>
           </div>
 
-          {/* Disclaimer */}
           <div className="moon-phase-disclaimer">
             <p>🔮 Moon phase insights are for inspiration and spiritual reflection. Your choices and actions are always your own.</p>
           </div>
