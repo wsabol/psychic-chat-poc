@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 
 // Voice greetings in multiple languages
 const voiceGreetings = {
@@ -58,12 +58,12 @@ export function useSpeech() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [currentText, setCurrentText] = useState('');
-  const [volume, setVolume] = useState(1);
   const [progress, setProgress] = useState(0);
   
   const utteranceRef = useRef(null);
   const synth = useRef(window.speechSynthesis);
   const cachedVoices = useRef({});
+  const progressIntervalRef = useRef(null);
 
   const selectVoice = useCallback((voiceName = 'sophia') => {
     const voices = synth.current.getVoices();
@@ -109,8 +109,16 @@ export function useSpeech() {
     return 'speechSynthesis' in window;
   }, []);
 
+  const clearProgress = useCallback(() => {
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
+    }
+  }, []);
+
   const stop = useCallback(() => {
     try {
+      clearProgress();
       synth.current.cancel();
       setIsPlaying(false);
       setIsPaused(false);
@@ -121,23 +129,34 @@ export function useSpeech() {
       setIsPlaying(false);
       setIsPaused(false);
     }
-  }, []);
+  }, [clearProgress]);
 
   const resume = useCallback(() => {
-    if (synth.current.paused) {
+    try {
       synth.current.resume();
       setIsPaused(false);
       setIsPlaying(true);
+      
+      // Restart progress interval
+      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = setInterval(() => {
+        setProgress(prev => Math.min(prev + 2, 95));
+      }, 100);
+    } catch (err) {
+      console.error('Resume error:', err);
     }
-  }, []);
+  }, [clearProgress]);
 
   const pause = useCallback(() => {
-    if (synth.current.speaking && !synth.current.paused) {
+    try {
       synth.current.pause();
+      clearProgress();
       setIsPaused(true);
       setIsPlaying(false);
+    } catch (err) {
+      console.error('Pause error:', err);
     }
-  }, []);
+  }, [clearProgress]);
 
   const speak = useCallback((text, options = {}) => {
     if (!isSupported()) {
@@ -165,7 +184,7 @@ export function useSpeech() {
 
       utterance.rate = options.rate || 0.95;
       utterance.pitch = options.pitch || 1.2;
-      utterance.volume = volume;
+      utterance.volume = 1;
 
       utterance.onstart = () => {
         setIsLoading(false);
@@ -173,13 +192,16 @@ export function useSpeech() {
         setIsPaused(false);
         setCurrentText(cleanText);
         setProgress(0);
-        // Update volume right after speaking starts
-        if (utteranceRef.current) {
-          utteranceRef.current.volume = volume;
-        }
+        
+        // Start progress tracking
+        clearProgress();
+        progressIntervalRef.current = setInterval(() => {
+          setProgress(prev => Math.min(prev + 2, 95));
+        }, 100);
       };
 
       utterance.onend = () => {
+        clearProgress();
         setIsPlaying(false);
         setIsPaused(false);
         setProgress(100);
@@ -187,6 +209,7 @@ export function useSpeech() {
       };
 
       utterance.onerror = (event) => {
+        clearProgress();
         if (event.error !== 'interrupted') {
           setError(`Speech error: ${event.error}`);
         }
@@ -201,21 +224,7 @@ export function useSpeech() {
       setError(`Failed: ${err.message}`);
       setIsLoading(false);
     }
-  }, [stop, selectVoice, isSupported, volume]);
-
-  // Update volume for currently playing utterance
-  useEffect(() => {
-    if (utteranceRef.current && isPlaying) {
-      utteranceRef.current.volume = volume;
-    }
-  }, [volume, isPlaying]);
-
-  // Update progress based on speaking time
-  const updateProgress = useCallback(() => {
-    if (isPlaying && utteranceRef.current) {
-      setProgress(prev => Math.min(prev + 2, 95));
-    }
-  }, [isPlaying]);
+  }, [stop, selectVoice, isSupported, clearProgress]);
 
   return {
     speak,
@@ -229,10 +238,7 @@ export function useSpeech() {
     isSupported: isSupported(),
     isSpeaking: isPlaying || isLoading,
     currentText,
-    volume,
-    setVolume,
     progress,
-    updateProgress,
     voiceGreetings
   };
 }

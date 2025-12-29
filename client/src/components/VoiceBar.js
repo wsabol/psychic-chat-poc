@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import './VoiceBar.css';
 
 export default function VoiceBar({
@@ -10,25 +10,9 @@ export default function VoiceBar({
   onTogglePause,
   onStop,
   isSupported,
-  volume,
-  onVolumeChange,
   progress = 0,
-  onUpdateProgress,
   disabled = false
 }) {
-  // Update progress periodically while playing
-  useEffect(() => {
-    if (!isPlaying) return;
-    
-    const interval = setInterval(() => {
-      if (onUpdateProgress) {
-        onUpdateProgress();
-      }
-    }, 100);
-    
-    return () => clearInterval(interval);
-  }, [isPlaying, onUpdateProgress]);
-
   if (!isSupported) {
     return null;
   }
@@ -94,25 +78,6 @@ export default function VoiceBar({
           <div className="progress-bar-container">
             <div className="progress-bar-fill" style={{ width: `${progress}%` }}></div>
           </div>
-        </div>
-
-        {/* Right side: Volume control */}
-        <div className="voice-bar-right">
-          <label htmlFor="voice-volume" className="voice-volume-label">
-            🔊
-          </label>
-          <input
-            id="voice-volume"
-            type="range"
-            min="0"
-            max="1"
-            step="0.1"
-            value={volume}
-            onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
-            className="voice-volume-slider"
-            disabled={disabled || (!isPlaying && !isPaused)}
-            title="Volume control"
-          />
         </div>
       </div>
     </div>

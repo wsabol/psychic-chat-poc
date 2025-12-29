@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useSpeech } from '../hooks/useSpeech';
 import VoiceBar from './VoiceBar';
 import { getCardImageByID, getCardImageByName } from '../utils/cardImageMap.js';
@@ -72,9 +72,8 @@ function cleanMarkdownToHTML(text) {
 
 export default function ChatMessage({ msg, defaultShowBrief = true, voiceEnabled = false, userId, token }) {
   const [showingBrief, setShowingBrief] = useState(defaultShowBrief);
-  const { speak, stop, pause, resume, isPlaying, isPaused, isLoading, error, isSupported, volume, setVolume, progress, updateProgress } = useSpeech();
+  const { speak, stop, pause, resume, isPlaying, isPaused, isLoading, error, isSupported, progress } = useSpeech();
   const [hasAutoPlayed, setHasAutoPlayed] = useState(false);
-  const progressIntervalRef = useRef(null);
   
   let fullText = msg.content;
   let briefText = null;
@@ -129,22 +128,6 @@ export default function ChatMessage({ msg, defaultShowBrief = true, voiceEnabled
     }
   }, [voiceEnabled, isSupported, msg.role, displayText, hasAutoPlayed, isPlaying, speak]);
 
-  // Update progress regularly while playing
-  useEffect(() => {
-    if (isPlaying) {
-      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
-      progressIntervalRef.current = setInterval(() => {
-        updateProgress();
-      }, 100);
-    } else {
-      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
-    }
-    
-    return () => {
-      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
-    };
-  }, [isPlaying, updateProgress]);
-
   const handlePlayVoice = () => {
     speak(displayText, { rate: 0.95, pitch: 1.2 });
   };
@@ -176,10 +159,7 @@ export default function ChatMessage({ msg, defaultShowBrief = true, voiceEnabled
                 onTogglePause={handleTogglePause}
                 onStop={stop}
                 isSupported={isSupported}
-                volume={volume}
-                onVolumeChange={setVolume}
                 progress={progress}
-                onUpdateProgress={updateProgress}
               />
             )}
             
