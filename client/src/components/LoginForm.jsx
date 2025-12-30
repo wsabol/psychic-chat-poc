@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from '../context/TranslationContext';
 import { PasswordInput } from './PasswordInput';
 
 /**
@@ -15,6 +16,7 @@ export function LoginForm({
   onSwitchToRegister,
   onForgotPassword
 }) {
+  const { t } = useTranslation();
   return (
     <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       <input

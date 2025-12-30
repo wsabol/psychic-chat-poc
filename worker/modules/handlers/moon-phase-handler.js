@@ -1,3 +1,5 @@
+import { db } from '../../shared/db.js';
+import { hashUserId } from '../../shared/hashUtils.js';
 import { 
     fetchUserPersonalInfo, 
     fetchUserAstrology,
@@ -15,6 +17,20 @@ import { translateContentObject } from '../translator.js';
  */
 export async function generateMoonPhaseCommentary(userId, phase) {
     try {
+        // Check if moon phase commentary already generated today
+        const today = new Date().toISOString().split('T')[0];
+        const userIdHash = hashUserId(userId);
+        
+        const { rows: existingMoonPhase } = await db.query(
+            `SELECT id FROM messages WHERE user_id_hash = $1 AND role = 'moon_phase' AND created_at::date = $2::date LIMIT 1`,
+            [userIdHash, today]
+        );
+        
+        if (existingMoonPhase.length > 0) {
+            console.log('[MOON-PHASE-HANDLER] Moon phase commentary already generated today, skipping');
+            return;
+        }
+        
         // Fetch user context
         const userInfo = await fetchUserPersonalInfo(userId);
         const astrologyInfo = await fetchUserAstrology(userId);

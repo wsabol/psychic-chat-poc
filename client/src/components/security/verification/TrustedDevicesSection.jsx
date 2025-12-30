@@ -11,7 +11,7 @@ export function TrustedDevicesSection({ userId, token, apiUrl }) {
 
   useEffect(() => {
     loadTrustedDevices();
-  }, [loadTrustedDevices]);
+  }, []);
 
   const loadTrustedDevices = useCallback(async () => {
     try {
@@ -137,4 +137,3 @@ export function TrustedDevicesSection({ userId, token, apiUrl }) {
     </div>
   );
 }
-

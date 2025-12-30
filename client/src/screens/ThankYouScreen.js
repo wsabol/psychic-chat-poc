@@ -1,6 +1,8 @@
 import React from 'react';
+import { useTranslation } from '../context/TranslationContext';
 
 export function ThankYouScreen({ onCreateAccount, onContinue, onExit }) {
+    const { t } = useTranslation();
     return (
         <div style={{
             display: 'flex',
@@ -22,9 +24,9 @@ export function ThankYouScreen({ onCreateAccount, onContinue, onExit }) {
                 position: 'relative',
                 zIndex: 10
             }}>
-                <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}>✨ Complete Your Onboarding</h1>
+                                <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}>✨ {t('thankyou.title')}</h1>
                 <p style={{ fontSize: '0.95rem', lineHeight: '1.6', color: '#d0d0ff', marginBottom: '2rem' }}>
-                    Thank you for exploring with our oracle. To save your readings and continue your spiritual journey, please complete your onboarding.
+                    {t('thankyou.message')}
                 </p>
                 <div style={{
                     display: 'flex',
@@ -44,7 +46,7 @@ export function ThankYouScreen({ onCreateAccount, onContinue, onExit }) {
                             fontSize: '1rem'
                         }}
                     >
-                        📝 Set Up an Account
+                        📝 {t('thankyou.createAccount')}
                     </button>
 
                     {onExit && (
@@ -61,7 +63,7 @@ export function ThankYouScreen({ onCreateAccount, onContinue, onExit }) {
                                 fontSize: '1rem'
                             }}
                         >
-                            ❌ Exit
+                            ❌ {t('thankyou.exit')}
                         </button>
                     )}
                 </div>

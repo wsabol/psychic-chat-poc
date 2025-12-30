@@ -1,10 +1,18 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from '../context/TranslationContext';
 import { getAstrologyFromBirthDate, getZodiacSignFromDate } from '../utils/astroUtils';
 import { COUNTRIES } from '../data/countries';
 import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
 import { validateBirthDate } from '../utils/dateValidator';
+import { FormInput } from '../components/forms/FormInput';
+import { FormSelect } from '../components/forms/FormSelect';
+import { FormSection } from '../components/forms/FormSection';
 import '../styles/responsive.css';
 import './PersonalInfoPage.css';
+
+// ============================================================
+// UTILITY FUNCTIONS
+// ============================================================
 
 function formatDateForDisplay(dateString) {
     if (!dateString) return '';
@@ -46,7 +54,20 @@ function parseDateForStorage(dateString) {
     }
 }
 
+// ============================================================
+// SEX OPTIONS
+// ============================================================
+
+const SEX_OPTIONS = ['Male', 'Female', 'Non-binary', 'Prefer not to say', 'Unspecified'];
+
+// ============================================================
+// MAIN COMPONENT
+// ============================================================
+
 export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage, onboarding }) {
+    const { t } = useTranslation();
+
+    // State
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -64,22 +85,31 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
     const [success, setSuccess] = useState(false);
     const [fieldErrors, setFieldErrors] = useState({});
 
+    // Config
     const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
     const isTemporaryAccount = auth?.isTemporaryAccount;
+
+    // ============================================================
+    // LIFECYCLE HOOKS
+    // ============================================================
 
     useEffect(() => {
         fetchPersonalInfo();
     }, [userId, token]); // eslint-disable-line react-hooks/exhaustive-deps
 
+    // ============================================================
+    // API CALLS
+    // ============================================================
+
     const fetchPersonalInfo = async () => {
         try {
-            const response = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}`, { 
+            const response = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}`, {
                 headers: {
                     'Authorization': token ? `Bearer ${token}` : ''
                 }
             });
             if (!response.ok) throw new Error('Failed to fetch personal info');
-            
+
             const data = await response.json();
             if (data && data.first_name) {
                 setFormData({
@@ -111,12 +141,33 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
         }
     };
 
+    const savePersonalInfo = async (dataToSend) => {
+        const response = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...(token && { 'Authorization': `Bearer ${token}` })
+            },
+            body: JSON.stringify(dataToSend)
+        });
+
+        if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error || 'Failed to save personal information');
+        }
+    };
+
+    // ============================================================
+    // EVENT HANDLERS
+    // ============================================================
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
             [name]: value
         }));
+        // Clear field error when user starts typing
         if (fieldErrors[name]) {
             setFieldErrors(prev => ({
                 ...prev,
@@ -125,46 +176,15 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
         }
     };
 
-    const validateFields = () => {
-        const errors = {};
-
-        if (!isTemporaryAccount) {
-            if (!formData.firstName.trim()) {
-                errors.firstName = 'First name is required';
-            }
-            if (!formData.lastName.trim()) {
-                errors.lastName = 'Last name is required';
-            }
-            if (!formData.sex) {
-                errors.sex = 'Sex is required';
-            }
-        }
-        
-        if (!formData.email.trim()) {
-            errors.email = 'Email is required';
-        }
-        if (!formData.birthDate) {
-            errors.birthDate = 'Date of birth is required (format: dd-mmm-yyyy, e.g., 09-Feb-1956)';
-        } else {
-            const dateValidation = validateBirthDate(formData.birthDate);
-            if (!dateValidation.isValid) {
-                errors.birthDate = dateValidation.error;
-            } else if (!dateValidation.isAdult) {
-                errors.birthDate = dateValidation.error;
-            }
-        }
-
-        return errors;
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
 
+        // Validate
         const errors = validateFields();
         if (Object.keys(errors).length > 0) {
             setFieldErrors(errors);
-            setError('Please complete all required fields marked in red');
+            setError(t('personalInfo.errors.missingRequired'));
             return;
         }
 
@@ -173,7 +193,7 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
 
         try {
             const storageBirthDate = parseDateForStorage(formData.birthDate);
-            
+
             let astrologyData = null;
             let zodiacSign = null;
             if (storageBirthDate) {
@@ -194,21 +214,11 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
                 dataToSend.sex = dataToSend.sex || 'Unspecified';
             }
 
-            const response = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    ...(token && { 'Authorization': `Bearer ${token}` })
-                },
-                body: JSON.stringify(dataToSend)
-            });
+            await savePersonalInfo(dataToSend);
 
-            if (!response.ok) {
-                const errData = await response.json();
-                throw new Error(errData.error || 'Failed to save personal information');
-            }
-            
-                        setSuccess(true);
+            setSuccess(true);
+
+            // Update onboarding
             if (onboarding?.updateOnboardingStep) {
                 try {
                     await onboarding.updateOnboardingStep('personal_info');
@@ -216,6 +226,8 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
                     console.warn('[ONBOARDING] Failed to update personal info step:', err);
                 }
             }
+
+            // Navigate or show success
             if (isTemporaryAccount && onNavigateToPage) {
                 setTimeout(() => {
                     onNavigateToPage(4);
@@ -231,221 +243,179 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
         }
     };
 
-    const hasFieldError = (fieldName) => !!fieldErrors[fieldName];
+    // ============================================================
+    // VALIDATION
+    // ============================================================
+
+    const validateFields = () => {
+        const errors = {};
+
+        if (!isTemporaryAccount) {
+            if (!formData.firstName.trim()) {
+                errors.firstName = t('personalInfo.errors.missingRequired');
+            }
+            if (!formData.lastName.trim()) {
+                errors.lastName = t('personalInfo.errors.missingRequired');
+            }
+            if (!formData.sex) {
+                errors.sex = t('personalInfo.errors.missingRequired');
+            }
+        }
+
+        if (!formData.email.trim()) {
+            errors.email = t('personalInfo.errors.missingRequired');
+        }
+        if (!formData.birthDate) {
+            errors.birthDate = t('personalInfo.errors.invalidBirthDate');
+        } else {
+            const dateValidation = validateBirthDate(formData.birthDate);
+            if (!dateValidation.isValid) {
+                errors.birthDate = dateValidation.error;
+            } else if (!dateValidation.isAdult) {
+                errors.birthDate = dateValidation.error;
+            }
+        }
+
+        return errors;
+    };
+
+    // ============================================================
+    // RENDER
+    // ============================================================
 
     return (
         <div className="page-safe-area personal-info-page">
+            {/* Header */}
             <div className="info-header">
-                <h2 className="heading-primary">👤 Personal Information</h2>
-                <p className="info-subtitle">Tell us about yourself so we can personalize your experience</p>
+                <h2 className="heading-primary">👤 {t('personalInfo.title')}</h2>
+                <p className="info-subtitle">{t('personalInfo.title')}</p>
             </div>
 
+            {/* Alerts */}
             {error && <div className="form-error-alert">{error}</div>}
-            {success && <div className="form-success-alert">✓ Saved successfully!</div>}
+            {success && <div className="form-success-alert">✓ {t('common.saved')}</div>}
 
+            {/* Form */}
             <form onSubmit={handleSubmit} className="info-form">
-                {/* Basic Information Section */}
-                <section className="form-section">
-                    <h3 className="heading-secondary">Basic Information</h3>
-                    
-                    {!isTemporaryAccount && (
-                        <div className="form-grid">
-                            <div className={`form-group ${hasFieldError('firstName') ? 'form-group-error' : ''}`}>
-                                <label className="form-label">
-                                    First Name <span className="required">*</span>
-                                </label>
-                                <input
-                                    type="text"
+                {/* Basic Information */}
+                <FormSection title={t('personalInfo.title')}>
+                    <div className="form-grid">
+                        {!isTemporaryAccount && (
+                            <>
+                                <FormInput
+                                    label={t('personalInfo.firstName')}
                                     name="firstName"
                                     value={formData.firstName}
                                     onChange={handleChange}
                                     required
-                                    className={`form-input ${hasFieldError('firstName') ? 'form-input-error' : ''}`}
+                                    error={fieldErrors.firstName}
                                     placeholder="John"
                                 />
-                                {hasFieldError('firstName') && (
-                                    <span className="field-error-message">{fieldErrors.firstName}</span>
-                                )}
-                            </div>
-
-                            <div className={`form-group ${hasFieldError('lastName') ? 'form-group-error' : ''}`}>
-                                <label className="form-label">
-                                    Last Name <span className="required">*</span>
-                                </label>
-                                <input
-                                    type="text"
+                                <FormInput
+                                    label={t('personalInfo.lastName')}
                                     name="lastName"
                                     value={formData.lastName}
                                     onChange={handleChange}
                                     required
-                                    className={`form-input ${hasFieldError('lastName') ? 'form-input-error' : ''}`}
+                                    error={fieldErrors.lastName}
                                     placeholder="Doe"
                                 />
-                                {hasFieldError('lastName') && (
-                                    <span className="field-error-message">{fieldErrors.lastName}</span>
-                                )}
-                            </div>
-                        </div>
-                    )}
-
-                    <div className={`form-group ${hasFieldError('email') ? 'form-group-error' : ''}`}>
-                        <label className="form-label">
-                            Email <span className="required">*</span>
-                        </label>
-                        <input
-                            type="email"
+                            </>
+                        )}
+                        <FormInput
+                            label={t('personalInfo.email')}
                             name="email"
+                            type="email"
                             value={formData.email}
                             onChange={handleChange}
                             required
-                            className={`form-input ${hasFieldError('email') ? 'form-input-error' : ''}`}
+                            error={fieldErrors.email}
                             placeholder="you@example.com"
+                            hint={isTemporaryAccount ? t('personalInfo.title') : null}
                         />
-                        {hasFieldError('email') && (
-                            <span className="field-error-message">{fieldErrors.email}</span>
-                        )}
-                        {isTemporaryAccount && !hasFieldError('email') && (
-                            <p className="form-hint">This temporary email can be changed when you create an account</p>
-                        )}
                     </div>
-                </section>
+                </FormSection>
 
-                {/* Date & Time of Birth Section */}
-                <section className="form-section">
-                    <h3 className="heading-secondary">⏰ Date & Time of Birth</h3>
-                    
+                {/* Date & Time of Birth */}
+                <FormSection title={t('personalInfo.birthDate')} icon="⏰">
                     <div className="form-grid">
-                        <div className={`form-group ${hasFieldError('birthDate') ? 'form-group-error' : ''}`}>
-                            <label className="form-label">
-                                Date of Birth <span className="required">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                name="birthDate"
-                                value={formData.birthDate}
-                                onChange={handleChange}
-                                required
-                                className={`form-input ${hasFieldError('birthDate') ? 'form-input-error' : ''}`}
-                                placeholder="dd-mmm-yyyy (e.g., 09-Feb-1956)"
-                            />
-                            {hasFieldError('birthDate') && (
-                                <span className="field-error-message">{fieldErrors.birthDate}</span>
-                            )}
-                        </div>
-
-                        <div className="form-group">
-                            <label className="form-label">
-                                Time of Birth <span className="optional">(Optional)</span>
-                            </label>
-                            <input
-                                type="time"
-                                name="birthTime"
-                                value={formData.birthTime}
-                                onChange={handleChange}
-                                className="form-input"
-                            />
-                        </div>
-                    </div>
-                </section>
-
-                {/* Place of Birth Section */}
-                <section className="form-section">
-                    <h3 className="heading-secondary">📍 Place of Birth</h3>
-                    
-                    <div className="form-grid">
-                        <div className="form-group">
-                            <label className="form-label">
-                                Country <span className="optional">(Optional)</span>
-                            </label>
-                            <select
-                                name="birthCountry"
-                                value={formData.birthCountry}
-                                onChange={handleChange}
-                                className="form-input form-select"
-                            >
-                                <option value="">-- Select Country --</option>
-                                {COUNTRIES.map((country, idx) => (
-                                    <option key={idx} value={country}>{country}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div className="form-group">
-                            <label className="form-label">
-                                State / Province <span className="optional">(Optional)</span>
-                            </label>
-                            <input
-                                type="text"
-                                name="birthProvince"
-                                value={formData.birthProvince}
-                                onChange={handleChange}
-                                className="form-input"
-                                placeholder="e.g., California"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="form-group">
-                        <label className="form-label">
-                            City <span className="optional">(Optional)</span>
-                        </label>
-                        <input
-                            type="text"
-                            name="birthCity"
-                            value={formData.birthCity}
+                        <FormInput
+                            label={t('personalInfo.birthDate')}
+                            name="birthDate"
+                            value={formData.birthDate}
                             onChange={handleChange}
-                            className="form-input"
-                            placeholder="e.g., New York"
+                            required
+                            error={fieldErrors.birthDate}
+                            placeholder="dd-mmm-yyyy (e.g., 09-Feb-1956)"
+                        />
+                        <FormInput
+                            label={t('personalInfo.birthTime')}
+                            name="birthTime"
+                            type="time"
+                            value={formData.birthTime}
+                            onChange={handleChange}
+                            optional
                         />
                     </div>
-                </section>
+                </FormSection>
 
-                {/* Additional Information Section */}
-                <section className="form-section">
-                    <h3 className="heading-secondary">✨ Additional Information</h3>
-                    
+                {/* Place of Birth */}
+                <FormSection title={t('personalInfo.birthLocation')} icon="📍">
                     <div className="form-grid">
-                        <div className={`form-group ${hasFieldError('sex') ? 'form-group-error' : ''}`}>
-                            <label className="form-label">
-                                Sex {!isTemporaryAccount && <span className="required">*</span>} {isTemporaryAccount && <span className="optional">(Optional)</span>}
-                            </label>
-                            <select
-                                name="sex"
-                                value={formData.sex}
-                                onChange={handleChange}
-                                required={!isTemporaryAccount}
-                                className={`form-input form-select ${hasFieldError('sex') ? 'form-input-error' : ''}`}
-                            >
-                                <option value="">Select...</option>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                                <option value="Non-binary">Non-binary</option>
-                                <option value="Prefer not to say">Prefer not to say</option>
-                                <option value="Unspecified">Unspecified</option>
-                            </select>
-                            {hasFieldError('sex') && (
-                                <span className="field-error-message">{fieldErrors.sex}</span>
-                            )}
-                        </div>
-
-                        <div className="form-group">
-                            <label className="form-label">
-                                How should the oracle address you? <span className="optional">(Optional)</span>
-                            </label>
-                            <input
-                                type="text"
-                                name="addressPreference"
-                                value={formData.addressPreference}
-                                onChange={handleChange}
-                                className="form-input"
-                                placeholder="e.g., Alex, Sarah"
-                            />
-                        </div>
+                        <FormSelect
+                            label={t('personalInfo.birthCountry')}
+                            name="birthCountry"
+                            value={formData.birthCountry}
+                            onChange={handleChange}
+                            options={COUNTRIES}
+                            optional
+                            placeholder="-- Select Country --"
+                        />
+                        <FormInput
+                            label={t('personalInfo.birthProvince')}
+                            name="birthProvince"
+                            value={formData.birthProvince}
+                            onChange={handleChange}
+                            optional
+                            placeholder="e.g., California"
+                        />
                     </div>
-                </section>
+                    <FormInput
+                        label={t('personalInfo.birthCity')}
+                        name="birthCity"
+                        value={formData.birthCity}
+                        onChange={handleChange}
+                        optional
+                        placeholder="e.g., New York"
+                    />
+                </FormSection>
+
+                {/* Additional Information */}
+                <FormSection title={t('personalInfo.title')} icon="✨">
+                    <div className="form-grid">
+                        <FormSelect
+                            label={t('personalInfo.gender')}
+                            name="sex"
+                            value={formData.sex}
+                            onChange={handleChange}
+                            options={SEX_OPTIONS}
+                            required={!isTemporaryAccount}
+                            optional={isTemporaryAccount}
+                            error={fieldErrors.sex}
+                        />
+                        <FormInput
+                            label="How should the oracle address you?"
+                            name="addressPreference"
+                            value={formData.addressPreference}
+                            onChange={handleChange}
+                            optional
+                            placeholder="e.g., Alex, Sarah"
+                        />
+                    </div>
+                </FormSection>
             </form>
 
-            {/* Floating Save Button Bubble */}
+            {/* Floating Save Button */}
             <button
                 type="submit"
                 onClick={handleSubmit}
@@ -454,13 +424,13 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
                 title={loading ? 'Processing...' : 'Save Information'}
             >
                 <span className="bubble-icon">{loading ? '⏳' : '💾'}</span>
-                <span className="bubble-text">{loading ? 'Saving...' : 'Save'}</span>
+                <span className="bubble-text">{loading ? t('common.saving') : t('common.save')}</span>
             </button>
 
             {/* Floating Success Bubble */}
             {success && (
                 <div className="floating-feedback-bubble floating-success">
-                    ✓ Saved!
+                    ✓ {t('common.saved')}
                 </div>
             )}
         </div>

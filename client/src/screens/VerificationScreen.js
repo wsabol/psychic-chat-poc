@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from '../context/TranslationContext';
 
 /**
  * Email verification screen shown after sign-up
@@ -14,8 +15,9 @@ export function VerificationScreen({
     resendLoading,
     checkCount = 0,
     onVerificationFailed,
-    onSignOut,
+        onSignOut,
 }) {
+    const { t } = useTranslation();
     const [showResendMessage, setShowResendMessage] = useState(false);
     const [resendCount, setResendCount] = useState(0);
     const MAX_CHECKS = 40; // ~2 minutes at 3 second intervals
@@ -79,14 +81,14 @@ export function VerificationScreen({
                     position: 'relative',
                     zIndex: 10
                 }}>
-                    <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Unable to Verify Email</h1>
+                                        <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}>{t('verification.errors.tooManyAttempts')}</h1>
                     <p style={{
                         fontSize: '1rem',
                         lineHeight: '1.8',
                         color: '#ff9999',
                         marginBottom: '2rem'
                     }}>
-                        I'm sorry, in order to use Starship Psychics, you must have a valid email. Please try again.
+                        {t('errors.sessionExpired')}
                     </p>
                     <p style={{
                         fontSize: '0.9rem',
@@ -121,7 +123,7 @@ export function VerificationScreen({
                 position: 'relative',
                 zIndex: 10
             }}>
-                <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}>✉️ Verify Your Email</h1>
+                <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}>✉️ {t('verification.title')}</h1>
 
                 {isStrongMessageMode ? (
                     <>
@@ -131,7 +133,7 @@ export function VerificationScreen({
                             color: '#ffd699',
                             marginBottom: '1.5rem'
                         }}>
-                            We're still waiting for verification from:
+                            {t('verification.message', { email: userEmail })}
                         </p>
 
                         <div style={{
@@ -152,7 +154,7 @@ export function VerificationScreen({
                             marginBottom: '2rem',
                             lineHeight: '1.6'
                         }}>
-                            Please check your email (including spam folder) or resend the verification email. {strikesRemaining} attempt{strikesRemaining === 1 ? '' : 's'} remaining.
+                            {t('verification.checkInbox')} - {strikesRemaining} attempt{strikesRemaining === 1 ? '' : 's'} remaining.
                         </p>
                     </>
                 ) : (
@@ -163,7 +165,7 @@ export function VerificationScreen({
                             color: '#d0d0ff',
                             marginBottom: '1.5rem'
                         }}>
-                            We've sent a verification link to:
+                            {t('verification.message', { email: userEmail })}
                         </p>
 
                         <div style={{
@@ -184,7 +186,7 @@ export function VerificationScreen({
                             marginBottom: '1.5rem',
                             lineHeight: '1.6'
                         }}>
-                            Click the link in the email to verify your account. The page will automatically update once verified.
+                                                        {t('verification.checkInbox')}
                         </p>
                         <p style={{
                             fontSize: '0.85rem',
@@ -193,7 +195,7 @@ export function VerificationScreen({
                             lineHeight: '1.6',
                             fontStyle: 'italic'
                         }}>
-                            💡 Tip: If you don't see the email, please check your Spam or Promotions folder!
+                            💡 {t('verification.checkInbox')}
                         </p>
                     </>
                 )}
@@ -215,7 +217,7 @@ export function VerificationScreen({
                         width: '100%'
                     }}
                 >
-                    {resendCount >= MAX_RESENDS ? 'No More Attempts Available' : resendLoading ? 'Sending...' : 'Resend Verification Email'}
+                    {resendCount >= MAX_RESENDS ? t('verification.errors.tooManyAttempts') : resendLoading ? t('common.loading') : t('verification.resendCode')}
                 </button>
 
                 {showResendMessage && (
@@ -228,7 +230,7 @@ export function VerificationScreen({
                         fontSize: '0.9rem',
                         marginBottom: '1rem'
                     }}>
-                        ✓ Verification email resent! Attempt {resendCount} of {MAX_RESENDS}
+                        ✓ {t('verification.resendSent')} - Attempt {resendCount} of {MAX_RESENDS}
                     </div>
                 )}
 
@@ -249,7 +251,7 @@ export function VerificationScreen({
                         margin: '1rem 0 0 0',
                         fontWeight: 'bold'
                     }}>
-                        ✗ No more verification attempts available
+                        ✗ {t('verification.errors.tooManyAttempts')}
                     </p>
                 )}
 
@@ -259,7 +261,7 @@ export function VerificationScreen({
                     margin: '2rem 0 0 0',
                     marginBottom: '2rem'
                 }}>
-                    ⏱️ Please check your email and try again
+                    ⏱️ {t('verification.checkInbox')}
                 </p>
 
                 {/* Sign Out Button */}
@@ -278,7 +280,7 @@ export function VerificationScreen({
                         marginBottom: '1rem'
                     }}
                 >
-                    Sign Out & Try Different Email
+                    {t('verification.actions.signOut')}
                 </button>
 
                 {error && (

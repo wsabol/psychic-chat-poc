@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from '../context/TranslationContext';
 import { useSpeech } from '../hooks/useSpeech';
 import VoiceBar from '../components/VoiceBar';
 import { getAstrologyData } from '../utils/astroUtils';
@@ -8,6 +9,7 @@ import '../styles/responsive.css';
 import './HoroscopePage.css';
 
 export default function HoroscopePage({ userId, token, auth, onExit, onNavigateToPage }) {
+  const { t } = useTranslation();
   const [horoscopeRange, setHoroscopeRange] = useState('daily');
   const [horoscopeData, setHoroscopeData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -229,7 +231,7 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
             }}
             onMouseEnter={(e) => e.target.style.opacity = '1'}
             onMouseLeave={(e) => e.target.style.opacity = '0.7'}
-            title="Close and complete onboarding"
+            title={t('common.closeAndContinue')}
           >
             ✕
           </button>
@@ -238,17 +240,17 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
             type="button"
             onClick={handleClose}
             className="exit-prompt"
-            title="Click to register and continue"
+            title={t('onboarding.clickExitToContinue')}
           >
             <span className="exit-arrow">👉</span>
-            <span className="exit-message">Click exit to continue</span>
+            <span className="exit-message">{t('onboarding.clickExitToContinue')}</span>
           </button>
         </>
       )}
 
       <div className="horoscope-header">
-        <h2 className="heading-primary">🔮 Your Horoscope</h2>
-        <p className="horoscope-subtitle">Personalized cosmic guidance for you</p>
+        <h2 className="heading-primary">{t('horoscope.title')}</h2>
+        <p className="horoscope-subtitle">{t('horoscope.subtitle')}</p>
       </div>
 
       <div className="horoscope-toggle">
@@ -259,7 +261,7 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
             onClick={() => setHoroscopeRange(range)}
             disabled={loading || generating}
           >
-            {range.charAt(0).toUpperCase() + range.slice(1)}
+            {t(`horoscope.${range}`)}
           </button>
         ))}
       </div>
@@ -280,7 +282,7 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
         <div className="horoscope-content error">
           <p className="error-message">⚠️ {error}</p>
           <button onClick={loadHoroscope} className="btn-secondary">
-            Try Again
+            {t('common.tryAgain')}
           </button>
         </div>
       )}
@@ -289,7 +291,7 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
         <div className="horoscope-content loading">
           <div className="spinner">🔮</div>
           <p>
-            {generating ? 'Your cosmic guidance is being woven by The Oracle...' : 'Loading your horoscope...'}
+            {generating ? t('horoscope.generatingMessage') : t('horoscope.loading')}
           </p>
         </div>
       )}
@@ -326,7 +328,7 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
         <section className="horoscope-content">
           <div className="horoscope-metadata">
             <p className="horoscope-range">
-              {horoscopeData.range.charAt(0).toUpperCase() + horoscopeData.range.slice(1)} Reading
+              {t('horoscope.reading', { range: horoscopeData.range.charAt(0).toUpperCase() + horoscopeData.range.slice(1) })}
             </p>
             <p className="horoscope-date">
               {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
@@ -352,7 +354,7 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
               />
             )}
             
-            <button onClick={() => setShowingBrief(!showingBrief)} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', backgroundColor: '#7c63d8', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '1rem', fontWeight: '500' }} onMouseEnter={(e) => e.target.style.backgroundColor = '#6b52c1'} onMouseLeave={(e) => e.target.style.backgroundColor = '#7c63d8'}>{showingBrief ? '📖 Tell me more' : '📋 Show less'}</button>
+            <button onClick={() => setShowingBrief(!showingBrief)} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', backgroundColor: '#7c63d8', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '1rem', fontWeight: '500' }} onMouseEnter={(e) => e.target.style.backgroundColor = '#6b52c1'} onMouseLeave={(e) => e.target.style.backgroundColor = '#7c63d8'}>{showingBrief ? t('chat.toggleMore') : t('chat.toggleLess')}</button>
           </div>
 
           {sunSignData && (
@@ -365,22 +367,22 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
 
               <div className="sun-info-grid">
                 <div className="info-item">
-                  <strong>Element:</strong>
+                  <strong>{t('mySign.element')}</strong>
                   <span>{sunSignData.element}</span>
                 </div>
                 <div className="info-item">
-                  <strong>Ruling Planet:</strong>
+                  <strong>{t('mySign.rulingPlanet')}</strong>
                   <span>{sunSignData.rulingPlanet}</span>
                 </div>
                 <div className="info-item">
-                  <strong>Dates:</strong>
+                  <strong>{t('mySign.dates')}</strong>
                   <span>{sunSignData.dates}</span>
                 </div>
               </div>
 
               {sunSignData.personality && (
                 <div className="sun-detail">
-                  <h4>About Your Sign</h4>
+                  <h4>{t('mySign.aboutYourSign')}</h4>
                   <p>{sunSignData.personality}</p>
                 </div>
               )}
@@ -388,7 +390,7 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
           )}
 
           <div className="horoscope-disclaimer">
-            <p>🔮 Horoscopes are for entertainment and inspiration. Your choices and actions ultimately shape your destiny.</p>
+            <p>{t('horoscope.disclaimer')}</p>
           </div>
         </section>
       )}

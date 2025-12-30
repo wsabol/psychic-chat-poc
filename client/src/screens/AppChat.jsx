@@ -5,6 +5,7 @@ import PaymentMethodRequiredModal from '../components/PaymentMethodRequiredModal
 import SubscriptionRequiredModal from '../components/SubscriptionRequiredModal';
 import OnboardingModal from '../components/OnboardingModal';
 import MainContainer from '../layouts/MainContainer';
+import { useLanguagePreference } from '../hooks/useLanguagePreference';
 
 /**
  * AppChat - Handles authenticated chat flow
@@ -30,6 +31,9 @@ export function AppChat({ state }) {
     handleNavigateFromBilling,
     tempFlow,
   } = state;
+
+  // Fetch user's language preference from DB when authenticated
+  useLanguagePreference();
 
   const isUserOnboarding = onboarding.onboardingStatus?.isOnboarding === true;
 

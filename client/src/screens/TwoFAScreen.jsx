@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from '../context/TranslationContext';
 import '../styles/screens/TwoFAScreen.css';
 
 /**
@@ -15,6 +16,7 @@ export default function TwoFAScreen({
   isLoading = false,
   error: initialError = null
 }) {
+    const { t } = useTranslation();
   const [code, setCode] = useState('');
   const [error, setError] = useState(initialError);
   const [verifying, setVerifying] = useState(false);
@@ -30,7 +32,7 @@ export default function TwoFAScreen({
     e.preventDefault();
 
     if (!code || code.length !== 6) {
-      setError('Please enter a 6-digit code');
+      setError(t('twoFactor.errors.invalidCode'));
       return;
     }
 
@@ -66,7 +68,7 @@ export default function TwoFAScreen({
         const data = await response.json();
         
         if (!response.ok || !data.success) {
-          setError(data.error || 'Invalid code');
+          setError(data.error || t('twoFactor.errors.invalidCode'));
           setCode('');
           return;
         }
@@ -80,7 +82,7 @@ export default function TwoFAScreen({
       }
     } catch (err) {
       console.error('[2FA-SCREEN] Error:', err);
-      setError('Failed to verify code. Please try again.');
+      setError(t('errors.server'));
       setCode('');
     } finally {
       setVerifying(false);
@@ -91,23 +93,20 @@ export default function TwoFAScreen({
     <div className="twofa-screen-container">
       <div className="twofa-screen-content">
         <div className="twofa-screen-header">
-          <h1 className="twofa-screen-title">🔐 Two-Factor Authentication</h1>
+          <h1 className="twofa-screen-title">🔐 {t('twoFactor.title')}</h1>
         </div>
 
         <div className="twofa-screen-body">
           <div className="twofa-message-section">
-            <p className="twofa-message">
-              A 6-digit verification code has been sent to your email address.
-            </p>
-            <p className="twofa-submessage">
-              Please enter the code below to complete your login.
+                        <p className="twofa-message">
+              {t('twoFactor.message', { method: method })}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="twofa-form-section">
             <div className="twofa-input-wrapper">
-              <label htmlFor="twofa-code" className="twofa-code-label">
-                Verification Code
+                            <label htmlFor="twofa-code" className="twofa-code-label">
+                {t('twoFactor.enterCode')}
               </label>
               <input
                 id="twofa-code"
@@ -121,7 +120,7 @@ export default function TwoFAScreen({
                 disabled={verifying || isLoading}
                 autoFocus
               />
-              <p className="twofa-code-hint">6 digits</p>
+              <p className="twofa-code-hint">{t('twoFactor.enterCode')}</p>
             </div>
 
             {error && (
@@ -135,11 +134,11 @@ export default function TwoFAScreen({
               disabled={verifying || isLoading || code.length !== 6}
               className="twofa-verify-button"
             >
-              {verifying ? 'Verifying...' : 'Verify Code'}
+              {verifying ? t('common.loading') : t('twoFactor.verify')}
             </button>
 
-            <p className="twofa-code-expiry">
-              Code expires in 10 minutes
+                        <p className="twofa-code-expiry">
+              {t('twoFactor.errors.expired')}
             </p>
 
             {/* Trust Device Checkbox */}
@@ -162,10 +161,10 @@ export default function TwoFAScreen({
                 disabled={verifying || isLoading}
                 style={{ cursor: 'pointer', width: '16px', height: '16px' }}
               />
-              <span>
-                <strong>Trust this device for 30 days</strong>
+                            <span>
+                <strong>{t('twoFactor.title')}</strong>
                 <br />
-                <span style={{ fontSize: '0.85rem', color: '#666' }}>Skip 2FA on this device</span>
+                <span style={{ fontSize: '0.85rem', color: '#666' }}>{t('security.trustedDevices')}</span>
               </span>
             </label>
           </form>
@@ -177,7 +176,7 @@ export default function TwoFAScreen({
             disabled={verifying || isLoading}
             className="twofa-signout-button"
           >
-            Sign Out
+            {t('verification.actions.signOut')}
           </button>
         </div>
       </div>

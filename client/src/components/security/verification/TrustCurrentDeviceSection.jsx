@@ -12,7 +12,7 @@ export function TrustCurrentDeviceSection({ userId, token, apiUrl }) {
 
   useEffect(() => {
     checkCurrentDeviceTrust();
-  }, [checkCurrentDeviceTrust]);
+  }, []);
 
   const checkCurrentDeviceTrust = useCallback(async () => {
     try {
@@ -135,4 +135,3 @@ export function TrustCurrentDeviceSection({ userId, token, apiUrl }) {
     </div>
   );
 }
-

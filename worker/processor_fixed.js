@@ -7,7 +7,6 @@ import { isLunarNodesRequest, generateLunarNodesInsight } from "./modules/handle
 import { isCosmicWeatherRequest, generateCosmicWeather } from "./modules/handlers/cosmic-weather-handler.js";
 import { isVoidOfCourseRequest, generateVoidOfCourseMoonAlert } from "./modules/handlers/void-of-course-handler.js";
 import { handleChatMessage } from "./modules/handlers/chat-handler.js";
-import { db } from "./shared/db.js";
 
 const API_URL = process.env.API_URL || 'http://localhost:3000';
 
@@ -42,46 +41,16 @@ async function routeJob(job) {
 }
 
 /**
- * Generate daily horoscope and moon phase for all users on app startup
- * Only generates if not already done today (checks happen in handlers)
+ * Update moon phase cache every hour (non-blocking)
  */
-async function generateDailyMysticalUpdates() {
+async function updateMoonPhaseCache() {
     try {
-        console.log('[STARTUP] Generating daily horoscope and moon phase updates for all users...');
-        
-        // Get all authenticated users (exclude temporary accounts)
-        const { rows: users } = await db.query(
-            `SELECT id FROM auth.users WHERE created_at > NOW() - INTERVAL '1 year'`
-        );
-        
-        if (users.length === 0) {
-            console.log('[STARTUP] No users found for daily updates');
-            return;
+        const moonPhaseData = await getCurrentMoonPhase();
+        if (moonPhaseData.success) {
+            await redis.setEx('current:moon-phase', 3600, JSON.stringify(moonPhaseData));
         }
-        
-        console.log(`[STARTUP] Updating ${users.length} users...`);
-        
-        let horoscopeCount = 0;
-        let moonPhaseCount = 0;
-        
-        for (const user of users) {
-            try {
-                // Generate horoscope (will skip if already done today)
-                await generateHoroscope(user.id, 'daily');
-                horoscopeCount++;
-                
-                // Generate moon phase (will skip if already done today)
-                await generateMoonPhaseCommentary(user.id, 'waxing');
-                moonPhaseCount++;
-            } catch (err) {
-                console.error(`[STARTUP] Error updating user ${user.id}:`, err.message);
-                // Continue with next user even if one fails
-            }
-        }
-        
-        console.log(`[STARTUP] ✓ Daily updates complete - Horoscopes: ${horoscopeCount}, Moon phases: ${moonPhaseCount}`);
     } catch (err) {
-        console.error('[STARTUP] Error generating daily mystical updates:', err.message);
+        console.error('[PROCESSOR] Error updating moon phase cache:', err.message);
     }
 }
 
@@ -110,18 +79,22 @@ async function cleanupOldTempAccounts() {
  * Main worker loop
  */
 export async function workerLoop() {
-    console.log('[WORKER] Starting worker loop...');
+    console.log('[WORKER] Started - waiting for jobs...');
     
-    // Generate daily horoscope and moon phase on startup
-    await generateDailyMysticalUpdates();
+    // Update moon phase cache in background (non-blocking)
+    // Don't wait for it to complete on startup
+    updateMoonPhaseCache().catch(err => 
+        console.error('[WORKER] Initial moon phase update failed:', err.message)
+    );
+    
+    // Update cache hourly
+    setInterval(updateMoonPhaseCache, 3600000);
     
     // Run cleanup job every 24 hours (86400000 ms)
     setInterval(cleanupOldTempAccounts, 86400000);
     
     // Also run cleanup once on startup (after 5 seconds delay to let system initialize)
     setTimeout(cleanupOldTempAccounts, 5000);
-    
-    console.log('[WORKER] Ready for job processing');
     
     // Main job processing loop
     while (true) {

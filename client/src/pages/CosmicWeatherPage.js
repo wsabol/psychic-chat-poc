@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from '../context/TranslationContext';
 import { useSpeech } from '../hooks/useSpeech';
 import VoiceBar from '../components/VoiceBar';
 import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
@@ -8,6 +9,7 @@ import '../styles/responsive.css';
 import './CosmicWeatherPage.css';
 
 export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPage }) {
+  const { t } = useTranslation();
   const [cosmicData, setCosmicData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -193,8 +195,8 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
   return (
     <div className="page-safe-area cosmic-weather-page">
       <div className="cosmic-header">
-        <h2 className="heading-primary">🌍 Today's Cosmic Weather</h2>
-        <p className="cosmic-subtitle">Current planetary positions and their influence</p>
+        <h2 className="heading-primary">🌍 {t('cosmicWeather.title')}</h2>
+        <p className="cosmic-subtitle">{t('cosmicWeather.subtitle')}</p>
       </div>
 
       {!loading && !error && isBirthInfoMissing(astroInfo) && (
@@ -212,14 +214,14 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
       {error && error !== 'BIRTH_INFO_MISSING' && (
         <div className="cosmic-content error">
           <p className="error-message">⚠️ {error}</p>
-          <button onClick={loadCosmicWeather} className="btn-secondary">Try Again</button>
+          <button onClick={loadCosmicWeather} className="btn-secondary">{t('common.tryAgain')}</button>
         </div>
       )}
 
       {loading && (
         <div className="cosmic-content loading">
           <div className="spinner">🌍</div>
-          <p>{generating ? 'Reading today\'s planetary energies...' : 'Loading cosmic weather...'}</p>
+          <p>{generating ? t('cosmicWeather.loading') : t('cosmicWeather.loading')}</p>
         </div>
       )}
 
@@ -248,12 +250,12 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
               />
             )}
             
-            <button onClick={() => setShowingBrief(!showingBrief)} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', backgroundColor: '#7c63d8', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '1rem', fontWeight: '500' }} onMouseEnter={(e) => e.target.style.backgroundColor = '#6b52c1'} onMouseLeave={(e) => e.target.style.backgroundColor = '#7c63d8'}>{showingBrief ? '📖 Tell me more' : '📋 Show less'}</button>
+            <button onClick={() => setShowingBrief(!showingBrief)} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', backgroundColor: '#7c63d8', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '1rem', fontWeight: '500' }} onMouseEnter={(e) => e.target.style.backgroundColor = '#6b52c1'} onMouseLeave={(e) => e.target.style.backgroundColor = '#7c63d8'}>{showingBrief ? t('chat.toggleMore') : t('chat.toggleLess')}</button>
           </div>
 
           <div className="cosmic-columns">
             <div className="cosmic-column">
-              <h3 className="column-title">Your Birth Chart</h3>
+              <h3 className="column-title">{t('astrology.birthChart')}</h3>
               {cosmicData.birthChart && (
                 <div className="birth-chart-simple">
                   <div className="chart-item">
@@ -273,7 +275,7 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
             </div>
 
             <div className="cosmic-column">
-              <h3 className="column-title">Current Planets</h3>
+              <h3 className="column-title">{t('astrology.planets')}</h3>
               {cosmicData.planets && cosmicData.planets.length > 0 ? (
                 <div className="planets-list">
                   {cosmicData.planets.map((planet, idx) => (
@@ -294,7 +296,7 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
 
           <div className="cosmic-mobile">
             <div className="mobile-section">
-              <h3>Your Birth Chart</h3>
+              <h3>{t('astrology.birthChart')}</h3>
               {cosmicData.birthChart && (
                 <div className="birth-chart-simple">
                   <div className="chart-item">
@@ -314,7 +316,7 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
             </div>
 
             <div className="mobile-section">
-              <h3>Current Planets</h3>
+              <h3>{t('astrology.planets')}</h3>
               {cosmicData.planets && cosmicData.planets.length > 0 ? (
                 <div className="planets-list">
                   {cosmicData.planets.map((planet, idx) => (
@@ -334,7 +336,7 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
           </div>
 
           <div className="cosmic-disclaimer">
-            <p>🌍 Cosmic weather is for inspiration and self-reflection. Your free will always guides your destiny.</p>
+            <p>{t('cosmicWeather.loading')}</p>
           </div>
         </section>
       )}

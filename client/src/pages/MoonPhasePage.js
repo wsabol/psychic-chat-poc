@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from '../context/TranslationContext';
 import { useSpeech } from '../hooks/useSpeech';
 import VoiceBar from '../components/VoiceBar';
 import { getAstrologyData } from '../utils/astroUtils';
@@ -8,6 +9,7 @@ import '../styles/responsive.css';
 import './MoonPhasePage.css';
 
 export default function MoonPhasePage({ userId, token, auth, onNavigateToPage }) {
+  const { t } = useTranslation();
   const [moonPhaseData, setMoonPhaseData] = useState(null);
   const [currentPhase, setCurrentPhase] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -235,8 +237,8 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
   return (
     <div className="page-safe-area moon-phase-page">
       <div className="moon-phase-header">
-        <h2 className="heading-primary">🌙 Moon Phase Insight</h2>
-        <p className="moon-phase-subtitle">Current lunar energy and its effect on you</p>
+        <h2 className="heading-primary">🌙 {t('moonPhase.title')}</h2>
+        <p className="moon-phase-subtitle">{t('moonPhase.subtitle')}</p>
       </div>
 
       {!loading && !error && isBirthInfoMissing(astroInfo) && (
@@ -255,7 +257,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
         <div className="moon-phase-content error">
           <p className="error-message">⚠️ {error}</p>
           <button onClick={loadMoonPhaseData} className="btn-secondary">
-            Try Again
+            {t('common.tryAgain')}
           </button>
         </div>
       )}
@@ -264,7 +266,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
         <div className="moon-phase-content loading">
           <div className="spinner">🌙</div>
           <p>
-            {generating ? 'The Oracle is sensing the lunar energy for you...' : 'Loading moon phase insight...'}
+            {generating ? t('moonPhase.loading') : t('moonPhase.loading')}
           </p>
         </div>
       )}
@@ -332,7 +334,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
               />
             )}
             
-            <button onClick={() => setShowingBrief(!showingBrief)} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', backgroundColor: '#7c63d8', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '1rem', fontWeight: '500' }} onMouseEnter={(e) => e.target.style.backgroundColor = '#6b52c1'} onMouseLeave={(e) => e.target.style.backgroundColor = '#7c63d8'}>{showingBrief ? '📖 Tell me more' : '📋 Show less'}</button>
+            <button onClick={() => setShowingBrief(!showingBrief)} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', backgroundColor: '#7c63d8', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '1rem', fontWeight: '500' }} onMouseEnter={(e) => e.target.style.backgroundColor = '#6b52c1'} onMouseLeave={(e) => e.target.style.backgroundColor = '#7c63d8'}>{showingBrief ? t('chat.toggleMore') : t('chat.toggleLess')}</button>
           </div>
 
           {lastUpdated && (
@@ -342,7 +344,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
           )}
 
           <section className="lunar-cycle">
-            <h3>Lunar Cycle</h3>
+            <h3>{t('moonPhase.title')}</h3>
             <div className="moon-phases-grid">
               {moonPhaseOrder.map((phase) => (
                 <div
@@ -368,22 +370,22 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
 
               <div className="sun-info-grid">
                 <div className="info-item">
-                  <strong>Element:</strong>
+                  <strong>{t('mySign.element')}</strong>
                   <span>{sunSignData.element}</span>
                 </div>
                 <div className="info-item">
-                  <strong>Ruling Planet:</strong>
+                  <strong>{t('mySign.rulingPlanet')}</strong>
                   <span>{sunSignData.rulingPlanet}</span>
                 </div>
                 <div className="info-item">
-                  <strong>Dates:</strong>
+                  <strong>{t('mySign.dates')}</strong>
                   <span>{sunSignData.dates}</span>
                 </div>
               </div>
 
               {sunSignData.personality && (
                 <div className="sun-detail">
-                  <h4>About Your Sign</h4>
+                  <h4>{t('mySign.aboutYourSign')}</h4>
                   <p>{sunSignData.personality}</p>
                 </div>
               )}
@@ -395,7 +397,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
           </div>
 
           <div className="moon-phase-disclaimer">
-            <p>🔮 Moon phase insights are for inspiration and spiritual reflection. Your choices and actions are always your own.</p>
+            <p>{t('moonPhase.disclaimer')}</p>
           </div>
         </section>
       )}

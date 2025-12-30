@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from '../context/TranslationContext';
 import { getAuth } from 'firebase/auth';
 import ReAuthModal from '../components/ReAuthModal';
 import DevicesTab from '../components/security/DevicesTab';
@@ -17,6 +18,7 @@ const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
  * - Reordered tabs: Verification first, then Password, Devices, Session
  */
 export default function SecurityPage({ userId, token, auth, onboarding }) {
+  const { t } = useTranslation();
   const [showReAuthModal, setShowReAuthModal] = useState(true);
   const [isVerified, setIsVerified] = useState(false);
   const [userEmail, setUserEmail] = useState('');
@@ -62,10 +64,10 @@ export default function SecurityPage({ userId, token, auth, onboarding }) {
   }
 
   const tabs = [
-    { id: 'verification', label: '🔐 Verification & 2FA', icon: '🔐' },
-    { id: 'password', label: '🔒 Password', icon: '🔒' },
-    { id: 'devices', label: '📱 Devices', icon: '📱' },
-    { id: 'session', label: '⏱️ Session & Privacy', icon: '⏱️' }
+    { id: 'verification', label: t('security.twoFactor'), icon: '🔐' },
+    { id: 'password', label: t('security.changePassword'), icon: '🔒' },
+    { id: 'devices', label: t('security.trustedDevices'), icon: '📱' },
+    { id: 'session', label: t('security.sessions'), icon: '⏱️' }
   ];
 
   return (
@@ -73,9 +75,9 @@ export default function SecurityPage({ userId, token, auth, onboarding }) {
       <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
         {/* Header */}
         <div style={{ marginBottom: '1rem' }}>
-          <h1 style={{ marginTop: 0, marginBottom: '0.25rem', fontSize: '24px' }}>🔐 Security Settings</h1>
+          <h1 style={{ marginTop: 0, marginBottom: '0.25rem', fontSize: '24px' }}>🔐 {t('security.title')}</h1>
           <p style={{ color: '#666', marginBottom: 0, fontSize: '13px' }}>
-            Manage your account security and verification methods.
+            {t('security.title')}
           </p>
         </div>
 

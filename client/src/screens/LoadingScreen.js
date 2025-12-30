@@ -1,6 +1,8 @@
 import React from 'react';
+import { useTranslation } from '../context/TranslationContext';
 
 export function LoadingScreen() {
+  const { t } = useTranslation();
     return (
         <div style={{
             display: 'flex',
@@ -11,7 +13,7 @@ export function LoadingScreen() {
             color: 'white',
             fontSize: '1.2rem'
         }}>
-            Loading oracle wisdom...
+            {t('common.loading')}
         </div>
     );
 }

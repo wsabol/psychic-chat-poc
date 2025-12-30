@@ -1,0 +1,375 @@
+{
+  "common": {
+    "appName": "Psychic Chat Oracle",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "save": "Save",
+    "cancel": "Cancel",
+    "back": "Back",
+    "next": "Next",
+    "close": "Close",
+    "submit": "Submit",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "logout": "Logout",
+    "language": "Language",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK",
+    "exit": "Exit",
+    "continue": "Continue",
+    "tryAgain": "Try Again",
+    "noData": "No data available",
+    "saving": "Saving...",
+    "saved": "Saved",
+    "error404": "Page not found"
+  },
+  "landing": {
+    "title": "✨ Psychic Chat Oracle ✨",
+    "subtitle": "Connect with ancient wisdom. Explore your cosmic destiny through the power of tarot, astrology, and intuitive guidance.",
+    "description": "Experience a free reading from our oracle. No account required.",
+    "footer": "Your journey of cosmic discovery awaits...",
+    "buttons": {
+      "tryFree": "🔮 Try for Free",
+      "createAccount": "📝 Create Account/Login"
+    }
+  },
+  "login": {
+    "title": "Sign In",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "createOne": "Create one here",
+    "signIn": "Sign In",
+    "signingIn": "Signing in...",
+    "signUp": "Sign Up",
+    "creatingAccount": "Creating account...",
+    "or": "or",
+    "googleSignIn": "Sign in with Google",
+    "agreeTerms": "I agree to the Terms of Service",
+    "agreePrivacy": "I agree to the Privacy Policy",
+    "errors": {
+      "invalidEmail": "Please enter a valid email address",
+      "passwordMismatch": "Passwords do not match",
+      "passwordTooShort": "Password must be at least 8 characters",
+      "accountExists": "An account with this email already exists",
+      "invalidCredentials": "Invalid email or password",
+      "userNotFound": "User not found"
+    }
+  },
+  "verification": {
+    "title": "Verify Your Email",
+    "message": "We've sent a verification code to {{email}}. Please enter it below.",
+    "enterCode": "Enter verification code",
+    "code": "Code",
+    "verify": "Verify",
+    "resendCode": "Resend code",
+    "resendSent": "Verification code sent",
+    "checkInbox": "Please check your email and spam folder",
+    "errors": {
+      "invalidCode": "Invalid verification code",
+      "expiredCode": "Verification code has expired",
+      "tooManyAttempts": "Too many attempts. Please try again later."
+    },
+    "actions": {
+      "signOut": "Sign Out",
+      "failed": "Verification failed"
+    }
+  },
+  "twoFactor": {
+    "title": "Two-Factor Authentication",
+    "message": "Enter the code sent to {{method}}",
+    "enterCode": "Enter verification code",
+    "verify": "Verify",
+    "resend": "Resend Code",
+    "errors": {
+      "invalidCode": "Invalid code",
+      "expired": "Code has expired",
+      "tooManyAttempts": "Too many attempts. Please try again later."
+    }
+  },
+
+  "settings": {
+    "title": "Settings",
+    "personalInfo": "Personal Information",
+    "preferences": "Preferences",
+    "security": "Security & Privacy",
+    "billing": "Billing & Subscription",
+    "help": "Help & Support",
+    "language": "Language",
+    "voiceSettings": "Voice Settings",
+    "voiceEnabled": "Enable Voice",
+    "voiceSelected": "Voice Type",
+    "responseType": "Response Type",
+    "full": "Full",
+    "brief": "Brief",
+    "changeLanguage": "Change Language",
+    "languageChanged": "Language changed successfully"
+  },
+  "personalInfo": {
+    "title": "Personal Information",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "birthDate": "Birth Date",
+    "birthTime": "Birth Time (optional)",
+    "birthLocation": "Birth Location",
+    "birthCountry": "Country",
+    "birthProvince": "Province/State",
+    "birthCity": "City",
+    "birthTimezone": "Timezone",
+    "gender": "Gender",
+    "male": "Male",
+    "female": "Female",
+    "other": "Other",
+    "unspecified": "Prefer not to say",
+    "save": "Save Information",
+    "errors": {
+      "missingRequired": "Please fill in all required fields",
+      "invalidEmail": "Please enter a valid email address",
+      "invalidBirthDate": "Please enter a valid birth date",
+      "ageTooYoung": "You must be 18 years or older to use this service"
+    }
+  },
+  "billing": {
+    "title": "Billing & Subscription",
+    "paymentMethods": "Payment Methods",
+    "subscriptions": "Subscriptions",
+    "addPaymentMethod": "Add Payment Method",
+    "updatePaymentMethod": "Update Payment Method",
+    "deletePaymentMethod": "Delete Payment Method",
+    "default": "Default",
+    "setAsDefault": "Set as Default",
+    "noPaymentMethods": "No payment methods on file",
+    "noSubscriptions": "No active subscriptions",
+    "subscribe": "Subscribe",
+    "manageSubscription": "Manage Subscription",
+    "cancelSubscription": "Cancel Subscription",
+    "subscriptionActive": "Active",
+    "subscriptionExpired": "Expired",
+    "nextBillingDate": "Next Billing Date",
+    "amount": "Amount",
+    "errors": {
+      "paymentFailed": "Payment failed",
+      "invalidCard": "Invalid card information"
+    }
+  },
+  "thankyou": {
+    "title": "Thank You!",
+    "subtitle": "Your oracle session has ended",
+    "message": "Your cosmic insights have been recorded",
+    "createAccount": "Create Account",
+    "continue": "Continue",
+    "exit": "Exit",
+    "clickToRegister": "Click exit to continue"
+  },
+  "errors": {
+    "network": "Network error. Please check your connection.",
+    "server": "Server error. Please try again later.",
+    "unauthorized": "You are not authorized to perform this action.",
+    "notFound": "Page not found.",
+    "sessionExpired": "Your session has expired. Please sign in again."
+  },
+  "passwords": {
+    "title": "Change Password",
+    "current": "Current Password",
+    "new": "New Password",
+    "confirm": "Confirm Password",
+    "change": "Change Password",
+    "requirements": "Password must be at least 8 characters",
+    "errors": {
+      "currentIncorrect": "Current password is incorrect",
+      "mismatch": "New passwords do not match"
+    }
+  },
+  "onboarding": {
+    "welcome": "Welcome to Psychic Chat Oracle!",
+    "step1": "Personal Information",
+    "step2": "Birth Chart",
+    "step3": "Payment Method",
+    "step4": "Subscription",
+    "step5": "Preferences",
+    "complete": "Setup Complete",
+    "skip": "Skip for now",
+    "continue": "Continue",
+    "enhanceReading": "✨ Enhance Your Reading",
+    "birthInfoPrompt": "As your oracle, I can enhance your reading with astrology. If you would like, please enter your birth date, and optional time and place of birth.",
+    "enterBirthInfo": "Yes, Enter My Birth Info",
+    "clickExitToContinue": "Click exit to continue"
+  },
+  "horoscope": {
+    "title": "🔮 Your Horoscope",
+    "subtitle": "Personalized cosmic guidance for you",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "loading": "Reading the stars...",
+    "generatingMessage": "Your cosmic guidance is being woven by The Oracle...",
+    "reading": "{{range}} Reading",
+    "disclaimer": "🔮 Horoscopes are for entertainment and inspiration. Your choices and actions ultimately shape your destiny.",
+    "tryAgain": "Try Again"
+  },
+  "moonPhase": {
+    "title": "🌙 Moon Phase",
+    "subtitle": "Current lunar energy",
+    "new": "New Moon",
+    "waxingCrescent": "Waxing Crescent",
+    "firstQuarter": "First Quarter",
+    "waxingGibbous": "Waxing Gibbous",
+    "full": "Full Moon",
+    "waningGibbous": "Waning Gibbous",
+    "lastQuarter": "Last Quarter",
+    "waningCrescent": "Waning Crescent",
+    "currentPhase": "Current Phase",
+    "nextPhase": "Next Phase",
+    "loading": "Reading the moon...",
+    "disclaimer": "The moon's influence guides our emotions and energy."
+  },
+  "cosmicWeather": {
+    "title": "🌌 Cosmic Weather",
+    "subtitle": "Current planetary influences",
+    "current": "Current",
+    "forecast": "Forecast",
+    "voidOfCourse": "Void of Course",
+    "retrograde": "Retrograde",
+    "mercury": "Mercury",
+    "venus": "Venus",
+    "mars": "Mars",
+    "loading": "Reading cosmic conditions..."
+  },
+  "mySign": {
+    "title": "My Sign",
+    "zodiacSign": "Zodiac Sign",
+    "element": "Element:",
+    "rulingPlanet": "Ruling Planet:",
+    "traits": "Traits",
+    "compatibility": "Compatibility",
+    "dates": "Dates:",
+    "aboutYourSign": "About Your Sign"
+  },
+  "astrology": {
+    "title": "Astrology",
+    "birthChart": "Birth Chart",
+    "sunSign": "Sun Sign",
+    "moonSign": "Moon Sign",
+    "risingSign": "Rising Sign",
+    "houses": "Houses",
+    "planets": "Planets",
+    "aspects": "Aspects"
+  },
+  "menu": {
+    "home": "Home",
+    "chat": "Chat",
+    "horoscope": "Horoscope",
+    "moonPhase": "Moon Phase",
+    "cosmicWeather": "Cosmic Weather",
+    "mySign": "My Sign",
+    "settings": "Settings",
+    "billing": "Billing",
+    "security": "Security",
+    "help": "Help",
+    "logout": "Logout"
+  },
+  "voice": {
+    "play": "Play",
+    "pause": "Pause",
+    "stop": "Stop",
+    "error": "Error playing audio",
+    "enabled": "Voice enabled",
+    "disabled": "Voice disabled",
+    "playing": "Playing...",
+    "paused": "Paused"
+  },
+  "validation": {
+    "passwordRequirements": "Password Requirements:",
+    "requirement8Chars": "At least 8 characters",
+    "requirementUppercase": "One uppercase letter (A-Z)",
+    "requirementLowercase": "One lowercase letter (a-z)",
+    "requirementNumber": "One number (0-9)",
+    "requirementSpecial": "One special character (!@#$%...)",
+    "passwordsMatch": "✓ Passwords match",
+    "passwordsMismatch": "✗ Passwords do not match",
+    "required": "This field is required",
+    "invalid": "Invalid input"
+  },
+  "chat": {
+    "title": "🔮 Chat with Oracle",
+    "titleTrial": "🔮 Oracle Chat (Free Trial)",
+    "subtitle": "Ask me anything about your journey",
+    "placeholder": "Ask the oracle a question...",
+    "send": "Send",
+    "thinking": "Oracle is thinking...",
+    "sessionExpired": "Your session has expired",
+    "reconnecting": "Reconnecting...",
+    "toggleMore": "📖 Tell me more",
+    "toggleLess": "📋 Show less",
+    "noMessages": "No messages yet. Ask the oracle a question."
+  },
+  "paymentMethods": {
+    "title": "Payment Methods",
+    "addNew": "Add New Payment Method",
+    "cardEnding": "Card ending in",
+    "expires": "Expires",
+    "lastUsed": "Last used",
+    "setAsDefault": "Set as Default",
+    "delete": "Delete",
+    "deleteConfirm": "Are you sure?"
+  },
+  "subscriptions": {
+    "title": "Subscriptions",
+    "plan": "Plan",
+    "price": "Price",
+    "renewal": "Renews on",
+    "cancel": "Cancel Subscription",
+    "upgrade": "Upgrade Plan",
+    "downgrade": "Downgrade Plan",
+    "active": "Active",
+    "expired": "Expired"
+  },
+  "invoices": {
+    "title": "Invoices",
+    "invoiceNumber": "Invoice #",
+    "date": "Date",
+    "amount": "Amount",
+    "status": "Status",
+    "download": "Download"
+  },
+  "security": {
+    "title": "Security & Privacy",
+    "password": "Password",
+    "changePassword": "Change Password",
+    "twoFactor": "Two-Factor Authentication",
+    "enable2FA": "Enable 2FA",
+    "disable2FA": "Disable 2FA",
+    "trustedDevices": "Trusted Devices",
+    "sessions": "Active Sessions",
+    "signOutOthers": "Sign out from other sessions",
+    "privacySettings": "Privacy Settings"
+  },
+  "help": {
+    "title": "Help & Support",
+    "faq": "Frequently Asked Questions",
+    "contact": "Contact Support",
+    "aboutUs": "About Us",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy"
+  },
+  "modals": {
+    "confirmDelete": "Are you sure?",
+    "deleteWarning": "This action cannot be undone.",
+    "ok": "OK",
+    "cancel": "Cancel",
+    "yes": "Yes",
+    "no": "No",
+    "close": "Close"
+  },
+  "timers": {
+    "secondsRemaining": "{{count}} seconds remaining",
+    "minutesRemaining": "{{count}} minutes remaining",
+    "expired": "Time expired"
+  }
+}

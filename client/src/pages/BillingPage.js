@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from '../context/TranslationContext';
 import PaymentMethodPage from './PaymentMethodPage';
 import SubscriptionsPage from './SubscriptionsPage';
 import InvoicesPage from './InvoicesPage';
@@ -10,6 +11,7 @@ import './BillingPage.css';
  * Displays: Payment Methods, Subscriptions, Invoices, Payments
  */
 export default function BillingPage({ userId, token, auth, onboarding, defaultTab = 'payment-methods' }) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState(defaultTab);
 
   // Update active tab when defaultTab prop changes
@@ -19,21 +21,21 @@ export default function BillingPage({ userId, token, auth, onboarding, defaultTa
     }
   }, [defaultTab]);
 
-  const tabs = [
-    { id: 'payment-methods', label: '💳 Payment Methods', icon: '💳' },
-    { id: 'subscriptions', label: '📋 Subscriptions', icon: '📋' },
-    { id: 'invoices', label: '📄 Invoices', icon: '📄' },
-    { id: 'payments', label: '💰 Payments', icon: '💰' },
+    const tabs = [
+    { id: 'payment-methods', label: t('paymentMethods.title'), icon: '💳' },
+    { id: 'subscriptions', label: t('subscriptions.title'), icon: '📋' },
+    { id: 'invoices', label: t('invoices.title'), icon: '📄' },
+    { id: 'payments', label: 'Payments', icon: '💰' },
   ];
 
   return (
     <div className="page-safe-area billing-page">
       <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
         {/* Header */}
-        <div style={{ marginBottom: '2rem' }}>
-          <h1 style={{ marginTop: 0, marginBottom: '0.5rem' }}>💳 Billing & Subscriptions</h1>
+                <div style={{ marginBottom: '2rem' }}>
+          <h1 style={{ marginTop: 0, marginBottom: '0.5rem' }}>💳 {t('billing.title')}</h1>
           <p style={{ color: '#666', marginBottom: 0 }}>
-            Manage your payment methods, subscriptions, invoices, and transaction history.
+            {t('billing.title')}
           </p>
         </div>
 

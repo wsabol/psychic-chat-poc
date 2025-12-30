@@ -1,0 +1,258 @@
+{
+  "common": {
+    "appName": "Oracle del Chat Psíquico",
+    "loading": "Cargando...",
+    "error": "Ocurrió un error",
+    "success": "Éxito",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "close": "Cerrar",
+    "submit": "Enviar",
+    "delete": "Eliminar",
+    "confirm": "Confirmar",
+    "logout": "Cerrar sesión",
+    "language": "Idioma",
+    "yes": "Sí",
+    "no": "No",
+    "ok": "OK",
+    "exit": "Salir",
+    "continue": "Continuar",
+    "tryAgain": "Intentar de nuevo",
+    "noData": "Sin datos disponibles",
+    "saving": "Guardando...",
+    "saved": "Guardado",
+    "error404": "Página no encontrada"
+  },
+  "landing": {
+    "title": "✨ Oracle del Chat Psíquico ✨",
+    "subtitle": "Conecta con la sabiduría antigua. Explora tu destino cósmico a través del poder del tarot, la astrología y la guía intuitiva.",
+    "description": "Experimenta una lectura gratuita de nuestro oráculo. No se requiere cuenta.",
+    "footer": "Tu viaje de descubrimiento cósmico te espera...",
+    "buttons": {
+      "tryFree": "🔮 Prueba Gratis",
+      "createAccount": "📝 Crear Cuenta/Iniciar Sesión"
+    }
+  },
+  "login": {
+    "title": "Iniciar Sesión",
+    "email": "Correo Electrónico",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar Contraseña",
+    "rememberMe": "Recuérdame",
+    "forgotPassword": "¿Olvidó su contraseña?",
+    "noAccount": "¿No tiene una cuenta?",
+    "createOne": "Cree una aquí",
+    "signIn": "Iniciar Sesión",
+    "signingIn": "Iniciando sesión...",
+    "signUp": "Registrarse",
+    "creatingAccount": "Creando cuenta...",
+    "or": "o",
+    "googleSignIn": "Iniciar sesión con Google",
+    "agreeTerms": "Acepto los Términos de Servicio",
+    "agreePrivacy": "Acepto la Política de Privacidad",
+    "errors": {
+      "invalidEmail": "Por favor, introduzca una dirección de correo electrónico válida",
+      "passwordMismatch": "Las contraseñas no coinciden",
+      "passwordTooShort": "La contraseña debe tener al menos 8 caracteres",
+      "accountExists": "Ya existe una cuenta con este correo electrónico",
+      "invalidCredentials": "Correo electrónico o contraseña inválidos",
+      "userNotFound": "Usuario no encontrado"
+    }
+  },
+  "verification": {
+    "title": "Verificar Su Correo Electrónico",
+    "message": "Hemos enviado un código de verificación a {{email}}. Por favor, introdúzcalo a continuación.",
+    "enterCode": "Introduzca el código de verificación",
+    "code": "Código",
+    "verify": "Verificar",
+    "resendCode": "Reenviar código",
+    "resendSent": "Código de verificación enviado",
+    "checkInbox": "Por favor, revise su correo electrónico e incluso la carpeta de spam",
+    "errors": {
+      "invalidCode": "Código de verificación inválido",
+      "expiredCode": "El código de verificación ha expirado",
+      "tooManyAttempts": "Demasiados intentos. Por favor, inténtelo más tarde."
+    }
+  },
+  "twoFactor": {
+    "title": "Autenticación de Dos Factores",
+    "message": "Introduzca el código enviado a {{method}}",
+    "enterCode": "Introduzca el código de verificación",
+    "verify": "Verificar",
+    "resend": "Reenviar Código",
+    "errors": {
+      "invalidCode": "Código inválido",
+      "expired": "El código ha expirado",
+      "tooManyAttempts": "Demasiados intentos. Por favor, inténtelo más tarde."
+    }
+  },
+  "settings": {
+    "title": "Configuración",
+    "personalInfo": "Información Personal",
+    "preferences": "Preferencias",
+    "security": "Seguridad y Privacidad",
+    "billing": "Facturación y Suscripción",
+    "help": "Ayuda y Soporte",
+    "language": "Idioma",
+    "voiceSettings": "Configuración de Voz",
+    "voiceEnabled": "Habilitar Voz",
+    "voiceSelected": "Tipo de Voz",
+    "responseType": "Tipo de Respuesta",
+    "full": "Completo",
+    "brief": "Breve",
+    "changeLanguage": "Cambiar Idioma",
+    "languageChanged": "Idioma cambiado exitosamente"
+  },
+  "personalInfo": {
+    "title": "Información Personal",
+    "firstName": "Nombre",
+    "lastName": "Apellido",
+    "email": "Correo Electrónico",
+    "birthDate": "Fecha de Nacimiento",
+    "birthTime": "Hora de Nacimiento (opcional)",
+    "birthLocation": "Lugar de Nacimiento",
+    "birthCountry": "País",
+    "birthProvince": "Provincia/Estado",
+    "birthCity": "Ciudad",
+    "birthTimezone": "Zona Horaria",
+    "gender": "Género",
+    "male": "Hombre",
+    "female": "Mujer",
+    "other": "Otro",
+    "unspecified": "Prefiero no decir",
+    "save": "Guardar Información",
+    "errors": {
+      "missingRequired": "Por favor, complete todos los campos requeridos",
+      "invalidEmail": "Por favor, introduzca una dirección de correo electrónico válida",
+      "invalidBirthDate": "Por favor, introduzca una fecha de nacimiento válida",
+      "ageTooYoung": "Debe tener al menos 18 años para usar este servicio"
+    }
+  },
+  "security": {
+    "title": "Seguridad y Privacidad",
+    "password": "Contraseña",
+    "changePassword": "Cambiar Contraseña",
+    "twoFactor": "Autenticación de Dos Factores",
+    "enable2FA": "Habilitar 2FA",
+    "disable2FA": "Deshabilitar 2FA",
+    "trustedDevices": "Dispositivos de Confianza",
+    "sessions": "Sesiones Activas",
+    "signOutOthers": "Cerrar sesión de otras sesiones",
+    "privacySettings": "Configuración de Privacidad"
+  },
+  "passwords": {
+    "title": "Cambiar Contraseña",
+    "current": "Contraseña Actual",
+    "new": "Nueva Contraseña",
+    "confirm": "Confirmar Contraseña",
+    "change": "Cambiar Contraseña",
+    "requirements": "La contraseña debe tener al menos 8 caracteres",
+    "errors": {
+      "currentIncorrect": "La contraseña actual es incorrecta",
+      "mismatch": "Las nuevas contraseñas no coinciden"
+    }
+  },
+  "menu": {
+    "home": "Inicio",
+    "chat": "Chat",
+    "horoscope": "Horóscopo",
+    "moonPhase": "Fase Lunar",
+    "cosmicWeather": "Clima Cósmico",
+    "mySign": "Mi Signo",
+    "settings": "Configuración",
+    "billing": "Facturación",
+    "security": "Seguridad",
+    "help": "Ayuda",
+    "logout": "Cerrar Sesión"
+  },
+  "chat": {
+    "title": "🔮 Chat con El Oráculo",
+    "titleTrial": "🔮 Chat del Oráculo (Prueba Gratuita)",
+    "subtitle": "Preguntale al oráculo cualquier cosa sobre tu viaje",
+    "placeholder": "Preguntale al oráculo una pregunta...",
+    "send": "Enviar",
+    "thinking": "El oráculo está pensando...",
+    "sessionExpired": "Su sesión ha expirado",
+    "reconnecting": "Reconectando...",
+    "toggleMore": "📖 Cuéntame más",
+    "toggleLess": "📋 Mostrar menos",
+    "noMessages": "Sin mensajes aún. Preguntale al oráculo una pregunta."
+  },
+  "voice": {
+    "play": "Reproducir",
+    "pause": "Pausar",
+    "stop": "Detener",
+    "error": "Error al reproducir audio",
+    "enabled": "Voz habilitada",
+    "disabled": "Voz deshabilitada",
+    "playing": "Reproduciendo...",
+    "paused": "En pausa"
+  },
+  "validation": {
+    "passwordRequirements": "Requisitos de Contraseña:",
+    "requirement8Chars": "Al menos 8 caracteres",
+    "requirementUppercase": "Una letra mayúscula (A-Z)",
+    "requirementLowercase": "Una letra minúscula (a-z)",
+    "requirementNumber": "Un número (0-9)",
+    "requirementSpecial": "Un carácter especial (!@#$%...)",
+    "passwordsMatch": "✓ Las contraseñas coinciden",
+    "passwordsMismatch": "✗ Las contraseñas no coinciden",
+    "required": "Este campo es obligatorio",
+    "invalid": "Entrada inválida"
+  },
+  "errors": {
+    "network": "Error de red. Por favor, compruebe su conexión.",
+    "server": "Error del servidor. Por favor, inténtelo más tarde.",
+    "unauthorized": "No está autorizado para realizar esta acción.",
+    "notFound": "Página no encontrada.",
+    "sessionExpired": "Su sesión ha expirado. Por favor, inicie sesión de nuevo."
+  },
+  "thankyou": {
+    "title": "¡Gracias!",
+    "subtitle": "Su sesión de oráculo ha terminado",
+    "message": "Sus insights cósmicos han sido registrados",
+    "createAccount": "Crear Cuenta",
+    "continue": "Continuar",
+    "exit": "Salir",
+    "clickToRegister": "Haga clic en salir para continuar"
+  },
+  "onboarding": {
+    "welcome": "¡Bienvenido a Oracle del Chat Psíquico!",
+    "step1": "Información Personal",
+    "step2": "Carta Natal",
+    "step3": "Método de Pago",
+    "step4": "Suscripción",
+    "step5": "Preferencias",
+    "complete": "Configuración Completa",
+    "skip": "Omitir por ahora",
+    "continue": "Continuar",
+    "enhanceReading": "✨ Mejorar Su Lectura",
+    "birthInfoPrompt": "Como su oráculo, puedo mejorar su lectura con astrología. Si lo desea, por favor introduzca su fecha de nacimiento, y la hora y lugar de nacimiento opcionales.",
+    "enterBirthInfo": "Sí, Introduzca Mi Información de Nacimiento",
+    "clickExitToContinue": "Haga clic en salir para continuar"
+  },
+  "modals": {
+    "confirmDelete": "¿Está seguro?",
+    "deleteWarning": "Esta acción no se puede deshacer.",
+    "ok": "OK",
+    "cancel": "Cancelar",
+    "yes": "Sí",
+    "no": "No",
+    "close": "Cerrar"
+  },
+  "timers": {
+    "secondsRemaining": "{{count}} segundos restantes",
+    "minutesRemaining": "{{count}} minutos restantes",
+    "expired": "Tiempo expirado"
+  },
+  "help": {
+    "title": "Ayuda y Soporte",
+    "faq": "Preguntas Frecuentes",
+    "contact": "Contactar Soporte",
+    "aboutUs": "Acerca de Nosotros",
+    "terms": "Términos de Servicio",
+    "privacy": "Política de Privacidad"
+  }
+}

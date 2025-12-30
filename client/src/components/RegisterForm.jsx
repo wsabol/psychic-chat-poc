@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from '../context/TranslationContext';
 import { PasswordInput } from './PasswordInput';
 import { TermsCheckbox } from './TermsCheckbox';
 
@@ -61,6 +62,7 @@ export function RegisterForm({
   onSubmit,
   onSwitchToLogin
 }) {
+  const { t } = useTranslation();
   const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
   
   const passwordValidation = useMemo(() => validatePassword(password), [password]);
@@ -72,9 +74,9 @@ export function RegisterForm({
 
   return (
     <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      <input
+            <input
         type="email"
-        placeholder="Email"
+        placeholder={t('login.email')}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         required
@@ -88,11 +90,11 @@ export function RegisterForm({
       />
       
       <div>
-        <PasswordInput
+                <PasswordInput
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           onFocus={() => setShowPasswordRequirements(true)}
-          placeholder="Password (8+ chars, uppercase, number, special char)"
+          placeholder={t('login.password')}
           autoComplete="new-password"
         />
         
@@ -128,8 +130,8 @@ export function RegisterForm({
             borderRadius: '5px',
             fontSize: '0.85rem',
           }}>
-            <div style={{ fontWeight: '600', marginBottom: '0.5rem', color: '#333' }}>
-              Password Requirements:
+                        <div style={{ fontWeight: '600', marginBottom: '0.5rem', color: '#333' }}>
+              {t('validation.passwordRequirements')}
             </div>
             {Object.entries(PASSWORD_REQUIREMENTS).map(([key, { label }]) => {
               const isMet = passwordValidation[key];
@@ -156,10 +158,10 @@ export function RegisterForm({
       </div>
       
       <div>
-        <PasswordInput
+                <PasswordInput
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder="Confirm Password"
+          placeholder={t('login.confirmPassword')}
           autoComplete="new-password"
         />
         
@@ -171,7 +173,7 @@ export function RegisterForm({
             color: passwordsMatch ? '#388e3c' : '#d32f2f',
             fontWeight: '600',
           }}>
-            {passwordsMatch ? '✓ Passwords match' : '✗ Passwords do not match'}
+            {passwordsMatch ? t('validation.passwordsMatch') : t('validation.passwordsMismatch')}
           </small>
         )}
       </div>
@@ -200,12 +202,12 @@ export function RegisterForm({
           transition: 'all 0.3s',
         }}
       >
-        {loading ? 'Creating account...' : 'Create Account'}
+        {loading ? t('login.creatingAccount') : t('login.signUp')}
       </button>
 
       <div style={{ textAlign: 'center', fontSize: '0.9rem' }}>
         <p>
-          Already have an account?{' '}
+                    {t('login.noAccount')}{' '}
           <button 
             type="button"
             onClick={onSwitchToLogin}
@@ -217,7 +219,7 @@ export function RegisterForm({
               textDecoration: 'underline'
             }}
           >
-            Sign in
+            {t('login.signIn')}
           </button>
         </p>
       </div>

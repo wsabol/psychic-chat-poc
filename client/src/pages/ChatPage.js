@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from '../context/TranslationContext';
 import { useChat } from '../hooks/useChat';
 import ChatMessageList from '../components/ChatMessageList';
 import ChatInputForm from '../components/ChatInputForm';
@@ -14,6 +15,7 @@ import './ChatPage.css';
  * - Shows modal with birth info or exit options after timer
  */
 export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogout }) {
+  const { t } = useTranslation();
   const isTemporaryAccount = auth?.isTemporaryAccount;
   const [defaultShowBrief, setDefaultShowBrief] = useState(true);
   
@@ -150,9 +152,9 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
             border: '1px solid rgba(100, 150, 255, 0.3)'
           }}>
-            <h2 style={{ marginBottom: '1rem' }}>✨ Enhance Your Reading</h2>
+                        <h2 style={{ marginBottom: '1rem' }}>{t('onboarding.enhanceReading')}</h2>
             <p style={{ marginBottom: '2rem', lineHeight: '1.6', color: '#d0d0ff' }}>
-              As your oracle, I can enhance your reading with astrology. If you would like, please enter your birth date, and optional time and place of birth.
+              {t('onboarding.birthInfoPrompt')}
             </p>
             <div style={{
               display: 'flex',
@@ -171,7 +173,7 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
                   fontWeight: 'bold'
                 }}
               >
-                Yes, Enter My Birth Info
+                {t('onboarding.enterBirthInfo')}
               </button>
               <button
                 onClick={handleAstrologyNo}
@@ -185,7 +187,7 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
                   fontWeight: 'bold'
                 }}
               >
-                No, Exit
+                {t('common.exit')}
               </button>
             </div>
           </div>
@@ -195,10 +197,10 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
       {/* Main chat UI */}
       <div className="page-safe-area chat-page-container">
         <div className="chat-header">
-          <h2 className="heading-primary">
-            {isTemporaryAccount ? '🔮 Oracle Chat (Free Trial)' : '🔮 Chat with Oracle'}
+                    <h2 className="heading-primary">
+            {isTemporaryAccount ? t('chat.titleTrial') : t('chat.title')}
           </h2>
-          <p className="chat-subtitle">Ask me anything about your journey</p>
+          <p className="chat-subtitle">{t('chat.subtitle')}</p>
         </div>
 
         {/* Messages */}

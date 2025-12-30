@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from '../context/TranslationContext';
 import './VoiceBar.css';
 
 export default function VoiceBar({
@@ -13,6 +14,7 @@ export default function VoiceBar({
   progress = 0,
   disabled = false
 }) {
+  const { t } = useTranslation();
   if (!isSupported) {
     return null;
   }
@@ -36,7 +38,7 @@ export default function VoiceBar({
               className="voice-btn voice-btn-play"
               onClick={onPlay}
               disabled={disabled}
-              title="Read aloud (🔊)"
+              title={t('voice.play')}
             >
               🔊
             </button>
@@ -49,7 +51,7 @@ export default function VoiceBar({
                 className="voice-btn voice-btn-toggle"
                 onClick={onTogglePause}
                 disabled={disabled}
-                title={isPlaying ? 'Pause (⏸)' : 'Resume (▶)'}
+                title={isPlaying ? t('voice.pause') : t('voice.play')}
               >
                 {isPlaying ? '⏸️' : '▶️'}
               </button>
@@ -58,7 +60,7 @@ export default function VoiceBar({
                 className="voice-btn voice-btn-stop"
                 onClick={onStop}
                 disabled={disabled}
-                title="Stop (⏹)"
+                title={t('voice.stop')}
               >
                 ⏹️
               </button>

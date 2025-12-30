@@ -26,6 +26,10 @@ export async function getMessageFromQueue() {
     return job ? JSON.parse(job) : null;
 }
 
-export async function redis() {
-    return getClient();
-}
+// Export redis as a lazy getter
+export const redis = {
+    async setEx(key, ttl, value) {
+        const redisClient = await getClient();
+        return redisClient.setEx(key, ttl, value);
+    }
+};
