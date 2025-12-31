@@ -2,6 +2,7 @@ import { useAstrologyData } from './MySignPage/hooks/useAstrologyData';
 import { SignCards } from './MySignPage/components/SignCards';
 import { SignDetails } from './MySignPage/components/SignDetails';
 import BirthInfoMissingPrompt from '../components/BirthInfoMissingPrompt';
+import { useTranslation } from '../context/TranslationContext';
 import './MySignPage.css';
 import '../styles/responsive.css';
 
@@ -10,6 +11,7 @@ import '../styles/responsive.css';
  * Refactored to use modular components and hooks
  */
 export default function MySignPage({ userId, token, auth, onNavigateToPage }) {
+  const { t } = useTranslation();
   const { astroData, loading, error, fetchAstrologyData } = useAstrologyData(userId, token);
 
   if (loading) {
@@ -59,21 +61,21 @@ export default function MySignPage({ userId, token, auth, onNavigateToPage }) {
 
   return (
     <div className="page-safe-area sign-page">
-      {/* Header */}
+            {/* Header */}
       <div className="sign-header">
-        <h2 className="heading-primary">♈ Your Birth Chart</h2>
-        <p className="sign-subtitle">Your Sun, Moon, and Rising Signs calculated from your birth data</p>
+        <h2 className="heading-primary">♈ {t('astrology.birthChart')}</h2>
+        <p className="sign-subtitle">{t('astrology.description') || 'Your Sun, Moon, and Rising Signs calculated from your birth data'}</p>
       </div>
 
       {/* The Three Signs */}
-      <SignCards astro={astro} />
+      <SignCards astro={astro} t={t} />
 
       {/* Divider */}
       <div className="section-divider"></div>
 
-      {/* Detailed Information */}
+            {/* Detailed Information */}
       <section className="zodiac-details-section">
-        <SignDetails astro={astro} />
+        <SignDetails astro={astro} t={t} />
       </section>
     </div>
   );

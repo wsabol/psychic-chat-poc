@@ -37,7 +37,22 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
     waningCrescent: '🌘'
   };
 
-  const moonPhaseOrder = ['newMoon', 'waxingCrescent', 'firstQuarter', 'waxingGibbous', 'fullMoon', 'waningGibbous', 'lastQuarter', 'waningCrescent'];
+    const moonPhaseOrder = ['newMoon', 'waxingCrescent', 'firstQuarter', 'waxingGibbous', 'fullMoon', 'waningGibbous', 'lastQuarter', 'waningCrescent'];
+
+  // Map phase names to translation keys
+  const getPhaseTranslationKey = (phase) => {
+    const keyMap = {
+      'newMoon': 'new',
+      'fullMoon': 'full',
+      'waxingCrescent': 'waxingCrescent',
+      'firstQuarter': 'firstQuarter',
+      'waxingGibbous': 'waxingGibbous',
+      'waningGibbous': 'waningGibbous',
+      'lastQuarter': 'lastQuarter',
+      'waningCrescent': 'waningCrescent',
+    };
+    return keyMap[phase] || phase;
+  };
 
   const calculateMoonPhase = () => {
     const now = new Date();
@@ -276,8 +291,8 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
           <div className="moon-phase-emoji">
             {moonPhaseEmojis[currentPhase]}
           </div>
-          <h3 className="moon-phase-name">
-            {currentPhase.replace(/([A-Z])/g, ' $1').trim()}
+                              <h3 className="moon-phase-name">
+            {t(`moonPhase.${getPhaseTranslationKey(currentPhase)}`)}
           </h3>
           <p className="moon-phase-date">
             {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
@@ -352,8 +367,8 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
                   className={`moon-phase-item ${phase === currentPhase ? 'active' : ''}`}
                 >
                   <div className="moon-emoji">{moonPhaseEmojis[phase]}</div>
-                  <p className="phase-name">
-                    {phase.replace(/([A-Z])/g, ' $1').trim()}
+                                                      <p className="phase-name">
+                    {t(`moonPhase.${getPhaseTranslationKey(phase)}`)}
                   </p>
                 </div>
               ))}

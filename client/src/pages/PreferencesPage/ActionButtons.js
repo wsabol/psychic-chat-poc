@@ -31,7 +31,7 @@ export default function ActionButtons({
         onMouseEnter={(e) => !saving && (e.target.style.backgroundColor = '#7b5bb5')}
         onMouseLeave={(e) => (e.target.style.backgroundColor = '#9370db')}
       >
-        {saving ? getString('saving') : getString('save')}
+        {saving ? getString('common.saving') : getString('common.save')}
       </button>
       <button
         type="button"
@@ -51,7 +51,7 @@ export default function ActionButtons({
         onMouseEnter={(e) => (e.target.style.backgroundColor = '#ccc')}
         onMouseLeave={(e) => (e.target.style.backgroundColor = '#ddd')}
       >
-        {getString('cancel')}
+        {getString('common.cancel')}
       </button>
     </div>
   );

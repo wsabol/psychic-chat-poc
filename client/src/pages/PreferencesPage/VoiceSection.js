@@ -46,7 +46,7 @@ export default function VoiceSection({
         color: '#333',
         fontSize: '16px'
       }}>
-        {getString('voice')}
+        {getString('settings.voiceSettings')}
       </label>
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
         <label style={{
@@ -65,7 +65,7 @@ export default function VoiceSection({
               cursor: 'pointer'
             }}
           />
-          {getString('voiceOn')}
+          {getString('settings.voiceEnabled')}
         </label>
         <label style={{
           display: 'flex',
@@ -83,7 +83,7 @@ export default function VoiceSection({
               cursor: 'pointer'
             }}
           />
-          {getString('voiceOff')}
+          {getString('settings.voiceDisabled')}
         </label>
       </div>
 

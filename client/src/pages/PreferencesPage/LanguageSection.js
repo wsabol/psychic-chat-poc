@@ -1,7 +1,8 @@
 import React from 'react';
-import { LANGUAGES } from '../../data/translations';
+import { useTranslation } from '../../context/TranslationContext';
 
 export default function LanguageSection({ value, onChange, getString }) {
+  const { availableLanguages } = useTranslation();
   return (
     <div style={{
       marginBottom: '2rem',
@@ -15,7 +16,7 @@ export default function LanguageSection({ value, onChange, getString }) {
         color: '#333',
         fontSize: '16px'
       }}>
-        {getString('language')}
+        {getString('settings.language')}
       </label>
       <select
         value={value}
@@ -30,8 +31,8 @@ export default function LanguageSection({ value, onChange, getString }) {
           cursor: 'pointer'
         }}
       >
-        {Object.entries(LANGUAGES).map(([code, name]) => (
-          <option key={code} value={code}>{name}</option>
+        {Object.entries(availableLanguages).map(([code, langObj]) => (
+          <option key={code} value={code}>{langObj.name}</option>
         ))}
       </select>
     </div>

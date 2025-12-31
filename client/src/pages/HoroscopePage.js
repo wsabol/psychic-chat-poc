@@ -327,8 +327,8 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
       {horoscopeData && !loading && (
         <section className="horoscope-content">
           <div className="horoscope-metadata">
-            <p className="horoscope-range">
-              {t('horoscope.reading', { range: horoscopeData.range.charAt(0).toUpperCase() + horoscopeData.range.slice(1) })}
+                        <p className="horoscope-range">
+              {t('horoscope.reading', { range: t(`horoscope.${horoscopeData.range}`) })}
             </p>
             <p className="horoscope-date">
               {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}

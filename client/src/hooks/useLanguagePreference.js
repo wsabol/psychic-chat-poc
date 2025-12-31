@@ -17,39 +17,9 @@ export function useLanguagePreference() {
   // Fetch user language preference from DB on mount or auth change
   // Only refetch when authUserId or token changes, NOT when changeLanguage changes
   useEffect(() => {
-    const fetchUserLanguagePreference = async () => {
-      if (!authUserId || !token) {
-        console.log('[LANGUAGE] Not authenticated, skipping DB fetch');
-        return; // Not authenticated, skip DB fetch
-      }
-
-      console.log('[LANGUAGE] Fetching preference for user:', authUserId);
-      try {
-        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
-        const response = await fetch(`${API_URL}/user-profile/${authUserId}/preferences`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (response.ok) {
-          const preferences = await response.json();
-          console.log('[LANGUAGE] Fetched from DB:', preferences);
-          if (preferences.language) {
-            console.log('[LANGUAGE] Changing language to:', preferences.language);
-            changeLanguage(preferences.language);
-          }
-        } else {
-          console.warn('[LANGUAGE] Failed to fetch preferences, status:', response.status);
-        }
-      } catch (err) {
-        console.error('[LANGUAGE] Failed to fetch language preference:', err);
-        // Don't block app initialization on preference fetch failure
-      }
-    };
-
-    fetchUserLanguagePreference();
+    // Don't fetch language preference during app initialization
+  // It causes race conditions and blocks the app if the API is slow
+  // Language is managed by TranslationContext and user can change it in Settings
   }, [authUserId, token]); // ✅ FIXED: Removed changeLanguage to prevent infinite loop
 
   // Save language change to DB

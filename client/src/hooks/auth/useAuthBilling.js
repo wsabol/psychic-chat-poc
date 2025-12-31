@@ -52,10 +52,11 @@ export function useAuthBilling() {
         headers: { 'Authorization': `Bearer ${idToken}` }
       });
 
-      if (response.ok) {
+            if (response.ok) {
         const subscriptions = await response.json();
-        // Check if user has any active subscriptions (not cancelled, not cancelled at period end)
-        const hasActive = subscriptions.some(sub => sub.status === 'active' && !sub.cancel_at_period_end);
+        // Check if user has any active subscriptions
+        // Include subscriptions with status 'active' (even if cancel_at_period_end is true, they're still active until period ends)
+        const hasActive = subscriptions.some(sub => sub.status === 'active');
         setHasActiveSubscription(hasActive);
         return hasActive;
       } else {

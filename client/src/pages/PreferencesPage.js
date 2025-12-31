@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
 import { useSpeech } from '../hooks/useSpeech';
-import { t } from '../data/translations';
+import { useTranslation } from '../context/TranslationContext';
+import { useLanguagePreference } from '../hooks/useLanguagePreference';
 import LanguageSection from './PreferencesPage/LanguageSection';
 import ResponseTypeSection from './PreferencesPage/ResponseTypeSection';
 import VoiceSection from './PreferencesPage/VoiceSection';
 import ActionButtons from './PreferencesPage/ActionButtons';
 
 function PreferencesPage({ userId, token, onNavigateToPage }) {
+    const { t, language, changeLanguage } = useTranslation();
+    const { saveLanguagePreference } = useLanguagePreference();
     const [preferences, setPreferences] = useState({
-        language: 'en-US',
+        language: language,
         response_type: 'full',
         voice_enabled: true,
         voice_selected: 'sophia'
@@ -72,6 +75,11 @@ function PreferencesPage({ userId, token, onNavigateToPage }) {
         setSuccess(false);
 
         try {
+            // Update language in TranslationContext if it changed
+            if (preferences.language !== language) {
+                await changeLanguage(preferences.language);
+            }
+
             const response = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}/preferences`, {
                 method: 'POST',
                 headers: {
@@ -123,10 +131,18 @@ function PreferencesPage({ userId, token, onNavigateToPage }) {
         }
     };
 
-    const getString = (key) => t(preferences.language, key);
+    // Create a local getString function that uses preferences language for old-style translations
+    // but also falls back to new TranslationContext
+    const getString = (key) => {
+        try {
+            return t(key);
+        } catch (e) {
+            return key;
+        }
+    };
 
     if (loading) {
-        return <div style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>{getString('loading')}</div>;
+        return <div style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>{getString('common.loading')}</div>;
     }
 
     return (
@@ -145,7 +161,7 @@ function PreferencesPage({ userId, token, onNavigateToPage }) {
                 color: '#333',
                 textAlign: 'center'
             }}>
-                {getString('preferences')}
+                {getString('settings.preferences')}
             </h1>
 
             {error && (
@@ -157,7 +173,7 @@ function PreferencesPage({ userId, token, onNavigateToPage }) {
                     borderRadius: '8px',
                     fontSize: '14px'
                 }}>
-                    {getString('error')}: {error}
+                    {getString('common.error')}: {error}
                 </div>
             )}
 
@@ -170,7 +186,7 @@ function PreferencesPage({ userId, token, onNavigateToPage }) {
                     borderRadius: '8px',
                     fontSize: '14px'
                 }}>
-                    ✓ {getString('saved')}
+                    ✓ {getString('common.saved')}
                 </div>
             )}
 
@@ -202,6 +218,8 @@ function PreferencesPage({ userId, token, onNavigateToPage }) {
                     onSubmit={handleSave}
                     onCancel={() => onNavigateToPage(0)}
                     getString={getString}
+                    language={preferences.language}
+                    onLanguageChange={(newLang) => setPreferences({ ...preferences, language: newLang })}
                 />
             </form>
         </div>

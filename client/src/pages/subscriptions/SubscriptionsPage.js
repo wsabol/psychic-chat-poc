@@ -36,7 +36,7 @@ export default function SubscriptionsPage({ userId, token, auth }) {
 
   // Load available prices, subscriptions, and payment methods on mount
   useEffect(() => {
-    const loadData = async () => {
+            const loadData = async () => {
       try {
         await Promise.all([
           billing.fetchAvailablePrices(),

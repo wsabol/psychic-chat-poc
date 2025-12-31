@@ -17,12 +17,13 @@ const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
  * - Smaller fonts and padding for better screen fit
  * - Reordered tabs: Verification first, then Password, Devices, Session
  */
-export default function SecurityPage({ userId, token, auth, onboarding }) {
+export default function SecurityPage({ userId, token, auth, onboarding, onNavigateToPage }) {
   const { t } = useTranslation();
-  const [showReAuthModal, setShowReAuthModal] = useState(true);
   const [isVerified, setIsVerified] = useState(false);
   const [userEmail, setUserEmail] = useState('');
   const [activeTab, setActiveTab] = useState('verification');
+  const [reAuthAttempts, setReAuthAttempts] = useState(0);
+  const MAX_REAUTH_ATTEMPTS = 3;
 
   // Get user email from Firebase
   useEffect(() => {
@@ -34,7 +35,7 @@ export default function SecurityPage({ userId, token, auth, onboarding }) {
   }, []);
 
   const handleReAuthSuccess = async () => {
-    setShowReAuthModal(false);
+// Modal already closed by isVerified state
     setIsVerified(true);
     
     // Mark security_settings as complete
@@ -47,18 +48,33 @@ export default function SecurityPage({ userId, token, auth, onboarding }) {
     }
   };
 
-  const handleReAuthCancel = () => {
-    // Route back or close (depends on navigation context)
-    window.history.back();
+    const handleReAuthCancel = () => {
+    // Try to go back to previous page
+    if (onNavigateToPage) {
+      onNavigateToPage(0); // Go to chat page
+    } else {
+      window.history.back();
+    }
   };
 
-  if (!isVerified) {
+  const handleReAuthFailure = () => {
+    const newAttempts = reAuthAttempts + 1;
+    setReAuthAttempts(newAttempts);
+    
+    if (newAttempts >= MAX_REAUTH_ATTEMPTS) {
+      // Too many failed attempts, go back
+      handleReAuthCancel();
+    }
+  };
+
+    if (!isVerified) {
     return (
       <ReAuthModal
-        isOpen={showReAuthModal}
+        isOpen={!isVerified}
         email={userEmail}
         onSuccess={handleReAuthSuccess}
         onCancel={handleReAuthCancel}
+        onFailure={handleReAuthFailure}
       />
     );
   }

@@ -12,7 +12,7 @@ import { auth } from '../firebase';
  * ReAuthModal - Re-authenticate user before accessing security settings
  * Shows both Google and Password options (user picks which they use)
  */
-export default function ReAuthModal({ isOpen, email, onSuccess, onCancel }) {
+export default function ReAuthModal({ isOpen, email, onSuccess, onCancel, onFailure }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
@@ -39,12 +39,20 @@ export default function ReAuthModal({ isOpen, email, onSuccess, onCancel }) {
     } catch (err) {
       console.error('[REAUTH] Google re-auth failed:', err);
       
+      // Skip popup-closed-by-user error to prevent calling onFailure
       if (err.code === 'auth/popup-closed-by-user') {
         setError('Sign-in was cancelled. Please try again.');
+        setLoading(false);
+        return;
       } else if (err.code === 'auth/popup-blocked') {
         setError('Pop-up was blocked. Please allow pop-ups for this site.');
       } else {
         setError(err.message || 'Google authentication failed');
+      }
+      
+      // Only call onFailure on actual authentication failures, not user cancellations
+      if (onFailure && err.code !== 'auth/popup-closed-by-user') {
+        onFailure();
       }
     } finally {
       setLoading(false);
@@ -76,6 +84,10 @@ export default function ReAuthModal({ isOpen, email, onSuccess, onCancel }) {
         setError('This password is not associated with this account.');
       } else {
         setError(err.message || 'Authentication failed. Please check your password.');
+      }
+      
+      if (onFailure) {
+        onFailure();
       }
     } finally {
       setLoading(false);

@@ -63,7 +63,7 @@ export function useAppState() {
     if (authState.emailVerified && !authState.isTemporaryAccount && onboarding.onboardingStatus?.isOnboarding) {
       setSkipPaymentCheck(true);
       setSkipSubscriptionCheck(true);
-      setStartingPage(7);
+            setStartingPage(8);
     }
   }, [authState.emailVerified, authState.isTemporaryAccount, onboarding.onboardingStatus?.isOnboarding]);
 
@@ -97,10 +97,10 @@ export function useAppState() {
     await authState.handleLogout();
   }, [authState]);
 
-  const handleNavigateToBilling = useCallback(() => {
+    const handleNavigateToBilling = useCallback(() => {
     setSkipPaymentCheck(true);
     setSkipSubscriptionCheck(true);
-    setStartingPage(7);
+    setStartingPage(8);
   }, []);
 
   const handleNavigateFromBilling = useCallback(async () => {
@@ -111,23 +111,23 @@ export function useAppState() {
     }
   }, [authState]);
 
-  const handleNavigateToSubscriptions = useCallback(() => {
+    const handleNavigateToSubscriptions = useCallback(() => {
     setSkipSubscriptionCheck(true);
-    setStartingPage(7);
+    setStartingPage(8);
   }, []);
 
-  const handleOnboardingNavigate = useCallback((step) => {
+    const handleOnboardingNavigate = useCallback((step) => {
     switch(step) {
       case 'payment_method':
         setSkipPaymentCheck(true);
         setSkipSubscriptionCheck(true);
-        setStartingPage(7);
+        setStartingPage(8);
         break;
       case 'subscription':
         setSkipPaymentCheck(true);
         setSkipSubscriptionCheck(true);
         setBillingTab('subscriptions');
-        setStartingPage(7);
+        setStartingPage(8);
         break;
       case 'personal_info':
         setStartingPage(1);

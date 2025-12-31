@@ -14,7 +14,7 @@ export default function ResponseTypeSection({ value, onChange, getString }) {
         color: '#333',
         fontSize: '16px'
       }}>
-        {getString('responseType')}
+        {getString('settings.responseType')}
       </label>
       <div style={{ display: 'flex', gap: '1rem' }}>
         <label style={{
@@ -34,7 +34,7 @@ export default function ResponseTypeSection({ value, onChange, getString }) {
               cursor: 'pointer'
             }}
           />
-          {getString('fullResponses')}
+          {getString('settings.full')}
         </label>
         <label style={{
           display: 'flex',
@@ -53,7 +53,7 @@ export default function ResponseTypeSection({ value, onChange, getString }) {
               cursor: 'pointer'
             }}
           />
-          {getString('briefResponses')}
+          {getString('settings.brief')}
         </label>
       </div>
     </div>
