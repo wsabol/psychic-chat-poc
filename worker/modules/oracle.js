@@ -236,9 +236,13 @@ export function getUserGreeting(userInfo, userId, isTemporaryUser = false) {
         return "Seaker";
     }
     
-    // For established accounts, use their preference or first name
-    if (!userInfo) return userId;
-    return userInfo.address_preference || userInfo.first_name || userId;
+    // For established accounts, use their first name or familiar name preference
+    if (!userInfo) return "Friend";
+    
+    // address_preference column contains the familiar_name from the DB query
+    const greeting = userInfo.address_preference || userInfo.first_name;
+    if (!greeting) return "Friend";
+    return greeting;
 }
 
 /**
