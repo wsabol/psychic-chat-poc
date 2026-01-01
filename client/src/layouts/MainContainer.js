@@ -13,6 +13,7 @@ import MoonPhasePage from '../pages/MoonPhasePage';
 import HoroscopePage from '../pages/HoroscopePage';
 import CosmicWeatherPage from '../pages/CosmicWeatherPage';
 import SecurityPage from '../pages/SecurityPage';
+import SettingsPage from '../pages/SettingsPage';
 import BillingPage from '../pages/BillingPage';
 import './MainContainer.css';
 
@@ -26,6 +27,7 @@ const PAGES = [
   { id: 'horoscope', label: 'Horoscope', component: HoroscopePage },
   { id: 'cosmic', label: 'Cosmic Weather', component: CosmicWeatherPage },
   { id: 'security', label: 'Security', component: SecurityPage },
+  { id: 'settings', label: 'Settings', component: SettingsPage },
   { id: 'billing', label: 'Billing & Subscriptions', component: BillingPage },
 ];
 

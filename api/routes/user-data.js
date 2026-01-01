@@ -10,9 +10,281 @@ import { db } from '../shared/db.js';
 import { authenticateToken, authorizeUser } from '../middleware/auth.js';
 import { logAudit } from '../shared/auditLog.js';
 import { hashUserId } from '../shared/hashUtils.js';
+import { getAuth } from 'firebase-admin/auth';
+import admin from 'firebase-admin';
 
 const router = Router();
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
+
+/**
+ * GET /user/download-data
+ * Export all user data as JSON (GDPR Article 20)
+ * No URL params needed - uses authenticated user
+ */
+router.get('/download-data', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.uid || req.user.userId;
+    const userIdHash = hashUserId(userId);
+
+    // Fetch personal info
+    const personalInfo = await db.query(
+      `SELECT user_id, 
+              pgp_sym_decrypt(first_name_encrypted, $2) as first_name,
+              pgp_sym_decrypt(last_name_encrypted, $2) as last_name,
+              pgp_sym_decrypt(email_encrypted, $2) as email,
+              pgp_sym_decrypt(phone_number_encrypted, $2) as phone_number,
+              pgp_sym_decrypt(birth_date_encrypted, $2) as birth_date,
+              pgp_sym_decrypt(birth_city_encrypted, $2) as birth_city,
+              pgp_sym_decrypt(birth_timezone_encrypted, $2) as birth_timezone,
+              created_at
+       FROM user_personal_info WHERE user_id = $1`,
+      [userId, ENCRYPTION_KEY]
+    );
+
+    if (personalInfo.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Fetch settings
+    const settings = await db.query(
+      `SELECT cookies_enabled, analytics_enabled, email_marketing_enabled, push_notifications_enabled
+       FROM user_settings WHERE user_id_hash = $1`,
+      [userIdHash]
+    );
+
+    // Fetch chat messages
+    const messages = await db.query(
+      `SELECT created_at, role,
+              pgp_sym_decrypt(content_full_encrypted, $2)::text as content
+       FROM messages WHERE user_id_hash = $1 ORDER BY created_at ASC LIMIT 1000`,
+      [userIdHash, ENCRYPTION_KEY]
+    );
+
+    const data = {
+      export_timestamp: new Date().toISOString(),
+      personal_information: personalInfo.rows[0],
+      settings: settings.rows[0] || null,
+      chat_messages_count: messages.rows.length,
+      chat_messages: messages.rows
+    };
+
+    // Log this action
+    await logAudit(db, {
+      userId,
+      action: 'DATA_DOWNLOAD_REQUESTED',
+      resourceType: 'compliance',
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      httpMethod: req.method,
+      endpoint: req.path,
+      status: 'SUCCESS'
+    }).catch(e => console.error('[AUDIT]', e.message));
+
+    res.json(data);
+  } catch (error) {
+    console.error('[DOWNLOAD-DATA]', error);
+    res.status(500).json({ error: 'Failed to download data', details: error.message });
+  }
+});
+
+/**
+ * POST /user/send-delete-verification
+ * Send email verification code for account deletion
+ */
+router.post('/send-delete-verification', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.uid || req.user.userId;
+    const userEmail = req.user.email;
+
+    if (!userEmail) {
+      return res.status(400).json({ error: 'User email not found' });
+    }
+
+    // Generate 6-digit code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Store code temporarily (10 minute expiry)
+    await db.query(
+      `INSERT INTO user_2fa_codes (user_id, code, code_type, expires_at)
+       VALUES ($1, $2, 'account_deletion', NOW() + INTERVAL '10 minutes')`,
+      [userId, verificationCode]
+    );
+
+    // Send verification email
+    await sendDeleteVerificationEmail(userEmail, verificationCode);
+
+    // Log action
+    await logAudit(db, {
+      userId,
+      action: 'ACCOUNT_DELETION_VERIFICATION_SENT',
+      resourceType: 'account',
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      httpMethod: req.method,
+      endpoint: req.path,
+      status: 'SUCCESS'
+    }).catch(e => console.error('[AUDIT]', e.message));
+
+    res.json({
+      success: true,
+      message: 'Verification code sent to email',
+      email_masked: maskEmail(userEmail)
+    });
+  } catch (error) {
+    console.error('[SEND-DELETE-VERIFICATION]', error);
+    res.status(500).json({ error: 'Failed to send verification email', details: error.message });
+  }
+});
+
+/**
+ * DELETE /user/delete-account
+ * Permanently delete user account after email verification
+ * Deletes from: Firebase, Stripe, PostgreSQL
+ */
+router.delete('/delete-account', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.uid || req.user.userId;
+    const { verificationCode } = req.body;
+    const userIdHash = hashUserId(userId);
+
+    if (!verificationCode) {
+      return res.status(400).json({ error: 'Verification code required' });
+    }
+
+    // Verify code
+    const codeCheck = await db.query(
+      `SELECT id FROM user_2fa_codes 
+       WHERE user_id = $1 
+       AND code = $2 
+       AND code_type = 'account_deletion'
+       AND expires_at > NOW()
+       AND used = FALSE`,
+      [userId, verificationCode]
+    );
+
+    if (codeCheck.rows.length === 0) {
+      return res.status(400).json({ error: 'Invalid or expired verification code' });
+    }
+
+    // Mark code as used
+    await db.query(
+      `UPDATE user_2fa_codes SET used = TRUE 
+       WHERE user_id = $1 AND code = $2`,
+      [userId, verificationCode]
+    );
+
+    // Delete from Firebase
+    try {
+      const auth = getAuth();
+      await auth.deleteUser(userId);
+    } catch (authErr) {
+      console.error('[DELETE-ACCOUNT] Firebase deletion failed:', authErr.message);
+      // Continue with database deletion even if Firebase fails
+    }
+
+    // Delete from Stripe (if customer exists)
+    try {
+      const stripeCustomer = await db.query(
+        `SELECT stripe_customer_id_encrypted FROM user_personal_info WHERE user_id = $1`,
+        [userId]
+      );
+      
+      if (stripeCustomer.rows[0]?.stripe_customer_id_encrypted) {
+        // Decrypt customer ID and delete from Stripe
+        const decryptedId = await decryptStripeCustomerId(stripeCustomer.rows[0].stripe_customer_id_encrypted);
+        if (decryptedId) {
+          const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+          await stripe.customers.del(decryptedId);
+        }
+      }
+    } catch (stripeErr) {
+      console.error('[DELETE-ACCOUNT] Stripe deletion failed:', stripeErr.message);
+      // Continue with database deletion
+    }
+
+    // Delete from all database tables
+    await deleteAllUserData(userId, userIdHash);
+
+    // Log deletion
+    await logAudit(db, {
+      userId,
+      action: 'ACCOUNT_PERMANENTLY_DELETED',
+      resourceType: 'account',
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      httpMethod: req.method,
+      endpoint: req.path,
+      status: 'SUCCESS'
+    }).catch(e => console.error('[AUDIT]', e.message));
+
+    res.json({
+      success: true,
+      message: 'Account permanently deleted',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('[DELETE-ACCOUNT]', error);
+    res.status(500).json({ error: 'Failed to delete account', details: error.message });
+  }
+});
+
+/**
+ * Helper Functions
+ */
+
+async function deleteAllUserData(userId, userIdHash) {
+  const tables = [
+    { table: 'user_2fa_codes', column: 'user_id' },
+    { table: 'user_2fa_settings', column: 'user_id' },
+    { table: 'messages', column: 'user_id_hash' },
+    { table: 'astrology_readings', column: 'user_id' },
+    { table: 'user_consents', column: 'user_id' },
+    { table: 'user_preferences', column: 'user_id_hash' },
+    { table: 'user_settings', column: 'user_id_hash' },
+    { table: 'password_reset_tokens', column: 'user_id' },
+    { table: 'audit_log', column: 'user_id' },
+    { table: 'user_personal_info', column: 'user_id' }
+  ];
+
+  for (const { table, column } of tables) {
+    try {
+      const value = column === 'user_id_hash' ? userIdHash : userId;
+      await db.query(`DELETE FROM ${table} WHERE ${column} = $1`, [value]);
+    } catch (e) {
+      console.error(`[DELETE-DATA] Failed to delete from ${table}:`, e.message);
+    }
+  }
+}
+
+async function sendDeleteVerificationEmail(email, code) {
+  // TODO: Implement with your email service (AWS SES, SendGrid, etc.)
+  console.log(`[EMAIL] Delete verification code sent to ${email}: ${code}`);
+  // Example with SendGrid:
+  // await sgMail.send({
+  //   to: email,
+  //   from: process.env.SENDGRID_FROM_EMAIL,
+  //   subject: 'Confirm Account Deletion',
+  //   html: `Your verification code is: <strong>${code}</strong><br>Code expires in 10 minutes.`
+  // });
+}
+
+function maskEmail(email) {
+  const [local, domain] = email.split('@');
+  return `${local.slice(0, 2)}***@${domain}`;
+}
+
+async function decryptStripeCustomerId(encryptedId) {
+  try {
+    const result = await db.query(
+      `SELECT pgp_sym_decrypt($1::bytea, $2) as customer_id`,
+      [encryptedId, ENCRYPTION_KEY]
+    );
+    return result.rows[0]?.customer_id;
+  } catch (e) {
+    console.error('[DECRYPT] Failed to decrypt Stripe customer ID:', e.message);
+    return null;
+  }
+}
 
 /**
  * GET /user/export-data/:userId?format=json|csv

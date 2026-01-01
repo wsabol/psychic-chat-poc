@@ -17,8 +17,9 @@ export const menuStructure = [
     type: 'category',
     submenu: [
       { id: 'personalInfo', label: 'Personal Information', icon: '👤', pageId: 'personal' },
-      { id: 'preferences', label: 'Preferences', icon: '⚙️', pageId: 'preferences' },
+      { id: 'preferences', label: 'Preferences', icon: '🎯', pageId: 'preferences' },
       { id: 'security', label: 'Security', icon: '🔒', pageId: 'security' },
+      { id: 'settings', label: 'Settings', icon: '⚙️', pageId: 'settings' },
     ],
   },
   {

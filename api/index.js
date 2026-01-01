@@ -109,6 +109,12 @@ app.use("/cleanup", cleanupRoutes);
 app.use("/cleanup", cleanupStatusRoutes);
 app.use("/migration", migrationRoutes);
 
+// New user data endpoints (authentication only - no validateUserHash)
+// These don't have user IDs in the URL
+app.use("/user/download-data", authenticateToken, userDataRoutes);
+app.use("/user/send-delete-verification", authenticateToken, userDataRoutes);
+app.use("/user/delete-account", authenticateToken, userDataRoutes);
+
 // Protected routes (authentication + user hash validation required)
 // validateUserHash ensures hashed user IDs in URLs match the authenticated user
 app.use("/chat", authenticateToken, validateUserHash, chatRoutes);

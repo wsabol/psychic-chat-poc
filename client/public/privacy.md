@@ -535,9 +535,6 @@ We use the following services to process your data:
 ### 14.2 Data Preferences
 
 **In Account Settings**, you can control:
-- [ ] Allow astrology-related guidance
-- [ ] Allow wellness/health-adjacent content **Not provided**
-- [ ] Allow chat history to improve guidance
 - [ ] Allow anonymous usage analytics
 - [ ] Allow email communication
 
@@ -545,13 +542,13 @@ We use the following services to process your data:
 
 **Download Your Data**:
 1. Log in to your account
-2. Go to Settings → Account
+2. Go to My Account → Settings
 3. Click "Download My Data"
 4. Receive JSON file with all your information
 
 **Delete Your Account**:
 1. Log in to your account
-2. Go to Settings → Account
+2. Go to My Account → Settings
 3. Click "Delete My Account"
 4. Confirm with password
 5. Confirm with email verification
