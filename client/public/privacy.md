@@ -1,9 +1,9 @@
-"# Privacy Policy
+# Privacy Policy
 
 **Psychic Chat POC**  
-**Effective Date**: November 21, 2025  
-**Last Updated**: November 21, 2025  
-**Jurisdiction**: Global (US, EU, Canada, Brazil)
+**Effective Date**: January 1, 2026  
+**Last Updated**: January 1, 2026  
+**Jurisdiction**: Global (US, Mexico, Canada, Brazil)
 
 ---
 
@@ -34,7 +34,6 @@ This Privacy Policy applies to our website, mobile applications, and all service
 - **Date of Birth** (YYYY-MM-DD format)
 - **Time of Birth** (HH:MM 24-hour format)
 - **Birth Location** (country, province/state, city)
-- **Birth Timezone**
 
 #### Profile Information (Optional)
 - **Preferred Name** (how you'd like to be addressed)
@@ -166,7 +165,7 @@ You have the right to:
 
 #### **Article 16: Right to Rectification**
 - Correct inaccurate or incomplete information
-- **Action**: Edit your profile information in account settings
+- **Action**: Edit your profile information in account Personal Information
 - **Timeline**: Immediate
 
 #### **Article 17: Right to Erasure ("Right to Be Forgotten")**
@@ -183,13 +182,12 @@ You have the right to:
 
 #### **Article 21: Right to Object**
 - Object to processing of your data for marketing or profiling
-- **Action**: Email privacy@psychicchat.example.com
+- **Action**: Email privacy@starshippsychics.com
 - **Timeline**: Honored within 30 days
 
 #### **Article 22: Automated Decision Making**
 - We do NOT use automated decision-making or profiling
-- Our astrology guidance is provided by AI for entertainment only
-- You always have human review available
+- Our astrology guidance, tarot card readingd, crystal and aroma messages are provided by AI for entertainment only
 
 ### 5.2 CCPA Rights (California Residents)
 
@@ -217,7 +215,7 @@ You have the right to:
 
 #### **Right to Limit Use & Disclosure**
 - Limit use of sensitive personal information
-- **Action**: Contact privacy@psychicchat.example.com
+- **Action**: Contact privacy@starshippsychics.com
 - **Sensitive Information**: Birth date, location data
 
 ### 5.3 PIPEDA Rights (Canadian Residents)
@@ -232,7 +230,7 @@ You have the right to:
 
 #### **Right to Correction**
 - Correct inaccurate information
-- **Action**: Edit profile settings
+- **Action**: Edit profile personal information
 - **Timeline**: Immediate
 
 #### **Right to Deletion**
@@ -242,7 +240,7 @@ You have the right to:
 
 #### **Right to Withdraw Consent**
 - Withdraw consent for astrology services
-- **Action**: Contact privacy@psychicchat.example.com
+- **Action**: Contact privacy@starshippsychics.com
 - **Effect**: Service will be limited
 
 ### 5.4 LGPD Rights (Brazilian Residents)
@@ -256,7 +254,7 @@ You have the right to:
 
 #### **Right to Correction**
 - Correct inaccurate data
-- **Action**: Edit profile settings
+- **Action**: Edit profile personal information
 - **Timeline**: Immediate
 
 #### **Right to Deletion**
@@ -271,7 +269,7 @@ You have the right to:
 
 #### **Right to Object**
 - Object to data processing
-- **Action**: Contact privacy@psychicchat.example.com
+- **Action**: Contact privacy@starshippsychics.com
 - **Timeline**: Response within 15 days
 
 ---
@@ -322,6 +320,7 @@ You have the right to:
 
 - **API Authentication**: JWT tokens (24-hour expiration)
 - **Password Hashing**: bcrypt with salt
+- **Email Hashing**: bcrypt with salt
 - **IP Logging**: All sensitive actions logged with IP address
 - **Audit Trail**: All data access logged and timestamped
 
@@ -414,7 +413,7 @@ We use Google Analytics to understand usage patterns:
 ### 10.3 Parental Contact
 
 If you believe your child has created an account:
-- Email: privacy@psychicchat.example.com
+- Email: privacy@starshippsychics.com
 - Phone: +1-XXX-XXX-XXXX
 - We will investigate and delete data within 24 hours
 
@@ -424,12 +423,12 @@ If you believe your child has created an account:
 
 ### 11.1 Privacy Questions
 
-**Email**: privacy@psychicchat.example.com  
+**Email**: privacy@starshippsychics.com  
 **Mail Address**:  
-Psychic Chat POC  
+Starship Psychics  
 Privacy Team  
-[Your Address]  
-[City, State ZIP]  
+PO Box 13  
+Winberley, TX 78676 
 
 **Response Time**: Within 30 days (or as required by law)
 
@@ -438,7 +437,7 @@ Privacy Team
 To make a formal data subject request:
 
 ```
-To: privacy@psychicchat.example.com
+To: privacy@starshippsychics.com
 Subject: Data Subject Request - [Your Name]
 
 Request Type (choose one):
@@ -506,6 +505,7 @@ We use the following services to process your data:
 ### 13.1 Your Information May Be Transferred To
 
 - **United States** (hosting infrastructure)
+- **Mexico** (if you access from Mexico)
 - **European Union** (if you access from EU)
 - **Canada** (if you access from Canada)
 - **Brazil** (if you access from Brazil)
@@ -536,7 +536,7 @@ We use the following services to process your data:
 
 **In Account Settings**, you can control:
 - [ ] Allow astrology-related guidance
-- [ ] Allow wellness/health-adjacent content
+- [ ] Allow wellness/health-adjacent content **Not provided**
 - [ ] Allow chat history to improve guidance
 - [ ] Allow anonymous usage analytics
 - [ ] Allow email communication
@@ -598,7 +598,7 @@ We may update this Privacy Policy occasionally to:
 
 ### 16.2 EU/EEA (GDPR) Specific
 
-**Data Protection Officer**: privacy@psychicchat.example.com
+**Data Protection Officer**: privacy@starshippsychics.com
 
 **Legal Basis for Processing**:
 - **Consent**: Explicit consent for astrology services
@@ -610,17 +610,17 @@ We may update this Privacy Policy occasionally to:
 
 ### 16.3 Canada (PIPEDA) Specific
 
-**Data Controller**: Psychic Chat POC (legal entity and address)
+**Data Controller**: Starship Psychics LLC, PO Box 13, Wimberle, TX
 
-**Privacy Officer**: privacy@psychicchat.example.com
+**Privacy Officer**: privacy@starshippsychics.com
 
 **Consent**: Explicit opt-in required for astrology services
 
-**Access Requests**: Submit via privacy@psychicchat.example.com
+**Access Requests**: Submit via privacy@starshippsychics.com
 
 ### 16.4 Brazil (LGPD) Specific
 
-**Data Controller**: Psychic Chat POC
+**Data Controller**: Starship Psychics LLC
 
 **Lawful Bases**:
 - Consent (explicit for astrology)
@@ -720,8 +720,8 @@ If you do NOT agree with these terms, please do NOT use our Service.
 
 ## Final Notes
 
-- **Last Review Date**: November 21, 2025
-- **Next Review Date**: May 21, 2026 (or upon regulatory changes)
+- **Last Review Date**: January 1, 2026
+- **Next Review Date**: July 1, 2026 (or upon regulatory changes)
 - **Version**: 1.0 (Initial)
 - **Status**: ✅ APPROVED FOR LAUNCH
 

@@ -68,6 +68,7 @@ If you create an account on our Service, you are responsible for:
 - Maintaining the confidentiality of your account information and password
 - All activities that occur under your account
 - Notifying us immediately of any unauthorized use of your account
+- Certifying you are 18 years of age or older
 
 You agree not to share your account credentials with others. Any misuse of your account is your responsibility.
 
@@ -192,7 +193,7 @@ You agree to indemnify, defend, and hold harmless our company from any claims, d
 
 ## 19. Dispute Resolution
 
-Any dispute arising from these Terms or use of the Service shall be governed by and construed in accordance with the laws of [Jurisdiction], and you agree to submit to the exclusive jurisdiction of the courts located in [Jurisdiction].
+Any dispute arising from these Terms or use of the Service shall be governed by and construed in accordance with the laws of Texas, and you agree to submit to the exclusive jurisdiction of the courts located in Austin, TX.
 
 ---
 
@@ -200,9 +201,9 @@ Any dispute arising from these Terms or use of the Service shall be governed by 
 
 For questions about these Terms of Service, please contact us at:
 
-**Email**: legal@psychicchat.app  
-**Mailing Address**: [Company Address]  
-**Last Updated**: November 24, 2025
+**Email**: legal@starshippsychics.com  
+**Mailing Address**: PO Box 13, Wimberley, TX 78676 
+**Last Updated**: November 24January 1, 2026
 
 ---
 
