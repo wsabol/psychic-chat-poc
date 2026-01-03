@@ -63,7 +63,7 @@ export function useAppState() {
     if (authState.emailVerified && !authState.isTemporaryAccount && onboarding.onboardingStatus?.isOnboarding) {
       setSkipPaymentCheck(true);
       setSkipSubscriptionCheck(true);
-            setStartingPage(8);
+            setStartingPage(9); // billing page is now index 9 after adding admin
     }
   }, [authState.emailVerified, authState.isTemporaryAccount, onboarding.onboardingStatus?.isOnboarding]);
 
@@ -97,10 +97,10 @@ export function useAppState() {
     await authState.handleLogout();
   }, [authState]);
 
-    const handleNavigateToBilling = useCallback(() => {
+        const handleNavigateToBilling = useCallback(() => {
     setSkipPaymentCheck(true);
     setSkipSubscriptionCheck(true);
-    setStartingPage(8);
+    setStartingPage(9); // billing page is now index 9 after adding admin
   }, []);
 
   const handleNavigateFromBilling = useCallback(async () => {
@@ -111,9 +111,9 @@ export function useAppState() {
     }
   }, [authState]);
 
-    const handleNavigateToSubscriptions = useCallback(() => {
+        const handleNavigateToSubscriptions = useCallback(() => {
     setSkipSubscriptionCheck(true);
-    setStartingPage(8);
+    setStartingPage(9); // billing page is now index 9 after adding admin
   }, []);
 
     const handleOnboardingNavigate = useCallback((step) => {
@@ -121,13 +121,13 @@ export function useAppState() {
       case 'payment_method':
         setSkipPaymentCheck(true);
         setSkipSubscriptionCheck(true);
-        setStartingPage(8);
+        setStartingPage(9); // billing page is now index 9 after adding admin
         break;
       case 'subscription':
         setSkipPaymentCheck(true);
         setSkipSubscriptionCheck(true);
         setBillingTab('subscriptions');
-        setStartingPage(8);
+        setStartingPage(9); // billing page is now index 9 after adding admin
         break;
       case 'personal_info':
         setStartingPage(1);

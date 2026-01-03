@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { LoadingScreen } from './LoadingScreen';
 import PaymentMethodRequiredModal from '../components/PaymentMethodRequiredModal';
@@ -6,6 +6,7 @@ import SubscriptionRequiredModal from '../components/SubscriptionRequiredModal';
 import OnboardingModal from '../components/OnboardingModal';
 import MainContainer from '../layouts/MainContainer';
 import { useLanguagePreference } from '../hooks/useLanguagePreference';
+import { initializeAnalytics, trackPageView } from '../utils/analyticsTracker';
 
 /**
  * AppChat - Handles authenticated chat flow
@@ -35,7 +36,18 @@ export function AppChat({ state }) {
   // Fetch user's language preference from DB when authenticated
   useLanguagePreference();
 
+  // Initialize analytics on first load
+  useEffect(() => {
+    initializeAnalytics();
+    trackPageView('app-initialized');
+  }, []);
+
   const isUserOnboarding = onboarding.onboardingStatus?.isOnboarding === true;
+
+  // Force re-render when onboarding status changes
+  useEffect(() => {
+    console.log('[APPCHAT] Onboarding status updated:', isUserOnboarding);
+  }, [isUserOnboarding]);
 
   // Guard: Don't show modals while onboarding data is loading
   if (authState.isAuthenticated && onboarding.onboardingStatus === null) {
@@ -68,9 +80,11 @@ export function AppChat({ state }) {
 
   // Show chat with optional onboarding modal
   if (isChat) {
+    const shouldShowModal = !authState.isTemporaryAccount && onboarding.onboardingStatus?.isOnboarding === true;
+    console.log('[APPCHAT-RENDER] shouldShowModal:', shouldShowModal, 'isTemporaryAccount:', authState.isTemporaryAccount, 'isOnboarding:', onboarding.onboardingStatus?.isOnboarding);
     return (
       <ErrorBoundary>
-        {!authState.isTemporaryAccount && onboarding.onboardingStatus?.isOnboarding === true && (
+        {shouldShowModal && (
           <OnboardingModal
             currentStep={onboarding.onboardingStatus.currentStep}
             completedSteps={onboarding.onboardingStatus.completedSteps}

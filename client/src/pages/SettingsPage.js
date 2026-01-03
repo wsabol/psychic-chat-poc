@@ -26,7 +26,6 @@ export default function SettingsPage({ userId, token, auth, onboarding }) {
   // Settings state
   const [settings, setSettings] = useState({
     cookiesEnabled: localStorage.getItem('cookiesEnabled') !== 'false',
-    analyticsEnabled: localStorage.getItem('analyticsEnabled') !== 'false',
     emailEnabled: localStorage.getItem('emailEnabled') !== 'false',
     pushNotificationsEnabled: localStorage.getItem('pushNotificationsEnabled') !== 'false',
   });

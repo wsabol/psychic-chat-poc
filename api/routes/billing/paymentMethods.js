@@ -46,23 +46,35 @@ router.get('/payment-methods', authenticateToken, async (req, res) => {
         return { cards: [], defaultPaymentMethodId: null };
       }
       
-      // ✅ OPTIMIZED: Make both Stripe calls in parallel
-      const [methods, customer] = await Promise.all([
-        listPaymentMethods(customerId),
-        stripe.customers.retrieve(customerId),
-      ]);
+            // ✅ OPTIMIZED: Make both Stripe calls in parallel
+      try {
+        const [methods, customer] = await Promise.all([
+          listPaymentMethods(customerId),
+          stripe.customers.retrieve(customerId),
+        ]);
+        
+        const defaultPaymentMethodId = customer.invoice_settings?.default_payment_method || null;
       
-      const defaultPaymentMethodId = customer.invoice_settings?.default_payment_method || null;
-      
-      const result = {
-        cards: methods,
-        defaultPaymentMethodId,
-      };
+              const result = {
+          cards: methods,
+          defaultPaymentMethodId,
+        };
 
-      // ✅ CACHE: Store in Redis for 10 seconds
-      await redis.setEx(cacheKey, 10, JSON.stringify(result));
-      
-      return result;
+        // ✅ CACHE: Store in Redis for 10 seconds
+        await redis.setEx(cacheKey, 10, JSON.stringify(result));
+        
+        return result;
+      } catch (stripeError) {
+        // If customer doesn't exist in Stripe anymore, return empty (user needs to add payment method again)
+        if (stripeError.code === 'resource_missing' || stripeError.message?.includes('No such customer')) {
+          console.warn(`[BILLING] Stripe customer ${customerId} not found - returning empty methods`);
+          const result = { cards: [], defaultPaymentMethodId: null };
+          await redis.setEx(cacheKey, 10, JSON.stringify(result));
+          return result;
+        }
+        // Re-throw other errors
+        throw stripeError;
+      }
     })();
 
     // Store in-flight request

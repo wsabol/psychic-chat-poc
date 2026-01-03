@@ -19,7 +19,9 @@ export async function getOrCreateStripeCustomer(userId, userEmail) {
         const customer = await stripe.customers.retrieve(storedCustomerId);
         return storedCustomerId;
       } catch (retrieveError) {
-        if (retrieveError.type === 'StripeInvalidRequestError' && retrieveError.raw?.code === 'resource_missing') {
+        console.warn(`[STRIPE] Stored customer ${storedCustomerId} not found:`, retrieveError.message);
+        if ((retrieveError.type === 'StripeInvalidRequestError' && retrieveError.raw?.code === 'resource_missing') ||
+            retrieveError.message?.includes('No such customer')) {
           await db.query(
             `UPDATE user_personal_info SET stripe_customer_id_encrypted = NULL WHERE user_id = $1`,
             [userId]
@@ -31,15 +33,18 @@ export async function getOrCreateStripeCustomer(userId, userEmail) {
       }
     }
 
+        console.log(`[STRIPE] Creating new customer for user ${userId}`);
     const customer = await stripe.customers.create({
       email: userEmail,
       metadata: { userId: userId },
     });
+    console.log(`[STRIPE] Created new customer: ${customer.id}`);
 
     const updateQuery = `UPDATE user_personal_info 
                          SET stripe_customer_id_encrypted = pgp_sym_encrypt($1, $2) 
                          WHERE user_id = $3`;
     await db.query(updateQuery, [customer.id, process.env.ENCRYPTION_KEY, userId]);
+    console.log(`[STRIPE] Stored customer ${customer.id} in database for user ${userId}`);
 
     return customer.id;
   } catch (error) {

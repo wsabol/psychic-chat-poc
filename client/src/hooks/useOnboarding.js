@@ -40,12 +40,14 @@ export function useOnboarding(token) {
       return null;
     }
 
-    try {
-      setError(null);
-      setLoading(true);
-      const data = await billingFetch('/billing/onboarding-status', { token });
-      setOnboardingStatus(data);
-      return data;
+          try {
+        setError(null);
+        setLoading(true);
+        const data = await billingFetch('/billing/onboarding-status', { token });
+        console.log('[ONBOARDING] Fetch status response:', data);
+        setOnboardingStatus(data);
+        console.log('[ONBOARDING] State updated, isOnboarding will be:', data.isOnboarding);
+        return data;
     } catch (err) {
       console.error('[ONBOARDING] Fetch status error:', err);
       setError(err.message);

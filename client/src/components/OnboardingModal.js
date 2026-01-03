@@ -2,21 +2,15 @@ import React, { useState, useEffect } from 'react';
 import './OnboardingModal.css';
 
 /**
- * OnboardingModal - Guided 5-step onboarding for new users
+ * OnboardingModal - Guided 4-step onboarding for new users
  * 
  * Steps:
- * 1. Create Account ✅ (done)
+ * 1. Create Account ✅
  * 2. Payment Method (required)
- * 3. Subscription (required, unlocks after step 2)
- * 4. Get Acquainted - Personal Information (optional)
- * 5. Security Settings (optional)
+ * 3. Subscription (required)
+ * 4. Personal Information (required)
  * 
- * Features:
- * - Draggable modal
- * - Minimizable (continues to block)
- * - Closeable after all required steps complete
- * - Step buttons navigate to relevant pages
- * - Visual progress indication
+ * All 4 steps must be completed to access the app.
  */
 export default function OnboardingModal({
   currentStep,
@@ -70,20 +64,11 @@ export default function OnboardingModal({
       title: 'Get Acquainted',
       icon: '🌟',
       description: 'Personal information',
-      required: false,
+      required: true,
       complete: completedSteps?.personal_info || false,
       disabled: !completedSteps?.subscription,
     },
-    {
-      id: 'security_settings',
-      number: 5,
-      title: 'Check Security',
-      icon: '🔒',
-      description: 'Security settings',
-      required: false,
-      complete: completedSteps?.security_settings || false,
-      disabled: !completedSteps?.subscription,
-    },
+
   ];
 
   if (isMinimized) {
@@ -105,7 +90,7 @@ export default function OnboardingModal({
     );
   }
 
-  const allRequiredComplete = completedSteps?.payment_method && completedSteps?.subscription;
+  const allRequiredComplete = completedSteps?.payment_method && completedSteps?.subscription && completedSteps?.personal_info;
 
   return (
     <div 
@@ -174,10 +159,10 @@ export default function OnboardingModal({
       {/* Footer message */}
       <div className="onboarding-footer">
         {!allRequiredComplete && (
-          <p>Complete steps 2-3 to start using the app</p>
+          <p>Complete all steps to start using the app</p>
         )}
         {allRequiredComplete && (
-          <p>You can complete optional steps anytime from the menu</p>
+          <p>✨ Onboarding complete! Enjoy the app</p>
         )}
       </div>
     </div>

@@ -18,6 +18,7 @@ import billingRoutes from "./routes/billing/index.js";
 import webhooksRouter from "./routes/billing/webhooks.js";
 import migrationRoutes from "./routes/migration.js";
 import helpRoutes from "./routes/help.js";
+import analyticsRoutes from "./routes/analytics.js";
 import { authenticateToken } from "./middleware/auth.js";
 import { validateUserHash } from "./middleware/userHashValidation.js";
 import cors from "cors";
@@ -109,6 +110,9 @@ app.use("/cleanup", cleanupRoutes);
 app.use("/cleanup", cleanupStatusRoutes);
 app.use("/migration", migrationRoutes);
 
+// Public analytics route (no authentication required - truly anonymous)
+app.use("/analytics", analyticsRoutes);
+
 // New user data endpoints (authentication only - no validateUserHash)
 // These don't have user IDs in the URL
 app.use("/user/download-data", authenticateToken, userDataRoutes);
@@ -133,6 +137,8 @@ app.use("/help", authenticateToken, helpRoutes);
 // Billing routes: authenticateToken only (no validateUserHash - no user ID in URL)
 // Webhooks endpoint is /webhooks/stripe-webhook (public, no auth required)
 app.use("/billing", authenticateToken, billingRoutes);
+
+
 
 // Initialize scheduled jobs
 initializeScheduler();

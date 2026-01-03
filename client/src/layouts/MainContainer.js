@@ -5,6 +5,7 @@ import Navigation from './Navigation';
 import { HelpIcon } from '../components/help/HelpIcon';
 import { HelpChatWindow } from '../components/help/HelpChatWindow';
 import { useHelpChat } from '../hooks/useHelpChat';
+import { trackPageView } from '../utils/analyticsTracker';
 import ChatPage from '../pages/ChatPage';
 import PersonalInfoPage from '../pages/PersonalInfoPage';
 import PreferencesPage from '../pages/PreferencesPage';
@@ -15,6 +16,7 @@ import CosmicWeatherPage from '../pages/CosmicWeatherPage';
 import SecurityPage from '../pages/SecurityPage';
 import SettingsPage from '../pages/SettingsPage';
 import BillingPage from '../pages/BillingPage';
+import AdminPage from '../pages/AdminPage';
 import './MainContainer.css';
 
 // Define all pages in order (matches menu order)
@@ -29,6 +31,7 @@ const PAGES = [
   { id: 'security', label: 'Security', component: SecurityPage },
   { id: 'settings', label: 'Settings', component: SettingsPage },
   { id: 'billing', label: 'Billing & Subscriptions', component: BillingPage },
+  { id: 'admin', label: 'Admin', component: AdminPage },
 ];
 
 export default function MainContainer({ auth, token, userId, onLogout, onExit, startingPage = 0, billingTab = 'payment-methods', onNavigateFromBilling, onboarding }) {
@@ -48,13 +51,13 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
   const currentPage = PAGES[currentPageIndex];
 
-  // Set starting page when it changes
+// Only apply startingPage during onboarding - once complete, user has full nav control
   useEffect(() => {
-    if (startingPage !== 0 && startingPage !== currentPageIndex) {
+    const isStillOnboarding = onboarding?.onboardingStatus?.isOnboarding === true;
+    if (isStillOnboarding && startingPage !== 0 && startingPage !== currentPageIndex) {
       setCurrentPageIndex(startingPage);
     }
-  }, [startingPage, currentPageIndex]);
-
+  }, [startingPage, currentPageIndex, onboarding?.onboardingStatus?.isOnboarding]);
   // Track scroll to hide/show nav on mobile
   useEffect(() => {
     const handleScroll = (e) => {
@@ -107,11 +110,13 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
     preventScrollOnSwipe: true,
   });
 
-  const goToPage = useCallback((index) => {
+    const goToPage = useCallback((index) => {
+    console.log('[GOTEPAGE] index:', index, 'currentPageIndex:', currentPageIndex);
     const newIndex = Math.max(0, Math.min(index, PAGES.length - 1));
+    console.log('[GOTEPAGE] newIndex:', newIndex);
     if (newIndex !== currentPageIndex) {
       // If leaving billing page and not going back to billing, notify App to re-check subscription
-      if (currentPageIndex === 8 && newIndex !== 8 && onNavigateFromBilling) {
+      if (currentPageIndex === 9 && newIndex !== 9 && onNavigateFromBilling) {
         onNavigateFromBilling();
       }
       setSwipeDirection(newIndex > currentPageIndex ? 1 : -1);
@@ -120,9 +125,16 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
     }
   }, [currentPageIndex, onNavigateFromBilling]);
 
-  const PageComponent = currentPage.component;
+    const PageComponent = currentPage.component;
 
-  return (
+  // Track page views
+  useEffect(() => {
+    if (currentPage) {
+      trackPageView(currentPage.id);
+    }
+  }, [currentPageIndex]);
+
+    return (
     <div className="main-container">
       <Navigation
         pages={PAGES}
@@ -132,6 +144,7 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
         onLogout={onLogout}
         isTemporaryAccount={auth?.isTemporaryAccount}
         isDisabled={onboarding?.onboardingStatus?.isOnboarding === true}
+        userEmail={auth?.authEmail}
       />
 
       <div className="pages-container" {...swipeHandlers}>

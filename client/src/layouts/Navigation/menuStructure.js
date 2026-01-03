@@ -41,4 +41,12 @@ export const menuStructure = [
       { id: 'cosmicWeather', label: 'Cosmic Weather', icon: '🌌', pageId: 'cosmic' },
     ],
   },
+  {
+    id: 'admin',
+    label: 'Admin',
+    icon: '⚡',
+    type: 'page',
+    pageId: 'admin',
+    adminOnly: true,
+  },
 ];

@@ -15,35 +15,45 @@ export default function Navigation({
   isVisible,
   onLogout,
   isTemporaryAccount,
-  isDisabled = false
+  isDisabled = false,
+  userEmail = ''
 }) {
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [expandedSubmenu, setExpandedSubmenu] = useState(null);
+    const [expandedSubmenu, setExpandedSubmenu] = useState(null);
+
+  // Filter menu structure - hide admin items for non-admins
+  const filteredMenu = menuStructure.filter(item => {
+    if (item.adminOnly && userEmail !== 'starshiptechnology1@gmail.com') {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <>
-      <NavMobile
+            <NavMobile
         pages={pages}
         currentPageIndex={currentPageIndex}
         onNavigate={onNavigate}
         onLogout={onLogout}
         isTemporaryAccount={isTemporaryAccount}
         isDisabled={isDisabled}
-        menuStructure={menuStructure}
+        menuStructure={filteredMenu}
         mobileMenuOpen={mobileMenuOpen}
         setMobileMenuOpen={setMobileMenuOpen}
         expandedSubmenu={expandedSubmenu}
         setExpandedSubmenu={setExpandedSubmenu}
       />
 
-      <NavDesktop
+            <NavDesktop
         pages={pages}
         currentPageIndex={currentPageIndex}
         onNavigate={onNavigate}
         onLogout={onLogout}
         isTemporaryAccount={isTemporaryAccount}
         isDisabled={isDisabled}
-        menuStructure={menuStructure}
+        menuStructure={filteredMenu}
         expandedSubmenu={expandedSubmenu}
         setExpandedSubmenu={setExpandedSubmenu}
       />

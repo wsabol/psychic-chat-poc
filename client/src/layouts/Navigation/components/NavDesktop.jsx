@@ -17,10 +17,13 @@ export function NavDesktop({
     return index === currentPageIndex;
   };
 
-  const handlePageClick = (pageId) => {
-    if (isTemporaryAccount || isDisabled) return; // Don't navigate during onboarding
+    const handlePageClick = (pageId) => {
+    console.log('[NAV-HANDLER] pageId:', pageId, 'isTemporaryAccount:', isTemporaryAccount);
+    if (isTemporaryAccount) return;
     const index = pages.findIndex(p => p.id === pageId);
+    console.log('[NAV-HANDLER] index:', index);
     if (index !== -1) {
+      console.log('[NAV-HANDLER] calling onNavigate');
       onNavigate(index);
     }
   };
@@ -35,9 +38,13 @@ export function NavDesktop({
         {menuStructure.map((item) => (
           <li key={item.id}>
             {item.type === 'page' ? (
-              <button
+                                          <button
                 className={`nav-item ${isPageActive(item.pageId) ? 'active' : ''}`}
-                onClick={() => handlePageClick(item.pageId)}
+                onClick={() => {
+                  console.log('[NAV-CLICK] Clicked:', item.label);
+                  handlePageClick(item.pageId);
+                }}
+                disabled={isTemporaryAccount}
                 style={isTemporaryAccount ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
               >
                 <span className="nav-icon">{item.icon}</span>

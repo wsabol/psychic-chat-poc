@@ -36,7 +36,9 @@ router.get('/onboarding-status', authenticateToken, async (req, res) => {
     
     // Determine which steps are complete based on onboarding_step progression
     // A step is complete if we've reached or passed it in the step order
-    const stepOrder = ['create_account', 'payment_method', 'subscription', 'personal_info', 'security_settings'];
+    // Required steps: create_account, payment_method, subscription, personal_info
+    // security_settings is OPTIONAL - removed from requirements
+    const stepOrder = ['create_account', 'payment_method', 'subscription', 'personal_info'];
     const currentStepIndex = onboarding_step ? stepOrder.indexOf(onboarding_step) : -1;
     
     const steps = {
@@ -44,7 +46,7 @@ router.get('/onboarding-status', authenticateToken, async (req, res) => {
       payment_method: currentStepIndex >= stepOrder.indexOf('payment_method'),
       subscription: currentStepIndex >= stepOrder.indexOf('subscription'),
       personal_info: currentStepIndex >= stepOrder.indexOf('personal_info'),
-      security_settings: currentStepIndex >= stepOrder.indexOf('security_settings'),
+
     };
     
     // isOnboarding = true if onboarding_completed is NULL or FALSE (not finished)
@@ -68,8 +70,8 @@ router.get('/onboarding-status', authenticateToken, async (req, res) => {
  * Update onboarding progress
  * 
  * Marks a step as complete and updates onboarding status
- * Onboarding is COMPLETE when subscription step is reached (all required steps done)
- * Optional steps don't affect completion
+ * Onboarding is COMPLETE when personal_info step is saved (all required steps done)
+ * security_settings is optional and doesn't affect completion
  */
 router.post('/onboarding-step/:step', authenticateToken, async (req, res) => {
   try {
@@ -77,12 +79,13 @@ router.post('/onboarding-step/:step', authenticateToken, async (req, res) => {
     const { step } = req.params;
     
     const validSteps = ['create_account', 'payment_method', 'subscription', 'personal_info', 'security_settings'];
+    // Note: security_settings is optional and doesn't affect onboarding completion
     if (!validSteps.includes(step)) {
       return res.status(400).json({ error: 'Invalid step' });
     }
     
-    // Onboarding is COMPLETE when subscription step is reached (all required steps done)
-    // Optional steps (personal_info, security_settings) don't affect completion, but keep tracking
+    // Onboarding is COMPLETE when personal_info step is saved (all required steps done)
+    // security_settings is optional and doesn't affect completion
     // Fetch current onboarding_completed status to preserve it
     const currentResult = await db.query(
       'SELECT onboarding_completed FROM user_personal_info WHERE user_id = $1',
@@ -90,7 +93,7 @@ router.post('/onboarding-step/:step', authenticateToken, async (req, res) => {
     );
     
     const currentCompleted = currentResult.rows[0]?.onboarding_completed;
-    const isOnboardingComplete = step === 'subscription' ? true : currentCompleted;
+    const isOnboardingComplete = step === 'personal_info' ? true : currentCompleted;
     
     const query = `
       UPDATE user_personal_info SET 

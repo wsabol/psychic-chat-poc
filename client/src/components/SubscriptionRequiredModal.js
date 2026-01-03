@@ -42,7 +42,10 @@ export default function SubscriptionRequiredModal({ onNavigateToSubscriptions, i
         </div>
 
         <button 
-          onClick={onNavigateToSubscriptions}
+          onClick={() => {
+            console.log('[SUBSCRIPTION-MODAL] Clicked View Subscription Plans');
+            onNavigateToSubscriptions();
+          }}
           style={styles.button}
           onMouseEnter={(e) => e.target.style.backgroundColor = '#5a4a9f'}
           onMouseLeave={(e) => e.target.style.backgroundColor = '#7c63d8'}

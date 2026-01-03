@@ -220,11 +220,17 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
 
             // Update onboarding
             if (onboarding?.updateOnboardingStep) {
-                try {
-                    await onboarding.updateOnboardingStep('personal_info');
-                } catch (err) {
-                    console.warn('[ONBOARDING] Failed to update personal info step:', err);
-                }
+              try {
+                console.log('[PERSONALINFO] Calling updateOnboardingStep(personal_info)');
+                await onboarding.updateOnboardingStep('personal_info');
+                console.log('[PERSONALINFO] updateOnboardingStep completed');
+                // Modal will close automatically when onboarding completes
+                // User can then navigate manually
+              } catch (err) {
+                console.error('[PERSONALINFO] Failed to update personal info step:', err);
+              }
+            } else {
+              console.warn('[PERSONALINFO] onboarding.updateOnboardingStep not available');
             }
 
             // Navigate or show success
