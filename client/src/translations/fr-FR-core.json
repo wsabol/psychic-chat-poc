@@ -50,6 +50,17 @@
     "creatingAccount": "Création d'un compte...",
     "or": "ou",
     "googleSignIn": "Se connecter avec Google",
+    "pageTitle": "Se connecter",
+    "createAccountTitle": "Créer un compte",
+    "resetPasswordTitle": "Réinitialiser le mot de passe",
+    "dontHaveAccount": "Pas encore de compte?",
+    "register": "S'inscrire",
+    "backToLogin": "Retour à la connexion",
+    "forgotPasswordMessage": "Flux de réinitialisation de mot de passe bientôt disponible",
+    "passwordsDontMatch": "Les mots de passe ne correspondent pas",
+    "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères",
+    "acceptTermsAndPrivacy": "Vous devez accepter les Conditions de service et la Politique de confidentialité pour créer un compte",
+    "accountCreated": "Compte créé! Vérifiez votre e-mail pour confirmer votre compte.",
     "agreeTerms": "J'accepte les Conditions de Service",
     "agreePrivacy": "J'accepte la Politique de Confidentialité",
     "errors": {
@@ -254,5 +265,58 @@
     "aboutUs": "À Propos de Nous",
     "terms": "Conditions de Service",
     "privacy": "Politique de Confidentialité"
+  },
+  "terms": {
+    "acceptPrefix": "J'accepte les",
+    "required": "Requis pour créer un compte",
+    "termsLink": "Conditions de Service",
+    "privacyLink": "Politique de Confidentialité"
+  },
+  "policies": {
+    "termsOfService": {
+      "title": "Conditions de Service",
+      "version": "1.0",
+      "effectiveDate": "24 novembre 2025",
+      "lastUpdated": "1er janvier 2026",
+      "versionLabel": "Version",
+      "effectiveDateLabel": "Date d'entrée en vigueur",
+      "lastUpdatedLabel": "Dernière mise à jour",
+      "sections": [
+        {"title": "1. Acceptation des Conditions", "content": "En accédant et en utilisant cette application, vous acceptez les conditions de cet accord."},
+        {"title": "2. Licence d'utilisation", "content": "Vous pouvez télécharger les matériaux uniquement pour un usage personnel et non commercial."},
+        {"title": "3. Clause de non-responsabilité", "content": "Les matériaux sont fournis tels quels. Nous n'offrons aucune garantie, expresse ou implicite."},
+        {"title": "4. Limitation de responsabilité", "content": "Nous ne sommes pas responsables des dommages, y compris la perte de données ou de revenus."},
+        {"title": "5. Avis d'astrologie", "content": "Les lectures d'astrologie sont à titre d'amusement uniquement. Elles ne sont pas destinées à prédire l'avenir."},
+        {"title": "6. Avis de santé", "content": "Ce Service ne fournit pas de services médicaux ou thérapeutiques."},
+        {"title": "7. Comptes utilisateur", "content": "Vous êtes responsable de la confidentialité de vos informations de compte. Vous devez être âgé d'au moins 18 ans."},
+        {"title": "8. Disponibilité du service", "content": "Nous ne garantissons pas la disponibilité permanente. Nous pouvons effectuer une maintenance ou modifier le service."},
+        {"title": "9. Résiliation de compte", "content": "Vous pouvez demander la suppression de votre compte à tout moment. Vous avez 30 jours pour changer d'avis."},
+        {"title": "10. Information de contact", "content": "Contact: legal@starshippsychics.com"}
+      ]
+    },
+    "privacyPolicy": {
+      "title": "Politique de Confidentialité",
+      "version": "1.0",
+      "effectiveDate": "1er janvier 2026",
+      "lastUpdated": "1er janvier 2026",
+      "versionLabel": "Version",
+      "effectiveDateLabel": "Date d'entrée en vigueur",
+      "lastUpdatedLabel": "Dernière mise à jour",
+      "sections": [
+        {"title": "1. Introduction", "content": "Nous nous engageons à protéger votre vie privée. Cette politique explique comment nous collectons et traitons vos données personnelles."},
+        {"title": "2. Informations que nous collectons", "content": "Nous collectons les informations que vous fournissez (nom, e-mail), les informations automatiquement collectes (adresse IP) et les informations provenant de tiers."},
+        {"title": "3. Comment nous utilisons vos informations", "content": "Nous utilisons vos informations pour fournir le service, traiter les transactions et améliorer le service."},
+        {"title": "4. Conservation des données", "content": "Les informations de profil sont conservées jusqu'à la suppression. Les messages sont supprimés 30 jours après la fermeture du compte."},
+        {"title": "5. Vos droits en matière de confidentialité", "content": "Vous avez le droit d'accéder, corriger, supprimer et exporter vos données. Contactez privacy@starshippsychics.com."},
+        {"title": "6. Sécurité des données", "content": "Toutes les informations sont cryptées avec AES-256 au repos et HTTPS/TLS 1.3 en transit."},
+        {"title": "7. Comment nous partageons vos données", "content": "Nous ne vendons pas vos données. Nous pouvons partager les données avec les fournisseurs de services."},
+        {"title": "8. Cookies", "content": "Nous utilisons des cookies fonctionnels et de préférence. Vous pouvez gérer les cookies dans les paramètres de votre navigateur."},
+        {"title": "9. Confidentialité des enfants", "content": "Ce Service est destiné aux personnes âgées d'au moins 18 ans. Nous ne collectons pas de données d'enfants."},
+        {"title": "10. Violation de données", "content": "En cas de violation, nous enquêtons, contenons et notifions dans les 72 heures."},
+        {"title": "11. Transferts de données internationaux", "content": "Vos données peuvent être transférées aux États-Unis."},
+        {"title": "12. Information de contact", "content": "Pour les questions: privacy@starshippsychics.com"},
+        {"title": "13. Modifications de cette politique", "content": "Nous pouvons mettre à jour cette politique occasionnellement. L'utilisation continue signifie l'acceptation."}
+      ]
+    }
   }
 }

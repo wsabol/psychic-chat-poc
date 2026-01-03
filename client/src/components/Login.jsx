@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '../firebase';
+import { useTranslation } from '../context/TranslationContext';
 import { LoginForm } from './LoginForm';
 import { RegisterForm } from './RegisterForm';
 import { useRegistrationFlow } from '../hooks/useRegistrationFlow';
@@ -10,8 +11,10 @@ import { useRegistrationFlow } from '../hooks/useRegistrationFlow';
  * Handles mode switching between login and register
  * Delegates form logic to sub-components
  * Delegates registration flow to custom hook
+ * Supports browser back button to return from register/forgot to login
  */
 export function Login() {
+  const { t } = useTranslation();
   const [mode, setMode] = useState('login');
   
   // Shared state
@@ -28,6 +31,39 @@ export function Login() {
   
   const { registerWithEmail } = useRegistrationFlow();
   const googleProvider = new GoogleAuthProvider();
+
+  // ===== BROWSER BACK BUTTON SUPPORT =====
+  useEffect(() => {
+    // Push initial state when component mounts
+    window.history.pushState({ mode: 'login' }, null, window.location.href);
+
+    const handlePopState = (event) => {
+      // When user clicks browser back button, go back to login
+      if (mode !== 'login') {
+        setMode('login');
+        setError('');
+        setSuccessMessage('');
+        setTermsAccepted(false);
+        setPrivacyAccepted(false);
+        // Push the login state to history
+        window.history.pushState({ mode: 'login' }, null, window.location.href);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [mode]);
+
+  // ===== UPDATE HISTORY WHEN MODE CHANGES =====
+  useEffect(() => {
+    if (mode !== 'login') {
+      // When switching to register or forgot mode, push a new history state
+      window.history.pushState({ mode: mode }, null, window.location.href);
+    }
+  }, [mode]);
 
   // ===== LOGIN HANDLER =====
   const handleEmailLogin = async (e) => {
@@ -53,26 +89,26 @@ export function Login() {
 
     // Validation
     if (!termsAccepted || !privacyAccepted) {
-      setError('You must accept Terms of Service and Privacy Policy to create an account');
+      setError(t('login.acceptTermsAndPrivacy'));
       setLoading(false);
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('login.passwordsDontMatch'));
       setLoading(false);
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError(t('login.passwordTooShort'));
       setLoading(false);
       return;
     }
 
     try {
       await registerWithEmail(email, password, termsAccepted, privacyAccepted);
-      setSuccessMessage('Account created! Check your email to verify your account.');
+      setSuccessMessage(t('login.accountCreated'));
       
       // Reset form
       setEmail('');
@@ -89,6 +125,14 @@ export function Login() {
 
   // ===== GOOGLE LOGIN =====
   const handleGoogleLogin = async () => {
+    // On register mode, check terms/privacy acceptance
+    if (mode === 'register') {
+      if (!termsAccepted || !privacyAccepted) {
+        setError(t('login.acceptTermsAndPrivacy'));
+        return;
+      }
+    }
+
     setLoading(true);
     setError('');
 
@@ -151,7 +195,7 @@ export function Login() {
       }}>
         {/* Title */}
         <h2 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          {mode === 'login' ? 'Sign In' : mode === 'register' ? 'Create Account' : 'Reset Password'}
+          {mode === 'login' ? t('login.pageTitle') : mode === 'register' ? t('login.createAccountTitle') : t('login.resetPasswordTitle')}
         </h2>
 
         {/* Error Message */}
@@ -220,7 +264,7 @@ export function Login() {
         {/* FORGOT PASSWORD PLACEHOLDER */}
         {mode === 'forgot' && (
           <div style={{ textAlign: 'center' }}>
-            <p>Forgot password flow coming soon</p>
+            <p>{t('login.forgotPasswordMessage')}</p>
             <button
               onClick={handleBackToLogin}
               style={{
@@ -231,35 +275,39 @@ export function Login() {
                 textDecoration: 'underline'
               }}
             >
-              Back to login
+              {t('login.backToLogin')}
             </button>
           </div>
         )}
 
-        {/* DIVIDER */}
+        {/* DIVIDER AND GOOGLE LOGIN - Only on login and register, not forgot password */}
         {mode !== 'forgot' && (
           <>
             <div style={{ margin: '1rem 0', textAlign: 'center' }}>
-              <p style={{ marginBottom: '0.5rem' }}>or</p>
+              <p style={{ marginBottom: '0.5rem' }}>{t('login.or')}</p>
             </div>
 
             {/* GOOGLE LOGIN */}
+            {/* On register mode: disabled until terms and privacy are accepted */}
+            {/* On login mode: always enabled */}
             <button
               onClick={handleGoogleLogin}
-              disabled={loading}
+              disabled={loading || (mode === 'register' && (!termsAccepted || !privacyAccepted))}
               style={{
                 width: '100%',
                 padding: '0.75rem',
                 borderRadius: '5px',
                 border: '1px solid #ddd',
-                backgroundColor: '#fff',
-                color: '#333',
+                backgroundColor: mode === 'register' && (!termsAccepted || !privacyAccepted) ? '#ccc' : '#fff',
+                color: mode === 'register' && (!termsAccepted || !privacyAccepted) ? '#999' : '#333',
                 fontSize: '1rem',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                fontWeight: 'bold'
+                cursor: loading || (mode === 'register' && (!termsAccepted || !privacyAccepted)) ? 'not-allowed' : 'pointer',
+                fontWeight: 'bold',
+                opacity: mode === 'register' && (!termsAccepted || !privacyAccepted) ? 0.6 : 1
               }}
+              title={mode === 'register' && (!termsAccepted || !privacyAccepted) ? t('login.acceptTermsAndPrivacy') : ''}
             >
-              Sign In with Google
+              {t('login.googleSignIn')}
             </button>
           </>
         )}

@@ -1,0 +1,15 @@
+{
+  "login": {
+    "pageTitle": "登录",
+    "createAccountTitle": "创建账户",
+    "resetPasswordTitle": "重置密码",
+    "dontHaveAccount": "没有账户?",
+    "register": "注册",
+    "backToLogin": "返回登录",
+    "forgotPasswordMessage": "密码重置流程即将推出",
+    "passwordsDontMatch": "密码不匹配",
+    "passwordTooShort": "密码必须至少6个字符",
+    "acceptTermsAndPrivacy": "您必须接受服务条款和隐私政策才能创建账户",
+    "accountCreated": "账户已创建!请检查您的电子邮件以验证您的账户。"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "login": {
+    "pageTitle": "Entrar",
+    "createAccountTitle": "Criar Conta",
+    "resetPasswordTitle": "Redefinir Senha",
+    "dontHaveAccount": "Não tem uma conta?",
+    "register": "Registre-se",
+    "backToLogin": "Voltar ao login",
+    "forgotPasswordMessage": "Fluxo de redefinição de senha em breve",
+    "passwordsDontMatch": "As senhas não correspondem",
+    "passwordTooShort": "A senha deve ter pelo menos 6 caracteres",
+    "acceptTermsAndPrivacy": "Você deve aceitar os Termos de Serviço e a Política de Privacidade",
+    "accountCreated": "Conta criada! Verifique seu email para confirmar sua conta."
+  }
+}

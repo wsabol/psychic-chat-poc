@@ -1,0 +1,49 @@
+{
+  "policies": {
+    "termsOfService": {
+      "title": "服务条款",
+      "version": "1.0",
+      "effectiveDate": "2025年11月24日",
+      "lastUpdated": "2026年1月1日",
+      "versionLabel": "版本",
+      "effectiveDateLabel": "生效日期",
+      "lastUpdatedLabel": "最后更新",
+      "sections": [
+        {"title": "1. 条款接受", "content": "访问和使用此应用程序即表示您同意本协议的条款。"},
+        {"title": "2. 使用许可", "content": "仅允许为个人非商业目的下载材料。"},
+        {"title": "3. 免责声明", "content": "材料按原样提供，不提供任何担保。"},
+        {"title": "4. 责任限制", "content": "对任何损害不承担责任。"},
+        {"title": "5. 占星术免责", "content": "占星术读数仅供娱乐。"},
+        {"title": "6. 健康免责", "content": "不提供医疗或治疗服务。"},
+        {"title": "7. 用户账户", "content": "必须年满18岁。"},
+        {"title": "8. 服务可用性", "content": "不保证常时可用性。"},
+        {"title": "9. 账户删除", "content": "可随时请求删除账户。"},
+        {"title": "10. 联系信息", "content": "legal@starshippsychics.com"}
+      ]
+    },
+    "privacyPolicy": {
+      "title": "隐私政策",
+      "version": "1.0",
+      "effectiveDate": "2026年1月1日",
+      "lastUpdated": "2026年1月1日",
+      "versionLabel": "版本",
+      "effectiveDateLabel": "生效日期",
+      "lastUpdatedLabel": "最后更新",
+      "sections": [
+        {"title": "1. 介绍", "content": "我们承诺保护您的隐私。"},
+        {"title": "2. 收集的信息", "content": "您提供的信息、自动收集的信息和第三方信息。"},
+        {"title": "3. 信息使用", "content": "用于提供和改进服务。"},
+        {"title": "4. 数据保留", "content": "保留至账户删除。"},
+        {"title": "5. 隐私权", "content": "访问、更正和删除数据的权利。"},
+        {"title": "6. 数据安全", "content": "使用AES-256加密保护。"},
+        {"title": "7. 数据共享", "content": "绝不出售数据。"},
+        {"title": "8. Cookies", "content": "使用功能性和偏好cookies。"},
+        {"title": "9. 儿童隐私", "content": "仅限18岁及以上。"},
+        {"title": "10. 数据泄露", "content": "72小时内通知。"},
+        {"title": "11. 国际数据转移", "content": "数据可转移至美国。"},
+        {"title": "12. 联系信息", "content": "privacy@starshippsychics.com"},
+        {"title": "13. 政策变更", "content": "政策可能定期更新。"}
+      ]
+    }
+  }
+}

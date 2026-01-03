@@ -1,0 +1,49 @@
+{
+  "policies": {
+    "termsOfService": {
+      "title": "利用規約",
+      "version": "1.0",
+      "effectiveDate": "2025年11月24日",
+      "lastUpdated": "2026年1月1日",
+      "versionLabel": "バージョン",
+      "effectiveDateLabel": "発効日",
+      "lastUpdatedLabel": "最終更新",
+      "sections": [
+        {"title": "1. 規約の受諾", "content": "このアプリケーションにアクセスして使用することで、この契約の条件に同意します。"},
+        {"title": "2. 使用ライセンス", "content": "個人的な非営利目的でのみ資料をダウンロードできます。"},
+        {"title": "3. 保証免責", "content": "資料はそのまま提供されます。"},
+        {"title": "4. 責任制限", "content": "損害について責任を負いません。"},
+        {"title": "5. 占星術免責", "content": "占星術の読みは娯楽のみです。"},
+        {"title": "6. 健康免責", "content": "医療または治療サービスを提供しません。"},
+        {"title": "7. ユーザーアカウント", "content": "18歳以上である必要があります。"},
+        {"title": "8. サービス利用可能性", "content": "常時利用可能性を保証しません。"},
+        {"title": "9. アカウント削除", "content": "いつでもアカウント削除をリクエストできます。"},
+        {"title": "10. お問い合わせ", "content": "お問い合わせ: legal@starshippsychics.com"}
+      ]
+    },
+    "privacyPolicy": {
+      "title": "プライバシーポリシー",
+      "version": "1.0",
+      "effectiveDate": "2026年1月1日",
+      "lastUpdated": "2026年1月1日",
+      "versionLabel": "バージョン",
+      "effectiveDateLabel": "発効日",
+      "lastUpdatedLabel": "最終更新",
+      "sections": [
+        {"title": "1. はじめに", "content": "プライバシー保護に努めています。"},
+        {"title": "2. 収集する情報", "content": "提供する情報、自動収集情報、第三者からの情報。"},
+        {"title": "3. 情報の使用", "content": "サービス提供とサービス改善のために使用します。"},
+        {"title": "4. データ保持", "content": "プロフィール情報は削除まで保持。"},
+        {"title": "5. プライバシー権", "content": "データのアクセス、修正、削除の権利。"},
+        {"title": "6. データセキュリティ", "content": "AES-256暗号化で保護。"},
+        {"title": "7. データ共有", "content": "データを販売しません。"},
+        {"title": "8. Cookie", "content": "機能的および環境設定Cookie。"},
+        {"title": "9. 児童プライバシー", "content": "18歳以上向け。"},
+        {"title": "10. データ侵害", "content": "72時間以内に通知。"},
+        {"title": "11. 国際データ転送", "content": "データは米国に転送されます。"},
+        {"title": "12. お問い合わせ", "content": "privacy@starshippsychics.com"},
+        {"title": "13. ポリシーの変更", "content": "定期的に更新される場合があります。"}
+      ]
+    }
+  }
+}

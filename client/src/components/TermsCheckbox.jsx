@@ -1,9 +1,11 @@
 import React from 'react';
+import { useTranslation } from '../context/TranslationContext';
 
 /**
  * TermsCheckbox Component
  * Displays T&C and Privacy Policy checkboxes with links
  * Used in registration flow
+ * Now links to multi-language policy pages
  */
 export function TermsCheckbox({ 
   termsAccepted, 
@@ -12,6 +14,7 @@ export function TermsCheckbox({
   onPrivacyChange, 
   disabled = false 
 }) {
+  const { t } = useTranslation();
   return (
     <div style={{
       backgroundColor: 'rgba(100, 100, 150, 0.3)',
@@ -36,14 +39,14 @@ export function TermsCheckbox({
           style={{ marginTop: '0.25rem', cursor: 'pointer' }}
         />
         <span>
-          I accept the{' '}
+          {t('terms.acceptPrefix')}{' '}
           <a 
-            href="/TERMS_OF_SERVICE.md" 
+            href="/policies?type=terms" 
             target="_blank" 
             rel="noopener noreferrer" 
             style={{ color: '#64B5F6', textDecoration: 'underline' }}
           >
-            Terms of Service
+            {t('terms.termsLink')}
           </a>
           {' '}*
         </span>
@@ -63,21 +66,21 @@ export function TermsCheckbox({
           style={{ marginTop: '0.25rem', cursor: 'pointer' }}
         />
         <span>
-          I accept the{' '}
+          {t('terms.acceptPrefix')}{' '}
           <a 
-            href="/privacy.md" 
+            href="/policies?type=privacy" 
             target="_blank" 
             rel="noopener noreferrer" 
             style={{ color: '#64B5F6', textDecoration: 'underline' }}
           >
-            Privacy Policy
+            {t('terms.privacyLink')}
           </a>
           {' '}*
         </span>
       </label>
 
       <p style={{ fontSize: '0.75rem', color: '#aaa', margin: '0.75rem 0 0 0' }}>
-        * Required to create account
+        * {t('terms.required')}
       </p>
     </div>
   );

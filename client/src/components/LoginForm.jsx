@@ -21,7 +21,7 @@ export function LoginForm({
     <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       <input
         type="email"
-        placeholder="Email"
+        placeholder={t('login.email')}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         required
@@ -37,7 +37,7 @@ export function LoginForm({
       <PasswordInput
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        placeholder="Password"
+        placeholder={t('login.password')}
         autoComplete="current-password"
       />
       
@@ -54,12 +54,12 @@ export function LoginForm({
           cursor: loading ? 'not-allowed' : 'pointer'
         }}
       >
-        {loading ? 'Signing in...' : 'Sign In'}
+        {loading ? t('login.signingIn') : t('login.signIn')}
       </button>
 
       <div style={{ textAlign: 'center', fontSize: '0.9rem' }}>
         <p>
-          Don't have an account?{' '}
+          {t('login.dontHaveAccount')}{' '}
           <button 
             type="button"
             onClick={onSwitchToRegister}
@@ -71,7 +71,7 @@ export function LoginForm({
               textDecoration: 'underline'
             }}
           >
-            Register
+            {t('login.register')}
           </button>
         </p>
         <p>
@@ -86,7 +86,7 @@ export function LoginForm({
               textDecoration: 'underline'
             }}
           >
-            Forgot password?
+            {t('login.forgotPassword')}
           </button>
         </p>
       </div>
