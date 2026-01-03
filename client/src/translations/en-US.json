@@ -277,7 +277,8 @@
     "currentPhase": "Current Phase",
     "nextPhase": "Next Phase",
     "loading": "Reading the moon...",
-    "disclaimer": "The moon's influence guides our emotions and energy."
+    "disclaimer": "The moon's influence guides our emotions and energy.",
+    "cycleInfo": "The moon completes a full cycle approximately every 29.5 days. Each phase carries unique energy that influences all zodiac signs differently based on your personal birth chart."
   },
   "cosmicWeather": {
     "title": "🌌 Cosmic Weather",
@@ -289,6 +290,13 @@
     "mercury": "Mercury",
     "venus": "Venus",
     "mars": "Mars",
+    "jupiter": "Jupiter",
+    "saturn": "Saturn",
+    "uranus": "Uranus",
+    "neptune": "Neptune",
+    "pluto": "Pluto",
+    "sun": "Sun",
+    "moon": "Moon",
     "loading": "Reading cosmic conditions..."
   },
   "mySign": {
@@ -333,7 +341,19 @@
     "season": "Season:",
     "energy": "Energy:",
     "bestSeason": "Best Season:",
-    "moonPhaseInfluences": "Moon Phase Influences"
+    "moonPhaseInfluences": "Moon Phase Influences",
+    "aries": "Aries",
+    "taurus": "Taurus",
+    "gemini": "Gemini",
+    "cancer": "Cancer",
+    "leo": "Leo",
+    "virgo": "Virgo",
+    "libra": "Libra",
+    "scorpio": "Scorpio",
+    "sagittarius": "Sagittarius",
+    "capricorn": "Capricorn",
+    "aquarius": "Aquarius",
+    "pisces": "Pisces"
   },
   "astrology": {
     "title": "Astrology",
@@ -368,6 +388,23 @@
     "disabled": "Voice disabled",
     "playing": "Playing...",
     "paused": "Paused"
+  },
+  "elements": {
+    "fire": "Fire",
+    "earth": "Earth",
+    "air": "Air",
+    "water": "Water"
+  },
+  "planets": {
+    "mercury": "Mercury",
+    "venus": "Venus",
+    "mars": "Mars",
+    "jupiter": "Jupiter",
+    "saturn": "Saturn",
+    "uranus": "Uranus",
+    "neptune": "Neptune",
+    "pluto": "Pluto",
+    "saturnuranus": "Saturn/Uranus"
   },
   "validation": {
     "passwordRequirements": "Password Requirements:",

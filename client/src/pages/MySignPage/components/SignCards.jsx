@@ -10,7 +10,7 @@ export function SignCards({ astro, t }) {
           <div className="sign-card-icon">↗️</div>
           <div className="sign-card-content">
             <h3 className="sign-card-title">{t ? t('astrology.risingSign') : 'Rising Sign'}</h3>
-            <p className="sign-card-value">{astro.rising_sign}</p>
+            <p className="sign-card-value">{t(`mySign.${astro.rising_sign.toLowerCase()}`)}</p>
             {astro.rising_degree && (
               <p className="sign-card-degree">{astro.rising_degree}°</p>
             )}
@@ -25,7 +25,7 @@ export function SignCards({ astro, t }) {
           <div className="sign-card-icon">🌙</div>
           <div className="sign-card-content">
             <h3 className="sign-card-title">{t ? t('astrology.moonSign') : 'Moon Sign'}</h3>
-            <p className="sign-card-value">{astro.moon_sign}</p>
+            <p className="sign-card-value">{t(`mySign.${astro.moon_sign.toLowerCase()}`)}</p>
             {astro.moon_degree && (
               <p className="sign-card-degree">{astro.moon_degree}°</p>
             )}
@@ -40,7 +40,7 @@ export function SignCards({ astro, t }) {
           <div className="sign-card-icon">☀️</div>
           <div className="sign-card-content">
             <h3 className="sign-card-title">{t ? t('astrology.sunSign') : 'Sun Sign'}</h3>
-            <p className="sign-card-value">{astro.sun_sign}</p>
+            <p className="sign-card-value">{t(`mySign.${astro.sun_sign.toLowerCase()}`)}</p>
             {astro.sun_degree && (
               <p className="sign-card-degree">{astro.sun_degree}°</p>
             )}

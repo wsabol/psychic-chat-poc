@@ -16,7 +16,6 @@ import { translateContentObject } from '../simpleTranslator.js';
  * Generate horoscopes for the user
  * Generates English horoscope, then translates to user's preferred language
  * Uses fast, free translation API (no OpenAI calls for translation)
- * Now tracks horoscope_range column to allow both daily and weekly on same day
  */
 export async function generateHoroscope(userId, range = 'daily') {
     try {
@@ -25,22 +24,15 @@ export async function generateHoroscope(userId, range = 'daily') {
         const today = new Date().toISOString().split('T')[0];
         const userIdHash = hashUserId(userId);
         
-        // Check if THIS SPECIFIC RANGE was already generated today (using new horoscope_range column)
         const { rows: existingHoroscopes } = await db.query(
-            `SELECT id FROM messages 
-             WHERE user_id_hash = $1 
-             AND role = 'horoscope' 
-             AND horoscope_range = $2
-             AND created_at::date = $3::date 
-             LIMIT 1`,
-            [userIdHash, range, today]
+            `SELECT id FROM messages WHERE user_id_hash = $1 AND role = 'horoscope' AND created_at::date = $2::date LIMIT 1`,
+            [userIdHash, today]
         );
         
         if (existingHoroscopes.length > 0) {
-            console.log(`[HOROSCOPE-HANDLER] ${range} horoscope already generated today, skipping`);
+            console.log('[HOROSCOPE-HANDLER] Horoscope already generated today, skipping');
             return;
         }
-        console.log(`[HOROSCOPE-HANDLER] No existing ${range} horoscope found for today, proceeding with generation`);
         
         // Fetch user context
         const userInfo = await fetchUserPersonalInfo(userId);
@@ -116,8 +108,7 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
                 }
                 
                 // Store message with both English and translated versions (if applicable)
-                // NOW PASSING: horoscopeRange parameter to track daily vs weekly
-                console.log(`[HOROSCOPE-HANDLER] Storing ${currentRange} horoscope to database...`);
+                console.log(`[HOROSCOPE-HANDLER] Storing horoscope to database...`);
                 await storeMessage(
                     userId, 
                     'horoscope', 
@@ -125,8 +116,7 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
                     horoscopeDataBrief,
                     userLanguage,
                     userLanguage !== 'en-US' ? horoscopeDataFullLang : null,
-                    userLanguage !== 'en-US' ? horoscopeDataBriefLang : null,
-                    currentRange  // ← HOROSCOPE RANGE (daily/weekly)
+                    userLanguage !== 'en-US' ? horoscopeDataBriefLang : null
                 );
                 console.log(`[HOROSCOPE-HANDLER] ✓ ${currentRange} horoscope generated and stored`);
                 

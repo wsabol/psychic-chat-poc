@@ -9,27 +9,29 @@ import {
     getUserGreeting
 } from '../oracle.js';
 import { storeMessage } from '../messages.js';
-import { translateContentObject } from '../translator.js';
+import { translateContentObject } from '../simpleTranslator.js';
 
 /**
  * Generate personalized moon phase commentary based on user's birth chart
- * Translates to user's preferred language if not English US
+ * Translates to user's preferred language using MyMemory (no OpenAI calls for translation)
  */
 export async function generateMoonPhaseCommentary(userId, phase) {
     try {
-        // Check if moon phase commentary already generated today
+        console.log(`[MOON-PHASE-HANDLER] Starting moon phase generation - userId: ${userId}, phase: ${phase}`);
         const today = new Date().toISOString().split('T')[0];
         const userIdHash = hashUserId(userId);
         
+        // Check if THIS SPECIFIC PHASE was already generated today (using new moon_phase column)
         const { rows: existingMoonPhase } = await db.query(
-            `SELECT id FROM messages WHERE user_id_hash = $1 AND role = 'moon_phase' AND created_at::date = $2::date LIMIT 1`,
-            [userIdHash, today]
+            `SELECT id FROM messages WHERE user_id_hash = $1 AND role = 'moon_phase' AND moon_phase = $2 AND created_at::date = $3::date LIMIT 1`,
+            [userIdHash, phase, today]
         );
         
         if (existingMoonPhase.length > 0) {
-            console.log('[MOON-PHASE-HANDLER] Moon phase commentary already generated today, skipping');
+            console.log(`[MOON-PHASE-HANDLER] ${phase} moon phase commentary already generated today, skipping`);
             return;
         }
+        console.log(`[MOON-PHASE-HANDLER] No existing ${phase} moon phase found for today, proceeding with generation`);
         
         // Fetch user context
         const userInfo = await fetchUserPersonalInfo(userId);
@@ -64,7 +66,9 @@ Do NOT include tarot cards - this is purely lunar + astrological insight enriche
 `;
         
         // Call Oracle (always in English first)
+        console.log(`[MOON-PHASE-HANDLER] Calling OpenAI for ${phase} moon phase...`);
         const oracleResponses = await callOracle(systemPrompt, [], moonPhasePrompt, true);
+        console.log(`[MOON-PHASE-HANDLER] ✓ OpenAI response received`);
         
         // Store moon phase commentary - BOTH full and brief (in English)
         const moonPhaseData = {
@@ -81,29 +85,37 @@ Do NOT include tarot cards - this is purely lunar + astrological insight enriche
             zodiac_sign: astrologyInfo.zodiac_sign 
         };
         
-        // Translate if user prefers non-English language
+        // Translate if user prefers non-English language (using MyMemory, not OpenAI)
         let moonPhaseDataLang = null;
         let moonPhaseDataBriefLang = null;
         
         if (userLanguage && userLanguage !== 'en-US') {
+            console.log(`[MOON-PHASE-HANDLER] Translating ${phase} moon phase to ${userLanguage}...`);
             moonPhaseDataLang = await translateContentObject(moonPhaseData, userLanguage);
             moonPhaseDataBriefLang = await translateContentObject(moonPhaseDataBrief, userLanguage);
+            console.log(`[MOON-PHASE-HANDLER] ✓ Translation complete`);
         }
         
         // Store message with both English and translated versions (if applicable)
-        // Always pass userLanguage (even if en-US) so it's tracked
+        // CRITICAL: Pass all parameters in CORRECT ORDER
+        console.log(`[MOON-PHASE-HANDLER] Storing ${phase} moon phase to database...`);
         await storeMessage(
-            userId, 
-            'moon_phase', 
-            moonPhaseData, 
-            moonPhaseDataBrief,
-            userLanguage,
-            userLanguage !== 'en-US' ? moonPhaseDataLang : null,
-            userLanguage !== 'en-US' ? moonPhaseDataBriefLang : null
+            userId,                                                    // 1: userId
+            'moon_phase',                                              // 2: role
+            moonPhaseData,                                             // 3: contentFull (English)
+            moonPhaseDataBrief,                                        // 4: contentBrief (English)
+            userLanguage,                                              // 5: languageCode
+            userLanguage !== 'en-US' ? moonPhaseDataLang : null,       // 6: contentFullLang
+            userLanguage !== 'en-US' ? moonPhaseDataBriefLang : null,  // 7: contentBriefLang
+            null,                                                      // 8: horoscopeRange (not used for moon)
+            phase,                                                     // 9: moonPhase ← CRITICAL!
+            null                                                       // 10: contentType
         );
+        console.log(`[MOON-PHASE-HANDLER] ✓ ${phase} moon phase generated and stored`);
         
     } catch (err) {
         console.error('[MOON-PHASE-HANDLER] Error generating commentary:', err.message);
+        console.error('[MOON-PHASE-HANDLER] Stack:', err.stack);
         throw err;
     }
 }

@@ -161,7 +161,7 @@ export function useTranslation() {
       value = value?.[k];
       if (value === undefined) {
         console.warn(`Translation key not found: ${key}`);
-        return key; // Return key as fallback
+        return key;
       }
     }
 

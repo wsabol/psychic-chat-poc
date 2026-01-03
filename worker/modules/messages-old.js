@@ -56,31 +56,16 @@ export async function getMessageHistory(userId, limit = 10) {
  * Store a message in database
  * ✅ ENCRYPTED: Stores content_encrypted using ENCRYPTION_KEY from .env
  * Stores both English (US) and optional language translation in new columns
- * Tracks horoscope_range, moon_phase, and content_type for duplicate detection
  * 
  * @param {string} userId - User ID
- * @param {string} role - Message role (user, assistant, horoscope, moon_phase, cosmic_weather, etc)
+ * @param {string} role - Message role (user, assistant, horoscope, moon_phase, etc)
  * @param {object} contentFull - Full content object (always in English US)
  * @param {object} contentBrief - Brief content object (always in English US)
  * @param {string} languageCode - User's preferred language (e.g., 'es-ES', 'fr-FR')
  * @param {object} contentFullLang - Full content translated to preferred language
  * @param {object} contentBriefLang - Brief content translated to preferred language
- * @param {string} horoscopeRange - For horoscopes: 'daily' or 'weekly'
- * @param {string} moonPhase - For moon phases: phase name (e.g., 'fullMoon', 'newMoon')
- * @param {string} contentType - Optional content type descriptor
  */
-export async function storeMessage(
-    userId, 
-    role, 
-    contentFull, 
-    contentBrief = null, 
-    languageCode = null, 
-    contentFullLang = null, 
-    contentBriefLang = null, 
-    horoscopeRange = null, 
-    moonPhase = null, 
-    contentType = null
-) {
+export async function storeMessage(userId, role, contentFull, contentBrief = null, languageCode = null, contentFullLang = null, contentBriefLang = null, horoscopeRange = null, moonPhase = null, contentType = null) {
     try {
         const userIdHash = hashUserId(userId);
         const fullStr = JSON.stringify(contentFull).substring(0, 200);
@@ -91,10 +76,7 @@ export async function storeMessage(
             briefLength: contentBrief ? JSON.stringify(contentBrief).length : 0, 
             fullPreview: fullStr, 
             briefPreview: briefStr, 
-            languageCode,
-            horoscopeRange,
-            moonPhase,
-            contentType
+            languageCode 
         });
         
         // Build query based on whether we have language-specific content
@@ -103,23 +85,8 @@ export async function storeMessage(
         
         if (languageCode && languageCode !== 'en-US' && contentFullLang) {
             // Store both English (baseline) and preferred language versions
-            query = `INSERT INTO messages(
-                user_id_hash, 
-                role, 
-                content_full_encrypted, 
-                content_brief_encrypted, 
-                content_full_lang_encrypted, 
-                content_brief_lang_encrypted, 
-                language_code, 
-                response_type,
-                horoscope_range,
-                moon_phase,
-                content_type
-            ) VALUES(
-                $1, $2, pgp_sym_encrypt($3, $6), pgp_sym_encrypt($4, $6), 
-                pgp_sym_encrypt($5, $6), pgp_sym_encrypt($7, $6), 
-                $8, 'both', $9, $10, $11
-            )`;
+            query = `INSERT INTO messages(user_id_hash, role, content_full_encrypted, content_brief_encrypted, content_full_lang_encrypted, content_brief_lang_encrypted, language_code, response_type) 
+                     VALUES($1, $2, pgp_sym_encrypt($3, $6), pgp_sym_encrypt($4, $6), pgp_sym_encrypt($5, $6), pgp_sym_encrypt($7, $6), $8, 'both')`;
             params = [
                 userIdHash,
                 role,
@@ -128,40 +95,22 @@ export async function storeMessage(
                 JSON.stringify(contentFullLang),
                 process.env.ENCRYPTION_KEY,
                 JSON.stringify(contentBriefLang || { text: '', cards: [] }),
-                languageCode,
-                horoscopeRange,
-                moonPhase,
-                contentType
+                languageCode
             ];
         } else {
             // Store only English (baseline) - no language-specific content
-            query = `INSERT INTO messages(
-                user_id_hash, 
-                role, 
-                content_full_encrypted, 
-                content_brief_encrypted, 
-                response_type,
-                horoscope_range,
-                moon_phase,
-                content_type
-            ) VALUES(
-                $1, $2, pgp_sym_encrypt($3, $4), pgp_sym_encrypt($5, $4), 
-                'both', $6, $7, $8
-            )`;
+            query = `INSERT INTO messages(user_id_hash, role, content_full_encrypted, content_brief_encrypted, response_type) 
+                     VALUES($1, $2, pgp_sym_encrypt($3, $4), pgp_sym_encrypt($5, $4), 'both')`;
             params = [
                 userIdHash,
                 role,
                 JSON.stringify(contentFull),
                 process.env.ENCRYPTION_KEY,
-                JSON.stringify(contentBrief || { text: '', cards: [] }),
-                horoscopeRange,
-                moonPhase,
-                contentType
+                JSON.stringify(contentBrief || { text: '', cards: [] })
             ];
         }
         
         await db.query(query, params);
-        console.log('[MESSAGES] ✓ Message stored successfully');
     } catch (err) {
         console.error('[MESSAGES] Error storing message:', err);
         throw err;

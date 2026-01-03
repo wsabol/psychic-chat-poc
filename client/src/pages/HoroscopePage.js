@@ -5,11 +5,13 @@ import VoiceBar from '../components/VoiceBar';
 import { getAstrologyData } from '../utils/astroUtils';
 import { isBirthInfoError, isBirthInfoMissing } from '../utils/birthInfoErrorHandler';
 import BirthInfoMissingPrompt from '../components/BirthInfoMissingPrompt';
+import { formatDateByLanguage } from '../utils/dateLocaleUtils';
+import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
 import '../styles/responsive.css';
 import './HoroscopePage.css';
 
 export default function HoroscopePage({ userId, token, auth, onExit, onNavigateToPage }) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [horoscopeRange, setHoroscopeRange] = useState('daily');
   const [horoscopeData, setHoroscopeData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -103,7 +105,7 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
         await fetchAstroInfo(headers);
       }
 
-      const response = await fetch(`${API_URL}/horoscope/${userId}/${horoscopeRange}`, { headers });
+      const response = await fetchWithTokenRefresh(`${API_URL}/horoscope/${userId}/${horoscopeRange}`, { headers });
 
       if (response.ok) {
         const data = await response.json();
@@ -118,7 +120,7 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
       }
 
       setGenerating(true);
-      const generateResponse = await fetch(`${API_URL}/horoscope/${userId}/${horoscopeRange}`, {
+            const generateResponse = await fetchWithTokenRefresh(`${API_URL}/horoscope/${userId}/${horoscopeRange}`, {
         method: 'POST',
         headers
       });
@@ -136,7 +138,9 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
         return;
       }
 
-      let pollCount = 0;
+                  let pollCount = 0;
+      // 30 second timeout for all horoscopes (whether daily or weekly)
+      // Weekly is slightly more complex analysis but single API call, so similar speed
       const maxPolls = 30;
 
       if (pollIntervalRef.current) {
@@ -147,7 +151,7 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
         pollCount++;
 
         try {
-          const pollResponse = await fetch(`${API_URL}/horoscope/${userId}/${horoscopeRange}`, { headers });
+          const pollResponse = await fetchWithTokenRefresh(`${API_URL}/horoscope/${userId}/${horoscopeRange}`, { headers });
 
           if (pollResponse.ok) {
             const data = await pollResponse.json();
@@ -299,24 +303,24 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
       {astro.sun_sign && !isBirthInfoMissing(astroInfo) && (
         <section className="horoscope-birth-chart">
           <div className="birth-chart-cards">
-            {astro.rising_sign && (
+                        {astro.rising_sign && (
               <div className="chart-card rising-card">
                 <span className="chart-icon">↗️</span>
-                <p className="chart-sign">{astro.rising_sign}</p>
+                <p className="chart-sign">{t(`mySign.${astro.rising_sign.toLowerCase()}`)}</p>
                 {astro.rising_degree && <p className="chart-degree">{astro.rising_degree}°</p>}
               </div>
             )}
             {astro.moon_sign && (
               <div className="chart-card moon-card">
                 <span className="chart-icon">🌙</span>
-                <p className="chart-sign">{astro.moon_sign}</p>
+                <p className="chart-sign">{t(`mySign.${astro.moon_sign.toLowerCase()}`)}</p>
                 {astro.moon_degree && <p className="chart-degree">{astro.moon_degree}°</p>}
               </div>
             )}
             {astro.sun_sign && (
               <div className="chart-card sun-card">
                 <span className="chart-icon">☀️</span>
-                <p className="chart-sign">{astro.sun_sign}</p>
+                <p className="chart-sign">{t(`mySign.${astro.sun_sign.toLowerCase()}`)}</p>
                 {astro.sun_degree && <p className="chart-degree">{astro.sun_degree}°</p>}
               </div>
             )}
@@ -330,8 +334,8 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
                         <p className="horoscope-range">
               {t('horoscope.reading', { range: t(`horoscope.${horoscopeData.range}`) })}
             </p>
-            <p className="horoscope-date">
-              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                        <p className="horoscope-date">
+              {formatDateByLanguage(new Date(), language)}
             </p>
           </div>
 
@@ -366,13 +370,13 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
               </div>
 
               <div className="sun-info-grid">
-                <div className="info-item">
+                                <div className="info-item">
                   <strong>{t('mySign.element')}</strong>
-                  <span>{sunSignData.element}</span>
+                  <span>{t(`elements.${sunSignData.element.toLowerCase()}`)}</span>
                 </div>
                 <div className="info-item">
                   <strong>{t('mySign.rulingPlanet')}</strong>
-                  <span>{sunSignData.rulingPlanet}</span>
+                  <span>{sunSignData.rulingPlanet.split('/').map((p, i) => <span key={i}>{i > 0 && '/'} {t(`planets.${p.toLowerCase().trim()}`)}</span>)}</span>
                 </div>
                 <div className="info-item">
                   <strong>{t('mySign.dates')}</strong>

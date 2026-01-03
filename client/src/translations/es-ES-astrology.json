@@ -27,6 +27,7 @@
     "nextPhase": "Próxima Fase",
     "loading": "Leyendo la luna...",
     "disclaimer": "La influencia de la luna guía nuestras emociones y energía.",
+    "cycleInfo": "La luna completa un ciclo completo aproximadamente cada 29,5 días. Cada fase lleva una energía única que influye en todos los signos del zodiaco de manera diferente basada en tu carta natal personal.",
     "noPhase": "Información de fase lunar no disponible"
   },
   "cosmicWeather": {
@@ -39,6 +40,13 @@
     "mercury": "Mercurio",
     "venus": "Venus",
     "mars": "Marte",
+    "jupiter": "Júpiter",
+    "saturn": "Saturno",
+    "uranus": "Urano",
+    "neptune": "Neptuno",
+    "pluto": "Plutón",
+    "sun": "Sol",
+    "moon": "Luna",
     "loading": "Leyendo condiciones cósmicas...",
     "noWeather": "Información de clima cósmico no disponible"
   },
@@ -112,5 +120,22 @@
     "birthChartReady": "Su carta natal está lista",
     "error": "Error al calcular la carta natal",
     "description": "Sus signos solares, lunares y ascendentes calculados a partir de sus datos de nacimiento"
+  },
+  "elements": {
+    "fire": "Fuego",
+    "earth": "Tierra",
+    "air": "Aire",
+    "water": "Agua"
+  },
+  "planets": {
+    "mercury": "Mercurio",
+    "venus": "Venus",
+    "mars": "Marte",
+    "jupiter": "Júpiter",
+    "saturn": "Saturno",
+    "uranus": "Urano",
+    "neptune": "Neptuno",
+    "pluto": "Plutón",
+    "saturnuranus": "Saturno/Urano"
   }
 }

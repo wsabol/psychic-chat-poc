@@ -51,9 +51,8 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
             const data = typeof fullContent === 'string' ? JSON.parse(fullContent) : fullContent;
             if (data.date === today) {
                 todaysWeather = data;
-                if (briefContent) {
-                    briefWeather = typeof briefContent === 'string' ? JSON.parse(briefContent) : briefContent;
-                }
+                // ALWAYS parse briefContent - don't skip if null
+                briefWeather = briefContent ? (typeof briefContent === 'string' ? JSON.parse(briefContent) : briefContent) : null;
                 break;
             }
         }
@@ -62,11 +61,10 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
             return res.status(404).json({ error: 'Generating today\'s cosmic weather...' });
         }
         
-        // Return based on user preference (full vs brief)
-        const textToReturn = responseType === 'brief' && briefWeather?.text ? briefWeather.text : todaysWeather.text;
+        // ALWAYS return FULL version - client decides display via toggle
         
         res.json({
-            weather: textToReturn,
+            weather: todaysWeather.text,
             brief: briefWeather?.text || null,
             birthChart: todaysWeather.birth_chart,
             currentPlanets: todaysWeather.planets
@@ -199,6 +197,74 @@ router.post("/void-of-course/:userId", authenticateToken, authorizeUser, async (
     } catch (err) {
         console.error('[ASTROLOGY-INSIGHTS] Error queuing void of course:', err);
         res.status(500).json({ error: 'Failed to queue void of course' });
+    }
+});
+
+// Moon Phase Endpoint - GET
+router.get("/moon-phase/:userId", authenticateToken, authorizeUser, async (req, res) => {
+    const { userId } = req.params;
+    const { phase } = req.query;
+    const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+    const userIdHash = hashUserId(userId);
+    
+    try {
+        const { rows: prefRows } = await db.query(
+            `SELECT language, response_type FROM user_preferences WHERE user_id_hash = $1`,
+            [userIdHash]
+        );
+        const userLanguage = prefRows.length > 0 ? prefRows[0].language : 'en-US';
+        const responseType = prefRows.length > 0 ? prefRows[0].response_type : 'full';
+        
+        const query = `SELECT 
+                pgp_sym_decrypt(content_full_encrypted, $2)::text as content_full,
+                pgp_sym_decrypt(content_brief_encrypted, $2)::text as content_brief,
+                pgp_sym_decrypt(content_full_lang_encrypted, $2)::text as content_lang,
+                pgp_sym_decrypt(content_brief_lang_encrypted, $2)::text as content_brief_lang,
+                language_code
+            FROM messages 
+            WHERE user_id_hash = $1 AND role = 'moon_phase' AND moon_phase = $3
+            ORDER BY created_at DESC LIMIT 1`;
+        const { rows } = await db.query(query, [userIdHash, ENCRYPTION_KEY, phase]);
+        
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Generating moon phase commentary...' });
+        }
+        
+        const row = rows[0];
+        let fullContent = row.content_full;
+        let briefContent = row.content_brief;
+        
+        if (row.language_code === userLanguage && row.content_lang) {
+            fullContent = row.content_lang;
+            briefContent = row.content_brief_lang || row.content_brief;
+        }
+        
+        const moonPhaseData = typeof fullContent === 'string' ? JSON.parse(fullContent) : fullContent;
+        const briefData = briefContent ? (typeof briefContent === 'string' ? JSON.parse(briefContent) : briefContent) : null;
+        
+        // Always return full version - client decides via toggle
+        res.json({
+            commentary: moonPhaseData.text,
+            brief: briefData?.text || null,
+            generated_at: moonPhaseData.generated_at,
+            phase: phase
+        });
+    } catch (err) {
+        console.error('[ASTROLOGY-INSIGHTS] Error fetching moon phase:', err);
+        res.status(500).json({ error: 'Failed to fetch moon phase' });
+    }
+});
+
+// Moon Phase Endpoint - POST
+router.post("/moon-phase/:userId", authenticateToken, authorizeUser, async (req, res) => {
+    const { userId } = req.params;
+    const { phase } = req.body;
+    try {
+        await enqueueMessage({ userId, message: `[SYSTEM] Generate moon phase commentary for ${phase}` });
+        res.json({ status: `Generating ${phase} moon phase commentary...` });
+    } catch (err) {
+        console.error('[ASTROLOGY-INSIGHTS] Error queuing moon phase:', err);
+        res.status(500).json({ error: 'Failed to queue moon phase' });
     }
 });
 

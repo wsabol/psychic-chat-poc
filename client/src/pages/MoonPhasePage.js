@@ -5,11 +5,13 @@ import VoiceBar from '../components/VoiceBar';
 import { getAstrologyData } from '../utils/astroUtils';
 import { isBirthInfoError, isBirthInfoMissing } from '../utils/birthInfoErrorHandler';
 import BirthInfoMissingPrompt from '../components/BirthInfoMissingPrompt';
+import { formatDateByLanguage } from '../utils/dateLocaleUtils';
+import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
 import '../styles/responsive.css';
 import './MoonPhasePage.css';
 
 export default function MoonPhasePage({ userId, token, auth, onNavigateToPage }) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [moonPhaseData, setMoonPhaseData] = useState(null);
   const [currentPhase, setCurrentPhase] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -147,7 +149,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
       const calculatedPhase = calculateMoonPhase();
       setCurrentPhase(calculatedPhase);
 
-      const response = await fetch(`${API_URL}/moon-phase/${userId}?phase=${calculatedPhase}`, { headers });
+      const response = await fetchWithTokenRefresh(`${API_URL}/moon-phase/${userId}?phase=${calculatedPhase}`, { headers });
 
       if (response.ok) {
         const data = await response.json();
@@ -163,7 +165,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
       }
 
       setGenerating(true);
-      const generateResponse = await fetch(`${API_URL}/moon-phase/${userId}`, {
+            const generateResponse = await fetchWithTokenRefresh(`${API_URL}/moon-phase/${userId}`, {
         method: 'POST',
         headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({ phase: calculatedPhase })
@@ -193,7 +195,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
         pollCount++;
 
         try {
-          const pollResponse = await fetch(`${API_URL}/moon-phase/${userId}?phase=${calculatedPhase}`, { headers });
+          const pollResponse = await fetchWithTokenRefresh(`${API_URL}/moon-phase/${userId}?phase=${calculatedPhase}`, { headers });
 
           if (pollResponse.ok) {
             const data = await pollResponse.json();
@@ -286,41 +288,41 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
         </div>
       )}
 
-      {currentPhase && !isBirthInfoMissing(astroInfo) && (
+            {currentPhase && !isBirthInfoMissing(astroInfo) && (
         <section className="moon-phase-display">
           <div className="moon-phase-emoji">
             {moonPhaseEmojis[currentPhase]}
           </div>
-                              <h3 className="moon-phase-name">
+          <h3 className="moon-phase-name">
             {t(`moonPhase.${getPhaseTranslationKey(currentPhase)}`)}
           </h3>
           <p className="moon-phase-date">
-            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+            {formatDateByLanguage(new Date(), language)}
           </p>
         </section>
       )}
 
       {astro.sun_sign && !isBirthInfoMissing(astroInfo) && (
         <section className="moon-phase-birth-chart">
-          <div className="birth-chart-cards">
+                    <div className="birth-chart-cards">
             {astro.rising_sign && (
               <div className="chart-card rising-card">
                 <span className="chart-icon">↗️</span>
-                <p className="chart-sign">{astro.rising_sign}</p>
+                <p className="chart-sign">{t(`mySign.${astro.rising_sign.toLowerCase()}`)}</p>
                 {astro.rising_degree && <p className="chart-degree">{astro.rising_degree}°</p>}
               </div>
             )}
             {astro.moon_sign && (
               <div className="chart-card moon-card">
                 <span className="chart-icon">🌙</span>
-                <p className="chart-sign">{astro.moon_sign}</p>
+                <p className="chart-sign">{t(`mySign.${astro.moon_sign.toLowerCase()}`)}</p>
                 {astro.moon_degree && <p className="chart-degree">{astro.moon_degree}°</p>}
               </div>
             )}
             {astro.sun_sign && (
               <div className="chart-card sun-card">
                 <span className="chart-icon">☀️</span>
-                <p className="chart-sign">{astro.sun_sign}</p>
+                <p className="chart-sign">{t(`mySign.${astro.sun_sign.toLowerCase()}`)}</p>
                 {astro.sun_degree && <p className="chart-degree">{astro.sun_degree}°</p>}
               </div>
             )}
@@ -367,7 +369,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
                   className={`moon-phase-item ${phase === currentPhase ? 'active' : ''}`}
                 >
                   <div className="moon-emoji">{moonPhaseEmojis[phase]}</div>
-                                                      <p className="phase-name">
+                  <p className="phase-name">
                     {t(`moonPhase.${getPhaseTranslationKey(phase)}`)}
                   </p>
                 </div>
@@ -383,14 +385,14 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
                 </h3>
               </div>
 
-              <div className="sun-info-grid">
-                <div className="info-item">
+                <div className="sun-info-grid">
+                                <div className="info-item">
                   <strong>{t('mySign.element')}</strong>
-                  <span>{sunSignData.element}</span>
+                  <span>{t(`elements.${sunSignData.element.toLowerCase()}`)}</span>
                 </div>
                 <div className="info-item">
                   <strong>{t('mySign.rulingPlanet')}</strong>
-                  <span>{sunSignData.rulingPlanet}</span>
+                  <span>{sunSignData.rulingPlanet.split('/').map((p, i) => <span key={i}>{i > 0 && '/'} {t(`planets.${p.toLowerCase().trim()}`)}</span>)}</span>
                 </div>
                 <div className="info-item">
                   <strong>{t('mySign.dates')}</strong>
@@ -407,8 +409,8 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
             </section>
           )}
 
-          <div className="moon-phase-info">
-            <p>🌙 The moon completes a full cycle approximately every 29.5 days. Each phase carries unique energy that influences all zodiac signs differently based on your personal birth chart.</p>
+            <div className="moon-phase-info">
+            <p>{t('moonPhase.cycleInfo')}</p>
           </div>
 
           <div className="moon-phase-disclaimer">

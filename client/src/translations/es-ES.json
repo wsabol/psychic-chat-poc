@@ -226,7 +226,8 @@
     "currentPhase": "Fase Actual",
     "nextPhase": "Próxima Fase",
     "loading": "Leyendo la luna...",
-    "disclaimer": "La influencia de la luna guía nuestras emociones y energía."
+    "disclaimer": "La influencia de la luna guía nuestras emociones y energía.",
+    "cycleInfo": "La luna completa un ciclo completo aproximadamente cada 29,5 días. Cada fase lleva una energía única que influye en todos los signos del zodiaco de manera diferente basada en tu carta natal personal."
   },
   "cosmicWeather": {
     "title": "🌌 Clima Cósmico",
@@ -283,6 +284,7 @@
     "playing": "Reproduciendo...",
     "paused": "En pausa"
   },
+
   "validation": {
     "passwordRequirements": "Requisitos de Contraseña:",
     "requirement8Chars": "Al menos 8 caracteres",

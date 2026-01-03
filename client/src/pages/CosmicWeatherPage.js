@@ -5,11 +5,12 @@ import VoiceBar from '../components/VoiceBar';
 import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
 import { isBirthInfoError, isBirthInfoMissing } from '../utils/birthInfoErrorHandler';
 import BirthInfoMissingPrompt from '../components/BirthInfoMissingPrompt';
+import { formatDateByLanguage } from '../utils/dateLocaleUtils';
 import '../styles/responsive.css';
 import './CosmicWeatherPage.css';
 
 export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPage }) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [cosmicData, setCosmicData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -98,11 +99,11 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
 
       const response = await fetchWithTokenRefresh(`${API_URL}/astrology-insights/cosmic-weather/${userId}`, { headers });
 
-      if (response.ok) {
+            if (response.ok) {
         const data = await response.json();
         setCosmicData({
-          text: data.weather,
-          brief: data.brief,
+          text: data.weather || data.text || '',
+          brief: data.brief || data.weather_brief || '',
           birthChart: data.birthChart,
           planets: data.currentPlanets || []
         });
@@ -143,10 +144,10 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
           const pollResponse = await fetchWithTokenRefresh(`${API_URL}/astrology-insights/cosmic-weather/${userId}`, { headers });
 
           if (pollResponse.ok) {
-            const data = await pollResponse.json();
+                        const data = await pollResponse.json();
             setCosmicData({
-              text: data.weather,
-              brief: data.brief,
+              text: data.weather || data.text || '',
+              brief: data.brief || data.weather_brief || '',
               birthChart: data.birthChart,
               planets: data.currentPlanets || []
             });
@@ -227,8 +228,8 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
 
       {cosmicData && !loading && (
         <section className="cosmic-content">
-          <div className="cosmic-date">
-            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                    <div className="cosmic-date">
+            {formatDateByLanguage(new Date(), language)}
           </div>
 
           <div className="cosmic-weather-text">
@@ -254,21 +255,21 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
           </div>
 
           <div className="cosmic-columns">
-            <div className="cosmic-column">
+                        <div className="cosmic-column">
               <h3 className="column-title">{t('astrology.birthChart')}</h3>
               {cosmicData.birthChart && (
                 <div className="birth-chart-simple">
                   <div className="chart-item">
                     <span className="chart-icon">↗️</span>
-                    <span className="chart-sign">{cosmicData.birthChart.rising_sign}</span>
+                    <span className="chart-sign">{t(`mySign.${cosmicData.birthChart.rising_sign.toLowerCase()}`)}</span>
                   </div>
                   <div className="chart-item">
                     <span className="chart-icon">🌙</span>
-                    <span className="chart-sign">{cosmicData.birthChart.moon_sign}</span>
+                    <span className="chart-sign">{t(`mySign.${cosmicData.birthChart.moon_sign.toLowerCase()}`)}</span>
                   </div>
                   <div className="chart-item">
                     <span className="chart-icon">☀️</span>
-                    <span className="chart-sign">{cosmicData.birthChart.sun_sign}</span>
+                    <span className="chart-sign">{t(`mySign.${cosmicData.birthChart.sun_sign.toLowerCase()}`)}</span>
                   </div>
                 </div>
               )}
@@ -280,9 +281,9 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
                 <div className="planets-list">
                   {cosmicData.planets.map((planet, idx) => (
                     <div key={idx} className={`planet-item ${planet.retrograde ? 'retrograde' : ''}`}>
-                      <span className="planet-icon">{planet.icon}</span>
-                      <span className="planet-name">{planet.name}</span>
-                      <span className="planet-sign">{planet.sign}</span>
+                                            <span className="planet-icon">{planet.icon}</span>
+                      <span className="planet-name">{t(`cosmicWeather.${planet.name.toLowerCase()}`)}</span>
+                      <span className="planet-sign">{t(`mySign.${planet.sign.toLowerCase()}`)}</span>
                       <span className="planet-degree">{planet.degree}°</span>
                       {planet.retrograde && <span className="retrograde-badge">♻️</span>}
                     </div>
@@ -295,21 +296,21 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
           </div>
 
           <div className="cosmic-mobile">
-            <div className="mobile-section">
+                        <div className="mobile-section">
               <h3>{t('astrology.birthChart')}</h3>
               {cosmicData.birthChart && (
                 <div className="birth-chart-simple">
                   <div className="chart-item">
                     <span className="chart-icon">↗️</span>
-                    <span className="chart-sign">{cosmicData.birthChart.rising_sign}</span>
+                    <span className="chart-sign">{t(`mySign.${cosmicData.birthChart.rising_sign.toLowerCase()}`)}</span>
                   </div>
                   <div className="chart-item">
                     <span className="chart-icon">🌙</span>
-                    <span className="chart-sign">{cosmicData.birthChart.moon_sign}</span>
+                    <span className="chart-sign">{t(`mySign.${cosmicData.birthChart.moon_sign.toLowerCase()}`)}</span>
                   </div>
                   <div className="chart-item">
                     <span className="chart-icon">☀️</span>
-                    <span className="chart-sign">{cosmicData.birthChart.sun_sign}</span>
+                    <span className="chart-sign">{t(`mySign.${cosmicData.birthChart.sun_sign.toLowerCase()}`)}</span>
                   </div>
                 </div>
               )}
@@ -321,9 +322,9 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
                 <div className="planets-list">
                   {cosmicData.planets.map((planet, idx) => (
                     <div key={idx} className={`planet-item ${planet.retrograde ? 'retrograde' : ''}`}>
-                      <span className="planet-icon">{planet.icon}</span>
-                      <span className="planet-name">{planet.name}</span>
-                      <span className="planet-sign">{planet.sign}</span>
+                                            <span className="planet-icon">{planet.icon}</span>
+                      <span className="planet-name">{t(`cosmicWeather.${planet.name.toLowerCase()}`)}</span>
+                      <span className="planet-sign">{t(`mySign.${planet.sign.toLowerCase()}`)}</span>
                       <span className="planet-degree">{planet.degree}°</span>
                       {planet.retrograde && <span className="retrograde-badge">♻️</span>}
                     </div>

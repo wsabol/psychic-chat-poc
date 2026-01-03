@@ -10,13 +10,12 @@ import {
     getUserGreeting
 } from '../oracle.js';
 import { storeMessage, formatMessageContent } from '../messages.js';
-import { translateContentObject } from '../simpleTranslator.js';
+import { translateContentObjectLocally } from '../localTranslator.js';
 
 /**
- * Generate horoscopes for the user
- * Generates English horoscope, then translates to user's preferred language
- * Uses fast, free translation API (no OpenAI calls for translation)
- * Now tracks horoscope_range column to allow both daily and weekly on same day
+ * Generate daily and weekly horoscopes for the user at once
+ * This way, switching between ranges doesn't require regeneration
+ * Translates to user's preferred language if not English US
  */
 export async function generateHoroscope(userId, range = 'daily') {
     try {
@@ -25,22 +24,15 @@ export async function generateHoroscope(userId, range = 'daily') {
         const today = new Date().toISOString().split('T')[0];
         const userIdHash = hashUserId(userId);
         
-        // Check if THIS SPECIFIC RANGE was already generated today (using new horoscope_range column)
         const { rows: existingHoroscopes } = await db.query(
-            `SELECT id FROM messages 
-             WHERE user_id_hash = $1 
-             AND role = 'horoscope' 
-             AND horoscope_range = $2
-             AND created_at::date = $3::date 
-             LIMIT 1`,
-            [userIdHash, range, today]
+            `SELECT id FROM messages WHERE user_id_hash = $1 AND role = 'horoscope' AND created_at::date = $2::date LIMIT 1`,
+            [userIdHash, today]
         );
         
         if (existingHoroscopes.length > 0) {
-            console.log(`[HOROSCOPE-HANDLER] ${range} horoscope already generated today, skipping`);
+            console.log('[HOROSCOPE-HANDLER] Horoscope already generated today, skipping');
             return;
         }
-        console.log(`[HOROSCOPE-HANDLER] No existing ${range} horoscope found for today, proceeding with generation`);
         
         // Fetch user context
         const userInfo = await fetchUserPersonalInfo(userId);
@@ -63,12 +55,12 @@ export async function generateHoroscope(userId, range = 'daily') {
         const userGreeting = getUserGreeting(userInfo, userId, isTemporary);
         const generatedAt = new Date().toISOString();
         
-        // Generate only the requested range
+        // Generate only the requested range - no double generation
+        // Weekly horoscopes are more complex and take longer, but we don't compound by generating both
         const ranges = [range];
         
         for (const currentRange of ranges) {
             try {
-                console.log(`[HOROSCOPE-HANDLER] Generating ${currentRange} horoscope...`);
                 const horoscopePrompt = buildHoroscopePrompt(userInfo, astrologyInfo, currentRange, userGreeting);
                 
                 const systemPrompt = baseSystemPrompt + `
@@ -85,9 +77,7 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
                 
                 // Call Oracle with just the user's birth data (no chat history for horoscopes)
                 // Always generate in English first
-                console.log(`[HOROSCOPE-HANDLER] Calling OpenAI for ${currentRange} horoscope...`);
                 const oracleResponses = await callOracle(systemPrompt, [], horoscopePrompt, true);
-                console.log(`[HOROSCOPE-HANDLER] ✓ OpenAI response received`);
                 
                 // Store horoscope in database with metadata (in English)
                 const horoscopeDataFull = {
@@ -104,20 +94,20 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
                     zodiac_sign: astrologyInfo.zodiac_sign 
                 };
                 
-                // Translate to user's preferred language using free API (no OpenAI calls)
+                // Translate to user's preferred language using LOCAL translator (no OpenAI API calls)
+                // Fast, consistent translations stored in database
                 let horoscopeDataFullLang = null;
                 let horoscopeDataBriefLang = null;
                 
                 if (userLanguage && userLanguage !== 'en-US') {
                     console.log(`[HOROSCOPE-HANDLER] Translating ${currentRange} horoscope to ${userLanguage}...`);
-                    horoscopeDataFullLang = await translateContentObject(horoscopeDataFull, userLanguage);
-                    horoscopeDataBriefLang = await translateContentObject(horoscopeDataBrief, userLanguage);
+                    horoscopeDataFullLang = await translateContentObjectLocally(horoscopeDataFull, userLanguage);
+                    horoscopeDataBriefLang = await translateContentObjectLocally(horoscopeDataBrief, userLanguage);
                     console.log(`[HOROSCOPE-HANDLER] ✓ Translation complete`);
                 }
                 
                 // Store message with both English and translated versions (if applicable)
-                // NOW PASSING: horoscopeRange parameter to track daily vs weekly
-                console.log(`[HOROSCOPE-HANDLER] Storing ${currentRange} horoscope to database...`);
+                // Always pass userLanguage (even if en-US) so it's tracked
                 await storeMessage(
                     userId, 
                     'horoscope', 
@@ -125,21 +115,17 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
                     horoscopeDataBrief,
                     userLanguage,
                     userLanguage !== 'en-US' ? horoscopeDataFullLang : null,
-                    userLanguage !== 'en-US' ? horoscopeDataBriefLang : null,
-                    currentRange  // ← HOROSCOPE RANGE (daily/weekly)
+                    userLanguage !== 'en-US' ? horoscopeDataBriefLang : null
                 );
-                console.log(`[HOROSCOPE-HANDLER] ✓ ${currentRange} horoscope generated and stored`);
                 
             } catch (err) {
                 console.error(`[HOROSCOPE-HANDLER] Error generating ${currentRange} horoscope:`, err.message);
-                console.error(`[HOROSCOPE-HANDLER] Stack:`, err.stack);
                 // Continue with next range even if one fails
             }
         }
         
     } catch (err) {
         console.error('[HOROSCOPE-HANDLER] Error generating horoscopes:', err.message);
-        console.error('[HOROSCOPE-HANDLER] Stack:', err.stack);
         throw err;
     }
 }

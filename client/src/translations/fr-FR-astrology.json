@@ -27,7 +27,8 @@
     "nextPhase": "Prochaine Phase",
     "loading": "Lecture de la lune...",
     "disclaimer": "L'influence de la lune guide nos émotions et notre énergie.",
-    "noPhase": "Aucune information de phase lunaire disponible"
+    "noPhase": "Aucune information de phase lunaire disponible",
+    "cycleInfo": "La lune complete un cycle complet environ tous les 29,5 jours. Chaque phase porte une energie unique qui influence tous les signes du zodiaque differemment en fonction de votre theme natal personnel."
   },
   "cosmicWeather": {
     "title": "🌌 Météo Cosmique",
@@ -39,6 +40,13 @@
     "mercury": "Mercure",
     "venus": "Vénus",
     "mars": "Mars",
+    "jupiter": "Jupiter",
+    "saturn": "Saturne",
+    "uranus": "Uranus",
+    "neptune": "Neptune",
+    "pluto": "Pluton",
+    "sun": "Soleil",
+    "moon": "Lune",
     "loading": "Lecture des conditions cosmiques...",
     "noWeather": "Aucune information de météo cosmique disponible"
   },
@@ -98,6 +106,23 @@
     "aquarius": "Verseau",
     "pisces": "Poissons"
   },
+  "elements": {
+    "fire": "Feu",
+    "earth": "Terre",
+    "air": "Air",
+    "water": "Eau"
+  },
+  "planets": {
+    "mercury": "Mercure",
+    "venus": "Venus",
+    "mars": "Mars",
+    "jupiter": "Jupiter",
+    "saturn": "Saturne",
+    "uranus": "Uranus",
+    "neptune": "Neptune",
+    "pluto": "Pluton",
+    "saturnuranus": "Saturne/Uranus"
+  },
   "astrology": {
     "title": "Astrologie",
     "birthChart": "Thème Natal",
@@ -112,5 +137,22 @@
     "birthChartReady": "Votre thème natal est prêt",
     "error": "Erreur lors du calcul du thème natal",
     "description": "Vos signes solaires, lunaires et ascendants calculés à partir de vos données de naissance"
+  },
+  "elements": {
+    "fire": "Feu",
+    "earth": "Terre",
+    "air": "Air",
+    "water": "Eau"
+  },
+  "planets": {
+    "mercury": "Mercure",
+    "venus": "Venus",
+    "mars": "Mars",
+    "jupiter": "Jupiter",
+    "saturn": "Saturne",
+    "uranus": "Uranus",
+    "neptune": "Neptune",
+    "pluto": "Pluton",
+    "saturnuranus": "Saturne/Uranus"
   }
 }
