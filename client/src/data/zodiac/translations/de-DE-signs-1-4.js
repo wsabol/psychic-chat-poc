@@ -3,6 +3,8 @@ export const translations = {
     name: "Widder",
     dates: "21. März - 19. April",
     element: "Feuer",
+    planet: "Mars",
+    rulingPlanet: "Mars",
     personality: "Kühn, ehrgeizig und energisch. Sie sind ein natürlicher Anführer, der sich in Herausforderungen und Neubeginn gedeiht. Ihr Pioniergeist treibt Sie an, unerforschte Gebiete zu erkunden.",
     strengths: ["Natürliche Führung", "Mut und Entschlossenheit", "Innovatives Denken", "Hohe Energie und Enthusiasmus", "Schnelle Entscheidungsfindung"],
     weaknesses: ["Ungeduld", "Neigung zu Impulsivität", "Kann übermäßig wettbewerbsfähig sein", "Schwierigkeit mit Routineaufgaben", "Kann handeln, ohne zu denken"],
@@ -10,7 +12,17 @@ export const translations = {
     opportunities: "Führungsrollen, Unternehmertum, Sport, Notfalldienste, und jedes Feld, das schnelles Denken und entschiedenes Handeln erfordert.",
     challenges: "Geduld lernen, Perspektiven anderer berücksichtigen, und langfristige Verpflichtungen erfüllen.",
     compatibility: {
+      mostCompatible: ["Löwe", "Schütze", "Zwillinge", "Wassermann"],
+      leastCompatible: ["Krebs", "Steinbock"],
+      soulmate: "Löwe",
       description: "Feuerzeichen entfachen Ihre Leidenschaft, während Luftzeichen Ihre Ideen nähren. Erdzeichen können Sie verlangsamen, und Wasserzeichen können Ihren Enthusiasmus dämpfen."
+    },
+    luckyElements: {
+      numbers: [1, 8, 17, 21, 31],
+      colors: ["Rot", "Orange", "Helles Gelb", "Scharlachrot"],
+      days: ["Dienstag", "Sonntag"],
+      stones: ["Diamant", "Rubin", "Blutstein", "Roter Jaspis"],
+      metals: ["Eisen", "Stahl"]
     },
     careerSpecific: {
       ideal: ["Militäroffizier", "Notfallarzt", "Unternehmer", "Profisportler", "Feuerwehrmann", "Verkaufsleiter"],
@@ -50,6 +62,8 @@ export const translations = {
     name: "Stier",
     dates: "20. April - 20. Mai",
     element: "Erde",
+    planet: "Venus",
+    rulingPlanet: "Venus",
     personality: "Erdgebunden, zuverlässig und sinnlich. Sie schätzen Schönheit, Komfort und Stabilität. Ihre stetige Natur macht Sie zu einer vertrauenswürdigen Kraft in jeder Situation.",
     strengths: ["Zuverlässigkeit und Treue", "Praktische Weisheit", "Wertschätzung für Schönheit", "Starker Arbeitsethos", "Finanzielle Scharfsinnigkeit"],
     weaknesses: ["Eigensinn", "Widerstand gegen Veränderung", "Materialistische Tendenzen", "Kann besitzergreifend sein", "Schwierigkeit, sich schnell anzupassen"],
@@ -57,7 +71,17 @@ export const translations = {
     opportunities: "Finanzen, Immobilien, Handwerk und Künste, Kochkunst, Landwirtschaft, und Luxusgüterindustrien.",
     challenges: "Veränderung annehmen, materielle Anhaftungen loslassen, und flexibler in Ihrem Ansatz sein.",
     compatibility: {
+      mostCompatible: ["Jungfrau", "Steinbock", "Krebs", "Fische"],
+      leastCompatible: ["Löwe", "Wassermann"],
+      soulmate: "Jungfrau",
       description: "Erdzeichen bieten Stabilität, Wasserzeichen bieten emotionale Tiefe. Feuerzeichen können Sie beeilen, Luftzeichen können zu abgelöst wirken."
+    },
+    luckyElements: {
+      numbers: [2, 6, 9, 12, 24],
+      colors: ["Grün", "Rosa", "Erdtöne", "Pastellblau"],
+      days: ["Freitag", "Montag"],
+      stones: ["Smaragd", "Rosenquarz", "Saphir", "Moos-Achat"],
+      metals: ["Kupfer", "Messing"]
     },
     careerSpecific: {
       ideal: ["Investmentbanker", "Luxusmarken-Manager", "Chef", "Innenarchitekt", "Immobilienentwickler", "Agrarwissenschaftler"],
@@ -97,6 +121,8 @@ export const translations = {
     name: "Zwillinge",
     dates: "21. Mai - 20. Juni",
     element: "Luft",
+    planet: "Merkur",
+    rulingPlanet: "Merkur",
     personality: "Neugierig, anpassungsfähig und kommunikativ. Sie sind ein schneller Denker, der Vielfalt und intellektuelle Stimulation liebt. Ihre Vielseitigkeit ermöglicht es Ihnen, sich mit verschiedenen Menschen und Ideen zu verbinden.",
     strengths: ["Ausgezeichnete Kommunikation", "Anpassungsfähigkeit", "Schnelle Lernfähigkeit", "Netzwerk-Fähigkeiten", "Kreative Problemlösung"],
     weaknesses: ["Inkonsistenz", "Schwierigkeit, sich auf eine Sache zu konzentrieren", "Kann oberflächlich sein", "Klatsch-Neigung", "Unruhe"],
@@ -104,7 +130,17 @@ export const translations = {
     opportunities: "Medien, Journalismus, Unterricht, Verkauf, Technologie, Übersetzung, und jedes Feld, das Kommunikationsfähigkeiten erfordert.",
     challenges: "Tiefe und Konzentration entwickeln, sich langfristigen Zielen verpflichten, und so viel zuhören wie sprechen.",
     compatibility: {
+      mostCompatible: ["Waage", "Wassermann", "Widder", "Löwe"],
+      leastCompatible: ["Jungfrau", "Fische"],
+      soulmate: "Waage",
       description: "Luftzeichen verstehen Ihren Bedarf nach mentaler Stimulation, Feuerzeichen regen Ihre Neugier an. Erdzeichen können Sie langweilen, Wasserzeichen können Sie emotional überlasten."
+    },
+    luckyElements: {
+      numbers: [5, 7, 14, 16, 23],
+      colors: ["Gelb", "Silber", "Hellblau", "Weiß"],
+      days: ["Mittwoch", "Samstag"],
+      stones: ["Achat", "Zitrin", "Alexandrit", "Perle"],
+      metals: ["Merkur", "Silber"]
     },
     careerSpecific: {
       ideal: ["Journalist", "Social-Media-Manager", "Übersetzer", "Radiomoderator", "Marketing-Koordinator", "Softwareentwickler"],
@@ -144,6 +180,8 @@ export const translations = {
     name: "Krebs",
     dates: "21. Juni - 22. Juli",
     element: "Wasser",
+    planet: "Mond",
+    rulingPlanet: "Mond",
     personality: "Intuitiv, nährend und emotional tiefe. Sie haben eine starke Verbindung zu Zuhause und Familie. Ihre empathische Natur macht Sie zu einem natürlichen Pflegenden und Heiler.",
     strengths: ["Starke Intuition", "Nährende Fähigkeiten", "Emotionale Intelligenz", "Treue zu Lieben", "Kreative Vorstellung"],
     weaknesses: ["Stimmungsschwankungen", "Neigung zur Sorge", "Kann übermäßig empfindlich sein", "Schwierigkeit loszulassen", "Kann sich zurückziehen, wenn verletzt"],
@@ -151,7 +189,17 @@ export const translations = {
     opportunities: "Gesundheitswesen, Beratung, Kinderbetreuung, Gastgewerbe, Immobilien, Lebensmittelservice, und kreative Künste.",
     challenges: "Emotionale Grenzen setzen, Kritik konstruktiv behandeln, und Sorge für andere mit Selbstpflege ausgleichen.",
     compatibility: {
+      mostCompatible: ["Skorpion", "Fische", "Stier", "Jungfrau"],
+      leastCompatible: ["Widder", "Waage"],
+      soulmate: "Skorpion",
       description: "Wasserzeichen verstehen Ihre emotionale Tiefe, Erdzeichen bieten Sicherheit. Feuerzeichen können Sie überlasten, Luftzeichen können zu emotional abgelöst wirken."
+    },
+    luckyElements: {
+      numbers: [2, 7, 11, 16, 20],
+      colors: ["Silber", "Weiß", "Meeresgrün", "Blasses Blau"],
+      days: ["Montag", "Donnerstag"],
+      stones: ["Mondstein", "Perle", "Rubin", "Smaragd"],
+      metals: ["Silber", "Platin"]
     },
     careerSpecific: {
       ideal: ["Pädiatrische Krankenschwester", "Familientherapeut", "Chef", "Innenarchitekt", "Museumsdirektor", "Kindergartenleiter"],

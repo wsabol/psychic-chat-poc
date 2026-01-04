@@ -1,16 +1,28 @@
 export const translations = {
-  aries: {
+    aries: {
     name: "Aries",
     dates: "21 de marzo - 19 de abril",
     element: "Fuego",
+    planet: "Marte",
+    rulingPlanet: "Marte",
     personality: "Audaz, ambicioso y energético. Eres un líder natural que prospera en desafíos y nuevos comienzos. Tu espíritu pionero te impulsa a explorar territorios inexplorados.",
     strengths: ["Liderazgo natural", "Valor y determinación", "Pensamiento innovador", "Alta energía y entusiasmo", "Toma de decisiones rápida"],
     weaknesses: ["Impaciencia", "Tendencia a la impulsividad", "Puede ser excesivamente competitivo", "Dificultad con tareas rutinarias", "Puede actuar sin pensar"],
     lifePath: "Tu viaje cósmico implica equilibrar tu independencia salvaje con la colaboración. Estás destinado a iniciar nuevos proyectos e inspirar a otros a la acción.",
     opportunities: "Roles de liderazgo, emprendimiento, deportes, servicios de emergencia, y cualquier campo que requiera pensamiento rápido y acción decidida.",
     challenges: "Aprender paciencia, considerar perspectivas ajenas, y cumplir compromisos a largo plazo.",
-    compatibility: {
+        compatibility: {
+      mostCompatible: ["Leo", "Sagitario", "Géminis", "Acuario"],
+      leastCompatible: ["Cáncer", "Capricornio"],
+      soulmate: "Leo",
       description: "Los signos de fuego encienden tu pasión, mientras que los signos de aire nutren tus ideas. Los signos de tierra pueden frenarte, y los signos de agua pueden apagar tu entusiasmo."
+    },
+    luckyElements: {
+      numbers: [1, 8, 17, 21, 31],
+      colors: ["Rojo", "Naranja", "Amarillo Brillante", "Escarlata"],
+      days: ["Martes", "Domingo"],
+      stones: ["Diamante", "Rubí", "Piedra de Sangre", "Jaspe Rojo"],
+      metals: ["Hierro", "Acero"]
     },
     careerSpecific: {
       ideal: ["Oficial militar", "Médico de urgencias", "Emprendedor", "Atleta profesional", "Bombero", "Gerente de ventas"],
@@ -46,18 +58,30 @@ export const translations = {
       bestSeason: "Primavera - cuando tu espíritu pionero natural se alinea con la renovación de la naturaleza"
     }
   },
-  taurus: {
+    taurus: {
     name: "Tauro",
     dates: "20 de abril - 20 de mayo",
     element: "Tierra",
+    planet: "Venus",
+    rulingPlanet: "Venus",
     personality: "Enraizado, confiable y sensual. Valoras la belleza, la comodidad y la estabilidad. Tu naturaleza constante te convierte en una fuerza digna de confianza en cualquier situación.",
     strengths: ["Confiabilidad y lealtad", "Sabiduría práctica", "Apreciación de la belleza", "Fuerte ética de trabajo", "Perspicacia financiera"],
     weaknesses: ["Terquedad", "Resistencia al cambio", "Tendencias materialistas", "Puede ser posesivo", "Dificultad para adaptarse rápidamente"],
     lifePath: "Tu camino implica crear valor duradero y belleza en el mundo. Estás destinado a construir fundaciones sólidas y ayudar a otros a apreciar los aspectos más finos de la vida.",
     opportunities: "Finanzas, bienes raíces, artesanías y artes, gastronomía, agricultura, e industrias de lujo.",
-    challenges: "Aceptar el cambio, soltar apegos materiales, y ser más flexible en tu enfoque.",
+        challenges: "Aceptar el cambio, soltar apegos materiales, y ser más flexible en tu enfoque.",
     compatibility: {
+      mostCompatible: ["Virgo", "Capricornio", "Cáncer", "Piscis"],
+      leastCompatible: ["Leo", "Acuario"],
+      soulmate: "Virgo",
       description: "Los signos de tierra ofrecen estabilidad, los signos de agua ofrecen profundidad emocional. Los signos de fuego pueden apresurarte, los signos de aire pueden parecer demasiado desapegados."
+    },
+    luckyElements: {
+      numbers: [2, 6, 9, 12, 24],
+      colors: ["Verde", "Rosa", "Tonos Tierra", "Azul Pastel"],
+      days: ["Viernes", "Lunes"],
+      stones: ["Esmeralda", "Cuarzo Rosa", "Zafiro", "Ágata Musgo"],
+      metals: ["Cobre", "Latón"]
     },
     careerSpecific: {
       ideal: ["Banquero de inversiones", "Gerente de marcas de lujo", "Chef", "Diseñador de interiores", "Desarrollador inmobiliario", "Agrónomo"],
@@ -93,18 +117,30 @@ export const translations = {
       bestSeason: "Primavera Tardía - cuando la tierra es más fructífera y hermosa"
     }
   },
-  gemini: {
+    gemini: {
     name: "Géminis",
     dates: "21 de mayo - 20 de junio",
     element: "Aire",
+    planet: "Mercurio",
+    rulingPlanet: "Mercurio",
     personality: "Curioso, adaptable y comunicativo. Eres un pensador rápido que ama la diversidad y la estimulación intelectual. Tu versatilidad te permite conectar con personas e ideas variadas.",
     strengths: ["Excelente comunicación", "Adaptabilidad", "Capacidad de aprendizaje rápido", "Habilidades de networking", "Resolución creativa de problemas"],
     weaknesses: ["Inconsistencia", "Dificultad para concentrarse en una cosa", "Puede ser superficial", "Tendencia al cotilleo", "Inquietud"],
     lifePath: "Tu camino implica ser un puente entre mundos e ideas diferentes. Estás destinado a compartir conocimiento y facilitar conexiones entre personas.",
     opportunities: "Medios, periodismo, enseñanza, ventas, tecnología, traducción, y cualquier campo que requiera habilidades de comunicación.",
-    challenges: "Desarrollar profundidad y concentración, comprometerte con objetivos a largo plazo, y escuchar tanto como hablas.",
+        challenges: "Desarrollar profundidad y concentración, comprometerte con objetivos a largo plazo, y escuchar tanto como hablas.",
     compatibility: {
+      mostCompatible: ["Libra", "Acuario", "Aries", "Leo"],
+      leastCompatible: ["Virgo", "Piscis"],
+      soulmate: "Libra",
       description: "Los signos de aire entienden tu necesidad de estimulación mental, los signos de fuego despiertan tu curiosidad. Los signos de tierra pueden aburrirte, los signos de agua pueden sobrecargarte emocionalmente."
+    },
+    luckyElements: {
+      numbers: [5, 7, 14, 16, 23],
+      colors: ["Amarillo", "Plata", "Azul Claro", "Blanco"],
+      days: ["Miércoles", "Sábado"],
+      stones: ["Ágata", "Citrino", "Alejandrita", "Perla"],
+      metals: ["Mercurio", "Plata"]
     },
     careerSpecific: {
       ideal: ["Periodista", "Gerente de Redes Sociales", "Traductor", "Locutor de radio", "Coordinador de marketing", "Desarrollador de software"],
@@ -140,18 +176,30 @@ export const translations = {
       bestSeason: "Primavera Tardía - cuando el mundo está lleno de nueva información y conexiones"
     }
   },
-  cancer: {
+    cancer: {
     name: "Cáncer",
     dates: "21 de junio - 22 de julio",
     element: "Agua",
+    planet: "Luna",
+    rulingPlanet: "Luna",
     personality: "Intuitivo, nutritivo y emocionalmente profundo. Tienes una fuerte conexión al hogar y la familia. Tu naturaleza empática te convierte en un cuidador y sanador natural.",
     strengths: ["Fuerte intuición", "Habilidades nutritivas", "Inteligencia emocional", "Lealtad a los seres queridos", "Imaginación creativa"],
     weaknesses: ["Cambios de humor", "Tendencia a preocuparse", "Puede ser excesivamente sensible", "Dificultad para soltar", "Puede retirarse cuando se siente herido"],
     lifePath: "Tu camino implica sanar y nutrir a otros, mientras proteges tu propio bienestar emocional. Estás destinado a crear espacios seguros para crecimiento y sanación.",
     opportunities: "Cuidado de la salud, consejería, cuidado infantil, hospitalidad, bienes raíces, servicio de alimentos, y artes creativas.",
-    challenges: "Establecer límites emocionales, tratar la crítica constructivamente, y equilibrar el cuidado de otros con el autocuidado.",
+        challenges: "Establecer límites emocionales, tratar la crítica constructivamente, y equilibrar el cuidado de otros con el autocuidado.",
     compatibility: {
+      mostCompatible: ["Escorpio", "Piscis", "Tauro", "Virgo"],
+      leastCompatible: ["Aries", "Libra"],
+      soulmate: "Escorpio",
       description: "Los signos de agua entienden tu profundidad emocional, los signos de tierra ofrecen seguridad. Los signos de fuego pueden sobrecargarte, los signos de aire pueden parecer demasiado emocionalmente desapegados."
+    },
+    luckyElements: {
+      numbers: [2, 7, 11, 16, 20],
+      colors: ["Plata", "Blanco", "Verde Mar", "Azul Pálido"],
+      days: ["Lunes", "Jueves"],
+      stones: ["Piedra de Luna", "Perla", "Rubí", "Esmeralda"],
+      metals: ["Plata", "Platino"]
     },
     careerSpecific: {
       ideal: ["Enfermera pediátrica", "Terapeuta familiar", "Chef", "Diseñador de interiores", "Director de museo", "Director de jardín de infancia"],

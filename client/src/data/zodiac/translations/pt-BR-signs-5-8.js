@@ -3,6 +3,8 @@ export const translations = {
     name: "Leão",
     dates: "23 de julho - 22 de agosto",
     element: "Fogo",
+    planet: "Sol",
+    rulingPlanet: "Sol",
     personality: "Confiante, generoso e carismático. Você tem talento natural para drama e performance. Sua personalidade quente o atrai como um ímã para os outros.",
     strengths: ["Carisma natural", "Espírito generoso", "Talentos criativos", "Habilidades de liderança", "Lealdade aos amigos"],
     weaknesses: ["Necessidade de atenção", "Problemas de orgulho e ego", "Pode ser dramático", "Dificuldade em aceitar críticas", "Pode dominar conversas"],
@@ -10,7 +12,17 @@ export const translations = {
     opportunities: "Entretenimento, artes, oratória, ensino, gestão, e qualquer campo onde você pode estar sob os holofotes.",
     challenges: "Equilibrar confiança com humildade, compartilhar os holofotes, e lidar com críticas com graça.",
     compatibility: {
+      mostCompatible: ["Áries", "Sagitário", "Gêmeos", "Libra"],
+      leastCompatible: ["Touro", "Escorpião"],
+      soulmate: "Áries",
       description: "Signos de fogo igualam sua paixão, signos de ar apreciam sua criatividade. Signos de terra podem parecer muito mundanos, signos de água muito intensamente emocionais."
+    },
+    luckyElements: {
+      numbers: [1, 3, 10, 19, 28],
+      colors: ["Ouro", "Laranja", "Amarelo", "Vermelho"],
+      days: ["Domingo", "Terça"],
+      stones: ["Rubi", "Peridoto", "Sardônica", "Diamante"],
+      metals: ["Ouro", "Latão"]
     },
     careerSpecific: {
       ideal: ["Ator", "CEO", "Organizador de eventos", "Diretor de arte", "Designer de moda", "Palestrante motivacional"],
@@ -50,6 +62,8 @@ export const translations = {
     name: "Virgem",
     dates: "23 de agosto - 22 de setembro",
     element: "Terra",
+    planet: "Mercúrio",
+    rulingPlanet: "Mercúrio",
     personality: "Analítico, prático e orientado ao serviço. Você tem um olho para detalhes e desejo de melhorar tudo ao seu redor. Sua abordagem metódica assegura resultados de alta qualidade.",
     strengths: ["Atenção aos detalhes", "Pensamento analítico", "Confiabilidade", "Desejo de ajudar outros", "Habilidades organizacionais"],
     weaknesses: ["Perfeccionismo", "Tendência a criticar", "Preocupação e ansiedade", "Dificuldade em delegar", "Pode ser excessivamente cauteloso"],
@@ -57,7 +71,17 @@ export const translations = {
     opportunities: "Saúde, pesquisa, edição, contabilidade, administração, e qualquer campo que exija precisão e análise.",
     challenges: "Aceitar imperfeição, gerenciar ansiedade, e apreciar suas próprias realizações sem crítica constante.",
     compatibility: {
+      mostCompatible: ["Touro", "Capricórnio", "Câncer", "Escorpião"],
+      leastCompatible: ["Gêmeos", "Sagitário"],
+      soulmate: "Touro",
       description: "Signos de terra apreciam sua praticidade, signos de água valorizam sua natureza carinhosa. Signos de ar podem parecer dispersos, signos de fogo muito impulsivos para sua natureza metódica."
+    },
+    luckyElements: {
+      numbers: [6, 15, 20, 27, 34],
+      colors: ["Azul Marinho", "Cinza", "Marrom", "Verde"],
+      days: ["Quarta", "Sábado"],
+      stones: ["Safira", "Cornalina", "Jade", "Jaspe"],
+      metals: ["Mercúrio", "Níquel"]
     },
     careerSpecific: {
       ideal: ["Pesquisador médico", "Gerente de controle de qualidade", "Bibliotecário", "Nutricionista", "Editor", "Analista de sistemas"],
@@ -97,6 +121,8 @@ export const translations = {
     name: "Libra",
     dates: "23 de setembro - 22 de outubro",
     element: "Ar",
+    planet: "Vênus",
+    rulingPlanet: "Vênus",
     personality: "Diplomático, encantador e em busca de harmonia. Você tem um senso natural de justiça e beleza. Sua capacidade de ver todos os lados o torna um excelente mediador e pacificador.",
     strengths: ["Habilidades diplomáticas", "Senso de justiça", "Apreciação pela beleza", "Graça social", "Capacidade de compromisso"],
     weaknesses: ["Indecisão", "Evitar confrontação", "Pode ser superficial", "Tendência a agradar pessoas", "Dificuldade em tomar decisões difíceis"],
@@ -104,7 +130,17 @@ export const translations = {
     opportunities: "Lei, diplomacia, artes, design, aconselhamento, relações públicas, e qualquer campo que exija habilidades de negociação.",
     challenges: "Tomar decisões com confiança, enfrentar conflitos diretamente, e manter sua própria identidade nos relacionamentos.",
     compatibility: {
+      mostCompatible: ["Gêmeos", "Aquário", "Leão", "Sagitário"],
+      leastCompatible: ["Câncer", "Capricórnio"],
+      soulmate: "Gêmeos",
       description: "Signos de ar estimulam seu intelecto, signos de fogo inspiram sua natureza social. Signos de água podem ser muito emocionais, signos de terra muito rígidos para sua abordagem flexível."
+    },
+    luckyElements: {
+      numbers: [6, 15, 24, 33, 42],
+      colors: ["Rosa", "Azul", "Cores Pastel", "Branco"],
+      days: ["Sexta", "Domingo"],
+      stones: ["Opala", "Lápis-lazúli", "Jade", "Coral"],
+      metals: ["Cobre", "Bronze"]
     },
     careerSpecific: {
       ideal: ["Diplomata", "Designer de interiores", "Conselheiro matrimonial", "Comerciante de arte", "Gerente de relações públicas", "Juiz"],
@@ -144,6 +180,8 @@ export const translations = {
     name: "Escorpião",
     dates: "23 de outubro - 21 de novembro",
     element: "Água",
+     planet: "Plutão",
+    rulingPlanet: "Marte/Plutão",
     personality: "Intenso, apaixonado e transformador. Você tem profundidade incrível e capacidade de ver sob superfícies. Sua presença magnética atrai outros em seu mundo misterioso.",
     strengths: ["Profundidade emocional", "Habilidades investigativas", "Resiliência", "Personalidade magnética", "Capacidade de transformação"],
     weaknesses: ["Ciúme e possessividade", "Tendência ao secretismo", "Pode ser vingativo", "Dificuldade em confiar", "A intensidade pode sobrecarregar outros"],
@@ -151,7 +189,17 @@ export const translations = {
     opportunities: "Psicologia, pesquisa, investigação criminal, cirurgia, estudos ocultos, e qualquer campo que exija análise profunda.",
     challenges: "Aprender a confiar, gerenciar ciúme, e usar sua intensidade construtivamente em vez de destrutivamente.",
     compatibility: {
+      mostCompatible: ["Câncer", "Peixes", "Virgem", "Capricórnio"],
+      leastCompatible: ["Leão", "Aquário"],
+      soulmate: "Câncer",
       description: "Signos de água entendem sua intensidade emocional, signos de terra oferecem estabilidade. Signos de fogo podem colidir com sua profundidade, signos de ar podem parecer muito superficiais."
+    },
+    luckyElements: {
+      numbers: [8, 13, 18, 27, 36],
+      colors: ["Vermelho Profundo", "Preto", "Marrom Escuro", "Roxo Escuro"],
+      days: ["Terça", "Quinta"],
+      stones: ["Topázio", "Obsidiana", "Granada", "Rubi"],
+      metals: ["Ferro", "Aço"]
     },
     careerSpecific: {
       ideal: ["Psicólogo", "Detetive", "Cirurgião", "Pesquisador", "Jornalista investigativo", "Terapeuta"],

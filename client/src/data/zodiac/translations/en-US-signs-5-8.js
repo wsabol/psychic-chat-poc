@@ -3,6 +3,8 @@ export const translations = {
     name: "Leo",
     dates: "July 23 - August 22",
     element: "Fire",
+    planet: "Sun",
+    rulingPlanet: "Sun",
     personality: "Confident, generous, and charismatic. You have a natural talent for drama and performance. Your warm personality attracts others like a magnet.",
     strengths: ["Natural charisma", "Generous spirit", "Creative talents", "Leadership abilities", "Loyalty to friends"],
     weaknesses: ["Need for attention", "Issues with pride and ego", "Can be dramatic", "Difficulty accepting criticism", "May dominate conversations"],
@@ -10,7 +12,17 @@ export const translations = {
     opportunities: "Entertainment, arts, public speaking, teaching, management, and any field where you can be in the spotlight.",
     challenges: "Balancing confidence with humility, sharing the spotlight, and handling criticism gracefully.",
     compatibility: {
+      mostCompatible: ["Aries", "Sagittarius", "Gemini", "Libra"],
+      leastCompatible: ["Taurus", "Scorpio"],
+      soulmate: "Aries",
       description: "Fire signs match your passion, air signs appreciate your creativity. Earth signs may seem too mundane, water signs too emotionally intense."
+    },
+    luckyElements: {
+      numbers: [1, 3, 10, 19, 28],
+      colors: ["Gold", "Orange", "Yellow", "Red"],
+      days: ["Sunday", "Tuesday"],
+      stones: ["Ruby", "Peridot", "Sardonyx", "Diamond"],
+      metals: ["Gold", "Brass"]
     },
     careerSpecific: {
       ideal: ["Actor", "CEO", "Event Planner", "Art Director", "Fashion Designer", "Motivational Speaker"],
@@ -50,6 +62,8 @@ export const translations = {
     name: "Virgo",
     dates: "August 23 - September 22",
     element: "Earth",
+    planet: "Mercury",
+    rulingPlanet: "Mercury",
     personality: "Analytical, practical, and service-oriented. You have an eye for detail and a desire to improve everything around you. Your methodical approach ensures high-quality results.",
     strengths: ["Attention to detail", "Analytical thinking", "Reliability", "Desire to help others", "Organizational skills"],
     weaknesses: ["Perfectionism", "Tendency to criticize", "Worry and fear", "Difficulty delegating", "Can be overly cautious"],
@@ -57,7 +71,17 @@ export const translations = {
     opportunities: "Healthcare, research, editing, accounting, administration, and any field requiring precision and analysis.",
     challenges: "Accepting imperfection, managing anxiety, and appreciating your own accomplishments without constant self-criticism.",
     compatibility: {
+      mostCompatible: ["Taurus", "Capricorn", "Cancer", "Scorpio"],
+      leastCompatible: ["Gemini", "Sagittarius"],
+      soulmate: "Taurus",
       description: "Earth signs appreciate your practicality, water signs value your caring nature. Air signs may seem scattered, fire signs too impulsive for your methodical nature."
+    },
+    luckyElements: {
+      numbers: [6, 15, 20, 27, 34],
+      colors: ["Navy Blue", "Grey", "Brown", "Green"],
+      days: ["Wednesday", "Saturday"],
+      stones: ["Sapphire", "Carnelian", "Jade", "Jasper"],
+      metals: ["Mercury", "Nickel"]
     },
     careerSpecific: {
       ideal: ["Medical Researcher", "Quality Control Manager", "Librarian", "Nutritional Counselor", "Editor", "Systems Analyst"],
@@ -97,6 +121,8 @@ export const translations = {
     name: "Libra",
     dates: "September 23 - October 22",
     element: "Air",
+    planet: "Venus",
+    rulingPlanet: "Venus",
     personality: "Diplomatic, charming, and harmony-seeking. You have a natural sense of justice and beauty. Your ability to see all sides makes you an excellent mediator and peacemaker.",
     strengths: ["Diplomatic skills", "Sense of justice", "Appreciation of beauty", "Social grace", "Ability to compromise"],
     weaknesses: ["Indecisiveness", "Conflict avoidance", "Can be superficial", "People-pleasing tendency", "Difficulty making tough decisions"],
@@ -104,7 +130,17 @@ export const translations = {
     opportunities: "Law, diplomacy, arts, design, consulting, public relations, and any field requiring negotiation skills.",
     challenges: "Making decisions with confidence, facing conflicts directly, and maintaining your identity in relationships.",
     compatibility: {
+      mostCompatible: ["Gemini", "Aquarius", "Leo", "Sagittarius"],
+      leastCompatible: ["Cancer", "Capricorn"],
+      soulmate: "Gemini",
       description: "Air signs stimulate your intellect, fire signs inspire your social nature. Water signs may be too emotional, earth signs too rigid for your flexible approach."
+    },
+    luckyElements: {
+      numbers: [6, 15, 24, 33, 42],
+      colors: ["Pink", "Blue", "Pastel colors", "White"],
+      days: ["Friday", "Sunday"],
+      stones: ["Opal", "Lapis Lazuli", "Jade", "Coral"],
+      metals: ["Copper", "Bronze"]
     },
     careerSpecific: {
       ideal: ["Diplomat", "Interior Designer", "Marriage Counselor", "Art Dealer", "PR Manager", "Judge"],
@@ -144,6 +180,8 @@ export const translations = {
     name: "Scorpio",
     dates: "October 23 - November 21",
     element: "Water",
+    planet: "Pluto",
+    rulingPlanet: "Mars/Pluto",
     personality: "Intense, passionate, and transformative. You have incredible depth and the ability to see beneath surfaces. Your magnetic presence draws others into your mysterious world.",
     strengths: ["Emotional depth", "Investigative abilities", "Resilience", "Magnetic personality", "Transformation ability"],
     weaknesses: ["Jealousy and possessiveness", "Tendency toward secrecy", "Can be vengeful", "Difficulty trusting", "Intensity can overwhelm others"],
@@ -151,7 +189,17 @@ export const translations = {
     opportunities: "Psychology, research, criminology, surgery, occult studies, and any field requiring deep analysis.",
     challenges: "Learning to trust, managing jealousy, and using your intensity constructively rather than destructively.",
     compatibility: {
+      mostCompatible: ["Cancer", "Pisces", "Virgo", "Capricorn"],
+      leastCompatible: ["Leo", "Aquarius"],
+      soulmate: "Cancer",
       description: "Water signs understand your emotional intensity, earth signs offer stability. Fire signs may clash with your depth, air signs may seem too superficial."
+    },
+    luckyElements: {
+      numbers: [8, 13, 18, 27, 36],
+      colors: ["Deep Red", "Black", "Maroon", "Dark Purple"],
+      days: ["Tuesday", "Thursday"],
+      stones: ["Topaz", "Obsidian", "Garnet", "Ruby"],
+      metals: ["Iron", "Steel"]
     },
     careerSpecific: {
       ideal: ["Psychologist", "Detective", "Surgeon", "Researcher", "Investigative Journalist", "Therapist"],

@@ -3,6 +3,8 @@ export const translations = {
     name: "Sagitário",
     dates: "22 de novembro - 21 de dezembro",
     element: "Fogo",
+    planet: "Júpiter",
+    rulingPlanet: "Júpiter",
     personality: "Aventureiro, filosófico e otimista. Você sempre busca novos horizontes e verdades superiores. Seu entusiasmo pela vida e aprendizado é contagioso.",
     strengths: ["Espírito aventureiro", "Pensamento filosófico", "Otimismo", "Amor pelo aprendizado", "Honestidade e franqueza"],
     weaknesses: ["Inquietação", "A franqueza pode ferir outros", "Dificuldade com compromisso", "Pode ser irresponsável", "Pode prometer mais do que pode entregar"],
@@ -10,7 +12,17 @@ export const translations = {
     opportunities: "Viagens, educação, editoria, religião, esportes, e qualquer campo que envolva exploração ou compartilhamento de conhecimento.",
     challenges: "Aprender compromisso, ser mais diplomático na comunicação, e cumprir suas promessas.",
     compatibility: {
+      mostCompatible: ["Áries", "Leão", "Libra", "Aquário"],
+      leastCompatible: ["Virgem", "Peixes"],
+      soulmate: "Leão",
       description: "Signos de fogo correspondem ao seu entusiasmo, signos de ar apreciam seu idealismo. Signos de terra podem parecer muito limitantes, signos de água muito emocionalmente exigentes."
+    },
+    luckyElements: {
+      numbers: [3, 9, 21, 30, 39],
+      colors: ["Roxo", "Turquesa", "Laranja", "Amarelo"],
+      days: ["Quinta", "Domingo"],
+      stones: ["Turquesa", "Ametista", "Topázio", "Safira"],
+      metals: ["Estanho", "Bronze"]
     },
     careerSpecific: {
       ideal: ["Escritor de viagem", "Professor universitário", "Missionário", "Guia de aventura", "Advogado internacional", "Filósofo"],
@@ -50,6 +62,8 @@ export const translations = {
     name: "Capricórnio",
     dates: "22 de dezembro - 19 de janeiro",
     element: "Terra",
+    planet: "Saturno",
+    rulingPlanet: "Saturno",
     personality: "Ambicioso, disciplinado e prático. Você tem compreensão inata de estrutura e hierarquia. Sua ascensão constante para o sucesso inspira outros a trabalhar mais duro.",
     strengths: ["Forte ética de trabalho", "Confiabilidade", "Natureza ambiciosa", "Sabedoria prática", "Habilidades de liderança"],
     weaknesses: ["Pode ser muito sério", "Tendências de vício em trabalho", "Dificuldade em expressar emoções", "Perspectiva pessimista", "Pensamento rígido"],
@@ -57,7 +71,17 @@ export const translations = {
     opportunities: "Negócios, gestão, política, arquitetura, banca, e qualquer campo que exija planejamento de longo prazo e liderança.",
     challenges: "Aprender a relaxar e desfrutar a vida, expressar emoções mais livremente, e evitar esgotamento por excesso de trabalho.",
     compatibility: {
+      mostCompatible: ["Touro", "Virgem", "Escorpião", "Peixes"],
+      leastCompatible: ["Áries", "Libra"],
+      soulmate: "Touro",
       description: "Signos de terra apreciam sua estabilidade, signos de água suavizam suas arestas. Signos de fogo podem ser muito impulsivos, signos de ar muito imprevisíveis para sua natureza metódica."
+    },
+    luckyElements: {
+      numbers: [8, 10, 26, 35, 44],
+      colors: ["Preto", "Marrom", "Verde Escuro", "Azul Marinho"],
+      days: ["Sábado", "Terça"],
+      stones: ["Granada", "Ônix", "Rubi", "Esmeralda"],
+      metals: ["Chumbo", "Prata"]
     },
     careerSpecific: {
       ideal: ["CEO", "Arquiteto", "Funcionário público", "Gerente bancário", "Gerente de projeto", "Engenheiro"],
@@ -97,6 +121,8 @@ export const translations = {
     name: "Aquário",
     dates: "20 de janeiro - 18 de fevereiro",
     element: "Ar",
+    planet: "Urano",
+    rulingPlanet: "Saturno/Urano",
     personality: "Independente, inovador e humanitário. Você marcha ao ritmo de seu próprio tambor e visualiza um futuro melhor para todos. Sua perspectiva única desafia o pensamento convencional.",
     strengths: ["Pensamento independente", "Espírito humanitário", "Inovação", "Curiosidade intelectual", "Orientado para amizade"],
     weaknesses: ["Distanciamento emocional", "Natureza rebelde", "Pode ser imprevisível", "Dificuldade com intimidade", "Teimoso sobre crenças"],
@@ -104,7 +130,17 @@ export const translations = {
     opportunities: "Tecnologia, causas sociais, ciência, invenção, liderança de grupo, e campos envolvendo pensamento futuro ou reforma.",
     challenges: "Desenvolver intimidade emocional, aprender quando se conformar, e equilibrar idealismo com ação prática.",
     compatibility: {
+      mostCompatible: ["Gêmeos", "Libra", "Áries", "Sagitário"],
+      leastCompatible: ["Touro", "Escorpião"],
+      soulmate: "Gêmeos",
       description: "Signos de ar estimulam seu intelecto, signos de fogo apoiam sua independência. Signos de terra podem parecer muito convencionais, signos de água muito emocionalmente exigentes."
+    },
+    luckyElements: {
+      numbers: [4, 11, 22, 29, 38],
+      colors: ["Azul Elétrico", "Prata", "Roxo", "Verde Neon"],
+      days: ["Quarta", "Sábado"],
+      stones: ["Ametista", "Agua-marinha", "Fluorita", "Labradorita"],
+      metals: ["Alumínio", "Urânio"]
     },
     careerSpecific: {
       ideal: ["Ativista social", "Inovador de tecnologia", "Cientista", "Operário humanitário", "Inventor", "Organizador comunitário"],
@@ -144,6 +180,8 @@ export const translations = {
     name: "Peixes",
     dates: "19 de fevereiro - 20 de março",
     element: "Água",
+    planet: "Netuno",
+    rulingPlanet: "Júpiter/Netuno",
     personality: "Intuitivo, compassivo e artístico. Você sente tudo profundamente e tem uma conexão natural com o reino espiritual. Sua empatia e criatividade tocam todos que encontra.",
     strengths: ["Empatia profunda", "Habilidades artísticas", "Sabedoria intuitiva", "Conexão espiritual", "Adaptabilidade"],
     weaknesses: ["Excessivamente sensível", "Tendências escapistas", "Dificuldade com limites", "Pode ser irreal", "Propenso a dependência"],
@@ -151,7 +189,17 @@ export const translations = {
     opportunities: "Artes, cura, espiritualidade, aconselhamento, música, e qualquer campo que exija empatia e expressão criativa.",
     challenges: "Estabelecer limites saudáveis, permanecer enraizado na realidade, e evitar comportamentos escapistas.",
     compatibility: {
+      mostCompatible: ["Câncer", "Escorpião", "Touro", "Capricórnio"],
+      leastCompatible: ["Gêmeos", "Sagitário"],
+      soulmate: "Escorpião",
       description: "Signos de água entendem sua profundidade emocional, signos de terra fornecem enraizamento. Signos de ar podem parecer muito desapegados, signos de fogo muito intensos para sua natureza sensível."
+    },
+    luckyElements: {
+      numbers: [7, 12, 16, 25, 34],
+      colors: ["Verde Mar", "Lavanda", "Prata", "Azul Água"],
+      days: ["Segunda", "Quinta"],
+      stones: ["Ametista", "Agua-marinha", "Pedra da Lua", "Jade"],
+      metals: ["Platina", "Estanho"]
     },
     careerSpecific: {
       ideal: ["Artista", "Terapeuta", "Músico", "Curador", "Assistente social", "Conselheiro espiritual"],

@@ -3,6 +3,8 @@ export const translations = {
     name: "Löwe",
     dates: "23. Juli - 22. August",
     element: "Feuer",
+    planet: "Sonne",
+    rulingPlanet: "Sonne",
     personality: "Selbstbewusst, großzügig und charismatisch. Sie haben ein natürliches Talent für Drama und Performance. Ihre warme Persönlichkeit zieht andere wie ein Magnet an.",
     strengths: ["Natürliches Charisma", "Großzügiger Geist", "Kreative Talente", "Führungsfähigkeiten", "Treue zu Freunden"],
     weaknesses: ["Aufmerksamkeitsbedarf", "Probleme mit Stolz und Ego", "Kann dramatisch sein", "Schwierigkeit, Kritik zu akzeptieren", "Kann Gespräche dominieren"],
@@ -10,7 +12,17 @@ export const translations = {
     opportunities: "Unterhaltung, Künste, öffentliches Sprechen, Unterricht, Management, und jedes Feld, in dem Sie unter den Scheinwerfern sein können.",
     challenges: "Selbstbewusstsein mit Demut ausgleichen, die Scheinwerfer teilen, und Kritik mit Anmut handhaben.",
     compatibility: {
+      mostCompatible: ["Widder", "Schütze", "Zwillinge", "Waage"],
+      leastCompatible: ["Stier", "Skorpion"],
+      soulmate: "Widder",
       description: "Feuerzeichen entsprechen Ihrer Leidenschaft, Luftzeichen schätzen Ihre Kreativität. Erdzeichen können zu weltlich wirken, Wasserzeichen zu emotional intensiv."
+    },
+    luckyElements: {
+      numbers: [1, 3, 10, 19, 28],
+      colors: ["Gold", "Orange", "Gelb", "Rot"],
+      days: ["Sonntag", "Dienstag"],
+      stones: ["Rubin", "Peridot", "Sardonyx", "Diamant"],
+      metals: ["Gold", "Messing"]
     },
     careerSpecific: {
       ideal: ["Schauspieler", "CEO", "Veranstaltungsplaner", "Kunstdirektor", "Modedesigner", "Motivationsredner"],
@@ -50,6 +62,8 @@ export const translations = {
     name: "Jungfrau",
     dates: "23. August - 22. September",
     element: "Erde",
+    planet: "Merkur",
+    rulingPlanet: "Merkur",
     personality: "Analytisch, praktisch und diensorientiert. Sie haben ein Auge für Details und den Wunsch, alles um Sie herum zu verbessern. Ihr methodischer Ansatz sichert hochwertige Ergebnisse.",
     strengths: ["Aufmerksamkeit zum Detail", "Analytisches Denken", "Zuverlässigkeit", "Wunsch, anderen zu helfen", "Organisatorische Fähigkeiten"],
     weaknesses: ["Perfektionismus", "Neigung zu kritisieren", "Sorge und Angst", "Schwierigkeit zu delegieren", "Kann übermäßig vorsichtig sein"],
@@ -57,7 +71,17 @@ export const translations = {
     opportunities: "Gesundheitswesen, Forschung, Bearbeitung, Buchhaltung, Verwaltung, und jedes Feld, das Präzision und Analyse erfordert.",
     challenges: "Unvollkommenheit akzeptieren, Angst handhaben, und Ihre eigenen Leistungen ohne ständige Kritik schätzen.",
     compatibility: {
+      mostCompatible: ["Stier", "Steinbock", "Krebs", "Skorpion"],
+      leastCompatible: ["Zwillinge", "Schütze"],
+      soulmate: "Stier",
       description: "Erdzeichen schätzen Ihre Praktikalität, Wasserzeichen schätzen Ihre fürsorgliche Natur. Luftzeichen können verstreut wirken, Feuerzeichen zu impulsiv für Ihre methodische Natur."
+    },
+    luckyElements: {
+      numbers: [6, 15, 20, 27, 34],
+      colors: ["Marineblau", "Grau", "Braun", "Grün"],
+      days: ["Mittwoch", "Samstag"],
+      stones: ["Saphir", "Karneol", "Jade", "Jaspis"],
+      metals: ["Merkur", "Nickel"]
     },
     careerSpecific: {
       ideal: ["Medizinforscher", "Qualitätskontrollmanager", "Bibliothekar", "Ernährungsberater", "Redakteur", "Systemanalyst"],
@@ -97,6 +121,8 @@ export const translations = {
     name: "Waage",
     dates: "23. September - 22. Oktober",
     element: "Luft",
+    planet: "Venus",
+    rulingPlanet: "Venus",
     personality: "Diplomatisch, charmant und harmoniesuchend. Sie haben einen natürlichen Sinn für Gerechtigkeit und Schönheit. Ihre Fähigkeit, alle Seiten zu sehen, macht Sie zu einem ausgezeichneten Vermittler und Friedensstifter.",
     strengths: ["Diplomatische Fähigkeiten", "Gerechtigkeitssinn", "Wertschätzung für Schönheit", "Soziale Anmut", "Kompromissfähigkeit"],
     weaknesses: ["Unschlüssigkeit", "Konfrontation vermeiden", "Kann oberflächlich sein", "Neigung, Leute zu gefallen", "Schwierigkeit, schwierige Entscheidungen zu treffen"],
@@ -104,7 +130,17 @@ export const translations = {
     opportunities: "Recht, Diplomatie, Künste, Design, Beratung, Öffentlichkeitsarbeit, und jedes Feld, das Verhandlungsfähigkeiten erfordert.",
     challenges: "Entscheidungen mit Vertrauen treffen, sich Konflikten direkt stellen, und Ihre eigene Identität in Beziehungen bewahren.",
     compatibility: {
+      mostCompatible: ["Zwillinge", "Wassermann", "Löwe", "Schütze"],
+      leastCompatible: ["Krebs", "Steinbock"],
+      soulmate: "Zwillinge",
       description: "Luftzeichen stimulieren Ihren Intellekt, Feuerzeichen inspirieren Ihre soziale Natur. Wasserzeichen können zu emotional sein, Erdzeichen zu rigide für Ihren flexiblen Ansatz."
+    },
+    luckyElements: {
+      numbers: [6, 15, 24, 33, 42],
+      colors: ["Rosa", "Blau", "Pastellfarben", "Weiß"],
+      days: ["Freitag", "Sonntag"],
+      stones: ["Opal", "Lapislazuli", "Jade", "Koralle"],
+      metals: ["Kupfer", "Bronze"]
     },
     careerSpecific: {
       ideal: ["Diplomat", "Innenarchitekt", "Ehe-Berater", "Kunsthändler", "PR-Manager", "Richter"],
@@ -144,6 +180,8 @@ export const translations = {
     name: "Skorpion",
     dates: "23. Oktober - 21. November",
     element: "Wasser",
+    planet: "Pluto",
+    rulingPlanet: "Mars/Pluto",
     personality: "Intensiv, leidenschaftlich und transformierend. Sie haben unglaubliche Tiefe und die Fähigkeit, unter Oberflächen zu sehen. Ihre magnetische Präsenz zieht andere in Ihre geheimnisvolle Welt.",
     strengths: ["Emotionale Tiefe", "Untersuchungsfähigkeiten", "Widerstandsfähigkeit", "Magnetische Persönlichkeit", "Transformationsfähigkeit"],
     weaknesses: ["Eifersucht und Besitztum", "Neigung zum Geheimnis", "Kann rächerisch sein", "Schwierigkeit zu vertrauen", "Intensität kann andere überlasten"],
@@ -151,7 +189,17 @@ export const translations = {
     opportunities: "Psychologie, Forschung, Kriminalermittlung, Chirurgie, okkulte Studien, und jedes Feld, das tiefe Analyse erfordert.",
     challenges: "Lernen zu vertrauen, Eifersucht handhaben, und Ihre Intensität konstruktiv nutzen, statt destruktiv.",
     compatibility: {
+       mostCompatible: ["Krebs", "Fische", "Jungfrau", "Steinbock"],
+      leastCompatible: ["Löwe", "Wassermann"],
+      soulmate: "Krebs",
       description: "Wasserzeichen verstehen Ihre emotionale Intensität, Erdzeichen bieten Stabilität. Feuerzeichen können mit Ihrer Tiefe kollidieren, Luftzeichen können zu oberflächlich wirken."
+    },
+    luckyElements: {
+      numbers: [8, 13, 18, 27, 36],
+      colors: ["Tiefrot", "Schwarz", "Kastanienbraun", "Dunkelviolett"],
+      days: ["Dienstag", "Donnerstag"],
+      stones: ["Topas", "Obsidian", "Granat", "Rubin"],
+      metals: ["Eisen", "Stahl"]
     },
     careerSpecific: {
       ideal: ["Psychologe", "Detektiv", "Chirurg", "Forscher", "Investigativer Journalist", "Therapeut"],

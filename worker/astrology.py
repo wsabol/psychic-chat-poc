@@ -247,10 +247,27 @@ def calculate_current_moon_phase():
         sun_pos = swe.calc_ut(jd, swe.SUN)
         moon_pos = swe.calc_ut(jd, swe.MOON)
         
-        phase_angle = (moon_pos[0][0] - sun_pos[0][0]) % 360
-        phase_index = int((phase_angle / 360) * 8) % 8
-        phase_names = ["newMoon", "waxingCrescent", "firstQuarter", "waxingGibbous", "fullMoon", "waningGibbous", "lastQuarter", "waningCrescent"]
+        sun_lon = sun_pos[0][0] % 360
+        moon_lon = moon_pos[0][0] % 360
+        phase_angle = (moon_lon - sun_lon) % 360
         cycle_percentage = round((phase_angle / 360) * 100, 1)
+        
+        # Improved phase detection with proper boundaries
+        # Each phase is 45 degrees (360/8 = 45)
+        # 0-22.5° = newMoon
+        # 22.5-67.5° = waxingCrescent
+        # 67.5-112.5° = firstQuarter
+        # 112.5-157.5° = waxingGibbous
+        # 157.5-202.5° = fullMoon
+        # 202.5-247.5° = waningGibbous
+        # 247.5-292.5° = lastQuarter
+        # 292.5-337.5° = waningCrescent
+        # 337.5-360° = newMoon (wrapping)
+        
+        phase_names = ["newMoon", "waxingCrescent", "firstQuarter", "waxingGibbous", "fullMoon", "waningGibbous", "lastQuarter", "waningCrescent"]
+        
+        # Add offset to center boundaries and round to nearest phase
+        phase_index = int(((phase_angle + 22.5) / 360) * 8) % 8
         
         return {"phase": phase_names[phase_index], "phase_angle": round(phase_angle, 2), "cycle_percentage": cycle_percentage, "timestamp": now_utc.isoformat(), "success": True}
     except Exception as e:

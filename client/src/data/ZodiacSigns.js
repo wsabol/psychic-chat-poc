@@ -17,7 +17,7 @@ export const zodiacSigns = {
     // New Enhanced Elements
     compatibility: {
       mostCompatible: ["Leo", "Sagittarius", "Gemini", "Aquarius"],
-      leastCompatible: ["Cancer", "Capricorn"],
+      mostCompatible: ["Capricprn"],
       soulmate: "Leo",
       description: "Fire signs ignite your passion, while air signs fuel your ideas. Earth signs may slow you down, and water signs can dampen your enthusiasm."
     },

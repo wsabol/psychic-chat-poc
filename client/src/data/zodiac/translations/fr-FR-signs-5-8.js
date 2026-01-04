@@ -3,6 +3,8 @@ leo: {
     name: "Lion",
     dates: "23 juillet - 22 août",
     element: "Feu",
+    planet: "Soleil",
+    rulingPlanet: "Soleil",
     personality: "Confiant, généreux et charismatique. Vous avez un talent naturel pour le drame et la performance. Votre personnalité chaleureuse attire les autres comme un aimant.",
     strengths: ["Charisme naturel", "Esprit généreux", "Talents créatifs", "Compétences en leadership", "Loyauté envers les amis"],
     weaknesses: ["Besoin d'attention", "Problèmes d'orgueil et d'ego", "Peut être dramatique", "Difficulté à accepter la critique", "Peut dominer les conversations"],
@@ -10,7 +12,17 @@ leo: {
     opportunities: "Divertissement, arts, prise de parole en public, enseignement, gestion, et tout domaine où vous pouvez être sous les projecteurs.",
     challenges: "Équilibrer la confiance avec l'humilité, partager les projecteurs, et gérer la critique avec grâce.",
     compatibility: {
+      mostCompatible: ["Bélier", "Sagittaire", "Gémeaux", "Balance"],
+      leastCompatible: ["Taureau", "Scorpion"],
+      soulmate: "Bélier",
       description: "Les signes de feu correspondent à votre passion, les signes d'air apprécient votre créativité. Les signes de terre peuvent sembler trop mondains, les signes d'eau trop intensément émotionnels."
+    },
+    luckyElements: {
+      numbers: [1, 3, 10, 19, 28],
+      colors: ["Or", "Orange", "Jaune", "Rouge"],
+      days: ["Dimanche", "Mardi"],
+      stones: ["Rubis", "Péridot", "Sardoine", "Diamant"],
+      metals: ["Or", "Laiton"]
     },
     careerSpecific: {
       ideal: ["Acteur", "PDG", "Planificateur d'événements", "Directeur artistique", "Designer de mode", "Conférencier motivant"],
@@ -50,6 +62,8 @@ leo: {
     name: "Vierge",
     dates: "23 août - 22 septembre",
     element: "Terre",
+    planet: "Mercure",
+    rulingPlanet: "Mercure",
     personality: "Analytique, pratique et orienté vers le service. Vous avez un oeil pour les détails et le désir d'améliorer tout ce qui vous entoure. Votre approche méthodique assure des résultats de haute qualité.",
     strengths: ["Attention aux détails", "Pensée analytique", "Fiabilité", "Désir d'aider les autres", "Compétences organisationnelles"],
     weaknesses: ["Perfectionnisme", "Tendance à critiquer", "Inquiétude et peur", "Difficulté à déléguer", "Peut être excessivement prudent"],
@@ -57,7 +71,17 @@ leo: {
     opportunities: "Soins de santé, recherche, édition, comptabilité, administration, et tout domaine nécessitant la précision et l'analyse.",
     challenges: "Accepter l'imperfection, gérer l'anxiété, et apprécier vos propres réalisations sans critique constante.",
     compatibility: {
+      mostCompatible: ["Taureau", "Capricorne", "Cancer", "Scorpion"],
+      leastCompatible: ["Gémeaux", "Sagittaire"],
+      soulmate: "Taureau",
       description: "Les signes de terre apprécient votre praticité, les signes d'eau valorisent votre nature bienveillante. Les signes d'air peuvent sembler dispersés, les signes de feu trop impulsifs pour votre nature méthodique."
+    },
+    luckyElements: {
+      numbers: [6, 15, 20, 27, 34],
+      colors: ["Bleu Marine", "Gris", "Marron", "Vert"],
+      days: ["Mercredi", "Samedi"],
+      stones: ["Saphir", "Cornaline", "Jade", "Jaspe"],
+      metals: ["Mercure", "Nickel"]
     },
     careerSpecific: {
       ideal: ["Chercheur médical", "Gestionnaire du contrôle de la qualité", "Bibliothécaire", "Conseiller nutritionnel", "Éditeur", "Analyste de systèmes"],
@@ -97,6 +121,8 @@ leo: {
     name: "Balance",
     dates: "23 septembre - 22 octobre",
     element: "Air",
+    planet: "Vénus",
+    rulingPlanet: "Vénus",
     personality: "Diplomatique, charmant et chercheur d'harmonie. Vous avez un sens naturel de la justice et de la beauté. Votre capacité à voir tous les côtés fait de vous un excellent médiateur et pacificateur.",
     strengths: ["Compétences diplomatiques", "Sens de la justice", "Appréciation de la beauté", "Grâce sociale", "Capacité de compromis"],
     weaknesses: ["Indécision", "Éviter la confrontation", "Peut être superficiel", "Tendance à complaire aux gens", "Difficulté à prendre des décisions difficiles"],
@@ -104,7 +130,17 @@ leo: {
     opportunities: "Droit, diplomatie, arts, design, conseil, relations publiques, et tout domaine nécessitant des compétences de négociation.",
     challenges: "Prendre des décisions avec confiance, affronter les conflits directement, et maintenir votre identité dans les relations.",
     compatibility: {
+      mostCompatible: ["Gémeaux", "Verseau", "Lion", "Sagittaire"],
+      leastCompatible: ["Cancer", "Capricorne"],
+      soulmate: "Gémeaux",
       description: "Les signes d'air stimulent votre intellect, les signes de feu inspirent votre nature sociale. Les signes d'eau peuvent être trop émotionnels, les signes de terre trop rigides pour votre approche flexible."
+    },
+    luckyElements: {
+      numbers: [6, 15, 24, 33, 42],
+      colors: ["Rose", "Bleu", "Couleurs Pastel", "Blanc"],
+      days: ["Vendredi", "Dimanche"],
+      stones: ["Opale", "Lapis-lazuli", "Jade", "Corail"],
+      metals: ["Cuivre", "Bronze"]
     },
     careerSpecific: {
       ideal: ["Diplomate", "Designer d'intérieur", "Conseiller conjugal", "Marchand d'art", "Gestionnaire de relations publiques", "Juge"],
@@ -144,6 +180,8 @@ leo: {
     name: "Scorpion",
     dates: "23 octobre - 21 novembre",
     element: "Eau",
+    planet: "Pluton",
+    rulingPlanet: "Mars/Pluton",
     personality: "Intense, passionné et transformateur. Vous avez une profondeur incroyable et la capacité de voir sous les surfaces. Votre présence magnétique attire les autres à votre monde mystérieux.",
     strengths: ["Profondeur émotionnelle", "Capacités investigatrices", "Résilience", "Personnalité magnétique", "Capacité de transformation"],
     weaknesses: ["Jalousie et possession", "Tendance au secret", "Peut être vengeur", "Difficulté à faire confiance", "L'intensité peut surcharger les autres"],
@@ -151,7 +189,17 @@ leo: {
     opportunities: "Psychologie, recherche, criminologie, chirurgie, études occultes, et tout domaine nécessitant une analyse profonde.",
     challenges: "Apprendre à faire confiance, gérer la jalousie, et utiliser votre intensité de manière constructive plutôt que destructive.",
     compatibility: {
+      mostCompatible: ["Cancer", "Poissons", "Vierge", "Capricorne"],
+      leastCompatible: ["Lion", "Verseau"],
+      soulmate: "Cancer",
       description: "Les signes d'eau comprennent votre intensité émotionnelle, les signes de terre offrent la stabilité. Les signes de feu peuvent entrer en collision avec votre profondeur, les signes d'air peuvent sembler trop superficiels."
+    },
+    luckyElements: {
+      numbers: [8, 13, 18, 27, 36],
+      colors: ["Rouge Profond", "Noir", "Marron Foncé", "Pourpre Foncé"],
+      days: ["Mardi", "Jeudi"],
+      stones: ["Topaze", "Obsidienne", "Grenat", "Rubis"],
+      metals: ["Fer", "Acier"]
     },
     careerSpecific: {
       ideal: ["Psychologue", "Détective", "Chirurgien", "Chercheur", "Journaliste investigateur", "Thérapeute"],

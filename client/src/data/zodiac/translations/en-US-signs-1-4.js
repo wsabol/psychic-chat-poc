@@ -3,6 +3,8 @@ export const translations = {
     name: "Aries",
     dates: "March 21 - April 19",
     element: "Fire",
+    planet: "Mars",
+    rulingPlanet: "Mars",
     personality: "Bold, ambitious, and energetic. You are a natural leader who thrives on challenges and new beginnings. Your pioneering spirit drives you to explore uncharted territories.",
     strengths: ["Natural leadership", "Courage and determination", "Innovative thinking", "High energy and enthusiasm", "Quick decision-making"],
     weaknesses: ["Impatience", "Tendency toward impulsivity", "Can be overly competitive", "Difficulty with routine tasks", "Can act without thinking"],
@@ -10,7 +12,17 @@ export const translations = {
     opportunities: "Leadership roles, entrepreneurship, sports, emergency services, and any field requiring quick thinking and decisive action.",
     challenges: "Learning patience, considering others' perspectives, and honoring long-term commitments.",
     compatibility: {
+      mostCompatible: ["Leo", "Sagittarius", "Gemini", "Aquarius"],
+      leastCompatible: ["Cancer", "Capricorn"],
+      soulmate: "Leo",
       description: "Fire signs ignite your passion, while air signs nurture your ideas. Earth signs may slow you down, and water signs may dampen your enthusiasm."
+    },
+    luckyElements: {
+      numbers: [1, 8, 17, 21, 31],
+      colors: ["Red", "Orange", "Bright Yellow", "Scarlet"],
+      days: ["Tuesday", "Sunday"],
+      stones: ["Diamond", "Ruby", "Bloodstone", "Red Jasper"],
+      metals: ["Iron", "Steel"]
     },
     careerSpecific: {
       ideal: ["Military Officer", "Emergency Physician", "Entrepreneur", "Professional Athlete", "Firefighter", "Sales Manager"],
@@ -50,6 +62,8 @@ export const translations = {
     name: "Taurus",
     dates: "April 20 - May 20",
     element: "Earth",
+    planet: "Venus",
+    rulingPlanet: "Venus",
     personality: "Grounded, reliable, and sensual. You appreciate beauty, comfort, and stability. Your steadfast nature makes you a trustworthy force in any situation.",
     strengths: ["Reliability and loyalty", "Practical wisdom", "Appreciation of beauty", "Strong work ethic", "Financial acumen"],
     weaknesses: ["Stubborn", "Resistance to change", "Materialistic tendencies", "Can be possessive", "Difficulty adapting quickly"],
@@ -57,7 +71,17 @@ export const translations = {
     opportunities: "Finance, real estate, crafts and arts, gastronomy, agriculture, and luxury industries.",
     challenges: "Embracing change, letting go of material attachments, and being more flexible in your approach.",
     compatibility: {
+      mostCompatible: ["Virgo", "Capricorn", "Cancer", "Pisces"],
+      leastCompatible: ["Leo", "Aquarius"],
+      soulmate: "Virgo",
       description: "Earth signs offer stability, water signs offer emotional depth. Fire signs may rush you, air signs may seem too detached."
+    },
+    luckyElements: {
+      numbers: [2, 6, 9, 12, 24],
+      colors: ["Green", "Pink", "Earth tones", "Pastel Blue"],
+      days: ["Friday", "Monday"],
+      stones: ["Emerald", "Rose Quartz", "Sapphire", "Moss Agate"],
+      metals: ["Copper", "Brass"]
     },
     careerSpecific: {
       ideal: ["Investment Banker", "Luxury Brand Manager", "Chef", "Interior Designer", "Real Estate Developer", "Agronomist"],
@@ -97,6 +121,8 @@ export const translations = {
     name: "Gemini",
     dates: "May 21 - June 20",
     element: "Air",
+    planet: "Mercury",
+    rulingPlanet: "Mercury",
     personality: "Curious, adaptable, and communicative. You are a quick thinker who loves diversity and intellectual stimulation. Your versatility allows you to connect with varied people and ideas.",
     strengths: ["Excellent communication", "Adaptability", "Quick learning ability", "Networking skills", "Creative problem-solving"],
     weaknesses: ["Inconsistency", "Difficulty focusing on one thing", "Can be superficial", "Gossiping tendency", "Restlessness"],
@@ -104,7 +130,17 @@ export const translations = {
     opportunities: "Media, journalism, teaching, sales, technology, translation, and any field requiring communication skills.",
     challenges: "Developing depth and concentration, committing to long-term goals, and listening as much as you speak.",
     compatibility: {
+      mostCompatible: ["Libra", "Aquarius", "Aries", "Leo"],
+      leastCompatible: ["Virgo", "Pisces"],
+      soulmate: "Libra",
       description: "Air signs understand your need for mental stimulation, fire signs spark your curiosity. Earth signs may bore you, water signs may emotionally overwhelm you."
+    },
+    luckyElements: {
+      numbers: [5, 7, 14, 16, 23],
+      colors: ["Yellow", "Silver", "Light Blue", "White"],
+      days: ["Wednesday", "Saturday"],
+      stones: ["Agate", "Citrine", "Alexandrite", "Pearl"],
+      metals: ["Mercury", "Silver"]
     },
     careerSpecific: {
       ideal: ["Journalist", "Social Media Manager", "Translator", "Radio Host", "Marketing Coordinator", "Software Developer"],
@@ -144,6 +180,8 @@ export const translations = {
     name: "Cancer",
     dates: "June 21 - July 22",
     element: "Water",
+    planet: "Moon",
+    rulingPlanet: "Moon",
     personality: "Intuitive, nurturing, and emotionally deep. You have a strong connection to home and family. Your empathetic nature makes you a natural caregiver and healer.",
     strengths: ["Strong intuition", "Nurturing abilities", "Emotional intelligence", "Loyalty to loved ones", "Creative imagination"],
     weaknesses: ["Mood swings", "Tendency to worry", "Can be overly sensitive", "Difficulty letting go", "May withdraw when hurt"],
@@ -151,7 +189,17 @@ export const translations = {
     opportunities: "Healthcare, counseling, childcare, hospitality, real estate, food service, and creative arts.",
     challenges: "Setting emotional boundaries, handling criticism constructively, and balancing caring for others with self-care.",
     compatibility: {
+      mostCompatible: ["Scorpio", "Pisces", "Taurus", "Virgo"],
+      leastCompatible: ["Aries", "Libra"],
+      soulmate: "Scorpio",
       description: "Water signs understand your emotional depth, earth signs offer security. Fire signs may overwhelm you, air signs may seem too emotionally detached."
+    },
+    luckyElements: {
+      numbers: [2, 7, 11, 16, 20],
+      colors: ["Silver", "White", "Sea Green", "Pale Blue"],
+      days: ["Monday", "Thursday"],
+      stones: ["Moonstone", "Pearl", "Ruby", "Emerald"],
+      metals: ["Silver", "Platinum"]
     },
     careerSpecific: {
       ideal: ["Pediatric Nurse", "Family Therapist", "Chef", "Interior Designer", "Museum Director", "Kindergarten Director"],

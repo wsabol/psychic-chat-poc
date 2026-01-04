@@ -3,6 +3,8 @@ export const translations = {
     name: "Bélier",
     dates: "21 mars - 19 avril",
     element: "Feu",
+    planet: "Mars",
+    rulingPlanet: "Mars",
     personality: "Audacieux, ambitieux et énergique. Vous êtes un leader naturel qui prospère face aux défis et aux nouveaux départs. Votre esprit pionnier vous pousse à explorer des territoires inexplorés.",
     strengths: ["Leadership naturel", "Courage et détermination", "Pensée innovante", "Haute énergie et enthousiasme", "Prise de décision rapide"],
     weaknesses: ["Impatience", "Tendance à l'impulsivité", "Peut être excessivement compétitif", "Difficulté avec les tâches routinières", "Peut agir sans réfléchir"],
@@ -10,7 +12,17 @@ export const translations = {
     opportunities: "Rôles de leadership, entrepreneuriat, sports, services d'urgence, et tout domaine nécessitant une pensée rapide et une action décidée.",
     challenges: "Apprendre la patience, considérer les perspectives des autres, et honorer les engagements à long terme.",
     compatibility: {
+      mostCompatible: ["Lion", "Sagittaire", "Gémeaux", "Verseau"],
+      leastCompatible: ["Cancer", "Capricorne"],
+      soulmate: "Lion",
       description: "Les signes de feu enflamment votre passion, tandis que les signes d'air nourrissent vos idées. Les signes de terre peuvent vous ralentir, et les signes d'eau peuvent éteindre votre enthousiasme."
+    },
+    luckyElements: {
+      numbers: [1, 8, 17, 21, 31],
+      colors: ["Rouge", "Orange", "Jaune Vif", "Écarlate"],
+      days: ["Mardi", "Dimanche"],
+      stones: ["Diamant", "Rubis", "Pierre de Sang", "Jaspe Rouge"],
+      metals: ["Fer", "Acier"]
     },
     careerSpecific: {
       ideal: ["Officier militaire", "Médecin d'urgence", "Entrepreneur", "Athlète professionnel", "Pompier", "Directeur des ventes"],
@@ -50,6 +62,8 @@ export const translations = {
     name: "Taureau",
     dates: "20 avril - 20 mai",
     element: "Terre",
+    planet: "Vénus",
+    rulingPlanet: "Vénus",
     personality: "Enraciné, fiable et sensuel. Vous appréciez la beauté, le confort et la stabilité. Votre nature constante fait de vous une force digne de confiance dans n'importe quelle situation.",
     strengths: ["Fiabilité et loyauté", "Sagesse pratique", "Appréciation de la beauté", "Éthique du travail solide", "Perspicacité financière"],
     weaknesses: ["Têtu", "Résistance au changement", "Tendances matérialistes", "Peut être possessif", "Difficulté à s'adapter rapidement"],
@@ -57,7 +71,17 @@ export const translations = {
     opportunities: "Finances, immobilier, artisanats et arts, gastronomie, agriculture, et industries du luxe.",
     challenges: "Accepter le changement, lâcher prise sur les attachements matériels, et être plus flexible dans votre approche.",
     compatibility: {
+      mostCompatible: ["Vierge", "Capricorne", "Cancer", "Poissons"],
+      leastCompatible: ["Lion", "Verseau"],
+      soulmate: "Vierge",
       description: "Les signes de terre offrent la stabilité, les signes d'eau offrent la profondeur émotionnelle. Les signes de feu peuvent vous presser, les signes d'air peuvent sembler trop détachés."
+    },
+    luckyElements: {
+      numbers: [2, 6, 9, 12, 24],
+      colors: ["Vert", "Rose", "Tons Terre", "Bleu Pastel"],
+      days: ["Vendredi", "Lundi"],
+      stones: ["Émeraude", "Quartz Rose", "Saphir", "Agate Mouche"],
+      metals: ["Cuivre", "Laiton"]
     },
     careerSpecific: {
       ideal: ["Banquier en investissement", "Directeur de marques de luxe", "Chef", "Designer d'intérieur", "Promoteur immobilier", "Agronome"],
@@ -97,6 +121,8 @@ export const translations = {
     name: "Gémeaux",
     dates: "21 mai - 20 juin",
     element: "Air",
+    planet: "Mercure",
+    rulingPlanet: "Mercure",
     personality: "Curieux, adaptable et communicatif. Vous êtes un penseur rapide qui aime la diversité et la stimulation intellectuelle. Votre polyvalence vous permet de vous connecter avec des personnes et des idées variées.",
     strengths: ["Excellente communication", "Adaptabilité", "Capacité d'apprentissage rapide", "Compétences en réseautage", "Résolution créative de problèmes"],
     weaknesses: ["Inconsistance", "Difficulté à se concentrer sur une chose", "Peut être superficiel", "Tendance aux commérages", "Agitation"],
@@ -104,7 +130,17 @@ export const translations = {
     opportunities: "Médias, journalisme, enseignement, ventes, technologie, traduction, et tout domaine nécessitant des compétences en communication.",
     challenges: "Développer la profondeur et la concentration, vous engager envers des objectifs à long terme, et écouter autant que vous parlez.",
     compatibility: {
+      mostCompatible: ["Balance", "Verseau", "Bélier", "Lion"],
+      leastCompatible: ["Vierge", "Poissons"],
+      soulmate: "Balance",
       description: "Les signes d'air comprennent votre besoin de stimulation mentale, les signes de feu éveillent votre curiosité. Les signes de terre peuvent vous ennuyer, les signes d'eau peuvent vous surcharger émotionnellement."
+    },
+    luckyElements: {
+      numbers: [5, 7, 14, 16, 23],
+      colors: ["Jaune", "Argent", "Bleu Clair", "Blanc"],
+      days: ["Mercredi", "Samedi"],
+      stones: ["Agate", "Citrine", "Alexandrite", "Perle"],
+      metals: ["Mercure", "Argent"]
     },
     careerSpecific: {
       ideal: ["Journaliste", "Gestionnaire des réseaux sociaux", "Traducteur", "Animateur radio", "Coordinateur marketing", "Développeur de logiciels"],
@@ -144,6 +180,8 @@ cancer: {
     name: "Cancer",
     dates: "21 juin - 22 juillet",
     element: "Eau",
+    planet: "Lune",
+    rulingPlanet: "Lune",
     personality: "Intuitif, bienveillant et émotionnellement profond. Vous avez une forte connexion à la maison et à la famille. Votre nature empathique fait de vous un soignant et un guérisseur naturel.",
     strengths: ["Intuition puissante", "Capacités de soin", "Intelligence émotionnelle", "Loyauté envers les êtres chers", "Imagination créative"],
     weaknesses: ["Changements d'humeur", "Tendance à s'inquiéter", "Peut être excessivement sensible", "Difficulté à lâcher prise", "Peut se retirer quand blessé"],
@@ -151,7 +189,17 @@ cancer: {
     opportunities: "Soins de santé, conseil, garde d'enfants, hôtellerie, immobilier, service alimentaire, et arts créatifs.",
     challenges: "Établir des limites émotionnelles, traiter la critique constructive, et équilibrer le soin des autres avec l'auto-soin.",
     compatibility: {
+      mostCompatible: ["Scorpion", "Poissons", "Taureau", "Vierge"],
+      leastCompatible: ["Bélier", "Balance"],
+      soulmate: "Scorpion",
       description: "Les signes d'eau comprennent votre profondeur émotionnelle, les signes de terre offrent la sécurité. Les signes de feu peuvent vous surcharger, les signes d'air peuvent sembler trop émotionnellement détachés."
+    },
+    luckyElements: {
+      numbers: [2, 7, 11, 16, 20],
+      colors: ["Argent", "Blanc", "Vert Marin", "Bleu Pâle"],
+      days: ["Lundi", "Jeudi"],
+      stones: ["Pierre de Lune", "Perle", "Rubis", "Émeraude"],
+      metals: ["Argent", "Platine"]
     },
     careerSpecific: {
       ideal: ["Infirmière pédiatrique", "Thérapeute familial", "Chef", "Designer d'intérieur", "Directeur de musée", "Directeur d'école maternelle"],

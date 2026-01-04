@@ -3,6 +3,8 @@ export const translations = {
     name: "Sagittarius",
     dates: "November 22 - December 21",
     element: "Fire",
+    planet: "Jupiter",
+    rulingPlanet: "Jupiter",
     personality: "Adventurous, philosophical, and optimistic. You are always seeking new horizons and higher truths. Your enthusiasm for life and learning is contagious.",
     strengths: ["Adventurous spirit", "Philosophical thinking", "Optimism", "Love of learning", "Honesty and openness"],
     weaknesses: ["Restlessness", "Openness can hurt others", "Difficulty with commitment", "Can be irresponsible", "May promise more than you can deliver"],
@@ -10,7 +12,17 @@ export const translations = {
     opportunities: "Travel, education, publishing, religion, sports, and any field involving exploration or knowledge exchange.",
     challenges: "Learning commitment, being more diplomatic in communication, and following through on your promises.",
     compatibility: {
+      mostCompatible: ["Aries", "Leo", "Libra", "Aquarius"],
+      leastCompatible: ["Virgo", "Pisces"],
+      soulmate: "Leo",
       description: "Fire signs match your enthusiasm, air signs appreciate your idealism. Earth signs may seem too restrictive, water signs too emotionally demanding."
+    },
+    luckyElements: {
+      numbers: [3, 9, 21, 30, 39],
+      colors: ["Purple", "Turquoise", "Orange", "Yellow"],
+      days: ["Thursday", "Sunday"],
+      stones: ["Turquoise", "Amethyst", "Topaz", "Sapphire"],
+      metals: ["Tin", "Bronze"]
     },
     careerSpecific: {
       ideal: ["Travel Writer", "University Professor", "Missionary", "Adventure Guide", "International Lawyer", "Philosopher"],
@@ -50,6 +62,8 @@ export const translations = {
     name: "Capricorn",
     dates: "December 22 - January 19",
     element: "Earth",
+    planet: "Saturn",
+    rulingPlanet: "Saturn",
     personality: "Ambitious, disciplined, and practical. You have an innate understanding of structure and hierarchy. Your steady climb to success inspires others to work harder.",
     strengths: ["Strong work ethic", "Reliability", "Ambitious nature", "Practical wisdom", "Leadership abilities"],
     weaknesses: ["Can be too serious", "Workaholic tendencies", "Difficulty expressing emotions", "Pessimistic perspective", "Rigid thinking"],
@@ -57,7 +71,17 @@ export const translations = {
     opportunities: "Business, management, politics, architecture, banking, and any field requiring long-term planning and leadership.",
     challenges: "Learning to relax and enjoy life, expressing emotions more freely, and avoiding burnout from overwork.",
     compatibility: {
+      mostCompatible: ["Taurus", "Virgo", "Scorpio", "Pisces"],
+      leastCompatible: ["Aries", "Libra"],
+      soulmate: "Taurus",
       description: "Earth signs value your stability, water signs soften your edges. Fire signs may be too impulsive, air signs too unpredictable for your methodical nature."
+    },
+    luckyElements: {
+      numbers: [8, 10, 26, 35, 44],
+      colors: ["Black", "Brown", "Dark Green", "Navy Blue"],
+      days: ["Saturday", "Tuesday"],
+      stones: ["Garnet", "Onyx", "Ruby", "Emerald"],
+      metals: ["Lead", "Silver"]
     },
     careerSpecific: {
       ideal: ["CEO", "Architect", "Government Official", "Bank Manager", "Project Manager", "Engineer"],
@@ -97,6 +121,8 @@ export const translations = {
     name: "Aquarius",
     dates: "January 20 - February 18",
     element: "Air",
+    planet: "Uranus",
+    rulingPlanet: "Saturn/Uranus",
     personality: "Independent, innovative, and humanitarian. You march to your own drum and envision a better future for all. Your unique perspective challenges conventional thinking.",
     strengths: ["Independent thinking", "Humanitarian spirit", "Innovation", "Intellectual curiosity", "Friend-oriented"],
     weaknesses: ["Emotional detachment", "Rebellious nature", "Can be unpredictable", "Difficulty with intimacy", "Stubborn about beliefs"],
@@ -104,7 +130,17 @@ export const translations = {
     opportunities: "Technology, social activism, science, invention, group leadership, and fields with future thinking or reform.",
     challenges: "Developing emotional intimacy, learning when to conform, and balancing idealism with practical action.",
     compatibility: {
+      mostCompatible: ["Gemini", "Libra", "Aries", "Sagittarius"],
+      leastCompatible: ["Taurus", "Scorpio"],
+      soulmate: "Gemini",
       description: "Air signs stimulate your intellect, fire signs support your independence. Earth signs may seem too conventional, water signs too emotionally demanding."
+    },
+    luckyElements: {
+      numbers: [4, 11, 22, 29, 38],
+      colors: ["Electric Blue", "Silver", "Purple", "Neon Green"],
+      days: ["Wednesday", "Saturday"],
+      stones: ["Amethyst", "Aquamarine", "Fluorite", "Labradorite"],
+      metals: ["Aluminum", "Uranium"]
     },
     careerSpecific: {
       ideal: ["Social Activist", "Tech Innovator", "Scientist", "Inventor", "Community Organizer", "Reformer"],
@@ -144,6 +180,8 @@ export const translations = {
     name: "Pisces",
     dates: "February 19 - March 20",
     element: "Water",
+    planet: "Neptune",
+    rulingPlanet: "Jupiter/Neptune",
     personality: "Intuitive, compassionate, and artistic. You feel everything deeply and have a natural connection to the spiritual realm. Your empathy and creativity touch everyone you meet.",
     strengths: ["Deep empathy", "Artistic abilities", "Intuitive wisdom", "Spiritual connection", "Adaptability"],
     weaknesses: ["Overly sensitive", "Escapist tendencies", "Difficulty with boundaries", "Can be unrealistic", "Addiction-prone"],
@@ -151,7 +189,17 @@ export const translations = {
     opportunities: "Arts, healing, spirituality, counseling, music, and any field requiring empathy and creative expression.",
     challenges: "Setting healthy emotional boundaries, staying grounded in reality, and avoiding escapist behaviors.",
     compatibility: {
+      mostCompatible: ["Cancer", "Scorpio", "Taurus", "Capricorn"],
+      leastCompatible: ["Gemini", "Sagittarius"],
+      soulmate: "Scorpio",
       description: "Water signs understand your emotional depth, earth signs offer grounding. Air signs may seem too detached, fire signs too intense for your sensitive nature."
+    },
+    luckyElements: {
+      numbers: [7, 12, 16, 25, 34],
+      colors: ["Sea Green", "Lavender", "Silver", "Aqua Blue"],
+      days: ["Monday", "Thursday"],
+      stones: ["Amethyst", "Aquamarine", "Moonstone", "Jade"],
+      metals: ["Platinum", "Tin"]
     },
     careerSpecific: {
       ideal: ["Artist", "Therapist", "Musician", "Healer", "Social Worker", "Spiritual Counselor"],

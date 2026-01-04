@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from '../context/TranslationContext';
 import { useSpeech } from '../hooks/useSpeech';
 import VoiceBar from '../components/VoiceBar';
-import { getAstrologyData } from '../utils/astroUtils';
+
+import { getTranslatedAstrologyData } from '../utils/translatedAstroUtils';
 import { isBirthInfoError, isBirthInfoMissing } from '../utils/birthInfoErrorHandler';
 import BirthInfoMissingPrompt from '../components/BirthInfoMissingPrompt';
 import { formatDateByLanguage } from '../utils/dateLocaleUtils';
@@ -22,6 +23,7 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
   const [userPreference, setUserPreference] = useState('full');
   const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [hasAutoPlayed, setHasAutoPlayed] = useState(false);
+  const [sunSignData, setSunSignData] = useState(null);
   const pollIntervalRef = useRef(null);
   const { speak, stop, pause, resume, isPlaying, isPaused, isLoading: isSpeechLoading, error: speechError, isSupported, volume, setVolume } = useSpeech();
 
@@ -184,13 +186,19 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
     }
   };
 
-  const getSunSignInfo = () => {
-    if (!astroInfo?.astrology_data?.sun_sign) return null;
-    const sunSignKey = astroInfo.astrology_data.sun_sign.toLowerCase();
-    return getAstrologyData(sunSignKey);
-  };
-
-  const sunSignData = getSunSignInfo();
+    // Load translated sun sign data based on language and sun sign
+  useEffect(() => {
+    const loadSunSignData = async () => {
+      if (astroInfo?.astrology_data?.sun_sign) {
+        const signKey = astroInfo.astrology_data.sun_sign.toLowerCase();
+        const data = await getTranslatedAstrologyData(signKey, language);
+        setSunSignData(data);
+      } else {
+        setSunSignData(null);
+      }
+    };
+    loadSunSignData();
+  }, [astroInfo, language]);
   const astro = astroInfo?.astrology_data || {};
 
   const handleClose = () => {
@@ -358,32 +366,28 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
               />
             )}
             
-            <button onClick={() => setShowingBrief(!showingBrief)} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', backgroundColor: '#7c63d8', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '1rem', fontWeight: '500' }} onMouseEnter={(e) => e.target.style.backgroundColor = '#6b52c1'} onMouseLeave={(e) => e.target.style.backgroundColor = '#7c63d8'}>{showingBrief ? t('chat.toggleMore') : t('chat.toggleLess')}</button>
+                        <button onClick={() => setShowingBrief(!showingBrief)} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', backgroundColor: '#7c63d8', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '1rem', fontWeight: '500' }} onMouseEnter={(e) => e.target.style.backgroundColor = '#6b52c1'} onMouseLeave={(e) => e.target.style.backgroundColor = '#7c63d8'}>{showingBrief ? t('chat.toggleMore') : t('chat.toggleLess')}</button>
           </div>
 
           {sunSignData && (
             <section className="sun-sign-info">
               <div className="sun-sign-header">
-                <h3>
-                  {sunSignData.emoji} {sunSignData.name}
-                </h3>
+                <h3>{sunSignData.emoji} {sunSignData.name}</h3>
               </div>
-
               <div className="sun-info-grid">
                                 <div className="info-item">
+                  <strong>{t('mySign.dates')}</strong>
+                  <span>{sunSignData.dates}</span>
+                </div>
+                <div className="info-item">
                   <strong>{t('mySign.element')}</strong>
                   <span>{t(`elements.${sunSignData.element.toLowerCase()}`)}</span>
                 </div>
                 <div className="info-item">
                   <strong>{t('mySign.rulingPlanet')}</strong>
-                  <span>{sunSignData.rulingPlanet.split('/').map((p, i) => <span key={i}>{i > 0 && '/'} {t(`planets.${p.toLowerCase().trim()}`)}</span>)}</span>
-                </div>
-                <div className="info-item">
-                  <strong>{t('mySign.dates')}</strong>
-                  <span>{sunSignData.dates}</span>
+                  <span>{sunSignData.rulingPlanet && sunSignData.rulingPlanet.split('/').map((p, i) => <span key={i}>{i > 0 && '/'} {t(`planets.${p.toLowerCase().trim()}`)}</span>)}</span>
                 </div>
               </div>
-
               {sunSignData.personality && (
                 <div className="sun-detail">
                   <h4>{t('mySign.aboutYourSign')}</h4>

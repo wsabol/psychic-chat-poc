@@ -3,6 +3,8 @@ sagittarius: {
     name: "Schütze",
     dates: "22. November - 21. Dezember",
     element: "Feuer",
+    planet: "Jupiter",
+    rulingPlanet: "Jupiter",
     personality: "Abenteuerlustig, philosophisch und optimistisch. Sie suchen immer neue Horizonte und höhere Wahrheiten. Ihr Enthusiasmus für Leben und Lernen ist ansteckend.",
     strengths: ["Abenteuergeist", "Philosophisches Denken", "Optimismus", "Liebe zum Lernen", "Ehrlichkeit und Offenheit"],
     weaknesses: ["Unruhe", "Offenheit kann andere verletzen", "Schwierigkeit mit Verpflichtung", "Kann verantwortungslos sein", "Kann mehr versprechen, als Sie liefern können"],
@@ -10,7 +12,17 @@ sagittarius: {
     opportunities: "Reisen, Bildung, Verlagswesen, Religion, Sport, und jedes Feld, das Erforschung oder Wissensaustausch beinhaltet.",
     challenges: "Verpflichtung lernen, diplomatischer in der Kommunikation sein, und Ihre Versprechen einhalten.",
     compatibility: {
+      mostCompatible: ["Widder", "Löwe", "Waage", "Wassermann"],
+      leastCompatible: ["Jungfrau", "Fische"],
+      soulmate: "Löwe",
       description: "Feuerzeichen entsprechen Ihrem Enthusiasmus, Luftzeichen schätzen Ihren Idealismus. Erdzeichen können zu einschränkend wirken, Wasserzeichen zu emotional fordernd."
+    },
+    luckyElements: {
+      numbers: [3, 9, 21, 30, 39],
+      colors: ["Violett", "Türkis", "Orange", "Gelb"],
+      days: ["Donnerstag", "Sonntag"],
+      stones: ["Türkis", "Amethyst", "Topas", "Saphir"],
+      metals: ["Zinn", "Bronze"]
     },
     careerSpecific: {
       ideal: ["Reiseschriftsteller", "Universitätsprofessor", "Missionar", "Abenteuerleitfaden", "Internationaler Anwalt", "Philosoph"],
@@ -50,6 +62,8 @@ sagittarius: {
     name: "Steinbock",
     dates: "22. Dezember - 19. Januar",
     element: "Erde",
+    planet: "Saturn",
+    rulingPlanet: "Saturn",
     personality: "Ehrgeizig, diszipliniert und praktisch. Sie haben angeborenes Verständnis von Struktur und Hierarchie. Ihr konstanter Aufstieg zum Erfolg inspiriert andere, härter zu arbeiten.",
     strengths: ["Starker Arbeitsethos", "Zuverlässigkeit", "Ehrgeizige Natur", "Praktische Weisheit", "Führungsfähigkeiten"],
     weaknesses: ["Kann zu ernsthaft sein", "Workaholic-Tendenzen", "Schwierigkeit, Emotionen auszudrücken", "Pessimistische Perspektive", "Starres Denken"],
@@ -57,7 +71,17 @@ sagittarius: {
     opportunities: "Geschäft, Management, Politik, Architektur, Bankwesen, und jedes Feld, das Langzeitplanung und Führung erfordert.",
     challenges: "Lernen zu entspannen und das Leben zu genießen, Emotionen freier auszudrücken, und Erschöpfung durch Überarbeitung vermeiden.",
     compatibility: {
+      mostCompatible: ["Stier", "Jungfrau", "Skorpion", "Fische"],
+      leastCompatible: ["Widder", "Waage"],
+      soulmate: "Stier",
       description: "Erdzeichen schätzen Ihre Stabilität, Wasserzeichen erweichen Ihre Kanten. Feuerzeichen können zu impulsiv sein, Luftzeichen zu unberechenbar für Ihre methodische Natur."
+    },
+    luckyElements: {
+      numbers: [8, 10, 26, 35, 44],
+      colors: ["Schwarz", "Braun", "Dunkelgrün", "Marineblau"],
+      days: ["Samstag", "Dienstag"],
+      stones: ["Granat", "Onyx", "Rubin", "Smaragd"],
+      metals: ["Blei", "Silber"]
     },
     careerSpecific: {
       ideal: ["CEO", "Architekt", "Regierungsbeamter", "Bankmanager", "Projektmanager", "Ingenieur"],
@@ -97,6 +121,8 @@ sagittarius: {
     name: "Wassermann",
     dates: "20. Januar - 18. Februar",
     element: "Luft",
+    planet: "Uranus",
+    rulingPlanet: "Saturn/Uranus",
     personality: "Unabhängig, innovativ und humanitär. Sie marschieren nach Ihrem eigenen Rhythmus und stellen sich eine bessere Zukunft für alle vor. Ihre einzigartige Perspektive stellt konventionelles Denken in Frage.",
     strengths: ["Unabhängiges Denken", "Humanitärer Geist", "Innovation", "Intellektuelle Neugier", "Freundesorientiert"],
     weaknesses: ["Emotionale Distanz", "Rebellische Natur", "Kann unvorhersehbar sein", "Schwierigkeit mit Intimität", "Stur über Überzeugungen"],
@@ -104,7 +130,17 @@ sagittarius: {
     opportunities: "Technologie, soziale Anlässe, Wissenschaft, Erfindung, Gruppenführung, und Felder mit zukünftigem Denken oder Reform.",
     challenges: "Emotionale Intimität entwickeln, lernen wann man sich konformiert, und Idealismus mit praktischer Aktion ausgleichen.",
     compatibility: {
+      mostCompatible: ["Zwillinge", "Waage", "Widder", "Schütze"],
+      leastCompatible: ["Stier", "Skorpion"],
+      soulmate: "Zwillinge",
       description: "Luftzeichen stimulieren Ihren Intellekt, Feuerzeichen unterstützen Ihre Unabhängigkeit. Erdzeichen können zu konventionell wirken, Wasserzeichen zu emotional anspruchsvoll."
+    },
+    luckyElements: {
+      numbers: [4, 11, 22, 29, 38],
+      colors: ["Elektrisches Blau", "Silber", "Violett", "Neongrün"],
+      days: ["Mittwoch", "Samstag"],
+      stones: ["Amethyst", "Aquamarin", "Fluorit", "Labradorit"],
+      metals: ["Aluminium", "Uran"]
     },
     careerSpecific: {
       ideal: ["Sozialaktivist", "Technologie-Innovator", "Wissenschaftler", "Humanitärer Arbeiter", "Erfinder", "Gemeinschaftsorganisator"],
@@ -144,6 +180,8 @@ sagittarius: {
     name: "Fische",
     dates: "19. Februar - 20. März",
     element: "Wasser",
+    planet: "Neptun",
+    rulingPlanet: "Jupiter/Neptun",
     personality: "Intuitiv, mitfühlend und künstlerisch. Sie fühlen alles tief und haben eine natürliche Verbindung zum spirituellen Reich. Ihre Empathie und Kreativität berühren alle, die Sie treffen.",
     strengths: ["Tiefe Empathie", "Künstlerische Fähigkeiten", "Intuitive Weisheit", "Spirituelle Verbindung", "Anpassungsfähigkeit"],
     weaknesses: ["Übermäßig empfindlich", "Flucht-Tendenzen", "Schwierigkeit mit Grenzen", "Kann unrealistisch sein", "Suchtanfällig"],
@@ -151,7 +189,17 @@ sagittarius: {
     opportunities: "Künste, Heilung, Spiritualität, Beratung, Musik, und jedes Feld, das Empathie und kreativen Ausdruck erfordert.",
     challenges: "Gesunde Grenzen etablieren, in der Realität verwurzelt bleiben, und Fluchtverhalten vermeiden.",
     compatibility: {
+      mostCompatible: ["Krebs", "Skorpion", "Stier", "Steinbock"],
+      leastCompatible: ["Zwillinge", "Schütze"],
+      soulmate: "Skorpion",
       description: "Wasserzeichen verstehen Ihre emotionale Tiefe, Erdzeichen bieten Verwurzeltsein. Luftzeichen können zu abgelöst wirken, Feuerzeichen zu intensiv für Ihre empfindliche Natur."
+    },
+    luckyElements: {
+      numbers: [7, 12, 16, 25, 34],
+      colors: ["Meeresgrün", "Lavendel", "Silber", "Aquablau"],
+      days: ["Montag", "Donnerstag"],
+      stones: ["Amethyst", "Aquamarin", "Mondstein", "Jade"],
+      metals: ["Platin", "Zinn"]
     },
     careerSpecific: {
       ideal: ["Künstler", "Therapeut", "Musiker", "Heiler", "Sozialarbeiter", "Spiritueller Berater"],
