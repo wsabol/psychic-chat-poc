@@ -1,6 +1,6 @@
 import { fetchUserAstrology, fetchUserLanguagePreference, getOracleSystemPrompt, callOracle, getUserGreeting, fetchUserPersonalInfo } from '../oracle.js';
 import { storeMessage } from '../messages.js';
-import { translateContentObject } from '../translator.js';
+import { translateContentObject } from '../simpleTranslator.js';
 import { db } from '../../shared/db.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { spawn } from 'child_process';

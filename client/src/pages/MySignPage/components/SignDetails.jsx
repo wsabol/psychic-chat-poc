@@ -49,7 +49,7 @@ export function SignDetails({ astro, t }) {
       {/* Header */}
       <div className="zodiac-header">
         <h2 className="heading-secondary">
-          {astro.emoji && <span>{astro.emoji}</span>} {astro.sun_sign}
+          {astro.emoji && <span>{astro.emoji}</span>} {t(`mySign.${astro.sun_sign.toLowerCase()}`)}
           {astro.symbol && <span className="zodiac-symbol">{astro.symbol}</span>}
         </h2>
       </div>
