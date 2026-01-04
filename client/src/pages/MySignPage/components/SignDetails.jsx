@@ -74,7 +74,7 @@ export function SignDetails({ astro, t }) {
           )}
           {astro.planet && (
             <div className="info-item">
-              <strong>Planet:</strong>
+              <strong>{t ? t('mySign.traditionalPlanet') : 'Traditional Planet:'}</strong>
               <span className="planet-with-emoji">
                 <span className="planet-emoji">{planetEmojis[astro.planet] || '🪐'}</span>
                 {astro.planet}
@@ -83,7 +83,7 @@ export function SignDetails({ astro, t }) {
           )}
           {astro.rulingPlanet && (
             <div className="info-item">
-              <strong>{t ? t('mySign.rulingPlanet') : 'Ruling Planet:'}</strong>
+              <strong>{t ? t('mySign.modernRulingPlanet') : 'Modern Ruling Planet:'}</strong>
               <div className="ruling-planets-stacked">
                 {astro.rulingPlanet.split('/').map((planet, idx) => {
                   const trimmed = planet.trim();

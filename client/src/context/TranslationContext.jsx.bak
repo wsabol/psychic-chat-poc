@@ -1,9 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
-// English modular translations
-import enUSCore from '../translations/en-US-core.json';
-import enUSAstrology from '../translations/en-US-astrology.json';
-import enUSBilling from '../translations/en-US-billing.json';
+// English translations (base language - keep as reference)
+import enUS from '../translations/en-US.json';
 
 // Spanish modular translations
 import esESCore from '../translations/es-ES-core.json';
@@ -15,30 +13,12 @@ import frFRCore from '../translations/fr-FR-core.json';
 import frFRAstrology from '../translations/fr-FR-astrology.json';
 import frFRBilling from '../translations/fr-FR-billing.json';
 
-// German modular translations
-import deDECore from '../translations/de-DE-core.json';
-import deDEAstrology from '../translations/de-DE-astrology.json';
-import deDEBilling from '../translations/de-DE-billing.json';
-
-// Italian modular translations
-import itITCore from '../translations/it-IT-core.json';
-import itITAstrology from '../translations/it-IT-astrology.json';
-import itITBilling from '../translations/it-IT-billing.json';
-
-// Portuguese modular translations
-import ptBRCore from '../translations/pt-BR-core.json';
-import ptBRAstrology from '../translations/pt-BR-astrology.json';
-import ptBRBilling from '../translations/pt-BR-billing.json';
-
-// Japanese modular translations
-import jaJPCore from '../translations/ja-JP-core.json';
-import jaJPAstrology from '../translations/ja-JP-astrology.json';
-import jaJPBilling from '../translations/ja-JP-billing.json';
-
-// Chinese modular translations
-import zhCNCore from '../translations/zh-CN-core.json';
-import zhCNAstrology from '../translations/zh-CN-astrology.json';
-import zhCNBilling from '../translations/zh-CN-billing.json';
+// Other languages (full files for now, can modularize later)
+import deDE from '../translations/de-DE.json';
+import itIT from '../translations/it-IT.json';
+import ptBR from '../translations/pt-BR.json';
+import jaJP from '../translations/ja-JP.json';
+import zhCN from '../translations/zh-CN.json';
 
 const TranslationContext = createContext();
 
@@ -53,17 +33,13 @@ function mergeTranslations(...objects) {
   }, {});
 }
 
-// All languages use modular structure: merge core + astrology + billing
-const enUS = mergeTranslations(enUSCore, enUSAstrology, enUSBilling);
+// Spanish is modular - merge all parts
 const esES = mergeTranslations(esESCore, esESAstrology, esESBilling);
-const frFR = mergeTranslations(frFRCore, frFRAstrology, frFRBilling);
-const deDE = mergeTranslations(deDECore, deDEAstrology, deDEBilling);
-const itIT = mergeTranslations(itITCore, itITAstrology, itITBilling);
-const ptBR = mergeTranslations(ptBRCore, ptBRAstrology, ptBRBilling);
-const jaJP = mergeTranslations(jaJPCore, jaJPAstrology, jaJPBilling);
-const zhCN = mergeTranslations(zhCNCore, zhCNAstrology, zhCNBilling);
 
-// All available languages (all using modular structure)
+// French is modular - merge all parts
+const frFR = mergeTranslations(frFRCore, frFRAstrology, frFRBilling);
+
+// All available languages
 const LANGUAGES = {
   'en-US': { name: 'English', flag: '🇺🇸', translations: enUS },
   'es-ES': { name: 'Español', flag: '🇪🇸', translations: esES },

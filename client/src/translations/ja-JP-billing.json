@@ -1,0 +1,6 @@
+{
+  "billing": {"title": "請求と購読", "paymentMethods": "支払い方法", "subscriptions": "購読", "addPaymentMethod": "支払い方法を追加", "updatePaymentMethod": "支払い方法を更新", "deletePaymentMethod": "支払い方法を削除", "default": "デフォルト", "setAsDefault": "デフォルトとして設定", "noPaymentMethods": "登録された支払い方法はありません", "noSubscriptions": "アクティブな購読はありません", "subscribe": "購読", "manageSubscription": "購読を管理", "cancelSubscription": "購読をキャンセル", "subscriptionActive": "アクティブ", "subscriptionExpired": "期限切れ", "nextBillingDate": "次の請求日", "amount": "金額", "errors": {"paymentFailed": "支払いに失敗しました", "invalidCard": "無効なカード情報"}},
+  "paymentMethods": {"title": "支払い方法", "addNew": "新しい支払い方法を追加", "cardEnding": "カード番号の終わり", "expires": "有効期限", "lastUsed": "最後に使用", "setAsDefault": "デフォルトとして設定", "delete": "削除", "deleteConfirm": "よろしいですか?"},
+  "subscriptions": {"title": "購読", "plan": "プラン", "price": "価格", "renewal": "更新日", "cancel": "購読をキャンセル", "upgrade": "プランをアップグレード", "downgrade": "プランをダウングレード", "active": "アクティブ", "expired": "期限切れ"},
+  "invoices": {"title": "請求書", "invoiceNumber": "請求書#", "date": "日付", "amount": "金額", "status": "ステータス", "download": "ダウンロード"}
+}

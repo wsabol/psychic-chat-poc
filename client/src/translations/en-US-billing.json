@@ -1,0 +1,54 @@
+{
+  "billing": {
+    "title": "Billing & Subscription",
+    "paymentMethods": "Payment Methods",
+    "subscriptions": "Subscriptions",
+    "addPaymentMethod": "Add Payment Method",
+    "updatePaymentMethod": "Update Payment Method",
+    "deletePaymentMethod": "Delete Payment Method",
+    "default": "Default",
+    "setAsDefault": "Set as Default",
+    "noPaymentMethods": "No payment methods on file",
+    "noSubscriptions": "No active subscriptions",
+    "subscribe": "Subscribe",
+    "manageSubscription": "Manage Subscription",
+    "cancelSubscription": "Cancel Subscription",
+    "subscriptionActive": "Active",
+    "subscriptionExpired": "Expired",
+    "nextBillingDate": "Next Billing Date",
+    "amount": "Amount",
+    "errors": {
+      "paymentFailed": "Payment failed",
+      "invalidCard": "Invalid card information"
+    }
+  },
+  "paymentMethods": {
+    "title": "Payment Methods",
+    "addNew": "Add New Payment Method",
+    "cardEnding": "Card ending in",
+    "expires": "Expires",
+    "lastUsed": "Last used",
+    "setAsDefault": "Set as Default",
+    "delete": "Delete",
+    "deleteConfirm": "Are you sure?"
+  },
+  "subscriptions": {
+    "title": "Subscriptions",
+    "plan": "Plan",
+    "price": "Price",
+    "renewal": "Renews on",
+    "cancel": "Cancel Subscription",
+    "upgrade": "Upgrade Plan",
+    "downgrade": "Downgrade Plan",
+    "active": "Active",
+    "expired": "Expired"
+  },
+  "invoices": {
+    "title": "Invoices",
+    "invoiceNumber": "Invoice #",
+    "date": "Date",
+    "amount": "Amount",
+    "status": "Status",
+    "download": "Download"
+  }
+}

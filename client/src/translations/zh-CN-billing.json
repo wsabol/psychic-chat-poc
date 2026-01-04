@@ -1,0 +1,6 @@
+{
+  "billing": {"title": "计费和订阅", "paymentMethods": "支付方式", "subscriptions": "订阅", "addPaymentMethod": "添加支付方式", "updatePaymentMethod": "更新支付方式", "deletePaymentMethod": "删除支付方式", "default": "默认", "setAsDefault": "设置为默认", "noPaymentMethods": "没有注册的支付方式", "noSubscriptions": "没有活跃的订阅", "subscribe": "订阅", "manageSubscription": "管理订阅", "cancelSubscription": "取消订阅", "subscriptionActive": "活跃", "subscriptionExpired": "已过期", "nextBillingDate": "下一个账单日期", "amount": "金额", "errors": {"paymentFailed": "支付失败", "invalidCard": "无效的卡信息"}},
+  "paymentMethods": {"title": "支付方式", "addNew": "添加新支付方式", "cardEnding": "卡号结尾", "expires": "过期", "lastUsed": "最后使用", "setAsDefault": "设置为默认", "delete": "删除", "deleteConfirm": "您确定吗?"},
+  "subscriptions": {"title": "订阅", "plan": "计划", "price": "价格", "renewal": "续订日期", "cancel": "取消订阅", "upgrade": "升级计划", "downgrade": "降级计划", "active": "活跃", "expired": "已过期"},
+  "invoices": {"title": "发票", "invoiceNumber": "发票#", "date": "日期", "amount": "金额", "status": "状态", "download": "下载"}
+}
