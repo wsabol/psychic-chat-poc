@@ -11,7 +11,7 @@ import moonPhaseRoutes from "./routes/moon-phase.js";
 import astrologyInsightsRoutes from "./routes/astrology-insights.js";
 import authRoutes from "./routes/auth-firebase.js";
 import consentRoutes from "./routes/consent.js";
-import userDataRoutes from "./routes/user-data.js";
+import userDataRoutes from "./routes/user-data/index.js";
 import cleanupRoutes from "./routes/cleanup.js";
 import securityRoutes from "./routes/security.js";
 import billingRoutes from "./routes/billing/index.js";
