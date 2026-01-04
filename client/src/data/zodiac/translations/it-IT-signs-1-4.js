@@ -3,6 +3,8 @@ export const translations = {
     name: "Ariete",
     dates: "21 marzo - 19 aprile",
     element: "Fuoco",
+    planet: "Marte",
+    rulingPlanet: "Marte",
     personality: "Audace, ambizioso ed energico. Siete un leader naturale che prospera nelle sfide e nei nuovi inizi. Il vostro spirito pionieristico vi spinge a esplorare territori inesplorati.",
     strengths: ["Leadership naturale", "Coraggio e determinazione", "Pensiero innovativo", "Energia alta e entusiasmo", "Rapido processo decisionale"],
     weaknesses: ["Impazienza", "Tendenza all'impulsività", "Può essere eccessivamente competitivo", "Difficoltà con compiti routinari", "Può agire senza pensare"],
@@ -10,7 +12,17 @@ export const translations = {
     opportunities: "Ruoli di leadership, imprenditoria, sport, servizi di emergenza, e qualsiasi campo che richieda pensiero rapido e azione decisiva.",
     challenges: "Imparare la pazienza, considerare le prospettive altrui, e seguire gli impegni a lungo termine.",
     compatibility: {
+      mostCompatible: ["Leone", "Sagittario", "Gemelli", "Acquario"],
+      leastCompatible: ["Cancro", "Capricorno"],
+      soulmate: "Leone",
       description: "I segni di fuoco accendono la vostra passione, mentre i segni d'aria alimentano le vostre idee. I segni di terra possono rallentarvi, e i segni d'acqua possono spegnere il vostro entusiasmo."
+    },
+    luckyElements: {
+      numbers: [1, 8, 17, 21, 31],
+      colors: ["Rosso", "Arancione", "Giallo Brillante", "Scarlatto"],
+      days: ["Martedì", "Domenica"],
+      stones: ["Diamante", "Rubino", "Pietra di Sangue", "Diaspro Rosso"],
+      metals: ["Ferro", "Acciaio"]
     },
     careerSpecific: {
       ideal: ["Ufficiale militare", "Medico d'urgenza", "Imprenditore", "Atleta professionista", "Pompiere", "Direttore vendite"],
@@ -50,6 +62,8 @@ export const translations = {
     name: "Toro",
     dates: "20 aprile - 20 maggio",
     element: "Terra",
+    planet: "Venere",
+    rulingPlanet: "Venere",
     personality: "Radicato, affidabile e sensuale. Apprezzate la bellezza, il comfort e la stabilità. La vostra natura costante vi rende una forza affidabile in qualsiasi situazione.",
     strengths: ["Affidabilità e lealtà", "Saggezza pratica", "Apprezzamento per la bellezza", "Forte etica del lavoro", "Acume finanziario"],
     weaknesses: ["Testardaggine", "Resistenza al cambiamento", "Tendenze materialiste", "Può essere possessivo", "Difficoltà ad adattarsi rapidamente"],
@@ -57,7 +71,17 @@ export const translations = {
     opportunities: "Finanza, immobiliare, arti e mestieri, arti culinarie, agricoltura, e industrie del lusso.",
     challenges: "Abbracciare il cambiamento, lasciar andare gli attaccamenti materiali, e essere più flessibili nel vostro approccio alla vita.",
     compatibility: {
+      mostCompatible: ["Vergine", "Capricorno", "Cancro", "Pesci"],
+      leastCompatible: ["Leone", "Acquario"],
+      soulmate: "Vergine",
       description: "I segni di terra forniscono stabilità, i segni d'acqua offrono profondità emotiva. I segni di fuoco possono affrettarvi, i segni d'aria possono sembrare troppo distaccati."
+    },
+    luckyElements: {
+      numbers: [2, 6, 9, 12, 24],
+      colors: ["Verde", "Rosa", "Tonalità Terrestre", "Blu Pastello"],
+      days: ["Venerdì", "Lunedì"],
+      stones: ["Smeraldo", "Quarzo Rosa", "Zaffiro", "Agata Muschio"],
+      metals: ["Rame", "Ottone"]
     },
     careerSpecific: {
       ideal: ["Banchiere d'investimento", "Direttore di marchio di lusso", "Chef", "Interior designer", "Sviluppatore immobiliare", "Ingegnere agricolo"],
@@ -97,6 +121,8 @@ export const translations = {
     name: "Gemelli",
     dates: "21 maggio - 20 giugno",
     element: "Aria",
+    planet: "Mercurio",
+    rulingPlanet: "Mercurio",
     personality: "Curiosi, adattabili e comunicativi. Siete un pensatore veloce che ama la varietà e la stimolazione intellettuale. La vostra versatilità vi permette di connettervi con persone e idee diverse.",
     strengths: ["Eccellente comunicazione", "Adattabilità", "Velocità di apprendimento", "Abilità di networking", "Risoluzione creativa dei problemi"],
     weaknesses: ["Incoerenza", "Difficoltà a concentrarsi su una cosa", "Può essere superficiale", "Tendenza al pettegolezzo", "Inquietudine"],
@@ -104,7 +130,17 @@ export const translations = {
     opportunities: "Media, giornalismo, insegnamento, vendite, tecnologia, traduzione, e qualsiasi campo che richieda abilità di comunicazione.",
     challenges: "Sviluppare profondità e focus, impegnarvi in obiettivi a lungo termine, e imparare ad ascoltare tanto quanto parlate.",
     compatibility: {
+      mostCompatible: ["Bilancia", "Acquario", "Ariete", "Leone"],
+      leastCompatible: ["Vergine", "Pesci"],
+      soulmate: "Bilancia",
       description: "I segni d'aria capiscono la vostra necessità di stimolazione mentale, i segni di fuoco eccitano la vostra curiosità. I segni di terra possono annoiarvi, i segni d'acqua possono sommergervi emotivamente."
+    },
+    luckyElements: {
+      numbers: [5, 7, 14, 16, 23],
+      colors: ["Giallo", "Argento", "Blu Chiaro", "Bianco"],
+      days: ["Mercoledì", "Sabato"],
+      stones: ["Agata", "Citrino", "Alessandrite", "Perla"],
+      metals: ["Mercurio", "Argento"]
     },
     careerSpecific: {
       ideal: ["Giornalista", "Social media manager", "Traduttore", "Conduttore radiofonico", "Coordinatore marketing", "Sviluppatore software"],
@@ -144,6 +180,8 @@ export const translations = {
     name: "Cancro",
     dates: "21 giugno - 22 luglio",
     element: "Acqua",
+    planet: "Luna",
+    rulingPlanet: "Luna",
     personality: "Intuitivo, nutriente e profondamente emotivo. Avete un forte legame con la casa e la famiglia. La vostra natura empatica vi rende un caregiver e guaritore naturale.",
     strengths: ["Forte intuizione", "Abilità nutrienti", "Intelligenza emotiva", "Lealtà ai cari", "Immaginazione creativa"],
     weaknesses: ["Sbalzi d'umore", "Tendenza a preoccuparsi", "Può essere eccessivamente sensibile", "Difficoltà a lasciar andare", "Può ritirarsi quando ferito"],
@@ -151,7 +189,17 @@ export const translations = {
     opportunities: "Assistenza sanitaria, consulenza, cura dell'infanzia, ospitalità, immobiliare, servizi alimentari, e arti creative.",
     challenges: "Stabilire confini emotivi, affrontare la critica costruttivamente, e bilanciare la cura degli altri con l'auto-cura.",
     compatibility: {
+      mostCompatible: ["Scorpione", "Pesci", "Toro", "Vergine"],
+      leastCompatible: ["Ariete", "Bilancia"],
+      soulmate: "Scorpione",
       description: "I segni d'acqua capiscono la vostra profondità emotiva, i segni di terra offrono sicurezza. I segni di fuoco possono travolgervi, i segni d'aria possono sembrare troppo distaccati dai sentimenti."
+    },
+    luckyElements: {
+      numbers: [2, 7, 11, 16, 20],
+      colors: ["Argento", "Bianco", "Verde Mare", "Blu Pallido"],
+      days: ["Lunedì", "Giovedì"],
+      stones: ["Pietra di Luna", "Perla", "Rubino", "Smeraldo"],
+      metals: ["Argento", "Platino"]
     },
     careerSpecific: {
       ideal: ["Infermiera pediatrica", "Terapeuta familiare", "Chef", "Interior designer", "Conservatore di museo", "Direttore di asilo"],

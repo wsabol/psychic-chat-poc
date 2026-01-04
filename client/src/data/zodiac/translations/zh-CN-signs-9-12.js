@@ -3,6 +3,8 @@ export const translations = {
     name: "射手座",
     dates: "11月22日～12月21日",
     element: "火",
+    planet: "木星",
+    rulingPlanet: "木星",
     personality: "冒险、哲学和乐观。你总是寻求新的地平线和更高的真理。你对生活和学习的热情具有传染性。",
     strengths: ["冒险精神", "哲学思维", "乐观主义", "对学习的热爱", "诚实和坦率"],
     weaknesses: ["不安", "坦率可能伤害他人", "承诺困难", "可能不负责任", "可能承诺超出能力"],
@@ -10,7 +12,17 @@ export const translations = {
     opportunities: "旅游、教育、出版、宗教、体育，以及任何涉及探索或知识共享的领域。",
     challenges: "学习承诺、在沟通中更具外交性、履行承诺。",
     compatibility: {
+      mostCompatible: ["白羊座", "狮子座", "天秤座", "水瓶座"],
+      leastCompatible: ["处女座", "双鱼座"],
+      soulmate: "狮子座",
       description: "火象星座与你的热情相符，风象星座欣赏你的理想主义。土象星座可能显得过于限制，水象星座可能在情感上要求苛刻。"
+    },
+    luckyElements: {
+      numbers: [3, 9, 21, 30, 39],
+      colors: ["紫色", "绿松石", "橙色", "黄色"],
+      days: ["星期四", "星期日"],
+      stones: ["绿松石", "紫水晶", "黄玉", "蓝宝石"],
+      metals: ["锡", "青铜"]
     },
     careerSpecific: {
       ideal: ["旅行作家", "大学教授", "传教士", "冒险导游", "国际律师", "哲学家"],
@@ -50,6 +62,8 @@ export const translations = {
     name: "摩羯座",
     dates: "12月22日～1月19日",
     element: "土",
+    planet: "土星",
+    rulingPlanet: "土星",
     personality: "雄心勃勃、纪律严明且务实。你天生理解结构和等级制度。你对成功的不断上升激励他人更加努力。",
     strengths: ["强大的职业道德", "可靠性", "雄心勃勃的性质", "实用智慧", "领导能力"],
     weaknesses: ["可能过于严肃", "工作成瘾倾向", "表达情感困难", "悲观视角", "思维僵化"],
@@ -57,7 +71,17 @@ export const translations = {
     opportunities: "商业、管理、政治、建筑、银行，以及任何需要长期规划和领导的领域。",
     challenges: "学会放松和享受生活、更自由地表达情感、避免过度工作导致倦怠。",
     compatibility: {
+      mostCompatible: ["金牛座", "处女座", "天蝎座", "双鱼座"],
+      leastCompatible: ["白羊座", "天秤座"],
+      soulmate: "金牛座",
       description: "土象星座欣赏你的稳定性，水象星座柔和你的棱角。火象星座可能过于冲动，风象星座对你的方法论性质过于不可预测。"
+    },
+    luckyElements: {
+      numbers: [8, 10, 26, 35, 44],
+      colors: ["黑色", "棕色", "深绿色", "海军蓝"],
+      days: ["星期六", "星期二"],
+      stones: ["石榴石", "黑玛瑙", "红宝石", "翡翠"],
+      metals: ["铅", "银"]
     },
     careerSpecific: {
       ideal: ["首席执行官", "建筑师", "政府官员", "银行经理", "项目经理", "工程师"],
@@ -97,6 +121,8 @@ export const translations = {
     name: "水瓶座",
     dates: "1月20日～2月18日",
     element: "风",
+    planet: "天王星",
+    rulingPlanet: "土星/天王星",
     personality: "独立、创新且人道主义。你按自己的鼓声行进，为所有人想象更美好的未来。你独特的视角挑战传统思维。",
     strengths: ["独立思维", "人道主义精神", "创新", "知识好奇心", "友谊导向"],
     weaknesses: ["情感疏离", "反叛性质", "可能不可预测", "亲密困难", "对信念固执"],
@@ -104,7 +130,17 @@ export const translations = {
     opportunities: "技术、社会事业、科学、发明、团体领导，以及涉及未来思维或改革的领域。",
     challenges: "发展情感亲密、学会何时适应、平衡理想主义与实际行动。",
     compatibility: {
+      mostCompatible: ["双子座", "天秤座", "白羊座", "射手座"],
+      leastCompatible: ["金牛座", "天蝎座"],
+      soulmate: "双子座",
       description: "风象星座刺激你的智力，火象星座支持你的独立。土象星座可能显得过于传统，水象星座可能在情感上要求过高。"
+    },
+    luckyElements: {
+      numbers: [4, 11, 22, 29, 38],
+      colors: ["电蓝色", "银色", "紫色", "霓虹绿"],
+      days: ["星期三", "星期六"],
+      stones: ["紫水晶", "海蓝宝石", "萤石", "拉长石"],
+      metals: ["铝", "铀"]
     },
     careerSpecific: {
       ideal: ["社会活动家", "技术创新者", "科学家", "人道主义工作者", "发明家", "社区组织者"],
@@ -144,6 +180,8 @@ export const translations = {
     name: "双鱼座",
     dates: "2月19日～3月20日",
     element: "水",
+    planet: "海王星",
+    rulingPlanet: "木星/海王星",
     personality: "直觉、同情且艺术化。你深深地感受一切并与精神领域有天生联系。你的同情和创意触及你遇见的每个人。",
     strengths: ["深层同情", "艺术能力", "直觉智慧", "精神联系", "适应性"],
     weaknesses: ["过度敏感", "逃避倾向", "边界困难", "可能不切实际", "容易上瘾"],
@@ -151,7 +189,17 @@ export const translations = {
     opportunities: "艺术、治疗、精神、咨询、音乐，以及任何需要同情和创意表达的领域。",
     challenges: "建立健康边界、保持现实根基、避免逃避行为。",
     compatibility: {
+      mostCompatible: ["巨蟹座", "天蝎座", "金牛座", "摩羯座"],
+      leastCompatible: ["双子座", "射手座"],
+      soulmate: "天蝎座",
       description: "水象星座理解你的情感深度，土象星座提供根基。风象星座可能显得过于疏离，火象星座对你的敏感性过于激烈。"
+    },
+    luckyElements: {
+      numbers: [7, 12, 16, 25, 34],
+      colors: ["海绿色", "薰衣草色", "银色", "水蓝色"],
+      days: ["星期一", "星期四"],
+      stones: ["紫水晶", "海蓝宝石", "月光石", "玉石"],
+      metals: ["铂金", "锡"]
     },
     careerSpecific: {
       ideal: ["艺术家", "治疗师", "音乐家", "治疗者", "社会工作者", "精神顾问"],

@@ -3,6 +3,8 @@ export const translations = {
     name: "Leone",
     dates: "23 luglio - 22 agosto",
     element: "Fuoco",
+    planet: "Sole",
+    rulingPlanet: "Sole",
     personality: "Sicuro di sé, generoso e carismatico. Avete un talento naturale per il dramma e la performance. La vostra personalità calda vi attrae come un magnete verso gli altri.",
     strengths: ["Carisma naturale", "Spirito generoso", "Talenti creativi", "Abilità di leadership", "Lealtà agli amici"],
     weaknesses: ["Bisogno di attenzione", "Problemi di orgoglio e ego", "Può essere drammatico", "Difficoltà ad accettare le critiche", "Può dominare le conversazioni"],
@@ -10,7 +12,17 @@ export const translations = {
     opportunities: "Intrattenimento, arti, oratoria, insegnamento, gestione, e qualsiasi campo dove potete essere sotto i riflettori.",
     challenges: "Bilanciare la fiducia con l'umiltà, condividere i riflettori, e gestire la critica con grazia.",
     compatibility: {
+      mostCompatible: ["Ariete", "Sagittario", "Gemelli", "Bilancia"],
+      leastCompatible: ["Toro", "Scorpione"],
+      soulmate: "Ariete",
       description: "I segni di fuoco uguagliano la vostra passione, i segni d'aria apprezzano la vostra creatività. I segni di terra possono sembrare troppo mondani, i segni d'acqua troppo intensamente emotivi."
+    },
+    luckyElements: {
+      numbers: [1, 3, 10, 19, 28],
+      colors: ["Oro", "Arancione", "Giallo", "Rosso"],
+      days: ["Domenica", "Martedì"],
+      stones: ["Rubino", "Peridoto", "Sardonice", "Diamante"],
+      metals: ["Oro", "Ottone"]
     },
     careerSpecific: {
       ideal: ["Attore", "CEO", "Organizzatore di eventi", "Direttore artistico", "Stilista", "Relatore motivazionale"],
@@ -50,6 +62,8 @@ export const translations = {
     name: "Vergine",
     dates: "23 agosto - 22 settembre",
     element: "Terra",
+    planet: "Mercurio",
+    rulingPlanet: "Mercurio",
     personality: "Analitico, pratico e orientato al servizio. Avete un occhio per i dettagli e un desiderio di migliorare tutto intorno a voi. Il vostro approccio metodico assicura risultati di alta qualità.",
     strengths: ["Attenzione ai dettagli", "Pensiero analitico", "Affidabilità", "Desiderio di aiutare gli altri", "Abilità organizzative"],
     weaknesses: ["Perfezionismo", "Tendenza a criticare", "Preoccupazione e ansia", "Difficoltà a delegare", "Può essere eccessivamente cauto"],
@@ -57,7 +71,17 @@ export const translations = {
     opportunities: "Assistenza sanitaria, ricerca, editing, contabilità, amministrazione, e qualsiasi campo che richieda precisione e analisi.",
     challenges: "Accettare l'imperfezione, gestire l'ansia, e apprezzare i vostri stessi risultati senza critica costante.",
     compatibility: {
+      mostCompatible: ["Toro", "Capricorno", "Cancro", "Scorpione"],
+      leastCompatible: ["Gemelli", "Sagittario"],
+      soulmate: "Toro",
       description: "I segni di terra apprezzano la vostra praticità, i segni d'acqua valutano la vostra natura affettuosa. I segni d'aria possono sembrare dispersivi, i segni di fuoco troppo impulsivi per la vostra natura metodica."
+    },
+    luckyElements: {
+      numbers: [6, 15, 20, 27, 34],
+      colors: ["Blu Marino", "Grigio", "Marrone", "Verde"],
+      days: ["Mercoledì", "Sabato"],
+      stones: ["Zaffiro", "Corniola", "Giada", "Diaspro"],
+      metals: ["Mercurio", "Nichel"]
     },
     careerSpecific: {
       ideal: ["Ricercatore medico", "Direttore del controllo qualità", "Bibliotecario", "Nutrizionista", "Editor", "Analista di sistemi"],
@@ -97,6 +121,8 @@ export const translations = {
     name: "Bilancia",
     dates: "23 settembre - 22 ottobre",
     element: "Aria",
+    planet: "Venere",
+    rulingPlanet: "Venere",
     personality: "Diplomatico, affascinante e in cerca di armonia. Avete un senso naturale della giustizia e della bellezza. La vostra capacità di vedere tutti i lati vi rende un eccellente mediatore e pacificatore.",
     strengths: ["Abilità diplomatiche", "Senso di giustizia", "Apprezzamento per la bellezza", "Grazia sociale", "Capacità di compromesso"],
     weaknesses: ["Indecisione", "Evitare la confrontazione", "Può essere superficiale", "Tendenza a compiacere le persone", "Difficoltà nel prendere decisioni difficili"],
@@ -104,7 +130,17 @@ export const translations = {
     opportunities: "Legge, diplomazia, arti, design, consulenza, relazioni pubbliche, e qualsiasi campo che richieda abilità di negoziazione.",
     challenges: "Prendere decisioni con fiducia, affrontare i conflitti direttamente, e mantenere la vostra identità nelle relazioni.",
     compatibility: {
+      mostCompatible: ["Gemelli", "Acquario", "Leone", "Sagittario"],
+      leastCompatible: ["Cancro", "Capricorno"],
+      soulmate: "Gemelli",
       description: "I segni d'aria stimolano il vostro intelletto, i segni di fuoco ispirano la vostra natura sociale. I segni d'acqua possono essere troppo emotivi, i segni di terra troppo rigidi per il vostro approccio flessibile."
+    },
+    luckyElements: {
+      numbers: [6, 15, 24, 33, 42],
+      colors: ["Rosa", "Blu", "Colori Pastello", "Bianco"],
+      days: ["Venerdì", "Domenica"],
+      stones: ["Opale", "Lapislazzuli", "Giada", "Corallo"],
+      metals: ["Rame", "Bronzo"]
     },
     careerSpecific: {
       ideal: ["Diplomatico", "Interior designer", "Consulente matrimoniale", "Mercante d'arte", "Direttore di relazioni pubbliche", "Giudice"],
@@ -144,6 +180,8 @@ export const translations = {
     name: "Scorpione",
     dates: "23 ottobre - 21 novembre",
     element: "Acqua",
+    planet: "Plutone",
+    rulingPlanet: "Marte/Plutone",
     personality: "Intenso, appassionato e trasformatore. Avete un'incredibile profondità e la capacità di vedere sotto le superfici. La vostra presenza magnetica attrae gli altri nel vostro mondo misterioso.",
     strengths: ["Profondità emotiva", "Abilità investigative", "Resilienza", "Personalità magnetica", "Capacità di trasformazione"],
     weaknesses: ["Gelosia e possessività", "Tendenza al segreto", "Può essere vendicativo", "Difficoltà a fidarsi", "L'intensità può travolgere gli altri"],
@@ -151,7 +189,17 @@ export const translations = {
     opportunities: "Psicologia, ricerca, investigazione criminale, chirurgia, studi occulti, e qualsiasi campo che richieda analisi profonda.",
     challenges: "Imparare a fidarsi, gestire la gelosia, e usare la vostra intensità costruttivamente piuttosto che distruttivamente.",
     compatibility: {
+      mostCompatible: ["Cancro", "Pesci", "Vergine", "Capricorno"],
+      leastCompatible: ["Leone", "Acquario"],
+      soulmate: "Cancro",
       description: "I segni d'acqua capiscono la vostra intensità emotiva, i segni di terra offrono stabilità. I segni di fuoco possono entrare in collisione con la vostra profondità, i segni d'aria possono sembrare troppo superficiali."
+    },
+    luckyElements: {
+      numbers: [8, 13, 18, 27, 36],
+      colors: ["Rosso Profondo", "Nero", "Marrone Scuro", "Viola Scuro"],
+      days: ["Martedì", "Giovedì"],
+      stones: ["Topazio", "Ossidiana", "Granato", "Rubino"],
+      metals: ["Ferro", "Acciaio"]
     },
     careerSpecific: {
       ideal: ["Psicologo", "Detective", "Chirurgo", "Ricercatore", "Giornalista investigativo", "Terapeuta"],

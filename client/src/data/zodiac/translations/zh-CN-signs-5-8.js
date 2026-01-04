@@ -3,6 +3,8 @@ export const translations = {
     name: "狮子座",
     dates: "7月23日～8月22日",
     element: "火",
+    planet: "太阳",
+    rulingPlanet: "太阳",
     personality: "自信、慷慨且富有魅力。你对戏剧和表演有天生的天赋。你温暖的个性像磁石一样吸引他人。",
     strengths: ["天生魅力", "慷慨的精神", "创意才能", "领导能力", "对朋友的忠诚"],
     weaknesses: ["对关注的需求", "骄傲和自我的问题", "可能过度戏剧化", "难以接受批评", "可能主导对话"],
@@ -10,7 +12,17 @@ export const translations = {
     opportunities: "娱乐、艺术、公开演讲、教育、管理，以及任何你能处于聚光灯下的领域。",
     challenges: "平衡自信与谦逊、分享聚光灯、优雅地处理批评。",
     compatibility: {
+      mostCompatible: ["白羊座", "射手座", "双子座", "天秤座"],
+      leastCompatible: ["金牛座", "天蝎座"],
+      soulmate: "白羊座",
       description: "火象星座与你的激情相当，风象星座欣赏你的创意。土象星座可能太世俗，水象星座可能过度情感化。"
+    },
+    luckyElements: {
+      numbers: [1, 3, 10, 19, 28],
+      colors: ["金色", "橙色", "黄色", "红色"],
+      days: ["星期日", "星期二"],
+      stones: ["红宝石", "橄榄石", "肉桂石", "钻石"],
+      metals: ["金", "黄铜"]
     },
     careerSpecific: {
       ideal: ["演员", "首席执行官", "活动规划师", "艺术总监", "时尚设计师", "激励演讲者"],
@@ -50,6 +62,8 @@ export const translations = {
     name: "处女座",
     dates: "8月23日～9月22日",
     element: "土",
+    planet: "水星",
+    rulingPlanet: "水星",
     personality: "分析、实用且以服务为导向。你对细节有敏锐的眼光，渴望改善周围的一切。你的方法论方法确保高质量的结果。",
     strengths: ["对细节的关注", "分析思维", "可靠性", "帮助他人的欲望", "组织技能"],
     weaknesses: ["完美主义", "批评倾向", "担忧和焦虑", "委派困难", "可能过于谨慎"],
@@ -57,7 +71,17 @@ export const translations = {
     opportunities: "医疗保健、研究、编辑、会计、行政管理，以及任何需要精确度和分析的领域。",
     challenges: "接受不完美、管理焦虑、欣赏自己的成就而无常数批评。",
     compatibility: {
+      mostCompatible: ["金牛座", "摩羯座", "巨蟹座", "天蝎座"],
+      leastCompatible: ["双子座", "射手座"],
+      soulmate: "金牛座",
       description: "土象星座欣赏你的实用性，水象星座重视你的体贴性质。风象星座可能显得分散，火象星座对你的方法论性质过于冲动。"
+    },
+    luckyElements: {
+      numbers: [6, 15, 20, 27, 34],
+      colors: ["海军蓝", "灰色", "棕色", "绿色"],
+      days: ["星期三", "星期六"],
+      stones: ["蓝宝石", "红玉髓", "玉石", "碧玉"],
+      metals: ["水银", "镍"]
     },
     careerSpecific: {
       ideal: ["医学研究员", "质量控制经理", "图书馆员", "营养师", "编辑", "系统分析师"],
@@ -97,6 +121,8 @@ export const translations = {
     name: "天秤座",
     dates: "9月23日～10月22日",
     element: "风",
+    planet: "金星",
+    rulingPlanet: "金星",
     personality: "外交、迷人且寻求和谐。你对正义和美有天生的感受。你看到各方的能力使你成为优秀的调解者和和平制造者。",
     strengths: ["外交技能", "正义感", "对美的欣赏", "社交优雅", "妥协能力"],
     weaknesses: ["优柔寡断", "避免对抗", "可能很肤浅", "讨好他人的倾向", "做出困难决定困难"],
@@ -104,7 +130,17 @@ export const translations = {
     opportunities: "法律、外交、艺术、设计、咨询、公共关系，以及任何需要谈判技能的领域。",
     challenges: "自信地做决定、直接应对冲突、在关系中保持自己的身份。",
     compatibility: {
+      mostCompatible: ["双子座", "水瓶座", "狮子座", "射手座"],
+      leastCompatible: ["巨蟹座", "摩羯座"],
+      soulmate: "双子座",
       description: "风象星座刺激你的智力，火象星座激励你的社交性。水象星座可能过于情感化，土象星座对你的灵活方法过于僵化。"
+    },
+    luckyElements: {
+      numbers: [6, 15, 24, 33, 42],
+      colors: ["粉红色", "蓝色", "柔和色彩", "白色"],
+      days: ["星期五", "星期日"],
+      stones: ["蛋白石", "青金石", "玉石", "珊瑚"],
+      metals: ["铜", "青铜"]
     },
     careerSpecific: {
       ideal: ["外交官", "室内设计师", "婚姻顾问", "艺术品商人", "公关经理", "法官"],
@@ -144,6 +180,8 @@ export const translations = {
     name: "天蝎座",
     dates: "10月23日～11月21日",
     element: "水",
+    planet: "冥王星",
+    rulingPlanet: "火星/冥王星",
     personality: "强烈、充满热情且变革性的。你拥有令人难以置信的深度和看穿表面的能力。你的磁性存在吸引他人进入你的神秘世界。",
     strengths: ["情感深度", "调查技能", "韧性", "磁力性格", "变革能力"],
     weaknesses: ["嫉妒和占有欲", "保密倾向", "可能报复", "信任困难", "强度可能压倒他人"],
@@ -151,7 +189,17 @@ export const translations = {
     opportunities: "心理学、研究、犯罪调查、手术、神秘学研究，以及任何需要深度分析的领域。",
     challenges: "学会信任、管理嫉妒、建设性而非破坏性地使用强度。",
     compatibility: {
+      mostCompatible: ["巨蟹座", "双鱼座", "处女座", "摩羯座"],
+      leastCompatible: ["狮子座", "水瓶座"],
+      soulmate: "巨蟹座",
       description: "水象星座理解你的情感强度，土象星座提供稳定性。火象星座可能与你的深度冲突，风象星座可能显得太肤浅。"
+    },
+    luckyElements: {
+      numbers: [8, 13, 18, 27, 36],
+      colors: ["深红色", "黑色", "栗色", "深紫色"],
+      days: ["星期二", "星期四"],
+      stones: ["黄玉", "黑曜石", "石榴石", "红宝石"],
+      metals: ["铁", "钢"]
     },
     careerSpecific: {
       ideal: ["心理学家", "侦探", "外科医生", "研究员", "调查记者", "治疗师"],

@@ -3,6 +3,8 @@ export const translations = {
     name: "白羊座",
     dates: "3月21日～4月19日",
     element: "火",
+    planet: "火星",
+    rulingPlanet: "火星",
     personality: "大胆、雄心勃勃、充满活力。你是天生的领导者，在挑战和新开始中茁壮成长。你的先锋精神驱使你探索未知领域。",
     strengths: ["天生领导能力", "勇气和决心", "创新思维", "高能量和热情", "快速决策"],
     weaknesses: ["缺乏耐心", "容易冲动", "过度竞争", "处理例行任务困难", "可能不经思考就行动"],
@@ -10,7 +12,17 @@ export const translations = {
     opportunities: "领导角色、创业精神、体育、紧急服务，以及任何需要快速思考和果断行动的领域。",
     challenges: "学习耐心、考虑他人的观点、履行长期承诺。",
     compatibility: {
+      mostCompatible: ["狮子座", "射手座", "双子座", "水瓶座"],
+      leastCompatible: ["巨蟹座", "摩羯座"],
+      soulmate: "狮子座",
       description: "火象星座点燃你的激情，风象星座激发你的想法。土象星座可能会拖慢你，水象星座可能会熄灭你的热情。"
+    },
+    luckyElements: {
+      numbers: [1, 8, 17, 21, 31],
+      colors: ["红色", "橙色", "亮黄色", "猩红色"],
+      days: ["星期二", "星期日"],
+      stones: ["钻石", "红宝石", "血石", "红碧玺"],
+      metals: ["铁", "钢"]
     },
     careerSpecific: {
       ideal: ["军官", "急诊医生", "企业家", "职业运动员", "消防员", "销售经理"],
@@ -50,6 +62,8 @@ export const translations = {
     name: "金牛座",
     dates: "4月20日～5月20日",
     element: "土",
+    planet: "金星",
+    rulingPlanet: "金星",
     personality: "根基深厚、可靠且感官敏感。你欣赏美丽、舒适和稳定性。你稳定的性质使你在任何情况下都是值得信赖的力量。",
     strengths: ["可靠性和忠诚度", "实用智慧", "对美的欣赏", "强大的工作伦理", "财务敏锐度"],
     weaknesses: ["固执", "抗拒改变", "唯物主义倾向", "可能很占有", "难以快速适应"],
@@ -57,7 +71,17 @@ export const translations = {
     opportunities: "财务、房地产、工艺和艺术、烹饪艺术、农业和奢侈品行业。",
     challenges: "接受变化、放开物质执着、在生活方法上更加灵活。",
     compatibility: {
+      mostCompatible: ["处女座", "摩羯座", "巨蟹座", "双鱼座"],
+      leastCompatible: ["狮子座", "水瓶座"],
+      soulmate: "处女座",
       description: "土象星座提供稳定性，水象星座提供情感深度。火象星座可能会催促你，风象星座可能显得过于冷漠。"
+    },
+    luckyElements: {
+      numbers: [2, 6, 9, 12, 24],
+      colors: ["绿色", "粉红色", "土色调", "浅蓝色"],
+      days: ["星期五", "星期一"],
+      stones: ["翡翠", "玫瑰石英", "蓝宝石", "苔藓玛瑙"],
+      metals: ["铜", "黄铜"]
     },
     careerSpecific: {
       ideal: ["投资银行家", "奢侈品牌经理", "厨师", "室内设计师", "房地产开发商", "农业工程师"],
@@ -97,6 +121,8 @@ export const translations = {
     name: "双子座",
     dates: "5月21日～6月20日",
     element: "风",
+    planet: "水星",
+    rulingPlanet: "水星",
     personality: "好奇、适应力强且善于交际。你是快速的思考者，热爱多样性和智力刺激。你的多功能性使你能够与不同的人和想法联系。",
     strengths: ["杰出的沟通", "适应能力", "快速学习能力", "人脉能力", "创意解决问题"],
     weaknesses: ["不一致", "难以专注于一件事", "可能很肤浅", "八卦倾向", "不安"],
@@ -104,7 +130,17 @@ export const translations = {
     opportunities: "媒体、新闻、教育、销售、技术、翻译，以及任何需要沟通技能的领域。",
     challenges: "培养深度和焦点、承诺长期目标、学会听得与说一样多。",
     compatibility: {
+      mostCompatible: ["天秤座", "水瓶座", "白羊座", "狮子座"],
+      leastCompatible: ["处女座", "双鱼座"],
+      soulmate: "天秤座",
       description: "风象星座理解你对心智刺激的需要，火象星座激发你的好奇心。土象星座可能会让你厌倦，水象星座可能会让你感情超载。"
+    },
+    luckyElements: {
+      numbers: [5, 7, 14, 16, 23],
+      colors: ["黄色", "银色", "浅蓝色", "白色"],
+      days: ["星期三", "星期六"],
+      stones: ["玛瑙", "黄水晶", "亚历山大石", "珍珠"],
+      metals: ["水银", "银"]
     },
     careerSpecific: {
       ideal: ["记者", "社交媒体经理", "翻译", "广播主持人", "营销协调员", "软件开发者"],
@@ -144,6 +180,8 @@ export const translations = {
     name: "巨蟹座",
     dates: "6月21日～7月22日",
     element: "水",
+    planet: "月球",
+    rulingPlanet: "月球",
     personality: "直觉、培育且深度情感化。你与家庭和家有着深厚的联系。你的同情心使你成为天生的护理者和治疗师。",
     strengths: ["强直觉", "培育能力", "情绪智力", "对亲人的忠诚", "创意想象力"],
     weaknesses: ["情绪波动", "担忧倾向", "过度敏感", "难以放手", "受伤时可能会退缩"],
@@ -151,7 +189,17 @@ export const translations = {
     opportunities: "医疗保健、咨询、儿童保育、酒店、房地产、食品服务和创意艺术。",
     challenges: "设置情感边界、建设性地处理批评、平衡照顾他人与自我照顾。",
     compatibility: {
+      mostCompatible: ["天蝎座", "双鱼座", "金牛座", "处女座"],
+      leastCompatible: ["白羊座", "天秤座"],
+      soulmate: "天蝎座",
       description: "水象星座理解你的情感深度，土象星座提供安全。火象星座可能让你过载，风象星座可能显得过于疏远。"
+    },
+    luckyElements: {
+      numbers: [2, 7, 11, 16, 20],
+      colors: ["银色", "白色", "海绿色", "淡蓝色"],
+      days: ["星期一", "星期四"],
+      stones: ["月光石", "珍珠", "红宝石", "翡翠"],
+      metals: ["银", "铂金"]
     },
     careerSpecific: {
       ideal: ["儿科护士", "家庭治疗师", "厨师", "室内设计师", "博物馆馆长", "托儿所主任"],
