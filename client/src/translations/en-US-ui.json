@@ -1,0 +1,78 @@
+{
+  "common": {
+    "appName": "Psychic Chat Oracle",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "save": "Save",
+    "cancel": "Cancel",
+    "back": "Back",
+    "next": "Next",
+    "close": "Close",
+    "closeAndContinue": "Close and Continue",
+    "submit": "Submit",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "logout": "Logout",
+    "language": "Language",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK",
+    "exit": "Exit",
+    "continue": "Continue",
+    "tryAgain": "Try Again",
+    "noData": "No data available",
+    "saving": "Saving...",
+    "saved": "Saved",
+    "error404": "Page not found"
+  },
+  "menu": {
+    "home": "Home",
+    "chat": "Chat",
+    "horoscope": "Horoscope",
+    "moonPhase": "Moon Phase",
+    "cosmicWeather": "Cosmic Weather",
+    "mySign": "My Sign",
+    "settings": "Settings",
+    "billing": "Billing",
+    "security": "Security",
+    "help": "Help",
+    "logout": "Logout"
+  },
+  "modals": {
+    "confirmDelete": "Are you sure?",
+    "deleteWarning": "This action cannot be undone.",
+    "ok": "OK",
+    "cancel": "Cancel",
+    "yes": "Yes",
+    "no": "No",
+    "close": "Close"
+  },
+  "timers": {
+    "secondsRemaining": "{{count}} seconds remaining",
+    "minutesRemaining": "{{count}} minutes remaining",
+    "expired": "Time expired"
+  },
+  "voice": {
+    "play": "Play",
+    "pause": "Pause",
+    "stop": "Stop",
+    "error": "Error playing audio",
+    "enabled": "Voice enabled",
+    "disabled": "Voice disabled",
+    "playing": "Playing...",
+    "paused": "Paused"
+  },
+  "validation": {
+    "passwordRequirements": "Password Requirements:",
+    "requirement8Chars": "At least 8 characters",
+    "requirementUppercase": "One uppercase letter (A-Z)",
+    "requirementLowercase": "One lowercase letter (a-z)",
+    "requirementNumber": "One number (0-9)",
+    "requirementSpecial": "One special character (!@#$%...)",
+    "passwordsMatch": "✓ Passwords match",
+    "passwordsMismatch": "✗ Passwords do not match",
+    "required": "This field is required",
+    "invalid": "Invalid input"
+  }
+}

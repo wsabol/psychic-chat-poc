@@ -1,0 +1,97 @@
+{
+  "login": {
+    "title": "Sign In",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "createOne": "Create one here",
+    "signIn": "Sign In",
+    "signingIn": "Signing in...",
+    "signUp": "Sign Up",
+    "creatingAccount": "Creating account...",
+    "or": "or",
+    "googleSignIn": "Sign in with Google",
+    "pageTitle": "Sign In",
+    "createAccountTitle": "Create Account",
+    "resetPasswordTitle": "Reset Password",
+    "dontHaveAccount": "Don't have an account?",
+    "register": "Register",
+    "backToLogin": "Back to login",
+    "forgotPasswordMessage": "Forgot password flow coming soon",
+    "passwordsDontMatch": "Passwords do not match",
+    "passwordTooShort": "Password must be at least 6 characters",
+    "acceptTermsAndPrivacy": "You must accept Terms of Service and Privacy Policy to create an account",
+    "accountCreated": "Account created! Check your email to verify your account.",
+    "agreeTerms": "I agree to the Terms of Service",
+    "agreePrivacy": "I agree to the Privacy Policy",
+    "errors": {
+      "invalidEmail": "Please enter a valid email address",
+      "passwordMismatch": "Passwords do not match",
+      "passwordTooShort": "Password must be at least 8 characters",
+      "accountExists": "An account with this email already exists",
+      "invalidCredentials": "Invalid email or password",
+      "userNotFound": "User not found"
+    }
+  },
+  "verification": {
+    "title": "Verify Your Email",
+    "message": "We've sent a verification code to {{email}}. Please enter it below.",
+    "enterCode": "Enter verification code",
+    "code": "Code",
+    "verify": "Verify",
+    "resendCode": "Resend code",
+    "resendSent": "Verification code sent",
+    "checkInbox": "Please check your email and spam folder",
+    "errors": {
+      "invalidCode": "Invalid verification code",
+      "expiredCode": "Verification code has expired",
+      "tooManyAttempts": "Too many attempts. Please try again later."
+    },
+    "actions": {
+      "signOut": "Sign Out",
+      "failed": "Verification failed"
+    }
+  },
+  "twoFactor": {
+    "title": "Two-Factor Authentication",
+    "message": "Enter the code sent to {{method}}",
+    "enterCode": "Enter verification code",
+    "verify": "Verify",
+    "resend": "Resend Code",
+    "errors": {
+      "invalidCode": "Invalid code",
+      "expired": "Code has expired",
+      "tooManyAttempts": "Too many attempts. Please try again later."
+    }
+  },
+  "passwords": {
+    "title": "Change Password",
+    "current": "Current Password",
+    "new": "New Password",
+    "confirm": "Confirm Password",
+    "change": "Change Password",
+    "requirements": "Password must be at least 8 characters",
+    "errors": {
+      "currentIncorrect": "Current password is incorrect",
+      "mismatch": "New passwords do not match"
+    }
+  },
+  "onboarding": {
+    "welcome": "Welcome to Psychic Chat Oracle!",
+    "step1": "Personal Information",
+    "step2": "Birth Chart",
+    "step3": "Payment Method",
+    "step4": "Subscription",
+    "step5": "Preferences",
+    "complete": "Setup Complete",
+    "skip": "Skip for now",
+    "continue": "Continue",
+    "enhanceReading": "✨ Enhance Your Reading",
+    "birthInfoPrompt": "As your oracle, I can enhance your reading with astrology. If you would like, please enter your birth date, and optional time and place of birth.",
+    "enterBirthInfo": "Yes, Enter My Birth Info",
+    "clickExitToContinue": "Click exit to continue"
+  }
+}

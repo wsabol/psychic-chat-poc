@@ -1,0 +1,42 @@
+{
+  "landing": {
+    "title": "✨ Oracle del Chat Psíquico ✨",
+    "subtitle": "Conecta con la sabiduría antigua. Explora tu destino cósmico a través del poder del tarot, la astrología y la guía intuitiva.",
+    "description": "Experimenta una lectura gratuita de nuestro oráculo. No se requiere cuenta.",
+    "footer": "Tu viaje de descubrimiento cósmico te espera...",
+    "buttons": {
+      "tryFree": "🔮 Prueba Gratis",
+      "createAccount": "📝 Crear Cuenta/Iniciar Sesión"
+    }
+  },
+  "chat": {
+    "title": "🔮 Chat con El Oráculo",
+    "titleTrial": "🔮 Chat del Oráculo (Prueba Gratuita)",
+    "subtitle": "Preguntale al oráculo cualquier cosa sobre tu viaje",
+    "placeholder": "Preguntale al oráculo una pregunta...",
+    "send": "Enviar",
+    "thinking": "El oráculo está pensando...",
+    "sessionExpired": "Su sesión ha expirado",
+    "reconnecting": "Reconectando...",
+    "toggleMore": "📖 Cuéntame más",
+    "toggleLess": "📋 Mostrar menos",
+    "noMessages": "Sin mensajes aún. Preguntale al oráculo una pregunta."
+  },
+  "thankyou": {
+    "title": "¡Gracias!",
+    "subtitle": "Su sesión de oráculo ha terminado",
+    "message": "Sus insights cósmicos han sido registrados",
+    "createAccount": "Crear Cuenta",
+    "continue": "Continuar",
+    "exit": "Salir",
+    "clickToRegister": "Haga clic en salir para continuar"
+  },
+  "help": {
+    "title": "Ayuda y Soporte",
+    "faq": "Preguntas Frecuentes",
+    "contact": "Contactar Soporte",
+    "aboutUs": "Acerca de Nosotros",
+    "terms": "Términos de Servicio",
+    "privacy": "Política de Privacidad"
+  }
+}

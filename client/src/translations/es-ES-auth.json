@@ -1,0 +1,93 @@
+{
+  "login": {
+    "title": "Iniciar Sesión",
+    "email": "Correo Electrónico",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar Contraseña",
+    "rememberMe": "Recuérdame",
+    "forgotPassword": "¿Olvidó su contraseña?",
+    "noAccount": "¿No tiene una cuenta?",
+    "createOne": "Cree una aquí",
+    "signIn": "Iniciar Sesión",
+    "signingIn": "Iniciando sesión...",
+    "signUp": "Registrarse",
+    "creatingAccount": "Creando cuenta...",
+    "or": "o",
+    "googleSignIn": "Iniciar sesión con Google",
+    "pageTitle": "Iniciar Sesión",
+    "createAccountTitle": "Crear Cuenta",
+    "resetPasswordTitle": "Restablecer Contraseña",
+    "dontHaveAccount": "¿No tienes una cuenta?",
+    "register": "Registrarse",
+    "backToLogin": "Volver a iniciar sesión",
+    "forgotPasswordMessage": "Flujo de restablecimiento de contraseña próximamente",
+    "passwordsDontMatch": "Las contraseñas no coinciden",
+    "passwordTooShort": "La contraseña debe tener al menos 6 caracteres",
+    "acceptTermsAndPrivacy": "Debe aceptar los Términos de Servicio y la Política de Privacidad para crear una cuenta",
+    "accountCreated": "¡Cuenta creada! Revise su correo electrónico para verificar su cuenta.",
+    "agreeTerms": "Acepto los Términos de Servicio",
+    "agreePrivacy": "Acepto la Política de Privacidad",
+    "errors": {
+      "invalidEmail": "Por favor, introduzca una dirección de correo electrónico válida",
+      "passwordMismatch": "Las contraseñas no coinciden",
+      "passwordTooShort": "La contraseña debe tener al menos 8 caracteres",
+      "accountExists": "Ya existe una cuenta con este correo electrónico",
+      "invalidCredentials": "Correo electrónico o contraseña inválidos",
+      "userNotFound": "Usuario no encontrado"
+    }
+  },
+  "verification": {
+    "title": "Verificar Su Correo Electrónico",
+    "message": "Hemos enviado un código de verificación a {{email}}. Por favor, introdúzcalo a continuación.",
+    "enterCode": "Introduzca el código de verificación",
+    "code": "Código",
+    "verify": "Verificar",
+    "resendCode": "Reenviar código",
+    "resendSent": "Código de verificación enviado",
+    "checkInbox": "Por favor, revise su correo electrónico e incluso la carpeta de spam",
+    "errors": {
+      "invalidCode": "Código de verificación inválido",
+      "expiredCode": "El código de verificación ha expirado",
+      "tooManyAttempts": "Demasiados intentos. Por favor, inténtelo más tarde."
+    }
+  },
+  "twoFactor": {
+    "title": "Autenticación de Dos Factores",
+    "message": "Introduzca el código enviado a {{method}}",
+    "enterCode": "Introduzca el código de verificación",
+    "verify": "Verificar",
+    "resend": "Reenviar Código",
+    "errors": {
+      "invalidCode": "Código inválido",
+      "expired": "El código ha expirado",
+      "tooManyAttempts": "Demasiados intentos. Por favor, inténtelo más tarde."
+    }
+  },
+  "passwords": {
+    "title": "Cambiar Contraseña",
+    "current": "Contraseña Actual",
+    "new": "Nueva Contraseña",
+    "confirm": "Confirmar Contraseña",
+    "change": "Cambiar Contraseña",
+    "requirements": "La contraseña debe tener al menos 8 caracteres",
+    "errors": {
+      "currentIncorrect": "La contraseña actual es incorrecta",
+      "mismatch": "Las nuevas contraseñas no coinciden"
+    }
+  },
+  "onboarding": {
+    "welcome": "¡Bienvenido a Oracle del Chat Psíquico!",
+    "step1": "Información Personal",
+    "step2": "Carta Natal",
+    "step3": "Método de Pago",
+    "step4": "Suscripción",
+    "step5": "Preferencias",
+    "complete": "Configuración Completa",
+    "skip": "Omitir por ahora",
+    "continue": "Continuar",
+    "enhanceReading": "✨ Mejorar Su Lectura",
+    "birthInfoPrompt": "Como su oráculo, puedo mejorar su lectura con astrología. Si lo desea, por favor introduzca su fecha de nacimiento, y la hora y lugar de nacimiento opcionales.",
+    "enterBirthInfo": "Sí, Introduzca Mi Información de Nacimiento",
+    "clickExitToContinue": "Haga clic en salir para continuar"
+  }
+}

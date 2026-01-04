@@ -1,42 +1,74 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 // English modular translations
-import enUSCore from '../translations/en-US-core.json';
+import enUSAuth from '../translations/en-US-auth.json';
+import enUSUI from '../translations/en-US-ui.json';
+import enUSPages from '../translations/en-US-pages.json';
+import enUSSettings from '../translations/en-US-settings.json';
+import enUSLegal from '../translations/en-US-legal.json';
 import enUSAstrology from '../translations/en-US-astrology.json';
 import enUSBilling from '../translations/en-US-billing.json';
 
 // Spanish modular translations
-import esESCore from '../translations/es-ES-core.json';
+import esESAuth from '../translations/es-ES-auth.json';
+import esESUI from '../translations/es-ES-ui.json';
+import esESPages from '../translations/es-ES-pages.json';
+import esESSettings from '../translations/es-ES-settings.json';
+import esESLegal from '../translations/es-ES-legal.json';
 import esESAstrology from '../translations/es-ES-astrology.json';
 import esESBilling from '../translations/es-ES-billing.json';
 
 // French modular translations
-import frFRCore from '../translations/fr-FR-core.json';
+import frFRAuth from '../translations/fr-FR-auth.json';
+import frFRUI from '../translations/fr-FR-ui.json';
+import frFRPages from '../translations/fr-FR-pages.json';
+import frFRSettings from '../translations/fr-FR-settings.json';
+import frFRLegal from '../translations/fr-FR-legal.json';
 import frFRAstrology from '../translations/fr-FR-astrology.json';
 import frFRBilling from '../translations/fr-FR-billing.json';
 
 // German modular translations
-import deDECore from '../translations/de-DE-core.json';
+import deDEAuth from '../translations/de-DE-auth.json';
+import deDEUI from '../translations/de-DE-ui.json';
+import deDEPages from '../translations/de-DE-pages.json';
+import deDESettings from '../translations/de-DE-settings.json';
+import deDELegal from '../translations/de-DE-legal.json';
 import deDEAstrology from '../translations/de-DE-astrology.json';
 import deDEBilling from '../translations/de-DE-billing.json';
 
 // Italian modular translations
-import itITCore from '../translations/it-IT-core.json';
+import itITAuth from '../translations/it-IT-auth.json';
+import itITUI from '../translations/it-IT-ui.json';
+import itITPages from '../translations/it-IT-pages.json';
+import itITSettings from '../translations/it-IT-settings.json';
+import itITLegal from '../translations/it-IT-legal.json';
 import itITAstrology from '../translations/it-IT-astrology.json';
 import itITBilling from '../translations/it-IT-billing.json';
 
 // Portuguese modular translations
-import ptBRCore from '../translations/pt-BR-core.json';
+import ptBRAuth from '../translations/pt-BR-auth.json';
+import ptBRUI from '../translations/pt-BR-ui.json';
+import ptBRPages from '../translations/pt-BR-pages.json';
+import ptBRSettings from '../translations/pt-BR-settings.json';
+import ptBRLegal from '../translations/pt-BR-legal.json';
 import ptBRAstrology from '../translations/pt-BR-astrology.json';
 import ptBRBilling from '../translations/pt-BR-billing.json';
 
 // Japanese modular translations
-import jaJPCore from '../translations/ja-JP-core.json';
+import jaJPAuth from '../translations/ja-JP-auth.json';
+import jaJPUI from '../translations/ja-JP-ui.json';
+import jaJPPages from '../translations/ja-JP-pages.json';
+import jaJPSettings from '../translations/ja-JP-settings.json';
+import jaJPLegal from '../translations/ja-JP-legal.json';
 import jaJPAstrology from '../translations/ja-JP-astrology.json';
 import jaJPBilling from '../translations/ja-JP-billing.json';
 
 // Chinese modular translations
-import zhCNCore from '../translations/zh-CN-core.json';
+import zhCNAuth from '../translations/zh-CN-auth.json';
+import zhCNUI from '../translations/zh-CN-ui.json';
+import zhCNPages from '../translations/zh-CN-pages.json';
+import zhCNSettings from '../translations/zh-CN-settings.json';
+import zhCNLegal from '../translations/zh-CN-legal.json';
 import zhCNAstrology from '../translations/zh-CN-astrology.json';
 import zhCNBilling from '../translations/zh-CN-billing.json';
 
@@ -53,15 +85,17 @@ function mergeTranslations(...objects) {
   }, {});
 }
 
-// All languages use modular structure: merge core + astrology + billing
-const enUS = mergeTranslations(enUSCore, enUSAstrology, enUSBilling);
-const esES = mergeTranslations(esESCore, esESAstrology, esESBilling);
-const frFR = mergeTranslations(frFRCore, frFRAstrology, frFRBilling);
-const deDE = mergeTranslations(deDECore, deDEAstrology, deDEBilling);
-const itIT = mergeTranslations(itITCore, itITAstrology, itITBilling);
-const ptBR = mergeTranslations(ptBRCore, ptBRAstrology, ptBRBilling);
-const jaJP = mergeTranslations(jaJPCore, jaJPAstrology, jaJPBilling);
-const zhCN = mergeTranslations(zhCNCore, zhCNAstrology, zhCNBilling);
+// English uses modular structure: merge auth + ui + pages + settings + legal + astrology + billing
+const enUS = mergeTranslations(enUSAuth, enUSUI, enUSPages, enUSSettings, enUSLegal, enUSAstrology, enUSBilling);
+
+
+const esES = mergeTranslations(esESAuth, esESUI, esESPages, esESSettings, esESLegal, esESAstrology, esESBilling);
+const frFR = mergeTranslations(frFRAuth, frFRUI, frFRPages, frFRSettings, frFRLegal, frFRAstrology, frFRBilling);
+const deDE = mergeTranslations(deDEAuth, deDEUI, deDEPages, deDESettings, deDELegal, deDEAstrology, deDEBilling);
+const itIT = mergeTranslations(itITAuth, itITUI, itITPages, itITSettings, itITLegal, itITAstrology, itITBilling);
+const ptBR = mergeTranslations(ptBRAuth, ptBRUI, ptBRPages, ptBRSettings, ptBRLegal, ptBRAstrology, ptBRBilling);
+const jaJP = mergeTranslations(jaJPAuth, jaJPUI, jaJPPages, jaJPSettings, jaJPLegal, jaJPAstrology, jaJPBilling);
+const zhCN = mergeTranslations(zhCNAuth, zhCNUI, zhCNPages, zhCNSettings, zhCNLegal, zhCNAstrology, zhCNBilling);
 
 // All available languages (all using modular structure)
 const LANGUAGES = {

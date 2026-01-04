@@ -1,0 +1,56 @@
+{
+  "settings": {
+    "title": "Configuración",
+    "personalInfo": "Información Personal",
+    "preferences": "Preferencias",
+    "security": "Seguridad y Privacidad",
+    "billing": "Facturación y Suscripción",
+    "help": "Ayuda y Soporte",
+    "language": "Idioma",
+    "voiceSettings": "Configuración de Voz",
+    "voiceEnabled": "Habilitar Voz",
+    "voiceSelected": "Tipo de Voz",
+    "responseType": "Tipo de Respuesta",
+    "full": "Completo",
+    "brief": "Breve",
+    "changeLanguage": "Cambiar Idioma",
+    "languageChanged": "Idioma cambiado exitosamente"
+  },
+  "personalInfo": {
+    "title": "Información Personal",
+    "firstName": "Nombre",
+    "lastName": "Apellido",
+    "email": "Correo Electrónico",
+    "birthDate": "Fecha de Nacimiento",
+    "birthTime": "Hora de Nacimiento (opcional)",
+    "birthLocation": "Lugar de Nacimiento",
+    "birthCountry": "País",
+    "birthProvince": "Provincia/Estado",
+    "birthCity": "Ciudad",
+    "birthTimezone": "Zona Horaria",
+    "gender": "Género",
+    "male": "Hombre",
+    "female": "Mujer",
+    "other": "Otro",
+    "unspecified": "Prefiero no decir",
+    "save": "Guardar Información",
+    "errors": {
+      "missingRequired": "Por favor, complete todos los campos requeridos",
+      "invalidEmail": "Por favor, introduzca una dirección de correo electrónico válida",
+      "invalidBirthDate": "Por favor, introduzca una fecha de nacimiento válida",
+      "ageTooYoung": "Debe tener al menos 18 años para usar este servicio"
+    }
+  },
+  "security": {
+    "title": "Seguridad y Privacidad",
+    "password": "Contraseña",
+    "changePassword": "Cambiar Contraseña",
+    "twoFactor": "Autenticación de Dos Factores",
+    "enable2FA": "Habilitar 2FA",
+    "disable2FA": "Deshabilitar 2FA",
+    "trustedDevices": "Dispositivos de Confianza",
+    "sessions": "Sesiones Activas",
+    "signOutOthers": "Cerrar sesión de otras sesiones",
+    "privacySettings": "Configuración de Privacidad"
+  }
+}

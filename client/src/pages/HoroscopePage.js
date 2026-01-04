@@ -192,7 +192,12 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
       if (astroInfo?.astrology_data?.sun_sign) {
         const signKey = astroInfo.astrology_data.sun_sign.toLowerCase();
         const data = await getTranslatedAstrologyData(signKey, language);
-        setSunSignData(data);
+        const englishData = await getTranslatedAstrologyData(signKey, 'en-US');
+        setSunSignData({
+          ...data,
+          _englishElement: englishData?.element,
+         _englishRulingPlanet: englishData?.rulingPlanet
+      });
       } else {
         setSunSignData(null);
       }
@@ -379,13 +384,13 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
                   <strong>{t('mySign.dates')}</strong>
                   <span>{sunSignData.dates}</span>
                 </div>
-                <div className="info-item">
+                                <div className="info-item">
                   <strong>{t('mySign.element')}</strong>
-                  <span>{t(`elements.${sunSignData.element.toLowerCase()}`)}</span>
+                  <span>{sunSignData._englishElement ? t(`elements.${sunSignData._englishElement.toLowerCase()}`) : sunSignData.element}</span>
                 </div>
-                <div className="info-item">
+                                <div className="info-item">
                   <strong>{t('mySign.rulingPlanet')}</strong>
-                  <span>{sunSignData.rulingPlanet && sunSignData.rulingPlanet.split('/').map((p, i) => <span key={i}>{i > 0 && '/'} {t(`planets.${p.toLowerCase().trim()}`)}</span>)}</span>
+                  <span>{sunSignData._englishRulingPlanet ? sunSignData._englishRulingPlanet.split('/').map((p, i) => <span key={i}>{i > 0 && ' / '} {t(`planets.${p.toLowerCase().trim()}`)}</span>) : sunSignData.rulingPlanet}</span>
                 </div>
               </div>
               {sunSignData.personality && (

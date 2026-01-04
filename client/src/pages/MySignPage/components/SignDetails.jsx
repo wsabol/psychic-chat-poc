@@ -129,7 +129,7 @@ export function SignDetails({ astro, t }) {
       )}
 
       {/* Challenges & Complications */}
-      {(astro.challenges || astro.weaknesses) && (
+      {(astro.challenges || astro.complications) && (
         <div className="detail-section">
           {astro.challenges && (
             <>
@@ -137,12 +137,12 @@ export function SignDetails({ astro, t }) {
               <p>{astro.challenges}</p>
             </>
           )}
-          {astro.weaknesses && Array.isArray(astro.weaknesses) && (
+          {astro.complications && Array.isArray(astro.complications) && (
             <>
-              <h4>Complications</h4>
+              <h4>{t('mySign.complications')}</h4>
               <ul className="challenge-list">
-                {astro.weaknesses.map((weakness, idx) => (
-                  <li key={idx}>{weakness}</li>
+                {astro.complications.map((complication, idx) => (
+                  <li key={idx}>{complication}</li>
                 ))}
               </ul>
             </>
@@ -156,13 +156,13 @@ export function SignDetails({ astro, t }) {
           <h4>{t ? t('mySign.compatibility') || 'Compatibility' : 'Compatibility'}</h4>
           {astro.compatibility.mostCompatible && (
             <div className="compatibility-item">
-              <strong>Most Compatible</strong>
+              <strong>{t('mySign.mostCompatible')}</strong>
               <p>{Array.isArray(astro.compatibility.mostCompatible) ? astro.compatibility.mostCompatible.join(', ') : astro.compatibility.mostCompatible}</p>
             </div>
           )}
           {astro.compatibility.leastCompatible && (
             <div className="compatibility-item">
-              <strong>Least Compatible</strong>
+              <strong>{t('mySign.leastCompatible')}</strong>
               <p>{Array.isArray(astro.compatibility.leastCompatible) ? astro.compatibility.leastCompatible.join(', ') : astro.compatibility.leastCompatible}</p>
             </div>
           )}

@@ -1,0 +1,42 @@
+{
+  "landing": {
+    "title": "✨ Psychic Chat Oracle ✨",
+    "subtitle": "Connect with ancient wisdom. Explore your cosmic destiny through the power of tarot, astrology, and intuitive guidance.",
+    "description": "Experience a free reading from our oracle. No account required.",
+    "footer": "Your journey of cosmic discovery awaits...",
+    "buttons": {
+      "tryFree": "🔮 Try for Free",
+      "createAccount": "📝 Create Account/Login"
+    }
+  },
+  "chat": {
+    "title": "🔮 Chat with Oracle",
+    "titleTrial": "🔮 Oracle Chat (Free Trial)",
+    "subtitle": "Ask me anything about your journey",
+    "placeholder": "Ask the oracle a question...",
+    "send": "Send",
+    "thinking": "Oracle is thinking...",
+    "sessionExpired": "Your session has expired",
+    "reconnecting": "Reconnecting...",
+    "toggleMore": "📖 Tell me more",
+    "toggleLess": "📋 Show less",
+    "noMessages": "No messages yet. Ask the oracle a question."
+  },
+  "thankyou": {
+    "title": "Thank You!",
+    "subtitle": "Your oracle session has ended",
+    "message": "Your cosmic insights have been recorded",
+    "createAccount": "Create Account",
+    "continue": "Continue",
+    "exit": "Exit",
+    "clickToRegister": "Click exit to continue"
+  },
+  "help": {
+    "title": "Help & Support",
+    "faq": "Frequently Asked Questions",
+    "contact": "Contact Support",
+    "aboutUs": "About Us",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy"
+  }
+}

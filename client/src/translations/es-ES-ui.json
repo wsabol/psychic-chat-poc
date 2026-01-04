@@ -1,0 +1,78 @@
+{
+  "common": {
+    "appName": "Oracle del Chat Psíquico",
+    "loading": "Cargando...",
+    "error": "Ocurrió un error",
+    "success": "Éxito",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "close": "Cerrar",
+    "closeAndContinue": "Cerrar y Continuar",
+    "submit": "Enviar",
+    "delete": "Eliminar",
+    "confirm": "Confirmar",
+    "logout": "Cerrar sesión",
+    "language": "Idioma",
+    "yes": "Sí",
+    "no": "No",
+    "ok": "OK",
+    "exit": "Salir",
+    "continue": "Continuar",
+    "tryAgain": "Intentar de nuevo",
+    "noData": "Sin datos disponibles",
+    "saving": "Guardando...",
+    "saved": "Guardado",
+    "error404": "Página no encontrada"
+  },
+  "menu": {
+    "home": "Inicio",
+    "chat": "Chat",
+    "horoscope": "Horóscopo",
+    "moonPhase": "Fase Lunar",
+    "cosmicWeather": "Clima Cósmico",
+    "mySign": "Mi Signo",
+    "settings": "Configuración",
+    "billing": "Facturación",
+    "security": "Seguridad",
+    "help": "Ayuda",
+    "logout": "Cerrar Sesión"
+  },
+  "modals": {
+    "confirmDelete": "¿Está seguro?",
+    "deleteWarning": "Esta acción no se puede deshacer.",
+    "ok": "OK",
+    "cancel": "Cancelar",
+    "yes": "Sí",
+    "no": "No",
+    "close": "Cerrar"
+  },
+  "timers": {
+    "secondsRemaining": "{{count}} segundos restantes",
+    "minutesRemaining": "{{count}} minutos restantes",
+    "expired": "Tiempo expirado"
+  },
+  "voice": {
+    "play": "Reproducir",
+    "pause": "Pausar",
+    "stop": "Detener",
+    "error": "Error al reproducir audio",
+    "enabled": "Voz habilitada",
+    "disabled": "Voz deshabilitada",
+    "playing": "Reproduciendo...",
+    "paused": "En pausa"
+  },
+  "validation": {
+    "passwordRequirements": "Requisitos de Contraseña:",
+    "requirement8Chars": "Al menos 8 caracteres",
+    "requirementUppercase": "Una letra mayúscula (A-Z)",
+    "requirementLowercase": "Una letra minúscula (a-z)",
+    "requirementNumber": "Un número (0-9)",
+    "requirementSpecial": "Un carácter especial (!@#$%...)",
+    "passwordsMatch": "✓ Las contraseñas coinciden",
+    "passwordsMismatch": "✗ Las contraseñas no coinciden",
+    "required": "Este campo es obligatorio",
+    "invalid": "Entrada inválida"
+  }
+}

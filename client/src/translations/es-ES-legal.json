@@ -1,0 +1,62 @@
+{
+  "terms": {
+    "acceptPrefix": "Acepto los",
+    "required": "Requerido para crear cuenta",
+    "termsLink": "Términos de Servicio",
+    "privacyLink": "Política de Privacidad"
+  },
+  "errors": {
+    "network": "Error de red. Por favor, compruebe su conexión.",
+    "server": "Error del servidor. Por favor, inténtelo más tarde.",
+    "unauthorized": "No está autorizado para realizar esta acción.",
+    "notFound": "Página no encontrada.",
+    "sessionExpired": "Su sesión ha expirado. Por favor, inicie sesión de nuevo."
+  },
+  "policies": {
+    "termsOfService": {
+      "title": "Términos de Servicio",
+      "version": "1.0",
+      "effectiveDate": "24 de noviembre de 2025",
+      "lastUpdated": "1 de enero de 2026",
+      "versionLabel": "Versión",
+      "effectiveDateLabel": "Fecha Efectiva",
+      "lastUpdatedLabel": "Última Actualización",
+      "sections": [
+        {"title": "1. Aceptación de Términos", "content": "Al acceder y usar esta aplicación Psychic Chat, usted acepta estar vinculado por los términos de este acuerdo."},
+        {"title": "2. Licencia de Uso", "content": "Se le concede permiso para descargar temporalmente una copia de los materiales únicamente para visualización personal y no comercial."},
+        {"title": "3. Renuncia de Garantías", "content": "Los materiales se proporcionan tal cual. No hacemos garantías, expresas o implícitas."},
+        {"title": "4. Limitación de Responsabilidad", "content": "En ningún caso seremos responsables por daños incluyendo pérdida de datos o ganancias."},
+        {"title": "5. Renuncia de Lecturas de Astrología", "content": "Las lecturas de astrología son solo para entretenimiento. No están destinadas a predecir el futuro o proporcionar asesoramiento profesional."},
+        {"title": "6. Renuncia de Salud", "content": "Este Servicio NO proporciona servicios médicos, de salud mental o terapéuticos. Si experimenta preocupaciones de salud, consulte un profesional."},
+        {"title": "7. Cuentas de Usuario", "content": "Usted es responsable de mantener confidencial la información de su cuenta. Debe tener 18 años o más."},
+        {"title": "8. Disponibilidad del Servicio", "content": "No garantizamos disponibilidad en todo momento. Podemos realizar mantenimiento, suspender servicio, o modificar características."},
+        {"title": "9. Terminación de Cuenta", "content": "Puede solicitar eliminar su cuenta. Tiene 30 días para cambiar de opinión. Los datos se anonimatizan después de 30 días."},
+        {"title": "10. Información de Contacto", "content": "Para preguntas, contacte: legal@starshippsychics.com"}
+      ]
+    },
+    "privacyPolicy": {
+      "title": "Política de Privacidad",
+      "version": "1.0",
+      "effectiveDate": "1 de enero de 2026",
+      "lastUpdated": "1 de enero de 2026",
+      "versionLabel": "Versión",
+      "effectiveDateLabel": "Fecha Efectiva",
+      "lastUpdatedLabel": "Última Actualización",
+      "sections": [
+        {"title": "1. Introducción", "content": "Nos comprometemos a proteger su privacidad. Esta Política explica cómo recopilamos y procesamos su información personal."},
+        {"title": "2. Información que Recopilamos", "content": "Recopilamos información que proporciona (nombre, correo, contraseña), información automática (IP, dispositivo), e información de terceros."},
+        {"title": "3. Cómo Usamos Su Información", "content": "Utilizamos su información para proporcionar el Servicio, procesar transacciones, mejorar el servicio y cumplir obligaciones legales."},
+        {"title": "4. Retención de Datos", "content": "La información de perfil se retiene hasta eliminación. Los mensajes se eliminan 30 días después del cierre de cuenta."},
+        {"title": "5. Sus Derechos de Privacidad", "content": "Tiene derecho a acceder, corregir, eliminar, y exportar sus datos. Contacte privacy@starshippsychics.com."},
+        {"title": "6. Seguridad de Datos", "content": "Toda la información se encripta usando AES-256 en reposo y HTTPS/TLS 1.3 en tránsito."},
+        {"title": "7. Cómo Compartimos Sus Datos", "content": "No vendemos sus datos. Podemos compartir con proveedores de servicios bajo acuerdos de protección de datos."},
+        {"title": "8. Cookies", "content": "Utilizamos cookies funcionales y de preferencia. Puede gestionar cookies en la configuración de su navegador."},
+        {"title": "9. Privacidad de Menores", "content": "Nuestro Servicio es para mayores de 18 años. No recopilamos datos de menores."},
+        {"title": "10. Violación de Datos", "content": "En caso de violación, investigaremos, contendremos y notificaremos dentro de 72 horas."},
+        {"title": "11. Transferencias Internacionales", "content": "Su información puede transferirse a Estados Unidos bajo Cláusulas Contractuales Estándar."},
+        {"title": "12. Información de Contacto", "content": "Para preguntas: privacy@starshippsychics.com"},
+        {"title": "13. Cambios en Esta Política", "content": "Podemos actualizar esta Política ocasionalmente. El uso continuo significa que acepta los cambios."}
+      ]
+    }
+  }
+}
