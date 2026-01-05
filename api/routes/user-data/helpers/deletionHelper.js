@@ -8,18 +8,82 @@ import { logAudit } from '../../../shared/auditLog.js';
 import { getAuth } from 'firebase-admin/auth';
 
 /**
- * Send account deletion verification email
- * TODO: Implement with your email service (AWS SES, SendGrid, etc.)
+ * Send account deletion verification email with 6-digit code
+ * Falls back to logging in development if SendGrid not configured
  */
 export async function sendDeleteVerificationEmail(email, code) {
-  console.log(`[EMAIL] Delete verification code sent to ${email}: ${code}`);
-  // Example with SendGrid:
-  // await sgMail.send({
-  //   to: email,
-  //   from: process.env.SENDGRID_FROM_EMAIL,
-  //   subject: 'Confirm Account Deletion',
-  //   html: `Your verification code is: <strong>${code}</strong><br>Code expires in 10 minutes.`
-  // });
+  try {
+    // Check if SendGrid API key is configured
+    if (!process.env.SENDGRID_API_KEY) {
+      console.warn('[EMAIL] SENDGRID_API_KEY not configured. Logging code instead (development mode).');
+      console.log(`[EMAIL] Verification code for ${email}: ${code}`);
+      return { success: true, email, note: 'Code logged to console (development mode - SendGrid not configured)' };
+    }
+
+    // Import SendGrid dynamically
+    const sgMail = (await import('@sendgrid/mail')).default;
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+    const emailHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; background-color: #f5f5f5; }
+            .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+            .header { text-align: center; color: #333; margin-bottom: 30px; }
+            .code-box { background: #f9f9f9; border: 2px solid #7c63d8; padding: 20px; text-align: center; border-radius: 6px; margin: 30px 0; }
+            .code { font-size: 48px; letter-spacing: 10px; font-weight: bold; color: #d32f2f; font-family: monospace; }
+            .warning { background: #ffebee; border-left: 4px solid #d32f2f; padding: 15px; margin: 20px 0; color: #c62828; }
+            .footer { color: #999; font-size: 12px; text-align: center; margin-top: 30px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Confirm Account Deletion</h1>
+              <p>We've received a request to delete your account</p>
+            </div>
+            <p>Enter this verification code to confirm the deletion of your account:</p>
+            <div class="code-box">
+              <div class="code">${code}</div>
+              <p style="color: #666; margin-top: 10px;">This code expires in 10 minutes</p>
+            </div>
+            <div class="warning">
+              <strong>⚠️ Important:</strong> This will permanently delete your account and all associated data including:
+              <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>Your profile and personal information</li>
+                <li>Payment methods and billing history</li>
+                <li>All reading and chat history</li>
+              </ul>
+              This action cannot be undone.
+            </div>
+            <p style="color: #666;">
+              If you did not request this, please ignore this email. Your account will not be deleted without your verification code.
+            </p>
+            <div class="footer">
+              <p>Do not share this code with anyone. Psychic never asks for this code via email.</p>
+              <p>&copy; 2025 Psychic. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    await sgMail.send({
+      to: email,
+      from: process.env.SENDGRID_FROM_EMAIL || 'noreply@psychic-chat.com',
+      subject: 'Confirm Your Account Deletion Request',
+      html: emailHtml,
+      text: `Your account deletion verification code is: ${code}\n\nThis code expires in 10 minutes. Do not share this code with anyone.`
+    });
+
+    console.log(`[EMAIL] Delete verification code sent to ${email}`);
+    return { success: true, email };
+  } catch (error) {
+    console.error('[EMAIL] Failed to send deletion verification email:', error.message);
+    throw new Error(`Failed to send verification email: ${error.message}`);
+  }
 }
 
 /**

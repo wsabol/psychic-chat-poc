@@ -14,7 +14,30 @@
     "full": "Completo",
     "brief": "Breve",
     "changeLanguage": "Cambiar Idioma",
-    "languageChanged": "Idioma cambiado exitosamente"
+    "languageChanged": "Idioma cambiado exitosamente",
+    "verifyEmail": "Verificar su Correo Electrónico",
+    "verificationCodeSent": "Hemos enviado un código de verificación a {{email}}",
+    "verificationCode": "Código de Verificación",
+    "verificationCodePlaceholder": "Ingrese código de 6 dígitos",
+    "resendCode": "Reenviar Código",
+    "resendCodeTimer": "Reenviar código en {{seconds}}s",
+    "back": "Atrás",
+    "continue": "Continuar",
+    "verificationCodeRequired": "Por favor, ingrese el código de verificación",
+    "verificationCodeError": "Error al enviar el correo de verificación. Por favor, inténtelo de nuevo.",
+    "sendingCode": "Enviando código...",
+    "verifying": "Verificando...",
+    "verifyCode": "Verificar Código",
+    "weWishYouWouldStay": "¡Esperamos que te quedes!",
+    "deleteAccountFinalWarning": "Esta acción no se puede deshacer",
+    "deleteAccountFinalMessage": "Entendemos si deseas tomarte un descanso, pero echaremos de menos los conocimientos que compartimos contigo. Tu cuenta contiene información personal e historial de lecturas que se borrarán permanentemente.",
+    "willBeDeleted": "Lo siguiente se eliminará permanentemente",
+    "deleteAccountData": "Tu perfil, preferencias e información personal",
+    "deletePaymentInfo": "Tus métodos de pago e historial de facturación",
+    "deleteReadingHistory": "Todo tu historial de lecturas y chats",
+    "cannotUndo": "Esta acción no se puede revertir",
+    "goBack": "Volver",
+    "permanentlyDelete": "Eliminar Permanentemente Mi Cuenta"
   },
   "personalInfo": {
     "title": "Información Personal",
@@ -52,5 +75,17 @@
     "sessions": "Sesiones Activas",
     "signOutOthers": "Cerrar sesión de otras sesiones",
     "privacySettings": "Configuración de Privacidad"
+  },
+  "deleteAccount": {
+    "verifyEmail": "Verificar su Correo Electrónico",
+    "verificationCodeSent": "Hemos enviado un código de verificación a {{email}}",
+    "verificationCode": "Código de Verificación",
+    "verificationCodePlaceholder": "Ingrese código de 6 dígitos",
+    "resendCode": "Reenviar Código",
+    "resendCodeTimer": "Reenviar código en {{seconds}}s",
+    "back": "Atrás",
+    "continue": "Continuar",
+    "verificationCodeRequired": "Por favor, ingrese el código de verificación",
+    "verificationCodeError": "Error al enviar el correo de verificación. Por favor, inténtelo de nuevo."
   }
 }

@@ -93,16 +93,16 @@ services:
       - .env
     environment:
       - CHOKIDAR_USEPOLLING=true
-      - NODE_OPTIONS=--max-old-space-size=2048
+      - NODE_OPTIONS=--max-old-space-size=4096
       - REACT_APP_API_URL=http://localhost:3000
       - REACT_APP_STRIPE_PUBLIC_KEY=${STRIPE_PUBLIC_KEY}
       - REACT_APP_DEV_EMAIL=${REACT_APP_DEV_EMAIL}
     deploy:
       resources:
         limits:
-          memory: 3G
+          memory: 6G
         reservations:
-          memory: 2G
+          memory: 4G
 
 volumes:
   postgres_data:

@@ -4,6 +4,7 @@
  */
 
 import { db } from '../../../shared/db.js';
+import { hashUserId } from '../../../shared/hashUtils.js';
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
 
@@ -106,14 +107,15 @@ export async function fetchAuditLogs(userId, limit = 100) {
  * Fetch deletion code for verification
  */
 export async function fetchDeletionCode(userId, verificationCode) {
+  const userIdHash = hashUserId(userId);
   return db.query(
     `SELECT id FROM user_2fa_codes 
-     WHERE user_id = $1 
+     WHERE user_id_hash = $1 
      AND code = $2 
      AND code_type = 'account_deletion'
      AND expires_at > NOW()
      AND used = FALSE`,
-    [userId, verificationCode]
+    [userIdHash, verificationCode]
   );
 }
 
@@ -121,10 +123,11 @@ export async function fetchDeletionCode(userId, verificationCode) {
  * Store deletion verification code
  */
 export async function storeDeletionCode(userId, verificationCode) {
+  const userIdHash = hashUserId(userId);
   return db.query(
-    `INSERT INTO user_2fa_codes (user_id, code, code_type, expires_at)
+    `INSERT INTO user_2fa_codes (user_id_hash, code, code_type, expires_at)
      VALUES ($1, $2, 'account_deletion', NOW() + INTERVAL '10 minutes')`,
-    [userId, verificationCode]
+    [userIdHash, verificationCode]
   );
 }
 
@@ -132,10 +135,11 @@ export async function storeDeletionCode(userId, verificationCode) {
  * Mark deletion code as used
  */
 export async function markCodeAsUsed(userId, verificationCode) {
+  const userIdHash = hashUserId(userId);
   return db.query(
     `UPDATE user_2fa_codes SET used = TRUE 
-     WHERE user_id = $1 AND code = $2`,
-    [userId, verificationCode]
+     WHERE user_id_hash = $1 AND code = $2`,
+    [userIdHash, verificationCode]
   );
 }
 

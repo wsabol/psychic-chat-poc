@@ -10,7 +10,7 @@
  */
 
 import { Router } from 'express';
-import { authorizeUser } from '../../middleware/auth.js';
+import { authenticateToken, authorizeUser } from '../../middleware/auth.js';
 import { logAudit } from '../../shared/auditLog.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { db } from '../../shared/db.js';
@@ -37,7 +37,7 @@ const router = Router();
  * Send email verification code for permanent account deletion
  * Requires authentication (current user)
  */
-router.post('/send-delete-verification', async (req, res) => {
+router.post('/send-delete-verification', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.uid || req.user.userId;
     const userEmail = req.user.email;
@@ -83,7 +83,7 @@ router.post('/send-delete-verification', async (req, res) => {
  * Permanently delete user account after email verification
  * Requires: verification code (sent to email)
  */
-router.delete('/delete-account', async (req, res) => {
+router.delete('/delete-account', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.uid || req.user.userId;
     const { verificationCode } = req.body;
