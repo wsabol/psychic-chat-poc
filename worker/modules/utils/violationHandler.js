@@ -1,0 +1,46 @@
+/**
+ * Violation Handler Utility
+ * Detects violations and records enforcement actions
+ */
+
+import { detectViolation, recordViolationAndGetAction, getSelfHarmHotlineResponse } from '../violationEnforcement.js';
+import { storeMessage } from '../messages.js';
+
+/**
+ * Check message for violations and handle enforcement
+ * Returns response if violation detected and handled, null if no violation
+ * 
+ * @param {string} userId - User ID
+ * @param {string} message - User message to check
+ * @param {boolean} tempUser - Is this a temporary/trial account
+ * @returns {Promise<string|null>} - Response message if violation detected, null if OK
+ */
+export async function handleViolation(userId, message, tempUser) {
+    try {
+        // Detect if message contains violation
+        const violation = detectViolation(message);
+
+        if (violation) {
+            // Record violation and get enforcement action
+            const enforcement = await recordViolationAndGetAction(userId, violation.type, message, tempUser);
+
+            // Build response (includes self-harm hotline if needed)
+            let responseToUser = enforcement.response;
+            if (violation.type === 'self_harm') {
+                responseToUser = getSelfHarmHotlineResponse() + '\n\n' + enforcement.response;
+            }
+
+            // Store response in database
+            await storeMessage(userId, 'assistant', { text: responseToUser });
+
+            // Note: For temp accounts, the account is deleted as part of enforcement
+            return responseToUser;
+        }
+
+        // No violation detected
+        return null;
+    } catch (err) {
+        console.error('[VIOLATION-HANDLER] Error checking violation:', err.message);
+        throw err;
+    }
+}
