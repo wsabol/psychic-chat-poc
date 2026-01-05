@@ -7,7 +7,7 @@ import { tarotDeck } from '../../tarotDeck.js';
 import { extractCardsFromResponse, formatCardsForStorage } from '../cards.js';
 import { buildPersonalInfoContext, buildAstrologyContext, getOracleSystemPrompt, callOracle } from '../oracle.js';
 import { formatMessageContent, storeMessage, getMessageHistory } from '../messages.js';
-import { translateContentObject } from '../translator.js';
+import { translateContentObject } from '../simpleTranslator.js';
 
 /**
  * Process oracle request: call API, extract cards, translate, and store
