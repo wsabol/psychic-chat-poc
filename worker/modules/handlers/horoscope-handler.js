@@ -10,13 +10,13 @@ import {
     getUserGreeting
 } from '../oracle.js';
 import { storeMessage, formatMessageContent } from '../messages.js';
-import { translateContentObject } from '../simpleTranslator.js';
+import { translateContentObject } from '../translator.js';
 
 /**
  * Generate horoscopes for the user
  * Generates English horoscope, then translates to user's preferred language
- * Uses fast, free translation API (no OpenAI calls for translation)
- * Now tracks horoscope_range column to allow both daily and weekly on same day
+ * Uses MyMemory API (free) with intelligent retry logic for rate limiting
+ * Tracks horoscope_range to allow both daily and weekly on same day
  */
 export async function generateHoroscope(userId, range = 'daily') {
     try {
@@ -25,7 +25,7 @@ export async function generateHoroscope(userId, range = 'daily') {
         const today = new Date().toISOString().split('T')[0];
         const userIdHash = hashUserId(userId);
         
-        // Check if THIS SPECIFIC RANGE was already generated today (using new horoscope_range column)
+        // Check if THIS SPECIFIC RANGE was already generated today
         const { rows: existingHoroscopes } = await db.query(
             `SELECT id FROM messages 
              WHERE user_id_hash = $1 
@@ -104,7 +104,7 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
                     zodiac_sign: astrologyInfo.zodiac_sign 
                 };
                 
-                // Translate to user's preferred language using free API (no OpenAI calls)
+                // Translate to user's preferred language using MyMemory API
                 let horoscopeDataFullLang = null;
                 let horoscopeDataBriefLang = null;
                 
@@ -112,11 +112,20 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
                     console.log(`[HOROSCOPE-HANDLER] Translating ${currentRange} horoscope to ${userLanguage}...`);
                     horoscopeDataFullLang = await translateContentObject(horoscopeDataFull, userLanguage);
                     horoscopeDataBriefLang = await translateContentObject(horoscopeDataBrief, userLanguage);
-                    console.log(`[HOROSCOPE-HANDLER] ✓ Translation complete`);
+                    
+                    // VALIDATION: Check if translation actually succeeded
+                    if (horoscopeDataFullLang?.text === horoscopeDataFull?.text) {
+                        console.warn(`[HOROSCOPE-HANDLER] ⚠️ WARNING: Translation returned SAME text as English!`);
+                        console.warn(`[HOROSCOPE-HANDLER] ⚠️ Translation likely failed. Storing English only.`);
+                        console.warn(`[HOROSCOPE-HANDLER] ⚠️ Check logs for MyMemory API errors (429 rate limiting)`)
+                        horoscopeDataFullLang = null;
+                        horoscopeDataBriefLang = null;
+                    } else {
+                        console.log(`[HOROSCOPE-HANDLER] ✓ Translation successful`);
+                    }
                 }
                 
                 // Store message with both English and translated versions (if applicable)
-                // NOW PASSING: horoscopeRange parameter to track daily vs weekly
                 console.log(`[HOROSCOPE-HANDLER] Storing ${currentRange} horoscope to database...`);
                 await storeMessage(
                     userId, 
@@ -133,7 +142,6 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
             } catch (err) {
                 console.error(`[HOROSCOPE-HANDLER] Error generating ${currentRange} horoscope:`, err.message);
                 console.error(`[HOROSCOPE-HANDLER] Stack:`, err.stack);
-                // Continue with next range even if one fails
             }
         }
         

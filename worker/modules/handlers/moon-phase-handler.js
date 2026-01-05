@@ -9,7 +9,7 @@ import {
     getUserGreeting
 } from '../oracle.js';
 import { storeMessage } from '../messages.js';
-import { translateContentObject } from '../simpleTranslator.js';
+import { translateContentObject } from '../translator.js';
 
 /**
  * Generate personalized moon phase commentary based on user's birth chart

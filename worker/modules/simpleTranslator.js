@@ -1,12 +1,10 @@
 /**
- * Simple Translation using MyMemory API
- * Free, no authentication, fast
- * Used for horoscope translations
+ * Fast Translation using MyMemory API
  * 
- * HANDLES LONG TEXTS: MyMemory has 500 char limit, so long texts are split into sentence chunks
+ * Strategy: Extract text from HTML, translate just the text portions,
+ * rebuild HTML with translated text. Minimize API calls by batching.
  */
 
-// Map our language codes to MyMemory language codes
 const LANGUAGE_MAP = {
   'en-US': 'en',
   'es-ES': 'es',
@@ -15,153 +13,214 @@ const LANGUAGE_MAP = {
   'it-IT': 'it',
   'pt-BR': 'pt-BR',
   'ja-JP': 'ja',
-  'zh-CN': 'zh-CN'
+  'zh-CN': 'zh-cn'
 };
 
 /**
- * Split text into sentences for chunking
- */
-function splitIntoSentences(text) {
-  // Split on sentence boundaries (. ! ?)
-  return text.match(/[^.!?]+[.!?]+/g) || [text];
-}
-
-/**
- * Translate a single chunk using MyMemory API
+ * Translate text via MyMemory
  */
 async function translateChunk(text, targetLangCode) {
   try {
+    if (!text || text.trim().length === 0) {
+      return text;
+    }
+    
+    const len = text.length;
+    if (len > 500) {
+      console.warn(`[MYMEMORY] Text ${len} chars exceeds 500 limit, will fail`);
+    }
+    
     const encodedText = encodeURIComponent(text);
     const url = `https://api.mymemory.translated.net/get?q=${encodedText}&langpair=en|${targetLangCode}`;
     
-    const response = await fetch(url, {
-      timeout: 10000 // 10 second timeout
-    });
+    const response = await fetch(url, { timeout: 15000 });
+    
+    if (response.status === 429) {
+      console.warn(`[MYMEMORY] 429 Rate limited`);
+      return text; // Return original on rate limit
+    }
     
     if (!response.ok) {
-      console.error(`[SIMPLE-TRANSLATOR] API error: ${response.status}`);
+      console.error(`[MYMEMORY] HTTP ${response.status}`);
       return text;
     }
     
     const data = await response.json();
     
-    if (data.responseStatus === 200 && data.responseData.translatedText) {
+    if (data.responseStatus === 200 && data.responseData?.translatedText) {
       return data.responseData.translatedText;
     } else {
-      console.error('[SIMPLE-TRANSLATOR] Translation failed:', data.responseDetails);
+      console.warn(`[MYMEMORY] Failed: ${data.responseDetails}`);
       return text;
     }
   } catch (err) {
-    console.error('[SIMPLE-TRANSLATOR] Error in translateChunk:', err.message);
+    console.error(`[MYMEMORY] Error:`, err.message);
     return text;
   }
 }
 
 /**
- * Translate text to target language using MyMemory API
- * Handles long texts by chunking into sentences (MyMemory has 500 char limit)
- * @param {string} text - Text to translate
- * @param {string} targetLanguage - Target language code (e.g., 'es-ES')
- * @returns {Promise<string>} Translated text
+ * Extract text nodes from HTML, preserving structure
+ * Returns array of {isTag: boolean, content: string}
  */
-export async function translateText(text, targetLanguage) {
+function extractTextNodes(html) {
+  const nodes = [];
+  let pos = 0;
+  
+  // Regex to find tags
+  const tagRegex = /<[^>]+>/g;
+  let match;
+  
+  while ((match = tagRegex.exec(html)) !== null) {
+    // Text before tag
+    if (match.index > pos) {
+      const text = html.substring(pos, match.index).trim();
+      if (text) {
+        nodes.push({ isTag: false, content: text });
+      }
+    }
+    // Tag itself
+    nodes.push({ isTag: true, content: match[0] });
+    pos = match.index + match[0].length;
+  }
+  
+  // Remaining text
+  if (pos < html.length) {
+    const text = html.substring(pos).trim();
+    if (text) {
+      nodes.push({ isTag: false, content: text });
+    }
+  }
+  
+  return nodes.length > 0 ? nodes : [{ isTag: false, content: html }];
+}
+
+/**
+ * Rebuild HTML from nodes with translated text
+ */
+function rebuildHTML(nodes, translatedTexts) {
+  let result = '';
+  let textIdx = 0;
+  
+  for (const node of nodes) {
+    if (node.isTag) {
+      result += node.content;
+    } else {
+      // Use translated version if available
+      result += translatedTexts[textIdx] || node.content;
+      textIdx++;
+    }
+  }
+  
+  return result;
+}
+
+/**
+ * Batch translate text nodes - combine them to minimize API calls
+ */
+async function batchTranslateTexts(textNodes, targetLangCode) {
+  if (textNodes.length === 0) return [];
+  
+  console.log(`[TRANSLATOR] Batch translating ${textNodes.length} text nodes`);
+  
+  // Combine all text with a separator (newline)
+  const combined = textNodes.join('\n');
+  
+  if (combined.length > 500) {
+    console.warn(`[TRANSLATOR] Combined text ${combined.length} chars exceeds 500 limit`);
+    // Translate each separately
+    const results = [];
+    for (let i = 0; i < textNodes.length; i++) {
+      const node = textNodes[i];
+      console.log(`[TRANSLATOR] Translating node ${i + 1}/${textNodes.length} (${node.length} chars)`);
+      const translated = await translateChunk(node, targetLangCode);
+      results.push(translated);
+      
+      // Small delay between requests
+      if (i < textNodes.length - 1) {
+        await new Promise(r => setTimeout(r, 500));
+      }
+    }
+    return results;
+  }
+  
+  // Under 500 chars, translate as one batch
+  console.log(`[TRANSLATOR] Combined ${textNodes.length} nodes into one request (${combined.length} chars)`);
+  const translated = await translateChunk(combined, targetLangCode);
+  
+  // Split back by newline
+  return translated.split('\n');
+}
+
+/**
+ * Main translation function
+ */
+export async function translateText(html, targetLanguage) {
   try {
-    // Skip if English or no language specified
-    if (targetLanguage === 'en-US' || !targetLanguage || !text) {
-      return text;
+    if (targetLanguage === 'en-US' || !targetLanguage || !html) {
+      return html;
     }
 
     const targetLangCode = LANGUAGE_MAP[targetLanguage];
-    
-    // If language not supported, return original text
     if (!targetLangCode) {
-      console.warn(`[SIMPLE-TRANSLATOR] Unsupported language: ${targetLanguage}, returning English`);
-      return text;
+      console.warn(`[TRANSLATOR] Unsupported: ${targetLanguage}`);
+      return html;
     }
 
-    console.log(`[SIMPLE-TRANSLATOR] Translating to ${targetLanguage}... (${text.length} chars)`);
+    const isHTML = /<[^>]+>/.test(html);
+    console.log(`[TRANSLATOR] Start: ${targetLanguage}, ${html.length} chars, HTML=${isHTML}`);
     
-    // MyMemory API has 500 char limit - split long text into chunks
-    const MAX_CHUNK_SIZE = 450; // Leave 50 char buffer
-    
-    if (text.length <= MAX_CHUNK_SIZE) {
-      // Text is short enough, translate directly
-      return await translateChunk(text, targetLangCode);
+    if (!isHTML) {
+      // Plain text
+      return await translateChunk(html, targetLangCode);
     }
     
-    // Text is too long, split into sentences and batch translate
-    console.log(`[SIMPLE-TRANSLATOR] Text exceeds limit, chunking into sentences...`);
-    const sentences = splitIntoSentences(text);
-    const chunks = [];
-    let currentChunk = '';
+    // HTML: Extract, translate, rebuild
+    console.log(`[TRANSLATOR] Extracting text from HTML...`);
+    const nodes = extractTextNodes(html);
+    console.log(`[TRANSLATOR] Found ${nodes.length} nodes (${nodes.filter(n => !n.isTag).length} text)`);
     
-    for (const sentence of sentences) {
-      if ((currentChunk + sentence).length > MAX_CHUNK_SIZE && currentChunk.length > 0) {
-        chunks.push(currentChunk.trim());
-        currentChunk = sentence;
-      } else {
-        currentChunk += sentence;
-      }
-    }
-    if (currentChunk.length > 0) {
-      chunks.push(currentChunk.trim());
-    }
+    // Get text nodes only
+    const textNodes = nodes.filter(n => !n.isTag).map(n => n.content);
     
-    console.log(`[SIMPLE-TRANSLATOR] Split into ${chunks.length} chunks`);
+    // Batch translate
+    const translatedTexts = await batchTranslateTexts(textNodes, targetLangCode);
     
-    // Translate each chunk
-    const translatedChunks = [];
-    for (let i = 0; i < chunks.length; i++) {
-      const chunk = chunks[i];
-      const translated = await translateChunk(chunk, targetLangCode);
-      translatedChunks.push(translated);
-      // Add small delay between requests to avoid rate limiting
-      if (i < chunks.length - 1) {
-        await new Promise(r => setTimeout(r, 100));
-      }
-    }
-    
-    const result = translatedChunks.join(' ');
-    console.log(`[SIMPLE-TRANSLATOR] ✓ Translation complete (${result.length} chars)`);
+    // Rebuild
+    const result = rebuildHTML(nodes, translatedTexts);
+    console.log(`[TRANSLATOR] ✓ Done`);
     return result;
     
   } catch (err) {
-    console.error(`[SIMPLE-TRANSLATOR] Error translating to ${targetLanguage}:`, err.message);
-    // Return original text on error
-    return text;
+    console.error(`[TRANSLATOR] Error:`, err.message);
+    return html;
   }
 }
 
 /**
  * Translate content object
- * @param {object} contentObj - Content object with text property
- * @param {string} targetLanguage - Target language code
- * @returns {Promise<object>} Translated content object
  */
 export async function translateContentObject(contentObj, targetLanguage) {
   try {
-    // Skip if English or no language
     if (targetLanguage === 'en-US' || !targetLanguage || !contentObj) {
       return contentObj;
     }
 
-    // If content is just a string, translate it
     if (typeof contentObj === 'string') {
       return await translateText(contentObj, targetLanguage);
     }
 
-    // If content is an object with text property
-    if (contentObj && typeof contentObj === 'object' && contentObj.text) {
-      const translatedText = await translateText(contentObj.text, targetLanguage);
+    if (contentObj?.text) {
+      const translated = await translateText(contentObj.text, targetLanguage);
       return {
         ...contentObj,
-        text: translatedText
+        text: translated
       };
     }
 
     return contentObj;
   } catch (err) {
-    console.error('[SIMPLE-TRANSLATOR] Error translating content object:', err.message);
+    console.error(`[TRANSLATOR] Error:`, err.message);
     return contentObj;
   }
 }
