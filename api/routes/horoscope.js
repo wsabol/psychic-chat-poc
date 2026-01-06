@@ -3,7 +3,7 @@ import { hashUserId } from "../shared/hashUtils.js";
 import { enqueueMessage } from "../shared/queue.js";
 import { authenticateToken, authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
-import { getUserTimezone, getLocalDateForTimezone } from "../shared/timezoneHelper.js";
+import { getUserTimezone, getLocalDateForTimezone, needsRegeneration } from "../shared/timezoneHelper.js";
 
 
 const router = Router();
@@ -26,16 +26,22 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
         
         const userIdHash = hashUserId(userId);
         
-        // Fetch user's language preference
-        // CRITICAL: user_preferences.user_id_hash is BYTEA, so convert hex string
+        // Fetch user's language preference AND timezone
+        // CRITICAL: user_id_hash may be hex string, normalize it
         const { rows: prefRows } = await db.query(
-            `SELECT language FROM user_preferences WHERE user_id_hash = decode($1, 'hex')`,
+            `SELECT language, timezone FROM user_preferences WHERE user_id_hash = decode($1, 'hex')`,
             [userIdHash]
         );
         const userLanguage = prefRows.length > 0 ? prefRows[0].language : 'en-US';
-        console.log(`[HOROSCOPE-API] User language: ${userLanguage}`);
+        const userTimezone = prefRows.length > 0 ? prefRows[0].timezone : 'UTC';
+        console.log(`[HOROSCOPE-API] User language: ${userLanguage}, timezone: ${userTimezone}`);
+        
+        // Get today's date in user's LOCAL timezone
+        const todayLocalDate = getLocalDateForTimezone(userTimezone);
+        console.log(`[HOROSCOPE-API] Today (user local): ${todayLocalDate}`);
         
         // Fetch horoscopes - return most recent for this range
+        // NOTE: horoscope_range may be NULL in legacy data, so we check for either matching range OR NULL
         const { rows } = await db.query(
             `SELECT 
                 pgp_sym_decrypt(content_full_encrypted, $2)::text as content_full,
@@ -48,7 +54,7 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
                 FROM messages 
                 WHERE user_id_hash = $1 
                   AND role = 'horoscope' 
-                  AND horoscope_range = $3
+                  AND (horoscope_range = $3 OR horoscope_range IS NULL)
                 ORDER BY CASE WHEN language_code = $4 THEN 0 ELSE 1 END, created_at DESC
                 LIMIT 1`,
             [userIdHash, process.env.ENCRYPTION_KEY, range.toLowerCase(), userLanguage]
@@ -56,8 +62,32 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
         
         console.log(`[HOROSCOPE-API] Found ${rows.length} horoscope(s)`);
         
+        // ✅ CRITICAL: Check if horoscope is stale (based on user's LOCAL timezone)
+        if (rows.length > 0 && rows[0].created_at_local_date) {
+            const isStale = needsRegeneration(rows[0].created_at_local_date, todayLocalDate);
+            console.log(`[HOROSCOPE-API] Stale check: created=${rows[0].created_at_local_date}, today=${todayLocalDate}, isStale=${isStale}`);
+            
+            if (isStale) {
+                console.log(`[HOROSCOPE-API] Horoscope is stale, needs regeneration`);
+                // Queue regeneration in background
+                enqueueMessage({
+                    userId,
+                    message: `[SYSTEM] Generate horoscope for ${range.toLowerCase()}`
+                }).catch(err => console.error('[HOROSCOPE-API] Error queueing refresh:', err));
+                
+                // Return 404 to trigger frontend regeneration request
+                return res.status(404).json({ error: `${range} horoscope is stale. Generating fresh one...` });
+            }
+        }
+        
         if (rows.length === 0) {
             console.log(`[HOROSCOPE-API] No ${range} horoscope found`);
+            // Queue generation in background
+            enqueueMessage({
+                userId,
+                message: `[SYSTEM] Generate horoscope for ${range.toLowerCase()}`
+            }).catch(err => console.error('[HOROSCOPE-API] Error queueing generation:', err));
+            
             return res.status(404).json({ error: `No ${range} horoscope found. Generating now...` });
         }
         

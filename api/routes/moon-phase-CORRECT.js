@@ -18,9 +18,9 @@ router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
         
         const userIdHash = hashUserId(userId);
         
-        // Fetch user's language preference AND timezone
+        // Fetch user's language preference AND timezone - EXACTLY LIKE HOROSCOPE DOES
         const { rows: prefRows } = await db.query(
-            `SELECT language, timezone FROM user_preferences WHERE user_id_hash = $1`,
+            `SELECT language, timezone FROM user_preferences WHERE user_id_hash = decode($1, 'hex')`,
             [userIdHash]
         );
         const userLanguage = prefRows.length > 0 ? prefRows[0].language : 'en-US';
@@ -30,7 +30,6 @@ router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
         // Get TODAY's date in user's LOCAL timezone
         const todayLocalDate = getLocalDateForTimezone(userTimezone);
         console.log(`[MOON-PHASE-API] Today (user local): ${todayLocalDate}`);
-        console.log(`[MOON-PHASE-API] DEBUG - userIdHash: ${userIdHash}, phase: ${phase}, todayLocalDate: ${todayLocalDate}`);
         
         // Fetch moon phase - EXACTLY LIKE HOROSCOPE DOES
         // Get both English AND translated versions, prefer language match

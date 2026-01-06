@@ -83,6 +83,13 @@ services:
         - REACT_APP_API_URL=http://localhost:3000
         - REACT_APP_STRIPE_PUBLIC_KEY=${STRIPE_PUBLIC_KEY}
         - REACT_APP_DEV_EMAIL=${REACT_APP_DEV_EMAIL}
+        - REACT_APP_FIREBASE_API_KEY=${REACT_APP_FIREBASE_API_KEY}
+        - REACT_APP_FIREBASE_AUTH_DOMAIN=${REACT_APP_FIREBASE_AUTH_DOMAIN}
+        - REACT_APP_FIREBASE_PROJECT_ID=${REACT_APP_FIREBASE_PROJECT_ID}
+        - REACT_APP_FIREBASE_STORAGE_BUCKET=${REACT_APP_FIREBASE_STORAGE_BUCKET}
+        - REACT_APP_FIREBASE_MESSAGING_SENDER_ID=${REACT_APP_FIREBASE_MESSAGING_SENDER_ID}
+        - REACT_APP_FIREBASE_APP_ID=${REACT_APP_FIREBASE_APP_ID}
+        - REACT_APP_FIREBASE_MEASUREMENT_ID=${REACT_APP_FIREBASE_MEASUREMENT_ID}
     command: npm start
     volumes:
       - ./client:/app
@@ -100,9 +107,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 6G
+          memory: 8G
         reservations:
-          memory: 4G
+          memory: 6G
 
 volumes:
   postgres_data:

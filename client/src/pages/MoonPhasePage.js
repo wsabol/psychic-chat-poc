@@ -185,12 +185,15 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
         return;
       }
 
-      let pollCount = 0;
-      const maxPolls = 30;
+                  let pollCount = 0;
+      const maxPolls = 60;
 
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current);
       }
+
+      // Wait 2 seconds before starting to poll - gives worker time to commit data
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
       pollIntervalRef.current = setInterval(async () => {
         pollCount++;
@@ -216,8 +219,8 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
           console.error('[MOON-PHASE] Polling error:', err);
         }
 
-        if (pollCount >= maxPolls) {
-          setError('Moon phase commentary generation is taking longer than expected. Please try again.');
+                if (pollCount >= maxPolls) {
+          setError('Moon phase commentary generation is taking longer than expected (60+ seconds). Please try again.');
           setGenerating(false);
           setLoading(false);
           clearInterval(pollIntervalRef.current);

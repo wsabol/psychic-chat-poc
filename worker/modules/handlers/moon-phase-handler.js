@@ -19,15 +19,16 @@ import { getUserTimezone, getLocalDateForTimezone, needsRegeneration } from '../
 export async function generateMoonPhaseCommentary(userId, phase) {
     try {
         console.log(`[MOON-PHASE-HANDLER] Starting moon phase generation - userId: ${userId}, phase: ${phase}`);
+        const userIdHash = hashUserId(userId);
+        
         // Get user timezone and today's local date
         const userTimezone = await getUserTimezone(userIdHash);
         const todayLocalDate = getLocalDateForTimezone(userTimezone);
         console.log(`[MOON-PHASE-HANDLER] User timezone: ${userTimezone}, Today (local): ${todayLocalDate}`);
-        const userIdHash = hashUserId(userId);
         
-        // Check if THIS SPECIFIC PHASE was already generated for today (in user's timezone)
+                // Check if THIS SPECIFIC PHASE was already generated for today (in user's timezone)
         const { rows: existingMoonPhase } = await db.query(
-                        `SELECT id, created_at_local_date FROM messages WHERE user_id_hash = $1 AND role = 'moon_phase' AND moon_phase = $2 ORDER BY created_at DESC LIMIT 1`,
+            `SELECT id, created_at_local_date FROM messages WHERE user_id_hash = $1 AND role = 'moon_phase' AND moon_phase = $2 ORDER BY created_at DESC LIMIT 1`,
             [userIdHash, phase]
         );
         
@@ -38,7 +39,7 @@ export async function generateMoonPhaseCommentary(userId, phase) {
                 return;
             }
         } else {
-                console.log(`[MOON-PHASE-HANDLER] No existing ${phase} moon phase found, proceeding with generation`);
+            console.log(`[MOON-PHASE-HANDLER] No existing ${phase} moon phase found, proceeding with generation`);
         }
         
         // Fetch user context

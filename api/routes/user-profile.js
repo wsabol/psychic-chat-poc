@@ -5,7 +5,6 @@ import { hashUserId } from "../shared/hashUtils.js";
 import { enqueueMessage } from "../shared/queue.js";
 import { validateAge } from "../shared/ageValidator.js";
 import { handleAgeViolation } from "../shared/violationHandler.js";
-import { encrypt } from "../utils/encryption.js";
 
 const router = Router();
 
@@ -178,7 +177,7 @@ router.get("/:userId/preferences", authorizeUser, async (req, res) => {
     
     try {
         const { rows } = await db.query(
-            `SELECT language, response_type, voice_enabled, COALESCE(voice_selected, 'sophia') as voice_selected FROM user_preferences WHERE user_id_hash = $1`,
+            `SELECT language, response_type, voice_enabled, COALESCE(voice_selected, 'sophia') as voice_selected, timezone FROM user_preferences WHERE user_id_hash = $1`,
             [userIdHash]
         );
         
@@ -187,7 +186,8 @@ router.get("/:userId/preferences", authorizeUser, async (req, res) => {
                 language: 'en-US',
                 response_type: 'full',
                 voice_enabled: true,
-                voice_selected: 'sophia'
+                voice_selected: 'sophia',
+                timezone: null
             });
         }
         
@@ -199,12 +199,28 @@ router.get("/:userId/preferences", authorizeUser, async (req, res) => {
 });
 
 // Save user preferences
+// 🌍 CRITICAL: Allow timezone-only updates (for browser timezone detection on login)
 router.post("/:userId/preferences", authorizeUser, async (req, res) => {
     const { userId } = req.params;
     const { language, response_type, voice_enabled, voice_selected, timezone } = req.body;
     const userIdHash = hashUserId(userId);
     
     try {
+        // 🌍 CRITICAL: If only timezone is provided, just update that field
+        if (timezone && !language && !response_type) {
+            console.log(`[PREFERENCES] ✓ Updating timezone only for user: ${timezone}`);
+            await db.query(
+                `INSERT INTO user_preferences (user_id_hash, timezone)
+                 VALUES ($1, $2)
+                 ON CONFLICT (user_id_hash) DO UPDATE SET
+                 timezone = EXCLUDED.timezone,
+                 updated_at = CURRENT_TIMESTAMP`,
+                [userIdHash, timezone]
+            );
+            return res.json({ success: true, message: 'Timezone saved successfully', timezone });
+        }
+        
+        // Otherwise require language and response_type for full preference update
         if (!language || !response_type) {
             return res.status(400).json({ error: 'Missing required fields: language, response_type' });
         }
