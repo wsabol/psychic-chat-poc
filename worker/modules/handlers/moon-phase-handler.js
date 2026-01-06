@@ -10,6 +10,7 @@ import {
 } from '../oracle.js';
 import { storeMessage } from '../messages.js';
 import { translateContentObject } from '../translator.js';
+import { getUserTimezone, getLocalDateForTimezone, needsRegeneration } from '../utils/timezoneHelper.js';
 
 /**
  * Generate personalized moon phase commentary based on user's birth chart
@@ -18,20 +19,27 @@ import { translateContentObject } from '../translator.js';
 export async function generateMoonPhaseCommentary(userId, phase) {
     try {
         console.log(`[MOON-PHASE-HANDLER] Starting moon phase generation - userId: ${userId}, phase: ${phase}`);
-        const today = new Date().toISOString().split('T')[0];
+        // Get user timezone and today's local date
+        const userTimezone = await getUserTimezone(userIdHash);
+        const todayLocalDate = getLocalDateForTimezone(userTimezone);
+        console.log(`[MOON-PHASE-HANDLER] User timezone: ${userTimezone}, Today (local): ${todayLocalDate}`);
         const userIdHash = hashUserId(userId);
         
-        // Check if THIS SPECIFIC PHASE was already generated today (using new moon_phase column)
+        // Check if THIS SPECIFIC PHASE was already generated for today (in user's timezone)
         const { rows: existingMoonPhase } = await db.query(
-            `SELECT id FROM messages WHERE user_id_hash = $1 AND role = 'moon_phase' AND moon_phase = $2 AND created_at::date = $3::date LIMIT 1`,
-            [userIdHash, phase, today]
+                        `SELECT id, created_at_local_date FROM messages WHERE user_id_hash = $1 AND role = 'moon_phase' AND moon_phase = $2 ORDER BY created_at DESC LIMIT 1`,
+            [userIdHash, phase]
         );
         
         if (existingMoonPhase.length > 0) {
-            console.log(`[MOON-PHASE-HANDLER] ${phase} moon phase commentary already generated today, skipping`);
-            return;
+            const createdAtLocalDate = existingMoonPhase[0].created_at_local_date;
+            if (!needsRegeneration(createdAtLocalDate, todayLocalDate)) {
+                console.log(`[MOON-PHASE-HANDLER] ${phase} moon phase already generated for today (${todayLocalDate}), skipping`);
+                return;
+            }
+        } else {
+                console.log(`[MOON-PHASE-HANDLER] No existing ${phase} moon phase found, proceeding with generation`);
         }
-        console.log(`[MOON-PHASE-HANDLER] No existing ${phase} moon phase found for today, proceeding with generation`);
         
         // Fetch user context
         const userInfo = await fetchUserPersonalInfo(userId);
@@ -109,7 +117,8 @@ Do NOT include tarot cards - this is purely lunar + astrological insight enriche
             userLanguage !== 'en-US' ? moonPhaseDataBriefLang : null,  // 7: contentBriefLang
             null,                                                      // 8: horoscopeRange (not used for moon)
             phase,                                                     // 9: moonPhase ← CRITICAL!
-            null                                                       // 10: contentType
+            null,                                                      // 10: contentType
+            todayLocalDate                                             // 11: created_at_local_date
         );
         console.log(`[MOON-PHASE-HANDLER] ✓ ${phase} moon phase generated and stored`);
         

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { auth } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { saveUserTimezone } from '../utils/timezoneUtils';
 
 const AuthContext = createContext();
 
@@ -42,6 +43,9 @@ export function AuthProvider({ children }) {
             firebaseUser // Store firebase user object for token refresh
           });
 
+          // Save timezone to user_preferences
+          await saveUserTimezone(firebaseUser.uid, token);
+          
           // Set up token refresh interval (refresh every 45 minutes = 2700000ms)
           // Firebase tokens expire after 1 hour, so refreshing at 45 min is safe
           if (tokenRefreshIntervalRef.current) {

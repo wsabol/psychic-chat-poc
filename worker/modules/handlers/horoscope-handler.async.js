@@ -9,46 +9,76 @@ import {
     callOracle,
     getUserGreeting
 } from '../oracle.js';
-import { storeMessage } from '../messages.js';
-import { translateContentObject } from '../translator.js';
-import { getUserTimezone, getLocalDateForTimezone, needsRegeneration } from '../utils/timezoneHelper.js';
+import { storeMessage, formatMessageContent, updateMessageTranslation } from '../messages.js';
+import { translateContentObject } from '../simpleTranslator.js';
+import { getTodayInUserTimezone, fetchUserTimezonePreference, getCurrentTimeInUserTimezone } from '../utils/timezoneUtils.js';
+import { cleanMarkdownCodeFences } from '../utils/cleanMarkdown.js';
 
 /**
- * Generate horoscopes for the user based on local timezone date
- * Checks if already generated for user's local date (not UTC)
- * Only generates if created_at_local_date < today's local date
+ * Background async translation function
+ * Runs without blocking the main flow
+ */
+async function translateAndUpdateHoroscope(userId, horoscopeDataFull, horoscopeDataBrief, userLanguage, range) {
+    try {
+        console.log(`[HOROSCOPE-ASYNC] Starting background translation for ${userLanguage}...`);
+        
+        const horoscopeDataFullLang = await translateContentObject(horoscopeDataFull, userLanguage);
+        const horoscopeDataBriefLang = await translateContentObject(horoscopeDataBrief, userLanguage);
+        
+        // VALIDATION: Check if translation succeeded
+        if (horoscopeDataFullLang?.text === horoscopeDataFull?.text) {
+            console.warn(`[HOROSCOPE-ASYNC] ⚠️ Translation failed (returned same text), skipping update`);
+            return;
+        }
+        
+        console.log(`[HOROSCOPE-ASYNC] ✓ Translation successful for ${userLanguage}, updating message...`);
+        
+        // Update the horoscope message with translation
+        if (updateMessageTranslation && typeof updateMessageTranslation === 'function') {
+            await updateMessageTranslation(userId, 'horoscope', horoscopeDataFullLang, horoscopeDataBriefLang, userLanguage, range);
+        }
+        
+        console.log(`[HOROSCOPE-ASYNC] ✓ Message updated with translation`);
+        
+    } catch (err) {
+        console.error(`[HOROSCOPE-ASYNC] Error:`, err.message);
+    }
+}
+
+/**
+ * Generate horoscopes for the user
+ * ASYNC TRANSLATION: Stores English immediately, translates in background
  */
 export async function generateHoroscope(userId, range = 'daily') {
     try {
         console.log(`[HOROSCOPE-HANDLER] Starting horoscope generation - userId: ${userId}, range: ${range}`);
+        
+        // Fetch user's timezone preference
+        let userTimezone = await fetchUserTimezonePreference(db, userId);
+        if (!userTimezone) {
+            console.warn(`[HOROSCOPE-HANDLER] No timezone preference found for user, defaulting to GMT`);
+            userTimezone = 'GMT';
+        }
+        
+        const today = getTodayInUserTimezone(userTimezone);
+        console.log(`[HOROSCOPE-HANDLER] User timezone: ${userTimezone}, Today's date: ${today}`);
+        
         const userIdHash = hashUserId(userId);
         
-        // Get user's timezone and today's local date
-        const userTimezone = await getUserTimezone(userIdHash);
-        const todayLocalDate = getLocalDateForTimezone(userTimezone);
-        console.log(`[HOROSCOPE-HANDLER] User timezone: ${userTimezone}, Today (local): ${todayLocalDate}`);
-        
-        // Check if THIS SPECIFIC RANGE was already generated for today (in user's timezone)
+        // Check if already generated today
         const { rows: existingHoroscopes } = await db.query(
-            `SELECT id, created_at_local_date FROM messages 
+            `SELECT id FROM messages 
              WHERE user_id_hash = $1 
              AND role = 'horoscope' 
              AND horoscope_range = $2
-             ORDER BY created_at DESC
+             AND created_at::date = $3::date 
              LIMIT 1`,
-            [userIdHash, range]
+            [userIdHash, range, today]
         );
         
         if (existingHoroscopes.length > 0) {
-            const createdAtLocalDate = existingHoroscopes[0].created_at_local_date;
-            if (!needsRegeneration(createdAtLocalDate, todayLocalDate)) {
-                console.log(`[HOROSCOPE-HANDLER] ${range} horoscope already generated for today (${todayLocalDate}), skipping`);
-                return;
-            } else {
-                console.log(`[HOROSCOPE-HANDLER] Previous horoscope from ${createdAtLocalDate}, today is ${todayLocalDate}, regenerating`);
-            }
-        } else {
-            console.log(`[HOROSCOPE-HANDLER] No existing ${range} horoscope found, proceeding with generation`);
+            console.log(`[HOROSCOPE-HANDLER] ${range} horoscope already generated today, skipping`);
+            return;
         }
         
         // Fetch user context
@@ -56,26 +86,16 @@ export async function generateHoroscope(userId, range = 'daily') {
         const astrologyInfo = await fetchUserAstrology(userId);
         const userLanguage = await fetchUserLanguagePreference(userId);
         
-        if (!userInfo) {
-            throw new Error('User personal info not found');
-        }
+        if (!userInfo) throw new Error('User personal info not found');
+        if (!astrologyInfo?.astrology_data) throw new Error('User astrology data not found');
         
-        if (!astrologyInfo?.astrology_data) {
-            throw new Error('User astrology data not found');
-        }
-        
-        // Check if user is temporary/trial account
         const isTemporary = await isTemporaryUser(userId);
-        
-        // Get oracle base prompt and user greeting
         const baseSystemPrompt = getOracleSystemPrompt(isTemporary);
         const userGreeting = getUserGreeting(userInfo, userId, isTemporary);
         const generatedAt = new Date().toISOString();
+        const userLocalTime = getCurrentTimeInUserTimezone(userTimezone);
         
-        // Generate only the requested range
-        const ranges = [range];
-        
-        for (const currentRange of ranges) {
+        for (const currentRange of [range]) {
             try {
                 console.log(`[HOROSCOPE-HANDLER] Generating ${currentRange} horoscope...`);
                 const horoscopePrompt = buildHoroscopePrompt(userInfo, astrologyInfo, currentRange, userGreeting);
@@ -92,79 +112,81 @@ Make it deeply personal and specific to their astrological signature.
 Do NOT include tarot cards in this response - this is purely astrological guidance enriched by their unique birth chart.
 `;
                 
-                // Call Oracle with just the user's birth data (no chat history for horoscopes)
-                // Always generate in English first
-                console.log(`[HOROSCOPE-HANDLER] Calling OpenAI for ${currentRange} horoscope...`);
+                console.log(`[HOROSCOPE-HANDLER] Calling OpenAI...`);
                 const oracleResponses = await callOracle(systemPrompt, [], horoscopePrompt, true);
                 console.log(`[HOROSCOPE-HANDLER] ✓ OpenAI response received`);
                 
-                // Store horoscope in database with metadata (in English)
+                // Prepare horoscope data
                 const horoscopeDataFull = {
-                    text: oracleResponses.full,
+                    text: cleanMarkdownCodeFences(oracleResponses.full),
                     range: currentRange,
                     generated_at: generatedAt,
+                    generated_at_local: userLocalTime.date + ' ' + userLocalTime.time,
+                    user_timezone: userTimezone,
                     zodiac_sign: astrologyInfo.zodiac_sign
                 };
                 
                 const horoscopeDataBrief = { 
-                    text: oracleResponses.brief, 
+                    text: cleanMarkdownCodeFences(oracleResponses.brief), 
                     range: currentRange, 
-                    generated_at: generatedAt, 
+                    generated_at: generatedAt,
+                    generated_at_local: userLocalTime.date + ' ' + userLocalTime.time,
+                    user_timezone: userTimezone,
                     zodiac_sign: astrologyInfo.zodiac_sign 
                 };
                 
-                // Translate to user's preferred language
-                let horoscopeDataFullLang = null;
-                let horoscopeDataBriefLang = null;
-                
-                if (userLanguage && userLanguage !== 'en-US') {
-                    console.log(`[HOROSCOPE-HANDLER] Translating ${currentRange} horoscope to ${userLanguage}...`);
-                    horoscopeDataFullLang = await translateContentObject(horoscopeDataFull, userLanguage);
-                    horoscopeDataBriefLang = await translateContentObject(horoscopeDataBrief, userLanguage);
-                    console.log(`[HOROSCOPE-HANDLER] ✓ Translation successful`);
-                }
-                
-                // Store message with both English and translated versions (if applicable)
-                // CRITICAL: Pass created_at_local_date with today's local date
-                console.log(`[HOROSCOPE-HANDLER] Storing ${currentRange} horoscope to database with local date: ${todayLocalDate}...`);
+                // ✨ STORE ENGLISH IMMEDIATELY (no wait for translation)
+                console.log(`[HOROSCOPE-HANDLER] Storing ${currentRange} horoscope (English)...`);
                 await storeMessage(
                     userId, 
                     'horoscope', 
                     horoscopeDataFull, 
                     horoscopeDataBrief,
-                    userLanguage,
-                    userLanguage !== 'en-US' ? horoscopeDataFullLang : null,
-                    userLanguage !== 'en-US' ? horoscopeDataBriefLang : null,
-                    currentRange,  // horoscopeRange
-                    null,          // moonPhase
-                    null,          // contentType
-                    todayLocalDate // created_at_local_date ← TIMEZONE-AWARE DATE
+                    'en-US',
+                    null,
+                    null,
+                    currentRange
                 );
-                console.log(`[HOROSCOPE-HANDLER] ✓ ${currentRange} horoscope generated and stored`);
+                console.log(`[HOROSCOPE-HANDLER] ✓ Stored (English)`);
+                
+                // Send "translating" message if needed
+                if (userLanguage && userLanguage !== 'en-US') {
+                    console.log(`[HOROSCOPE-HANDLER] Sending 'translating' status message...`);
+                    await storeMessage(
+                        userId,
+                        'system',
+                        { text: `I am now translating your ${currentRange} reading...` },
+                        { text: `Translating...` },
+                        userLanguage
+                    );
+                    
+                    // ✨ START ASYNC TRANSLATION (fire and forget)
+                    console.log(`[HOROSCOPE-HANDLER] Starting async translation...`);
+                    translateAndUpdateHoroscope(userId, horoscopeDataFull, horoscopeDataBrief, userLanguage, currentRange)
+                        .catch(err => console.error(`[HOROSCOPE-HANDLER] Async error:`, err.message));
+                }
                 
             } catch (err) {
-                console.error(`[HOROSCOPE-HANDLER] Error generating ${currentRange} horoscope:`, err.message);
-                console.error(`[HOROSCOPE-HANDLER] Stack:`, err.stack);
+                console.error(`[HOROSCOPE-HANDLER] Error generating ${currentRange}:`, err.message);
+                console.error(`[HOROSCOPE-HANDLER] Stack: ${err.stack}`);
             }
         }
         
     } catch (err) {
-        console.error('[HOROSCOPE-HANDLER] Error generating horoscopes:', err.message);
-        console.error('[HOROSCOPE-HANDLER] Stack:', err.stack);
+        console.error('[HOROSCOPE-HANDLER] Error:', err.message);
+        console.error(`[HOROSCOPE-HANDLER] Stack: ${err.stack}`);
         throw err;
     }
 }
 
 /**
- * Build horoscope prompt with user context
+ * Build horoscope prompt
  */
 function buildHoroscopePrompt(userInfo, astrologyInfo, range, userGreeting) {
     const astro = astrologyInfo.astrology_data;
-    
     let prompt = `Generate a personalized ${range} horoscope for ${userGreeting}:\n\n`;
     
     if (astro.sun_sign) {
-        // Calculated birth chart with complete details
         prompt += `COMPLETE BIRTH CHART:\n`;
         prompt += `- Sun Sign: ${astro.sun_sign} (${astro.sun_degree}°) - Core Identity, Life Purpose\n`;
         prompt += `- Moon Sign: ${astro.moon_sign} (${astro.moon_degree}°) - Inner Emotional World, Needs, Instincts\n`;
@@ -175,12 +197,10 @@ function buildHoroscopePrompt(userInfo, astrologyInfo, range, userGreeting) {
         if (astro.mars_sign) prompt += `- Mars Sign: ${astro.mars_sign} (${astro.mars_degree}°) - Action, Drive, Passion\n`;
         if (astro.mercury_sign) prompt += `- Mercury Sign: ${astro.mercury_sign} (${astro.mercury_degree}°) - Communication, Thinking Style\n`;
     } else if (astro.name) {
-        // Traditional zodiac data
         prompt += `Sun Sign: ${astro.name}\n`;
     }
     
     prompt += `\nCONTEXT FOR THIS ${range.toUpperCase()}:\n`;
-    
     switch (range.toLowerCase()) {
         case 'daily':
             prompt += `- What energies are prominent TODAY for this person?\n`;
@@ -208,16 +228,10 @@ function buildHoroscopePrompt(userInfo, astrologyInfo, range, userGreeting) {
     return prompt;
 }
 
-/**
- * Check if message is a horoscope request
- */
 export function isHoroscopeRequest(message) {
     return message.includes('[SYSTEM]') && message.includes('horoscope');
 }
 
-/**
- * Extract horoscope range from message
- */
 export function extractHoroscopeRange(message) {
     const match = message.match(/horoscope for (\w+)/i);
     if (match && match[1]) {
@@ -226,5 +240,5 @@ export function extractHoroscopeRange(message) {
             return range;
         }
     }
-    return 'daily'; // default
+    return 'daily';
 }

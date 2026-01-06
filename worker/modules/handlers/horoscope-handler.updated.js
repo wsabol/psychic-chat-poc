@@ -9,47 +9,50 @@ import {
     callOracle,
     getUserGreeting
 } from '../oracle.js';
-import { storeMessage } from '../messages.js';
-import { translateContentObject } from '../translator.js';
-import { getUserTimezone, getLocalDateForTimezone, needsRegeneration } from '../utils/timezoneHelper.js';
+import { storeMessage, formatMessageContent } from '../messages.js';
+import { translateContentObject } from '../simpleTranslator.js';
+import { getTodayInUserTimezone, fetchUserTimezonePreference } from '../utils/timezoneUtils.js';
 
 /**
- * Generate horoscopes for the user based on local timezone date
- * Checks if already generated for user's local date (not UTC)
- * Only generates if created_at_local_date < today's local date
+ * Generate horoscopes for the user
+ * Generates English horoscope, then translates to user's preferred language
+ * Uses MyMemory API (free) with intelligent retry logic for rate limiting
+ * Tracks horoscope_range to allow both daily and weekly on same day
+ * NOW TIMEZONE-AWARE: Uses user's local timezone instead of GMT
  */
 export async function generateHoroscope(userId, range = 'daily') {
     try {
         console.log(`[HOROSCOPE-HANDLER] Starting horoscope generation - userId: ${userId}, range: ${range}`);
+        
+        // Fetch user's timezone preference (stored from client-side detection)
+        let userTimezone = await fetchUserTimezonePreference(db, userId);
+        if (!userTimezone) {
+            console.warn(`[HOROSCOPE-HANDLER] No timezone preference found for user, defaulting to GMT`);
+            userTimezone = 'GMT';
+        }
+        
+        // Get today's date in user's LOCAL timezone (not GMT)
+        const today = getTodayInUserTimezone(userTimezone);
+        console.log(`[HOROSCOPE-HANDLER] User timezone: ${userTimezone}, Today's date: ${today}`);
+        
         const userIdHash = hashUserId(userId);
         
-        // Get user's timezone and today's local date
-        const userTimezone = await getUserTimezone(userIdHash);
-        const todayLocalDate = getLocalDateForTimezone(userTimezone);
-        console.log(`[HOROSCOPE-HANDLER] User timezone: ${userTimezone}, Today (local): ${todayLocalDate}`);
-        
-        // Check if THIS SPECIFIC RANGE was already generated for today (in user's timezone)
+        // Check if THIS SPECIFIC RANGE was already generated today (in user's timezone)
         const { rows: existingHoroscopes } = await db.query(
-            `SELECT id, created_at_local_date FROM messages 
+            `SELECT id FROM messages 
              WHERE user_id_hash = $1 
              AND role = 'horoscope' 
              AND horoscope_range = $2
-             ORDER BY created_at DESC
+             AND created_at::date = $3::date 
              LIMIT 1`,
-            [userIdHash, range]
+            [userIdHash, range, today]
         );
         
         if (existingHoroscopes.length > 0) {
-            const createdAtLocalDate = existingHoroscopes[0].created_at_local_date;
-            if (!needsRegeneration(createdAtLocalDate, todayLocalDate)) {
-                console.log(`[HOROSCOPE-HANDLER] ${range} horoscope already generated for today (${todayLocalDate}), skipping`);
-                return;
-            } else {
-                console.log(`[HOROSCOPE-HANDLER] Previous horoscope from ${createdAtLocalDate}, today is ${todayLocalDate}, regenerating`);
-            }
-        } else {
-            console.log(`[HOROSCOPE-HANDLER] No existing ${range} horoscope found, proceeding with generation`);
+            console.log(`[HOROSCOPE-HANDLER] ${range} horoscope already generated today, skipping`);
+            return;
         }
+        console.log(`[HOROSCOPE-HANDLER] No existing ${range} horoscope found for today, proceeding with generation`);
         
         // Fetch user context
         const userInfo = await fetchUserPersonalInfo(userId);
@@ -103,17 +106,19 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
                     text: oracleResponses.full,
                     range: currentRange,
                     generated_at: generatedAt,
+                    user_timezone: userTimezone,
                     zodiac_sign: astrologyInfo.zodiac_sign
                 };
                 
                 const horoscopeDataBrief = { 
                     text: oracleResponses.brief, 
                     range: currentRange, 
-                    generated_at: generatedAt, 
+                    generated_at: generatedAt,
+                    user_timezone: userTimezone,
                     zodiac_sign: astrologyInfo.zodiac_sign 
                 };
                 
-                // Translate to user's preferred language
+                // Translate to user's preferred language using MyMemory API
                 let horoscopeDataFullLang = null;
                 let horoscopeDataBriefLang = null;
                 
@@ -121,12 +126,21 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
                     console.log(`[HOROSCOPE-HANDLER] Translating ${currentRange} horoscope to ${userLanguage}...`);
                     horoscopeDataFullLang = await translateContentObject(horoscopeDataFull, userLanguage);
                     horoscopeDataBriefLang = await translateContentObject(horoscopeDataBrief, userLanguage);
-                    console.log(`[HOROSCOPE-HANDLER] ✓ Translation successful`);
+                    
+                    // VALIDATION: Check if translation actually succeeded
+                    if (horoscopeDataFullLang?.text === horoscopeDataFull?.text) {
+                        console.warn(`[HOROSCOPE-HANDLER] ⚠️ WARNING: Translation returned SAME text as English!`);
+                        console.warn(`[HOROSCOPE-HANDLER] ⚠️ Translation likely failed. Storing English only.`);
+                        console.warn(`[HOROSCOPE-HANDLER] ⚠️ Check logs for MyMemory API errors (429 rate limiting)`)
+                        horoscopeDataFullLang = null;
+                        horoscopeDataBriefLang = null;
+                    } else {
+                        console.log(`[HOROSCOPE-HANDLER] ✓ Translation successful`);
+                    }
                 }
                 
                 // Store message with both English and translated versions (if applicable)
-                // CRITICAL: Pass created_at_local_date with today's local date
-                console.log(`[HOROSCOPE-HANDLER] Storing ${currentRange} horoscope to database with local date: ${todayLocalDate}...`);
+                console.log(`[HOROSCOPE-HANDLER] Storing ${currentRange} horoscope to database...`);
                 await storeMessage(
                     userId, 
                     'horoscope', 
@@ -135,10 +149,7 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
                     userLanguage,
                     userLanguage !== 'en-US' ? horoscopeDataFullLang : null,
                     userLanguage !== 'en-US' ? horoscopeDataBriefLang : null,
-                    currentRange,  // horoscopeRange
-                    null,          // moonPhase
-                    null,          // contentType
-                    todayLocalDate // created_at_local_date ← TIMEZONE-AWARE DATE
+                    currentRange  // ← HOROSCOPE RANGE (daily/weekly)
                 );
                 console.log(`[HOROSCOPE-HANDLER] ✓ ${currentRange} horoscope generated and stored`);
                 
@@ -150,7 +161,7 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
         
     } catch (err) {
         console.error('[HOROSCOPE-HANDLER] Error generating horoscopes:', err.message);
-        console.error('[HOROSCOPE-HANDLER] Stack:', err.stack);
+        console.error('[HOROSCOPE-HANDLER] Stack:`, err.stack);
         throw err;
     }
 }

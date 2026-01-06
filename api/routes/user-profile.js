@@ -201,7 +201,7 @@ router.get("/:userId/preferences", authorizeUser, async (req, res) => {
 // Save user preferences
 router.post("/:userId/preferences", authorizeUser, async (req, res) => {
     const { userId } = req.params;
-    const { language, response_type, voice_enabled, voice_selected } = req.body;
+    const { language, response_type, voice_enabled, voice_selected, timezone } = req.body;
     const userIdHash = hashUserId(userId);
     
     try {
@@ -221,16 +221,17 @@ router.post("/:userId/preferences", authorizeUser, async (req, res) => {
         const selectedVoice = validVoices.includes(voice_selected) ? voice_selected : 'sophia';
         
         const { rows } = await db.query(
-            `INSERT INTO user_preferences (user_id_hash, language, response_type, voice_enabled, voice_selected)
-             VALUES ($1, $2, $3, $4, $5)
+            `INSERT INTO user_preferences (user_id_hash, language, response_type, voice_enabled, voice_selected, timezone)
+             VALUES ($1, $2, $3, $4, $5, $6)
              ON CONFLICT (user_id_hash) DO UPDATE SET
              language = EXCLUDED.language,
              response_type = EXCLUDED.response_type,
              voice_enabled = EXCLUDED.voice_enabled,
              voice_selected = EXCLUDED.voice_selected,
+             timezone = EXCLUDED.timezone,
              updated_at = CURRENT_TIMESTAMP
-             RETURNING language, response_type, voice_enabled, voice_selected`,
-            [userIdHash, language, response_type, voice_enabled !== false, selectedVoice]
+             RETURNING language, response_type, voice_enabled, voice_selected, timezone`,
+            [userIdHash, language, response_type, voice_enabled !== false, selectedVoice, timezone]
         );
         
         res.json({ success: true, preferences: rows[0] });

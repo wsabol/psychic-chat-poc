@@ -1,0 +1,101 @@
+import { Router } from 'express';
+import { db } from '../../shared/db.js';
+import { hashUserId } from '../../shared/hashUtils.js';
+import logger from '../../shared/logger.js';
+
+const router = Router();
+
+/**
+ * POST /auth/timezone
+ * Save user's browser timezone to database
+ * Called on app startup with browser-detected timezone
+ */
+router.post('/timezone', async (req, res) => {
+  try {
+    const { userId, timezone } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'userId required' });
+    }
+    
+    if (!timezone) {
+      return res.status(400).json({ error: 'timezone required' });
+    }
+    
+    // Validate timezone is IANA format (basic check)
+    if (typeof timezone !== 'string' || timezone.length < 3) {
+      return res.status(400).json({ error: 'Invalid timezone format' });
+    }
+    
+    const userIdHash = hashUserId(userId);
+    
+    // UPSERT: Update if exists, insert if not
+    const result = await db.query(
+      `INSERT INTO user_preferences (user_id_hash, timezone)
+       VALUES ($1, $2)
+       ON CONFLICT (user_id_hash) DO UPDATE SET
+       timezone = EXCLUDED.timezone,
+       updated_at = CURRENT_TIMESTAMP
+       RETURNING timezone`,
+      [userIdHash, timezone]
+    );
+    
+    logger.info(`[PREFERENCES] Timezone saved for user ${userId}: ${timezone}`);
+    
+    return res.json({
+      success: true,
+      timezone: result.rows[0].timezone,
+      message: 'Timezone saved successfully'
+    });
+    
+  } catch (err) {
+    logger.error('[PREFERENCES] Error saving timezone:', err.message);
+    return res.status(500).json({
+      error: 'Failed to save timezone',
+      details: err.message
+    });
+  }
+});
+
+/**
+ * GET /auth/timezone
+ * Retrieve user's stored timezone
+ */
+router.get('/timezone', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'userId required' });
+    }
+    
+    const userIdHash = hashUserId(userId);
+    
+    const { rows } = await db.query(
+      `SELECT timezone FROM user_preferences WHERE user_id_hash = $1`,
+      [userIdHash]
+    );
+    
+    if (rows.length === 0) {
+      return res.json({
+        success: true,
+        timezone: 'GMT',
+        message: 'No timezone set, defaulting to GMT'
+      });
+    }
+    
+    return res.json({
+      success: true,
+      timezone: rows[0].timezone || 'GMT'
+    });
+    
+  } catch (err) {
+    logger.error('[PREFERENCES] Error fetching timezone:', err.message);
+    return res.status(500).json({
+      error: 'Failed to fetch timezone',
+      details: err.message
+    });
+  }
+});
+
+export default router;

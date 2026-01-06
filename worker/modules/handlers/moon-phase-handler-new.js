@@ -68,7 +68,6 @@ export async function getMessageHistory(userId, limit = 10) {
  * @param {string} horoscopeRange - For horoscopes: 'daily' or 'weekly'
  * @param {string} moonPhase - For moon phases: phase name (e.g., 'fullMoon', 'newMoon')
  * @param {string} contentType - Optional content type descriptor
- * @param {string} createdAtLocalDate - Creation date in user's local timezone (YYYY-MM-DD)
  */
 export async function storeMessage(
     userId, 
@@ -78,16 +77,17 @@ export async function storeMessage(
     languageCode = null, 
     contentFullLang = null, 
     contentBriefLang = null, 
-        horoscopeRange = null, 
+    horoscopeRange = null, 
     moonPhase = null, 
     contentType = null,
+    createdAtLocal = null,
     createdAtLocalDate = null
 ) {
     try {
         const userIdHash = hashUserId(userId);
         const fullStr = JSON.stringify(contentFull).substring(0, 200);
         const briefStr = contentBrief ? JSON.stringify(contentBrief).substring(0, 200) : 'NULL';
-                console.log('[MESSAGES] Storing:', { 
+        console.log('[MESSAGES] Storing:', { 
             role, 
             fullLength: JSON.stringify(contentFull).length, 
             briefLength: contentBrief ? JSON.stringify(contentBrief).length : 0, 
@@ -96,8 +96,7 @@ export async function storeMessage(
             languageCode,
             horoscopeRange,
             moonPhase,
-            contentType,
-            createdAtLocalDate
+            contentType
         });
         
         // Build query based on whether we have language-specific content
@@ -115,14 +114,15 @@ export async function storeMessage(
                 content_brief_lang_encrypted, 
                 language_code, 
                 response_type,
-                                horoscope_range,
+                horoscope_range,
                 moon_phase,
                 content_type,
+                created_at,
                 created_at_local_date
             ) VALUES(
                 $1, $2, pgp_sym_encrypt($3, $6), pgp_sym_encrypt($4, $6), 
                 pgp_sym_encrypt($5, $6), pgp_sym_encrypt($7, $6), 
-                $8, 'both', $9, $10, $11, $12
+                $8, 'both', $9, $10, $11, $12, $13
             )`;
             params = [
                 userIdHash,
@@ -136,7 +136,8 @@ export async function storeMessage(
                 horoscopeRange,
                 moonPhase,
                 contentType,
-                createdAtLocalDate
+                createdAtLocal || new Date().toISOString(),
+                createdAtLocalDate || new Date().toISOString().split('T')[0]
             ];
         } else {
             // Store only English (baseline) - no language-specific content
@@ -149,10 +150,13 @@ export async function storeMessage(
                 horoscope_range,
                 moon_phase,
                 content_type,
+
+                created_at,
                 created_at_local_date
             ) VALUES(
                 $1, $2, pgp_sym_encrypt($3, $4), pgp_sym_encrypt($5, $4), 
-                'both', $6, $7, $8, $9
+
+                'both', $6, $7, $8, $9, $10
             )`;
             params = [
                 userIdHash,
@@ -161,14 +165,14 @@ export async function storeMessage(
                 process.env.ENCRYPTION_KEY,
                 JSON.stringify(contentBrief || { text: '', cards: [] }),
                 horoscopeRange,
-                                moonPhase,
+                moonPhase,
                 contentType,
-                createdAtLocalDate
+                createdAtLocal || new Date().toISOString()
             ];
         }
         
         await db.query(query, params);
-        console.log('[MESSAGES] ✓ Message stored successfully with createdAtLocalDate:', createdAtLocalDate);
+        console.log('[MESSAGES] ✓ Message stored successfully');
     } catch (err) {
         console.error('[MESSAGES] Error storing message:', err);
         throw err;
@@ -178,6 +182,68 @@ export async function storeMessage(
 /**
  * Format message for storage - combine text and metadata
  */
+/**
+ * Update an existing message with translation
+ */
+export async function updateMessageTranslation(
+    userId,
+    role,
+    contentFullLang,
+    contentBriefLang,
+    userLanguage,
+    horoscopeRange = null
+) {
+    try {
+        const userIdHash = hashUserId(userId);
+        
+        let query;
+        let params;
+        
+        if (horoscopeRange) {
+            // Use subquery to find most recent message first
+            query = `UPDATE messages SET
+                content_full_lang_encrypted = pgp_sym_encrypt($3, $4),
+                content_brief_lang_encrypted = pgp_sym_encrypt($5, $4),
+                language_code = $6,
+                response_type = 'both'
+             WHERE id = (SELECT id FROM messages WHERE user_id_hash = $1 AND role = $2 AND horoscope_range = $7 ORDER BY created_at DESC LIMIT 1)`;
+            params = [
+                userIdHash,
+                role,
+                JSON.stringify(contentFullLang),
+                process.env.ENCRYPTION_KEY,
+                JSON.stringify(contentBriefLang),
+                userLanguage,
+                horoscopeRange
+            ];
+        } else {
+            // Use subquery to find most recent message first
+            query = `UPDATE messages SET
+                content_full_lang_encrypted = pgp_sym_encrypt($3, $4),
+                content_brief_lang_encrypted = pgp_sym_encrypt($5, $4),
+                language_code = $6,
+                response_type = 'both'
+             WHERE id = (SELECT id FROM messages WHERE user_id_hash = $1 AND role = $2 ORDER BY created_at DESC LIMIT 1)`;
+            params = [
+                userIdHash,
+                role,
+                JSON.stringify(contentFullLang),
+                process.env.ENCRYPTION_KEY,
+                JSON.stringify(contentBriefLang),
+                userLanguage
+            ];
+        }
+        
+        const result = await db.query(query, params);
+        console.log('[MESSAGES] ✓ Message translation updated - rows affected:', result.rowCount, 'Query:', query.substring(0, 100));
+    } catch (err) {
+        console.error('[MESSAGES] Error updating translation:', err.message);
+        console.error('[MESSAGES] Query was:', query);
+        console.error('[MESSAGES] Params:', params.slice(0, 3));
+        throw err;
+    }
+}
+
 export function formatMessageContent(text, cards = null) {
     const content = { text };
     if (cards && cards.length > 0) {
