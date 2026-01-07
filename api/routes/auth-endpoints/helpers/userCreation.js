@@ -1,5 +1,6 @@
 import { db } from '../../../shared/db.js';
 import { hashUserId } from '../../../shared/hashUtils.js';
+import { recordUserConsent } from './consentHelper.js';
 
 /**
  * Create user database records (personal info, 2FA settings, astrology)

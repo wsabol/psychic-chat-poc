@@ -1,26 +1,27 @@
 import React from 'react';
 import VoiceOption from './VoiceOption';
 
+// Voice options with translation keys for instant updates
 const VOICE_OPTIONS = {
   sophia: {
-    label: 'Sophia',
-    specialty: 'Intuitive Energy Reader',
-    description: 'Warm and insightful wisdom'
+    labelKey: 'voiceSelect.sophia',
+    specialtyKey: 'voiceSelect.sophiaSpecialty',
+    descriptionKey: 'voiceSelect.sophiaDesc'
   },
   cassandra: {
-    label: 'Cassandra',
-    specialty: 'Deep Oracle Wisdom',
-    description: 'Ancient knowledge keeper'
+    labelKey: 'voiceSelect.cassandra',
+    specialtyKey: 'voiceSelect.cassandraSpecialty',
+    descriptionKey: 'voiceSelect.cassandraDesc'
   },
   meridian: {
-    label: 'Meridian',
-    specialty: 'Celestial Alignment Expert',
-    description: 'Cosmic energy specialist'
+    labelKey: 'voiceSelect.meridian',
+    specialtyKey: 'voiceSelect.meridianSpecialty',
+    descriptionKey: 'voiceSelect.meridianDesc'
   },
   leo: {
-    label: 'Leo',
-    specialty: 'Stellar Mystic',
-    description: 'Universal spiritual insights'
+    labelKey: 'voiceSelect.leo',
+    specialtyKey: 'voiceSelect.leoSpecialty',
+    descriptionKey: 'voiceSelect.leoDesc'
   }
 };
 
@@ -100,22 +101,23 @@ export default function VoiceSection({
             fontWeight: '500',
             color: '#555'
           }}>
-            Select your oracle's voice:
+            {getString('voiceSelect.label')}
           </p>
           <div style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
             gap: '1rem'
           }}>
-            {Object.entries(VOICE_OPTIONS).map(([key, data]) => (
+            {Object.entries(VOICE_OPTIONS).map(([key, translationKeys]) => (
               <VoiceOption
                 key={key}
                 voiceKey={key}
-                voiceData={data}
+                translationKeys={translationKeys}
                 isSelected={voiceSelected === key}
                 isPreviewingVoice={previewingVoice}
                 onSelect={onVoiceSelectedChange}
                 onPreview={onPreviewVoice}
+                getString={getString}
               />
             ))}
           </div>

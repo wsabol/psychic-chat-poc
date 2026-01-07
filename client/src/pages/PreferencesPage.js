@@ -1,118 +1,59 @@
-import React, { useState, useEffect } from 'react';
-import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
+import React, { useState } from 'react';
 import { useSpeech } from '../hooks/useSpeech';
 import { useTranslation } from '../context/TranslationContext';
-import { useLanguagePreference } from '../hooks/useLanguagePreference';
+import { useFetchPreferences, useSavePreferences } from './PreferencesPage/usePreferencesLogic';
+import { createGetString } from './PreferencesPage/getStringUtil';
 import LanguageSection from './PreferencesPage/LanguageSection';
 import ResponseTypeSection from './PreferencesPage/ResponseTypeSection';
 import VoiceSection from './PreferencesPage/VoiceSection';
 import ActionButtons from './PreferencesPage/ActionButtons';
 
+/**
+ * PreferencesPage Component
+ * Allows users to configure language, response type, and voice settings
+ * Translations are embedded for instant UI updates when language changes
+ */
 function PreferencesPage({ userId, token, onNavigateToPage }) {
-    const { t, language, changeLanguage } = useTranslation();
-    const { saveLanguagePreference } = useLanguagePreference();
-    const [preferences, setPreferences] = useState({
-        language: language,
-        response_type: 'full',
-        voice_enabled: true,
-        voice_selected: 'sophia'
-    });
-    const [personalInfo, setPersonalInfo] = useState({ familiar_name: '' });
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
-    const [error, setError] = useState(null);
-    const [success, setSuccess] = useState(false);
-    const [previewingVoice, setPreviewingVoice] = useState(null);
-
+    const { t, changeLanguage } = useTranslation();
     const { speak, voiceGreetings, isSupported: isSpeechSupported } = useSpeech();
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
-    useEffect(() => {
-        fetchData();
-    }, [userId, token, API_URL]);
+    // Fetch preferences from server
+    const { preferences, setPreferences, personalInfo, loading, error: fetchError } = useFetchPreferences(
+        userId,
+        token,
+        API_URL
+    );
 
-    const fetchData = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-            
-            if (!token) {
-                console.log('[PREFERENCES] No token available yet');
-                setLoading(false);
-                return;
-            }
-            
-            const headers = { 'Authorization': `Bearer ${token}` };
+    // Save preferences to server
+    const { save: savePreferences, saving, error: saveError, success } = useSavePreferences(
+        API_URL,
+        userId,
+        token,
+        changeLanguage
+    );
 
-            const prefResponse = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}/preferences`, { headers });
-            if (!prefResponse.ok) throw new Error('Failed to fetch preferences');
-            
-            const prefData = await prefResponse.json();
-            setPreferences({
-                language: prefData.language || 'en-US',
-                response_type: prefData.response_type || 'full',
-                voice_enabled: prefData.voice_enabled !== false,
-                voice_selected: prefData.voice_selected || 'sophia'
-            });
+    const [previewingVoice, setPreviewingVoice] = useState(null);
+    const [error, setError] = useState(fetchError);
 
-            const personalResponse = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}`, { headers });
-            if (personalResponse.ok) {
-                const personalData = await personalResponse.json();
-                setPersonalInfo({ familiar_name: personalData.address_preference || 'Friend' });
-            }
-        } catch (err) {
-            console.error('Error fetching data:', err);
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+    // Create getString function with current language and t() function
+    const getString = createGetString(preferences.language, t);
 
     const handleSave = async (e) => {
         e.preventDefault();
-        setSaving(true);
         setError(null);
-        setSuccess(false);
 
         try {
-            // Update language in TranslationContext if it changed
-            if (preferences.language !== language) {
-                await changeLanguage(preferences.language);
+            const savedPrefs = await savePreferences(preferences);
+            if (savedPrefs) {
+                setPreferences(savedPrefs);
             }
 
-            const response = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}/preferences`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(preferences)
-            });
-
-            if (!response.ok) {
-                const errData = await response.json();
-                throw new Error(errData.error || 'Failed to save preferences');
-            }
-
-            const data = await response.json();
-            if (data.preferences) {
-                setPreferences({
-                    language: data.preferences.language,
-                    response_type: data.preferences.response_type,
-                    voice_enabled: data.preferences.voice_enabled,
-                    voice_selected: data.preferences.voice_selected
-                });
-            }
-            setSuccess(true);
             setTimeout(() => {
-                setSuccess(false);
                 onNavigateToPage(0);
             }, 1500);
         } catch (err) {
-            console.error('Error saving preferences:', err);
             setError(err.message);
-        } finally {
-            setSaving(false);
         }
     };
 
@@ -131,18 +72,12 @@ function PreferencesPage({ userId, token, onNavigateToPage }) {
         }
     };
 
-    // Create a local getString function that uses preferences language for old-style translations
-    // but also falls back to new TranslationContext
-    const getString = (key) => {
-        try {
-            return t(key);
-        } catch (e) {
-            return key;
-        }
-    };
-
     if (loading) {
-        return <div style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>{getString('common.loading')}</div>;
+        return (
+            <div style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>
+                {getString('common.loading')}
+            </div>
+        );
     }
 
     return (
@@ -164,7 +99,7 @@ function PreferencesPage({ userId, token, onNavigateToPage }) {
                 {getString('settings.preferences')}
             </h1>
 
-            {error && (
+            {(error || saveError) && (
                 <div style={{
                     padding: '12px',
                     marginBottom: '1.5rem',
@@ -173,7 +108,7 @@ function PreferencesPage({ userId, token, onNavigateToPage }) {
                     borderRadius: '8px',
                     fontSize: '14px'
                 }}>
-                    {getString('common.error')}: {error}
+                    {getString('common.error')}: {error || saveError}
                 </div>
             )}
 
@@ -218,8 +153,6 @@ function PreferencesPage({ userId, token, onNavigateToPage }) {
                     onSubmit={handleSave}
                     onCancel={() => onNavigateToPage(0)}
                     getString={getString}
-                    language={preferences.language}
-                    onLanguageChange={(newLang) => setPreferences({ ...preferences, language: newLang })}
                 />
             </form>
         </div>

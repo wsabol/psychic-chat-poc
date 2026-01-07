@@ -49,7 +49,8 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
             }
             
             const data = typeof fullContent === 'string' ? JSON.parse(fullContent) : fullContent;
-            if (data.date === today) {
+            const dataDate = data.generated_at?.split('T')[0];
+            if (dataDate === today) {
                 todaysWeather = data;
                 // ALWAYS parse briefContent - don't skip if null
                 briefWeather = briefContent ? (typeof briefContent === 'string' ? JSON.parse(briefContent) : briefContent) : null;

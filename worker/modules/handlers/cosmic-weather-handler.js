@@ -8,9 +8,9 @@ import { spawn } from 'child_process';
 
 function getCosmicWeatherPlanets() {
     return new Promise((resolve, reject) => {
-        const python = spawn('python3', ['astrology_v2.py']);
+        const python = spawn('python3', ['/app/astrology.py']);
         let output = '';
-        python.stdin.write(JSON.stringify({ type: 'cosmic_weather_planets' }));
+        python.stdin.write(JSON.stringify({ type: 'current_planets' }));
         python.stdin.end();
         python.stdout.on('data', (data) => { output += data.toString(); });
         python.stderr.on('data', (data) => console.error('[PYTHON]', data.toString()));

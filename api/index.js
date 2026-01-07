@@ -40,9 +40,11 @@ app.use(helmet({
             styleSrc: ["'self'", "'unsafe-inline'"],
             imgSrc: ["'self'", "data:", "https:"],
             fontSrc: ["'self'", "data:"],
-            // ✅ FIXED: Allow Stripe API connections
+            // ✅ FIXED: Allow localhost for development AND Stripe API for production
             connectSrc: [
                 "'self'",
+                "http://localhost:3000",       // API in development
+                "http://localhost:3001",       // Client in development
                 "https:",
                 "https://m.stripe.network",    // Stripe fraud detection
                 "https://m.stripe.com",         // Stripe API

@@ -2,11 +2,12 @@ import React from 'react';
 
 export default function VoiceOption({
   voiceKey,
-  voiceData,
+  translationKeys,
   isSelected,
   isPreviewingVoice,
   onSelect,
-  onPreview
+  onPreview,
+  getString
 }) {
   return (
     <label style={{
@@ -39,7 +40,7 @@ export default function VoiceOption({
           color: '#333',
           marginBottom: '0.25rem'
         }}>
-          {voiceData.label}
+          {getString(translationKeys.labelKey)}
         </div>
         <div style={{
           fontSize: '12px',
@@ -47,14 +48,14 @@ export default function VoiceOption({
           fontWeight: '500',
           marginBottom: '0.25rem'
         }}>
-          {voiceData.specialty}
+          {getString(translationKeys.specialtyKey)}
         </div>
         <div style={{
           fontSize: '12px',
           color: '#666',
           marginBottom: '0.5rem'
         }}>
-          {voiceData.description}
+          {getString(translationKeys.descriptionKey)}
         </div>
         <button
           type="button"
@@ -71,7 +72,7 @@ export default function VoiceOption({
             opacity: isPreviewingVoice === voiceKey ? 0.7 : 1
           }}
         >
-          {isPreviewingVoice === voiceKey ? '🔊 Listening...' : '🔊 Preview'}
+          {isPreviewingVoice === voiceKey ? `🔊 ${getString('voiceSelect.previewing')}` : `🔊 ${getString('voiceSelect.preview')}`}
         </button>
       </div>
     </label>

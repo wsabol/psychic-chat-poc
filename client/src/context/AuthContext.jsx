@@ -28,20 +28,62 @@ export function AuthProvider({ children }) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
         if (firebaseUser) {
+          console.log('[AUTH] User logged in:', firebaseUser.uid);
+          
           // Get ID token
           const token = await firebaseUser.getIdToken();
+          
+          // Check if user has accepted consent
+          let consentStatus = {
+            hasConsent: false,
+            terms_accepted: false,
+            privacy_accepted: false
+          };
+          
+          try {
+            const consentUrl = `http://localhost:3000/auth/check-consent/${firebaseUser.uid}`;
+            console.log('[AUTH] Checking consent at:', consentUrl);
+            
+            const consentResponse = await fetch(consentUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            
+            console.log('[AUTH] Consent check response status:', consentResponse.status);
+            
+            if (consentResponse.ok) {
+              consentStatus = await consentResponse.json();
+              console.log('[AUTH] Consent status returned:', consentStatus);
+              console.log('[AUTH] hasConsent =', consentStatus.hasConsent, '| terms =', consentStatus.terms_accepted, '| privacy =', consentStatus.privacy_accepted);
+            } else {
+              console.warn('[AUTH] Consent check returned non-200:', consentResponse.status);
+              const errorText = await consentResponse.text();
+              console.warn('[AUTH] Error response:', errorText);
+            }
+          } catch (consentErr) {
+            console.warn('[AUTH] Could not check consent:', consentErr.message);
+            console.error('[AUTH] Consent error details:', consentErr);
+          }
           
           // Don't fetch /auth/user - we already have Firebase user info
           // Firebase provides: uid, email, emailVerified, displayName, etc.
           
-          setUser({
+          const newUser = {
             uid: firebaseUser.uid,
             email: firebaseUser.email,
             emailVerified: firebaseUser.emailVerified,
             displayName: firebaseUser.displayName,
             token,
-            firebaseUser // Store firebase user object for token refresh
-          });
+            firebaseUser, // Store firebase user object for token refresh
+            consentStatus,
+            needsConsent: !consentStatus.hasConsent
+          };
+          
+          console.log('[AUTH] Setting user with needsConsent =', newUser.needsConsent);
+          setUser(newUser);
 
           // Save timezone to user_preferences
           await saveUserTimezone(firebaseUser.uid, token);
@@ -57,6 +99,7 @@ export function AuthProvider({ children }) {
           }, 45 * 60 * 1000); // 45 minutes
 
         } else {
+          console.log('[AUTH] User logged out');
           setUser(null);
           // Clear token refresh interval
           if (tokenRefreshIntervalRef.current) {

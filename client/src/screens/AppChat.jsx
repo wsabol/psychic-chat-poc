@@ -1,16 +1,19 @@
 import React, { useEffect } from 'react';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { LoadingScreen } from './LoadingScreen';
+import { ConsentModal } from '../components/ConsentModal';
 import PaymentMethodRequiredModal from '../components/PaymentMethodRequiredModal';
 import SubscriptionRequiredModal from '../components/SubscriptionRequiredModal';
 import OnboardingModal from '../components/OnboardingModal';
 import MainContainer from '../layouts/MainContainer';
 import { useLanguagePreference } from '../hooks/useLanguagePreference';
+import { useAuth } from '../context/AuthContext';
 import { initializeAnalytics, trackPageView } from '../utils/analyticsTracker';
 
 /**
  * AppChat - Handles authenticated chat flow
  * Shows:
+ * - Consent modal (if user hasn't accepted terms)
  * - Payment required modal (if needed)
  * - Subscription required modal (if needed)
  * - Onboarding modal (if new user)
@@ -33,6 +36,19 @@ export function AppChat({ state }) {
     tempFlow,
   } = state;
 
+  const { user } = useAuth();
+  const [showConsentModal, setShowConsentModal] = React.useState(false);
+
+  // Check if user needs to show consent modal
+  useEffect(() => {
+    if (user && user.needsConsent) {
+      console.log('[APPCHAT] User needs to accept consent');
+      setShowConsentModal(true);
+    } else {
+      setShowConsentModal(false);
+    }
+  }, [user?.needsConsent]);
+
   // Fetch user's language preference from DB when authenticated
   useLanguagePreference();
 
@@ -48,6 +64,27 @@ export function AppChat({ state }) {
   useEffect(() => {
     console.log('[APPCHAT] Onboarding status updated:', isUserOnboarding);
   }, [isUserOnboarding]);
+
+  // Handle consent accepted
+  const handleConsentAccepted = () => {
+    console.log('[APPCHAT] Consent accepted');
+    setShowConsentModal(false);
+    // User will be redirected or updated by AuthContext
+    window.location.reload();
+  };
+
+  // Guard: Show consent modal if user hasn't accepted terms
+  if (showConsentModal && user) {
+    return (
+      <ErrorBoundary>
+        <ConsentModal
+          userId={user.uid}
+          token={user.token}
+          onConsentAccepted={handleConsentAccepted}
+        />
+      </ErrorBoundary>
+    );
+  }
 
   // Guard: Don't show modals while onboarding data is loading
   if (authState.isAuthenticated && onboarding.onboardingStatus === null) {

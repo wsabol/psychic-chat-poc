@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '../firebase';
 import { useTranslation } from '../context/TranslationContext';
+import { LanguageSwitcher } from './LanguageSwitcher';
 import { LoginForm } from './LoginForm';
 import { RegisterForm } from './RegisterForm';
 import { useRegistrationFlow } from '../hooks/useRegistrationFlow';
@@ -181,8 +182,19 @@ export function Login() {
       justifyContent: 'center',
       minHeight: '100vh',
       backgroundColor: 'transparent',
-      color: 'white'
+      color: 'white',
+      position: 'relative'
     }}>
+      {/* Language Switcher */}
+      <div style={{
+        position: 'absolute',
+        top: '1rem',
+        right: '1rem',
+        zIndex: 100
+      }}>
+        <LanguageSwitcher compact={true} />
+      </div>
+
       <div style={{
         backgroundColor: 'rgba(30, 30, 60, 0.9)',
         padding: '2rem',

@@ -50,7 +50,7 @@ export async function generateCosmicWeather(userId, token) {
  * Poll for cosmic weather until ready
  * Returns data when ready, throws error if timeout
  */
-export async function pollForCosmicWeather(userId, token, maxPolls = 30, pollInterval = 1000) {
+export async function pollForCosmicWeather(userId, token, maxPolls = 120, pollInterval = 1000) {
   const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
   let pollCount = 0;
 
