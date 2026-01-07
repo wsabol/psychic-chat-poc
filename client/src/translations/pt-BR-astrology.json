@@ -6,6 +6,7 @@
     "weekly": "Semanal",
     "monthly": "Mensal",
     "loading": "Lendo as estrelas...",
+    "translating.horoscope": "Estou traduzindo seu horóscopo {{range}} do inglês para {{language}}...",
     "generatingMessage": "Sua orientação cósmica está sendo tecida pelo Oráculo...",
     "reading": "Leitura {{range}}",
     "disclaimer": "🔮 Os horóscopos são para entretenimento e inspiração. Suas escolhas e ações moldam seu destino.",
@@ -26,6 +27,7 @@
     "currentPhase": "Fase Atual",
     "nextPhase": "Próxima Fase",
     "loading": "Lendo a lua...",
+    "translating.moonPhase": "Estou traduzindo sua perspectiva de fase lunar {{phase}} do inglês para {{language}}...",
     "disclaimer": "A influência da lua guia nossas emoções e energia.",
     "cycleInfo": "A lua completa um ciclo completo aproximadamente a cada 29,5 dias. Cada fase carrega uma energia única que influencia todos os signos do zodíaco de forma diferente com base em seu mapa natal pessoal.",
     "noPhase": "Nenhuma informação de fase lunar disponível"
@@ -48,6 +50,7 @@
     "sun": "Sol",
     "moon": "Lua",
     "loading": "Lendo condições cósmicas...",
+    "translating.cosmicWeather": "Estou traduzindo seu clima cósmico do inglês para {{language}}...",
     "noWeather": "Nenhuma informação de clima cósmico disponível"
   },
   "mySign": {

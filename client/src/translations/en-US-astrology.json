@@ -7,6 +7,7 @@
     "monthly": "Monthly",
     "loading": "Reading the stars...",
     "generatingMessage": "Your cosmic guidance is being woven by The Oracle...",
+    "translating.horoscope": "I am now translating your {{range}} horoscope from English to {{language}}...",
     "reading": "{{range}} Reading",
     "disclaimer": "🔮 Horoscopes are for entertainment and inspiration. Your choices and actions ultimately shape your destiny.",
     "tryAgain": "Try Again",
@@ -26,6 +27,7 @@
     "currentPhase": "Current Phase",
     "nextPhase": "Next Phase",
     "loading": "Reading the moon...",
+      "translating.moonPhase": "I am now translating your {{phase}} moon phase insight from English to {{language}}...",
     "disclaimer": "The moon's influence guides our emotions and energy.",
     "cycleInfo": "The moon completes a full cycle approximately every 29.5 days. Each phase carries unique energy that influences all zodiac signs differently based on your personal birth chart.",
     "noPhase": "Moon phase information not available"
@@ -48,6 +50,7 @@
     "sun": "Sun",
     "moon": "Moon",
     "loading": "Reading cosmic conditions...",
+      "translating.cosmicWeather": "I am now translating your cosmic weather from English to {{language}}...",
     "noWeather": "Cosmic weather information not available"
   },
   "mySign": {

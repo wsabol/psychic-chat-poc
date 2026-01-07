@@ -8,6 +8,7 @@
     "loading": "阅读星星...",
     "generatingMessage": "您的宇宙指导正在被神谕编织...",
     "reading": "{{range}}阅读",
+    "translating.horoscope": "我正在将您的{{range}}星座运势从英文翻译成{{language}}...",
     "disclaimer": "🔮 星座运势仅供娱乐和启发。您的选择和行动最终决定了您的命运。",
     "tryAgain": "重试",
     "noHoroscope": "没有可用的星座运势"
@@ -26,6 +27,7 @@
     "currentPhase": "当前月相",
     "nextPhase": "下一个月相",
     "loading": "阅读月亮...",
+    "translating.cosmicWeather": "我正在将您的宇宙天气从英文翻译成{{language}}...",
     "disclaimer": "月亮的影响指引我们的情绪和能量。",
     "cycleInfo": "月亮大约每29.5天完成一个完整周期。每个阶段都带有独特的能量，根据您的个人出生图表，对所有黄道十二宫的影响各不相同。",
     "noPhase": "没有可用的月相信息"
@@ -48,6 +50,7 @@
     "sun": "太阳",
     "moon": "月亮",
     "loading": "阅读宇宙条件...",
+    "translating.moonPhase": "我正在将您的{{phase}}月相见解从英文翻译成{{language}}...",
     "noWeather": "没有可用的宇宙天气信息"
   },
   "mySign": {

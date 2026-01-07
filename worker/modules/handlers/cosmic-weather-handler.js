@@ -1,5 +1,5 @@
 import { fetchUserAstrology, fetchUserLanguagePreference, getOracleSystemPrompt, callOracle, getUserGreeting, fetchUserPersonalInfo } from '../oracle.js';
-import { storeMessage } from '../messages.js';
+import { storeMessage, storeTranslatingMessage } from '../messages.js';
 import { translateContentObject } from '../translator.js';
 import { getUserTimezone, getLocalDateForTimezone, needsRegeneration } from '../utils/timezoneHelper.js';
 import { db } from '../../shared/db.js';
@@ -126,14 +126,40 @@ Do NOT include tarot cards - this is pure astrological forecasting enriched by t
             generated_at: new Date().toISOString()
         };
         
-        // Translate if user prefers non-English language
+                // Translate if user prefers non-English language
         let cosmicWeatherDataLang = null;
         let cosmicWeatherDataBriefLang = null;
         
         if (userLanguage && userLanguage !== 'en-US') {
+            // Store "translating..." message to show user translation is in progress
+            const languageNames = {
+                'es-ES': 'Spanish',
+                'en-GB': 'British English',
+                'fr-FR': 'French',
+                'de-DE': 'German',
+                'it-IT': 'Italian',
+                'pt-BR': 'Brazilian Portuguese',
+                'ja-JP': 'Japanese',
+                'zh-CN': 'Simplified Chinese'
+            };
+                                    const languageName = languageNames[userLanguage] || 'your language';
+            const contentTypeLabel = 'cosmic weather';
+            await storeTranslatingMessage(userId, 'translating_cosmic_weather', languageName, contentTypeLabel, todayLocalDate);
+            
             console.log(`[COSMIC-WEATHER] Translating to ${userLanguage}...`);
-            cosmicWeatherDataLang = await translateContentObject(cosmicWeatherDataFull, userLanguage);
-            cosmicWeatherDataBriefLang = await translateContentObject(cosmicWeatherDataBrief, userLanguage);
+            // Translate only the text fields to avoid timeout with complex objects
+            const translatedFullText = await translateContentObject({ text: cosmicWeatherDataFull.text }, userLanguage);
+            const translatedBriefText = await translateContentObject({ text: cosmicWeatherDataBrief.text }, userLanguage);
+            
+            // Preserve original structure with translated text
+            cosmicWeatherDataLang = {
+                ...cosmicWeatherDataFull,
+                text: translatedFullText.text
+            };
+            cosmicWeatherDataBriefLang = {
+                ...cosmicWeatherDataBrief,
+                text: translatedBriefText.text
+            };
             console.log(`[COSMIC-WEATHER] ✓ Translation successful`);
         }
         

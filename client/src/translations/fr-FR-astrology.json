@@ -8,6 +8,7 @@
     "loading": "Lecture des étoiles...",
     "generatingMessage": "Votre guidance cosmique est tissée par L'Oracle...",
     "reading": "Lecture {{range}}",
+    "translating.horoscope": "Je traduis maintenant votre horoscope {{range}} de l'anglais en {{language}}...",
     "disclaimer": "🔮 Les horoscopes sont pour le divertissement et l'inspiration. Vos choix et actions façonnent ultimement votre destinée.",
     "tryAgain": "Réessayer",
     "noHoroscope": "Aucun horoscope disponible"
@@ -26,6 +27,7 @@
     "currentPhase": "Phase Actuelle",
     "nextPhase": "Prochaine Phase",
     "loading": "Lecture de la lune...",
+    "translating.moonPhase": "Je traduis maintenant votre aperçu de phase lunaire {{phase}} de l'anglais en {{language}}...",
     "disclaimer": "L'influence de la lune guide nos émotions et notre énergie.",
     "noPhase": "Aucune information de phase lunaire disponible",
     "cycleInfo": "La lune complete un cycle complet environ tous les 29,5 jours. Chaque phase porte une energie unique qui influence tous les signes du zodiaque differemment en fonction de votre theme natal personnel."
@@ -48,6 +50,7 @@
     "sun": "Soleil",
     "moon": "Lune",
     "loading": "Lecture des conditions cosmiques...",
+    "translating.cosmicWeather": "Je traduis maintenant votre météo cosmique de l'anglais en {{language}}...",
     "noWeather": "Aucune information de météo cosmique disponible"
   },
   "mySign": {

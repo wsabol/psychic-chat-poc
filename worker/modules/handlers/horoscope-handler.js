@@ -9,7 +9,7 @@ import {
     callOracle,
     getUserGreeting
 } from '../oracle.js';
-import { storeMessage } from '../messages.js';
+import { storeMessage, storeTranslatingMessage } from '../messages.js';
 import { translateContentObject } from '../translator.js';
 import { getUserTimezone, getLocalDateForTimezone, needsRegeneration } from '../utils/timezoneHelper.js';
 
@@ -118,6 +118,21 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
                 let horoscopeDataBriefLang = null;
                 
                 if (userLanguage && userLanguage !== 'en-US') {
+                    // Store "translating..." message to show user translation is in progress
+                    const languageNames = {
+                        'es-ES': 'Spanish',
+                        'en-GB': 'British English',
+                        'fr-FR': 'French',
+                        'de-DE': 'German',
+                        'it-IT': 'Italian',
+                        'pt-BR': 'Brazilian Portuguese',
+                        'ja-JP': 'Japanese',
+                        'zh-CN': 'Simplified Chinese'
+                    };
+                    const languageName = languageNames[userLanguage] || 'your language';
+                    const contentTypeLabel = `${currentRange} horoscope`;
+                    await storeTranslatingMessage(userId, `translating_horoscope_${currentRange}`, languageName, contentTypeLabel, todayLocalDate);
+                    
                     console.log(`[HOROSCOPE-HANDLER] Translating ${currentRange} horoscope to ${userLanguage}...`);
                     horoscopeDataFullLang = await translateContentObject(horoscopeDataFull, userLanguage);
                     horoscopeDataBriefLang = await translateContentObject(horoscopeDataBrief, userLanguage);

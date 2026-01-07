@@ -6,6 +6,7 @@
     "weekly": "週刊",
     "monthly": "月刊",
     "loading": "星を読んでいます...",
+    "translating.horoscope": "{{range}}の運勢をEnglishから{{language}}に翻訳しています...",
     "generatingMessage": "あなたの宇宙的なガイダンスはオラクルによって織られています...",
     "reading": "{{range}}リーディング",
     "disclaimer": "🔮 ホロスコープはエンターテインメントとインスピレーションのためです。あなたの選択と行動が最終的にあなたの運命を形成します。",
@@ -26,6 +27,7 @@
     "currentPhase": "現在の位相",
     "nextPhase": "次の位相",
     "loading": "月を読んでいます...",
+    "translating.moonPhase": "{{phase}}の月相の洞察をEnglishから{{language}}に翻訳しています...",
     "disclaimer": "月の影響は私たちの感情とエネルギーを導きます。",
     "cycleInfo": "月は約29.5日で完全な周期を完成します。各位相は独特のエネルギーを持っており、個人的な出生図に基づいて、すべての黄道十二宮に異なる方法で影響します。",
     "noPhase": "月の位相情報は利用できません"
@@ -48,6 +50,7 @@
     "sun": "太陽",
     "moon": "月",
     "loading": "宇宙の状態を読んでいます...",
+    "translating.cosmicWeather": "コズミックウェザーをEnglishから{{language}}に翻訳しています...",
     "noWeather": "宇宙の天気情報は利用できません"
   },
   "mySign": {

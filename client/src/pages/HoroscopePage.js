@@ -140,14 +140,16 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
         return;
       }
 
-                  let pollCount = 0;
-      // 30 second timeout for all horoscopes (whether daily or weekly)
-      // Weekly is slightly more complex analysis but single API call, so similar speed
-      const maxPolls = 30;
+                                    let pollCount = 0;
+      // 60 second timeout for horoscopes (generation 10-20s + translation 10-20s)
+      const maxPolls = 60;
 
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current);
       }
+
+      // Wait 2 seconds before starting to poll - gives worker time to commit data
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
       pollIntervalRef.current = setInterval(async () => {
         pollCount++;
@@ -172,8 +174,8 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
           console.error('[HOROSCOPE] Polling error:', err);
         }
 
-        if (pollCount >= maxPolls) {
-          setError('Horoscope generation is taking longer than expected. Please try again.');
+                if (pollCount >= maxPolls) {
+          setError('Horoscope generation is taking longer than expected (60+ seconds). Please try again.');
           setGenerating(false);
           setLoading(false);
           clearInterval(pollIntervalRef.current);

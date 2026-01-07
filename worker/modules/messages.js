@@ -176,6 +176,54 @@ export async function storeMessage(
 }
 
 /**
+ * Store a translating status message
+ * Used during async translations to show users translation is in progress
+ * @param {string} userId - User ID
+ * @param {string} role - Message role (horoscope, cosmic_weather, moon_phase)
+ * @param {string} languageName - Human-readable language name (e.g., 'Spanish', 'French')
+ * @param {string} contentTypeLabel - Label for content type (e.g., 'daily horoscope', 'cosmic weather', 'full moon insight')
+ * @param {string} createdAtLocalDate - Creation date in user's local timezone
+ */
+export async function storeTranslatingMessage(userId, role, languageName, contentTypeLabel, createdAtLocalDate) {
+    try {
+        const userIdHash = hashUserId(userId);
+        const translatingText = `I am now translating your ${contentTypeLabel} from English to ${languageName}...`;
+        const content = { text: translatingText };
+        
+        console.log('[MESSAGES] Storing translating message:', { role, contentTypeLabel, languageName });
+        
+        const query = `INSERT INTO messages(
+            user_id_hash, 
+            role, 
+            content_full_encrypted, 
+            content_brief_encrypted, 
+            response_type,
+            content_type,
+            created_at_local_date
+        ) VALUES(
+            $1, $2, pgp_sym_encrypt($3, $4), pgp_sym_encrypt($5, $4), 
+            'both', $6, $7
+        )`;
+        
+        const params = [
+            userIdHash,
+            role,
+            JSON.stringify(content),
+            process.env.ENCRYPTION_KEY,
+            JSON.stringify(content),
+            `translating_${contentTypeLabel.replace(/\s+/g, '_')}`,
+            createdAtLocalDate
+        ];
+        
+        await db.query(query, params);
+        console.log('[MESSAGES] ✓ Translating message stored');
+    } catch (err) {
+        console.error('[MESSAGES] Error storing translating message:', err);
+        throw err;
+    }
+}
+
+/**
  * Format message for storage - combine text and metadata
  */
 export function formatMessageContent(text, cards = null) {

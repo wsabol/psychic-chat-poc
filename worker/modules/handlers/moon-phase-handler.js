@@ -8,7 +8,7 @@ import {
     callOracle,
     getUserGreeting
 } from '../oracle.js';
-import { storeMessage } from '../messages.js';
+import { storeMessage, storeTranslatingMessage } from '../messages.js';
 import { translateContentObject } from '../translator.js';
 import { getUserTimezone, getLocalDateForTimezone, needsRegeneration } from '../utils/timezoneHelper.js';
 
@@ -94,11 +94,26 @@ Do NOT include tarot cards - this is purely lunar + astrological insight enriche
             zodiac_sign: astrologyInfo.zodiac_sign 
         };
         
-        // Translate if user prefers non-English language (using MyMemory, not OpenAI)
+                // Translate if user prefers non-English language (using MyMemory, not OpenAI)
         let moonPhaseDataLang = null;
         let moonPhaseDataBriefLang = null;
         
         if (userLanguage && userLanguage !== 'en-US') {
+            // Store "translating..." message to show user translation is in progress
+            const languageNames = {
+                'es-ES': 'Spanish',
+                'en-GB': 'British English',
+                'fr-FR': 'French',
+                'de-DE': 'German',
+                'it-IT': 'Italian',
+                'pt-BR': 'Brazilian Portuguese',
+                'ja-JP': 'Japanese',
+                'zh-CN': 'Simplified Chinese'
+            };
+                        const languageName = languageNames[userLanguage] || 'your language';
+            const contentTypeLabel = `${phase} moon phase insight`;
+            await storeTranslatingMessage(userId, `translating_moon_phase_${phase}`, languageName, contentTypeLabel, todayLocalDate);
+            
             console.log(`[MOON-PHASE-HANDLER] Translating ${phase} moon phase to ${userLanguage}...`);
             moonPhaseDataLang = await translateContentObject(moonPhaseData, userLanguage);
             moonPhaseDataBriefLang = await translateContentObject(moonPhaseDataBrief, userLanguage);

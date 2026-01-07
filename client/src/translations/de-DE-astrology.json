@@ -8,6 +8,7 @@
     "loading": "Lesen der Sterne...",
     "generatingMessage": "Ihre kosmische Führung wird vom Orakel gewebt...",
     "reading": "{{range}} Lesung",
+    "translating.horoscope": "Ich übersetze jetzt Ihr {{range}} Horoskop aus dem Englischen ins {{language}}...",
     "disclaimer": "🔮 Horoskope dienen zur Unterhaltung und Inspiration. Ihre Entscheidungen und Handlungen prägen letztendlich Ihr Schicksal.",
     "tryAgain": "Erneut versuchen",
     "noHoroscope": "Kein Horoskop verfügbar"
@@ -26,6 +27,7 @@
     "currentPhase": "Aktuelle Phase",
     "nextPhase": "Nächste Phase",
     "loading": "Den Mond lesen...",
+    "translating.moonPhase": "Ich übersetze jetzt Ihren {{phase}} Mondphasen-Einblick aus dem Englischen ins {{language}}...",
     "disclaimer": "Der Einfluss des Mondes leitet unsere Gefühle und Energie.",
     "cycleInfo": "Der Mond durchläuft etwa alle 29,5 Tage einen vollständigen Zyklus. Jede Phase trägt eine einzigartige Energie, die alle Tierkreiszeichen unterschiedlich beeinflusst, basierend auf Ihrem persönlichen Geburtshoroskop.",
     "noPhase": "Keine Informationen zur Mondphase verfügbar"
@@ -48,6 +50,7 @@
     "sun": "Sonne",
     "moon": "Mond",
     "loading": "Kosmische Bedingungen lesen...",
+    "translating.cosmicWeather": "Ich übersetze jetzt Ihr kosmisches Wetter aus dem Englischen ins {{language}}...",
     "noWeather": "Keine Informationen zum kosmischen Wetter verfügbar"
   },
   "mySign": {
