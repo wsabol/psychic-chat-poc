@@ -91,6 +91,31 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
             return res.status(404).json({ error: `No ${range} horoscope found. Generating now...` });
         }
         
+        // ✅ NEW: Check for translating message (shows user translation is in progress)
+        if (userLanguage !== 'en-US') {
+            const { rows: translatingRows } = await db.query(
+                `SELECT pgp_sym_decrypt(content_full_encrypted, $2)::text as content_full
+                 FROM messages 
+                 WHERE user_id_hash = $1 
+                   AND role = 'translating_horoscope_${range.toLowerCase()}'
+                   AND created_at_local_date = $3
+                 ORDER BY created_at DESC
+                 LIMIT 1`,
+                [userIdHash, process.env.ENCRYPTION_KEY, todayLocalDate]
+            );
+            
+            if (translatingRows.length > 0) {
+                console.log(`[HOROSCOPE-API] ✓ Found translating message - showing to user`);
+                const translatingContent = JSON.parse(translatingRows[0].content_full);
+                return res.json({
+                    horoscope: translatingContent.text,
+                    brief: null,
+                    generated_at: new Date().toISOString(),
+                    isTranslating: true
+                });
+            }
+        }
+        
         // Process the horoscope row
         const row = rows[0];
         let content = row.content_full;

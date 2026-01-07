@@ -1,3 +1,5 @@
+import { useTranslation } from '../context/TranslationContext';
+
 /**
  * ChatInputForm - Input field and send button
  */
@@ -9,6 +11,8 @@ export default function ChatInputForm({
   loading,
   isTemporaryAccount
 }) {
+  const { t } = useTranslation();
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!disabled && !loading && inputMessage.trim()) {
@@ -22,7 +26,7 @@ export default function ChatInputForm({
         type="text"
         value={inputMessage}
         onChange={(e) => setInputMessage(e.target.value)}
-        placeholder={disabled ? "" : "Ask the oracle..."}
+        placeholder={disabled ? "" : t('chat.placeholder')}
         disabled={loading || disabled}
         className="chat-input"
         style={{

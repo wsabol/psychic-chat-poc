@@ -102,7 +102,38 @@ ${astrologyLines.join('\n')}
 `;
 }
 
-export function getOracleSystemPrompt(isTemporaryUser = false) {
+/**
+ * Build language-aware system prompt
+ * Tells the oracle to respond in the user's preferred language
+ * @param {string} language - Language code (e.g., 'es-ES', 'fr-FR')
+ * @returns {string} Language instruction
+ */
+function buildLanguageInstruction(language) {
+    const languageMap = {
+        'en-US': 'English (United States)',
+        'en-GB': 'English (British)',
+        'es-ES': 'Spanish (Spain)',
+        'fr-FR': 'French',
+        'de-DE': 'German',
+        'it-IT': 'Italian',
+        'pt-BR': 'Portuguese (Brazil)',
+        'ja-JP': 'Japanese',
+        'zh-CN': 'Simplified Chinese'
+    };
+    
+    const languageName = languageMap[language] || 'English';
+    
+    if (language === 'en-US') {
+        return ''; // No instruction needed for English
+    }
+    
+    return `\n\nLANGUAGE REQUIREMENT:
+Respond EXCLUSIVELY in ${languageName}. Every word, phrase, and instruction must be in ${languageName}.
+Do NOT include English translations, code-switching, or explanations in any other language.
+All HTML tags and structure remain the same, but all content must be ${languageName}.`;
+}
+
+export function getOracleSystemPrompt(isTemporaryUser = false, language = 'en-US') {
     const basePrompt = `You are The Oracle of Starship Psychics — a mystical guide who seamlessly blends tarot, astrology, and crystals into unified, holistic readings.
 
 YOUR CORE APPROACH: 
@@ -187,11 +218,10 @@ You are reading for a valued, established member. Engage authentically:
 - Reference previous conversations or patterns if they mention them (e.g., "I remember you asking about...")
 - Your responses can be conversational, exploratory, and genuinely collaborative`;
 
-    if (isTemporaryUser) {
-        return basePrompt + tempAccountAddition;
-    } else {
-        return basePrompt + establishedAccountAddition;
-    }
+    const accountAddition = isTemporaryUser ? tempAccountAddition : establishedAccountAddition;
+    const languageAddition = buildLanguageInstruction(language);
+    
+    return basePrompt + accountAddition + languageAddition;
 }
 
 export async function callOracle(systemPrompt, messageHistory, userMessage, generateBrief = true) {

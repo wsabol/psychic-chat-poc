@@ -47,6 +47,13 @@ router.get("/opening/:userId", authorizeUser, verify2FA, async (req, res) => {
             });
         }
 
+        // Fetch user's language preference
+        const { rows: prefRows } = await db.query(
+            `SELECT language FROM user_preferences WHERE user_id_hash = $1`,
+            [userIdHash]
+        );
+        const userLanguage = prefRows.length > 0 ? prefRows[0].language : 'en-US';
+
         // Only generate opening if no messages exist yet OR if last message was from user
         const recentMessages = await getRecentMessages(userId)
         
@@ -67,6 +74,7 @@ router.get("/opening/:userId", authorizeUser, verify2FA, async (req, res) => {
         let opening = await generatePsychicOpening({
             clientName: clientName,
             recentMessages: recentMessages,
+            userLanguage: userLanguage
         });
 
         if (opening === '') {

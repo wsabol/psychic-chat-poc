@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from '../context/TranslationContext';
 import { useSpeech } from '../hooks/useSpeech';
 import VoiceBar from './VoiceBar';
 import { getCardImageByID, getCardImageByName } from '../utils/cardImageMap.js';
@@ -71,6 +72,7 @@ function cleanMarkdownToHTML(text) {
 }
 
 export default function ChatMessage({ msg, defaultShowBrief = true, voiceEnabled = false, userId, token }) {
+  const { t } = useTranslation();
   const [showingBrief, setShowingBrief] = useState(defaultShowBrief);
   const { speak, stop, pause, resume, isPlaying, isPaused, isLoading, error, isSupported, progress } = useSpeech();
   const [hasAutoPlayed, setHasAutoPlayed] = useState(false);
@@ -182,7 +184,7 @@ export default function ChatMessage({ msg, defaultShowBrief = true, voiceEnabled
                 onMouseEnter={(e) => e.target.style.backgroundColor = '#6b52c1'}
                 onMouseLeave={(e) => e.target.style.backgroundColor = '#7c63d8'}
               >
-                {showingBrief ? '📖 Tell me more' : '📋 Show less'}
+                {showingBrief ? t('chat.toggleMore') : t('chat.toggleLess')}
               </button>
             )}
           </>
