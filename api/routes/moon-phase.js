@@ -32,14 +32,12 @@ router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
         console.log(`[MOON-PHASE-API] Today (user local): ${todayLocalDate}`);
         console.log(`[MOON-PHASE-API] DEBUG - userIdHash: ${userIdHash}, phase: ${phase}, todayLocalDate: ${todayLocalDate}`);
         
-        // Fetch moon phase - EXACTLY LIKE HOROSCOPE DOES
-        // Get both English AND translated versions, prefer language match
+        // Fetch moon phase
+        // NOTE: Only content_full_encrypted and content_brief_encrypted exist in database
         const { rows } = await db.query(
             `SELECT 
                 pgp_sym_decrypt(content_full_encrypted, $2)::text as content_full,
                 pgp_sym_decrypt(content_brief_encrypted, $2)::text as content_brief,
-                pgp_sym_decrypt(content_full_lang_encrypted, $2)::text as content_lang,
-                pgp_sym_decrypt(content_brief_lang_encrypted, $2)::text as content_brief_lang,
                 language_code,
                 moon_phase,
                 created_at_local_date
@@ -48,9 +46,9 @@ router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
               AND role = 'moon_phase' 
               AND moon_phase = $3
               AND created_at_local_date = $4
-            ORDER BY CASE WHEN language_code = $5 THEN 0 ELSE 1 END, created_at DESC
+            ORDER BY created_at DESC
             LIMIT 1`,
-            [userIdHash, process.env.ENCRYPTION_KEY, phase, todayLocalDate, userLanguage]
+            [userIdHash, process.env.ENCRYPTION_KEY, phase, todayLocalDate]
         );
         
         console.log(`[MOON-PHASE-API] Found ${rows.length} moon phase record(s)`);
@@ -65,20 +63,10 @@ router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
             return res.status(404).json({ error: 'No moon phase commentary found. Generating now...' });
         }
         
-        // Process the moon phase row - EXACTLY LIKE HOROSCOPE DOES
+        // Process the moon phase row
         const row = rows[0];
         let content = row.content_full;
         let brief = row.content_brief;
-        
-        // Prefer language-specific version if it matches user's language AND exists
-        console.log(`[MOON-PHASE-API] Row language_code: ${row.language_code}, user language: ${userLanguage}`);
-        if (row.language_code === userLanguage && row.content_lang) {
-            console.log(`[MOON-PHASE-API] ✓ Using translated content for ${userLanguage}`);
-            content = row.content_lang;
-            brief = row.content_brief_lang || row.content_brief;
-        } else if (row.language_code !== userLanguage && row.content_lang) {
-            console.log(`[MOON-PHASE-API] ⚠️ Stored language (${row.language_code}) doesn't match user language (${userLanguage}), using English baseline`);
-        }
         
         if (!content) {
             console.warn(`[MOON-PHASE-API] No content found in moon phase row`);

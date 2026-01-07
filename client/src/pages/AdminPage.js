@@ -1,16 +1,18 @@
 /**
- * Admin Dashboard - Analytics Reports
+ * Admin Dashboard - Analytics Reports & Violation Monitoring
  * Only accessible to admin email: starshiptechnology1@gmail.com
  */
 
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../context/TranslationContext';
 import { getAuth } from 'firebase/auth';
+import ViolationReportTab from '../components/AdminTabs/ViolationReportTab';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 export default function AdminPage({ token, userId }) {
   const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState('analytics');
   const [isLoading, setIsLoading] = useState(false);
   const [report, setReport] = useState(null);
   const [error, setError] = useState('');
@@ -158,227 +160,280 @@ export default function AdminPage({ token, userId }) {
         {/* Header */}
         <div style={{ marginBottom: '1.5rem' }}>
           <h1 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '24px' }}>⚡ Admin Dashboard</h1>
-          <p style={{ color: '#666', marginBottom: 0, fontSize: '13px' }}>Analytics Reports & Data Management</p>
+          <p style={{ color: '#666', marginBottom: 0, fontSize: '13px' }}>Analytics Reports, Violation Monitoring & Data Management</p>
         </div>
 
-        {/* Messages */}
-        {error && (
-          <div style={{
-            padding: '0.75rem',
-            marginBottom: '1rem',
-            borderRadius: '6px',
-            backgroundColor: '#ffebee',
-            color: '#c62828',
-            fontSize: '13px',
-            border: '1px solid #ef5350',
-          }}>
-            {error}
-          </div>
-        )}
-
-        {message && (
-          <div style={{
-            padding: '0.75rem',
-            marginBottom: '1rem',
-            borderRadius: '6px',
-            backgroundColor: '#e8f5e9',
-            color: '#2e7d32',
-            fontSize: '13px',
-            border: '1px solid #81c784',
-          }}>
-            {message}
-          </div>
-        )}
-
-        {/* Action Buttons */}
+        {/* Tabs */}
         <div style={{
           display: 'flex',
-          gap: '0.75rem',
+          gap: '0.5rem',
           marginBottom: '1.5rem',
-          flexWrap: 'wrap',
+          borderBottom: '2px solid #e0e0e0',
         }}>
-          <button
-            onClick={handleFetchReport}
-            disabled={isLoading}
-            style={{
-              padding: '0.75rem 1.5rem',
-              backgroundColor: '#7c63d8',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: isLoading ? 'not-allowed' : 'pointer',
-              fontSize: '13px',
-              fontWeight: 'bold',
-              opacity: isLoading ? 0.6 : 1,
-            }}
-          >
-            📊 Load Report
-          </button>
-
-          <button
-            onClick={handleExportJSON}
-            disabled={!report || isLoading}
-            style={{
-              padding: '0.75rem 1.5rem',
-              backgroundColor: '#4caf50',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: (!report || isLoading) ? 'not-allowed' : 'pointer',
-              fontSize: '13px',
-              fontWeight: 'bold',
-              opacity: (!report || isLoading) ? 0.6 : 1,
-            }}
-          >
-            💾 Export JSON
-          </button>
-
-          <button
-            onClick={handleCleanupOldData}
-            disabled={isLoading}
-            style={{
-              padding: '0.75rem 1.5rem',
-              backgroundColor: '#ff9800',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: isLoading ? 'not-allowed' : 'pointer',
-              fontSize: '13px',
-              fontWeight: 'bold',
-              opacity: isLoading ? 0.6 : 1,
-            }}
-          >
-            🧹 Cleanup (90+ days)
-          </button>
-
-          <button
-            onClick={handleDeleteAllData}
-            disabled={isLoading}
-            style={{
-              padding: '0.75rem 1.5rem',
-              backgroundColor: '#d32f2f',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: isLoading ? 'not-allowed' : 'pointer',
-              fontSize: '13px',
-              fontWeight: 'bold',
-              opacity: isLoading ? 0.6 : 1,
-            }}
-          >
-            🗑️ Delete All Data
-          </button>
+          <TabButton
+            label="📊 Analytics"
+            isActive={activeTab === 'analytics'}
+            onClick={() => setActiveTab('analytics')}
+          />
+          <TabButton
+            label="🚨 Violation Reports"
+            isActive={activeTab === 'violations'}
+            onClick={() => setActiveTab('violations')}
+          />
         </div>
 
-        {/* Report Display */}
-        {report && (
-          <div style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.97)',
-            padding: '1.5rem',
-            borderRadius: '8px',
-            border: '1px solid #e0e0e0',
-          }}>
-            <h2 style={{ marginTop: 0, fontSize: '18px', marginBottom: '1rem' }}>Report Summary</h2>
+        {/* Analytics Tab */}
+        {activeTab === 'analytics' && (
+          <div>
+            {/* Messages */}
+            {error && (
+              <div style={{
+                padding: '0.75rem',
+                marginBottom: '1rem',
+                borderRadius: '6px',
+                backgroundColor: '#ffebee',
+                color: '#c62828',
+                fontSize: '13px',
+                border: '1px solid #ef5350',
+              }}>
+                {error}
+              </div>
+            )}
 
-            {/* Summary Stats */}
+            {message && (
+              <div style={{
+                padding: '0.75rem',
+                marginBottom: '1rem',
+                borderRadius: '6px',
+                backgroundColor: '#e8f5e9',
+                color: '#2e7d32',
+                fontSize: '13px',
+                border: '1px solid #81c784',
+              }}>
+                {message}
+              </div>
+            )}
+
+            {/* Action Buttons */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '1rem',
-              marginBottom: '2rem',
+              display: 'flex',
+              gap: '0.75rem',
+              marginBottom: '1.5rem',
+              flexWrap: 'wrap',
             }}>
-              <StatBox label="Total Events" value={report.summary.total_events} />
-              <StatBox label="Data Period" value={`${report.summary.data_period_days} days`} />
-              <StatBox label="Unique Dates" value={report.summary.unique_dates} />
-              <StatBox label="Generated" value={new Date(report.generated_at).toLocaleDateString()} />
+              <button
+                onClick={handleFetchReport}
+                disabled={isLoading}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: '#7c63d8',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: isLoading ? 'not-allowed' : 'pointer',
+                  fontSize: '13px',
+                  fontWeight: 'bold',
+                  opacity: isLoading ? 0.6 : 1,
+                }}
+              >
+                📊 Load Report
+              </button>
+
+              <button
+                onClick={handleExportJSON}
+                disabled={!report || isLoading}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: '#4caf50',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: (!report || isLoading) ? 'not-allowed' : 'pointer',
+                  fontSize: '13px',
+                  fontWeight: 'bold',
+                  opacity: (!report || isLoading) ? 0.6 : 1,
+                }}
+              >
+                💾 Export JSON
+              </button>
+
+              <button
+                onClick={handleCleanupOldData}
+                disabled={isLoading}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: '#ff9800',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: isLoading ? 'not-allowed' : 'pointer',
+                  fontSize: '13px',
+                  fontWeight: 'bold',
+                  opacity: isLoading ? 0.6 : 1,
+                }}
+              >
+                🧹 Cleanup (90+ days)
+              </button>
+
+              <button
+                onClick={handleDeleteAllData}
+                disabled={isLoading}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: '#d32f2f',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: isLoading ? 'not-allowed' : 'pointer',
+                  fontSize: '13px',
+                  fontWeight: 'bold',
+                  opacity: isLoading ? 0.6 : 1,
+                }}
+              >
+                🗑️ Delete All Data
+              </button>
             </div>
 
-            {/* Detailed Data Preview */}
-            <details style={{ marginBottom: '1rem' }}>
-              <summary style={{ cursor: 'pointer', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                📊 Feature Usage ({report.feature_usage?.length || 0} items)
-              </summary>
-              <pre style={{
-                backgroundColor: '#f5f5f5',
-                padding: '1rem',
-                borderRadius: '4px',
-                overflow: 'auto',
-                fontSize: '11px',
-                maxHeight: '300px',
+            {/* Report Display */}
+            {report && (
+              <div style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.97)',
+                padding: '1.5rem',
+                borderRadius: '8px',
+                border: '1px solid #e0e0e0',
               }}>
-                {JSON.stringify(report.feature_usage?.slice(0, 10) || [], null, 2)}
-              </pre>
-            </details>
+                <h2 style={{ marginTop: 0, fontSize: '18px', marginBottom: '1rem' }}>Report Summary</h2>
 
-            <details style={{ marginBottom: '1rem' }}>
-              <summary style={{ cursor: 'pointer', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                📍 Daily Active Users by Location ({report.daily_active_by_location?.length || 0} items)
-              </summary>
-              <pre style={{
-                backgroundColor: '#f5f5f5',
-                padding: '1rem',
-                borderRadius: '4px',
-                overflow: 'auto',
-                fontSize: '11px',
-                maxHeight: '300px',
+                {/* Summary Stats */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '1rem',
+                  marginBottom: '2rem',
+                }}>
+                  <StatBox label="Total Events" value={report.summary.total_events} />
+                  <StatBox label="Data Period" value={`${report.summary.data_period_days} days`} />
+                  <StatBox label="Unique Dates" value={report.summary.unique_dates} />
+                  <StatBox label="Generated" value={new Date(report.generated_at).toLocaleDateString()} />
+                </div>
+
+                {/* Detailed Data Preview */}
+                <details style={{ marginBottom: '1rem' }}>
+                  <summary style={{ cursor: 'pointer', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+                    📊 Feature Usage ({report.feature_usage?.length || 0} items)
+                  </summary>
+                  <pre style={{
+                    backgroundColor: '#f5f5f5',
+                    padding: '1rem',
+                    borderRadius: '4px',
+                    overflow: 'auto',
+                    fontSize: '11px',
+                    maxHeight: '300px',
+                  }}>
+                    {JSON.stringify(report.feature_usage?.slice(0, 10) || [], null, 2)}
+                  </pre>
+                </details>
+
+                <details style={{ marginBottom: '1rem' }}>
+                  <summary style={{ cursor: 'pointer', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+                    📍 Daily Active Users by Location ({report.daily_active_by_location?.length || 0} items)
+                  </summary>
+                  <pre style={{
+                    backgroundColor: '#f5f5f5',
+                    padding: '1rem',
+                    borderRadius: '4px',
+                    overflow: 'auto',
+                    fontSize: '11px',
+                    maxHeight: '300px',
+                  }}>
+                    {JSON.stringify(report.daily_active_by_location?.slice(0, 10) || [], null, 2)}
+                  </pre>
+                </details>
+
+                <details style={{ marginBottom: '1rem' }}>
+                  <summary style={{ cursor: 'pointer', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+                    ⚠️ Error Tracking ({report.error_tracking?.length || 0} items)
+                  </summary>
+                  <pre style={{
+                    backgroundColor: '#ffebee',
+                    padding: '1rem',
+                    borderRadius: '4px',
+                    overflow: 'auto',
+                    fontSize: '11px',
+                    maxHeight: '300px',
+                    color: '#c62828',
+                  }}>
+                    {JSON.stringify(report.error_tracking?.slice(0, 10) || [], null, 2)}
+                  </pre>
+                </details>
+
+                <details style={{ marginBottom: '1rem' }}>
+                  <summary style={{ cursor: 'pointer', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+                    📉 Drop-off Analysis ({report.dropoff_analysis?.length || 0} items)
+                  </summary>
+                  <pre style={{
+                    backgroundColor: '#f5f5f5',
+                    padding: '1rem',
+                    borderRadius: '4px',
+                    overflow: 'auto',
+                    fontSize: '11px',
+                    maxHeight: '300px',
+                  }}>
+                    {JSON.stringify(report.dropoff_analysis?.slice(0, 10) || [], null, 2)}
+                  </pre>
+                </details>
+
+                <p style={{ color: '#999', fontSize: '12px', marginTop: '1rem' }}>
+                  💡 Tip: Click "Export JSON" to download the full report for analysis in VS Code or Excel
+                </p>
+              </div>
+            )}
+
+            {!report && (
+              <div style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.97)',
+                padding: '2rem',
+                borderRadius: '8px',
+                border: '1px solid #e0e0e0',
+                textAlign: 'center',
+                color: '#999',
               }}>
-                {JSON.stringify(report.daily_active_by_location?.slice(0, 10) || [], null, 2)}
-              </pre>
-            </details>
-
-            <details style={{ marginBottom: '1rem' }}>
-              <summary style={{ cursor: 'pointer', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                ⚠️ Error Tracking ({report.error_tracking?.length || 0} items)
-              </summary>
-              <pre style={{
-                backgroundColor: '#ffebee',
-                padding: '1rem',
-                borderRadius: '4px',
-                overflow: 'auto',
-                fontSize: '11px',
-                maxHeight: '300px',
-                color: '#c62828',
-              }}>
-                {JSON.stringify(report.error_tracking?.slice(0, 10) || [], null, 2)}
-              </pre>
-            </details>
-
-            <details style={{ marginBottom: '1rem' }}>
-              <summary style={{ cursor: 'pointer', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                📉 Drop-off Analysis ({report.dropoff_analysis?.length || 0} items)
-              </summary>
-              <pre style={{
-                backgroundColor: '#f5f5f5',
-                padding: '1rem',
-                borderRadius: '4px',
-                overflow: 'auto',
-                fontSize: '11px',
-                maxHeight: '300px',
-              }}>
-                {JSON.stringify(report.dropoff_analysis?.slice(0, 10) || [], null, 2)}
-              </pre>
-            </details>
-
-            <p style={{ color: '#999', fontSize: '12px', marginTop: '1rem' }}>
-              💡 Tip: Click "Export JSON" to download the full report for analysis in VS Code or Excel
-            </p>
+                <p>Click "Load Report" to view analytics data</p>
+              </div>
+            )}
           </div>
         )}
 
-        {!report && (
-          <div style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.97)',
-            padding: '2rem',
-            borderRadius: '8px',
-            border: '1px solid #e0e0e0',
-            textAlign: 'center',
-            color: '#999',
-          }}>
-            <p>Click "Load Report" to view analytics data</p>
-          </div>
+        {/* Violation Reports Tab */}
+        {activeTab === 'violations' && (
+          <ViolationReportTab token={token} />
         )}
       </div>
     </div>
+  );
+}
+
+/**
+ * TabButton - Navigation tab button
+ */
+function TabButton({ label, isActive, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: '0.75rem 1.5rem',
+        backgroundColor: 'transparent',
+        color: isActive ? '#7c63d8' : '#999',
+        border: 'none',
+        borderBottom: isActive ? '3px solid #7c63d8' : '3px solid transparent',
+        cursor: 'pointer',
+        fontSize: '14px',
+        fontWeight: isActive ? 'bold' : 'normal',
+        transition: 'all 0.2s ease',
+      }}
+    >
+      {label}
+    </button>
   );
 }
 

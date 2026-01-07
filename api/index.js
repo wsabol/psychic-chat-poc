@@ -19,6 +19,7 @@ import webhooksRouter from "./routes/billing/webhooks.js";
 import migrationRoutes from "./routes/migration.js";
 import helpRoutes from "./routes/help.js";
 import analyticsRoutes from "./routes/analytics.js";
+import violationReportsRoutes from "./routes/violationReports.js";
 import { authenticateToken } from "./middleware/auth.js";
 import { validateUserHash } from "./middleware/userHashValidation.js";
 import cors from "cors";
@@ -115,6 +116,9 @@ app.use("/migration", migrationRoutes);
 // Public analytics route (no authentication required - truly anonymous)
 app.use("/analytics", analyticsRoutes);
 
+// Violation reports (admin only)
+app.use("/violations", authenticateToken, violationReportsRoutes);
+
 // New user data endpoints (authentication only - no validateUserHash)
 // These don't have user IDs in the URL
 app.use("/user/download-data", authenticateToken, userDataRoutes);
@@ -171,4 +175,5 @@ if (fs.existsSync('./certificates/key.pem') && fs.existsSync('./certificates/cer
 //     } catch (e) { logger.error('[CLEANUP] Error:', e.message); }
 // }, 24 * 60 * 60 * 1000);
 
+export default app;
 export { logger };

@@ -23,12 +23,11 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
         const userLanguage = prefRows.length > 0 ? prefRows[0].language : 'en-US';
         const responseType = prefRows.length > 0 ? prefRows[0].response_type : 'full';
         
-        // Fetch cosmic weather with language versions
+        // Fetch cosmic weather
+        // NOTE: Only content_full_encrypted and content_brief_encrypted exist in database
         const query = `SELECT 
                 pgp_sym_decrypt(content_full_encrypted, $2)::text as content_full,
                 pgp_sym_decrypt(content_brief_encrypted, $2)::text as content_brief,
-                pgp_sym_decrypt(content_full_lang_encrypted, $2)::text as content_lang,
-                pgp_sym_decrypt(content_brief_lang_encrypted, $2)::text as content_brief_lang,
                 language_code
             FROM messages 
             WHERE user_id_hash = $1 AND role = 'cosmic_weather' 
@@ -39,20 +38,13 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
         let briefWeather = null;
         
         for (const row of rows) {
-            // Select correct language version
-            let fullContent = row.content_full;
-            let briefContent = row.content_brief;
-            
-            if (row.language_code === userLanguage && row.content_lang) {
-                fullContent = row.content_lang;
-                briefContent = row.content_brief_lang || row.content_brief;
-            }
+            const fullContent = row.content_full;
+            const briefContent = row.content_brief;
             
             const data = typeof fullContent === 'string' ? JSON.parse(fullContent) : fullContent;
             const dataDate = data.generated_at?.split('T')[0];
             if (dataDate === today) {
                 todaysWeather = data;
-                // ALWAYS parse briefContent - don't skip if null
                 briefWeather = briefContent ? (typeof briefContent === 'string' ? JSON.parse(briefContent) : briefContent) : null;
                 break;
             }
@@ -61,8 +53,6 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
         if (!todaysWeather) {
             return res.status(404).json({ error: 'Generating today\'s cosmic weather...' });
         }
-        
-        // ALWAYS return FULL version - client decides display via toggle
         
         res.json({
             weather: todaysWeather.text,
@@ -143,12 +133,11 @@ router.get("/void-of-course/:userId", authenticateToken, authorizeUser, async (r
         const userLanguage = prefRows.length > 0 ? prefRows[0].language : 'en-US';
         const responseType = prefRows.length > 0 ? prefRows[0].response_type : 'full';
         
-        // Fetch void of course with language versions
+        // Fetch void of course
+        // NOTE: Only content_full_encrypted and content_brief_encrypted exist in database
         const query = `SELECT 
                 pgp_sym_decrypt(content_full_encrypted, $2)::text as content_full,
                 pgp_sym_decrypt(content_brief_encrypted, $2)::text as content_brief,
-                pgp_sym_decrypt(content_full_lang_encrypted, $2)::text as content_lang,
-                pgp_sym_decrypt(content_brief_lang_encrypted, $2)::text as content_brief_lang,
                 language_code
             FROM messages 
             WHERE user_id_hash = $1 AND role = 'void_of_course' 
@@ -158,14 +147,7 @@ router.get("/void-of-course/:userId", authenticateToken, authorizeUser, async (r
         
         let todaysAlert = null;
         for (const row of rows) {
-            // Select correct language version
-            let fullContent = row.content_full;
-            let briefContent = row.content_brief;
-            
-            if (row.language_code === userLanguage && row.content_lang) {
-                fullContent = row.content_lang;
-                briefContent = row.content_brief_lang || row.content_brief;
-            }
+            const fullContent = row.content_full;
             
             const data = typeof fullContent === 'string' ? JSON.parse(fullContent) : fullContent;
             const dataDate = data.generated_at?.split('T')[0];
@@ -216,11 +198,10 @@ router.get("/moon-phase/:userId", authenticateToken, authorizeUser, async (req, 
         const userLanguage = prefRows.length > 0 ? prefRows[0].language : 'en-US';
         const responseType = prefRows.length > 0 ? prefRows[0].response_type : 'full';
         
+        // NOTE: Only content_full_encrypted and content_brief_encrypted exist in database
         const query = `SELECT 
                 pgp_sym_decrypt(content_full_encrypted, $2)::text as content_full,
                 pgp_sym_decrypt(content_brief_encrypted, $2)::text as content_brief,
-                pgp_sym_decrypt(content_full_lang_encrypted, $2)::text as content_lang,
-                pgp_sym_decrypt(content_brief_lang_encrypted, $2)::text as content_brief_lang,
                 language_code
             FROM messages 
             WHERE user_id_hash = $1 AND role = 'moon_phase' AND moon_phase = $3
@@ -232,18 +213,12 @@ router.get("/moon-phase/:userId", authenticateToken, authorizeUser, async (req, 
         }
         
         const row = rows[0];
-        let fullContent = row.content_full;
-        let briefContent = row.content_brief;
-        
-        if (row.language_code === userLanguage && row.content_lang) {
-            fullContent = row.content_lang;
-            briefContent = row.content_brief_lang || row.content_brief;
-        }
+        const fullContent = row.content_full;
+        const briefContent = row.content_brief;
         
         const moonPhaseData = typeof fullContent === 'string' ? JSON.parse(fullContent) : fullContent;
         const briefData = briefContent ? (typeof briefContent === 'string' ? JSON.parse(briefContent) : briefContent) : null;
         
-        // Always return full version - client decides via toggle
         res.json({
             commentary: moonPhaseData.text,
             brief: briefData?.text || null,

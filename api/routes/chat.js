@@ -95,9 +95,7 @@ router.get("/opening/:userId", authorizeUser, verify2FA, async (req, res) => {
 
 /**
  * GET /chat/history/:userId
- * Returns chat history with automatic language selection
- * If user has language preference set, returns that language version
- * Falls back to English if language version not available
+ * Returns chat history for the user
  */
 router.get("/history/:userId", authorizeUser, verify2FA, async (req, res) => {
     const userId = req.userId;
@@ -105,37 +103,27 @@ router.get("/history/:userId", authorizeUser, verify2FA, async (req, res) => {
     try {
         const userIdHash = hashUserId(userId);
         
-        // Fetch user's language preference
-        const { rows: prefRows } = await db.query(
-            `SELECT language FROM user_preferences WHERE user_id_hash = $1`,
-            [userIdHash]
-        );
-        const userLanguage = prefRows.length > 0 ? prefRows[0].language : 'en-US';
-        
-        // Fetch messages with language_code and all versions (English + translated)
-        const query = `SELECT id, role, language_code,
+        // Fetch messages from database
+        // Note: Only content_full_encrypted and content_brief_encrypted columns exist
+        const query = `SELECT 
+            id, 
+            role, 
+            language_code,
             pgp_sym_decrypt(content_full_encrypted, $2)::text as content_full, 
-            pgp_sym_decrypt(content_brief_encrypted, $2)::text as brief_full,
-            pgp_sym_decrypt(content_full_lang_encrypted, $2)::text as content_lang,
-            pgp_sym_decrypt(content_brief_lang_encrypted, $2)::text as brief_lang
+            pgp_sym_decrypt(content_brief_encrypted, $2)::text as brief_full
         FROM messages 
-        WHERE user_id_hash=$1 
+        WHERE user_id_hash = $1 
         ORDER BY created_at ASC`;
         
         const { rows } = await db.query(query, [userIdHash, ENCRYPTION_KEY]);
         
-        // Transform: return appropriate language version based on user preference
+        // Transform: format for frontend
         const transformedRows = rows.map(msg => ({
             id: msg.id,
             role: msg.role,
             language_code: msg.language_code,
-            // If message has translation for user's language, use it; otherwise use English
-            content: (msg.language_code === userLanguage && msg.content_lang) 
-                ? msg.content_lang 
-                : msg.content_full,
-            brief_content: (msg.language_code === userLanguage && msg.brief_lang)
-                ? msg.brief_lang
-                : msg.brief_full
+            content: msg.content_full || msg.brief_full,
+            brief_content: msg.brief_full || msg.content_full
         }));
         
         res.json(transformedRows);

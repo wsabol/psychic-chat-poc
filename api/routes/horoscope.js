@@ -12,7 +12,6 @@ const router = Router();
  * GET /horoscope/:userId/:range
  * Fetch the cached horoscope for the user matching the range and TODAY'S LOCAL DATE
  * CRITICAL: Validates created_at_local_date matches user's timezone date
- * Returns appropriate language version based on user preference
  */
 router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res) => {
     const { userId, range } = req.params;
@@ -27,7 +26,6 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
         const userIdHash = hashUserId(userId);
         
         // Fetch user's language preference AND timezone
-        // CRITICAL: user_id_hash may be hex string, normalize it
         const { rows: prefRows } = await db.query(
             `SELECT language, timezone FROM user_preferences WHERE user_id_hash = decode($1, 'hex')`,
             [userIdHash]
@@ -41,13 +39,11 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
         console.log(`[HOROSCOPE-API] Today (user local): ${todayLocalDate}`);
         
         // Fetch horoscopes - return most recent for this range
-        // NOTE: horoscope_range may be NULL in legacy data, so we check for either matching range OR NULL
+        // NOTE: Only content_full_encrypted and content_brief_encrypted exist in database
         const { rows } = await db.query(
             `SELECT 
                 pgp_sym_decrypt(content_full_encrypted, $2)::text as content_full,
                 pgp_sym_decrypt(content_brief_encrypted, $2)::text as content_brief,
-                pgp_sym_decrypt(content_full_lang_encrypted, $2)::text as content_lang,
-                pgp_sym_decrypt(content_brief_lang_encrypted, $2)::text as content_brief_lang,
                 language_code,
                 horoscope_range,
                 created_at_local_date
@@ -55,14 +51,14 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
                 WHERE user_id_hash = $1 
                   AND role = 'horoscope' 
                   AND (horoscope_range = $3 OR horoscope_range IS NULL)
-                ORDER BY CASE WHEN language_code = $4 THEN 0 ELSE 1 END, created_at DESC
+                ORDER BY created_at DESC
                 LIMIT 1`,
-            [userIdHash, process.env.ENCRYPTION_KEY, range.toLowerCase(), userLanguage]
+            [userIdHash, process.env.ENCRYPTION_KEY, range.toLowerCase()]
         );
         
         console.log(`[HOROSCOPE-API] Found ${rows.length} horoscope(s)`);
         
-        // ✅ CRITICAL: Check if horoscope is stale (based on user's LOCAL timezone)
+        // CRITICAL: Check if horoscope is stale (based on user's LOCAL timezone)
         if (rows.length > 0 && rows[0].created_at_local_date) {
             const isStale = needsRegeneration(rows[0].created_at_local_date, todayLocalDate);
             console.log(`[HOROSCOPE-API] Stale check: created=${rows[0].created_at_local_date}, today=${todayLocalDate}, isStale=${isStale}`);
@@ -91,45 +87,10 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
             return res.status(404).json({ error: `No ${range} horoscope found. Generating now...` });
         }
         
-        // ✅ NEW: Check for translating message (shows user translation is in progress)
-        if (userLanguage !== 'en-US') {
-            const { rows: translatingRows } = await db.query(
-                `SELECT pgp_sym_decrypt(content_full_encrypted, $2)::text as content_full
-                 FROM messages 
-                 WHERE user_id_hash = $1 
-                   AND role = 'translating_horoscope_${range.toLowerCase()}'
-                   AND created_at_local_date = $3
-                 ORDER BY created_at DESC
-                 LIMIT 1`,
-                [userIdHash, process.env.ENCRYPTION_KEY, todayLocalDate]
-            );
-            
-            if (translatingRows.length > 0) {
-                console.log(`[HOROSCOPE-API] ✓ Found translating message - showing to user`);
-                const translatingContent = JSON.parse(translatingRows[0].content_full);
-                return res.json({
-                    horoscope: translatingContent.text,
-                    brief: null,
-                    generated_at: new Date().toISOString(),
-                    isTranslating: true
-                });
-            }
-        }
-        
-        // Process the horoscope row
+        // Get content from the row
         const row = rows[0];
         let content = row.content_full;
         let brief = row.content_brief;
-        
-        // ✅ CRITICAL: Prefer language-specific version if it matches user's language AND exists
-        console.log(`[HOROSCOPE-API] Row language_code: ${row.language_code}, user language: ${userLanguage}`);
-        if (row.language_code === userLanguage && row.content_lang) {
-            console.log(`[HOROSCOPE-API] ✓ Using translated content for ${userLanguage}`);
-            content = row.content_lang;
-            brief = row.content_brief_lang || row.content_brief;
-        } else if (row.language_code !== userLanguage && row.content_lang) {
-            console.log(`[HOROSCOPE-API] ⚠️ Stored language (${row.language_code}) doesn't match user language (${userLanguage}), using English baseline`);
-        }
         
         if (!content) {
             console.warn(`[HOROSCOPE-API] No content found in horoscope row`);
