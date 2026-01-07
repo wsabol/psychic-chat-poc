@@ -16,6 +16,7 @@ import {
   applyPendingRedemptions,
   getRedemptionMessage
 } from './violationRedemption.js';
+import { VIOLATION_TYPES } from './violationDetector.js';
 
 /**
  * Record violation and get enforcement action
@@ -61,6 +62,9 @@ export async function recordViolationAndGetAction(userId, violationType, userMes
     }
 
     // STEP 5: ESTABLISHED ACCOUNT: Enforce based on violation count
+    // Special handling for CRITICAL violations (self-harm, harm to others)
+    const isCriticalViolation = [VIOLATION_TYPES.SELF_HARM, VIOLATION_TYPES.HARM_OTHERS].includes(violationType);
+
     if (violationCount === 1) {
       // First offense: Warning + Redemption Path
       const baseResponse = getWarningResponse(violationType, violationCount);
@@ -74,22 +78,40 @@ export async function recordViolationAndGetAction(userId, violationType, userMes
         redeemableAfter: calculateRedemptionTime(violationType)
       };
     } else if (violationCount === 2) {
-      // Second offense: 7-day suspension
-      // NOTE: If this violation was previously redeemed and user offended again,
-      // they lose the redemption privilege for this violation type going forward
-      const suspensionEnd = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      // Second offense:
+      // - CRITICAL violations (self-harm, harm to others): IMMEDIATE PERMANENT BAN
+      // - Other violations: 7-day suspension
+      
+      if (isCriticalViolation) {
+        // Critical violations: 2nd offense = permanent ban
+        await db.query(
+          `UPDATE user_violations SET is_account_disabled = TRUE WHERE user_id_hash = $1`,
+          [userIdHash]
+        );
 
-      await db.query(
-        `UPDATE user_personal_info SET is_suspended = TRUE, suspension_end_date = $1 WHERE user_id = $2`,
-        [suspensionEnd, userId]
-      );
+        return {
+          action: 'ACCOUNT_DISABLED_PERMANENT',
+          violationCount: violationCount,
+          response: getPermanentBanResponse(violationType)
+        };
+      } else {
+        // Standard violations: 7-day suspension
+        // NOTE: If this violation was previously redeemed and user offended again,
+        // they lose the redemption privilege for this violation type going forward
+        const suspensionEnd = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-      return {
-        action: 'SUSPENDED_7_DAYS',
-        violationCount: violationCount,
-        suspensionEnd: suspensionEnd,
-        response: getSuspensionResponse(violationType)
-      };
+        await db.query(
+          `UPDATE user_personal_info SET is_suspended = TRUE, suspension_end_date = $1 WHERE user_id = $2`,
+          [suspensionEnd, userId]
+        );
+
+        return {
+          action: 'SUSPENDED_7_DAYS',
+          violationCount: violationCount,
+          suspensionEnd: suspensionEnd,
+          response: getSuspensionResponse(violationType)
+        };
+      }
     } else {
       // Third+ offense: Permanent ban
       // Mark as disabled in database
