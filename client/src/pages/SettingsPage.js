@@ -22,22 +22,71 @@ export default function SettingsPage({ userId, token, auth, onboarding }) {
   const [isLoading, setIsLoading] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [isSaving, setIsSaving] = useState(false);
 
   // Settings state
   const [settings, setSettings] = useState({
-    cookiesEnabled: localStorage.getItem('cookiesEnabled') !== 'false',
-    emailEnabled: localStorage.getItem('emailEnabled') !== 'false',
-    pushNotificationsEnabled: localStorage.getItem('pushNotificationsEnabled') !== 'false',
+    cookiesEnabled: true,
+    emailEnabled: true,
+    pushNotificationsEnabled: true,
+    analyticsEnabled: true,
   });
 
-  // Get user email from Firebase
+  // Get user email from Firebase and load settings from database
   useEffect(() => {
-    const authInstance = getAuth();
-    const currentUser = authInstance.currentUser;
-    if (currentUser && currentUser.email) {
-      setUserEmail(currentUser.email);
+    const loadUserData = async () => {
+      try {
+        const authInstance = getAuth();
+        const currentUser = authInstance.currentUser;
+        if (currentUser && currentUser.email) {
+          setUserEmail(currentUser.email);
+        }
+
+        // Load settings from database
+        if (userId && token) {
+          await loadSettingsFromDatabase();
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+      }
+    };
+
+    loadUserData();
+  }, [userId, token]);
+
+  // Load settings from database
+  const loadSettingsFromDatabase = async () => {
+    try {
+      const response = await fetch(`${API_URL}/user-settings/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.settings) {
+          setSettings(data.settings);
+          // Also sync to localStorage for offline use
+          localStorage.setItem('cookiesEnabled', data.settings.cookiesEnabled.toString());
+          localStorage.setItem('emailEnabled', data.settings.emailEnabled.toString());
+          localStorage.setItem('pushNotificationsEnabled', data.settings.pushNotificationsEnabled.toString());
+          localStorage.setItem('analyticsEnabled', data.settings.analyticsEnabled.toString());
+        }
+      }
+    } catch (error) {
+      console.error('Error loading settings from database:', error);
+      // Fall back to localStorage on error
+      setSettings({
+        cookiesEnabled: localStorage.getItem('cookiesEnabled') !== 'false',
+        emailEnabled: localStorage.getItem('emailEnabled') !== 'false',
+        pushNotificationsEnabled: localStorage.getItem('pushNotificationsEnabled') !== 'false',
+        analyticsEnabled: localStorage.getItem('analyticsEnabled') !== 'false',
+      });
     }
-  }, []);
+  };
 
   // Download My Data
   const handleDownloadData = async () => {
@@ -114,11 +163,64 @@ export default function SettingsPage({ userId, token, auth, onboarding }) {
     }
   };
 
-  // Toggle settings
-  const handleToggleSetting = (settingKey) => {
+  // Toggle settings and save to database
+  const handleToggleSetting = async (settingKey) => {
     const newValue = !settings[settingKey];
-    setSettings(prev => ({ ...prev, [settingKey]: newValue }));
+    const newSettings = { ...settings, [settingKey]: newValue };
+    setSettings(newSettings);
+    
+    // Save to localStorage immediately for offline use
     localStorage.setItem(settingKey, newValue.toString());
+    
+    // Save to database asynchronously
+    await saveSettingsToDatabase(newSettings);
+  };
+
+  // Save settings to database
+  const saveSettingsToDatabase = async (settingsToSave) => {
+    if (!userId || !token) return;
+    
+    setIsSaving(true);
+    try {
+      const response = await fetch(`${API_URL}/user-settings/${userId}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(settingsToSave),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Error saving settings:', error);
+        setMessage({ 
+          type: 'error', 
+          text: t('settings.saveError') || 'Failed to save settings'
+        });
+        // Revert changes on error
+        await loadSettingsFromDatabase();
+        return;
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setMessage({ 
+          type: 'success', 
+          text: t('settings.saveSuccess') || 'Settings saved successfully'
+        });
+        // Clear message after 3 seconds
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+      }
+    } catch (error) {
+      console.error('Error saving settings to database:', error);
+      setMessage({ 
+        type: 'error', 
+        text: t('settings.saveError') || 'Failed to save settings'
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Delete Account

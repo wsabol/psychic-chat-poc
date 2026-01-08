@@ -81,7 +81,9 @@
     "deleteReadingHistory": "Tout votre historique de lecture et de chat",
     "cannotUndo": "Cette action ne peut pas être annulée",
     "goBack": "Retour",
-    "permanentlyDelete": "Supprimer Définitivement Mon Compte"
+    "permanentlyDelete": "Supprimer Définitivement Mon Compte",
+    "saveSuccess": "Paramètres enregistrés avec succès",
+    "saveError": "Impossible d'enregistrer les paramètres. Veuillez réessayer."
   },
   "personalInfo": {
     "title": "Informations Personnelles",

@@ -81,7 +81,9 @@
     "deleteReadingHistory": "Todo o seu histórico de leitura e chat",
     "cannotUndo": "Esta ação não pode ser desfeita",
     "goBack": "Voltar",
-    "permanentlyDelete": "Excluir Permanentemente Minha Conta"
+    "permanentlyDelete": "Excluir Permanentemente Minha Conta",
+    "saveSuccess": "Configurações salvas com sucesso",
+    "saveError": "Erro ao salvar as configurações. Por favor, tente novamente."
   },
   "personalInfo": {
     "title": "Informações Pessoais",

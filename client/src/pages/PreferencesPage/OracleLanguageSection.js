@@ -15,6 +15,21 @@ export default function OracleLanguageSection({ oracleLanguage, onLanguageChange
     'French': [
       { code: 'fr-FR', label: 'French - France' },
       { code: 'fr-CA', label: 'French - Canada' }
+    ],
+    'German': [
+      { code: 'de-DE', label: 'German - Germany' }
+    ],
+    'Italian': [
+      { code: 'it-IT', label: 'Italian - Italy' }
+    ],
+    'Japanese': [
+      { code: 'ja-JP', label: 'Japanese - Japan' }
+    ],
+    'Portuguese': [
+      { code: 'pt-BR', label: 'Portuguese - Brazil' }
+    ],
+    'Chinese': [
+      { code: 'zh-CN', label: 'Chinese - Simplified' }
     ]
   };
 

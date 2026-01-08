@@ -81,7 +81,9 @@
     "deleteReadingHistory": "すべての閲覧とチャット履歴",
     "cannotUndo": "この操作は取り消すことはできません",
     "goBack": "戻る",
-    "permanentlyDelete": "アカウントを永続的に削除"
+    "permanentlyDelete": "アカウントを永続的に削除",
+    "saveSuccess": "設定が正常に保存されました",
+    "saveError": "設定を保存できませんでした。もう一度お試しください。"
   },
   "personalInfo": {
     "title": "個人情報",

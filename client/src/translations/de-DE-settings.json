@@ -81,7 +81,9 @@
     "deleteReadingHistory": "Ihr gesamter Lese- und Chat-Verlauf",
     "cannotUndo": "Diese Aktion kann nicht rückgängig gemacht werden",
     "goBack": "Zurück",
-    "permanentlyDelete": "Mein Konto dauerhaft löschen"
+    "permanentlyDelete": "Mein Konto dauerhaft löschen",
+    "saveSuccess": "Einstellungen erfolgreich gespeichert",
+    "saveError": "Einstellungen konnten nicht gespeichert werden. Bitte versuchen Sie es erneut."
   },
   "personalInfo": {
     "title": "Persönliche Informationen",

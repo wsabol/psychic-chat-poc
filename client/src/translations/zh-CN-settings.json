@@ -81,7 +81,9 @@
     "deleteReadingHistory": "您的所有阅读和聊天历史",
     "cannotUndo": "此操作无法撤销",
     "goBack": "返回",
-    "permanentlyDelete": "永久删除我的账户"
+    "permanentlyDelete": "永久删除我的账户",
+    "saveSuccess": "設置保存成功",
+    "saveError": "保存設置失敗。請重試。"
   },
   "personalInfo": {
     "title": "个人信息",

@@ -81,7 +81,9 @@
     "deleteReadingHistory": "All your reading and chat history",
     "cannotUndo": "This action cannot be reversed",
     "goBack": "Go Back",
-    "permanentlyDelete": "Permanently Delete My Account"
+    "permanentlyDelete": "Permanently Delete My Account",
+    "saveSuccess": "Settings saved successfully",
+    "saveError": "Failed to save settings. Please try again."
   },
   "personalInfo": {
     "title": "Personal Information",
@@ -121,3 +123,4 @@
     "privacySettings": "Privacy Settings"
   }
 }
+

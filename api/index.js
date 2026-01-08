@@ -20,6 +20,7 @@ import migrationRoutes from "./routes/migration.js";
 import helpRoutes from "./routes/help.js";
 import analyticsRoutes from "./routes/analytics.js";
 import violationReportsRoutes from "./routes/violationReports.js";
+import userSettingsRoutes from "./routes/user-settings.js";
 import { authenticateToken } from "./middleware/auth.js";
 import { validateUserHash } from "./middleware/userHashValidation.js";
 import cors from "cors";
@@ -136,6 +137,9 @@ app.use("/moon-phase", authenticateToken, validateUserHash, moonPhaseRoutes);
 app.use("/astrology-insights", authenticateToken, validateUserHash, astrologyInsightsRoutes);
 
 app.use("/security", authenticateToken, validateUserHash, securityRoutes);
+
+// User settings routes (authentication + user hash validation required)
+app.use("/user-settings", authenticateToken, validateUserHash, userSettingsRoutes);
 
 // Help routes (authentication required)
 app.use("/help", authenticateToken, helpRoutes);

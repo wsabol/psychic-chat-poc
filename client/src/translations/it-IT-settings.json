@@ -81,7 +81,9 @@
     "deleteReadingHistory": "Tutta la tua cronologia di letture e chat",
     "cannotUndo": "Questa azione non può essere annullata",
     "goBack": "Indietro",
-    "permanentlyDelete": "Elimina Definitivamente il Mio Account"
+    "permanentlyDelete": "Elimina Definitivamente il Mio Account",
+    "saveSuccess": "Impostazioni salvate con successo",
+    "saveError": "Errore nel salvataggio delle impostazioni. Per favore, riprova."
   },
   "personalInfo": {
     "title": "Informazioni Personali",

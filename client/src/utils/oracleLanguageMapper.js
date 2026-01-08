@@ -6,6 +6,11 @@
  * en-GB → en-US (both English)
  * es-MX, es-DO → es-ES (all Spanish)
  * fr-CA → fr-FR (both French)
+ * de-DE → de-DE (German)
+ * it-IT → it-IT (Italian)
+ * ja-JP → ja-JP (Japanese)
+ * pt-BR → pt-BR (Portuguese - Brazil)
+ * zh-CN → zh-CN (Chinese - Simplified)
  */
 
 export const oracleLanguageMap = {
@@ -16,6 +21,11 @@ export const oracleLanguageMap = {
   'es-DO': 'es-ES',
   'fr-FR': 'fr-FR',
   'fr-CA': 'fr-FR',
+  'de-DE': 'de-DE',
+  'it-IT': 'it-IT',
+  'ja-JP': 'ja-JP',
+  'pt-BR': 'pt-BR',
+  'zh-CN': 'zh-CN',
 };
 
 /**
