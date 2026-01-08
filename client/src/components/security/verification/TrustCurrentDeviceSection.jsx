@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from '../../../context/TranslationContext';
 
 /**
  * TrustCurrentDeviceSection - Trust the current device
  * Allows user to trust their current device for 30 days
  */
 export function TrustCurrentDeviceSection({ userId, token, apiUrl }) {
+  const { t } = useTranslation();
   const [isCurrentDeviceTrusted, setIsCurrentDeviceTrusted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -47,14 +49,14 @@ export function TrustCurrentDeviceSection({ userId, token, apiUrl }) {
 
       if (response.ok) {
         setIsCurrentDeviceTrusted(true);
-        setSuccess('Device trusted for 30 days');
+        setSuccess(t('security.trustDevice.successTrusted'));
         setTimeout(() => setSuccess(null), 3000);
       } else {
-        setError(data.error || 'Failed to trust device');
+        setError(data.error || t('security.trustDevice.errorTrust'));
       }
     } catch (err) {
       console.error('[TRUST-DEVICE] Error:', err);
-      setError('Error trusting device');
+      setError(t('security.trustDevice.errorTrust'));
     } finally {
       setLoading(false);
     }
@@ -78,14 +80,14 @@ export function TrustCurrentDeviceSection({ userId, token, apiUrl }) {
 
       if (response.ok) {
         setIsCurrentDeviceTrusted(false);
-        setSuccess('Device trust removed');
+        setSuccess(t('security.trustDevice.successRemoved'));
         setTimeout(() => setSuccess(null), 3000);
       } else {
-        setError(data.error || 'Failed to revoke device trust');
+        setError(data.error || t('security.trustDevice.errorRevoke'));
       }
     } catch (err) {
       console.error('[TRUST-DEVICE] Error:', err);
-      setError('Error revoking device trust');
+      setError(t('security.trustDevice.errorRevoke'));
     } finally {
       setLoading(false);
     }
@@ -93,7 +95,7 @@ export function TrustCurrentDeviceSection({ userId, token, apiUrl }) {
 
   return (
     <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '6px', marginTop: '1.5rem' }}>
-      <h3 style={{ margin: '0 0 1rem 0', fontSize: '15px' }}>🔒 Trust This Device</h3>
+      <h3 style={{ margin: '0 0 1rem 0', fontSize: '15px' }}>{t('security.trustDevice.heading')}</h3>
       
       {error && (
         <div style={{ color: '#d32f2f', fontSize: '12px', marginBottom: '0.75rem' }}>
@@ -109,9 +111,7 @@ export function TrustCurrentDeviceSection({ userId, token, apiUrl }) {
 
       <div style={{ fontSize: '12px', marginBottom: '1rem', color: '#666' }}>
         <p style={{ margin: '0 0 0.5rem 0' }}>
-          {isCurrentDeviceTrusted 
-            ? '✓ This device is trusted for 30 days. You will not need to enter a 2FA code when logging in.'
-            : 'Trust this device to skip 2FA for 30 days. You will not need to enter a verification code when logging in from this device.'}
+          {isCurrentDeviceTrusted ? t('security.trustDevice.infoTrusted') : t('security.trustDevice.infoUntrusted')}
         </p>
       </div>
 
@@ -130,7 +130,7 @@ export function TrustCurrentDeviceSection({ userId, token, apiUrl }) {
           opacity: loading ? 0.6 : 1
         }}
       >
-        {loading ? 'Processing...' : (isCurrentDeviceTrusted ? 'Remove Trust' : 'Trust This Device')}
+        {loading ? t('security.trustDevice.processing') : (isCurrentDeviceTrusted ? t('security.trustDevice.removeButton') : t('security.trustDevice.trustButton'))}
       </button>
     </div>
   );

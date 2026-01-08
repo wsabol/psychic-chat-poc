@@ -1,10 +1,12 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import { useTranslation } from '../../context/TranslationContext';
 
 /**
  * SessionPrivacyTab - Manage "Stay Logged In" preference
  * Reads/writes from: user_2fa_settings.persistent_session
  */
 export default function SessionPrivacyTab({ userId, token, apiUrl }) {
+  const { t } = useTranslation();
   const [persistentSession, setPersistentSession] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -24,7 +26,7 @@ export default function SessionPrivacyTab({ userId, token, apiUrl }) {
       }
     } catch (err) {
       console.error('[SESSION] Error loading preference:', err);
-      setError(err.message);
+      setError(t('security.session.errorLoading'));
     } finally {
       setLoading(false);
     }
@@ -57,24 +59,24 @@ export default function SessionPrivacyTab({ userId, token, apiUrl }) {
         setTimeout(() => setSuccess(''), 3000);
       } else {
         const err = await response.json();
-        setError(err.error || 'Failed to save preference');
+        setError(err.error || t('security.session.errorSaving'));
       }
     } catch (err) {
-      setError(err.message);
+      setError(t('security.session.errorSaving'));
     } finally {
       setSaving(false);
     }
   };
 
   if (loading) {
-    return <div style={{ textAlign: 'center', padding: '2rem' }}>Loading session settings...</div>;
+    return <div style={{ textAlign: 'center', padding: '2rem' }}>{t('security.session.loading')}</div>;
   }
 
   return (
     <div>
-      <h2 style={{ marginTop: 0 }}>Session & Privacy</h2>
+      <h2 style={{ marginTop: 0 }}>{t('security.session.title')}</h2>
       <p style={{ color: '#666' }}>
-        Control how long you stay logged in on this device.
+        {t('security.session.subtitle')}
       </p>
 
       {error && (
@@ -117,10 +119,10 @@ export default function SessionPrivacyTab({ userId, token, apiUrl }) {
         }}>
           <div>
             <p style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>
-              {persistentSession ? '🟢 ON' : '🔴 OFF'}
+              {persistentSession ? t('security.session.statusOn') : t('security.session.statusOff')}
             </p>
             <p style={{ margin: '0.5rem 0 0 0', fontSize: '14px', color: '#666' }}>
-              {persistentSession ? 'Stay logged in for 30 days' : 'Log out when browser closes'}
+              {persistentSession ? t('security.session.statusLoggedInDays') : t('security.session.statusLogoutOnClose')}
             </p>
           </div>
 
@@ -140,7 +142,7 @@ export default function SessionPrivacyTab({ userId, token, apiUrl }) {
               padding: 0,
               outline: 'none'
             }}
-            title={persistentSession ? 'Turn off' : 'Turn on'}
+            title={t('security.session.toggleTooltip')}
           >
             <div style={{
               position: 'absolute',
@@ -165,7 +167,7 @@ export default function SessionPrivacyTab({ userId, token, apiUrl }) {
             marginBottom: '1.5rem'
           }}>
             <p style={{ margin: 0, fontSize: '14px', color: '#2e7d32' }}>
-              ✓ You will stay logged in for 30 days on this device.
+              {t('security.session.warningOn')}
             </p>
           </div>
         ) : (
@@ -177,7 +179,7 @@ export default function SessionPrivacyTab({ userId, token, apiUrl }) {
             marginBottom: '1.5rem'
           }}>
             <p style={{ margin: 0, fontSize: '14px', color: '#e65100' }}>
-              ⚠️ You will be logged out when you close your browser window.
+              {t('security.session.warningOff')}
             </p>
           </div>
         )}
@@ -189,22 +191,22 @@ export default function SessionPrivacyTab({ userId, token, apiUrl }) {
           marginBottom: '1rem'
         }}>
           <p style={{ margin: '0 0 0.5rem 0', fontSize: '13px', fontWeight: 'bold', color: '#333' }}>
-            💡 Recommendation:
+            {t('security.session.recommendationHeader')}
           </p>
           <ul style={{ margin: 0, paddingLeft: '1.5rem', fontSize: '13px', color: '#666' }}>
             <li style={{ marginBottom: '0.5rem' }}>
-              <strong>ON:</strong> Use on your personal, private devices only
+              {t('security.session.recommendationPersonal')}
             </li>
             <li style={{ marginBottom: '0.5rem' }}>
-              <strong>OFF:</strong> Use on shared or public computers (recommended for security)
+              {t('security.session.recommendationPublic')}
             </li>
             <li>
-              <strong>Expiry:</strong> Sessions auto-expire after 30 days regardless of setting
+              {t('security.session.recommendationExpiry')}
             </li>
           </ul>
         </div>
 
-        {saving && <p style={{ color: '#999', fontSize: '13px', marginTop: '1rem' }}>Saving...</p>}
+        {saving && <p style={{ color: '#999', fontSize: '13px', marginTop: '1rem' }}>{t('security.session.saving')}</p>}
       </div>
     </div>
   );

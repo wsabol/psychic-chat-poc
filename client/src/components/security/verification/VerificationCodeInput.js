@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from '../../../context/TranslationContext';
 
 /**
  * VerificationCodeInput - Code verification screen (reusable)
@@ -12,8 +13,10 @@ export default function VerificationCodeInput({
   onVerify,
   onBack
 }) {
+  const { t } = useTranslation();
   const typeLabel = verificationType === 'phone' ? 'Phone' : 'Email';
   const isValidCode = code.length === 6;
+  const heading = verificationType === 'phone' ? t('security.verificationCode.verifyHeadingPhone') : t('security.verificationCode.verifyHeadingEmail');
 
   return (
     <div style={{
@@ -22,9 +25,9 @@ export default function VerificationCodeInput({
       borderRadius: '8px',
       border: '1px solid #e0e0e0'
     }}>
-      <h3 style={{ marginTop: 0 }}>Verify Your {typeLabel}</h3>
+      <h3 style={{ marginTop: 0 }}>{heading}</h3>
       <p style={{ color: '#666' }}>
-        Enter the 6-digit code sent to {contactValue}
+        {t('security.verificationCode.verifySubtitlePrefix')} {contactValue}
       </p>
 
       {/* Code Input */}
@@ -33,7 +36,7 @@ export default function VerificationCodeInput({
           type="text"
           value={code}
           onChange={(e) => setCode(e.target.value.slice(0, 6))}
-          placeholder="000000"
+          placeholder={t('security.verificationCode.placeholder')}
           maxLength="6"
           disabled={saving}
           style={{
@@ -67,7 +70,7 @@ export default function VerificationCodeInput({
             opacity: saving || !isValidCode ? 0.6 : 1
           }}
         >
-          {saving ? 'Verifying...' : 'Verify Code'}
+          {saving ? t('security.verificationCode.verifying') : t('security.verificationCode.verifyButton')}
         </button>
         <button
           onClick={onBack}
@@ -82,7 +85,7 @@ export default function VerificationCodeInput({
             fontSize: '14px'
           }}
         >
-          Back
+          {t('security.verificationCode.backButton')}
         </button>
       </div>
     </div>

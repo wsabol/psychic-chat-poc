@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from '../../../context/TranslationContext';
 import VerificationForm from './VerificationForm';
 import VerificationCodeInput from './VerificationCodeInput';
 
@@ -15,10 +16,12 @@ export function VerificationMethodsSection({
   onVerifyCode,
   onEnterEditMode
 }) {
+  const { t } = useTranslation();
+
   return (
     <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '6px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h3 style={{ margin: 0, fontSize: '15px' }}>📋 Verification Methods</h3>
+        <h3 style={{ margin: 0, fontSize: '15px' }}>{t('security.verification.heading')}</h3>
         {!flow.editMode && !flow.showVerification && (
           <button
             onClick={onEnterEditMode}
@@ -32,7 +35,7 @@ export function VerificationMethodsSection({
               fontWeight: 'bold'
             }}
           >
-            ✏️ Edit
+            {t('security.verification.editButton')}
           </button>
         )}
       </div>
@@ -42,14 +45,14 @@ export function VerificationMethodsSection({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           {/* Primary Email */}
           <div style={{ fontSize: '12px', padding: '0.4rem 0', borderBottom: '1px solid #eee' }}>
-            <span><strong>Primary Email:</strong> {userEmail}, verified ✓</span>
+            <span><strong>{t('security.verification.primaryEmailLabel')}</strong> {userEmail}, {t('security.verification.verified')}</span>
           </div>
 
           {/* Phone Number */}
           <div style={{ fontSize: '12px', padding: '0.4rem 0', borderBottom: '1px solid #eee' }}>
             <span>
-              <strong>Phone Number:</strong> {flow.phoneNumber || 'Not set'}
-              {flow.phoneNumber && methods?.phoneVerified && ', verified ✓'}
+              <strong>{t('security.verification.phoneNumberLabel')}</strong> {flow.phoneNumber || t('security.verification.notSet')}
+              {flow.phoneNumber && methods?.phoneVerified && `, ${t('security.verification.verified')}`}
             </span>
           </div>
 
@@ -63,7 +66,7 @@ export function VerificationMethodsSection({
             alignItems: 'center'
           }}>
             <span>
-              <strong>Recovery Email:</strong> {flow.recoveryEmail || 'Not set'}
+              <strong>{t('security.verification.recoveryEmailLabel')}</strong> {flow.recoveryEmail || t('security.verification.notSet')}
             </span>
             {flow.recoveryEmail && methods?.recoveryEmailVerified && (
               <span style={{
@@ -74,7 +77,7 @@ export function VerificationMethodsSection({
                 fontSize: '11px',
                 fontWeight: '600'
               }}>
-                ✓ Verified
+                {t('security.verification.verifiedBadge')}
               </span>
             )}
           </div>
@@ -82,8 +85,8 @@ export function VerificationMethodsSection({
           {/* Recovery Phone */}
           <div style={{ fontSize: '12px', padding: '0.4rem 0' }}>
             <span>
-              <strong>Recovery Phone:</strong> {flow.recoveryPhone || 'Not set'}
-              {flow.recoveryPhone && methods?.recoveryPhoneVerified && ', verified ✓'}
+              <strong>{t('security.verification.recoveryPhoneLabel')}</strong> {flow.recoveryPhone || t('security.verification.notSet')}
+              {flow.recoveryPhone && methods?.recoveryPhoneVerified && `, ${t('security.verification.verified')}`}
             </span>
           </div>
         </div>

@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { useTranslation } from '../../context/TranslationContext';
 import { getAuth, updatePassword } from 'firebase/auth';
 
 /**
  * PasswordTab - Change password via Firebase
  */
 export default function PasswordTab({ userId, token, apiUrl }) {
+  const { t } = useTranslation();
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -14,19 +16,19 @@ export default function PasswordTab({ userId, token, apiUrl }) {
 
   const validatePassword = (password) => {
     if (password.length < 8) {
-      return 'Password must be at least 8 characters long';
+      return t('security.passwordTab.minLength');
     }
     if (!/[A-Z]/.test(password)) {
-      return 'Password must contain at least one uppercase letter';
+      return t('security.passwordTab.uppercase');
     }
     if (!/[a-z]/.test(password)) {
-      return 'Password must contain at least one lowercase letter';
+      return t('security.passwordTab.lowercase');
     }
     if (!/[0-9]/.test(password)) {
-      return 'Password must contain at least one number';
+      return t('security.passwordTab.number');
     }
     if (!/[!@#$%^&*]/.test(password)) {
-      return 'Password must contain at least one special character (!@#$%^&*)';
+      return t('security.passwordTab.specialChar');
     }
     return null;
   };
@@ -38,12 +40,12 @@ export default function PasswordTab({ userId, token, apiUrl }) {
 
     // Validation
     if (!newPassword.trim() || !confirmPassword.trim()) {
-      setError('Please fill in all fields');
+      setError(t('security.passwordTab.fillAllFields'));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError('New passwords do not match');
+      setError(t('security.passwordTab.passwordsMismatch'));
       return;
     }
 
@@ -59,13 +61,13 @@ export default function PasswordTab({ userId, token, apiUrl }) {
       const user = auth.currentUser;
 
       if (!user) {
-        throw new Error('No user logged in');
+        throw new Error(t('security.passwordTab.errorNoUser'));
       }
 
       // Update password via Firebase
       await updatePassword(user, newPassword);
 
-      setSuccess('✓ Password changed successfully!');
+      setSuccess(t('security.passwordTab.successMessage'));
       
       // Clear form
       setNewPassword('');
@@ -82,7 +84,7 @@ export default function PasswordTab({ userId, token, apiUrl }) {
       }
     } catch (err) {
       console.error('[PASSWORD] Error changing password:', err);
-      setError(err.message || 'Failed to change password');
+      setError(err.message || t('security.passwordTab.errorGeneric'));
     } finally {
       setLoading(false);
     }
@@ -90,9 +92,9 @@ export default function PasswordTab({ userId, token, apiUrl }) {
 
   return (
     <div>
-      <h2 style={{ marginTop: 0 }}>Change Password</h2>
+      <h2 style={{ marginTop: 0 }}>{t('security.passwordTab.title')}</h2>
       <p style={{ color: '#666' }}>
-        Update your password to a strong, unique combination.
+        {t('security.passwordTab.subtitle')}
       </p>
 
       {error && (
@@ -132,14 +134,14 @@ export default function PasswordTab({ userId, token, apiUrl }) {
             marginBottom: '0.5rem',
             fontWeight: 'bold'
           }}>
-            New Password
+            {t('security.passwordTab.newPasswordLabel')}
           </label>
           <div style={{ position: 'relative' }}>
             <input
               type={showPasswords ? 'text' : 'password'}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Create a strong password"
+              placeholder={t('security.passwordTab.newPasswordPlaceholder')}
               style={{
                 width: '100%',
                 padding: '0.75rem',
@@ -167,7 +169,7 @@ export default function PasswordTab({ userId, token, apiUrl }) {
             </button>
           </div>
           <p style={{ fontSize: '12px', color: '#999', marginTop: '0.5rem' }}>
-            At least 8 characters with uppercase, lowercase, number, and special character
+            {t('security.passwordTab.requirements')}
           </p>
         </div>
 
@@ -177,13 +179,13 @@ export default function PasswordTab({ userId, token, apiUrl }) {
             marginBottom: '0.5rem',
             fontWeight: 'bold'
           }}>
-            Confirm New Password
+            {t('security.passwordTab.confirmPasswordLabel')}
           </label>
           <input
             type={showPasswords ? 'text' : 'password'}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="Re-enter your password"
+            placeholder={t('security.passwordTab.confirmPasswordPlaceholder')}
             style={{
               width: '100%',
               padding: '0.75rem',
@@ -194,12 +196,12 @@ export default function PasswordTab({ userId, token, apiUrl }) {
           />
           {newPassword && confirmPassword && newPassword === confirmPassword && (
             <p style={{ fontSize: '12px', color: '#2e7d32', marginTop: '0.5rem' }}>
-              ✓ Passwords match
+              {t('security.passwordTab.passwordsMatch')}
             </p>
           )}
           {newPassword && confirmPassword && newPassword !== confirmPassword && (
             <p style={{ fontSize: '12px', color: '#d32f2f', marginTop: '0.5rem' }}>
-              ✗ Passwords do not match
+              {t('security.passwordTab.passwordsDoNotMatch')}
             </p>
           )}
         </div>
@@ -219,7 +221,7 @@ export default function PasswordTab({ userId, token, apiUrl }) {
             fontWeight: 'bold'
           }}
         >
-          {loading ? 'Changing Password...' : 'Change Password'}
+          {loading ? t('security.passwordTab.changingPassword') : t('security.passwordTab.changePasswordButton')}
         </button>
       </form>
 
@@ -231,7 +233,7 @@ export default function PasswordTab({ userId, token, apiUrl }) {
         fontSize: '14px',
         color: '#e65100'
       }}>
-        <strong>⚠️ Note:</strong> Changing your password will log you out of all other devices. You'll need to sign in again with your new password.
+        {t('security.passwordTab.warningNote')}
       </div>
     </div>
   );

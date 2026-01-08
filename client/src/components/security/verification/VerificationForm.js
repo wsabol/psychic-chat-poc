@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from '../../../context/TranslationContext';
 
 /**
  * VerificationForm - Edit mode form for updating verification methods
@@ -14,6 +15,8 @@ export default function VerificationForm({
   onSave,
   onCancel
 }) {
+  const { t } = useTranslation();
+
   return (
     <div style={{
       backgroundColor: 'white',
@@ -24,13 +27,13 @@ export default function VerificationForm({
       {/* Phone Number Field */}
       <div style={{ marginBottom: '1rem' }}>
         <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-          Phone Number
+          {t('security.verificationForm.phoneNumberLabel')}
         </label>
         <input
           type="tel"
           value={phoneNumber}
           onChange={(e) => setPhoneNumber(e.target.value)}
-          placeholder="+1 (555) 000-0000"
+          placeholder={t('security.verificationForm.phonePlaceholder')}
           disabled={saving}
           style={{
             width: '100%',
@@ -45,13 +48,13 @@ export default function VerificationForm({
       {/* Recovery Phone Field */}
       <div style={{ marginBottom: '1rem' }}>
         <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-          Recovery Phone (Optional)
+          {t('security.verificationForm.recoveryPhoneLabel')}
         </label>
         <input
           type="tel"
           value={recoveryPhone}
           onChange={(e) => setRecoveryPhone(e.target.value)}
-          placeholder="+1 (555) 000-0000"
+          placeholder={t('security.verificationForm.recoveryPhonePlaceholder')}
           disabled={saving}
           style={{
             width: '100%',
@@ -66,13 +69,13 @@ export default function VerificationForm({
       {/* Recovery Email Field */}
       <div style={{ marginBottom: '1.5rem' }}>
         <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-          Recovery Email
+          {t('security.verificationForm.recoveryEmailLabel')}
         </label>
         <input
           type="email"
           value={recoveryEmail}
           onChange={(e) => setRecoveryEmail(e.target.value)}
-          placeholder="recovery@example.com"
+          placeholder={t('security.verificationForm.recoveryEmailPlaceholder')}
           disabled={saving}
           style={{
             width: '100%',
@@ -101,7 +104,7 @@ export default function VerificationForm({
             fontWeight: 'bold'
           }}
         >
-          {saving ? 'Saving...' : 'Save & Verify'}
+          {saving ? t('security.verificationForm.saving') : t('security.verificationForm.saveAndVerify')}
         </button>
         <button
           onClick={onCancel}
@@ -116,7 +119,7 @@ export default function VerificationForm({
             fontSize: '14px'
           }}
         >
-          Cancel
+          {t('security.verificationForm.cancel')}
         </button>
       </div>
     </div>

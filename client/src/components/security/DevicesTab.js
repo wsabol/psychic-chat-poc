@@ -1,9 +1,11 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import { useTranslation } from '../../context/TranslationContext';
 
 /**
  * DevicesTab - Show all logged-in devices and allow logout from specific device
  */
 export default function DevicesTab({ userId, token, apiUrl }) {
+  const { t } = useTranslation();
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -24,7 +26,7 @@ export default function DevicesTab({ userId, token, apiUrl }) {
       setDevices(data.devices || []);
     } catch (err) {
       console.error('[DEVICES] Error loading devices:', err);
-      setError(err.message);
+      setError(t('security.devices.errorLoading'));
     } finally {
       setLoading(false);
     }
@@ -35,7 +37,7 @@ export default function DevicesTab({ userId, token, apiUrl }) {
   }, [loadDevices]);
 
   const handleLogoutDevice = async (deviceId) => {
-    if (!window.confirm('Log out this device? You will need to sign in again on that device.')) {
+    if (!window.confirm(t('security.devices.logoutConfirm'))) {
       return;
     }
 
@@ -51,21 +53,21 @@ export default function DevicesTab({ userId, token, apiUrl }) {
       setDevices(devices.filter(d => d.id !== deviceId));
     } catch (err) {
       console.error('[DEVICES] Error logging out device:', err);
-      setError(err.message);
+      setError(t('security.devices.errorLogout'));
     } finally {
       setLoggingOut(null);
     }
   };
 
   if (loading) {
-    return <div style={{ textAlign: 'center', padding: '2rem' }}>Loading devices...</div>;
+    return <div style={{ textAlign: 'center', padding: '2rem' }}>{t('security.devices.loadingDevices')}</div>;
   }
 
   return (
     <div>
-      <h2 style={{ marginTop: 0 }}>Your Devices</h2>
+      <h2 style={{ marginTop: 0 }}>{t('security.devices.title')}</h2>
       <p style={{ color: '#666' }}>
-        Devices where you're currently signed in. Log out any device you don't recognize.
+        {t('security.devices.subtitle')}
       </p>
 
       {error && (
@@ -82,7 +84,7 @@ export default function DevicesTab({ userId, token, apiUrl }) {
 
       {devices.length === 0 ? (
         <p style={{ color: '#999', textAlign: 'center', padding: '2rem' }}>
-          No devices found
+          {t('security.devices.noDevices')}
         </p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -104,10 +106,10 @@ export default function DevicesTab({ userId, token, apiUrl }) {
                   📍 {device.deviceName}
                 </h3>
                 <p style={{ margin: '0.25rem 0', fontSize: '14px', color: '#666' }}>
-                  <strong>IP:</strong> {device.ipAddress}
+                  <strong>{t('security.devices.ipLabel')}:</strong> {device.ipAddress}
                 </p>
                 <p style={{ margin: '0.25rem 0', fontSize: '14px', color: '#666' }}>
-                  <strong>Last active:</strong> {new Date(device.lastLogin).toLocaleString()}
+                  <strong>{t('security.devices.lastActiveLabel')}:</strong> {new Date(device.lastLogin).toLocaleString()}
                 </p>
                 {device.deviceName === (navigator.userAgent ? 'Current Device' : '') && (
                   <span style={{
@@ -120,7 +122,7 @@ export default function DevicesTab({ userId, token, apiUrl }) {
                     marginTop: '0.5rem',
                     fontWeight: 'bold'
                   }}>
-                    Current Device
+                    {t('security.devices.currentDeviceBadge')}
                   </span>
                 )}
               </div>
@@ -141,7 +143,7 @@ export default function DevicesTab({ userId, token, apiUrl }) {
                     fontSize: '14px'
                   }}
                 >
-                  {loggingOut === device.id ? 'Logging out...' : 'Log Out'}
+                  {loggingOut === device.id ? t('security.devices.loggingOut') : t('security.devices.logOut')}
                 </button>
               )}
             </div>

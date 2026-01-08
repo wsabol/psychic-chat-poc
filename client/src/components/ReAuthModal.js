@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from '../context/TranslationContext';
 import {
   reauthenticateWithCredential,
   reauthenticateWithPopup,
@@ -13,6 +14,7 @@ import { auth } from '../firebase';
  * Shows both Google and Password options (user picks which they use)
  */
 export default function ReAuthModal({ isOpen, email, onSuccess, onCancel, onFailure }) {
+  const { t } = useTranslation();
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
@@ -41,13 +43,13 @@ export default function ReAuthModal({ isOpen, email, onSuccess, onCancel, onFail
       
       // Skip popup-closed-by-user error to prevent calling onFailure
       if (err.code === 'auth/popup-closed-by-user') {
-        setError('Sign-in was cancelled. Please try again.');
+        setError(t('security.reauth.errorPopupClosed'));
         setLoading(false);
         return;
       } else if (err.code === 'auth/popup-blocked') {
-        setError('Pop-up was blocked. Please allow pop-ups for this site.');
+        setError(t('security.reauth.errorPopupBlocked'));
       } else {
-        setError(err.message || 'Google authentication failed');
+        setError(err.message || t('security.reauth.errorAuthFailed'));
       }
       
       // Only call onFailure on actual authentication failures, not user cancellations
@@ -79,11 +81,11 @@ export default function ReAuthModal({ isOpen, email, onSuccess, onCancel, onFail
       console.error('[REAUTH] Password re-auth failed:', err);
       
       if (err.code === 'auth/wrong-password') {
-        setError('Incorrect password. Please try again.');
+        setError(t('security.reauth.errorWrongPassword'));
       } else if (err.code === 'auth/user-mismatch') {
-        setError('This password is not associated with this account.');
+        setError(t('security.reauth.errorUserMismatch'));
       } else {
-        setError(err.message || 'Authentication failed. Please check your password.');
+        setError(err.message || t('security.reauth.errorAuthenticationFailed'));
       }
       
       if (onFailure) {
@@ -108,7 +110,7 @@ export default function ReAuthModal({ isOpen, email, onSuccess, onCancel, onFail
       }, 3000);
     } catch (err) {
       console.error('[REAUTH] Password reset failed:', err);
-      setError('Failed to send password reset email. Please try again.');
+      setError(t('security.reauth.errorResetFailed'));
     } finally {
       setLoading(false);
     }
@@ -137,9 +139,9 @@ export default function ReAuthModal({ isOpen, email, onSuccess, onCancel, onFail
         width: '90%',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
       }}>
-        <h2 style={{ marginTop: 0, marginBottom: '0.5rem' }}>Verify Your Identity</h2>
+        <h2 style={{ marginTop: 0, marginBottom: '0.5rem' }}>{t('security.reauth.title')}</h2>
         <p style={{ color: '#666', marginBottom: '1.5rem', fontSize: '14px' }}>
-          For your security, please verify your identity to access security settings.
+          {t('security.reauth.subtitle')}
         </p>
 
         {error && (
@@ -164,7 +166,7 @@ export default function ReAuthModal({ isOpen, email, onSuccess, onCancel, onFail
             marginBottom: '1rem',
             fontSize: '14px'
           }}>
-            ✓ Password reset email sent! Check your inbox.
+            {t('security.reauth.successResetSent')}
           </p>
         )}
 
@@ -176,7 +178,7 @@ export default function ReAuthModal({ isOpen, email, onSuccess, onCancel, onFail
             fontWeight: 'bold',
             fontSize: '14px'
           }}>
-            Email
+            {t('security.reauth.emailLabel')}
           </label>
           <input
             type="email"
@@ -223,7 +225,7 @@ export default function ReAuthModal({ isOpen, email, onSuccess, onCancel, onFail
                 alt="Google"
                 style={{ width: '16px', height: '16px' }}
               />
-              {loading ? 'Signing in...' : 'Sign in with Google'}
+              {loading ? t('security.reauth.googleSigningIn') : t('security.reauth.googleSignIn')}
             </button>
 
             {/* Divider */}
@@ -234,7 +236,7 @@ export default function ReAuthModal({ isOpen, email, onSuccess, onCancel, onFail
               gap: '1rem'
             }}>
               <div style={{ flex: 1, height: '1px', backgroundColor: '#ddd' }} />
-              <span style={{ color: '#999', fontSize: '12px' }}>or</span>
+              <span style={{ color: '#999', fontSize: '12px' }}>{t('security.reauth.orDivider')}</span>
               <div style={{ flex: 1, height: '1px', backgroundColor: '#ddd' }} />
             </div>
 
@@ -247,14 +249,14 @@ export default function ReAuthModal({ isOpen, email, onSuccess, onCancel, onFail
                   fontWeight: 'bold',
                   fontSize: '14px'
                 }}>
-                  Password
+                  {t('security.reauth.passwordLabel')}
                 </label>
                 <div style={{ position: 'relative' }}>
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
+                    placeholder={t('security.reauth.passwordPlaceholder')}
                     autoFocus
                     disabled={loading}
                     style={{
@@ -287,7 +289,7 @@ export default function ReAuthModal({ isOpen, email, onSuccess, onCancel, onFail
                     }}
                     onMouseEnter={(e) => e.target.style.opacity = loading ? '0.5' : '1'}
                     onMouseLeave={(e) => e.target.style.opacity = loading ? '0.5' : '0.7'}
-                    title={showPassword ? 'Hide password' : 'Show password'}
+                    title={showPassword ? t('security.reauth.hidePassword') : t('security.reauth.showPassword')}
                   >
                     {showPassword ? '👁️' : '👁️‍🗨️'}
                   </button>
@@ -311,7 +313,7 @@ export default function ReAuthModal({ isOpen, email, onSuccess, onCancel, onFail
                   opacity: loading || !password.trim() ? 0.6 : 1
                 }}
               >
-                {loading ? 'Verifying...' : 'Verify'}
+                {loading ? t('security.reauth.verifying') : t('security.reauth.verify')}
               </button>
 
               <button
@@ -328,7 +330,7 @@ export default function ReAuthModal({ isOpen, email, onSuccess, onCancel, onFail
                   textDecoration: 'underline'
                 }}
               >
-                Forgot password?
+                {t('security.reauth.forgotPassword')}
               </button>
             </form>
           </>
@@ -338,7 +340,7 @@ export default function ReAuthModal({ isOpen, email, onSuccess, onCancel, onFail
         {showPasswordReset && (
           <div>
             <p style={{ color: '#666', fontSize: '14px', marginBottom: '1rem' }}>
-              We'll send a password reset link to your email.
+              {t('security.reauth.passwordResetText')}
             </p>
             <button
               onClick={handlePasswordReset}
@@ -357,7 +359,7 @@ export default function ReAuthModal({ isOpen, email, onSuccess, onCancel, onFail
                 opacity: loading ? 0.6 : 1
               }}
             >
-              {loading ? 'Sending...' : 'Send Reset Email'}
+              {loading ? t('security.reauth.sending') : t('security.reauth.sendResetEmail')}
             </button>
             <button
               onClick={() => setShowPasswordReset(false)}
@@ -371,7 +373,7 @@ export default function ReAuthModal({ isOpen, email, onSuccess, onCancel, onFail
                 fontSize: '14px'
               }}
             >
-              Back
+              {t('security.reauth.back')}
             </button>
           </div>
         )}
@@ -393,7 +395,7 @@ export default function ReAuthModal({ isOpen, email, onSuccess, onCancel, onFail
                 fontWeight: '500'
               }}
             >
-              Cancel
+              {t('security.reauth.cancel')}
             </button>
           </div>
         )}

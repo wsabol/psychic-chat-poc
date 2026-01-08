@@ -82,7 +82,7 @@ export default function SecurityPage({ userId, token, auth, onboarding, onNaviga
   const tabs = [
     { id: 'verification', label: t('security.twoFactor'), icon: '🔐' },
     { id: 'password', label: t('security.changePassword'), icon: '🔒' },
-    { id: 'devices', label: t('security.trustedDevices'), icon: '📱' },
+    { id: 'devices', label: t('security.trustedDevices.heading'), icon: '📱' },
     { id: 'session', label: t('security.sessions'), icon: '⏱️' }
   ];
 

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from '../../../context/TranslationContext';
 
 /**
  * TwoFASection - Render 2FA settings UI
@@ -16,6 +17,8 @@ export function TwoFASection({
   twoFASettings,
   hasVerificationMethods
 }) {
+  const { t } = useTranslation();
+
   return (
     <div style={{
       marginBottom: '1.5rem',
@@ -28,10 +31,10 @@ export function TwoFASection({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
         <div>
           <h3 style={{ marginTop: 0, marginBottom: '0.25rem', fontSize: '15px' }}>
-            🔐 Two-Factor Authentication
+            {t('security.twoFA.heading')}
           </h3>
           <p style={{ margin: 0, fontSize: '12px', color: twoFAEnabled ? '#2e7d32' : '#f57f17' }}>
-            <strong>Status:</strong> {twoFAEnabled ? '✓ Enabled' : '⚠️ Disabled'}
+            <strong>{t('security.twoFA.statusLabel')}</strong> {twoFAEnabled ? t('security.twoFA.enabled') : t('security.twoFA.disabled')}
           </p>
         </div>
         {!twoFAEditMode && (
@@ -49,7 +52,7 @@ export function TwoFASection({
               whiteSpace: 'nowrap'
             }}
           >
-            ⚙️ Change 2FA
+            {t('security.twoFA.changeButton')}
           </button>
         )}
       </div>
@@ -57,7 +60,7 @@ export function TwoFASection({
       {/* Method line */}
       {twoFAEnabled && !twoFAEditMode && (
         <p style={{ margin: '0.5rem 0 0 0', fontSize: '12px', color: '#333' }}>
-          <strong>Method:</strong> {twoFAMethod === 'email' ? '📧 Email' : '📱 SMS'}
+          <strong>{t('security.twoFA.methodLabel')}</strong> {twoFAMethod === 'email' ? t('security.twoFA.methodEmail') : t('security.twoFA.methodSMS')}
         </p>
       )}
 
@@ -79,13 +82,13 @@ export function TwoFASection({
               disabled={twoFASaving}
               style={{ cursor: 'pointer', width: '16px', height: '16px' }}
             />
-            <span>Enable Two-Factor Authentication</span>
+            <span>{t('security.twoFA.enableCheckbox')}</span>
           </label>
 
           {twoFAEnabled && (
             <div style={{ marginBottom: '0.75rem', marginLeft: '1.5rem' }}>
               <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', fontSize: '12px' }}>
-                Method
+                {t('security.twoFA.methodSectionLabel')}
               </label>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 <label style={{
@@ -103,7 +106,7 @@ export function TwoFASection({
                     disabled={twoFASaving}
                     style={{ cursor: 'pointer', width: '16px', height: '16px' }}
                   />
-                  <span>📧 Email</span>
+                  <span>{t('security.twoFA.methodEmail')}</span>
                 </label>
                 <label style={{
                   display: 'flex',
@@ -120,7 +123,7 @@ export function TwoFASection({
                     disabled={twoFASaving}
                     style={{ cursor: 'pointer', width: '16px', height: '16px' }}
                   />
-                  <span>📱 SMS</span>
+                  <span>{t('security.twoFA.methodSMS')}</span>
                 </label>
               </div>
             </div>
@@ -142,7 +145,7 @@ export function TwoFASection({
                 fontWeight: 'bold'
               }}
             >
-              Save
+              {t('security.twoFA.save')}
             </button>
             <button
               onClick={() => {
@@ -161,7 +164,7 @@ export function TwoFASection({
                 fontSize: '12px'
               }}
             >
-              Cancel
+              {t('security.twoFA.cancel')}
             </button>
           </div>
         </div>
@@ -169,7 +172,7 @@ export function TwoFASection({
 
       {!hasVerificationMethods && !twoFAEnabled && (
         <p style={{ margin: '0.75rem 0 0 0', fontSize: '12px', color: '#f57f17' }}>
-          ⚠️ Add phone or email below to enable 2FA
+          {t('security.twoFA.warningNoVerification')}
         </p>
       )}
     </div>

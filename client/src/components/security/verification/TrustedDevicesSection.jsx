@@ -31,7 +31,7 @@ export function TrustedDevicesSection({ userId, token, apiUrl }) {
       }
     } catch (err) {
       console.error('[TRUSTED-DEVICES] Error:', err);
-      setError('Error loading trusted devices');
+      setError('Failed to load trusted devices');
     } finally {
       setLoading(false);
     }
