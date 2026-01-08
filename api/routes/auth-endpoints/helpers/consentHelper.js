@@ -57,18 +57,9 @@ export async function recordUserConsent(userId, termsAccepted, privacyAccepted, 
   try {
     const userIdHash = hashUserId(userId);
     
-    // Verify user exists
-    const userExists = await db.query(
-      'SELECT user_id FROM user_personal_info WHERE user_id = $1',
-      [userId]
-    );
-    
-    if (userExists.rows.length === 0) {
-      return {
-        success: false,
-        message: 'User not found'
-      };
-    }
+    // NOTE: We do NOT check if user exists in user_personal_info
+    // Users can accept consent before their profile is fully created
+    // This is critical during signup/free trial flow
     
     // Encrypt IP and user agent
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;

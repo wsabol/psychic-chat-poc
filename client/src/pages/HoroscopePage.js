@@ -270,40 +270,32 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
 
   return (
     <div className="page-safe-area horoscope-page" style={{ position: 'relative' }}>
-      {auth?.isTemporaryAccount && (
-        <>
+            {auth?.isTemporaryAccount && (
+        <div style={{
+          position: 'fixed',
+          top: '1rem',
+          right: '1rem',
+          zIndex: 1000
+        }}>
           <button
             type="button"
             onClick={handleClose}
             style={{
-              position: 'absolute',
-              top: '1rem',
-              right: '1rem',
-              background: 'transparent',
-              border: 'none',
-              fontSize: '1.5rem',
+              padding: '0.75rem 1.5rem',
+              background: 'rgba(124, 99, 216, 0.9)',
+              border: '2px solid #7c63d8',
+              color: 'white',
+              fontSize: '0.95rem',
+              fontWeight: '600',
               cursor: 'pointer',
-              zIndex: 100,
-              opacity: 0.7,
-              transition: 'opacity 0.2s'
+              borderRadius: '5px',
+              transition: 'all 0.2s ease'
             }}
-            onMouseEnter={(e) => e.target.style.opacity = '1'}
-            onMouseLeave={(e) => e.target.style.opacity = '0.7'}
-            title={t('common.closeAndContinue')}
+            title="Exit free trial"
           >
-            ✕
+            ✕ Exit
           </button>
-          
-          <button
-            type="button"
-            onClick={handleClose}
-            className="exit-prompt"
-            title={t('onboarding.clickExitToContinue')}
-          >
-            <span className="exit-arrow">👉</span>
-            <span className="exit-message">{t('onboarding.clickExitToContinue')}</span>
-          </button>
-        </>
+        </div>
       )}
 
       <div className="horoscope-header">

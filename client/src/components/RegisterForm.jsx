@@ -60,7 +60,8 @@ export function RegisterForm({
   setPrivacyAccepted,
   loading,
   onSubmit,
-  onSwitchToLogin
+    onSwitchToLogin,
+  isFreeTrial = false
 }) {
   const { t } = useTranslation();
   const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
@@ -70,7 +71,9 @@ export function RegisterForm({
   const allRequirementsMet = Object.values(passwordValidation).every(Boolean);
   const passwordsMatch = password === confirmPassword && password.length > 0;
   
-  const isFormValid = termsAccepted && privacyAccepted && allRequirementsMet && passwordsMatch;
+  // For free trial users converting to permanent account, skip Terms requirement
+  const termsRequired = !isFreeTrial;
+  const isFormValid = (!termsRequired || (termsAccepted && privacyAccepted)) && allRequirementsMet && passwordsMatch;
 
   return (
     <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -178,14 +181,30 @@ export function RegisterForm({
         )}
       </div>
 
-      {/* T&C Checkboxes */}
-      <TermsCheckbox
-        termsAccepted={termsAccepted}
-        privacyAccepted={privacyAccepted}
-        onTermsChange={setTermsAccepted}
-        onPrivacyChange={setPrivacyAccepted}
-        disabled={loading}
-      />
+            {/* T&C Checkboxes - Skip for free trial users */}
+      {!isFreeTrial && (
+        <TermsCheckbox
+          termsAccepted={termsAccepted}
+          privacyAccepted={privacyAccepted}
+          onTermsChange={setTermsAccepted}
+          onPrivacyChange={setPrivacyAccepted}
+          disabled={loading}
+        />
+      )}
+      
+      {/* Free Trial User Notice */}
+      {isFreeTrial && (
+        <div style={{
+          backgroundColor: 'rgba(76, 175, 80, 0.1)',
+          border: '1px solid #4CAF50',
+          borderRadius: '5px',
+          padding: '0.75rem',
+          fontSize: '0.85rem',
+          color: '#2e7d32'
+        }}>
+          Check Converting your free trial to a permanent account
+        </div>
+      )}
 
       <button 
         type="submit" 

@@ -28,8 +28,19 @@ router.get('/onboarding-status', authenticateToken, async (req, res) => {
       [userId]
     );
     
+    // For new users (temp accounts, not yet in DB), return default onboarding state
     if (!result.rows[0]) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.json({
+        currentStep: 'create_account',
+        isOnboarding: true,
+        completedSteps: {
+          create_account: false,
+          payment_method: false,
+          subscription: false,
+          personal_info: false
+        },
+        subscriptionStatus: null
+      });
     }
     
     const { onboarding_step, onboarding_completed, subscription_status } = result.rows[0];

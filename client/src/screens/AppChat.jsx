@@ -47,6 +47,13 @@ export function AppChat({ state }) {
       return;
     }
     
+    // Skip consent modal for temp/free trial users - they can try first, then consent on signup
+    if (authState.isTemporaryAccount) {
+      setShowConsentModal(false);
+      setConsentLoading(false);
+      return;
+    }
+    
     const fetchConsentStatus = async () => {
       try {
         const response = await fetch(`http://localhost:3000/auth/check-consent/${user.uid}`, {

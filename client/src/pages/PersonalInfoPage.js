@@ -236,7 +236,7 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
             // Navigate or show success
             if (isTemporaryAccount && onNavigateToPage) {
                 setTimeout(() => {
-                    onNavigateToPage(4);
+                    onNavigateToPage(5); // Page 5 = Horoscope (from PAGES array in MainContainer)
                 }, 1500);
             } else {
                 setTimeout(() => setSuccess(false), 3000);

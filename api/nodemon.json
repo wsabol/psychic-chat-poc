@@ -1,4 +1,5 @@
 {
-  "watch": ["index.js"],
+  "watch": ["."],
+  "ignore": ["node_modules", ".git"],
   "exec": "node index.js"
 }

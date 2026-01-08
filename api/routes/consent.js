@@ -78,15 +78,8 @@ router.post('/consent/terms-acceptance', async (req, res) => {
 
     const userIdHash = hashUserId(userId);
 
-    // Validate that user exists
-    const userExists = await db.query(
-      'SELECT user_id FROM user_personal_info WHERE user_id = $1',
-      [userId]
-    );
-
-    if (userExists.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
+    // NOTE: We do NOT check if user exists in user_personal_info
+    // Users can accept consent during signup before their profile is created
 
     // Get client IP and user agent for consent proof
     const clientIp = req.ip || req.connection.remoteAddress;
@@ -233,15 +226,8 @@ router.post('/consents', async (req, res) => {
 
     const userIdHash = hashUserId(userId);
 
-    // Validate that user exists
-    const userExists = await db.query(
-      'SELECT user_id FROM user_personal_info WHERE user_id = $1',
-      [userId]
-    );
-
-    if (userExists.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
+    // NOTE: We do NOT check if user exists in user_personal_info
+    // Users can consent during signup before profile is fully created
 
     // Get client IP and user agent for consent proof
     const clientIp = req.ip || req.connection.remoteAddress;
