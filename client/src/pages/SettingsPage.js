@@ -84,7 +84,7 @@ export default function SettingsPage({ userId, token, auth, onboarding }) {
 
   // Clear Browsing Data
   const handleClearBrowsingData = async () => {
-    if (!window.confirm('Are you sure you want to clear your browsing data?')) {
+    if (!window.confirm(t('settings.clearBrowsingConfirm'))) {
       return;
     }
 
@@ -168,7 +168,7 @@ export default function SettingsPage({ userId, token, auth, onboarding }) {
             {t('settings.title')}
           </h1>
           <p style={{ color: '#666', marginBottom: 0, fontSize: '13px' }}>
-            Manage your privacy, data, and communication preferences
+            {t('settings.subtitle')}
           </p>
         </div>
 
@@ -212,7 +212,7 @@ export default function SettingsPage({ userId, token, auth, onboarding }) {
                   opacity: isLoading ? 0.6 : 1,
                 }}
               >
-                {isLoading ? t('settings.downloading') : 'Download'}
+                {isLoading ? t('settings.downloading') : t('settings.download')}
               </button>
             }
           />
@@ -226,6 +226,8 @@ export default function SettingsPage({ userId, token, auth, onboarding }) {
               <ToggleSwitch
                 checked={settings.cookiesEnabled}
                 onChange={() => handleToggleSetting('cookiesEnabled')}
+                enabledLabel={t('settings.enabled')}
+                disabledLabel={t('settings.disabled')}
               />
             }
           />
@@ -251,7 +253,7 @@ export default function SettingsPage({ userId, token, auth, onboarding }) {
                   opacity: isLoading ? 0.6 : 1,
                 }}
               >
-                {isLoading ? t('settings.clearingData') : 'Clear'}
+                {isLoading ? t('settings.clearingData') : t('settings.clear')}
               </button>
             }
           />
@@ -265,6 +267,8 @@ export default function SettingsPage({ userId, token, auth, onboarding }) {
               <ToggleSwitch
                 checked={settings.analyticsEnabled}
                 onChange={() => handleToggleSetting('analyticsEnabled')}
+                enabledLabel={t('settings.enabled')}
+                disabledLabel={t('settings.disabled')}
               />
             }
           />
@@ -278,6 +282,8 @@ export default function SettingsPage({ userId, token, auth, onboarding }) {
               <ToggleSwitch
                 checked={settings.emailEnabled}
                 onChange={() => handleToggleSetting('emailEnabled')}
+                enabledLabel={t('settings.enabled')}
+                disabledLabel={t('settings.disabled')}
               />
             }
           />
@@ -291,6 +297,8 @@ export default function SettingsPage({ userId, token, auth, onboarding }) {
               <ToggleSwitch
                 checked={settings.pushNotificationsEnabled}
                 onChange={() => handleToggleSetting('pushNotificationsEnabled')}
+                enabledLabel={t('settings.enabled')}
+                disabledLabel={t('settings.disabled')}
               />
             }
           />
@@ -373,7 +381,7 @@ function SettingSection({ icon, title, description, warning, action }) {
 /**
  * ToggleSwitch - On/off toggle component
  */
-function ToggleSwitch({ checked, onChange }) {
+function ToggleSwitch({ checked, onChange, enabledLabel = 'Enabled', disabledLabel = 'Disabled' }) {
   return (
     <button
       onClick={onChange}
@@ -392,7 +400,7 @@ function ToggleSwitch({ checked, onChange }) {
         paddingLeft: checked ? '26px' : '3px',
         paddingRight: checked ? '3px' : '26px',
       }}
-      title={checked ? 'Enabled' : 'Disabled'}
+      title={checked ? enabledLabel : disabledLabel}
     >
       <div
         style={{

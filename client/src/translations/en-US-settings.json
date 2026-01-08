@@ -1,6 +1,7 @@
 {
   "settings": {
     "title": "⚙️ Settings",
+    "subtitle": "Manage your privacy, data, and communication preferences",
     "personalInfo": "Personal Information",
     "preferences": "Preferences",
     "security": "Security & Privacy",
@@ -21,6 +22,11 @@
     "downloading": "Downloading...",
     "downloadSuccess": "Your data has been downloaded successfully",
     "downloadError": "Error downloading your data",
+    "download": "Download",
+    "clear": "Clear",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "clearBrowsingConfirm": "Are you sure you want to clear your browsing data?",
     "cookies": "Cookies",
     "cookiesDescription": "Allow cookies to improve your experience",
     "cookiesEnabled": "Cookies enabled",
