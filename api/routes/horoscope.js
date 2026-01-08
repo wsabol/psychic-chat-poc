@@ -32,16 +32,9 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
             [userIdHash]
         );
         const userLanguage = prefRows.length > 0 ? prefRows[0].language : 'en-US';
-        let userTimezone = prefRows.length > 0 && prefRows[0].timezone ? prefRows[0].timezone : null;
-        
-        // If no timezone in preferences, fallback to birth_timezone
-        if (!userTimezone) {
-            const { rows: birthRows } = await db.query(
-                `SELECT pgp_sym_decrypt(birth_timezone_encrypted, $1) as birth_timezone FROM user_personal_info WHERE user_id = $2`,
-                [process.env.ENCRYPTION_KEY, userId]
-            );
-            userTimezone = birthRows.length > 0 && birthRows[0].birth_timezone ? birthRows[0].birth_timezone : 'UTC';
-        }
+        // Browser timezone (from saveUserTimezone on login) is the authoritative source
+        // NEVER use birth_timezone - causes day-off issues if user was born elsewhere
+        const userTimezone = prefRows.length > 0 && prefRows[0].timezone ? prefRows[0].timezone : 'UTC';
         console.log(`[HOROSCOPE-API] User language: ${userLanguage}, timezone: ${userTimezone}`);
         
         // Get today's date in user's LOCAL timezone
