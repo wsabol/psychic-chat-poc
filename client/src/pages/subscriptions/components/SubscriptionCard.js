@@ -5,6 +5,7 @@
  */
 
 import React from 'react';
+import { useTranslation } from '../../../context/TranslationContext';
 
 export default function SubscriptionCard({
   subscription,
@@ -17,6 +18,7 @@ export default function SubscriptionCard({
   onChangeSubscription,
   billing
 }) {
+  const { t } = useTranslation();
   const planName = subscription.items?.data?.[0]?.price?.product?.name || 'Subscription';
   const interval = subscription.items?.data?.[0]?.price?.recurring?.interval || 'month';
   const expiresDate = new Date(subscription.current_period_end * 1000).toLocaleDateString('en-US', {
@@ -28,9 +30,9 @@ export default function SubscriptionCard({
   // Status display
   const getStatusBadge = () => {
     if (isCanceling) {
-      return { text: '⏱️ Canceling', color: '#ff9800' };
+      return { text: `⏱️ ${t('subscriptions.canceling')}`, color: '#ff9800' };
     }
-    return { text: '✅ Active', color: '#4caf50' };
+    return { text: `✅ ${t('subscriptions.active')}`, color: '#4caf50' };
   };
 
   const statusBadge = getStatusBadge();
@@ -41,11 +43,11 @@ export default function SubscriptionCard({
         {/* Left: Plan info */}
         <div className="sub-simple-left">
           <div className="sub-simple-plan">
-            {planName} <span className="sub-simple-interval">({interval === 'month' ? 'Monthly' : 'Yearly'})</span>
+            {planName}           <span className="sub-simple-interval">({interval === 'month' ? t('subscriptions.monthly') : t('subscriptions.yearly')})</span>
           </div>
           {isCanceling && (
             <div className="sub-simple-canceling">
-              ⚠️ This subscription ends on <strong>{expiresDate}</strong>
+              ⚠️ {t('subscriptions.thisSubscriptionEnds')} <strong>{expiresDate}</strong>
             </div>
           )}
         </div>
@@ -60,14 +62,14 @@ export default function SubscriptionCard({
         {/* Right: Expiry + Action */}
         <div className="sub-simple-right">
           <div className="sub-simple-expires">
-            Expires {expiresDate}
+            {t('subscriptions.expires')} {expiresDate}
           </div>
           {!isCanceling && subscription.status === 'active' && (
             <button
               className="btn-secondary btn-small"
               onClick={() => onChangeClick(subscription.id)}
             >
-              {expandedSub === subscription.id ? '✕ Close' : '📋 Change'}
+              {expandedSub === subscription.id ? `✕ ${t('subscriptions.close')}` : `📋 ${t('subscriptions.change')}`}
             </button>
           )}
         </div>
@@ -76,7 +78,7 @@ export default function SubscriptionCard({
       {/* Change Plan Options - Expanded */}
       {expandedSub === subscription.id && subscription.status === 'active' && !isCanceling && (
         <div className="sub-simple-expand">
-          <h5>Switch to a Different Plan</h5>
+          <h5>{t('subscriptions.switchToADifferentPlan')}</h5>
           <div className="sub-simple-plans-grid">
             {Object.entries(pricesByProduct).map(([productId, { product, prices }]) => (
               prices.map(price => {
@@ -87,7 +89,7 @@ export default function SubscriptionCard({
                 return (
                   <div key={price.id} className="sub-simple-plan-option">
                     <div className="sub-simple-plan-name">
-                      {product?.name} ({newInterval === 'month' ? 'Mo' : 'Yr'})
+                      {product?.name} ({newInterval === 'month' ? t('subscriptions.mo') : t('subscriptions.yr')})
                     </div>
                     <div className="sub-simple-plan-price">
                       ${(price.unit_amount / 100).toFixed(2)}
@@ -97,7 +99,7 @@ export default function SubscriptionCard({
                       onClick={() => onChangeSubscription(subscription, price.id)}
                       disabled={isSamePrice || billing.loading}
                     >
-                      {isSamePrice ? 'Current' : 'Switch'}
+                      {isSamePrice ? t('subscriptions.current') : t('subscriptions.switch')}
                     </button>
                   </div>
                 );

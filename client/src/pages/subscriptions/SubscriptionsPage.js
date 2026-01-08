@@ -11,6 +11,7 @@
  */
 
 import React, { useEffect } from 'react';
+import { useTranslation } from '../../context/TranslationContext';
 import { useBilling } from '../../hooks/useBilling';
 import { useSubscriptionState } from './hooks/useSubscriptionState';
 import { useSubscriptionHandlers } from './hooks/useSubscriptionHandlers';
@@ -24,6 +25,7 @@ import '../SubscriptionsPage.css';
 import '../../styles/modals.css';
 
 export default function SubscriptionsPage({ userId, token, auth }) {
+  const { t } = useTranslation();
   // State management
   const state = useSubscriptionState(token);
   const billing = useBilling(token);
@@ -87,22 +89,22 @@ export default function SubscriptionsPage({ userId, token, auth }) {
   return (
     <div className="subscriptions-page">
       {/* Header */}
-      <div className="section-header">
-        <h2>📋 Subscriptions</h2>
-        <p>Manage your subscription plans and billing</p>
+            <div className="section-header">
+        <h2>📋 {t('subscriptions.title')}</h2>
+        <p>{t('subscriptions.managePlans') || 'Manage your subscription plans and billing'}</p>
       </div>
 
-      {/* Alerts */}
+            {/* Alerts */}
       {state.error && <div className="alert alert-error">{state.error}</div>}
-      {state.success && <div className="alert alert-success">✓ Changes saved successfully!</div>}
+      {state.success && <div className="alert alert-success">✓ {t('subscriptions.changesSaved') || 'Changes saved successfully!'}</div>}
 
       {/* LAYOUT: Show Available Plans FIRST if no subscription, otherwise show Active Subscriptions */}
       {activeSubscriptionsList.length === 0 ? (
         <>
           {/* NO ACTIVE SUBSCRIPTION - Show products first */}
-          <div style={{ marginBottom: '2rem', padding: '1rem', backgroundColor: '#fff3e0', borderRadius: '8px', borderLeft: '4px solid #ff9800' }}>
+                    <div style={{ marginBottom: '2rem', padding: '1rem', backgroundColor: '#fff3e0', borderRadius: '8px', borderLeft: '4px solid #ff9800' }}>
             <p style={{ margin: 0, fontWeight: 'bold', color: '#e65100' }}>
-              ⚠️ You need an active subscription to use this site. Choose a plan below to get started.
+              ⚠️ {t('subscriptions.needActiveSubscription') || 'You need an active subscription to use this site. Choose a plan below to get started.'}
             </p>
           </div>
 

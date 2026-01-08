@@ -4,17 +4,19 @@
  */
 
 import React from 'react';
+import { useTranslation } from '../../../context/TranslationContext';
 
 export default function SubscriptionInfo() {
+  const { t } = useTranslation();
   return (
     <div className="subscription-info">
-      <h3>How Subscriptions Work</h3>
+      <h3>{t('subscriptions.howSubscriptionsWork')}</h3>
       <ul>
-        <li>✓ <strong>Automatic Renewal:</strong> Your subscription automatically renews at the end of each billing period</li>
-        <li>✓ <strong>Cancel Anytime:</strong> Uncheck the box next to your subscription to cancel</li>
-        <li>✓ <strong>No Interruption:</strong> Your service continues until the end of your current billing period</li>
-        <li>✓ <strong>Plan Changes:</strong> When changing plans, your new subscription starts after your current period ends</li>
-        <li>✓ <strong>Simple Billing:</strong> All charges appear clearly on your invoices</li>
+        <li>✓ {t('subscriptions.automaticRenewalInfo')}</li>
+        <li>✓ {t('subscriptions.cancelAnytime')}</li>
+        <li>✓ {t('subscriptions.noInterruption')}</li>
+        <li>✓ {t('subscriptions.planChanges')}</li>
+        <li>✓ {t('subscriptions.simpleBilling')}</li>
       </ul>
     </div>
   );

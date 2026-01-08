@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { useTranslation } from '../../../context/TranslationContext';
 import SubscriptionCard from './SubscriptionCard';
 
 export default function ActiveSubscriptionsSection({
@@ -16,13 +17,15 @@ export default function ActiveSubscriptionsSection({
   onChangeSubscription,
   billing
 }) {
+  const { t } = useTranslation();
+  
   if (subscriptions.length === 0) {
     return null;
   }
 
   return (
     <div className="current-subscriptions">
-      <h3>Your Active Subscriptions</h3>
+      <h3>{t('subscriptions.yourActiveSubscriptions')}</h3>
       <div className="subscriptions-list">
         {subscriptions.map(subscription => {
           const isActive = activeSubscriptions[subscription.id] !== false;

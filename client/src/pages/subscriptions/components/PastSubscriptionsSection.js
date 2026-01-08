@@ -4,8 +4,10 @@
  */
 
 import React from 'react';
+import { useTranslation } from '../../../context/TranslationContext';
 
 export default function PastSubscriptionsSection({ subscriptions }) {
+  const { t } = useTranslation();
   const pastSubs = subscriptions.filter(sub => sub.status === 'canceled');
 
   if (pastSubs.length === 0) {
@@ -14,13 +16,13 @@ export default function PastSubscriptionsSection({ subscriptions }) {
 
   return (
     <div style={styles.container}>
-      <h3 style={styles.heading}>Past Subscriptions</h3>
+      <h3 style={styles.heading}>{t('subscriptions.pastSubscriptions')}</h3>
       <table style={styles.table}>
         <thead>
           <tr style={styles.headerRow}>
-            <th style={styles.th}>Plan</th>
-            <th style={styles.th}>Price</th>
-            <th style={styles.th}>Ended</th>
+            <th style={styles.th}>{t('subscriptions.plan')}</th>
+            <th style={styles.th}>{t('subscriptions.price')}</th>
+            <th style={styles.th}>{t('subscriptions.ended')}</th>
           </tr>
         </thead>
         <tbody>

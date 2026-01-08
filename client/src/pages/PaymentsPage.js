@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from '../context/TranslationContext';
 import { useBilling } from '../hooks/useBilling';
 import './PaymentsPage.css';
 
@@ -6,6 +7,7 @@ import './PaymentsPage.css';
  * PaymentsPage - View payment transaction history
  */
 export default function PaymentsPage({ userId, token, auth }) {
+  const { t } = useTranslation();
   const billing = useBilling(token);
   const [filterStatus, setFilterStatus] = useState('all');
   const [dateRange, setDateRange] = useState('all');
@@ -51,9 +53,9 @@ export default function PaymentsPage({ userId, token, auth }) {
     }
     if (charge.payment_method_details?.us_bank_account) {
       const bank = charge.payment_method_details.us_bank_account;
-      return `Bank ●●●● ${bank.last4}`;
+      return `${t('paymentHistory.bank')} ●●●● ${bank.last4}`;
     }
-    return charge.payment_method_details?.type?.toUpperCase() || 'Unknown';
+    return charge.payment_method_details?.type?.toUpperCase() || t('paymentHistory.unknown');
   };
 
   const filterPaymentsByDate = () => {
@@ -91,23 +93,23 @@ export default function PaymentsPage({ userId, token, auth }) {
     <div className="payments-page">
       {/* Header */}
       <div className="section-header">
-        <h2>💰 Payment History</h2>
-        <p>Track all your transactions and payments</p>
+        <h2>💰 {t('paymentHistory.title')}</h2>
+        <p>{t('paymentHistory.trackPayments')}</p>
       </div>
 
       {/* Summary Cards */}
       {filteredPayments.length > 0 && (
         <div className="summary-cards">
           <div className="summary-card">
-            <div className="summary-label">Total Payments</div>
+            <div className="summary-label">{t('paymentHistory.totalPayments')}</div>
             <div className="summary-value">{filteredPayments.length}</div>
           </div>
           <div className="summary-card">
-            <div className="summary-label">Total Amount</div>
+            <div className="summary-label">{t('paymentHistory.totalAmount')}</div>
             <div className="summary-value">{formatAmount(totalAmount, 'USD')}</div>
           </div>
           <div className="summary-card">
-            <div className="summary-label">Successful</div>
+            <div className="summary-label">{t('paymentHistory.successful')}</div>
             <div className="summary-value">
               {filteredPayments.filter(p => p.status === 'succeeded').length}
             </div>
@@ -119,32 +121,32 @@ export default function PaymentsPage({ userId, token, auth }) {
       {billing.payments && billing.payments.length > 0 && (
         <div className="filters-bar">
           <div className="filter-group">
-            <label htmlFor="status-filter">Status:</label>
+            <label htmlFor="status-filter">{t('paymentHistory.filterStatus')}</label>
             <select
               id="status-filter"
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
               className="form-select"
             >
-              <option value="all">All</option>
-              <option value="succeeded">Succeeded</option>
-              <option value="pending">Pending</option>
-              <option value="failed">Failed</option>
+              <option value="all">{t('paymentHistory.all')}</option>
+              <option value="succeeded">{t('paymentHistory.succeeded')}</option>
+              <option value="pending">{t('paymentHistory.pending')}</option>
+              <option value="failed">{t('paymentHistory.failed')}</option>
             </select>
           </div>
 
           <div className="filter-group">
-            <label htmlFor="date-filter">Date Range:</label>
+            <label htmlFor="date-filter">{t('paymentHistory.dateRange')}:</label>
             <select
               id="date-filter"
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value)}
               className="form-select"
             >
-              <option value="all">All Time</option>
-              <option value="30days">Last 30 Days</option>
-              <option value="month">This Month</option>
-              <option value="year">This Year</option>
+              <option value="all">{t('paymentHistory.allTime')}</option>
+              <option value="30days">{t('paymentHistory.last30Days')}</option>
+              <option value="month">{t('paymentHistory.thisMonth')}</option>
+              <option value="year">{t('paymentHistory.thisYear')}</option>
             </select>
           </div>
         </div>
@@ -156,12 +158,12 @@ export default function PaymentsPage({ userId, token, auth }) {
           <table className="payments-table">
             <thead>
               <tr>
-                <th>Date</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Payment Method</th>
-                <th>Reference</th>
-                <th>Description</th>
+                <th>{t('paymentHistory.date')}</th>
+                <th>{t('paymentHistory.amount')}</th>
+                <th>{t('paymentHistory.status')}</th>
+                <th>{t('paymentHistory.paymentMethod')}</th>
+                <th>{t('paymentHistory.reference')}</th>
+                <th>{t('paymentHistory.description')}</th>
               </tr>
             </thead>
             <tbody>
@@ -196,8 +198,8 @@ export default function PaymentsPage({ userId, token, auth }) {
         <div className="empty-state">
           <p>
             {billing.payments && billing.payments.length === 0
-              ? 'No payments yet. Your transactions will appear here.'
-              : 'No payments match the selected filters.'}
+              ? t('paymentHistory.noPayments')
+              : t('paymentHistory.noPaymentsFiltered')}
           </p>
         </div>
       )}
@@ -205,13 +207,13 @@ export default function PaymentsPage({ userId, token, auth }) {
       {/* Export Info */}
       {filteredPayments && filteredPayments.length > 0 && (
         <div className="payments-info-box">
-          <h3>💡 About Your Payments</h3>
+          <h3>💡 {t('paymentHistory.aboutPayments')}</h3>
           <ul>
-            <li><strong>Status:</strong> Succeeded (completed), Pending (processing), or Failed (unsuccessful)</li>
-            <li><strong>Payment Method:</strong> The card or bank account used for the payment</li>
-            <li><strong>Reference:</strong> Transaction ID for support inquiries</li>
-            <li><strong>Date:</strong> When the payment was processed</li>
-            <li>For more details, check your email receipts or invoice section</li>
+            <li><strong>{t('paymentHistory.statusLabel')}</strong> {t('paymentHistory.statusExplained')}</li>
+            <li><strong>{t('paymentHistory.paymentMethod')}:</strong> {t('paymentHistory.paymentMethodExplained')}</li>
+            <li><strong>{t('paymentHistory.reference')}:</strong> {t('paymentHistory.referenceExplained')}</li>
+            <li><strong>{t('paymentHistory.date')}:</strong> {t('paymentHistory.dateExplained')}</li>
+            <li>{t('paymentHistory.moreDetails')}</li>
           </ul>
         </div>
       )}

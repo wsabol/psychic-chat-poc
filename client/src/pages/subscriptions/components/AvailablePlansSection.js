@@ -4,16 +4,11 @@
  */
 
 import React from 'react';
+import { useTranslation } from '../../../context/TranslationContext';
 
 function formatPrice(price) {
   const amount = (price.unit_amount / 100).toFixed(2);
-  const interval = price.recurring?.interval || '';
-
-  if (interval === 'month') {
-    return `$${amount}/month`;
-  } else if (interval === 'year') {
-    return `$${amount}/year`;
-  }
+  // Just return the amount without the interval text - let translations handle that
   return `$${amount}`;
 }
 
@@ -24,6 +19,8 @@ export default function AvailablePlansSection({
   showSection,
   defaultPaymentMethodId
 }) {
+  const { t } = useTranslation();
+  
   if (!showSection) {
     return null;
   }
@@ -32,11 +29,11 @@ export default function AvailablePlansSection({
 
   return (
     <div className="available-plans">
-      <h3>Choose a Plan to Get Started</h3>
+      <h3>{t('subscriptions.chooseAPlan')}</h3>
       
       {noPaymentMethod && (
         <div className="alert alert-warning">
-          <strong>⚠️ Payment Method Required:</strong> Please add a payment method in your billing settings before subscribing to a plan.
+          <strong>⚠️ {t('subscriptions.paymentMethodRequired')}:</strong> {t('subscriptions.paymentMethodRequiredDesc')}
         </div>
       )}
 
@@ -44,35 +41,47 @@ export default function AvailablePlansSection({
         {Object.keys(pricesByProduct).length > 0 ? (
           Object.entries(pricesByProduct).map(([productId, { product, prices }]) => (
             <div key={productId} className="plan-card">
-              <div className="plan-header">
-                <h4>{product?.name || 'Plan'}</h4>
-                {product?.description && <p className="plan-description">{product.description}</p>}
+                            <div className="plan-header">
+                <h4>
+                  {product?.name?.toLowerCase().includes('monthly') ? t('subscriptions.monthlySubscription') :
+                   product?.name?.toLowerCase().includes('annual') || product?.name?.toLowerCase().includes('yearly') ? t('subscriptions.annualSubscription') :
+                   product?.name || 'Plan'}
+                </h4>
+                {product?.description && (
+                  <p className="plan-description">
+                    {product?.name?.toLowerCase().includes('monthly') ? t('subscriptions.monthlyDescription') :
+                     product?.name?.toLowerCase().includes('annual') || product?.name?.toLowerCase().includes('yearly') ? t('subscriptions.annualDescription') :
+                     product.description}
+                  </p>
+                )}
               </div>
 
               <div className="plan-pricing">
                 {prices.map(price => (
                   <div key={price.id} className="price-option">
-                    <div className="price-amount">{formatPrice(price)}</div>
-                    <div className="price-interval">
-                      {price.recurring?.interval === 'month' && 'per month'}
-                      {price.recurring?.interval === 'year' && 'per year'}
-                      {!price.recurring?.interval && 'one-time'}
+                                        <div className="price-display">
+                      <span className="price-amount">{formatPrice(price)}</span>
+                      <span className="price-interval">
+                        {price.recurring?.interval === 'month' && `/${t('subscriptions.perMonth').toLowerCase()}`}
+                        {price.recurring?.interval === 'year' && `/${t('subscriptions.perYear').toLowerCase()}`}
+                        {!price.recurring?.interval && ` ${t('subscriptions.oneTime')}`}
+                      </span>
                     </div>
-                    <button
+                                        <button
                       className="btn-primary"
                       onClick={() => onSubscribe(price.id)}
                       disabled={billing.loading || noPaymentMethod}
-                      title={noPaymentMethod ? 'Please add a payment method first' : ''}
+                      title={noPaymentMethod ? t('subscriptions.addPaymentMethodFirst') : ''}
                     >
-                      {billing.loading ? 'Processing...' : (noPaymentMethod ? 'Add Payment Method First' : 'Subscribe Now')}
+                      {billing.loading ? t('subscriptions.processingEllipsis') : (noPaymentMethod ? t('subscriptions.addPaymentMethodFirst') : t('subscriptions.subscribeNow'))}
                     </button>
                   </div>
                 ))}
               </div>
 
-              {product?.features && (
+                            {product?.features && (
                 <div className="plan-features">
-                  <h5>Features:</h5>
+                  <h5>{t('subscriptions.features')}:</h5>
                   <ul>
                     {product.features.map((feature, idx) => (
                       <li key={idx}>✓ {feature}</li>
@@ -82,9 +91,9 @@ export default function AvailablePlansSection({
               )}
             </div>
           ))
-        ) : (
+                ) : (
           <div className="empty-state">
-            <p>No subscription plans available yet. Check back soon!</p>
+            <p>{t('subscriptions.noPlanAvailable')}</p>
           </div>
         )}
       </div>

@@ -25,7 +25,7 @@ export default function BillingPage({ userId, token, auth, onboarding, defaultTa
     { id: 'payment-methods', label: t('paymentMethods.title'), icon: '💳' },
     { id: 'subscriptions', label: t('subscriptions.title'), icon: '📋' },
     { id: 'invoices', label: t('invoices.title'), icon: '📄' },
-    { id: 'payments', label: 'Payments', icon: '💰' },
+    { id: 'payments', label: t('paymentHistory.title'), icon: '💰' },
   ];
 
   return (

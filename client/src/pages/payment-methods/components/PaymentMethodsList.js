@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from '../../../context/TranslationContext';
 
 export default function PaymentMethodsList({
   paymentMethods,
@@ -7,11 +8,12 @@ export default function PaymentMethodsList({
   onDelete,
   onVerify,
 }) {
+  const { t } = useTranslation();
   return (
     <>
       {paymentMethods?.cards && paymentMethods.cards.length > 0 && (
         <div className="payment-methods-list">
-          <h3>💳 Saved Cards</h3>
+          <h3>💳 {t('paymentMethods.savedCards')}</h3>
           <div className="methods-grid">
             {paymentMethods.cards.map((card) => {
               const isDefault = card.id === defaultPaymentMethodId;
@@ -20,19 +22,19 @@ export default function PaymentMethodsList({
                   <div className="card-header">
                     <span className="card-brand">{card.card?.brand?.toUpperCase()}</span>
                     <span className="card-last4">●●●● {card.card?.last4}</span>
-                    {isDefault && <span className="default-badge">⭐ Default</span>}
+                    {isDefault && <span className="default-badge">⭐ {t('billing.default')}</span>}
                   </div>
                   <div className="card-expiry">
-                    Expires {card.card?.exp_month}/{card.card?.exp_year}
+                    {t('paymentMethods.expires')} {card.card?.exp_month}/{card.card?.exp_year}
                   </div>
                   <div className="card-actions">
                     {!isDefault && (
                       <button className="btn-link" onClick={() => onSetDefault(card.id)}>
-                        Set as Default
+                        {t('paymentMethods.setAsDefault')}
                       </button>
                     )}
                     <button className="btn-danger" onClick={() => onDelete(card.id)}>
-                      Delete
+                      {t('paymentMethods.delete')}
                     </button>
                   </div>
                 </div>
@@ -44,7 +46,7 @@ export default function PaymentMethodsList({
 
       {paymentMethods?.bankAccounts && paymentMethods.bankAccounts.length > 0 && (
         <div className="payment-methods-list">
-          <h3>🏦 Saved Bank Accounts</h3>
+          <h3>💰 {t('paymentMethods.savedBankAccounts')}</h3>
           <div className="methods-grid">
             {paymentMethods.bankAccounts.map((bank) => {
               // Get verification status
@@ -64,9 +66,9 @@ export default function PaymentMethodsList({
               return (
                 <div key={bank.id} className="payment-method-card" style={isDefault ? { border: '2px solid #4caf50' } : {}}>
                   <div className="card-header">
-                    <span className="card-brand">Bank Account</span>
+                    <span className="card-brand">{t('paymentMethods.bankAccount')}</span>
                     <span className="card-last4">●●●● {bank.us_bank_account?.last4}</span>
-                    {isDefault && <span className="default-badge">⭐ Default</span>}
+                    {isDefault && <span className="default-badge">⭐ {t('billing.default')}</span>}
                   </div>
                   <div className="card-expiry">
                     {bank.us_bank_account?.bank_name}
@@ -84,26 +86,26 @@ export default function PaymentMethodsList({
                       <button 
                         className="btn-warning"
                         onClick={() => onVerify(bank)}
-                        title="Enter the microdeposit amounts to verify"
+                        title={t('paymentMethods.enterMicrodeposit')}
                       >
-                        🔐 Verify
+                        🔐 {t('paymentMethods.verify')}
                       </button>
                     )}
                     {!isDefault && (
                       <button className="btn-link" onClick={() => onSetDefault(bank.id)}>
-                        Set as Default
+                        {t('paymentMethods.setAsDefault')}
                       </button>
                     )}
                     <button 
                       className="btn-danger" 
                       onClick={() => {
-                        if (window.confirm('Delete this bank account?')) {
+                        if (window.confirm(t('paymentMethods.deleteBankAccountConfirm'))) {
                           onDelete(bank.id);
                         }
                       }}
-                    >
-                      Delete
-                    </button>
+                                          >
+                        {t('paymentMethods.delete')}
+                      </button>
                   </div>
                 </div>
               );

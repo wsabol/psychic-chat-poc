@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
+import { useTranslation } from '../../context/TranslationContext';
 import { useBilling } from '../../hooks/useBilling';
 import CardPaymentForm from './components/CardPaymentForm';
 import PaymentMethodsList from './components/PaymentMethodsList';
@@ -15,6 +16,7 @@ const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
  * ✅ DEBOUNCED: Refresh only on explicit user actions
  */
 export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
+  const { t } = useTranslation();
   const billing = useBilling(token);
   const [showAddPaymentForm, setShowAddPaymentForm] = useState(false);
   const [cardError, setCardError] = useState(null);
@@ -47,14 +49,14 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
     };
   }, [billing]);
 
-  const handleAddClick = async () => {
+    const handleAddClick = async () => {
     try {
       setCardError(null);
       const intent = await billing.createSetupIntent();
       setSetupIntent(intent);
       setShowAddPaymentForm(true);
     } catch (err) {
-      setCardError(err.message || 'Failed to prepare payment form');
+      setCardError(err.message || t('paymentMethods.failedToPrepare'));
       setShowAddPaymentForm(true);
     }
   };
@@ -69,14 +71,14 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
     }, 500);
   }, [billing]);
 
-  const handleCardSubmit = async (cardElement) => {
+    const handleCardSubmit = async (cardElement) => {
     if (!stripeRef.current) {
-      setCardError('Stripe not ready');
+      setCardError(t('paymentMethods.stripeNotReady'));
       return;
     }
 
     if (!billingForm.cardholderName) {
-      setCardError('Please enter cardholder name');
+      setCardError(t('paymentMethods.enterCardholderName'));
       return;
     }
 
@@ -98,8 +100,8 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
 
       const paymentMethodId = paymentMethod.id;
 
-      if (!setupIntent?.clientSecret) {
-        setCardError('Setup intent not available. Please try again.');
+            if (!setupIntent?.clientSecret) {
+        setCardError(t('paymentMethods.setupIntentNotAvailable'));
         setLoading(false);
         return;
       }
@@ -137,9 +139,9 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
       setShowAddPaymentForm(false);
       setCardSuccess(true);
       setTimeout(() => setCardSuccess(false), 3000);
-    } catch (err) {
+        } catch (err) {
       console.error('[CARD] Error:', err);
-      setCardError(err.message || 'An error occurred');
+      setCardError(err.message || t('paymentMethods.failedToPrepare'));
     } finally {
       setLoading(false);
     }
@@ -147,23 +149,23 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
 
   return (
     <div className="payment-method-page">
-      <div className="section-header">
-        <h2>💳 Payment Methods</h2>
-        <p>Add and manage your payment methods for subscriptions and purchases</p>
+            <div className="section-header">
+        <h2>💳 {t('paymentMethods.title')}</h2>
+        <p>{t('paymentMethods.description')}</p>
       </div>
 
       {cardError && <div className="alert alert-error">{cardError}</div>}
       {billing.error && !cardError && (
         <div className="alert alert-error">
           ⚠️ {billing.error}
-          <br/>
+                    <br/>
           <small style={{marginTop: '0.5rem', display: 'block'}}>
-            If the issue persists, please refresh the page or contact support.
+            {t('paymentMethods.ifIssuePersists')}
           </small>
         </div>
       )}
-      {cardSuccess && (
-        <div className="alert alert-success">✓ Payment method added successfully!</div>
+            {cardSuccess && (
+        <div className="alert alert-success">✓ {t('paymentMethods.addedSuccessfully')}</div>
       )}
 
       {!showAddPaymentForm && (
@@ -171,16 +173,16 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
           className="btn-primary"
           onClick={handleAddClick}
           disabled={false}
-        >
-          {loading ? '⏳ Processing...' : '+ Add Payment Method'}
+                >
+          {loading ? `⏳ ${t('paymentMethods.processing')}` : t('paymentMethods.addNewButton')}
         </button>
       )}
 
       {showAddPaymentForm && setupIntent && (
-        <div className="payment-form-container">
-          <h3>Add New Payment Method</h3>
+                <div className="payment-form-container">
+          <h3>{t('paymentMethods.addNew')}</h3>
           <p style={{ fontSize: '0.95rem', color: '#666', marginBottom: '1.5rem' }}>
-            Choose your preferred payment method:
+            {t('paymentMethods.description')}
           </p>
 
           <Elements
@@ -215,14 +217,14 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
             debouncedRefreshPaymentMethods();
             setCardSuccess(true);
             setTimeout(() => setCardSuccess(false), 3000);
-          } catch (err) {
-            setCardError(err.message || 'Failed to set default payment method');
+                    } catch (err) {
+            setCardError(err.message || t('paymentMethods.failedToSetDefault'));
             // Refresh to show true state
             billing.fetchPaymentMethods();
           }
         }}
         onDelete={async (paymentMethodId) => {
-          if (!window.confirm('Are you sure you want to delete this payment method?')) {
+          if (!window.confirm(t('paymentMethods.deleteConfirm'))) {
             return;
           }
           try {
@@ -231,8 +233,8 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
             debouncedRefreshPaymentMethods();
             setCardSuccess(true);
             setTimeout(() => setCardSuccess(false), 3000);
-          } catch (err) {
-            setCardError(err.message || 'Failed to delete payment method');
+                    } catch (err) {
+            setCardError(err.message || t('paymentMethods.failedToDelete'));
             // Refresh to show true state
             billing.fetchPaymentMethods();
           }

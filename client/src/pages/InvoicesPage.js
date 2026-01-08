@@ -1,9 +1,11 @@
 import { useState, useCallback, useEffect } from 'react';
+import { useTranslation } from '../context/TranslationContext';
 import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
 import '../styles/responsive.css';
 import './MySignPage.css';
 
 export default function InvoicesPage({ userId, token, auth }) {
+  const { t } = useTranslation();
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -21,7 +23,7 @@ export default function InvoicesPage({ userId, token, auth }) {
       });
       
       if (!response.ok) {
-        setError('Unable to load invoices. Please try again.');
+        setError(t('invoices.unableToLoad'));
         setLoading(false);
         return;
       }
@@ -31,7 +33,7 @@ export default function InvoicesPage({ userId, token, auth }) {
       setLoading(false);
     } catch (err) {
       console.error('[INVOICES] Error loading invoices:', err);
-      setError('Unable to load your invoices. Please try again.');
+      setError(t('invoices.unableToLoadYour'));
       setLoading(false);
     }
   }, [token, API_URL]);
@@ -44,7 +46,7 @@ export default function InvoicesPage({ userId, token, auth }) {
     return (
       <div className="page-safe-area sign-page">
         <div className="loading-container">
-          <p>Loading your invoices...</p>
+          <p>{t('invoices.loading')}</p>
         </div>
       </div>
     );
@@ -56,7 +58,7 @@ export default function InvoicesPage({ userId, token, auth }) {
         <div className="error-container">
           <p className="error-message">⚠️ {error}</p>
           <button onClick={fetchInvoices} className="btn-secondary">
-            Try Again
+            {t('invoices.tryAgain')}
           </button>
         </div>
       </div>
@@ -66,8 +68,8 @@ export default function InvoicesPage({ userId, token, auth }) {
   return (
     <div className="page-safe-area sign-page">
       <div className="sign-header">
-        <h2 className="heading-primary">📄 Invoices</h2>
-        <p className="sign-subtitle">Your billing history and invoices</p>
+        <h2 className="heading-primary">📄 {t('invoices.title')}</h2>
+        <p className="sign-subtitle">{t('invoices.description')}</p>
       </div>
 
       {invoices.length === 0 ? (
@@ -78,7 +80,7 @@ export default function InvoicesPage({ userId, token, auth }) {
           textAlign: 'center',
           color: '#666'
         }}>
-          <p>No invoices to display yet. Your invoices will appear here when you make purchases.</p>
+          <p>{t('invoices.noInvoices')}</p>
         </div>
       ) : (
         <div style={{
@@ -101,16 +103,16 @@ export default function InvoicesPage({ userId, token, auth }) {
             >
               <div>
                 <h3 style={{ marginTop: 0, marginBottom: '0.5rem' }}>
-                  Invoice #{invoice.number}
+                  {t('invoices.invoiceNumber')} {invoice.number}
                 </h3>
                 <p style={{ margin: '0.25rem 0', fontSize: '14px', color: '#666' }}>
-                  <strong>Date:</strong> {new Date(invoice.created).toLocaleDateString()}
+                  <strong>{t('invoices.date')}:</strong> {new Date(invoice.created).toLocaleDateString()}
                 </p>
                 <p style={{ margin: '0.25rem 0', fontSize: '14px', color: '#666' }}>
-                  <strong>Amount:</strong> ${(invoice.amount_due / 100).toFixed(2)}
+                  <strong>{t('invoices.amount')}:</strong> ${(invoice.amount_due / 100).toFixed(2)}
                 </p>
                 <p style={{ margin: '0.25rem 0', fontSize: '14px', color: '#666' }}>
-                  <strong>Status:</strong> {invoice.status}
+                  <strong>{t('invoices.status')}:</strong> {invoice.status}
                 </p>
               </div>
               {invoice.pdf_url && (
@@ -129,7 +131,7 @@ export default function InvoicesPage({ userId, token, auth }) {
                     textDecoration: 'none'
                   }}
                 >
-                  Download PDF
+                  {t('invoices.downloadPDF')}
                 </a>
               )}
             </div>
