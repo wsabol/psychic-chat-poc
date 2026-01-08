@@ -5,12 +5,15 @@ import { logAudit } from '../shared/auditLog.js';
 import { hashUserId } from '../shared/hashUtils.js';
 import { getEncryptionKey } from '../shared/decryptionHelper.js';
 import { checkUserConsent, recordUserConsent } from './auth-endpoints/helpers/consentHelper.js';
+import { checkUserCompliance, getComplianceReport, getUsersRequiringAction, markUserNotified } from '../shared/complianceChecker.js';
+import { getCurrentTermsVersion, getCurrentPrivacyVersion } from '../shared/versionConfig.js';
+import VERSION_CONFIG from '../shared/versionConfig.js';
 
 const router = Router();
 
-// Current versions (update when T&C changes)
-const CURRENT_TERMS_VERSION = "1.0";
-const CURRENT_PRIVACY_VERSION = "1.0";
+// Use version config from centralized location
+const CURRENT_TERMS_VERSION = getCurrentTermsVersion();
+const CURRENT_PRIVACY_VERSION = getCurrentPrivacyVersion();
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
 
 /**
@@ -35,6 +38,7 @@ router.post('/check-consent/:userId', async (req, res) => {
  * Record user consent
  */
 router.post('/record-consent/:userId', async (req, res) => {
+  console.log('[RECORD-CONSENT-DEBUG] Called with body:', req.body);
   try {
     const { userId } = req.params;
     const { terms_accepted = false, privacy_accepted = false } = req.body;
@@ -127,18 +131,20 @@ router.post('/consent/terms-acceptance', async (req, res) => {
         privacy_accepted_at,
         agreed_from_ip_encrypted,
         user_agent_encrypted,
+        requires_consent_update,
         created_at,
         updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, false, NOW(), NOW())
       ON CONFLICT (user_id_hash) DO UPDATE SET
-        terms_version = $2,
+        terms_version = CASE WHEN excluded.terms_accepted THEN $2 ELSE user_consents.terms_version END,
         terms_accepted = $3,
-        terms_accepted_at = CASE WHEN $3 THEN NOW() ELSE terms_accepted_at END,
-        privacy_version = $5,
+        terms_accepted_at = CASE WHEN $3 THEN NOW() ELSE user_consents.terms_accepted_at END,
+        privacy_version = CASE WHEN excluded.privacy_accepted THEN $5 ELSE user_consents.privacy_version END,
         privacy_accepted = $6,
-        privacy_accepted_at = CASE WHEN $6 THEN NOW() ELSE privacy_accepted_at END,
+        privacy_accepted_at = CASE WHEN $6 THEN NOW() ELSE user_consents.privacy_accepted_at END,
         agreed_from_ip_encrypted = $8,
         user_agent_encrypted = $9,
+        requires_consent_update = false,
         updated_at = NOW()
       RETURNING *`,
       [
@@ -286,6 +292,7 @@ router.post('/consents', async (req, res) => {
         agreed_from_ip_encrypted = $5,
         user_agent_encrypted = $6,
         updated_at = NOW()
+        -- NOTE: DO NOT override terms_accepted, privacy_accepted, or their versions
       RETURNING *`,
       [
         userIdHash,
@@ -552,6 +559,92 @@ router.get('/consent-summary/:userId', authenticateToken, authorizeUser, async (
       details: error.message 
     });
   }
+});
+
+/**
+ * POST /auth/check-compliance/:userId
+ * Check if user's consent is compliant with current versions
+ */
+router.post('/check-compliance/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (!userId) return res.status(400).json({ error: 'userId required' });
+    
+    const compliance = await checkUserCompliance(userId);
+    return res.json(compliance);
+  } catch (error) {
+    console.error('[COMPLIANCE-CHECK] Error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /auth/compliance-report
+ * Get compliance statistics (admin only)
+ */
+router.post('/compliance-report', authenticateToken, async (req, res) => {
+  try {
+    const report = await getComplianceReport();
+    return res.json(report);
+  } catch (error) {
+    console.error('[COMPLIANCE-REPORT] Error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /auth/users-requiring-action
+ * Get list of users who need to re-accept terms (admin only)
+ */
+router.post('/users-requiring-action', authenticateToken, async (req, res) => {
+  try {
+    const result = await getUsersRequiringAction();
+    return res.json(result);
+  } catch (error) {
+    console.error('[USERS-ACTION] Error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /auth/mark-user-notified/:userId
+ * Mark that user has been notified of version change
+ */
+router.post('/mark-user-notified/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (!userId) return res.status(400).json({ error: 'userId required' });
+    
+    const result = await markUserNotified(userId);
+    return res.json(result);
+  } catch (error) {
+    console.error('[MARK-NOTIFIED] Error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /auth/version-config
+ * Get current version configuration (public)
+ */
+router.get('/version-config', (req, res) => {
+  return res.json({
+    success: true,
+    versions: {
+      terms: {
+        version: CURRENT_TERMS_VERSION,
+        changeType: VERSION_CONFIG.terms.changeType,
+        changedAt: VERSION_CONFIG.terms.changedAt,
+        description: VERSION_CONFIG.terms.description
+      },
+      privacy: {
+        version: CURRENT_PRIVACY_VERSION,
+        changeType: VERSION_CONFIG.privacy.changeType,
+        changedAt: VERSION_CONFIG.privacy.changedAt,
+        description: VERSION_CONFIG.privacy.description
+      }
+    }
+  });
 });
 
 export default router;

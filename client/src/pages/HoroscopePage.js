@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from '../context/TranslationContext';
 import { useSpeech } from '../hooks/useSpeech';
 import VoiceBar from '../components/VoiceBar';
+import { ComplianceUpdateModal } from '../components/ComplianceUpdateModal-CLEAN';
 
 import { getTranslatedAstrologyData } from '../utils/translatedAstroUtils';
 import { isBirthInfoError, isBirthInfoMissing } from '../utils/birthInfoErrorHandler';
@@ -24,6 +25,7 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
   const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [hasAutoPlayed, setHasAutoPlayed] = useState(false);
   const [sunSignData, setSunSignData] = useState(null);
+  const [complianceStatus, setComplianceStatus] = useState(null);
   const pollIntervalRef = useRef(null);
   const { speak, stop, pause, resume, isPlaying, isPaused, isLoading: isSpeechLoading, error: speechError, isSupported, volume, setVolume } = useSpeech();
 
@@ -107,7 +109,16 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
         await fetchAstroInfo(headers);
       }
 
-      const response = await fetchWithTokenRefresh(`${API_URL}/horoscope/${userId}/${horoscopeRange}`, { headers });
+            const response = await fetchWithTokenRefresh(`${API_URL}/horoscope/${userId}/${horoscopeRange}`, { headers });
+
+      // CHECK FOR COMPLIANCE REQUIREMENT (HTTP 451)
+      if (response.status === 451) {
+        const complianceData = await response.json();
+        console.log('[HOROSCOPE] Compliance required:', complianceData);
+        setComplianceStatus(complianceData.details);
+        setLoading(false);
+        return;
+      }
 
       if (response.ok) {
         const data = await response.json();
@@ -117,6 +128,7 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
           generatedAt: data.generated_at,
           range: horoscopeRange
         });
+        setComplianceStatus(null);
         setLoading(false);
         return;
       }
@@ -206,7 +218,34 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
     };
     loadSunSignData();
   }, [astroInfo, language]);
-  const astro = astroInfo?.astrology_data || {};
+    const astro = astroInfo?.astrology_data || {};
+
+    if (complianceStatus?.requiresPrivacyUpdate || complianceStatus?.requiresTermsUpdate) {
+    return (
+      <ComplianceUpdateModal
+        userId={userId}
+        token={token}
+        compliance={{
+          blocksAccess: true,
+          requiresTermsUpdate: complianceStatus.requiresTermsUpdate,
+          requiresPrivacyUpdate: complianceStatus.requiresPrivacyUpdate,
+          termsVersion: {
+            requiresReacceptance: complianceStatus.requiresTermsUpdate,
+            current: complianceStatus.termsVersion
+          },
+          privacyVersion: {
+            requiresReacceptance: complianceStatus.requiresPrivacyUpdate,
+            current: complianceStatus.privacyVersion
+          }
+        }}
+        onConsentUpdated={() => {
+          setComplianceStatus(null);
+          setLoading(false);
+          loadHoroscope();
+        }}
+      />
+    );
+  }
 
   const handleClose = () => {
     if (onExit) {

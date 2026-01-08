@@ -4,6 +4,7 @@ import { enqueueMessage } from "../shared/queue.js";
 import { authenticateToken, authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
 import { getUserTimezone, getLocalDateForTimezone, needsRegeneration } from "../shared/timezoneHelper.js";
+import { checkUserCompliance } from "../shared/complianceChecker.js";
 
 
 const router = Router();
@@ -27,11 +28,20 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
         
         // Fetch user's language preference AND timezone
         const { rows: prefRows } = await db.query(
-            `SELECT language, timezone FROM user_preferences WHERE user_id_hash = decode($1, 'hex')`,
+            `SELECT language, timezone FROM user_preferences WHERE user_id_hash = $1`,
             [userIdHash]
         );
         const userLanguage = prefRows.length > 0 ? prefRows[0].language : 'en-US';
-        const userTimezone = prefRows.length > 0 ? prefRows[0].timezone : 'UTC';
+        let userTimezone = prefRows.length > 0 && prefRows[0].timezone ? prefRows[0].timezone : null;
+        
+        // If no timezone in preferences, fallback to birth_timezone
+        if (!userTimezone) {
+            const { rows: birthRows } = await db.query(
+                `SELECT pgp_sym_decrypt(birth_timezone_encrypted, $1) as birth_timezone FROM user_personal_info WHERE user_id = $2`,
+                [process.env.ENCRYPTION_KEY, userId]
+            );
+            userTimezone = birthRows.length > 0 && birthRows[0].birth_timezone ? birthRows[0].birth_timezone : 'UTC';
+        }
         console.log(`[HOROSCOPE-API] User language: ${userLanguage}, timezone: ${userTimezone}`);
         
         // Get today's date in user's LOCAL timezone
@@ -59,6 +69,25 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
         console.log(`[HOROSCOPE-API] Found ${rows.length} horoscope(s)`);
         
         // CRITICAL: Check if horoscope is stale (based on user's LOCAL timezone)
+        // CHECK COMPLIANCE ON DAILY HOROSCOPE FETCH
+        // This is the trigger for users with persistent sessions (30+ days)
+        // Runs once per day when horoscope is requested
+        const compliance = await checkUserCompliance(userId);
+        if (compliance.blocksAccess) {
+            console.log(`[HOROSCOPE-API] ⚠️ Compliance check failed for user ${userId}`);
+            return res.status(451).json({
+                error: 'COMPLIANCE_UPDATE_REQUIRED',
+                message: 'Your acceptance of updated terms is required to continue',
+                details: {
+                    requiresTermsUpdate: compliance.termsVersion.requiresReacceptance,
+                    requiresPrivacyUpdate: compliance.privacyVersion.requiresReacceptance,
+                    termsVersion: compliance.termsVersion.current,
+                    privacyVersion: compliance.privacyVersion.current
+                },
+                redirect: '/update-consent'
+            });
+        }
+        
         if (rows.length > 0 && rows[0].created_at_local_date) {
             const isStale = needsRegeneration(rows[0].created_at_local_date, todayLocalDate);
             console.log(`[HOROSCOPE-API] Stale check: created=${rows[0].created_at_local_date}, today=${todayLocalDate}, isStale=${isStale}`);

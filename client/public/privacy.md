@@ -1,4 +1,4 @@
-# Privacy Policy
+  # Privacy Policy Version 1.1
 
 **Psychic Chat POC**  
 **Effective Date**: January 1, 2026  

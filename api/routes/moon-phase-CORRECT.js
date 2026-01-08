@@ -20,7 +20,7 @@ router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
         
         // Fetch user's language preference AND timezone - EXACTLY LIKE HOROSCOPE DOES
         const { rows: prefRows } = await db.query(
-            `SELECT language, timezone FROM user_preferences WHERE user_id_hash = decode($1, 'hex')`,
+            `SELECT language, timezone FROM user_preferences WHERE user_id_hash = $1`,
             [userIdHash]
         );
         const userLanguage = prefRows.length > 0 ? prefRows[0].language : 'en-US';

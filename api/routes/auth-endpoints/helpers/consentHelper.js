@@ -1,5 +1,9 @@
 import { db } from '../../../shared/db.js';
 import { hashUserId } from '../../../shared/hashUtils.js';
+import { 
+  getCurrentTermsVersion, 
+  getCurrentPrivacyVersion 
+} from '../../../shared/versionConfig.js';
 
 /**
  * Check if user has accepted T&C and privacy policy
@@ -95,8 +99,11 @@ export async function recordUserConsent(userId, termsAccepted, privacyAccepted, 
       }
     }
     
-    // Insert or update consent
+    // Insert or update consent with current versions
     const timestampNow = new Date().toISOString();
+    const termsVersion = getCurrentTermsVersion();
+    const privacyVersion = getCurrentPrivacyVersion();
+    
     await db.query(
       `INSERT INTO user_consents (
         user_id_hash,
@@ -108,23 +115,27 @@ export async function recordUserConsent(userId, termsAccepted, privacyAccepted, 
         privacy_accepted_at,
         agreed_from_ip_encrypted,
         user_agent_encrypted,
+        requires_consent_update,
         created_at,
         updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, false, NOW(), NOW())
       ON CONFLICT (user_id_hash) DO UPDATE SET
-        terms_accepted = $3,
-        privacy_accepted = $6,
-        terms_accepted_at = $4,
-        privacy_accepted_at = $7,
+        terms_version = CASE WHEN $3 THEN $2 ELSE user_consents.terms_version END,
+        terms_accepted = CASE WHEN $3 THEN true ELSE user_consents.terms_accepted END,
+        terms_accepted_at = CASE WHEN $3 THEN NOW() ELSE user_consents.terms_accepted_at END,
+        privacy_version = CASE WHEN $6 THEN $5 ELSE user_consents.privacy_version END,
+        privacy_accepted = CASE WHEN $6 THEN true ELSE user_consents.privacy_accepted END,
+        privacy_accepted_at = CASE WHEN $6 THEN NOW() ELSE user_consents.privacy_accepted_at END,
         agreed_from_ip_encrypted = $8,
         user_agent_encrypted = $9,
+        requires_consent_update = false,
         updated_at = NOW()`,
       [
         userIdHash,
-        '1.0', // terms_version
+        termsVersion,
         termsAccepted,
         termsAccepted ? timestampNow : null,
-        '1.0', // privacy_version
+        privacyVersion,
         privacyAccepted,
         privacyAccepted ? timestampNow : null,
         encryptedIp,

@@ -1,0 +1,291 @@
+/* Compliance Update Modal Styles */
+
+.compliance-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.compliance-modal {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 40px;
+  animation: slideInDown 0.3s ease-out;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.compliance-header {
+  margin-bottom: 30px;
+  border-bottom: 2px solid #f5f5f5;
+  padding-bottom: 20px;
+}
+
+.compliance-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.compliance-subtitle {
+  color: #666;
+  font-size: 14px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.compliance-error-message {
+  background: #fee;
+  color: #c33;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  border-left: 4px solid #c33;
+  font-size: 14px;
+}
+
+.compliance-content {
+  margin: 20px 0;
+}
+
+.compliance-section {
+  background: #f9f9f9;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.section-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.version-badge {
+  background: #fff3cd;
+  color: #856404;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.compliance-text {
+  margin-bottom: 15px;
+}
+
+.compliance-text p {
+  color: #666;
+  font-size: 14px;
+  margin: 0 0 10px 0;
+  line-height: 1.5;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  margin: 15px 0;
+  flex-wrap: wrap;
+}
+
+.btn-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: #f0f0f0;
+  color: #0066cc;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-link:hover {
+  background: #e8e8e8;
+  border-color: #0066cc;
+}
+
+.compliance-checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  cursor: pointer;
+  margin-bottom: 12px;
+  gap: 12px;
+}
+
+.compliance-checkbox-label input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  margin-top: 2px;
+  cursor: pointer;
+  accent-color: #0066cc;
+}
+
+.compliance-checkbox-label .checkbox-text {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.4;
+}
+
+.btn-accept {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  background: #0066cc;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 12px;
+}
+
+.btn-accept:hover:not(:disabled) {
+  background: #0052a3;
+}
+
+.btn-accept:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.accepted-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #d4edda;
+  color: #155724;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-top: 12px;
+  border: 1px solid #c3e6cb;
+}
+
+.compliance-actions {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e5e5;
+}
+
+.btn-continue {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-continue:hover {
+  background: #218838;
+}
+
+.compliance-help {
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e5e5;
+  font-size: 13px;
+  color: #666;
+  line-height: 1.6;
+}
+
+.compliance-help p {
+  margin: 10px 0;
+}
+
+.compliance-help strong {
+  color: #333;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+  .compliance-modal {
+    padding: 20px;
+    border-radius: 8px;
+  }
+
+  .compliance-header h2 {
+    font-size: 18px;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .compliance-modal-overlay {
+    padding: 10px;
+  }
+}
+
+@media (max-width: 400px) {
+  .compliance-modal {
+    padding: 15px;
+  }
+
+  .compliance-header h2 {
+    font-size: 16px;
+  }
+
+  .compliance-text p {
+    font-size: 13px;
+  }
+
+  .btn-accept,
+  .btn-continue {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+}
