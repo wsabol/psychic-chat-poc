@@ -13,7 +13,7 @@ import { initializeAnalytics, trackPageView } from '../utils/analyticsTracker';
 /**
  * AppChat - Handles authenticated chat flow
  * Shows:
- * - Consent modal (if user hasn't accepted terms)
+ * - Consent modal (if user hasn't accepted terms AND privacy)
  * - Payment required modal (if needed)
  * - Subscription required modal (if needed)
  * - Onboarding modal (if new user)
@@ -38,16 +38,38 @@ export function AppChat({ state }) {
 
   const { user } = useAuth();
   const [showConsentModal, setShowConsentModal] = React.useState(false);
+  const [consentLoading, setConsentLoading] = React.useState(true);
 
-  // Check if user needs to show consent modal
+  // Fetch actual consent status from database
   useEffect(() => {
-    if (user && user.needsConsent) {
-      console.log('[APPCHAT] User needs to accept consent');
-      setShowConsentModal(true);
-    } else {
-      setShowConsentModal(false);
+    if (!user || !user.token) {
+      setConsentLoading(false);
+      return;
     }
-  }, [user?.needsConsent]);
+    
+    const fetchConsentStatus = async () => {
+      try {
+        const response = await fetch(`http://localhost:3000/auth/check-consent/${user.uid}`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${user.token}` }
+        });
+        const data = await response.json();
+        
+        // Show modal only if BOTH terms AND privacy are NOT accepted
+        const needsConsent = !data.terms_accepted || !data.privacy_accepted;
+        console.log('[APPCHAT] Consent check:', { terms_accepted: data.terms_accepted, privacy_accepted: data.privacy_accepted, needsConsent });
+        setShowConsentModal(needsConsent);
+      } catch (err) {
+        console.error('[APPCHAT] Error checking consent:', err);
+        // On error, require consent to be safe (compliance-first)
+        setShowConsentModal(true);
+      } finally {
+        setConsentLoading(false);
+      }
+    };
+    
+    fetchConsentStatus();
+  }, [user?.uid, user?.token]);
 
   // Fetch user's language preference from DB when authenticated
   useLanguagePreference();
@@ -72,6 +94,11 @@ export function AppChat({ state }) {
     // User will be redirected or updated by AuthContext
     window.location.reload();
   };
+
+  // Guard: Show loading while checking consent
+  if (consentLoading) {
+    return <ErrorBoundary><LoadingScreen /></ErrorBoundary>;
+  }
 
   // Guard: Show consent modal if user hasn't accepted terms
   if (showConsentModal && user) {

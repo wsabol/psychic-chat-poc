@@ -1,4 +1,4 @@
-import { fetchUserPersonalInfo, fetchUserAstrology, fetchUserLanguagePreference, isTemporaryUser } from '../oracle.js';
+import { fetchUserPersonalInfo, fetchUserAstrology, fetchUserLanguagePreference, fetchUserOracleLanguagePreference, isTemporaryUser } from '../oracle.js';
 import { storeMessage } from '../messages.js';
 import { checkAccountStatus } from '../utils/accountStatusCheck.js';
 import { handleViolation } from '../utils/violationHandler.js';
@@ -12,10 +12,11 @@ import { processOracleRequest } from '../utils/oracleProcessor.js';
  */
 export async function handleChatMessage(userId, message) {
     try {
-        // STEP 1: Fetch user context and preferences
+                // STEP 1: Fetch user context and preferences
         const userInfo = await fetchUserPersonalInfo(userId);
         let astrologyInfo = await fetchUserAstrology(userId);
         const userLanguage = await fetchUserLanguagePreference(userId);
+        const oracleLanguage = await fetchUserOracleLanguagePreference(userId);
         const tempUser = await isTemporaryUser(userId);
 
         // STEP 2: Check account status (disabled/suspended)
@@ -40,8 +41,9 @@ export async function handleChatMessage(userId, message) {
         // STEP 5: Ensure user has astrology data (calculate if needed)
         astrologyInfo = await ensureUserAstrology(userInfo, astrologyInfo, userId);
 
-        // STEP 6: Process oracle request (API call, translation, storage)
-        await processOracleRequest(userId, userInfo, astrologyInfo, userLanguage, message, tempUser);
+                // STEP 6: Process oracle request (API call, translation, storage)
+        // Pass both userLanguage (page UI) and oracleLanguage (oracle responses)
+        await processOracleRequest(userId, userInfo, astrologyInfo, userLanguage, oracleLanguage, message, tempUser);
 
     } catch (err) {
         console.error('[CHAT-HANDLER] Error handling chat message:', err.message);

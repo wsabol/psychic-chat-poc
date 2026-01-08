@@ -20,7 +20,7 @@ import { translateContentObject } from '../translator.js';
  * @param {boolean} tempUser - Is temporary/trial account
  * @returns {Promise<void>}
  */
-export async function processOracleRequest(userId, userInfo, astrologyInfo, userLanguage, message, tempUser) {
+export async function processOracleRequest(userId, userInfo, astrologyInfo, userLanguage, oracleLanguage, message, tempUser) {
     try {
         // Get message history
         let history = await getMessageHistory(userId);
@@ -43,7 +43,8 @@ IMPORTANT: Use the above personal and astrological information to:
 `;
 
         // Get oracle prompt (accounts for temporary vs established users)
-        const systemPrompt = getOracleSystemPrompt(tempUser) + "\n\n" + combinedContext;
+        // Use oracleLanguage for oracle responses, not userLanguage
+        const systemPrompt = getOracleSystemPrompt(tempUser, oracleLanguage) + "\n\n" + combinedContext;
 
         // Call Oracle (generates both full and brief responses)
         const oracleResponses = await callOracle(systemPrompt, history, message, true);

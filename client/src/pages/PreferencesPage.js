@@ -3,29 +3,22 @@ import { useSpeech } from '../hooks/useSpeech';
 import { useTranslation } from '../context/TranslationContext';
 import { useFetchPreferences, useSavePreferences } from './PreferencesPage/usePreferencesLogic';
 import { createGetString } from './PreferencesPage/getStringUtil';
-import LanguageSection from './PreferencesPage/LanguageSection';
+import OracleLanguageSection from './PreferencesPage/OracleLanguageSection';
 import ResponseTypeSection from './PreferencesPage/ResponseTypeSection';
 import VoiceSection from './PreferencesPage/VoiceSection';
 import ActionButtons from './PreferencesPage/ActionButtons';
 
-/**
- * PreferencesPage Component
- * Allows users to configure language, response type, and voice settings
- * Translations are embedded for instant UI updates when language changes
- */
 function PreferencesPage({ userId, token, onNavigateToPage }) {
     const { t, changeLanguage } = useTranslation();
     const { speak, voiceGreetings, isSupported: isSpeechSupported } = useSpeech();
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
-    // Fetch preferences from server
     const { preferences, setPreferences, personalInfo, loading, error: fetchError } = useFetchPreferences(
         userId,
         token,
         API_URL
     );
 
-    // Save preferences to server
     const { save: savePreferences, saving, error: saveError, success } = useSavePreferences(
         API_URL,
         userId,
@@ -36,7 +29,6 @@ function PreferencesPage({ userId, token, onNavigateToPage }) {
     const [previewingVoice, setPreviewingVoice] = useState(null);
     const [error, setError] = useState(fetchError);
 
-    // Create getString function with current language and t() function
     const getString = createGetString(preferences.language, t);
 
     const handleSave = async (e) => {
@@ -44,6 +36,7 @@ function PreferencesPage({ userId, token, onNavigateToPage }) {
         setError(null);
 
         try {
+            console.log('[PREF-PAGE] Saving preferences:', preferences);
             const savedPrefs = await savePreferences(preferences);
             if (savedPrefs) {
                 setPreferences(savedPrefs);
@@ -126,9 +119,13 @@ function PreferencesPage({ userId, token, onNavigateToPage }) {
             )}
 
             <form onSubmit={handleSave}>
-                <LanguageSection
-                    value={preferences.language}
-                    onChange={(lang) => setPreferences({ ...preferences, language: lang })}
+                <OracleLanguageSection
+                    oracleLanguage={preferences.oracle_language}
+                    onLanguageChange={(oracleLanguage, pageLanguage) => {
+                        console.log('[PREF-PAGE] Language changed:', { oracleLanguage, pageLanguage });
+                        // UPDATE BOTH in a SINGLE call to avoid state race condition
+                        setPreferences({ ...preferences, oracle_language: oracleLanguage, language: pageLanguage });
+                    }}
                     getString={getString}
                 />
 

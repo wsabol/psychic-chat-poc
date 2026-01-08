@@ -295,8 +295,10 @@ CREATE TABLE IF NOT EXISTS user_preferences (
     language VARCHAR(10) DEFAULT 'en-US',
     response_type VARCHAR(20) DEFAULT 'full',
     voice_enabled BOOLEAN DEFAULT TRUE,
+    oracle_language VARCHAR(10) DEFAULT 'en-US',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_user_preferences_user_id_hash ON user_preferences(user_id_hash);
+CREATE INDEX IF NOT EXISTS idx_user_preferences_oracle_language ON user_preferences(oracle_language);

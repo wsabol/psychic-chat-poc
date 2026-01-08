@@ -4,6 +4,7 @@ import {
     fetchUserPersonalInfo, 
     fetchUserAstrology,
     fetchUserLanguagePreference,
+    fetchUserOracleLanguagePreference,
     isTemporaryUser,
     getOracleSystemPrompt,
     callOracle,
@@ -54,6 +55,7 @@ export async function generateHoroscope(userId, range = 'daily') {
         const userInfo = await fetchUserPersonalInfo(userId);
         const astrologyInfo = await fetchUserAstrology(userId);
         const userLanguage = await fetchUserLanguagePreference(userId);
+        const oracleLanguage = await fetchUserOracleLanguagePreference(userId);
         
         if (!userInfo) {
             throw new Error('User personal info not found');
@@ -66,14 +68,15 @@ export async function generateHoroscope(userId, range = 'daily') {
         // Check if user is temporary/trial account
         const isTemporary = await isTemporaryUser(userId);
         
-        // Get oracle system prompt with LANGUAGE SUPPORT
-        const baseSystemPrompt = getOracleSystemPrompt(isTemporary, userLanguage);
+        // Get oracle system prompt with ORACLE LANGUAGE SUPPORT
+        // Oracle response uses oracleLanguage (can be regional variant), page UI uses userLanguage
+        const baseSystemPrompt = getOracleSystemPrompt(isTemporary, oracleLanguage);
         const userGreeting = getUserGreeting(userInfo, userId, isTemporary);
         const generatedAt = new Date().toISOString();
         
         // Generate the horoscope
         try {
-            console.log(`[HOROSCOPE-HANDLER] Generating ${range} horoscope in ${userLanguage}...`);
+            console.log(`[HOROSCOPE-HANDLER] Generating ${range} horoscope in ${oracleLanguage} (page UI: ${userLanguage})...`);
             const horoscopePrompt = buildHoroscopePrompt(userInfo, astrologyInfo, range, userGreeting);
             
             const systemPrompt = baseSystemPrompt + `

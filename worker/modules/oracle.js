@@ -72,6 +72,23 @@ export async function fetchUserLanguagePreference(userId) {
     }
 }
 
+export async function fetchUserOracleLanguagePreference(userId) {
+    try {
+        const userIdHash = hashUserId(userId);
+        const { rows } = await db.query(
+            `SELECT COALESCE(oracle_language, 'en-US') as oracle_language FROM user_preferences WHERE user_id_hash = $1`,
+            [userIdHash]
+        );
+        if (rows.length > 0 && rows[0].oracle_language) {
+            return rows[0].oracle_language;
+        }
+        return 'en-US'; // Default to English US
+    } catch (err) {
+        console.error('[ORACLE] Error fetching oracle language preference:', err);
+        return 'en-US'; // Default to English US on error
+    }
+}
+
 export function buildPersonalInfoContext(userInfo) {
     if (!userInfo || Object.keys(userInfo).length === 0) return '';
     return `

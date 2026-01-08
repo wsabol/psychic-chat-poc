@@ -177,7 +177,7 @@ router.get("/:userId/preferences", authorizeUser, async (req, res) => {
     
     try {
         const { rows } = await db.query(
-            `SELECT language, response_type, voice_enabled, COALESCE(voice_selected, 'sophia') as voice_selected, timezone FROM user_preferences WHERE user_id_hash = $1`,
+            `SELECT language, response_type, voice_enabled, COALESCE(voice_selected, 'sophia') as voice_selected, timezone, COALESCE(oracle_language, 'en-US') as oracle_language FROM user_preferences WHERE user_id_hash = $1`,
             [userIdHash]
         );
         
@@ -187,7 +187,8 @@ router.get("/:userId/preferences", authorizeUser, async (req, res) => {
                 response_type: 'full',
                 voice_enabled: true,
                 voice_selected: 'sophia',
-                timezone: null
+                timezone: null,
+                oracle_language: 'en-US'
             });
         }
         
@@ -200,9 +201,10 @@ router.get("/:userId/preferences", authorizeUser, async (req, res) => {
 
 // Save user preferences
 // 🌍 CRITICAL: Allow timezone-only updates (for browser timezone detection on login)
+// 🌎 NEW: oracle_language allows regional variants (en-GB, es-MX, es-DO, fr-CA, etc.)
 router.post("/:userId/preferences", authorizeUser, async (req, res) => {
     const { userId } = req.params;
-    const { language, response_type, voice_enabled, voice_selected, timezone } = req.body;
+    const { language, response_type, voice_enabled, voice_selected, timezone, oracle_language } = req.body;
     const userIdHash = hashUserId(userId);
     
     try {
@@ -233,21 +235,26 @@ router.post("/:userId/preferences", authorizeUser, async (req, res) => {
             return res.status(400).json({ error: 'Invalid response_type' });
         }
 
+        // Validate oracle_language if provided
+        const validOracleLanguages = ['en-US', 'en-GB', 'es-ES', 'es-MX', 'es-DO', 'fr-FR', 'fr-CA'];
+        const selectedOracleLanguage = (oracle_language && validOracleLanguages.includes(oracle_language)) ? oracle_language : language;
+
         const validVoices = ['sophia', 'cassandra', 'meridian', 'leo'];
         const selectedVoice = validVoices.includes(voice_selected) ? voice_selected : 'sophia';
         
         const { rows } = await db.query(
-            `INSERT INTO user_preferences (user_id_hash, language, response_type, voice_enabled, voice_selected, timezone)
-             VALUES ($1, $2, $3, $4, $5, $6)
+            `INSERT INTO user_preferences (user_id_hash, language, response_type, voice_enabled, voice_selected, timezone, oracle_language)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)
              ON CONFLICT (user_id_hash) DO UPDATE SET
              language = EXCLUDED.language,
              response_type = EXCLUDED.response_type,
              voice_enabled = EXCLUDED.voice_enabled,
              voice_selected = EXCLUDED.voice_selected,
              timezone = EXCLUDED.timezone,
+             oracle_language = EXCLUDED.oracle_language,
              updated_at = CURRENT_TIMESTAMP
-             RETURNING language, response_type, voice_enabled, voice_selected, timezone`,
-            [userIdHash, language, response_type, voice_enabled !== false, selectedVoice, timezone]
+             RETURNING language, response_type, voice_enabled, voice_selected, timezone, oracle_language`,
+            [userIdHash, language, response_type, voice_enabled !== false, selectedVoice, timezone, selectedOracleLanguage]
         );
         
         res.json({ success: true, preferences: rows[0] });
