@@ -61,24 +61,31 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
         
         console.log(`[HOROSCOPE-API] Found ${rows.length} horoscope(s)`);
         
-        // CRITICAL: Check if horoscope is stale (based on user's LOCAL timezone)
-        // CHECK COMPLIANCE ON DAILY HOROSCOPE FETCH
-        // This is the trigger for users with persistent sessions (30+ days)
-        // Runs once per day when horoscope is requested
-        const compliance = await checkUserCompliance(userId);
-        if (compliance.blocksAccess) {
-            console.log(`[HOROSCOPE-API] ⚠️ Compliance check failed for user ${userId}`);
-            return res.status(451).json({
-                error: 'COMPLIANCE_UPDATE_REQUIRED',
-                message: 'Your acceptance of updated terms is required to continue',
-                details: {
-                    requiresTermsUpdate: compliance.termsVersion.requiresReacceptance,
-                    requiresPrivacyUpdate: compliance.privacyVersion.requiresReacceptance,
-                    termsVersion: compliance.termsVersion.current,
-                    privacyVersion: compliance.privacyVersion.current
-                },
-                redirect: '/update-consent'
-            });
+        // Check if user is temporary (free trial) - EXEMPT from compliance checks
+        const { rows: userRows } = await db.query(
+            `SELECT pgp_sym_decrypt(email_encrypted, $1) as email FROM user_personal_info WHERE user_id = $2`,
+            [process.env.ENCRYPTION_KEY, userId]
+        );
+        const isTemporaryUser = userRows.length > 0 && userRows[0].email && userRows[0].email.startsWith('temp_');
+        
+        // Only enforce compliance for established (permanent) users
+        // Temporary/free trial users are EXEMPT
+        if (!isTemporaryUser) {
+            const compliance = await checkUserCompliance(userId);
+            if (compliance.blocksAccess && compliance.termsVersion && compliance.privacyVersion) {
+                console.log(`[HOROSCOPE-API] ⚠️ Compliance check failed for user ${userId}`);
+                return res.status(451).json({
+                    error: 'COMPLIANCE_UPDATE_REQUIRED',
+                    message: 'Your acceptance of updated terms is required to continue',
+                    details: {
+                        requiresTermsUpdate: compliance.termsVersion.requiresReacceptance,
+                        requiresPrivacyUpdate: compliance.privacyVersion.requiresReacceptance,
+                        termsVersion: compliance.termsVersion.current,
+                        privacyVersion: compliance.privacyVersion.current
+                    },
+                    redirect: '/update-consent'
+                });
+            }
         }
         
         if (rows.length > 0 && rows[0].created_at_local_date) {

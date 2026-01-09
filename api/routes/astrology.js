@@ -10,8 +10,6 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Helper function to calculate birth chart synchronously via Python script
-// EXPORTED for use in other routes
 export async function calculateBirthChartSync(birthData) {
     return new Promise((resolve, reject) => {
         const workerDir = path.join(__dirname, '../..', 'worker');
@@ -52,13 +50,10 @@ export async function calculateBirthChartSync(birthData) {
     });
 }
 
-// ✅ NEW: POST endpoint to validate location before saving personal info
-// Tests if the location can be geocoded without full calculation
 router.post('/validate-location', authorizeUser, async (req, res) => {
     try {
         const { birth_city, birth_province, birth_country, birth_date, birth_time } = req.body;
         
-        // Validate required fields
         if (!birth_city || !birth_province || !birth_country || !birth_date) {
             return res.status(400).json({ 
                 error: 'Missing required fields for location validation',
@@ -66,7 +61,6 @@ router.post('/validate-location', authorizeUser, async (req, res) => {
             });
         }
         
-        // Call Python to validate location
         const result = await calculateBirthChartSync({
             birth_date: birth_date,
             birth_time: birth_time || '12:00:00',
@@ -75,7 +69,6 @@ router.post('/validate-location', authorizeUser, async (req, res) => {
             birth_city: birth_city
         });
         
-        // Check if location was found (result will have warnings if location couldn't be found)
         if (result.location_error) {
             console.warn('[LOCATION-VALIDATE] Location not found:', result.location_error);
             return res.json({
@@ -104,7 +97,6 @@ router.post('/validate-location', authorizeUser, async (req, res) => {
             });
         }
         
-        // Fallback error
         console.warn('[LOCATION-VALIDATE] Unexpected result:', result);
         return res.json({
             success: false,
@@ -114,7 +106,6 @@ router.post('/validate-location', authorizeUser, async (req, res) => {
         
     } catch (err) {
         console.error('[LOCATION-VALIDATE] Error validating location:', err);
-        // Return error but don't block user
         return res.json({
             success: false,
             error: 'Location validation service unavailable',
@@ -123,11 +114,11 @@ router.post('/validate-location', authorizeUser, async (req, res) => {
     }
 });
 
-// POST endpoint to calculate astrology for user (synchronous)
-// Called when personal info is saved
+// POST endpoint to calculate astrology synchronously
 router.post('/sync-calculate/:userId', authorizeUser, async (req, res) => {
     try {
         const { userId } = req.params;
+        console.log('[SYNC-CALC] Starting for userId:', userId);
         
         // Fetch user's personal information (decrypted)
         const { rows: personalInfoRows } = await db.query(
@@ -136,35 +127,40 @@ router.post('/sync-calculate/:userId', authorizeUser, async (req, res) => {
                 pgp_sym_decrypt(birth_time_encrypted, $1) as birth_time,
                 pgp_sym_decrypt(birth_country_encrypted, $1) as birth_country,
                 pgp_sym_decrypt(birth_province_encrypted, $1) as birth_province,
-                pgp_sym_decrypt(birth_city_encrypted, $1) as birth_city,
-                pgp_sym_decrypt(birth_timezone_encrypted, $1) as birth_timezone
+                pgp_sym_decrypt(birth_city_encrypted, $1) as birth_city
              FROM user_personal_info 
              WHERE user_id = $2`,
             [process.env.ENCRYPTION_KEY, userId]
         );
         
         if (!personalInfoRows.length) {
+            console.error('[SYNC-CALC] Personal info not found');
             return res.status(404).json({ error: 'Personal info not found' });
         }
         
         const info = personalInfoRows[0];
+        console.log('[SYNC-CALC] Personal info found:', { date: !!info.birth_date, time: !!info.birth_time, country: !!info.birth_country, prov: !!info.birth_province, city: !!info.birth_city, tz: !!info.birth_timezone });
         
-        // Validate complete birth data
+        // Validate birth data (timezone is optional, defaults to UTC)
         if (!info.birth_date || !info.birth_time || !info.birth_country || !info.birth_province || !info.birth_city) {
+            console.error('[SYNC-CALC] Incomplete birth info');
             return res.status(400).json({ error: 'Incomplete birth information' });
         }
         
         // Calculate birth chart
+        console.log('[SYNC-CALC] Calling Python...');
         const calculatedChart = await calculateBirthChartSync({
             birth_date: info.birth_date,
             birth_time: info.birth_time,
             birth_country: info.birth_country,
             birth_province: info.birth_province,
-            birth_city: info.birth_city,
-            birth_timezone: info.birth_timezone
+            birth_city: info.birth_city
         });
         
+        console.log('[SYNC-CALC] Python response - success:', calculatedChart.success, 'rising:', !!calculatedChart.rising_sign, 'moon:', !!calculatedChart.moon_sign);
+        
         if (!calculatedChart.success || !calculatedChart.rising_sign || !calculatedChart.moon_sign) {
+            console.error('[SYNC-CALC] Calculation failed:', calculatedChart.error);
             return res.status(500).json({ error: calculatedChart.error || 'Calculation failed' });
         }
         
@@ -192,13 +188,14 @@ router.post('/sync-calculate/:userId', authorizeUser, async (req, res) => {
             [userIdHash, calculatedChart.sun_sign, JSON.stringify(astrologyData)]
         );
         
+        console.log('[SYNC-CALC] Success! Stored astrology for user');
         res.json({
             success: true,
             message: 'Astrology calculated and stored',
             data: astrologyData
         });
     } catch (err) {
-        console.error('[ASTROLOGY] Error calculating:', err);
+        console.error('[SYNC-CALC] Error:', err.message);
         res.status(500).json({ error: 'Calculation failed', details: err.message });
     }
 });
@@ -236,8 +233,6 @@ router.get("/:userId", authorizeUser, async (req, res) => {
             result.astrology_data = JSON.parse(result.astrology_data);
         }
         
-        // CRITICAL: Ensure sun_sign is in astrology_data for frontend compatibility
-        // The zodiac_sign column stores the sun sign from the original calculation
         if (result.zodiac_sign && !result.astrology_data.sun_sign) {
             result.astrology_data.sun_sign = result.zodiac_sign;
         }

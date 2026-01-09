@@ -1,60 +1,40 @@
 import { useState, useEffect, useRef } from 'react';
-import { useTranslation } from '../context/TranslationContext';
-import { useSpeech } from '../hooks/useSpeech';
-import VoiceBar from '../components/VoiceBar';
-import { ComplianceUpdateModal } from '../components/ComplianceUpdateModal-CLEAN';
-
-import { getTranslatedAstrologyData } from '../utils/translatedAstroUtils';
+import { getAstrologyData } from '../utils/astroUtils';
 import { isBirthInfoError, isBirthInfoMissing } from '../utils/birthInfoErrorHandler';
 import BirthInfoMissingPrompt from '../components/BirthInfoMissingPrompt';
-import { formatDateByLanguage } from '../utils/dateLocaleUtils';
-import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
 import '../styles/responsive.css';
 import './HoroscopePage.css';
 
 export default function HoroscopePage({ userId, token, auth, onExit, onNavigateToPage }) {
-  const { t, language } = useTranslation();
   const [horoscopeRange, setHoroscopeRange] = useState('daily');
   const [horoscopeData, setHoroscopeData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState(null);
-  const [astroInfo, setAstroInfo] = useState(null);
-  const [showingBrief, setShowingBrief] = useState(false);
-  const [userPreference, setUserPreference] = useState('full');
-  const [voiceEnabled, setVoiceEnabled] = useState(false);
-  const [hasAutoPlayed, setHasAutoPlayed] = useState(false);
-  const [sunSignData, setSunSignData] = useState(null);
-  const [complianceStatus, setComplianceStatus] = useState(null);
+    const [astroInfo, setAstroInfo] = useState(null);
   const pollIntervalRef = useRef(null);
-  const { speak, stop, pause, resume, isPlaying, isPaused, isLoading: isSpeechLoading, error: speechError, isSupported, volume, setVolume } = useSpeech();
+  const astroDataRef = useRef(null);
 
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
+        // Fetch astroInfo on component mount (before horoscope loads)
   useEffect(() => {
-    const fetchPreferences = async () => {
-      try {
-        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-        const response = await fetch(`${API_URL}/user-profile/${userId}/preferences`, { headers });
-        if (response.ok) {
-          const data = await response.json();
-          setUserPreference(data.response_type || 'full');
-          setVoiceEnabled(data.voice_enabled !== false);
-          setShowingBrief(data.response_type === 'brief');
-        }
-      } catch (err) {
-        console.error('[HOROSCOPE] Error fetching preferences:', err);
+    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+    fetchAstroInfo(headers).then(astro => {
+      if (astro) {
+        console.log('[HOROSCOPE-MOUNT] Fetched astro keys:', Object.keys(astro));
+        console.log('[HOROSCOPE-MOUNT] sun:', astro.sun_sign, 'moon:', astro.moon_sign, 'rising:', astro.rising_sign);
+        astroDataRef.current = astro;
       }
-    };
-    fetchPreferences();
-  }, [userId, token, API_URL]);
+    });
+  }, [userId, token]);
 
+  // Load horoscope when range changes
   useEffect(() => {
-    if (!loading) {
-      loadHoroscope();
-    }
-  }, [horoscopeRange, userPreference]);
+    loadHoroscope();
+  }, [horoscopeRange]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Cleanup polling on unmount
   useEffect(() => {
     return () => {
       if (pollIntervalRef.current) {
@@ -63,26 +43,17 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
     };
   }, []);
 
-  // Auto-play when horoscope data arrives
-  useEffect(() => {
-    if (voiceEnabled && isSupported && horoscopeData && !hasAutoPlayed && !isPlaying) {
-      setHasAutoPlayed(true);
-      const textToRead = showingBrief && horoscopeData?.brief ? horoscopeData.brief : horoscopeData?.text;
-      setTimeout(() => {
-        speak(textToRead, { rate: 0.95, pitch: 1.2 });
-      }, 500);
-    }
-  }, [voiceEnabled, isSupported, horoscopeData, hasAutoPlayed, isPlaying, showingBrief, speak]);
-
-  const fetchAstroInfo = async (headers) => {
+    const fetchAstroInfo = async (headers) => {
     try {
       const response = await fetch(`${API_URL}/user-astrology/${userId}`, { headers });
       if (response.ok) {
         const data = await response.json();
+        console.log('[FETCH-ASTRO] Full response:', data);
         let astroDataObj = data.astrology_data;
         if (typeof astroDataObj === 'string') {
           astroDataObj = JSON.parse(astroDataObj);
         }
+        console.log('[FETCH-ASTRO] Returning astroDataObj:', astroDataObj);
         setAstroInfo({
           ...data,
           astrology_data: astroDataObj
@@ -100,49 +71,41 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
     setError(null);
     setHoroscopeData(null);
     setGenerating(false);
-    setHasAutoPlayed(false);
 
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
 
+      // Fetch astro info if not already loaded
       if (!astroInfo) {
         await fetchAstroInfo(headers);
       }
 
-            const response = await fetchWithTokenRefresh(`${API_URL}/horoscope/${userId}/${horoscopeRange}`, { headers });
-
-      // CHECK FOR COMPLIANCE REQUIREMENT (HTTP 451)
-      if (response.status === 451) {
-        const complianceData = await response.json();
-        console.log('[HOROSCOPE] Compliance required:', complianceData);
-        setComplianceStatus(complianceData.details);
-        setLoading(false);
-        return;
-      }
+      // Try to fetch cached horoscope
+      const response = await fetch(`${API_URL}/horoscope/${userId}/${horoscopeRange}`, { headers });
 
       if (response.ok) {
         const data = await response.json();
         setHoroscopeData({
           text: data.horoscope,
-          brief: data.brief,
           generatedAt: data.generated_at,
           range: horoscopeRange
         });
-        setComplianceStatus(null);
         setLoading(false);
         return;
       }
 
+      // No cached horoscope - trigger generation
       setGenerating(true);
-            const generateResponse = await fetchWithTokenRefresh(`${API_URL}/horoscope/${userId}/${horoscopeRange}`, {
+      const generateResponse = await fetch(`${API_URL}/horoscope/${userId}/${horoscopeRange}`, {
         method: 'POST',
         headers
       });
 
-      if (!generateResponse.ok) {
+            if (!generateResponse.ok) {
         const errorData = await generateResponse.json();
         const errorMsg = errorData.error || 'Could not generate horoscope';
         
+        // Check if this is a birth info error
         if (isBirthInfoError(errorMsg)) {
           setError('BIRTH_INFO_MISSING');
         } else {
@@ -152,28 +115,24 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
         return;
       }
 
-                                    let pollCount = 0;
-      // 60 second timeout for horoscopes (generation 10-20s + translation 10-20s)
-      const maxPolls = 60;
+      // Start polling for generated horoscope
+      let pollCount = 0;
+      const maxPolls = 30;
 
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current);
       }
 
-      // Wait 2 seconds before starting to poll - gives worker time to commit data
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
       pollIntervalRef.current = setInterval(async () => {
         pollCount++;
 
         try {
-          const pollResponse = await fetchWithTokenRefresh(`${API_URL}/horoscope/${userId}/${horoscopeRange}`, { headers });
+          const pollResponse = await fetch(`${API_URL}/horoscope/${userId}/${horoscopeRange}`, { headers });
 
           if (pollResponse.ok) {
             const data = await pollResponse.json();
             setHoroscopeData({
               text: data.horoscope,
-              brief: data.brief,
               generatedAt: data.generated_at,
               range: horoscopeRange
             });
@@ -186,8 +145,8 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
           console.error('[HOROSCOPE] Polling error:', err);
         }
 
-                if (pollCount >= maxPolls) {
-          setError('Horoscope generation is taking longer than expected (60+ seconds). Please try again.');
+        if (pollCount >= maxPolls) {
+          setError('Horoscope generation is taking longer than expected. Please try again.');
           setGenerating(false);
           setLoading(false);
           clearInterval(pollIntervalRef.current);
@@ -200,54 +159,16 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
     }
   };
 
-    // Load translated sun sign data based on language and sun sign
-  useEffect(() => {
-    const loadSunSignData = async () => {
-      if (astroInfo?.astrology_data?.sun_sign) {
-        const signKey = astroInfo.astrology_data.sun_sign.toLowerCase();
-        const data = await getTranslatedAstrologyData(signKey, language);
-        const englishData = await getTranslatedAstrologyData(signKey, 'en-US');
-        setSunSignData({
-          ...data,
-          _englishElement: englishData?.element,
-         _englishRulingPlanet: englishData?.rulingPlanet
-      });
-      } else {
-        setSunSignData(null);
-      }
-    };
-    loadSunSignData();
-  }, [astroInfo, language]);
-    const astro = astroInfo?.astrology_data || {};
+  const getSunSignInfo = () => {
+    if (!astroInfo?.astrology_data?.sun_sign) return null;
+    const sunSignKey = astroInfo.astrology_data.sun_sign.toLowerCase();
+    return getAstrologyData(sunSignKey);
+  };
 
-    if (complianceStatus?.requiresPrivacyUpdate || complianceStatus?.requiresTermsUpdate) {
-    return (
-      <ComplianceUpdateModal
-        userId={userId}
-        token={token}
-        compliance={{
-          blocksAccess: true,
-          requiresTermsUpdate: complianceStatus.requiresTermsUpdate,
-          requiresPrivacyUpdate: complianceStatus.requiresPrivacyUpdate,
-          termsVersion: {
-            requiresReacceptance: complianceStatus.requiresTermsUpdate,
-            current: complianceStatus.termsVersion
-          },
-          privacyVersion: {
-            requiresReacceptance: complianceStatus.requiresPrivacyUpdate,
-            current: complianceStatus.privacyVersion
-          }
-        }}
-        onConsentUpdated={() => {
-          setComplianceStatus(null);
-          setLoading(false);
-          loadHoroscope();
-        }}
-      />
-    );
-  }
+    const sunSignData = getSunSignInfo();
+  const astro = astroDataRef.current || astroInfo?.astrology_data || {};
 
-  const handleClose = () => {
+    const handleClose = () => {
     if (onExit) {
       onExit();
     } else {
@@ -255,54 +176,53 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
     }
   };
 
-  const handleTogglePause = () => {
-    if (isPlaying) {
-      pause();
-    } else if (isPaused) {
-      resume();
-    }
-  };
-
-  const handlePlayVoice = () => {
-    const textToRead = showingBrief && horoscopeData?.brief ? horoscopeData.brief : horoscopeData?.text;
-    speak(textToRead, { rate: 0.95, pitch: 1.2 });
-  };
-
   return (
     <div className="page-safe-area horoscope-page" style={{ position: 'relative' }}>
-            {auth?.isTemporaryAccount && (
-        <div style={{
-          position: 'fixed',
-          top: '1rem',
-          right: '1rem',
-          zIndex: 1000
-        }}>
-          <button
+            {/* Close button - top right for temp accounts during onboarding */}
+      {auth?.isTemporaryAccount && (
+        <>
+                    <button
             type="button"
             onClick={handleClose}
             style={{
-              padding: '0.75rem 1.5rem',
-              background: 'rgba(124, 99, 216, 0.9)',
-              border: '2px solid #7c63d8',
-              color: 'white',
-              fontSize: '0.95rem',
-              fontWeight: '600',
+              position: 'absolute',
+              top: '1rem',
+              right: '1rem',
+              background: 'transparent',
+              border: 'none',
+              fontSize: '1.5rem',
               cursor: 'pointer',
-              borderRadius: '5px',
-              transition: 'all 0.2s ease'
+              zIndex: 100,
+              opacity: 0.7,
+              transition: 'opacity 0.2s'
             }}
-            title="Exit free trial"
+            onMouseEnter={(e) => e.target.style.opacity = '1'}
+            onMouseLeave={(e) => e.target.style.opacity = '0.7'}
+            title="Close and complete onboarding"
           >
-            ✕ Exit
+            ✕
           </button>
-        </div>
+          
+                              {/* Exit prompt with green arrow - clickable */}
+          <button
+            type="button"
+            onClick={handleClose}
+            className="exit-prompt"
+            title="Click to register and continue"
+          >
+            <span className="exit-arrow">👉</span>
+            <span className="exit-message">Click exit to continue</span>
+          </button>
+        </>
       )}
 
+      {/* Header */}
       <div className="horoscope-header">
-        <h2 className="heading-primary">{t('horoscope.title')}</h2>
-        <p className="horoscope-subtitle">{t('horoscope.subtitle')}</p>
+        <h2 className="heading-primary">🔮 Your Horoscope</h2>
+        <p className="horoscope-subtitle">Personalized cosmic guidance for you</p>
       </div>
 
+      {/* Range Toggle */}
       <div className="horoscope-toggle">
         {['daily', 'weekly'].map((range) => (
           <button
@@ -311,62 +231,33 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
             onClick={() => setHoroscopeRange(range)}
             disabled={loading || generating}
           >
-            {t(`horoscope.${range}`)}
+            {range.charAt(0).toUpperCase() + range.slice(1)}
           </button>
         ))}
       </div>
 
-      {!loading && !error && isBirthInfoMissing(astroInfo) && (
-        <BirthInfoMissingPrompt 
-          onNavigateToPersonalInfo={() => onNavigateToPage && onNavigateToPage(2)}
-        />
-      )}
-
-      {error && error === 'BIRTH_INFO_MISSING' && (
-        <BirthInfoMissingPrompt 
-          onNavigateToPersonalInfo={() => onNavigateToPage && onNavigateToPage(2)}
-        />
-      )}
-      
-      {error && error !== 'BIRTH_INFO_MISSING' && (
-        <div className="horoscope-content error">
-          <p className="error-message">⚠️ {error}</p>
-          <button onClick={loadHoroscope} className="btn-secondary">
-            {t('common.tryAgain')}
-          </button>
-        </div>
-      )}
-
-      {loading && (
-        <div className="horoscope-content loading">
-          <div className="spinner">🔮</div>
-          <p>
-            {generating ? t('horoscope.generatingMessage') : t('horoscope.loading')}
-          </p>
-        </div>
-      )}
-
-      {astro.sun_sign && !isBirthInfoMissing(astroInfo) && (
+                  {/* Birth Chart Info - REORDERED: Rising, Moon, Sun */}
+      {astroDataRef.current?.sun_sign && (
         <section className="horoscope-birth-chart">
           <div className="birth-chart-cards">
-                        {astro.rising_sign && (
+            {astro.rising_sign && (
               <div className="chart-card rising-card">
                 <span className="chart-icon">↗️</span>
-                <p className="chart-sign">{t(`mySign.${astro.rising_sign.toLowerCase()}`)}</p>
+                <p className="chart-sign">{astro.rising_sign}</p>
                 {astro.rising_degree && <p className="chart-degree">{astro.rising_degree}°</p>}
               </div>
             )}
             {astro.moon_sign && (
               <div className="chart-card moon-card">
                 <span className="chart-icon">🌙</span>
-                <p className="chart-sign">{t(`mySign.${astro.moon_sign.toLowerCase()}`)}</p>
+                <p className="chart-sign">{astro.moon_sign}</p>
                 {astro.moon_degree && <p className="chart-degree">{astro.moon_degree}°</p>}
               </div>
             )}
             {astro.sun_sign && (
               <div className="chart-card sun-card">
                 <span className="chart-icon">☀️</span>
-                <p className="chart-sign">{t(`mySign.${astro.sun_sign.toLowerCase()}`)}</p>
+                <p className="chart-sign">{astro.sun_sign}</p>
                 {astro.sun_degree && <p className="chart-degree">{astro.sun_degree}°</p>}
               </div>
             )}
@@ -374,69 +265,78 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
         </section>
       )}
 
+      {/* Loading State */}
+      {loading && (
+        <div className="horoscope-content loading">
+          <div className="spinner">🔮</div>
+          <p>
+            {generating ? 'Your cosmic guidance is being woven by The Oracle...' : 'Loading your horoscope...'}
+          </p>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div className="horoscope-content error">
+          <p className="error-message">⚠️ {error}</p>
+          <button onClick={loadHoroscope} className="btn-secondary">
+            Try Again
+          </button>
+        </div>
+      )}
+
+      {/* Horoscope Content */}
       {horoscopeData && !loading && (
         <section className="horoscope-content">
           <div className="horoscope-metadata">
-                        <p className="horoscope-range">
-              {t('horoscope.reading', { range: t(`horoscope.${horoscopeData.range}`) })}
+            <p className="horoscope-range">
+              {horoscopeData.range.charAt(0).toUpperCase() + horoscopeData.range.slice(1)} Reading
             </p>
-                        <p className="horoscope-date">
-              {formatDateByLanguage(new Date(), language)}
+            <p className="horoscope-date">
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
             </p>
           </div>
 
           <div className="horoscope-text">
-            <div dangerouslySetInnerHTML={{ __html: showingBrief && horoscopeData.brief ? horoscopeData.brief : horoscopeData.text }} />
-            
-            {/* Voice Bar */}
-            {isSupported && (
-              <VoiceBar
-                isPlaying={isPlaying}
-                isPaused={isPaused}
-                isLoading={isSpeechLoading}
-                error={speechError}
-                onPlay={handlePlayVoice}
-                onTogglePause={handleTogglePause}
-                onStop={stop}
-                isSupported={isSupported}
-                volume={volume}
-                onVolumeChange={setVolume}
-              />
-            )}
-            
-                        <button onClick={() => setShowingBrief(!showingBrief)} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', backgroundColor: '#7c63d8', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '1rem', fontWeight: '500' }} onMouseEnter={(e) => e.target.style.backgroundColor = '#6b52c1'} onMouseLeave={(e) => e.target.style.backgroundColor = '#7c63d8'}>{showingBrief ? t('chat.toggleMore') : t('chat.toggleLess')}</button>
+            <div dangerouslySetInnerHTML={{ __html: horoscopeData.text }} />
           </div>
 
+          {/* Sun Sign Info Below Horoscope */}
           {sunSignData && (
             <section className="sun-sign-info">
               <div className="sun-sign-header">
-                <h3>{sunSignData.emoji} {sunSignData.name}</h3>
+                <h3>
+                  {sunSignData.emoji} {sunSignData.name}
+                </h3>
               </div>
+
               <div className="sun-info-grid">
-                                <div className="info-item">
-                  <strong>{t('mySign.dates')}</strong>
+                <div className="info-item">
+                  <strong>Element:</strong>
+                  <span>{sunSignData.element}</span>
+                </div>
+                <div className="info-item">
+                  <strong>Ruling Planet:</strong>
+                  <span>{sunSignData.rulingPlanet}</span>
+                </div>
+                <div className="info-item">
+                  <strong>Dates:</strong>
                   <span>{sunSignData.dates}</span>
                 </div>
-                                <div className="info-item">
-                  <strong>{t('mySign.element')}</strong>
-                  <span>{sunSignData._englishElement ? t(`elements.${sunSignData._englishElement.toLowerCase()}`) : sunSignData.element}</span>
-                </div>
-                                <div className="info-item">
-                  <strong>{t('mySign.rulingPlanet')}</strong>
-                  <span>{sunSignData._englishRulingPlanet ? sunSignData._englishRulingPlanet.split('/').map((p, i) => <span key={i}>{i > 0 && ' / '} {t(`planets.${p.toLowerCase().trim()}`)}</span>) : sunSignData.rulingPlanet}</span>
-                </div>
               </div>
+
               {sunSignData.personality && (
                 <div className="sun-detail">
-                  <h4>{t('mySign.aboutYourSign')}</h4>
+                  <h4>About Your Sign</h4>
                   <p>{sunSignData.personality}</p>
                 </div>
               )}
             </section>
           )}
 
+          {/* Disclaimer */}
           <div className="horoscope-disclaimer">
-            <p>{t('horoscope.disclaimer')}</p>
+            <p>🔮 Horoscopes are for entertainment and inspiration. Your choices and actions ultimately shape your destiny.</p>
           </div>
         </section>
       )}

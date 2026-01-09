@@ -216,6 +216,23 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
 
             await savePersonalInfo(dataToSend);
 
+            // Calculate astrology with moon_sign and rising_sign for temp users
+            console.log('[PERSONALINFO] Checking astrology: temp?', isTemporaryAccount, 'country?', !!formData.birthCountry, 'province?', !!formData.birthProvince, 'city?', !!formData.birthCity, 'time?', !!formData.birthTime);
+                        console.warn('🔮 Astrology condition check - temp:', isTemporaryAccount, 'country:', formData.birthCountry, 'province:', formData.birthProvince, 'city:', formData.birthCity, 'time:', formData.birthTime);
+            if (isTemporaryAccount && formData.birthCountry && formData.birthProvince && formData.birthCity && formData.birthTime) {
+                console.warn('🔮 ENTERING ASTROLOGY SYNC-CALCULATE BLOCK');
+                try {
+                    console.log('[PERSONALINFO] Calling sync-calculate for moon/rising signs');
+                    const astrResponse = await fetchWithTokenRefresh(`${API_URL}/user-astrology/sync-calculate/${userId}`, {
+                        method: 'POST',
+                        headers: { 'Authorization': token ? `Bearer ${token}` : '' }
+                    });
+                    console.log('[PERSONALINFO] Sync-calculate response:', astrResponse.status);
+                } catch (err) {
+                    console.error('[PERSONALINFO] Astrology sync-calculate error:', err);
+                }
+            }
+
             setSuccess(true);
 
             // Update onboarding
@@ -439,6 +456,6 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
                     ✓ {t('common.saved')}
                 </div>
             )}
-        </div>
+                </div>
     );
 }
