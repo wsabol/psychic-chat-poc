@@ -31,8 +31,9 @@ export function getLocalDateString(timezone = null) {
  * @param {string} token - Auth token
  * @param {string} timezone - IANA timezone (auto-detected if not provided)
  * 
- * CRITICAL FIX: Only use temp_user_language for ACTUAL temporary accounts
- * Real Google-authenticated users should NOT have their preferences overwritten
+ * ✅ CRITICAL FIX: Only save timezone, NEVER save language/preferences
+ * Language and preferences should only be saved by PreferencesPage
+ * when user explicitly changes them
  */
 export async function saveUserTimezone(userId, token, timezone = null) {
   try {
@@ -41,28 +42,10 @@ export async function saveUserTimezone(userId, token, timezone = null) {
     
     console.log(`[TIMEZONE] Saving timezone for user: ${tz}`);
     
-    // ✅ CRITICAL FIX: Check if user is actually a temporary account
-    // Temp accounts have emails like "temp_<uuid>@psychic.local"
-    // Real Google users have real email addresses
-    const isTemporaryAccount = userId && userId.startsWith('temp_');
-    
-    // For TEMPORARY accounts only, apply the language they selected
-    const tempUserLanguage = localStorage.getItem('temp_user_language');
+    // ✅ ONLY send timezone - let the API preserve all other preferences
     const body = {
       timezone: tz
     };
-    
-    // Only apply temp_user_language for actual temporary accounts
-    if (tempUserLanguage && isTemporaryAccount) {
-      body.language = tempUserLanguage;
-      body.oracle_language = tempUserLanguage;
-      body.response_type = 'full';  // Default to full for temp users
-      console.log(`[TIMEZONE] ✅ Temp user - applying language: ${tempUserLanguage}`);
-    } else if (tempUserLanguage && !isTemporaryAccount) {
-      // Real user logged in - DON'T apply temp language, just save timezone
-      console.log(`[TIMEZONE] ⚠️ Real user detected - ignoring temp_user_language: ${tempUserLanguage}`);
-      console.log(`[TIMEZONE] Only saving timezone, preserving user's existing preferences`);
-    }
     
     const response = await fetch(`${API_URL}/user-profile/${userId}/preferences`, {
       method: 'POST',
@@ -78,7 +61,7 @@ export async function saveUserTimezone(userId, token, timezone = null) {
       return false;
     }
     
-    console.log('[TIMEZONE] ✓ Timezone saved successfully');
+    console.log('[TIMEZONE] ✓ Timezone saved successfully (other preferences preserved)');
     return true;
   } catch (err) {
     console.error('[TIMEZONE] Error saving timezone:', err);

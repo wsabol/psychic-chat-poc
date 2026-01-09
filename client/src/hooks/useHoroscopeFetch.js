@@ -5,8 +5,10 @@ import { buildHoroscopeData, HOROSCOPE_CONFIG } from '../utils/horoscopeUtils';
 
 /**
  * Hook to manage horoscope fetching, generation, and polling
+ * 
+ * Returns horoscopeState object with: data, loading, generating, error
  */
-export function useHoroscopeFetch(userId, token, apiUrl) {
+export function useHoroscopeFetch(userId, token, apiUrl, horoscopeRange) {
   const [horoscopeData, setHoroscopeData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -18,7 +20,7 @@ export function useHoroscopeFetch(userId, token, apiUrl) {
    * Load horoscope (cached or trigger generation)
    */
   const loadHoroscope = useCallback(
-    async (horoscopeRange) => {
+    async () => {
       setLoading(true);
       setError(null);
       setHoroscopeData(null);
@@ -79,7 +81,7 @@ export function useHoroscopeFetch(userId, token, apiUrl) {
         setLoading(false);
       }
     },
-    [userId, token, apiUrl]
+    [userId, token, apiUrl, horoscopeRange]
   );
 
   /**
@@ -144,14 +146,17 @@ export function useHoroscopeFetch(userId, token, apiUrl) {
     }
   }, []);
 
+  // ✅ Return horoscopeState object as expected by HoroscopePage
   return {
-    horoscopeData,
-    loading,
-    generating,
-    error,
+    horoscopeState: {
+      data: horoscopeData,
+      loading,
+      generating,
+      error
+    },
     complianceStatus,
-    loadHoroscope,
     setComplianceStatus,
-    cleanup
+    loadHoroscope,
+    stopPolling: cleanup
   };
 }

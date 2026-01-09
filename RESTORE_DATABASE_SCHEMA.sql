@@ -136,7 +136,7 @@ CREATE TABLE IF NOT EXISTS security (
 
 CREATE INDEX IF NOT EXISTS idx_security_user_id_hash ON security(user_id_hash);
 
--- TABLE: security_sessions
+-- TABLE: security_sessions (WITH DEVICE TRUST COLUMNS)
 CREATE TABLE IF NOT EXISTS security_sessions (
     id SERIAL PRIMARY KEY,
     user_id_hash VARCHAR(255) UNIQUE,
@@ -145,6 +145,8 @@ CREATE TABLE IF NOT EXISTS security_sessions (
     device_name_encrypted BYTEA,
     ip_address_encrypted BYTEA,
     user_agent_encrypted BYTEA,
+    is_trusted BOOLEAN DEFAULT false,
+    trust_expiry TIMESTAMP,
     last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -306,3 +308,29 @@ CREATE TABLE IF NOT EXISTS messages (
 CREATE INDEX IF NOT EXISTS idx_messages_user_id_hash ON messages(user_id_hash);
 CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at);
 
+-- TABLE: app_analytics
+CREATE TABLE IF NOT EXISTS app_analytics (
+    id SERIAL PRIMARY KEY,
+    event_type VARCHAR(50) NOT NULL,
+    page_name VARCHAR(100) NOT NULL,
+    event_action VARCHAR(100),
+    ip_address_encrypted BYTEA,
+    user_agent_encrypted BYTEA,
+    browser_name VARCHAR(50),
+    browser_version VARCHAR(20),
+    os_name VARCHAR(50),
+    os_version VARCHAR(20),
+    device_type VARCHAR(20),
+    session_duration_ms INT,
+    error_message_encrypted BYTEA,
+    error_stack_encrypted BYTEA,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_app_analytics_event_type ON app_analytics(event_type);
+CREATE INDEX IF NOT EXISTS idx_app_analytics_page_name ON app_analytics(page_name);
+CREATE INDEX IF NOT EXISTS idx_app_analytics_created_at ON app_analytics(created_at);
+CREATE INDEX IF NOT EXISTS idx_app_analytics_device_type ON app_analytics(device_type);
+CREATE INDEX IF NOT EXISTS idx_app_analytics_os_name ON app_analytics(os_name);
+CREATE INDEX IF NOT EXISTS idx_app_analytics_browser_name ON app_analytics(browser_name);
+CREATE INDEX IF NOT EXISTS idx_app_analytics_event_action ON app_analytics(event_action);

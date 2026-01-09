@@ -69,17 +69,45 @@
 }
 
 /* ============================================
+   HOROSCOPE TEXT TOGGLE BUTTON
+   ============================================ */
+
+.horoscope-toggle-btn {
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--color-accent-purple);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  font-size: var(--font-size-body);
+  font-weight: 500;
+  transition: var(--transition-fast);
+  min-height: var(--touch-target);
+}
+
+.horoscope-toggle-btn:hover {
+  background: #6b52c1;
+}
+
+.horoscope-toggle-btn:active {
+  transform: scale(0.98);
+}
+
+/* ============================================
    ACCESSIBILITY: CONTROLS
    ============================================ */
 
 .toggle-btn:focus,
-.btn-secondary:focus {
+.btn-secondary:focus,
+.horoscope-toggle-btn:focus {
   outline: 2px solid var(--color-accent-purple);
   outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .toggle-btn {
+  .toggle-btn,
+  .horoscope-toggle-btn {
     transition: none;
   }
 }

@@ -101,7 +101,7 @@ export function useAuthState(checkBillingStatus) {
             } else {
               try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                const timeoutId = setTimeout(() => controller.abort(), 15000);
                 
                 const twoFAResponse = await fetch(`http://localhost:3000/auth/check-2fa/${firebaseUser.uid}`, {
                   method: 'POST',

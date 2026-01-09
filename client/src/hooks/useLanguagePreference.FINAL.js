@@ -5,56 +5,21 @@ import { useAuth } from './useAuth';
 /**
  * Hook to sync language preference with user database
  * 
- * PROPER FIX: Fetch user preferences from database when authenticated
- * This ensures preferences persist across login/logout cycles
+ * CRITICAL FIX: When changing language, fetch current preferences first,
+ * then send the full preference set to preserve response_type and voice_enabled
  */
 export function useLanguagePreference() {
   const { changeLanguage, language } = useTranslation();
   const { authUserId, token } = useAuth();
 
-  // ✅ CRITICAL: Fetch preferences from database when user authenticates
+  // Don't fetch automatically - language persists via localStorage in TranslationContext
   useEffect(() => {
-    if (!authUserId || !token) {
-      console.log('[LANGUAGE-PREF] No auth - skipping fetch');
-      return;
-    }
-
-    const fetchAndApplyPreferences = async () => {
-      try {
-        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
-        console.log('[LANGUAGE-PREF] Fetching preferences for userId:', authUserId);
-
-        const response = await fetch(`${API_URL}/user-profile/${authUserId}/preferences`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (!response.ok) {
-          console.warn('[LANGUAGE-PREF] Failed to fetch preferences:', response.status);
-          return;
-        }
-
-        const data = await response.json();
-        console.log('[LANGUAGE-PREF] Fetched from DB:', data);
-
-        // Apply the language from database
-        if (data.language && data.language !== language) {
-          console.log('[LANGUAGE-PREF] Changing language from', language, 'to', data.language);
-          await changeLanguage(data.language);
-        }
-      } catch (err) {
-        console.error('[LANGUAGE-PREF] Error fetching preferences:', err);
-        // Fail silently - use whatever language is already set
-      }
-    };
-
-    fetchAndApplyPreferences();
-  }, [authUserId, token, changeLanguage, language]);
+    // Do nothing - TranslationContext handles language initialization
+  }, [authUserId, token]);
 
   /**
-   * Save language preference with all other preferences preserved
+   * Save language preference WITHOUT overwriting other settings
+   * Fetch current preferences first, then update only the language
    */
   const saveLanguagePreference = useCallback(async (newLanguage) => {
     // Always change locally first
@@ -69,7 +34,7 @@ export function useLanguagePreference() {
       try {
         const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
         
-        // First fetch current preferences to preserve other settings
+        // ✅ FIX: First fetch current preferences to preserve other settings
         let currentPrefs = {
           response_type: 'full',
           voice_enabled: true,
@@ -93,10 +58,10 @@ export function useLanguagePreference() {
               voice_selected: data.voice_selected || 'sophia',
               oracle_language: data.oracle_language || 'en-US'
             };
-            console.log('[LANGUAGE-PREF] Fetched current preferences:', currentPrefs);
+            console.log('[LANGUAGE] Fetched current preferences:', currentPrefs);
           }
         } catch (fetchErr) {
-          console.warn('[LANGUAGE-PREF] Could not fetch current preferences:', fetchErr.message);
+          console.warn('[LANGUAGE] Could not fetch current preferences, using defaults:', fetchErr.message);
         }
 
         // Now save with language update + all other preferences preserved
@@ -108,7 +73,7 @@ export function useLanguagePreference() {
           oracle_language: currentPrefs.oracle_language
         };
 
-        console.log('[LANGUAGE-PREF] Saving with payload:', savePayload);
+        console.log('[LANGUAGE] Saving with payload:', savePayload);
 
         const response = await fetch(`${API_URL}/user-profile/${authUserId}/preferences`, {
           method: 'POST',
@@ -120,14 +85,14 @@ export function useLanguagePreference() {
         });
 
         if (response.ok) {
-          console.log(`[LANGUAGE-PREF] ✅ Language saved to DB: ${newLanguage}`);
+          console.log(`[LANGUAGE] ✅ Language saved to DB: ${newLanguage}`);
           return true;
         } else {
-          console.warn('[LANGUAGE-PREF] Failed to save language preference to DB');
+          console.warn('[LANGUAGE] Failed to save language preference to DB');
           return true; // Still successful locally
         }
       } catch (err) {
-        console.warn('[LANGUAGE-PREF] Error saving language preference:', err);
+        console.warn('[LANGUAGE] Error saving language preference:', err);
         return true; // Still successful locally
       }
     }

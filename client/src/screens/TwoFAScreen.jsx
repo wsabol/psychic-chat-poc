@@ -164,7 +164,7 @@ export default function TwoFAScreen({
                             <span>
                 <strong>{t('twoFactor.title')}</strong>
                 <br />
-                <span style={{ fontSize: '0.85rem', color: '#666' }}>{t('security.trustedDevices')}</span>
+                <span style={{ fontSize: '0.85rem', color: '#666' }}>{t('security.trustedDevices.heading')}</span>
               </span>
             </label>
           </form>

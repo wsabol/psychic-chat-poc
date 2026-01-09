@@ -3,29 +3,14 @@ import { fetchWithTokenRefresh } from '../../utils/fetchWithTokenRefresh';
 
 /**
  * Hook for fetching and managing user preferences
- * FIXED: Better logging, localStorage cache, and proper error handling
  */
 export const useFetchPreferences = (userId, token, API_URL) => {
-  const [preferences, setPreferences] = useState(() => {
-    // Try to load from localStorage first as fallback
-    if (userId) {
-      const cached = localStorage.getItem(`userPreferences_${userId}`);
-      if (cached) {
-        console.log('[PREFERENCES-FETCH] Loaded from localStorage:', cached);
-        try {
-          return JSON.parse(cached);
-        } catch (e) {
-          console.error('[PREFERENCES-FETCH] Failed to parse cached preferences');
-        }
-      }
-    }
-    return {
-      language: 'en-US',
-      response_type: 'full',
-      voice_enabled: true,
-      voice_selected: 'sophia',
-      oracle_language: 'en-US'
-    };
+  const [preferences, setPreferences] = useState({
+    language: 'en-US',
+    response_type: 'full',
+    voice_enabled: true,
+    voice_selected: 'sophia',
+    oracle_language: 'en-US'
   });
   const [personalInfo, setPersonalInfo] = useState({ familiar_name: '' });
   const [loading, setLoading] = useState(true);
@@ -36,54 +21,42 @@ export const useFetchPreferences = (userId, token, API_URL) => {
       setLoading(true);
       setError(null);
       
-      console.log('[PREFERENCES-FETCH] Starting fetch...');
-      console.log('[PREFERENCES-FETCH] userId:', userId);
-      console.log('[PREFERENCES-FETCH] token:', token ? token.substring(0, 20) + '...' : 'MISSING');
-      console.log('[PREFERENCES-FETCH] API_URL:', API_URL);
-      
       if (!token) {
-        console.log('[PREFERENCES-FETCH] ❌ No token - cannot fetch from API');
+        console.log('[PREFERENCES] No token available - using defaults');
         setLoading(false);
         return;
       }
       
       if (!userId) {
-        console.log('[PREFERENCES-FETCH] ❌ No userId - cannot fetch from API');
+        console.log('[PREFERENCES] No userId available - using defaults');
         setLoading(false);
         return;
       }
       
-      const headers = { 'Authorization': `Bearer ${token}` };
-      const prefUrl = `${API_URL}/user-profile/${userId}/preferences`;
+      console.log('[PREFERENCES-FETCH] Fetching for userId:', userId, 'with token:', !!token);
       
+      const headers = { 'Authorization': `Bearer ${token}` };
+
+      const prefUrl = `${API_URL}/user-profile/${userId}/preferences`;
       console.log('[PREFERENCES-FETCH] Fetching from:', prefUrl);
       const prefResponse = await fetchWithTokenRefresh(prefUrl, { headers });
       
-      console.log('[PREFERENCES-FETCH] Response status:', prefResponse.status);
-      
       if (!prefResponse.ok) {
-        console.error('[PREFERENCES-FETCH] ❌ API error:', prefResponse.status);
+        console.error('[PREFERENCES-FETCH] API returned status:', prefResponse.status);
         const errorText = await prefResponse.text();
         console.error('[PREFERENCES-FETCH] Error response:', errorText);
-        throw new Error(`HTTP ${prefResponse.status}`);
+        throw new Error(`Failed to fetch preferences: ${prefResponse.status}`);
       }
       
       const prefData = await prefResponse.json();
-      console.log('[PREFERENCES-FETCH] ✅ Data from API:', prefData);
-      
-      const newPreferences = {
+      console.log('[PREFERENCES-FETCH] Data from API:', prefData);
+      setPreferences({
         language: prefData.language || 'en-US',
         response_type: prefData.response_type || 'full',
         voice_enabled: prefData.voice_enabled !== false,
         voice_selected: prefData.voice_selected || 'sophia',
         oracle_language: prefData.oracle_language || 'en-US'
-      };
-      
-      setPreferences(newPreferences);
-      
-      // Cache in localStorage
-      localStorage.setItem(`userPreferences_${userId}`, JSON.stringify(newPreferences));
-      console.log('[PREFERENCES-FETCH] ✅ Cached preferences to localStorage');
+      });
 
       const personalResponse = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}`, { headers });
       if (personalResponse.ok) {
@@ -91,7 +64,7 @@ export const useFetchPreferences = (userId, token, API_URL) => {
         setPersonalInfo({ familiar_name: personalData.address_preference || 'Friend' });
       }
     } catch (err) {
-      console.error('[PREFERENCES-FETCH] ❌ Error:', err.message);
+      console.error('Error fetching data:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -99,7 +72,6 @@ export const useFetchPreferences = (userId, token, API_URL) => {
   };
 
   useEffect(() => {
-    console.log('[PREFERENCES-FETCH] useEffect triggered - userId changed or token changed');
     fetchData();
   }, [userId, token, API_URL]);
 
@@ -108,7 +80,6 @@ export const useFetchPreferences = (userId, token, API_URL) => {
 
 /**
  * Hook for saving user preferences to the server
- * FIXED: Better logging and localStorage backup
  */
 export const useSavePreferences = (API_URL, userId, token, changeLanguage) => {
   const [saving, setSaving] = useState(false);
@@ -121,20 +92,13 @@ export const useSavePreferences = (API_URL, userId, token, changeLanguage) => {
     setSuccess(false);
 
     try {
-      console.log('[PREFERENCES-SAVE] Starting save...');
       console.log('[PREFERENCES-SAVE] Saving preferences:', preferences);
-      console.log('[PREFERENCES-SAVE] userId:', userId);
-      console.log('[PREFERENCES-SAVE] token:', token ? token.substring(0, 20) + '...' : 'MISSING');
       
       // Update language in context if it changed (page UI language)
       if (preferences.language) {
-        console.log('[PREFERENCES-SAVE] Changing language to:', preferences.language);
         await changeLanguage(preferences.language);
       }
-
-      // Save to localStorage immediately as backup
-      localStorage.setItem(`userPreferences_${userId}`, JSON.stringify(preferences));
-      console.log('[PREFERENCES-SAVE] ✅ Saved to localStorage as backup');
+      // oracle_language is optional and independent of page language
 
       const response = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}/preferences`, {
         method: 'POST',
@@ -149,18 +113,17 @@ export const useSavePreferences = (API_URL, userId, token, changeLanguage) => {
 
       if (!response.ok) {
         const errData = await response.json();
-        console.error('[PREFERENCES-SAVE] ❌ API error:', errData);
+        console.error('[PREFERENCES-SAVE] API error:', errData);
         throw new Error(errData.error || 'Failed to save preferences');
       }
 
       const data = await response.json();
-      console.log('[PREFERENCES-SAVE] ✅ Response data:', data);
+      console.log('[PREFERENCES-SAVE] Response data:', data);
       setSuccess(true);
-      console.log('[PREFERENCES-SAVE] ✅ Preferences saved successfully!');
       
       return data.preferences;
     } catch (err) {
-      console.error('[PREFERENCES-SAVE] ❌ Exception:', err.message);
+      console.error('Error saving preferences:', err);
       setError(err.message);
       throw err;
     } finally {
