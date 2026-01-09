@@ -22,6 +22,9 @@ export function useLanguagePreference() {
   // Language is managed by TranslationContext and user can change it in Settings
   }, [authUserId, token]); // ✅ FIXED: Removed changeLanguage to prevent infinite loop
 
+  // Get auth info including isTemporaryAccount
+  const { isTemporaryAccount } = useAuth();
+
   // Save language change to DB
   const saveLanguagePreference = useCallback(async (newLanguage) => {
     // Always change locally first
@@ -43,6 +46,9 @@ export function useLanguagePreference() {
           },
           body: JSON.stringify({
             language: newLanguage,
+            // For temporary (free trial) users, set oracle_language = language
+            // For established users, oracle_language can be different (if saved separately)
+            oracle_language: isTemporaryAccount ? newLanguage : undefined,
             // Keep existing preferences
             response_type: 'full',
             voice_enabled: true
@@ -50,7 +56,7 @@ export function useLanguagePreference() {
         });
 
         if (response.ok) {
-          console.log(`[LANGUAGE] Language saved to DB: ${newLanguage}`);
+          console.log(`[LANGUAGE] Language saved to DB: ${newLanguage}${isTemporaryAccount ? ' (temp user - oracle_language also set)' : ''}`);
           return true;
         } else {
           console.warn('[LANGUAGE] Failed to save language preference to DB');
@@ -65,7 +71,7 @@ export function useLanguagePreference() {
     }
 
     return true;
-  }, [authUserId, token, changeLanguage]);
+  }, [authUserId, token, changeLanguage, isTemporaryAccount]);
 
   return {
     saveLanguagePreference,

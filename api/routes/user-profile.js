@@ -209,7 +209,7 @@ router.post("/:userId/preferences", authorizeUser, async (req, res) => {
     
     try {
         // 🌍 CRITICAL: If only timezone is provided, just update that field
-        if (timezone && !language && !response_type) {
+        if (timezone && !language && !response_type && !oracle_language) {
             console.log(`[PREFERENCES] ✓ Updating timezone only for user: ${timezone}`);
             await db.query(
                 `INSERT INTO user_preferences (user_id_hash, timezone)
@@ -220,6 +220,44 @@ router.post("/:userId/preferences", authorizeUser, async (req, res) => {
                 [userIdHash, timezone]
             );
             return res.json({ success: true, message: 'Timezone saved successfully', timezone });
+        }
+        
+        // 🌎 NEW: If timezone + language + oracle_language provided (temp user flow), update all three
+        if (timezone && language && oracle_language && response_type) {
+            console.log(`[PREFERENCES] ✓ Updating timezone, language, and oracle_language for temp user`);
+            console.log(`[PREFERENCES] language: ${language}, oracle_language: ${oracle_language}, timezone: ${timezone}`);
+            
+            // Validate language
+            if (!['en-US', 'en-GB', 'es-ES', 'es-MX', 'es-DO', 'fr-FR', 'fr-CA', 'de-DE', 'it-IT', 'pt-BR', 'ja-JP', 'zh-CN'].includes(language)) {
+                return res.status(400).json({ error: 'Invalid language: ' + language });
+            }
+            
+            // Validate response_type
+            if (!['full', 'brief'].includes(response_type)) {
+                return res.status(400).json({ error: 'Invalid response_type: ' + response_type });
+            }
+            
+            const validOracleLanguages = ['en-US', 'en-GB', 'es-ES', 'es-MX', 'es-DO', 'fr-FR', 'fr-CA'];
+            if (!validOracleLanguages.includes(oracle_language)) {
+                return res.status(400).json({ error: 'Invalid oracle_language: ' + oracle_language });
+            }
+            
+            const { rows } = await db.query(
+                `INSERT INTO user_preferences (user_id_hash, language, response_type, voice_enabled, timezone, oracle_language)
+                 VALUES ($1, $2, $3, $4, $5, $6)
+                 ON CONFLICT (user_id_hash) DO UPDATE SET
+                 language = EXCLUDED.language,
+                 response_type = EXCLUDED.response_type,
+                 voice_enabled = EXCLUDED.voice_enabled,
+                 timezone = EXCLUDED.timezone,
+                 oracle_language = EXCLUDED.oracle_language,
+                 updated_at = CURRENT_TIMESTAMP
+                 RETURNING language, response_type, voice_enabled, timezone, oracle_language`,
+                [userIdHash, language, response_type, voice_enabled !== false, timezone, oracle_language]
+            );
+            
+            console.log(`[PREFERENCES] ✓ Preferences updated:`, rows[0]);
+            return res.json({ success: true, preferences: rows[0] });
         }
         
         // Otherwise require language and response_type for full preference update

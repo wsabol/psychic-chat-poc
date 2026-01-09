@@ -1,6 +1,6 @@
 
-\mport { useState, useEffect, useRef } from 'react';
-\ YOU HAVE RUINED MY APPmport { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from '../context/TranslationContext';
 import { useSpeech } from '../hooks/useSpeech';
 import VoiceBar from '../components/VoiceBar';

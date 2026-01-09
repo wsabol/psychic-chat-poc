@@ -40,7 +40,7 @@ export default function ChatInputForm({
         disabled={loading || !inputMessage.trim() || disabled}
         className="btn-primary"
       >
-        {loading ? 'Sending...' : 'Send'}
+        {loading ? t('chat.sending') : t('chat.send')}
       </button>
     </form>
   );

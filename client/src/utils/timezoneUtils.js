@@ -38,15 +38,27 @@ export async function saveUserTimezone(userId, token, timezone = null) {
     
     console.log(`[TIMEZONE] Saving timezone for user: ${tz}`);
     
+    // For temp users, also send the language they selected on landing page
+    const tempUserLanguage = localStorage.getItem('temp_user_language');
+    const body = {
+      timezone: tz
+    };
+    
+    // If temp user selected a language, send it so oracle_language is set correctly
+    if (tempUserLanguage) {
+      body.language = tempUserLanguage;
+      body.oracle_language = tempUserLanguage;
+      body.response_type = 'full';  // Default to full for temp users
+      console.log(`[TIMEZONE] Including temp user language: ${tempUserLanguage} and oracle_language: ${tempUserLanguage}`);
+    }
+    
     const response = await fetch(`${API_URL}/user-profile/${userId}/preferences`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        timezone: tz
-      })
+      body: JSON.stringify(body)
     });
     
     if (!response.ok) {

@@ -6,6 +6,7 @@ import { createUserDatabaseRecords, getUserProfile } from './helpers/userCreatio
 import { recordLoginAttempt } from './helpers/accountLockout.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { encrypt } from '../../utils/encryption.js';
+import { getCurrentTermsVersion, getCurrentPrivacyVersion } from '../../shared/versionConfig.js';
 
 const router = Router();
 
@@ -38,14 +39,59 @@ router.post('/log-login-success', async (req, res) => {
       
       // Only create if doesn't exist - never overwrite saved preferences
       if (prefExists.rows.length === 0) {
+        const isTemporaryUser = email && email.startsWith('temp_');
+        const preferredLanguage = (isTemporaryUser && req.body?.temp_user_language) ? req.body.temp_user_language : 'en-US';
+        
         await db.query(
           `INSERT INTO user_preferences (user_id_hash, language, response_type, voice_enabled)
            VALUES ($1, $2, $3, $4)`,
-          [userIdHash, 'en-US', 'full', true]
+          [userIdHash, preferredLanguage, 'full', true]
         );
+        
+        if (isTemporaryUser && preferredLanguage !== 'en-US') {
+          logger.info(`[TEMP-ACCOUNT] Created preferences with language: ${preferredLanguage}`);
+        }
       }
     } catch (prefErr) {
       logger.warn('Failed to create default preferences:', prefErr.message);
+    }
+
+    // For TEMPORARY accounts, automatically set user_consents to avoid blocking consent modal
+    // Temp users have email starting with 'temp_' (free trial accounts)
+    if (email && email.startsWith('temp_')) {
+      try {
+        const userIdHash = hashUserId(userId);
+        const consentExists = await db.query(
+          'SELECT user_id_hash FROM user_consents WHERE user_id_hash = $1',
+          [userIdHash]
+        );
+        
+        // Only create if doesn't exist
+        if (consentExists.rows.length === 0) {
+          const termsVersion = getCurrentTermsVersion();
+          const privacyVersion = getCurrentPrivacyVersion();
+          logger.info(`[TEMP-ACCOUNT] Creating consent with versions - Terms: ${termsVersion}, Privacy: ${privacyVersion}`);
+          
+          await db.query(
+            `INSERT INTO user_consents (
+              user_id_hash,
+              terms_version,
+              terms_accepted,
+              terms_accepted_at,
+              privacy_version,
+              privacy_accepted,
+              privacy_accepted_at,
+              requires_consent_update,
+              created_at,
+              updated_at
+            ) VALUES ($1, $2, $3, NOW(), $4, $5, NOW(), false, NOW(), NOW())`,
+            [userIdHash, termsVersion, true, privacyVersion, true]
+          );
+          logger.info('[TEMP-ACCOUNT] Auto-created user_consents for temp user:', userId);
+        }
+      } catch (consentErr) {
+        logger.warn('[TEMP-ACCOUNT] Failed to create temp user consents:', consentErr.message);
+      }
     }
 
     // Log successful login - audit_log schema: user_id_hash, action, details, ip_address_encrypted, user_agent, created_at

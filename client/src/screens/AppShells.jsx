@@ -6,12 +6,14 @@ import { LandingScreenWrapper } from './LandingScreenWrapper';
 import { LoginScreenWrapper } from './LoginScreenWrapper';
 import { VerificationScreen } from './VerificationScreen';
 import TwoFAScreen from './TwoFAScreen';
+import { useTranslation } from '../context/TranslationContext';
 
 /**
  * AppShells - Renders early screens before chat
  * Handles: Loading, Login, Register, Verification, 2FA, ThankYou, Landing
  */
 export function AppShells({ state }) {
+  const { language } = useTranslation();
   const {
     isLoading,
     isThankyou,
@@ -92,6 +94,8 @@ export function AppShells({ state }) {
         <LandingScreenWrapper
           onTryFree={() => {
             authState.setHasLoggedOut(false);
+            // Save selected language to localStorage before creating temp account
+            localStorage.setItem('temp_user_language', language);
             handlers.handleTryFree();
           }}
           onCreateAccount={() => {
