@@ -334,7 +334,7 @@
 
 ## Table: user_preferences
 **Purpose:** User language, voice, and Oracle settings
-**Indexes:** user_id_hash, oracle_language
+**Indexes:** user_id_hash, oracle_language, voice_selected
 
 | Column | Type | Constraints | Purpose |
 |--------|------|-------------|---------|
@@ -343,7 +343,9 @@
 | language | VARCHAR(10) | DEFAULT 'en-US' | UI language preference |
 | response_type | VARCHAR(20) | DEFAULT 'full' | Response type (full/brief) |
 | voice_enabled | BOOLEAN | DEFAULT TRUE | Voice output enabled |
-| oracle_language | VARCHAR(10) | DEFAULT 'en-US' | Oracle response language |
+| voice_selected | VARCHAR(50) | DEFAULT 'sophia' | Selected voice name for TTS (e.g., sophia, maya, nova) |
+| oracle_language | VARCHAR(10) | DEFAULT 'en-US' | Oracle response language (regional variants: en-US, en-GB, es-MX, es-DO, fr-CA) |
+| timezone | VARCHAR(50) | DEFAULT 'UTC' | User timezone for display and notifications |
 | created_at | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Preference creation |
 | updated_at | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Last update |
 

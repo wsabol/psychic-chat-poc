@@ -1,19 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from '../context/TranslationContext';
 import { COUNTRIES } from '../data/countries';
-import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
-import { validateBirthDate } from '../utils/dateValidator';
 import { FormInput } from '../components/forms/FormInput';
 import { FormSelect } from '../components/forms/FormSelect';
 import { FormSection } from '../components/forms/FormSection';
-import { formatDateForDisplay, parseDateForStorage } from '../utils/dateFormatting';
+import { parseDateForStorage } from '../utils/dateFormatting';
 import {
   preparePersonalInfoData,
-  hasBirthLocationData,
   INITIAL_FORM_DATA,
   SEX_OPTIONS,
   TIMING
 } from '../utils/personalInfoUtils';
+import { validatePersonalInfoForm } from '../utils/validatePersonalInfoForm';
+import { usePersonalInfoAPI } from '../hooks/usePersonalInfoAPI';
+import { useTempAccountConfig } from '../hooks/useTempAccountConfig';
 import { useAstrologyPolling } from '../hooks/useAstrologyPolling';
 import '../styles/responsive.css';
 import './PersonalInfoPage.css';
@@ -31,66 +31,37 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
   const [success, setSuccess] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
 
-  // CONFIG
-  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+  // ============================================================
+  // CONFIG & HOOKS
+  // ============================================================
   const isTemporaryAccount = auth?.isTemporaryAccount;
+  const tempAccountConfig = useTempAccountConfig(isTemporaryAccount);
+  const { fetchPersonalInfo: apiFetchPersonalInfo, savePersonalInfo: apiSavePersonalInfo, triggerAstrologySync } = usePersonalInfoAPI(userId, token);
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
   // ============================================================
   // LIFECYCLE
   // ============================================================
   useEffect(() => {
-    fetchPersonalInfo();
+    loadPersonalInfo();
   }, [userId, token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ============================================================
-  // API CALLS
+  // API HANDLERS
   // ============================================================
-  const fetchPersonalInfo = async () => {
-    try {
-      const response = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}`, {
-        headers: { 'Authorization': token ? `Bearer ${token}` : '' }
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch personal info');
-
-      const data = await response.json();
-      if (data?.first_name) {
-        setFormData({
-          firstName: data.first_name || '',
-          lastName: data.last_name || '',
-          email: data.email || (isTemporaryAccount ? 'tempuser@example.com' : ''),
-          birthCountry: data.birth_country || '',
-          birthProvince: data.birth_province || '',
-          birthCity: data.birth_city || '',
-          birthDate: formatDateForDisplay(data.birth_date) || '',
-          birthTime: data.birth_time || '',
-          sex: data.sex || '',
-          addressPreference: data.address_preference || ''
-        });
-      } else if (isTemporaryAccount) {
-        setFormData((prev) => ({ ...prev, email: 'tempuser@example.com' }));
-      }
-    } catch (err) {
-      console.error('[PERSONAL-INFO] Error fetching data:', err);
-      if (isTemporaryAccount) {
-        setFormData((prev) => ({ ...prev, email: 'tempuser@example.com' }));
-      }
+  const loadPersonalInfo = async () => {
+    const result = await apiFetchPersonalInfo();
+    if (result.success) {
+      setFormData(result.data);
+    } else if (isTemporaryAccount) {
+      setFormData((prev) => ({ ...prev, email: 'tempuser@example.com' }));
     }
   };
 
-  const savePersonalInfo = async (dataToSend) => {
-    const response = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { 'Authorization': `Bearer ${token}` })
-      },
-      body: JSON.stringify(dataToSend)
-    });
-
-    if (!response.ok) {
-      const errData = await response.json();
-      throw new Error(errData.error || 'Failed to save personal information');
+  const handleSavePersonalInfo = async (dataToSend) => {
+    const result = await apiSavePersonalInfo(dataToSend);
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to save personal information');
     }
   };
 
@@ -127,25 +98,12 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
       const dataToSend = preparePersonalInfoData(formData, isTemporaryAccount, storageBirthDate);
 
       // Save personal info
-      await savePersonalInfo(dataToSend);
+      await handleSavePersonalInfo(dataToSend);
 
-      // Trigger astrology calculation for temp users with location data
-      if (isTemporaryAccount && hasBirthLocationData(formData)) {
+      // Trigger astrology calculation for temp users with complete location data
+      if (tempAccountConfig.hasCompleteAstrologyData(formData)) {
         console.log('[PERSONAL-INFO] Temp user with birth location - triggering sync-calculate');
-        try {
-          const astrResponse = await fetchWithTokenRefresh(
-            `${API_URL}/user-astrology/sync-calculate/${userId}`,
-            { method: 'POST', headers: { 'Authorization': token ? `Bearer ${token}` : '' } }
-          );
-
-          if (astrResponse.ok) {
-            console.log('[PERSONAL-INFO] ✓ Sync-calculate endpoint called');
-          } else {
-            console.warn('[PERSONAL-INFO] Sync-calculate returned:', astrResponse.status);
-          }
-        } catch (err) {
-          console.error('[PERSONAL-INFO] Sync-calculate error:', err);
-        }
+        await triggerAstrologySync();
       }
 
       setSuccess(true);
@@ -160,18 +118,19 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
       }
 
       // Navigate or show success
-      if (isTemporaryAccount && onNavigateToPage) {
+      const postSaveAction = tempAccountConfig.getPostSaveAction();
+      if (postSaveAction.shouldNavigate && onNavigateToPage) {
         // Poll for astrology completion before navigating
         await pollForAstrology(userId, token, API_URL, {
           maxAttempts: TIMING.ASTROLOGY_POLL_MAX_ATTEMPTS,
           intervalMs: TIMING.ASTROLOGY_POLL_INTERVAL_MS,
           onReady: () => {
             console.log('[PERSONAL-INFO] Astrology ready, navigating to horoscope');
-            onNavigateToPage(5);
+            onNavigateToPage(postSaveAction.navigationTarget);
           },
           onTimeout: () => {
             console.warn('[PERSONAL-INFO] Astrology timeout, navigating anyway');
-            onNavigateToPage(5);
+            onNavigateToPage(postSaveAction.navigationTarget);
           }
         });
       } else {
@@ -189,35 +148,8 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
   // VALIDATION
   // ============================================================
   const validateFields = () => {
-    const errors = {};
-
-    if (!isTemporaryAccount) {
-      if (!formData.firstName.trim()) {
-        errors.firstName = t('personalInfo.errors.missingRequired');
-      }
-      if (!formData.lastName.trim()) {
-        errors.lastName = t('personalInfo.errors.missingRequired');
-      }
-      if (!formData.sex) {
-        errors.sex = t('personalInfo.errors.missingRequired');
-      }
-    }
-
-    if (!formData.email.trim()) {
-      errors.email = t('personalInfo.errors.missingRequired');
-    }
-    if (!formData.birthDate) {
-      errors.birthDate = t('personalInfo.errors.invalidBirthDate');
-    } else {
-      const dateValidation = validateBirthDate(formData.birthDate);
-      if (!dateValidation.isValid) {
-        errors.birthDate = dateValidation.error;
-      } else if (!dateValidation.isAdult) {
-        errors.birthDate = dateValidation.error;
-      }
-    }
-
-    return errors;
+    const validation = validatePersonalInfoForm(formData, isTemporaryAccount, t);
+    return validation.errors;
   };
 
   // ============================================================
