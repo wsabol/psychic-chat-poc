@@ -21,6 +21,7 @@ import helpRoutes from "./routes/help.js";
 import analyticsRoutes from "./routes/analytics.js";
 import violationReportsRoutes from "./routes/violationReports.js";
 import userSettingsRoutes from "./routes/user-settings.js";
+import complianceDashboardRoutes from "./routes/admin/compliance-dashboard.js";
 import { authenticateToken } from "./middleware/auth.js";
 import { validateUserHash } from "./middleware/userHashValidation.js";
 import cors from "cors";
@@ -119,6 +120,9 @@ app.use("/analytics", analyticsRoutes);
 
 // Violation reports (admin only)
 app.use("/violations", authenticateToken, violationReportsRoutes);
+
+// Compliance dashboard (admin only)
+app.use("/admin", authenticateToken, complianceDashboardRoutes);
 
 // New user data endpoints (authentication only - no validateUserHash)
 // These don't have user IDs in the URL

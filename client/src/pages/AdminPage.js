@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../context/TranslationContext';
 import { getAuth } from 'firebase/auth';
 import ViolationReportTab from '../components/AdminTabs/ViolationReportTab';
+import { ComplianceDashboard } from '../components/admin/ComplianceDashboard';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -179,6 +180,11 @@ export default function AdminPage({ token, userId }) {
             label="🚨 Violation Reports"
             isActive={activeTab === 'violations'}
             onClick={() => setActiveTab('violations')}
+          />
+          <TabButton
+            label="✅ Compliance"
+            isActive={activeTab === 'compliance'}
+            onClick={() => setActiveTab('compliance')}
           />
         </div>
 
@@ -407,6 +413,11 @@ export default function AdminPage({ token, userId }) {
         {/* Violation Reports Tab */}
         {activeTab === 'violations' && (
           <ViolationReportTab token={token} />
+        )}
+
+        {/* Compliance Tab */}
+        {activeTab === 'compliance' && (
+          <ComplianceDashboard token={token} />
         )}
       </div>
     </div>
