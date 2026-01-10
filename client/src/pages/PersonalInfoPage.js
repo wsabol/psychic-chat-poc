@@ -200,7 +200,6 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
               required
               error={fieldErrors.email}
               placeholder="you@example.com"
-              hint={isTemporaryAccount ? t('personalInfo.title') : null}
             />
           </div>
         </FormSection>
@@ -216,6 +215,7 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
               required
               error={fieldErrors.birthDate}
               placeholder="dd-mmm-yyyy (e.g., 09-Feb-1956)"
+              hint={t('personalInfo.birthDateHint')}
             />
             <FormInput
               label={t('personalInfo.birthTime')}
@@ -224,6 +224,7 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
               value={formData.birthTime}
               onChange={handleChange}
               optional
+              hint={t('personalInfo.birthTimeHint')}
             />
           </div>
         </FormSection>
@@ -239,6 +240,7 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
               options={COUNTRIES}
               optional
               placeholder="-- Select Country --"
+              hint={t('personalInfo.birthCountryHint')}
             />
             <FormInput
               label={t('personalInfo.birthProvince')}
@@ -247,6 +249,7 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
               onChange={handleChange}
               optional
               placeholder="e.g., California"
+              hint={t('personalInfo.birthProvinceHint')}
             />
           </div>
           <FormInput
@@ -256,6 +259,7 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
             onChange={handleChange}
             optional
             placeholder="e.g., New York"
+            hint={t('personalInfo.birthCityHint')}
           />
         </FormSection>
 

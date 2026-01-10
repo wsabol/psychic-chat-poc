@@ -153,10 +153,15 @@
 }
 
 .form-hint {
-  margin: 0;
+  margin: var(--spacing-xs) 0 0 0;
+  padding: var(--spacing-xs) var(--spacing-sm);
   font-size: 0.85rem;
-  color: var(--color-text-light);
+  color: #555;
   font-style: italic;
+  background-color: #f5f5f5;
+  border-left: 3px solid #9370db;
+  border-radius: 2px;
+  line-height: 1.4;
 }
 
 /* ============================================
