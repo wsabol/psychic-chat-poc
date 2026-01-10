@@ -26,18 +26,25 @@
     "saved": "Saved",
     "error404": "Page not found"
   },
-  "menu": {
-    "home": "Home",
-    "chat": "Chat",
-    "horoscope": "Horoscope",
-    "moonPhase": "Moon Phase",
-    "cosmicWeather": "Cosmic Weather",
-    "mySign": "My Sign",
-    "settings": "Settings",
-    "billing": "Billing",
-    "security": "Security",
-    "help": "Help",
-    "logout": "Logout"
+      "menu": {
+    "title": "Oracle",
+    "myAccount": {
+      "title": "My Account",
+      "personalInfo": "Personal Information",
+      "preferences": "Preferences",
+      "security": "Security",
+      "settings": "Settings"
+    },
+    "astrology": {
+      "title": "Astrology",
+      "mySign": "My Sign",
+      "horoscope": "Horoscope",
+      "moonPhase": "Moon Phase",
+      "cosmicWeather": "Cosmic Weather"
+    },
+    "billing": {
+      "title": "Billing & Subscriptions"
+    }
   },
   "modals": {
     "confirmDelete": "Are you sure?",
@@ -63,6 +70,7 @@
     "playing": "Playing...",
     "paused": "Paused"
   },
+          
   "validation": {
     "passwordRequirements": "Password Requirements:",
     "requirement8Chars": "At least 8 characters",
