@@ -1,0 +1,9 @@
+{
+  "personalInfo": {
+    "birthDateHint": "Determines your astrological sign. May affect your chart and readings if inaccurate.",
+    "birthTimeHint": "May affect your chart and readings.",
+    "birthCountryHint": "Helps determine your birth timezone and location. May affect your astrological chart.",
+    "birthProvinceHint": "Refines your exact birth location and timezone. May impact your astrological chart.",
+    "birthCityHint": "Refines your exact birth location and timezone. May impact your astrological chart."
+  }
+}

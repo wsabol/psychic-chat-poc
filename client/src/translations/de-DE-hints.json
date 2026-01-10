@@ -1,0 +1,9 @@
+{
+  "personalInfo": {
+    "birthDateHint": "Bestimmt dein astrologisches Zeichen. Kann dein Horoskop und deine Lesungen beeinflussen, wenn es ungenau ist.",
+    "birthTimeHint": "Kann dein Horoskop und deine Lesungen beeinflussen.",
+    "birthCountryHint": "Hilft bei der Bestimmung deiner Zeitzone und deines Geburtsortes. Kann dein astrologisches Horoskop beeinflussen.",
+    "birthProvinceHint": "Verfeinert deinen genauen Geburtsort und deine Zeitzone. Kann dein astrologisches Horoskop beeinflussen.",
+    "birthCityHint": "Verfeinert deinen genauen Geburtsort und deine Zeitzone. Kann dein astrologisches Horoskop beeinflussen."
+  }
+}

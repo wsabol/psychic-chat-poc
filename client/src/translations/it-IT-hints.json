@@ -1,0 +1,9 @@
+{
+  "personalInfo": {
+    "birthDateHint": "Determina il tuo segno astrologico. Può influenzare il tuo tema natale e le letture se inesatto.",
+    "birthTimeHint": "Può influenzare il tuo tema natale e le letture.",
+    "birthCountryHint": "Aiuta a determinare il tuo fuso orario e il luogo di nascita. Può influenzare il tuo tema astrologico.",
+    "birthProvinceHint": "Affina il tuo esatto luogo di nascita e fuso orario. Può impattare il tuo tema astrologico.",
+    "birthCityHint": "Affina il tuo esatto luogo di nascita e fuso orario. Può impattare il tuo tema astrologico."
+  }
+}

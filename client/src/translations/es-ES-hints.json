@@ -1,0 +1,9 @@
+{
+  "personalInfo": {
+    "birthDateHint": "Determina tu signo astrológico. Puede afectar tu carta y lecturas si es inexacto.",
+    "birthTimeHint": "Puede afectar tu carta y lecturas.",
+    "birthCountryHint": "Ayuda a determinar tu zona horaria y ubicación de nacimiento. Puede afectar tu carta astrológica.",
+    "birthProvinceHint": "Refina tu ubicación exacta de nacimiento y zona horaria. Puede impactar tu carta astrológica.",
+    "birthCityHint": "Refina tu ubicación exacta de nacimiento y zona horaria. Puede impactar tu carta astrológica."
+  }
+}

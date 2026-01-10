@@ -1,0 +1,9 @@
+{
+  "personalInfo": {
+    "birthDateHint": "确定您的星座。如果不准确，可能会影响您的星盘和读数。",
+    "birthTimeHint": "可能会影响您的星盘和读数。",
+    "birthCountryHint": "帮助确定您的时区和出生地点。可能会影响您的占星图。",
+    "birthProvinceHint": "细化您的确切出生地和时区。可能会影响您的占星图。",
+    "birthCityHint": "细化您的确切出生地和时区。可能会影响您的占星图。"
+  }
+}
