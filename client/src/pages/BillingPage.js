@@ -31,9 +31,9 @@ export default function BillingPage({ userId, token, auth, onboarding, defaultTa
   return (
     <div className="page-safe-area billing-page">
       <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-        {/* Header */}
+                {/* Header */}
                 <div style={{ marginBottom: '2rem' }}>
-          <h1 style={{ marginTop: 0, marginBottom: '0.5rem' }}>💳 {t('billing.title')}</h1>
+          <h2 className="heading-primary">💳 {t('billing.title')}</h2>
           <p style={{ color: '#666', marginBottom: 0 }}>
             {t('billing.title')}
           </p>

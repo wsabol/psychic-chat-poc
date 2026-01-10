@@ -24,7 +24,8 @@
     "noData": "Sin datos disponibles",
     "saving": "Guardando...",
     "saved": "Guardado",
-    "error404": "Página no encontrada"
+        "error404": "Página no encontrada",
+    "disclaimer": "Esto es solo para entretenimiento e información"
   },
       "menu": {
     "title": "Oracle",
@@ -42,9 +43,12 @@
       "moonPhase": "Fase Lunar",
       "cosmicWeather": "Clima Cósmico"
     },
-    "billing": {
+        "billing": {
       "title": "Facturación y Suscripción"
-    }
+    },
+    "chat": "Chat",
+    "admin": "Admin",
+    "logout": "Cerrar Sesión"
   },
   "modals": {
     "confirmDelete": "¿Está seguro?",

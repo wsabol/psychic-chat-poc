@@ -1,6 +1,8 @@
 /**
  * NavDesktop - Desktop sidebar navigation
  */
+import { useTranslation } from '../../../context/TranslationContext';
+
 export function NavDesktop({
   pages,
   currentPageIndex,
@@ -12,12 +14,14 @@ export function NavDesktop({
   expandedSubmenu,
   setExpandedSubmenu
 }) {
+  const { t } = useTranslation();
+
   const isPageActive = (pageId) => {
     const index = pages.findIndex(p => p.id === pageId);
     return index === currentPageIndex;
   };
 
-    const handlePageClick = (pageId) => {
+  const handlePageClick = (pageId) => {
     console.log('[NAV-HANDLER] pageId:', pageId, 'isTemporaryAccount:', isTemporaryAccount);
     if (isTemporaryAccount) return;
     const index = pages.findIndex(p => p.id === pageId);
@@ -28,27 +32,31 @@ export function NavDesktop({
     }
   };
 
+  const getLabel = (item) => {
+    return t(item.labelKey) || item.label || item.labelKey;
+  };
+
   return (
     <nav className="nav-desktop-sidebar">
       <div className="nav-brand">
-        <h1>🔮 Oracle</h1>
+        <h1>🔮 {t('menu.title')}</h1>
       </div>
 
       <ul className="nav-menu" style={isTemporaryAccount ? { opacity: 0.5 } : {}}>
         {menuStructure.map((item) => (
           <li key={item.id}>
             {item.type === 'page' ? (
-                                          <button
+              <button
                 className={`nav-item ${isPageActive(item.pageId) ? 'active' : ''}`}
                 onClick={() => {
-                  console.log('[NAV-CLICK] Clicked:', item.label);
+                  console.log('[NAV-CLICK] Clicked:', getLabel(item));
                   handlePageClick(item.pageId);
                 }}
                 disabled={isTemporaryAccount}
                 style={isTemporaryAccount ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
               >
                 <span className="nav-icon">{item.icon}</span>
-                <span className="nav-label">{item.label}</span>
+                <span className="nav-label">{getLabel(item)}</span>
               </button>
             ) : (
               <>
@@ -58,7 +66,7 @@ export function NavDesktop({
                   style={isTemporaryAccount ? { opacity: 0.6 } : {}}
                 >
                   <span className="nav-icon">{item.icon}</span>
-                  <span className="nav-label">{item.label}</span>
+                  <span className="nav-label">{getLabel(item)}</span>
                   <span className="nav-arrow">{expandedSubmenu === item.id ? '▼' : '▶'}</span>
                 </button>
                 {expandedSubmenu === item.id && (
@@ -71,7 +79,7 @@ export function NavDesktop({
                           style={isTemporaryAccount ? { opacity: 0.6 } : {}}
                         >
                           <span className="nav-icon">{subitem.icon}</span>
-                          <span className="nav-label">{subitem.label}</span>
+                          <span className="nav-label">{getLabel(subitem)}</span>
                         </button>
                       </li>
                     ))}
@@ -89,7 +97,7 @@ export function NavDesktop({
           onClick={onLogout}
           aria-label="Log out"
         >
-          🚪 Log Out
+          🚪 {t('menu.logout')}
         </button>
         <p className="nav-version">v1.0</p>
       </div>

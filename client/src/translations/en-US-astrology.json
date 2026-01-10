@@ -142,6 +142,8 @@
     "uranus": "Uranus",
     "neptune": "Neptune",
     "pluto": "Pluto",
+    "sun": "Sun",
+    "moon": "Moon",
     "saturnuranus": "Saturn/Uranus"
   }
 }

@@ -1,6 +1,8 @@
 /**
  * NavMobile - Mobile header and menu
  */
+import { useTranslation } from '../../../context/TranslationContext';
+
 export function NavMobile({
   pages,
   currentPageIndex,
@@ -13,6 +15,8 @@ export function NavMobile({
   expandedSubmenu,
   setExpandedSubmenu
 }) {
+  const { t } = useTranslation();
+
   const isPageActive = (pageId) => {
     const index = pages.findIndex(p => p.id === pageId);
     return index === currentPageIndex;
@@ -28,6 +32,10 @@ export function NavMobile({
     }
   };
 
+  const getLabel = (item) => {
+    return t(item.labelKey) || item.label || item.labelKey;
+  };
+
   return (
     <>
       {/* Mobile Header */}
@@ -41,7 +49,7 @@ export function NavMobile({
           <span></span>
           <span></span>
         </button>
-        <h1 className="app-title">🔮 Oracle</h1>
+        <h1 className="app-title">🔮 {t('menu.title')}</h1>
         <div className="spacer"></div>
       </header>
 
@@ -54,7 +62,7 @@ export function NavMobile({
           />
           <nav className="nav-mobile-menu">
             <div className="nav-mobile-header-menu">
-              <h2>Menu</h2>
+              <h2>{t('menu.title')}</h2>
               <button
                 className="close-btn"
                 onClick={() => setMobileMenuOpen(false)}
@@ -74,7 +82,7 @@ export function NavMobile({
                       style={isTemporaryAccount ? { opacity: 0.6 } : {}}
                     >
                       <span className="nav-icon">{item.icon}</span>
-                      <span className="nav-label">{item.label}</span>
+                      <span className="nav-label">{getLabel(item)}</span>
                     </button>
                   ) : (
                     <>
@@ -83,7 +91,7 @@ export function NavMobile({
                         onClick={() => setExpandedSubmenu(expandedSubmenu === item.id ? null : item.id)}
                       >
                         <span className="nav-icon">{item.icon}</span>
-                        <span className="nav-label">{item.label}</span>
+                        <span className="nav-label">{getLabel(item)}</span>
                         <span className="nav-arrow">{expandedSubmenu === item.id ? '▼' : '▶'}</span>
                       </button>
                       {expandedSubmenu === item.id && (
@@ -96,7 +104,7 @@ export function NavMobile({
                                 style={isTemporaryAccount ? { opacity: 0.6 } : {}}
                               >
                                 <span className="nav-icon">{subitem.icon}</span>
-                                <span className="nav-label">{subitem.label}</span>
+                                <span className="nav-label">{getLabel(subitem)}</span>
                               </button>
                             </li>
                           ))}
@@ -118,7 +126,7 @@ export function NavMobile({
               }}
               aria-label="Log out"
             >
-              🚪 Log Out
+              🚪 {t('menu.logout')}
             </button>
           </nav>
         </>

@@ -1,49 +1,50 @@
 /**
  * Menu structure configuration
  * Defines all navigation items and submenus
+ * Labels are translation keys - will be translated by the component
  */
 export const menuStructure = [
   {
     id: 'chat',
-    label: 'Chat',
+    labelKey: 'menu.chat',
     icon: '💬',
     type: 'page',
     pageId: 'chat',
   },
   {
     id: 'accountManagement',
-    label: 'My Account',
+    labelKey: 'menu.myAccount.title',
     icon: '👤',
     type: 'category',
     submenu: [
-      { id: 'personalInfo', label: 'Personal Information', icon: '👤', pageId: 'personal' },
-      { id: 'preferences', label: 'Preferences', icon: '🎯', pageId: 'preferences' },
-      { id: 'security', label: 'Security', icon: '🔒', pageId: 'security' },
-      { id: 'settings', label: 'Settings', icon: '⚙️', pageId: 'settings' },
+      { id: 'personalInfo', labelKey: 'menu.myAccount.personalInfo', icon: '👤', pageId: 'personal' },
+      { id: 'preferences', labelKey: 'menu.myAccount.preferences', icon: '🎯', pageId: 'preferences' },
+      { id: 'security', labelKey: 'menu.myAccount.security', icon: '🔒', pageId: 'security' },
+      { id: 'settings', labelKey: 'menu.myAccount.settings', icon: '⚙️', pageId: 'settings' },
     ],
   },
   {
     id: 'billing',
-    label: 'Billing & Subscriptions',
+    labelKey: 'menu.billing.title',
     icon: '💳',
     type: 'page',
     pageId: 'billing',
   },
   {
     id: 'astrology',
-    label: 'Astrology',
+    labelKey: 'menu.astrology.title',
     icon: '✨',
     type: 'category',
     submenu: [
-      { id: 'mySign', label: 'My Sign', icon: '♈', pageId: 'sign' },
-      { id: 'horoscope', label: 'Horoscope', icon: '🔮', pageId: 'horoscope' },
-      { id: 'moonPhase', label: 'Moon Phase', icon: '🌙', pageId: 'moon' },
-      { id: 'cosmicWeather', label: 'Cosmic Weather', icon: '🌌', pageId: 'cosmic' },
+      { id: 'mySign', labelKey: 'menu.astrology.mySign', icon: '♈', pageId: 'sign' },
+      { id: 'horoscope', labelKey: 'menu.astrology.horoscope', icon: '🔮', pageId: 'horoscope' },
+      { id: 'moonPhase', labelKey: 'menu.astrology.moonPhase', icon: '🌙', pageId: 'moon' },
+      { id: 'cosmicWeather', labelKey: 'menu.astrology.cosmicWeather', icon: '🌌', pageId: 'cosmic' },
     ],
   },
   {
     id: 'admin',
-    label: 'Admin',
+    labelKey: 'menu.admin',
     icon: '⚡',
     type: 'page',
     pageId: 'admin',

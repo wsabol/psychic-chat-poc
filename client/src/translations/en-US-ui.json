@@ -24,10 +24,12 @@
     "noData": "No data available",
     "saving": "Saving...",
     "saved": "Saved",
-    "error404": "Page not found"
+    "error404": "Page not found",
+    "disclaimer": "This is for entertainment and informational purposes only"
   },
-      "menu": {
+  "menu": {
     "title": "Oracle",
+    "chat": "Chat",
     "myAccount": {
       "title": "My Account",
       "personalInfo": "Personal Information",
@@ -44,7 +46,9 @@
     },
     "billing": {
       "title": "Billing & Subscriptions"
-    }
+    },
+    "admin": "Admin",
+    "logout": "Log Out"
   },
   "modals": {
     "confirmDelete": "Are you sure?",
@@ -70,7 +74,6 @@
     "playing": "Playing...",
     "paused": "Paused"
   },
-          
   "validation": {
     "passwordRequirements": "Password Requirements:",
     "requirement8Chars": "At least 8 characters",

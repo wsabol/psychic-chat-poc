@@ -90,8 +90,8 @@ export default function SecurityPage({ userId, token, auth, onboarding, onNaviga
     <div className="page-safe-area" style={{ padding: '0.75rem' }}>
       <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
         {/* Header */}
-        <div style={{ marginBottom: '1rem' }}>
-          <h1 style={{ marginTop: 0, marginBottom: '0.25rem', fontSize: '24px' }}>🔐 {t('security.title')}</h1>
+              <div style={{ marginBottom: '1rem' }}>
+          <h2 className="heading-primary">🔐 {t('security.title')}</h2>
           <p style={{ color: '#666', marginBottom: 0, fontSize: '13px' }}>
             {t('security.title')}
           </p>
