@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from '../../context/TranslationContext';
 import { FAQViewer } from './FAQViewer';
-import './HelpChat.css';
+import { DocumentViewer } from './DocumentViewer';
+import { AboutViewer } from './AboutViewer';
+import './HelpChatWindow.css';
 
 /**
  * HelpChatWindow - Persistent help chat modal with FAQ access
@@ -16,12 +18,8 @@ export function HelpChatWindow({ isOpen, onClose, userId, token, apiUrl, current
   const [currentView, setCurrentView] = useState('chat'); // 'chat', 'faq', 'terms', 'privacy', 'about'
   const messagesEndRef = useRef(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const handleSendMessage = async (e) => {
@@ -260,92 +258,3 @@ export function HelpChatWindow({ isOpen, onClose, userId, token, apiUrl, current
   );
 }
 
-/**
- * DocumentViewer - Display Terms or Privacy documents
- */
-function DocumentViewer({ title, docType, onBack }) {
-  const [content, setContent] = React.useState('');
-  const [loading, setLoading] = React.useState(true);
-  const { t } = useTranslation();
-
-  React.useEffect(() => {
-    const fetchDocument = async () => {
-      try {
-        const fileName = docType === 'terms' ? 'TERMS_OF_SERVICE.md' : 'privacy.md';
-        const response = await fetch(`/${fileName}`);
-        const text = await response.text();
-        setContent(text);
-      } catch (err) {
-        console.error(`Error loading ${docType}:`, err);
-        setContent(`Failed to load ${docType} document.`);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchDocument();
-  }, [docType]);
-
-  return (
-    <div className="help-document-viewer">
-      <div className="help-document-header">
-        <h2>{title}</h2>
-        <button
-          onClick={onBack}
-          className="help-back-button"
-          title={t('help.controls.back')}
-        >
-          ← {t('help.controls.back')}
-        </button>
-      </div>
-      <div className="help-document-content">
-        {loading ? (
-          <p>Loading...</p>
-        ) : (
-          <div className="markdown-content">
-            {content.split('\n').map((line, idx) => {
-              if (line.startsWith('#')) {
-                const level = line.match(/^#+/)[0].length;
-                const text = line.replace(/^#+\s+/, '');
-                return React.createElement(`h${Math.min(level + 1, 6)}`, { key: idx }, text);
-              }
-              if (line.startsWith('-')) {
-                return <li key={idx}>{line.replace(/^-\s+/, '')}</li>;
-              }
-              if (line.trim() === '') {
-                return <br key={idx} />;
-              }
-              return <p key={idx}>{line}</p>;
-            })}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/**
- * AboutViewer - Display About page
- */
-function AboutViewer({ onBack }) {
-  const { t } = useTranslation();
-
-  return (
-    <div className="help-about-viewer">
-      <div className="help-about-header">
-        <h2>{t('help.about.title')}</h2>
-        <button
-          onClick={onBack}
-          className="help-back-button"
-          title={t('help.controls.back')}
-        >
-          ← {t('help.controls.back')}
-        </button>
-      </div>
-      <div className="help-about-content">
-        {t('help.about.content').split('\n').map((paragraph, idx) => (
-          <p key={idx}>{paragraph}</p>
-        ))}
-      </div>
-    </div>
-  );
-}

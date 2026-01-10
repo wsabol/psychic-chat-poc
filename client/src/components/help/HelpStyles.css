@@ -1,0 +1,162 @@
+/* Shared Help System Styles */
+
+:root {
+  --help-primary: #667eea;
+  --help-primary-dark: #764ba2;
+  --help-border: #e0e0e0;
+  --help-bg-light: #fafafa;
+  --help-text-dark: #333;
+  --help-text-light: #999;
+}
+
+/* Animations */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    height: 500px;
+  }
+  to {
+    height: auto;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Shared Container Styles */
+.help-dialog-container {
+  position: fixed;
+  bottom: 0;
+  right: 20px;
+  width: 380px;
+  max-height: 500px;
+  background: white;
+  border: 1px solid var(--help-border);
+  border-radius: 8px 8px 0 0;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  z-index: 9998;
+  animation: slideUp 0.3s ease-out;
+}
+
+/* Shared Header Styles */
+.help-dialog-header {
+  padding: 1rem;
+  background: linear-gradient(135deg, var(--help-primary) 0%, var(--help-primary-dark) 100%);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--help-border);
+  border-radius: 8px 8px 0 0;
+}
+
+.help-dialog-header h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Shared Button Styles */
+.help-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.2s;
+}
+
+.help-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.help-button.close:hover {
+  background: rgba(255, 0, 0, 0.3);
+}
+
+/* Shared Back Button */
+.help-back-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.help-back-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Shared Content Styles */
+.help-content-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--help-text-dark);
+  background: var(--help-bg-light);
+}
+
+/* Scrollbar Styles (reusable) */
+.help-content-area::-webkit-scrollbar {
+  width: 6px;
+}
+
+.help-content-area::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.help-content-area::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.help-content-area::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .help-dialog-container {
+    width: 100%;
+    right: 0;
+    left: 0;
+    max-height: 60vh;
+  }
+}

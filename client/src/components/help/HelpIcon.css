@@ -1,0 +1,41 @@
+/* Help Icon (Question Mark Button) */
+
+.help-icon {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+  transition: transform 0.2s, box-shadow 0.2s;
+  z-index: 9997;
+  padding: 0;
+  line-height: 1;
+}
+
+.help-icon:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.6);
+}
+
+.help-icon:active {
+  transform: scale(0.95);
+}
+
+/* When chat is open, hide the icon */
+.help-icon.hidden {
+  display: none;
+}
+
+.help-chat-open .help-icon {
+  display: none;
+}

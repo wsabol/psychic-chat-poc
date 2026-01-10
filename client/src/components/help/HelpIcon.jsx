@@ -1,5 +1,5 @@
 import React from 'react';
-import './HelpChat.css';
+import './HelpIcon.css';
 
 /**
  * HelpIcon - Fixed question mark button
