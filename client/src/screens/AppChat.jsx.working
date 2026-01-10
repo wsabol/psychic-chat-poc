@@ -42,7 +42,6 @@ export function AppChat({ state }) {
   const [showConsentModal, setShowConsentModal] = React.useState(false);
   const [consentLoading, setConsentLoading] = React.useState(true);
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(false);
-  const [wasOnboarding, setWasOnboarding] = useState(false);
 
   // Fetch actual consent status from database
   useEffect(() => {
@@ -93,24 +92,10 @@ export function AppChat({ state }) {
 
   const isUserOnboarding = onboarding.onboardingStatus?.isOnboarding === true;
 
-  // Detect when onboarding COMPLETES (transitions from true to false)
+  // Force re-render when onboarding status changes
   useEffect(() => {
-    console.log('[APPCHAT] Onboarding status updated:', isUserOnboarding, 'wasOnboarding:', wasOnboarding);
-    
-    // If was onboarding and now NOT onboarding = onboarding just completed
-    if (wasOnboarding && !isUserOnboarding) {
-      console.log('[APPCHAT] *** ONBOARDING COMPLETED - SHOWING WELCOME MESSAGE ***');
-      setShowWelcomeMessage(true);
-    }
-    
-    // Track state for next render
-    setWasOnboarding(isUserOnboarding);
-  }, [isUserOnboarding, wasOnboarding]);
-
-  // Debug: Track welcome message state
-  useEffect(() => {
-    console.log('[APPCHAT] showWelcomeMessage state changed to:', showWelcomeMessage);
-  }, [showWelcomeMessage]);
+    console.log('[APPCHAT] Onboarding status updated:', isUserOnboarding);
+  }, [isUserOnboarding]);
 
   // Handle consent accepted
   const handleConsentAccepted = () => {
@@ -118,6 +103,20 @@ export function AppChat({ state }) {
     setShowConsentModal(false);
     // User will be redirected or updated by AuthContext
     window.location.reload();
+  };
+
+  // Handle onboarding close - show welcome message
+  const handleOnboardingCloseWithWelcome = async () => {
+    console.log('[APPCHAT] Onboarding closed, showing welcome message');
+    setShowWelcomeMessage(true);
+    // Still mark onboarding as complete
+    if (onboarding.updateOnboardingStep) {
+      try {
+        await onboarding.updateOnboardingStep('subscription');
+      } catch (err) {
+        console.warn('[APPCHAT] Failed to update onboarding step:', err);
+      }
+    }
   };
 
   // Handle welcome message close
@@ -182,7 +181,7 @@ export function AppChat({ state }) {
   // Show chat with optional onboarding modal and welcome message
   if (isChat) {
     const shouldShowModal = !authState.isTemporaryAccount && onboarding.onboardingStatus?.isOnboarding === true;
-    console.log('[APPCHAT-RENDER]', { shouldShowModal, showWelcomeMessage, isOnboarding: onboarding.onboardingStatus?.isOnboarding });
+    console.log('[APPCHAT-RENDER] shouldShowModal:', shouldShowModal, 'isTemporaryAccount:', authState.isTemporaryAccount, 'isOnboarding:', onboarding.onboardingStatus?.isOnboarding);
     return (
       <ErrorBoundary>
         {shouldShowModal && (
@@ -190,7 +189,7 @@ export function AppChat({ state }) {
             currentStep={onboarding.onboardingStatus.currentStep}
             completedSteps={onboarding.onboardingStatus.completedSteps}
             onNavigateToStep={handleOnboardingNavigate}
-            onClose={handleOnboardingClose}
+            onClose={handleOnboardingCloseWithWelcome}
             isMinimized={onboarding.isMinimized}
             onToggleMinimize={onboarding.setIsMinimized}
             isDragging={onboarding.isDragging}

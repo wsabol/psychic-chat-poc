@@ -1,0 +1,186 @@
+/* Welcome Message Modal - Popup Style */
+
+.welcome-message-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.welcome-message-overlay.fade-in {
+  opacity: 1;
+}
+
+.welcome-message-modal {
+  background: linear-gradient(135deg, #f5f3ff 0%, #fffbf7 100%);
+  border-radius: 16px;
+  padding: 2.5rem;
+  max-width: 450px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 12px 48px rgba(147, 112, 219, 0.3), 0 0 20px rgba(147, 112, 219, 0.15);
+  border: 2px solid rgba(147, 112, 219, 0.2);
+  animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.welcome-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.welcome-header h2 {
+  margin: 0;
+  color: #6b5b95;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.welcome-content {
+  margin-bottom: 2rem;
+}
+
+.welcome-greeting {
+  text-align: center;
+  font-size: 1.1rem;
+  color: #7c3aed;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  line-height: 1.5;
+}
+
+.welcome-paragraph {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #374151;
+  margin: 0.75rem 0;
+  text-align: justify;
+}
+
+.welcome-paragraph:last-of-type {
+  margin-bottom: 1rem;
+}
+
+.welcome-timer {
+  text-align: center;
+  font-size: 0.85rem;
+  color: #9370db;
+  margin-top: 1.25rem;
+  padding: 0.75rem;
+  background-color: rgba(147, 112, 219, 0.1);
+  border-radius: 8px;
+  font-style: italic;
+}
+
+.welcome-footer {
+  display: flex;
+  gap: 1rem;
+  flex-direction: column;
+}
+
+.welcome-btn {
+  padding: 0.85rem 1.5rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  letter-spacing: 0.3px;
+}
+
+.welcome-btn-primary {
+  background: linear-gradient(135deg, #9370db 0%, #7c3aed 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(147, 112, 219, 0.4);
+}
+
+.welcome-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(147, 112, 219, 0.5);
+}
+
+.welcome-btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(147, 112, 219, 0.3);
+}
+
+.welcome-btn-secondary {
+  background-color: white;
+  color: #6b5b95;
+  border: 2px solid #9370db;
+}
+
+.welcome-btn-secondary:hover {
+  background-color: #f5f3ff;
+  border-color: #7c3aed;
+}
+
+.welcome-btn-secondary:active {
+  background-color: #ede9fe;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .welcome-message-modal {
+    max-width: 95%;
+    padding: 1.75rem;
+  }
+
+  .welcome-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .welcome-paragraph {
+    font-size: 0.9rem;
+    text-align: left;
+  }
+
+  .welcome-btn {
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+  }
+
+  .welcome-footer {
+    flex-direction: column;
+  }
+}
+
+/* Scrollbar styling for the modal */
+.welcome-message-modal::-webkit-scrollbar {
+  width: 6px;
+}
+
+.welcome-message-modal::-webkit-scrollbar-track {
+  background: rgba(147, 112, 219, 0.1);
+  border-radius: 3px;
+}
+
+.welcome-message-modal::-webkit-scrollbar-thumb {
+  background: rgba(147, 112, 219, 0.3);
+  border-radius: 3px;
+}
+
+.welcome-message-modal::-webkit-scrollbar-thumb:hover {
+  background: rgba(147, 112, 219, 0.5);
+}

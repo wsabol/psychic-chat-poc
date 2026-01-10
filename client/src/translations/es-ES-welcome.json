@@ -1,0 +1,12 @@
+{
+  "welcome": {
+    "title": "Bienvenido a Starship Psychics",
+    "personalized": "¡Bienvenido a Starship Psychics, {{name}}!",
+    "paragraph1": "Gracias por convertirse en parte de una creciente comunidad de espiritualistas. Nos honra tener su tiempo en nuestro sitio y esperamos genuinamente que disfrute su visita.",
+    "paragraph2": "Le invitamos a visitar Mi Cuenta/Preferencias para mejorar su experiencia con el oráculo. También podría desear visitar Mi Cuenta/Configuración y Seguridad.",
+    "paragraph3": "El oráculo espera con ansias su conversación. Los de Starship Psychics.",
+    "autoNavigate": "Navegando al chat en {{seconds}} segundos...",
+    "goToChat": "✨ Ir al Chat",
+    "exploreFirst": "📖 Explorar Primero"
+  }
+}
