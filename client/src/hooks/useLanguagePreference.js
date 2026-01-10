@@ -39,9 +39,9 @@ export function useLanguagePreference() {
         const data = await response.json();
         console.log('[LANGUAGE-PREF] Fetched from DB:', data);
 
-        // Apply the language from database
-        if (data.language && data.language !== language) {
-          console.log('[LANGUAGE-PREF] Changing language from', language, 'to', data.language);
+        // Apply the language from database (only on initial load)
+        if (data.language) {
+          console.log('[LANGUAGE-PREF] Applying language from DB:', data.language);
           await changeLanguage(data.language);
         }
       } catch (err) {
@@ -51,7 +51,7 @@ export function useLanguagePreference() {
     };
 
     fetchAndApplyPreferences();
-  }, [authUserId, token, changeLanguage, language]);
+  }, [authUserId, token, changeLanguage]);
 
   /**
    * Save language preference with all other preferences preserved
