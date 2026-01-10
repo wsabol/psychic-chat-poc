@@ -88,6 +88,46 @@
     "enhanceReading": "✨ Mejorar Su Lectura",
     "birthInfoPrompt": "Como su oráculo, puedo mejorar su lectura con astrología. Si lo desea, por favor introduzca su fecha de nacimiento, y la hora y lugar de nacimiento opcionales.",
     "enterBirthInfo": "Sí, Introduzca Mi Información de Nacimiento",
-    "clickExitToContinue": "Haga clic en salir para continuar"
+        "clickExitToContinue": "Haga clic en salir para continuar"
+  },
+  "modal": {
+    "title": "🚀 Progreso del Onboarding",
+    "subtitle": "Complete los pasos requeridos para acceder a la aplicación",
+    "subtitleComplete": "✨ ¡Pasos requeridos completados!",
+    "steps": {
+      "createAccount": {
+        "title": "Crear Cuenta",
+        "description": "Cuenta creada"
+      },
+      "paymentMethod": {
+        "title": "Método de Pago",
+        "description": "Agregar método de pago"
+      },
+      "subscription": {
+        "title": "Suscripción",
+        "description": "Comprar suscripción"
+      },
+      "personalInfo": {
+        "title": "Conocernos",
+        "description": "Información personal"
+      }
+    },
+    "badges": {
+      "required": "Requerido",
+      "optional": "Opcional"
+    },
+    "tooltips": {
+      "disabled": "Complete primero los pasos anteriores",
+      "goToStep": "Ir a {{stepTitle}}",
+      "dragMove": "Arrastra para mover, haz clic para expandir"
+    },
+    "buttons": {
+      "minimize": "Minimizar",
+      "close": "Cerrar e ir al Chat"
+    },
+    "footer": {
+      "incomplete": "Complete todos los pasos para comenzar a usar la aplicación",
+      "complete": "✨ ¡Onboarding completado! Disfruta la aplicación"
+    }
   }
 }

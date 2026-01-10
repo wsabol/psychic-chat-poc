@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from '../context/TranslationContext';
 import './OnboardingModal.css';
 
 /**
@@ -23,6 +24,7 @@ export default function OnboardingModal({
   position,
   onStartDrag
 }) {
+  const { t } = useTranslation();
   const [fadeIn, setFadeIn] = useState(false);
 
   useEffect(() => {
@@ -33,27 +35,27 @@ export default function OnboardingModal({
     {
       id: 'create_account',
       number: 1,
-      title: 'Create Account',
+      title: t('modal.steps.createAccount.title'),
       icon: '👤',
-      description: 'Account created',
+      description: t('modal.steps.createAccount.description'),
       required: true,
       complete: true, // Always complete for showing users
     },
     {
       id: 'payment_method',
       number: 2,
-      title: 'Payment Method',
+      title: t('modal.steps.paymentMethod.title'),
       icon: '💳',
-      description: 'Add payment method',
+      description: t('modal.steps.paymentMethod.description'),
       required: true,
       complete: completedSteps?.payment_method || false,
     },
     {
       id: 'subscription',
       number: 3,
-      title: 'Subscription',
+      title: t('modal.steps.subscription.title'),
       icon: '🎯',
-      description: 'Purchase subscription',
+      description: t('modal.steps.subscription.description'),
       required: true,
       complete: completedSteps?.subscription || false,
       disabled: !completedSteps?.payment_method, // Disabled until payment method added
@@ -61,9 +63,9 @@ export default function OnboardingModal({
     {
       id: 'personal_info',
       number: 4,
-      title: 'Get Acquainted',
+      title: t('modal.steps.personalInfo.title'),
       icon: '🌟',
-      description: 'Personal information',
+      description: t('modal.steps.personalInfo.description'),
       required: true,
       complete: completedSteps?.personal_info || false,
       disabled: !completedSteps?.subscription,
@@ -81,10 +83,10 @@ export default function OnboardingModal({
           cursor: isDragging ? 'grabbing' : 'grab',
         }}
         onMouseDown={onStartDrag}
-        title="Drag to move, click to expand"
+        title={t('modal.tooltips.dragMove')}
       >
         <button onClick={onToggleMinimize} className="minimized-button">
-          ⬆️ Onboarding
+          ⬆️ {t('modal.buttons.minimize')}
         </button>
       </div>
     );
@@ -104,16 +106,16 @@ export default function OnboardingModal({
       {/* Header with drag handle and minimize */}
       <div className="onboarding-header" onMouseDown={onStartDrag}>
         <div className="onboarding-title-section">
-          <h3>🚀 Onboarding Progress</h3>
+          <h3>{t('modal.title')}</h3>
           <p className="onboarding-subtitle">
-            {allRequiredComplete ? '✨ Required steps complete!' : 'Complete required steps to access the app'}
+            {allRequiredComplete ? t('modal.subtitleComplete') : t('modal.subtitle')}
           </p>
         </div>
         <div className="onboarding-controls">
           <button 
             className="onboarding-minimize"
             onClick={() => onToggleMinimize(true)}
-            title="Minimize"
+            title={t('modal.buttons.minimize')}
             type="button"
           >
             −
@@ -122,7 +124,7 @@ export default function OnboardingModal({
             <button 
               className="onboarding-close"
               onClick={onClose}
-              title="Close and go to Chat"
+              title={t('modal.buttons.close')}
               type="button"
             >
               ✕
@@ -139,7 +141,7 @@ export default function OnboardingModal({
             className={`onboarding-step ${step.complete ? 'complete' : ''} ${step.disabled ? 'disabled' : ''} ${step.required ? 'required' : 'optional'}`}
             onClick={() => !step.disabled && onNavigateToStep(step.id)}
             disabled={step.disabled}
-            title={step.disabled ? 'Complete previous steps first' : `Go to ${step.title}`}
+            title={step.disabled ? t('modal.tooltips.disabled') : t('modal.tooltips.goToStep', { stepTitle: step.title })}
             type="button"
           >
             <div className="step-icon">{step.icon}</div>
@@ -147,8 +149,8 @@ export default function OnboardingModal({
               <div className="step-title">{step.title}</div>
               <div className="step-desc">{step.description}</div>
               <div className="step-badges">
-                {step.required && <span className="step-required">Required</span>}
-                {!step.required && <span className="step-optional">Optional</span>}
+                {step.required && <span className="step-required">{t('modal.badges.required')}</span>}
+                {!step.required && <span className="step-optional">{t('modal.badges.optional')}</span>}
                 {step.complete && <span className="step-check">✓</span>}
               </div>
             </div>
@@ -159,10 +161,10 @@ export default function OnboardingModal({
       {/* Footer message */}
       <div className="onboarding-footer">
         {!allRequiredComplete && (
-          <p>Complete all steps to start using the app</p>
+          <p>{t('modal.footer.incomplete')}</p>
         )}
         {allRequiredComplete && (
-          <p>✨ Onboarding complete! Enjoy the app</p>
+          <p>{t('modal.footer.complete')}</p>
         )}
       </div>
     </div>

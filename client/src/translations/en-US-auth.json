@@ -93,5 +93,45 @@
     "birthInfoPrompt": "As your oracle, I can enhance your reading with astrology. If you would like, please enter your birth date, and optional time and place of birth.",
     "enterBirthInfo": "Yes, Enter My Birth Info",
     "clickExitToContinue": "Click exit to continue"
+  },
+  "modal": {
+    "title": "🚀 Onboarding Progress",
+    "subtitle": "Complete required steps to access the app",
+    "subtitleComplete": "✨ Required steps complete!",
+    "steps": {
+      "createAccount": {
+        "title": "Create Account",
+        "description": "Account created"
+      },
+      "paymentMethod": {
+        "title": "Payment Method",
+        "description": "Add payment method"
+      },
+      "subscription": {
+        "title": "Subscription",
+        "description": "Purchase subscription"
+      },
+      "personalInfo": {
+        "title": "Get Acquainted",
+        "description": "Personal information"
+      }
+    },
+    "badges": {
+      "required": "Required",
+      "optional": "Optional"
+    },
+    "tooltips": {
+      "disabled": "Complete previous steps first",
+      "goToStep": "Go to {{stepTitle}}",
+      "dragMove": "Drag to move, click to expand"
+    },
+    "buttons": {
+      "minimize": "Minimize",
+      "close": "Close and go to Chat"
+    },
+    "footer": {
+      "incomplete": "Complete all steps to start using the app",
+      "complete": "✨ Onboarding complete! Enjoy the app"
+    }
   }
 }

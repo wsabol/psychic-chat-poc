@@ -1,1 +1,137 @@
-{"login": {"title": "Accedi", "email": "Email", "password": "Password", "confirmPassword": "Conferma Password", "rememberMe": "Ricordami", "forgotPassword": "Password dimenticata?", "noAccount": "Non hai un account?", "createOne": "Creane uno qui", "signIn": "Accedi", "signingIn": "Accesso in corso...", "signUp": "Registrati", "creatingAccount": "Creazione account...", "or": "oppure", "googleSignIn": "Accedi con Google", "pageTitle": "Accedi", "createAccountTitle": "Crea account", "resetPasswordTitle": "Reimposta password", "dontHaveAccount": "Non hai un account?", "register": "Registrati", "backToLogin": "Torna al login", "forgotPasswordMessage": "Flusso di ripristino della password prossimamente", "passwordsDontMatch": "Le password non corrispondono", "passwordTooShort": "La password deve avere almeno 6 caratteri", "acceptTermsAndPrivacy": "Devi accettare i Termini di Servizio e l'Informativa sulla Privacy per creare un account", "accountCreated": "Account creato! Controlla la tua email.", "agreeTerms": "Accetto i Termini di Servizio", "agreePrivacy": "Accetto l'Informativa sulla Privacy", "errors": {"invalidEmail": "Inserisci un indirizzo email valido", "passwordMismatch": "Le password non corrispondono", "passwordTooShort": "La password deve avere almeno 8 caratteri", "accountExists": "Esiste già un account con questa email", "invalidCredentials": "Email o password non validi", "userNotFound": "Utente non trovato"}}, "verification": {"title": "Verifica la Tua Email", "message": "Abbiamo inviato un codice di verifica a {{email}}. Inseriscilo qui sotto.", "enterCode": "Inserisci il codice di verifica", "code": "Codice", "verify": "Verifica", "resendCode": "Invia di nuovo il codice", "resendSent": "Codice di verifica inviato", "checkInbox": "Controlla la tua email e la cartella spam", "errors": {"invalidCode": "Codice di verifica non valido", "expiredCode": "Il codice di verifica è scaduto", "tooManyAttempts": "Troppi tentativi. Riprova più tardi."}}, "twoFactor": {"title": "Autenticazione a Due Fattori", "message": "Inserisci il codice inviato a {{method}}", "enterCode": "Inserisci il codice di verifica", "verify": "Verifica", "resend": "Invia di Nuovo il Codice", "errors": {"invalidCode": "Codice non valido", "expired": "Il codice è scaduto", "tooManyAttempts": "Troppi tentativi. Riprova più tardi."}}, "passwords": {"title": "Cambia Password", "current": "Password Attuale", "new": "Nuova Password", "confirm": "Conferma Password", "change": "Cambia Password", "requirements": "La password deve avere almeno 8 caratteri", "errors": {"currentIncorrect": "La password attuale è errata", "mismatch": "Le nuove password non corrispondono"}}, "onboarding": {"welcome": "Benvenuto su Oracle Chat Psichico!", "step1": "Informazioni Personali", "step2": "Tema Natale", "step3": "Metodo di Pagamento", "step4": "Abbonamento", "step5": "Preferenze", "complete": "Configurazione Completata", "skip": "Salta per ora", "continue": "Continua", "enhanceReading": "✨ Migliora la Tua Lettura", "birthInfoPrompt": "Come tuo Oracolo, posso migliorare la tua lettura con l'astrologia. Se lo desideri, inserisci la tua data di nascita e opzionalmente l'ora e il luogo di nascita.", "enterBirthInfo": "Sì, Inserisci le Mie Informazioni di Nascita", "clickExitToContinue": "Clicca su Esci per continuare"}}
+{
+  "login": {
+    "title": "Accedi",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Conferma Password",
+    "rememberMe": "Ricordami",
+    "forgotPassword": "Password dimenticata?",
+    "noAccount": "Non hai un account?",
+    "createOne": "Creane uno qui",
+    "signIn": "Accedi",
+    "signingIn": "Accesso in corso...",
+    "signUp": "Registrati",
+    "creatingAccount": "Creazione account...",
+    "or": "oppure",
+    "googleSignIn": "Accedi con Google",
+    "pageTitle": "Accedi",
+    "createAccountTitle": "Crea account",
+    "resetPasswordTitle": "Reimposta password",
+    "dontHaveAccount": "Non hai un account?",
+    "register": "Registrati",
+    "backToLogin": "Torna al login",
+    "forgotPasswordMessage": "Flusso di ripristino della password prossimamente",
+    "passwordsDontMatch": "Le password non corrispondono",
+    "passwordTooShort": "La password deve avere almeno 6 caratteri",
+    "acceptTermsAndPrivacy": "Devi accettare i Termini di Servizio e l'Informativa sulla Privacy per creare un account",
+    "accountCreated": "Account creato! Controlla la tua email.",
+    "agreeTerms": "Accetto i Termini di Servizio",
+    "agreePrivacy": "Accetto l'Informativa sulla Privacy",
+    "errors": {
+      "invalidEmail": "Inserisci un indirizzo email valido",
+      "passwordMismatch": "Le password non corrispondono",
+      "passwordTooShort": "La password deve avere almeno 8 caratteri",
+      "accountExists": "Esiste già un account con questa email",
+      "invalidCredentials": "Email o password non validi",
+      "userNotFound": "Utente non trovato"
+    }
+  },
+  "verification": {
+    "title": "Verifica la Tua Email",
+    "message": "Abbiamo inviato un codice di verifica a {{email}}. Inseriscilo qui sotto.",
+    "enterCode": "Inserisci il codice di verifica",
+    "code": "Codice",
+    "verify": "Verifica",
+    "resendCode": "Invia di nuovo il codice",
+    "resendSent": "Codice di verifica inviato",
+    "checkInbox": "Controlla la tua email e la cartella spam",
+    "errors": {
+      "invalidCode": "Codice di verifica non valido",
+      "expiredCode": "Il codice di verifica è scaduto",
+      "tooManyAttempts": "Troppi tentativi. Riprova più tardi."
+    },
+    "actions": {
+      "signOut": "Esci",
+      "failed": "Verifica fallita"
+    }
+  },
+  "twoFactor": {
+    "title": "Autenticazione a Due Fattori",
+    "message": "Inserisci il codice inviato a {{method}}",
+    "enterCode": "Inserisci il codice di verifica",
+    "verify": "Verifica",
+    "resend": "Invia di Nuovo il Codice",
+    "errors": {
+      "invalidCode": "Codice non valido",
+      "expired": "Il codice è scaduto",
+      "tooManyAttempts": "Troppi tentativi. Riprova più tardi."
+    }
+  },
+  "passwords": {
+    "title": "Cambia Password",
+    "current": "Password Attuale",
+    "new": "Nuova Password",
+    "confirm": "Conferma Password",
+    "change": "Cambia Password",
+    "requirements": "La password deve avere almeno 8 caratteri",
+    "errors": {
+      "currentIncorrect": "La password attuale è errata",
+      "mismatch": "Le nuove password non corrispondono"
+    }
+  },
+  "onboarding": {
+    "welcome": "Benvenuto su Oracle Chat Psichico!",
+    "step1": "Informazioni Personali",
+    "step2": "Tema Natale",
+    "step3": "Metodo di Pagamento",
+    "step4": "Abbonamento",
+    "step5": "Preferenze",
+    "complete": "Configurazione Completata",
+    "skip": "Salta per ora",
+    "continue": "Continua",
+    "enhanceReading": "✨ Migliora la Tua Lettura",
+    "birthInfoPrompt": "Come tuo Oracolo, posso migliorare la tua lettura con l'astrologia. Se lo desideri, inserisci la tua data di nascita e opzionalmente l'ora e il luogo di nascita.",
+    "enterBirthInfo": "Sì, Inserisci le Mie Informazioni di Nascita",
+    "clickExitToContinue": "Clicca su Esci per continuare"
+  },
+  "modal": {
+    "title": "🚀 Progresso dell'Onboarding",
+    "subtitle": "Completa i passaggi richiesti per accedere all'app",
+    "subtitleComplete": "✨ Passaggi richiesti completati!",
+    "steps": {
+      "createAccount": {
+        "title": "Crea Account",
+        "description": "Account creato"
+      },
+      "paymentMethod": {
+        "title": "Metodo di Pagamento",
+        "description": "Aggiungi metodo di pagamento"
+      },
+      "subscription": {
+        "title": "Abbonamento",
+        "description": "Acquista abbonamento"
+      },
+      "personalInfo": {
+        "title": "Conosciamoci",
+        "description": "Informazioni personali"
+      }
+    },
+    "badges": {
+      "required": "Richiesto",
+      "optional": "Facoltativo"
+    },
+    "tooltips": {
+      "disabled": "Completa prima i passaggi precedenti",
+      "goToStep": "Vai a {{stepTitle}}",
+      "dragMove": "Trascina per spostare, fai clic per espandere"
+    },
+    "buttons": {
+      "minimize": "Riduci a icona",
+      "close": "Chiudi e vai a Chat"
+    },
+    "footer": {
+      "incomplete": "Completa tutti i passaggi per iniziare a utilizzare l'app",
+      "complete": "✨ Onboarding completato! Goditi l'app"
+    }
+  }
+}

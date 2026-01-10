@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from '../../../context/TranslationContext';
 import { fetchWithTokenRefresh } from '../../../utils/fetchWithTokenRefresh';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
@@ -17,6 +18,7 @@ export default function SubscriptionConfirmationModal({
   onCancel,
   token,
 }) {
+  const { t } = useTranslation();
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState(null);
 
@@ -34,7 +36,7 @@ export default function SubscriptionConfirmationModal({
       const subId = subscription.subscriptionId || subscription.id;
       
       if (!subId) {
-        setError('Subscription ID is missing');
+        setError(t('subscriptions.subscriptionIdMissing'));
         setConfirming(false);
         return;
       }
@@ -54,7 +56,7 @@ export default function SubscriptionConfirmationModal({
 
       if (!finalizeResponse.ok) {
         const errorData = await finalizeResponse.json();
-        setError(errorData.error || 'Failed to finalize subscription');
+        setError(errorData.error || t('subscriptions.failedToFinalizeSubscription'));
         setConfirming(false);
         return;
       }
@@ -86,7 +88,7 @@ export default function SubscriptionConfirmationModal({
       const finalSubId = subscription.subscriptionId || subscription.id;
       onSuccess({ status: 'succeeded', id: finalSubId });
     } catch (err) {
-      setError(err.message || 'Failed to complete subscription');
+      setError(err.message || t('subscriptions.failedToCompleteSubscription'));
       setConfirming(false);
     }
   };
@@ -94,13 +96,13 @@ export default function SubscriptionConfirmationModal({
   return (
     <div className="modal-overlay">
       <div className="modal-content">
-        <h3>Complete Your Subscription</h3>
+        <h3>{t('subscriptions.completeYourSubscription')}</h3>
         
         <div className="modal-description">
           {amount === 0 ? (
-            <p>Your subscription is ready to start. You will be charged at the end of your first billing period on {subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toLocaleDateString() : 'the scheduled date'}.</p>
+            <p>{t('subscriptions.subscriptionReadyToStart')} {subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toLocaleDateString() : t('subscriptions.theScheduledDate')}.</p>
           ) : (
-            <p>Your subscription is ready. Please click below to finalize and complete the setup.</p>
+            <p>{t('subscriptions.subscriptionReady')}</p>
           )}
         </div>
 
@@ -108,15 +110,15 @@ export default function SubscriptionConfirmationModal({
 
         <div className="subscription-summary">
           <div className="summary-row">
-            <span>Amount Due:</span>
+            <span>{t('subscriptions.amountDue')}</span>
             <strong>{(amount / 100).toFixed(2)} {currency}</strong>
           </div>
           <div className="summary-row">
-            <span>Status:</span>
-            <strong className="status-warning">Incomplete</strong>
+            <span>{t('subscriptions.status')}</span>
+            <strong className="status-warning">{t('subscriptions.statusIncomplete')}</strong>
           </div>
           <div className="summary-row">
-            <span>Subscription ID:</span>
+            <span>{t('subscriptions.subscriptionId')}</span>
             <code>{subscription.subscriptionId || subscription.id}</code>
           </div>
         </div>
@@ -128,7 +130,7 @@ export default function SubscriptionConfirmationModal({
               className="btn-primary" 
               disabled={confirming}
             >
-              {confirming ? 'Completing Subscription...' : 'Complete Subscription'}
+              {confirming ? t('subscriptions.completingSubscription') : t('subscriptions.completeSubscription')}
             </button>
             <button 
               type="button" 
@@ -136,13 +138,13 @@ export default function SubscriptionConfirmationModal({
               onClick={onCancel}
               disabled={confirming}
             >
-              Cancel
+              {t('paymentMethods.cancel')}
             </button>
           </div>
         </form>
 
         <div className="modal-info">
-          <p>💳 Your saved payment method will be charged for this subscription.</p>
+          <p>{t('subscriptions.savedPaymentWillBeCharged')}</p>
         </div>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from '../../../context/TranslationContext';
 import { useStripe } from '../hooks/useStripe';
 
 /**
@@ -13,6 +14,7 @@ export default function CardPaymentForm({
   cardElementRef,
   stripeRef, // Now receives the Stripe instance
 }) {
+  const { t } = useTranslation();
   const stripe = useStripe();
   const elementsRef = useRef(null);
   const [elementError, setElementError] = useState(null);
@@ -34,7 +36,7 @@ export default function CardPaymentForm({
       try {
         const cardElementContainer = document.getElementById('card-element');
         if (!cardElementContainer) {
-          setElementError('Card element container not found');
+          setElementError(t('paymentMethods.containerNotFound'));
           return;
         }
 
@@ -73,7 +75,7 @@ export default function CardPaymentForm({
           }
         });
       } catch (err) {
-        setElementError('Failed to initialize card form: ' + err.message);
+        setElementError(t('paymentMethods.failedToInitialize') + ': ' + err.message);
       }
     }, 100);
 
@@ -94,12 +96,12 @@ export default function CardPaymentForm({
     e.preventDefault();
     
     if (elementError) {
-      setElementError('Please fix card errors before submitting');
+      setElementError(t('paymentMethods.fixCardErrors'));
       return;
     }
 
     if (!ready || !cardElementRef.current) {
-      setElementError('Card element is not ready');
+      setElementError(t('paymentMethods.cardElementNotReady'));
       return;
     }
 
@@ -109,11 +111,11 @@ export default function CardPaymentForm({
 
   return (
     <form onSubmit={handleFormSubmit} className="form payment-form">
-      <h4>Card Information</h4>
+      <h4>{t('paymentMethods.cardInformation')}</h4>
 
       <div className="form-row">
         <div className="form-group full-width">
-          <label>Cardholder Name *</label>
+          <label>{t('paymentMethods.cardholderName')} *</label>
           <input
             type="text"
             name="cardholderName"
@@ -128,19 +130,19 @@ export default function CardPaymentForm({
 
       <div className="form-row">
         <div className="form-group full-width">
-          <label>Card Details *</label>
+          <label>{t('paymentMethods.cardDetails')} *</label>
           <div id="card-element" className="stripe-card-element"></div>
           {elementError && <div className="element-error">{elementError}</div>}
-          {!ready && <div className="element-loading">Loading card form...</div>}
-          <small>Test: 4242 4242 4242 4242, Expires: 11/28, CVC: 546</small>
+          {!ready && <div className="element-loading">{t('paymentMethods.loadingCardForm')}</div>}
+          <small>{t('paymentMethods.testCardInfo')}</small>
         </div>
       </div>
 
-      <h4 style={{ marginTop: '20px' }}>Billing Address</h4>
+      <h4 style={{ marginTop: '20px' }}>{t('paymentMethods.billingAddress')}</h4>
 
       <div className="form-row">
         <div className="form-group full-width">
-          <label>Street Address</label>
+          <label>{t('paymentMethods.streetAddress')}</label>
           <input
             type="text"
             name="billingAddress"
@@ -154,7 +156,7 @@ export default function CardPaymentForm({
 
       <div className="form-row">
         <div className="form-group">
-          <label>City</label>
+          <label>{t('paymentMethods.city')}</label>
           <input
             type="text"
             name="billingCity"
@@ -165,7 +167,7 @@ export default function CardPaymentForm({
           />
         </div>
         <div className="form-group">
-          <label>State</label>
+          <label>{t('paymentMethods.state')}</label>
           <input
             type="text"
             name="billingState"
@@ -177,7 +179,7 @@ export default function CardPaymentForm({
           />
         </div>
         <div className="form-group">
-          <label>ZIP Code</label>
+          <label>{t('paymentMethods.zipCode')}</label>
           <input
             type="text"
             name="billingZip"
@@ -191,7 +193,7 @@ export default function CardPaymentForm({
 
       <div className="form-actions">
         <button type="submit" className="btn-primary" disabled={loading || !ready || elementError}>
-          {loading ? 'Processing...' : 'Add Card'}
+          {loading ? t('paymentMethods.processing') : t('paymentMethods.addCard')}
         </button>
         <button
           type="button"
@@ -199,7 +201,7 @@ export default function CardPaymentForm({
           onClick={onCancel}
           disabled={loading}
         >
-          Cancel
+          {t('paymentMethods.cancel')}
         </button>
       </div>
     </form>

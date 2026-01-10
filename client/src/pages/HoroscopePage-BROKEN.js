@@ -18,7 +18,21 @@ import './HoroscopePage.css';
 
 /**
  * HoroscopePage - Displays daily/weekly horoscopes with voice support
- * FIXED: Prevents infinite re-render loop by only loading on mount + range change
+ * 
+ * Features:
+ * - Fetches existing or generates new horoscopes
+ * - Polls for generation status
+ * - Voice-to-speech playback
+ * - Brief/full text toggle
+ * - Sun sign detailed info
+ * - Birth chart display (sun/moon/rising)
+ * 
+ * Refactored: Extracted logic into hooks and sub-components
+ * - useHoroscopePreferences: Manages user preferences
+ * - useHoroscopeFetch: Handles all horoscope fetching/generation/polling
+ * - ExitButton: Temporary account exit
+ * - SunSignInfo: Sun sign details
+ * - HoroscopeTextSection: Text + voice controls
  */
 export default function HoroscopePage({ userId, token, auth, onExit, onNavigateToPage }) {
   const { t, language } = useTranslation();
@@ -28,37 +42,29 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
   
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
   
-  // Refs to prevent duplicate loads
-  const initLoadDoneRef = useRef(false);
-  const prevRangeRef = useRef('daily');
-  
   // Hooks
   const { speak, stop, pause, resume, isPlaying, isPaused, isLoading: isSpeechLoading, error: speechError, isSupported, volume, setVolume } = useSpeech();
   const { showingBrief, setShowingBrief, voiceEnabled } = useHoroscopePreferences(userId, token, API_URL);
   const { horoscopeState, complianceStatus, setComplianceStatus, loadHoroscope, stopPolling } = useHoroscopeFetch(userId, token, API_URL, horoscopeRange);
   const { astroInfo, fetchAstroInfo } = useAstroInfo(userId, token);
 
-  // Fetch astro info on mount only
+  // Fetch astro info on mount
   useEffect(() => {
     if (!astroInfo) fetchAstroInfo();
-  }, []);
+  }, [userId, token, astroInfo, fetchAstroInfo]);
 
-  // ✅ CRITICAL FIX: Load horoscope only on mount and when range changes
-  // Do NOT include loadHoroscope in deps - it changes on every render
+      // Load horoscope when range changes - use ref to prevent duplicate calls
+  const hasLoadedRef = useRef(false);
   useEffect(() => {
-    // First mount: load initial horoscope
-    if (!initLoadDoneRef.current) {
-      initLoadDoneRef.current = true;
+    const shouldLoad = !horoscopeState.loading && !horoscopeState.data && !hasLoadedRef.current;
+    if (shouldLoad) {
+      hasLoadedRef.current = true;
       loadHoroscope();
-      return;
+    } else if (horoscopeRange !== 'daily' && !horoscopeState.loading) {
+      // Reset ref when range changes to allow new load
+      hasLoadedRef.current = false;
     }
-    
-    // Range changed: reload
-    if (horoscopeRange !== prevRangeRef.current) {
-      prevRangeRef.current = horoscopeRange;
-      loadHoroscope();
-    }
-  }, [horoscopeRange]); // Only depend on horoscopeRange!
+  }, [horoscopeRange, horoscopeState.loading, horoscopeState.data, loadHoroscope]);
 
   // Cleanup on unmount
   useEffect(() => {

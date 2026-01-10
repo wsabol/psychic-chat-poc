@@ -51,7 +51,7 @@ async function generateDailyMysticalUpdates() {
         
         // Get all authenticated users (exclude temporary accounts)
         const { rows: users } = await db.query(
-            `SELECT id FROM auth.users WHERE created_at > NOW() - INTERVAL '1 year'`
+            `SELECT user_id as id FROM user_personal_info WHERE created_at > NOW() - INTERVAL '1 year' AND user_id NOT LIKE 'temp_%'`
         );
         
         if (users.length === 0) {
