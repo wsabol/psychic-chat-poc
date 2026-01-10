@@ -1,0 +1,61 @@
+{
+  "help": {
+    "window": {
+      "titleExpanded": "❓ Ajuda & Perguntas",
+      "titleMinimized": "❓ Ajuda",
+      "buttons": {
+        "faq": "Perguntas Frequentes",
+        "terms": "Termos",
+        "privacy": "Privacidade",
+        "about": "Sobre"
+      }
+    },
+    "chat": {
+      "placeholder": "Faça uma pergunta...",
+      "send": "Enviar",
+      "welcome": {
+        "greeting": "👋 Bem-vindo ao Chat de Ajuda!",
+        "description": "Faça-me qualquer pergunta sobre como usar o aplicativo. Estou aqui para ajudar!",
+        "examples": "💡 Você pode fazer perguntas como:",
+        "exampleList": [
+          "Como atualizo meu método de pagamento?",
+          "Como ativo a autenticação de dois fatores?",
+          "Onde posso encontrar meu mapa astral?"
+        ],
+        "faqHint": "👉 Clique no botão Perguntas Frequentes acima para encontrar respostas instantâneas!"
+      },
+      "messages": {
+        "thinking": "Pensando...",
+        "error": "Desculpe, tive problemas ao processar sua pergunta. Por favor, tente novamente."
+      }
+    },
+    "faq": {
+      "title": "📚 Perguntas Frequentes",
+      "search": "Pesquisar Perguntas Frequentes...",
+      "searchHint": "Pesquisar Perguntas Frequentes... (por exemplo, 'pagamento', '2FA', 'horóscopo')",
+      "noResults": "Nenhum resultado encontrado para \"{search}\"",
+      "noResultsHint": "Tente palavras-chave diferentes ou navegue por todas as categorias",
+      "browseAll": "Todas",
+      "footer": "Não encontra o que está procurando? Use o Chat de Ajuda para fazer uma pergunta!"
+    },
+    "terms": {
+      "title": "📋 Termos de Serviço",
+      "label": "Termos de Serviço"
+    },
+    "privacy": {
+      "title": "🔒 Política de Privacidade",
+      "label": "Política de Privacidade"
+    },
+    "about": {
+      "title": "ℹ️ Sobre Psychic Chat",
+      "label": "Sobre",
+      "content": "Psychic Chat é um aplicativo de bem-estar espiritual que combina a sabedoria astrológica antiga com a tecnologia de IA moderna para fornecer insights cósmicos personalizados. Nossa missão é ajudá-lo a explorar seu destino cósmico através de mapas astrais, horóscopos diários, fases lunares e orientação intuitiva.\n\nSeja procurando clareza sobre relacionamentos, decisões de carreira ou crescimento pessoal, nosso oráculo movido por IA oferece perspectivas reflexivas enraizadas em tradições astrológicas.\n\nPara perguntas, entre em contato com support@psychicchat.com ou use o recurso de Chat de Ajuda."
+    },
+    "controls": {
+      "minimize": "Minimizar",
+      "expand": "Expandir",
+      "close": "Fechar",
+      "back": "Voltar"
+    }
+  }
+}

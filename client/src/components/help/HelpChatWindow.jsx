@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from '../../context/TranslationContext';
 import { FAQViewer } from './FAQViewer';
 import './HelpChat.css';
 
@@ -7,11 +8,12 @@ import './HelpChat.css';
  * Shows conversation history and takes user questions
  */
 export function HelpChatWindow({ isOpen, onClose, userId, token, apiUrl, currentPage, onMinimize }) {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [showFAQ, setShowFAQ] = useState(false);
+  const [currentView, setCurrentView] = useState('chat'); // 'chat', 'faq', 'terms', 'privacy', 'about'
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -61,7 +63,7 @@ export function HelpChatWindow({ isOpen, onClose, userId, token, apiUrl, current
       } else {
         const errorMessage = {
           role: 'assistant',
-          content: 'Sorry, I had trouble processing your question. Please try again.'
+          content: t('help.chat.messages.error')
         };
         setMessages(prev => [...prev, errorMessage]);
       }
@@ -69,7 +71,7 @@ export function HelpChatWindow({ isOpen, onClose, userId, token, apiUrl, current
       console.error('[HELP-CHAT] Error:', err);
       const errorMessage = {
         role: 'assistant',
-        content: 'Sorry, I had trouble processing your question. Please try again.'
+        content: t('help.chat.messages.error')
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
@@ -91,13 +93,50 @@ export function HelpChatWindow({ isOpen, onClose, userId, token, apiUrl, current
     setMessages([]);
     setInputValue('');
     setIsMinimized(false);
-    setShowFAQ(false);
+    setCurrentView('chat');
     onClose();
   };
 
+  const handleViewChange = (view) => {
+    setCurrentView(view);
+  };
+
   // Show FAQ instead of chat
-  if (showFAQ) {
-    return <FAQViewer onClose={() => setShowFAQ(false)} />;
+  if (currentView === 'faq') {
+    return (
+      <FAQViewer onClose={() => setCurrentView('chat')} onViewChange={handleViewChange} />
+    );
+  }
+
+  // Show Terms
+  if (currentView === 'terms') {
+    return (
+      <DocumentViewer
+        title={t('help.terms.title')}
+        docType="terms"
+        onBack={() => setCurrentView('chat')}
+      />
+    );
+  }
+
+  // Show Privacy
+  if (currentView === 'privacy') {
+    return (
+      <DocumentViewer
+        title={t('help.privacy.title')}
+        docType="privacy"
+        onBack={() => setCurrentView('chat')}
+      />
+    );
+  }
+
+  // Show About
+  if (currentView === 'about') {
+    return (
+      <AboutViewer
+        onBack={() => setCurrentView('chat')}
+      />
+    );
   }
 
   if (!isOpen) return null;
@@ -107,27 +146,48 @@ export function HelpChatWindow({ isOpen, onClose, userId, token, apiUrl, current
       {/* Header */}
       <div className="help-chat-header">
         <div className="help-chat-title">
-          {isMinimized ? '❓ Help' : '❓ Help & Questions'}
+          {isMinimized ? t('help.window.titleMinimized') : t('help.window.titleExpanded')}
         </div>
         <div className="help-chat-controls">
           <button
-            onClick={() => setShowFAQ(true)}
+            onClick={() => handleViewChange('faq')}
             className="help-chat-button faq-btn"
-            title="View FAQ"
+            title={t('help.window.buttons.faq')}
           >
             📚
           </button>
           <button
+            onClick={() => handleViewChange('terms')}
+            className="help-chat-button terms-btn"
+            title={t('help.window.buttons.terms')}
+          >
+            📋
+          </button>
+          <button
+            onClick={() => handleViewChange('privacy')}
+            className="help-chat-button privacy-btn"
+            title={t('help.window.buttons.privacy')}
+          >
+            🔒
+          </button>
+          <button
+            onClick={() => handleViewChange('about')}
+            className="help-chat-button about-btn"
+            title={t('help.window.buttons.about')}
+          >
+            ℹ️
+          </button>
+          <button
             onClick={isMinimized ? handleExpand : handleMinimize}
             className="help-chat-button minimize"
-            title={isMinimized ? 'Expand' : 'Minimize'}
+            title={isMinimized ? t('help.controls.expand') : t('help.controls.minimize')}
           >
             {isMinimized ? '▲' : '▼'}
           </button>
           <button
             onClick={handleClose}
             className="help-chat-button close"
-            title="Close"
+            title={t('help.controls.close')}
           >
             ✕
           </button>
@@ -141,19 +201,17 @@ export function HelpChatWindow({ isOpen, onClose, userId, token, apiUrl, current
           <div className="help-chat-messages">
             {messages.length === 0 && (
               <div className="help-chat-welcome">
-                <p>👋 Welcome to the Help Chat!</p>
-                <p>Ask me any questions about how to use the app. I'm here to help!</p>
+                <p>{t('help.chat.welcome.greeting')}</p>
+                <p>{t('help.chat.welcome.description')}</p>
                 <p style={{ fontSize: '11px', color: '#999', marginTop: '1rem' }}>
-                  💡 You can ask things like:
+                  {t('help.chat.welcome.examples')}
                   <br />
-                  • How do I update my payment method?
-                  <br />
-                  • How do I enable 2FA?
-                  <br />
-                  • Where can I find my birth chart?
+                  {t('help.chat.welcome.exampleList').map((example, idx) => (
+                    <span key={idx}>• {example}<br /></span>
+                  ))}
                 </p>
                 <p style={{ fontSize: '11px', color: '#667eea', marginTop: '1rem', fontWeight: '600' }}>
-                  👉 Click the 📚 button above to browse the FAQ for instant answers!
+                  {t('help.chat.welcome.faqHint')}
                 </p>
               </div>
             )}
@@ -170,7 +228,7 @@ export function HelpChatWindow({ isOpen, onClose, userId, token, apiUrl, current
             {loading && (
               <div className="help-chat-message assistant">
                 <div className="help-chat-message-content">
-                  <span className="help-chat-loading">Thinking...</span>
+                  <span className="help-chat-loading">{t('help.chat.messages.thinking')}</span>
                 </div>
               </div>
             )}
@@ -182,7 +240,7 @@ export function HelpChatWindow({ isOpen, onClose, userId, token, apiUrl, current
             <input
               type="text"
               className="help-chat-input"
-              placeholder="Ask a question..."
+              placeholder={t('help.chat.placeholder')}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               disabled={loading}
@@ -191,13 +249,103 @@ export function HelpChatWindow({ isOpen, onClose, userId, token, apiUrl, current
               type="submit"
               className="help-chat-send-button"
               disabled={loading || !inputValue.trim()}
-              title="Send"
+              title={t('help.chat.send')}
             >
-              Send
+              {t('help.chat.send')}
             </button>
           </form>
         </>
       )}
+    </div>
+  );
+}
+
+/**
+ * DocumentViewer - Display Terms or Privacy documents
+ */
+function DocumentViewer({ title, docType, onBack }) {
+  const [content, setContent] = React.useState('');
+  const [loading, setLoading] = React.useState(true);
+  const { t } = useTranslation();
+
+  React.useEffect(() => {
+    const fetchDocument = async () => {
+      try {
+        const fileName = docType === 'terms' ? 'TERMS_OF_SERVICE.md' : 'privacy.md';
+        const response = await fetch(`/${fileName}`);
+        const text = await response.text();
+        setContent(text);
+      } catch (err) {
+        console.error(`Error loading ${docType}:`, err);
+        setContent(`Failed to load ${docType} document.`);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDocument();
+  }, [docType]);
+
+  return (
+    <div className="help-document-viewer">
+      <div className="help-document-header">
+        <h2>{title}</h2>
+        <button
+          onClick={onBack}
+          className="help-back-button"
+          title={t('help.controls.back')}
+        >
+          ← {t('help.controls.back')}
+        </button>
+      </div>
+      <div className="help-document-content">
+        {loading ? (
+          <p>Loading...</p>
+        ) : (
+          <div className="markdown-content">
+            {content.split('\n').map((line, idx) => {
+              if (line.startsWith('#')) {
+                const level = line.match(/^#+/)[0].length;
+                const text = line.replace(/^#+\s+/, '');
+                return React.createElement(`h${Math.min(level + 1, 6)}`, { key: idx }, text);
+              }
+              if (line.startsWith('-')) {
+                return <li key={idx}>{line.replace(/^-\s+/, '')}</li>;
+              }
+              if (line.trim() === '') {
+                return <br key={idx} />;
+              }
+              return <p key={idx}>{line}</p>;
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * AboutViewer - Display About page
+ */
+function AboutViewer({ onBack }) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="help-about-viewer">
+      <div className="help-about-header">
+        <h2>{t('help.about.title')}</h2>
+        <button
+          onClick={onBack}
+          className="help-back-button"
+          title={t('help.controls.back')}
+        >
+          ← {t('help.controls.back')}
+        </button>
+      </div>
+      <div className="help-about-content">
+        {t('help.about.content').split('\n').map((paragraph, idx) => (
+          <p key={idx}>{paragraph}</p>
+        ))}
+      </div>
     </div>
   );
 }

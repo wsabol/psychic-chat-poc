@@ -1,0 +1,61 @@
+{
+  "help": {
+    "window": {
+      "titleExpanded": "❓ 帮助 & 问题",
+      "titleMinimized": "❓ 帮助",
+      "buttons": {
+        "faq": "常见问题",
+        "terms": "服务条款",
+        "privacy": "隐私",
+        "about": "关于"
+      }
+    },
+    "chat": {
+      "placeholder": "提出一个问题...",
+      "send": "发送",
+      "welcome": {
+        "greeting": "👋 欢迎来到帮助聊天!",
+        "description": "问我任何关于如何使用该应用程序的问题。我在这里帮助你!",
+        "examples": "💡 你可以问这样的问题:",
+        "exampleList": [
+          "我如何更新我的支付方法?",
+          "我如何启用双因素认证?",
+          "我在哪里可以找到我的出生图表?"
+        ],
+        "faqHint": "👉 点击上面的常见问题按钮，立即找到答案!"
+      },
+      "messages": {
+        "thinking": "思考中...",
+        "error": "抱歉，我在处理您的问题时遇到了困难。请重试。"
+      }
+    },
+    "faq": {
+      "title": "📚 常见问题",
+      "search": "搜索常见问题...",
+      "searchHint": "搜索常见问题... (例如，'支付', '2FA', '星座')",
+      "noResults": "未找到\"{search}\"的结果",
+      "noResultsHint": "尝试使用不同的关键词或浏览所有类别",
+      "browseAll": "所有",
+      "footer": "找不到您要找的内容? 使用帮助聊天提出问题!"
+    },
+    "terms": {
+      "title": "📋 服务条款",
+      "label": "服务条款"
+    },
+    "privacy": {
+      "title": "🔒 隐私政策",
+      "label": "隐私政策"
+    },
+    "about": {
+      "title": "ℹ️ 关于Psychic Chat",
+      "label": "关于",
+      "content": "Psychic Chat是一个精神健康应用程序，将古老的占星术智慧与现代人工智能技术相结合，提供个性化的宇宙洞察。我们的使命是帮助您通过出生图表、每日星座运势、月相和直观指导来探索您的宇宙命运。\n\n无论您是在寻求关于人际关系、职业决策还是个人成长的清晰答案，我们的AI驱动的神谕都提供了植根于占星术传统的深思熟虑的观点。\n\n有问题，请联系support@psychicchat.com或使用帮助聊天功能。"
+    },
+    "controls": {
+      "minimize": "最小化",
+      "expand": "展开",
+      "close": "关闭",
+      "back": "返回"
+    }
+  }
+}

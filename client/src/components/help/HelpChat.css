@@ -300,3 +300,188 @@
 .help-chat-open .help-icon {
   display: none;
 }
+
+/* Document Viewer (Terms/Privacy) */
+.help-document-viewer {
+  position: fixed;
+  bottom: 0;
+  right: 20px;
+  width: 380px;
+  max-height: 500px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px 8px 0 0;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  z-index: 9998;
+  animation: slideUp 0.3s ease-out;
+}
+
+.help-document-header {
+  padding: 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e0e0e0;
+  border-radius: 8px 8px 0 0;
+}
+
+.help-document-header h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.help-back-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.help-back-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.help-document-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #333;
+  background: #fafafa;
+}
+
+.help-document-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.help-document-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.help-document-content::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.help-document-content::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.help-document-content .markdown-content h2,
+.help-document-content .markdown-content h3,
+.help-document-content .markdown-content h4,
+.help-document-content .markdown-content h5,
+.help-document-content .markdown-content h6 {
+  margin: 1rem 0 0.5rem 0;
+  font-weight: 600;
+  color: #222;
+}
+
+.help-document-content .markdown-content h2 {
+  font-size: 16px;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 0.5rem;
+}
+
+.help-document-content .markdown-content p {
+  margin: 0.5rem 0;
+}
+
+.help-document-content .markdown-content li {
+  margin-left: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+
+/* About Viewer */
+.help-about-viewer {
+  position: fixed;
+  bottom: 0;
+  right: 20px;
+  width: 380px;
+  max-height: 500px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px 8px 0 0;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  z-index: 9998;
+  animation: slideUp 0.3s ease-out;
+}
+
+.help-about-header {
+  padding: 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e0e0e0;
+  border-radius: 8px 8px 0 0;
+}
+
+.help-about-header h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.help-about-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #333;
+  background: #fafafa;
+}
+
+.help-about-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.help-about-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.help-about-content::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.help-about-content::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.help-about-content p {
+  margin: 0.75rem 0;
+}
+
+/* Mobile Responsiveness for Documents */
+@media (max-width: 768px) {
+  .help-document-viewer,
+  .help-about-viewer {
+    width: 100%;
+    right: 0;
+    left: 0;
+    max-height: 60vh;
+  }
+}
+
+/* Additional button styles */
+.help-chat-button.terms-btn:hover,
+.help-chat-button.privacy-btn:hover,
+.help-chat-button.about-btn:hover {
+  background: rgba(102, 126, 234, 0.3);
+}

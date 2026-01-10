@@ -1,0 +1,61 @@
+{
+  "help": {
+    "window": {
+      "titleExpanded": "❓ Hilfe & Fragen",
+      "titleMinimized": "❓ Hilfe",
+      "buttons": {
+        "faq": "Häufig Gestellte Fragen",
+        "terms": "Bedingungen",
+        "privacy": "Datenschutz",
+        "about": "Über"
+      }
+    },
+    "chat": {
+      "placeholder": "Stelle eine Frage...",
+      "send": "Senden",
+      "welcome": {
+        "greeting": "👋 Willkommen im Hilfe-Chat!",
+        "description": "Stelle mir Fragen zur Verwendung der App. Ich bin hier, um dir zu helfen!",
+        "examples": "💡 Du kannst zum Beispiel fragen:",
+        "exampleList": [
+          "Wie aktualisiere ich meine Zahlungsmethode?",
+          "Wie aktiviere ich die Zwei-Faktor-Authentifizierung?",
+          "Wo finde ich mein Geburtshoroskop?"
+        ],
+        "faqHint": "👉 Klicke oben auf die Schaltfläche Häufig Gestellte Fragen, um sofortige Antworten zu erhalten!"
+      },
+      "messages": {
+        "thinking": "Nachdenken...",
+        "error": "Entschuldigung, ich hatte Schwierigkeiten, deine Frage zu verarbeiten. Bitte versuche es erneut."
+      }
+    },
+    "faq": {
+      "title": "📚 Häufig Gestellte Fragen",
+      "search": "In Häufig Gestellte Fragen suchen...",
+      "searchHint": "In Häufig Gestellte Fragen suchen... (z.B. 'Zahlung', '2FA', 'Horoskop')",
+      "noResults": "Keine Ergebnisse für \"{search}\" gefunden",
+      "noResultsHint": "Versuche andere Suchbegriffe oder durchsuche alle Kategorien",
+      "browseAll": "Alle",
+      "footer": "Findest du nicht, was du suchst? Nutze den Hilfe-Chat, um eine Frage zu stellen!"
+    },
+    "terms": {
+      "title": "📋 Nutzungsbedingungen",
+      "label": "Nutzungsbedingungen"
+    },
+    "privacy": {
+      "title": "🔒 Datenschutzrichtlinie",
+      "label": "Datenschutzrichtlinie"
+    },
+    "about": {
+      "title": "ℹ️ Über Psychic Chat",
+      "label": "Über",
+      "content": "Psychic Chat ist eine App für spirituelles Wohlbefinden, die alte astrologische Weisheit mit moderner KI-Technologie verbindet, um personalisierte kosmische Einblicke zu bieten. Unsere Mission ist es, dir zu helfen, dein kosmisches Schicksal durch Geburtshoroskope, tägliche Horoskope, Mondphasen und intuitive Führung zu erkunden.\n\nOb du Klarheit in Beziehungen, Karrieresentscheidungen oder persönlichem Wachstum suchst, unser von KI angetriebenes Orakel bietet durchdachte Perspektiven, die in astrologischen Traditionen verwurzelt sind.\n\nBei Fragen kontaktiere support@psychicchat.com oder nutze die Hilfe-Chat-Funktion."
+    },
+    "controls": {
+      "minimize": "Minimieren",
+      "expand": "Erweitern",
+      "close": "Schließen",
+      "back": "Zurück"
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "help": {
+    "window": {
+      "titleExpanded": "❓ Aiuto e Domande",
+      "titleMinimized": "❓ Aiuto",
+      "buttons": {
+        "faq": "Domande Frequenti",
+        "terms": "Termini",
+        "privacy": "Privacy",
+        "about": "Chi Siamo"
+      }
+    },
+    "chat": {
+      "placeholder": "Fai una domanda...",
+      "send": "Invia",
+      "welcome": {
+        "greeting": "👋 Benvenuto nella Chat di Aiuto!",
+        "description": "Fammi qualsiasi domanda su come usare l'app. Sono qui per aiutarti!",
+        "examples": "💡 Puoi chiedere cose come:",
+        "exampleList": [
+          "Come aggiorno il mio metodo di pagamento?",
+          "Come abilito l'autenticazione a due fattori?",
+          "Dove posso trovare il mio tema natale?"
+        ],
+        "faqHint": "👉 Clicca sul pulsante Domande Frequenti sopra per trovare risposte istantanee!"
+      },
+      "messages": {
+        "thinking": "Sto pensando...",
+        "error": "Scusa, ho avuto problemi nell'elaborare la tua domanda. Per favore riprova."
+      }
+    },
+    "faq": {
+      "title": "📚 Domande Frequenti",
+      "search": "Cerca nelle Domande Frequenti...",
+      "searchHint": "Cerca nelle Domande Frequenti... (es. 'pagamento', '2FA', 'oroscopo')",
+      "noResults": "Nessun risultato trovato per \"{search}\"",
+      "noResultsHint": "Prova diverse parole chiave o sfoglia tutte le categorie",
+      "browseAll": "Tutte",
+      "footer": "Non trovi quello che cerchi? Usa la Chat di Aiuto per fare una domanda!"
+    },
+    "terms": {
+      "title": "📋 Termini di Servizio",
+      "label": "Termini di Servizio"
+    },
+    "privacy": {
+      "title": "🔒 Informativa sulla Privacy",
+      "label": "Informativa sulla Privacy"
+    },
+    "about": {
+      "title": "ℹ️ Chi Siamo",
+      "label": "Chi Siamo",
+      "content": "Psychic Chat è un'app di benessere spirituale che combina la saggezza astrologica antica con la moderna tecnologia AI per fornire intuizioni cosmiche personalizzate. La nostra missione è aiutarti a esplorare il tuo destino cosmico attraverso temi natali, oroscopi quotidiani, fasi lunari e guida intuitiva.\n\nChe tu stia cercando chiarezza su relazioni, decisioni di carriera o crescita personale, il nostro oracolo basato su AI offre prospettive riflessive radicate nelle tradizioni astrologiche.\n\nPer domande, contatta support@psychicchat.com o utilizza la funzione Chat di Aiuto."
+    },
+    "controls": {
+      "minimize": "Riduci",
+      "expand": "Espandi",
+      "close": "Chiudi",
+      "back": "Indietro"
+    }
+  }
+}

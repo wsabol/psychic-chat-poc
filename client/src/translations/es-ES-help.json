@@ -1,0 +1,61 @@
+{
+  "help": {
+    "window": {
+      "titleExpanded": "❓ Ayuda y Preguntas",
+      "titleMinimized": "❓ Ayuda",
+      "buttons": {
+        "faq": "Preguntas Frecuentes",
+        "terms": "Términos",
+        "privacy": "Privacidad",
+        "about": "Acerca de"
+      }
+    },
+    "chat": {
+      "placeholder": "Haz una pregunta...",
+      "send": "Enviar",
+      "welcome": {
+        "greeting": "👋 ¡Bienvenido al Chat de Ayuda!",
+        "description": "Hazme cualquier pregunta sobre cómo usar la aplicación. ¡Estoy aquí para ayudarte!",
+        "examples": "💡 Puedes preguntar cosas como:",
+        "exampleList": [
+          "¿Cómo actualizo mi método de pago?",
+          "¿Cómo habilito la autenticación de dos factores?",
+          "¿Dónde puedo encontrar mi carta natal?"
+        ],
+        "faqHint": "👉 ¡Haz clic en el botón Preguntas Frecuentes arriba para buscar respuestas instantáneas!"
+      },
+      "messages": {
+        "thinking": "Pensando...",
+        "error": "Lo siento, tuve problemas para procesar tu pregunta. Por favor, inténtalo de nuevo."
+      }
+    },
+    "faq": {
+      "title": "📚 Preguntas Frecuentes",
+      "search": "Buscar en Preguntas Frecuentes...",
+      "searchHint": "Buscar en Preguntas Frecuentes... (por ejemplo, 'pago', '2FA', 'horóscopo')",
+      "noResults": "No se encontraron resultados para \"{search}\"",
+      "noResultsHint": "Prueba con palabras clave diferentes o navega todas las categorías",
+      "browseAll": "Todas",
+      "footer": "¿No encuentras lo que buscas? ¡Usa el Chat de Ayuda para hacer una pregunta!"
+    },
+    "terms": {
+      "title": "📋 Términos de Servicio",
+      "label": "Términos de Servicio"
+    },
+    "privacy": {
+      "title": "🔒 Política de Privacidad",
+      "label": "Política de Privacidad"
+    },
+    "about": {
+      "title": "ℹ️ Acerca de Psychic Chat",
+      "label": "Acerca de",
+      "content": "Psychic Chat es una aplicación de bienestar espiritual que combina la sabiduría astrológica antigua con tecnología de IA moderna para proporcionar perspectivas cósmicas personalizadas. Nuestra misión es ayudarte a explorar tu destino cósmico a través de cartas natales, horóscopos diarios, fases lunares y orientación intuitiva.\n\nSi buscas claridad sobre relaciones, decisiones de carrera o crecimiento personal, nuestro oráculo impulsado por IA ofrece perspectivas reflexivas arraigadas en tradiciones astrológicas.\n\nPara preguntas, contacta a support@psychicchat.com o usa la función de Chat de Ayuda."
+    },
+    "controls": {
+      "minimize": "Minimizar",
+      "expand": "Expandir",
+      "close": "Cerrar",
+      "back": "Atrás"
+    }
+  }
+}

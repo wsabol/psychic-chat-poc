@@ -1,0 +1,61 @@
+{
+  "help": {
+    "window": {
+      "titleExpanded": "❓ Help & Questions",
+      "titleMinimized": "❓ Help",
+      "buttons": {
+        "faq": "FAQ",
+        "terms": "Terms",
+        "privacy": "Privacy",
+        "about": "About"
+      }
+    },
+    "chat": {
+      "placeholder": "Ask a question...",
+      "send": "Send",
+      "welcome": {
+        "greeting": "👋 Welcome to the Help Chat!",
+        "description": "Ask me any questions about how to use the app. I'm here to help!",
+        "examples": "💡 You can ask things like:",
+        "exampleList": [
+          "How do I update my payment method?",
+          "How do I enable 2FA?",
+          "Where can I find my birth chart?"
+        ],
+        "faqHint": "👉 Click the FAQ button above to browse questions for instant answers!"
+      },
+      "messages": {
+        "thinking": "Thinking...",
+        "error": "Sorry, I had trouble processing your question. Please try again."
+      }
+    },
+    "faq": {
+      "title": "📚 Frequently Asked Questions",
+      "search": "Search FAQ...",
+      "searchHint": "Search FAQ... (e.g., 'payment', '2FA', 'horoscope')",
+      "noResults": "No results found for \"{search}\"",
+      "noResultsHint": "Try different keywords or browse all categories",
+      "browseAll": "All",
+      "footer": "Can't find what you're looking for? Use the Help Chat to ask a question!"
+    },
+    "terms": {
+      "title": "📋 Terms of Service",
+      "label": "Terms of Service"
+    },
+    "privacy": {
+      "title": "🔒 Privacy Policy",
+      "label": "Privacy Policy"
+    },
+    "about": {
+      "title": "ℹ️ About Psychic Chat",
+      "label": "About Us",
+      "content": "Psychic Chat is a spiritual wellness app that combines ancient astrological wisdom with modern AI technology to provide personalized cosmic insights. Our mission is to help you explore your cosmic destiny through birth charts, daily horoscopes, moon phases, and intuitive guidance.\n\nWhether you're seeking clarity on relationships, career decisions, or personal growth, our AI-powered oracle offers thoughtful perspectives rooted in astrological traditions.\n\nFor questions, contact support@psychicchat.com or use the Help Chat feature."
+    },
+    "controls": {
+      "minimize": "Minimize",
+      "expand": "Expand",
+      "close": "Close",
+      "back": "Back"
+    }
+  }
+}

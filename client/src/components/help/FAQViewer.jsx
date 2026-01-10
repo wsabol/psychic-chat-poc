@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
+import { useTranslation } from '../../context/TranslationContext';
 import { FAQ_DATA } from '../../data/faq';
 import './FAQViewer.css';
 
 /**
  * FAQViewer - Display FAQ with search and category filtering
  */
-export function FAQViewer({ onClose }) {
+export function FAQViewer({ onClose, onViewChange }) {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedIds, setExpandedIds] = useState(new Set());
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -41,8 +43,8 @@ export function FAQViewer({ onClose }) {
     <div className="faq-viewer">
       {/* Header */}
       <div className="faq-header">
-        <h2>📚 Frequently Asked Questions</h2>
-        <button onClick={onClose} className="faq-close-btn" title="Close">✕</button>
+        <h2>{t('help.faq.title')}</h2>
+        <button onClick={onClose} className="faq-close-btn" title={t('help.controls.back')}>← {t('help.controls.back')}</button>
       </div>
 
       {/* Search */}
@@ -50,7 +52,7 @@ export function FAQViewer({ onClose }) {
         <input
           type="text"
           className="faq-search-input"
-          placeholder="Search FAQ... (e.g., 'payment', '2FA', 'horoscope')"
+          placeholder={t('help.faq.searchHint')}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
@@ -62,7 +64,7 @@ export function FAQViewer({ onClose }) {
           className={`faq-category-btn ${selectedCategory === null ? 'active' : ''}`}
           onClick={() => setSelectedCategory(null)}
         >
-          All
+          {t('help.faq.browseAll')}
         </button>
         {FAQ_DATA.map(cat => (
           <button
@@ -79,8 +81,8 @@ export function FAQViewer({ onClose }) {
       <div className="faq-content">
         {filteredFAQ.length === 0 ? (
           <div className="faq-no-results">
-            <p>No results found for "{searchTerm}"</p>
-            <p style={{ fontSize: '12px', color: '#999' }}>Try different keywords or browse all categories</p>
+            <p>{t('help.faq.noResults').replace('{search}', searchTerm)}</p>
+            <p style={{ fontSize: '12px', color: '#999' }}>{t('help.faq.noResultsHint')}</p>
           </div>
         ) : (
           filteredFAQ.map(category => (
@@ -115,7 +117,7 @@ export function FAQViewer({ onClose }) {
 
       {/* Footer */}
       <div className="faq-footer">
-        <p>Can't find what you're looking for? Use the Help Chat to ask a question!</p>
+        <p>{t('help.faq.footer')}</p>
       </div>
     </div>
   );
