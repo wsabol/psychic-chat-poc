@@ -277,13 +277,35 @@ def calculate_current_planets():
     try:
         now_utc = datetime.now(ZoneInfo("UTC"))
         jd = swe.julday(now_utc.year, now_utc.month, now_utc.day, now_utc.hour + now_utc.minute / 60.0 + now_utc.second / 3600.0)
-        planets = [(swe.SUN, "Sun"), (swe.MOON, "Moon"), (swe.MERCURY, "Mercury"), (swe.VENUS, "Venus"), (swe.MARS, "Mars"), (swe.JUPITER, "Jupiter"), (swe.SATURN, "Saturn")]
+        # Include all 10 planets with emoji icons
+        planets = [
+            (swe.SUN, "Sol", "☀️"),
+            (swe.MOON, "Luna", "🌙"),
+            (swe.MERCURY, "Mercurio", "☿️"),
+            (swe.VENUS, "Venus", "♀️"),
+            (swe.MARS, "Marte", "♂️"),
+            (swe.JUPITER, "Júpiter", "♃"),
+            (swe.SATURN, "Saturno", "♄"),
+            (swe.URANUS, "Urano", "♅"),
+            (swe.NEPTUNE, "Neptuno", "♆"),
+            (swe.PLUTO, "Plutón", "♇")
+        ]
         planet_data = []
-        for planet_id, planet_name in planets:
+        for planet_id, planet_name, icon in planets:
             planet_pos = swe.calc_ut(jd, planet_id)
             longitude = planet_pos[0][0]
+            # Check retrograde status (speed < 0 means retrograde)
+            speed = planet_pos[0][3]
+            is_retrograde = speed < 0
             sign, degree = degrees_to_zodiac(longitude)
-            planet_data.append({"name": planet_name, "sign": sign, "degree": round(degree, 2), "retrograde": False, "displayName": planet_name})
+            planet_data.append({
+                "name": planet_name,
+                "sign": sign,
+                "degree": round(degree, 2),
+                "retrograde": is_retrograde,
+                "icon": icon,
+                "displayName": planet_name
+            })
         return {"planets": planet_data, "timestamp": now_utc.isoformat(), "success": True}
     except Exception as e:
         return {"error": str(e), "planets": [], "success": False}
