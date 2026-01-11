@@ -1,5 +1,8 @@
 {
-  "watch": ["."],
+  "watch": ["index.js"],
   "ignore": ["node_modules", ".git"],
-  "exec": "node index.js"
+  "exec": "node index.js",
+  "ext": "js,json",
+  "delay": 2000,
+  "legacy-watch": true
 }
