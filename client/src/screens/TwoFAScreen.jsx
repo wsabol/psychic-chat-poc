@@ -50,9 +50,10 @@ export default function TwoFAScreen({
           setCode('');
           return;
         }
-      } else {
+            } else {
         // Fallback to API call (shouldn't happen in normal flow)
-        const response = await fetch('http://localhost:3000/auth/verify-2fa', {
+        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+        const response = await fetch(`${API_URL}/auth/verify-2fa`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

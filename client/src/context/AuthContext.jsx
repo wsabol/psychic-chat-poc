@@ -40,8 +40,9 @@ export function AuthProvider({ children }) {
             privacy_accepted: false
           };
           
-          try {
-            const consentUrl = `http://localhost:3000/auth/check-consent/${firebaseUser.uid}`;
+                    try {
+            const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+            const consentUrl = `${API_URL}/auth/check-consent/${firebaseUser.uid}`;
             console.log('[AUTH] Checking consent at:', consentUrl);
             
             const consentResponse = await fetch(consentUrl, {

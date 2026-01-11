@@ -16,8 +16,9 @@ export function ConsentModal({ userId, token, onConsentAccepted }) {
     setLoading(true);
     setError('');
 
-    try {
-      const response = await fetch(`http://localhost:3000/auth/record-consent/${userId}`, {
+        try {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+      const response = await fetch(`${API_URL}/auth/record-consent/${userId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
