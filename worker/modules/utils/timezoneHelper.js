@@ -16,7 +16,6 @@ export async function getUserTimezone(userIdHash) {
     }
     
     // Default to UTC if not set
-    console.warn(`[TIMEZONE] No timezone found for user, defaulting to UTC`);
     return 'UTC';
   } catch (err) {
     console.error('[TIMEZONE] Error fetching timezone:', err);
@@ -56,7 +55,6 @@ export function getLocalDateForTimezone(timezone = 'UTC') {
  */
 export function needsRegeneration(createdAtLocalDate, todayLocalDate) {
   if (!createdAtLocalDate) {
-    console.log('[TIMEZONE] No previous creation date, needs generation');
     return true;
   }
   
@@ -64,7 +62,7 @@ export function needsRegeneration(createdAtLocalDate, todayLocalDate) {
   const todayDate = new Date(todayLocalDate);
   
   const needsRegen = previousDate < todayDate;
-  console.log(`[TIMEZONE] Previous: ${createdAtLocalDate}, Today: ${todayLocalDate}, Needs regen: ${needsRegen}`);
   
   return needsRegen;
 }
+

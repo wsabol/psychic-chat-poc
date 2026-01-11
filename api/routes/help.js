@@ -137,7 +137,6 @@ router.post('/ask', authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error('[HELP] Error:', error);
-    logger.error('Help endpoint error:', error.message);
     return res.status(500).json({
       error: 'Failed to get help response',
       details: error.message
@@ -146,3 +145,4 @@ router.post('/ask', authenticateToken, async (req, res) => {
 });
 
 export default router;
+

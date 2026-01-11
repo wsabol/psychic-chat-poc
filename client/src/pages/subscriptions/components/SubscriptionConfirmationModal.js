@@ -73,12 +73,10 @@ export default function SubscriptionConfirmationModal({
             );
 
             if (stripeError) {
-              console.warn('[MODAL] Card payment confirmation warning:', stripeError.message);
               // Don't fail - subscription is already finalized, payment might process separately
             } 
           } 
         } catch (stripeErr) {
-          console.warn('[MODAL] Stripe confirmation warning:', stripeErr.message);
           // Don't fail - subscription is already finalized
         }
       }
@@ -150,3 +148,4 @@ export default function SubscriptionConfirmationModal({
     </div>
   );
 }
+

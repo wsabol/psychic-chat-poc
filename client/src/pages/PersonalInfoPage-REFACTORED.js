@@ -131,7 +131,6 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
 
       // Trigger astrology calculation for temp users with location data
       if (isTemporaryAccount && hasBirthLocationData(formData)) {
-        console.log('[PERSONAL-INFO] Temp user with birth location - triggering sync-calculate');
         try {
           const astrResponse = await fetchWithTokenRefresh(
             `${API_URL}/user-astrology/sync-calculate/${userId}`,
@@ -139,9 +138,7 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
           );
 
           if (astrResponse.ok) {
-            console.log('[PERSONAL-INFO] ✓ Sync-calculate endpoint called');
           } else {
-            console.warn('[PERSONAL-INFO] Sync-calculate returned:', astrResponse.status);
           }
         } catch (err) {
           console.error('[PERSONAL-INFO] Sync-calculate error:', err);
@@ -166,11 +163,9 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
           maxAttempts: TIMING.ASTROLOGY_POLL_MAX_ATTEMPTS,
           intervalMs: TIMING.ASTROLOGY_POLL_INTERVAL_MS,
           onReady: () => {
-            console.log('[PERSONAL-INFO] Astrology ready, navigating to horoscope');
             onNavigateToPage(5);
           },
           onTimeout: () => {
-            console.warn('[PERSONAL-INFO] Astrology timeout, navigating anyway');
             onNavigateToPage(5);
           }
         });
@@ -373,3 +368,4 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
     </div>
   );
 }
+

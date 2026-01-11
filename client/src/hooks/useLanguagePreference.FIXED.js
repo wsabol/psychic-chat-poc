@@ -51,14 +51,11 @@ export function useLanguagePreference() {
         });
 
         if (response.ok) {
-          console.log(`[LANGUAGE] Language saved to DB: ${newLanguage}`);
           return true;
         } else {
-          console.warn('[LANGUAGE] Failed to save language preference to DB');
           return true; // Still successful locally
         }
       } catch (err) {
-        console.warn('[LANGUAGE] Error saving language preference:', err);
         return true; // Still successful locally
       }
     }
@@ -71,3 +68,4 @@ export function useLanguagePreference() {
     currentLanguage: language
   };
 }
+

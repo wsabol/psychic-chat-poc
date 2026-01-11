@@ -21,7 +21,6 @@ export async function calculateBirthChart(birthData) {
             }
             try {
                 const result = JSON.parse(outputData);
-                if (result.error) console.warn(`[ASTROLOGY] Calculation warning: ${result.error}`);
                 resolve(result);
             } catch (e) {
                 console.error(`[ASTROLOGY] Failed to parse result:`, outputData);
@@ -131,3 +130,4 @@ export async function getCurrentPlanets() {
         python.stdin.end();
     });
 }
+

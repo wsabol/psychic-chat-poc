@@ -38,7 +38,6 @@ export function useHoroscopeFetch(userId, token, apiUrl, horoscopeRange) {
         // Check for compliance requirement
         if (response.status === 451) {
           const complianceData = await response.json();
-          console.log('[HOROSCOPE-FETCH] Compliance required:', complianceData);
           setComplianceStatus(complianceData.details);
           setLoading(false);
           return;
@@ -114,7 +113,6 @@ export function useHoroscopeFetch(userId, token, apiUrl, horoscopeRange) {
             setGenerating(false);
             setLoading(false);
             clearInterval(pollIntervalRef.current);
-            console.log('[HOROSCOPE-FETCH] ✓ Horoscope ready after polling');
             return;
           }
         } catch (err) {
@@ -160,3 +158,4 @@ export function useHoroscopeFetch(userId, token, apiUrl, horoscopeRange) {
     stopPolling: cleanup
   };
 }
+

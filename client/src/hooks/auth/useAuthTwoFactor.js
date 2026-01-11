@@ -54,13 +54,11 @@ export function useAuthTwoFactor() {
       if (complete2FA && authToken && authUserId) {
         complete2FA(authUserId, authToken);
       } else {
-        console.warn('[2FA] Missing complete2FA or auth tokens, falling back to reload');
         // Fallback: Force auth state to re-run listener if complete2FA not available
         if (auth.currentUser) {
           try {
             await auth.currentUser.reload();
           } catch (reloadErr) {
-            console.warn('[2FA] Failed to reload auth user:', reloadErr.message);
           }
         }
       }
@@ -97,3 +95,4 @@ export function useAuthTwoFactor() {
     reset2FAState,
   };
 }
+

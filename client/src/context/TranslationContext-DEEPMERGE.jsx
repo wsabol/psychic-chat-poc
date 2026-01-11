@@ -224,7 +224,6 @@ export function useTranslation() {
     for (const k of keys) {
       value = value?.[k];
       if (value === undefined) {
-        console.warn(`Translation key not found: ${key}`);
         return key;
       }
     }
@@ -246,3 +245,4 @@ export function useTranslation() {
     availableLanguages
   };
 }
+

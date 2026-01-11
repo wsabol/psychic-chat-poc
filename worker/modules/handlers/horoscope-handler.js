@@ -20,13 +20,11 @@ import { getUserTimezone, getLocalDateForTimezone, needsRegeneration } from '../
  */
 export async function generateHoroscope(userId, range = 'daily') {
     try {
-        console.log(`[HOROSCOPE-HANDLER] Starting horoscope generation - userId: ${userId}, range: ${range}`);
         const userIdHash = hashUserId(userId);
         
         // Get user's timezone and today's local date
         const userTimezone = await getUserTimezone(userIdHash);
         const todayLocalDate = getLocalDateForTimezone(userTimezone);
-        console.log(`[HOROSCOPE-HANDLER] User timezone: ${userTimezone}, Today (local): ${todayLocalDate}`);
         
         // Check if THIS SPECIFIC RANGE was already generated for today (in user's timezone)
         const { rows: existingHoroscopes } = await db.query(
@@ -42,13 +40,10 @@ export async function generateHoroscope(userId, range = 'daily') {
         if (existingHoroscopes.length > 0) {
             const createdAtLocalDate = existingHoroscopes[0].created_at_local_date;
             if (!needsRegeneration(createdAtLocalDate, todayLocalDate)) {
-                console.log(`[HOROSCOPE-HANDLER] ${range} horoscope already generated for today (${todayLocalDate}), skipping`);
                 return;
             } else {
-                console.log(`[HOROSCOPE-HANDLER] Previous horoscope from ${createdAtLocalDate}, today is ${todayLocalDate}, regenerating`);
             }
         } else {
-            console.log(`[HOROSCOPE-HANDLER] No existing ${range} horoscope found, proceeding with generation`);
         }
         
         // Fetch user context
@@ -76,7 +71,6 @@ export async function generateHoroscope(userId, range = 'daily') {
         
         // Generate the horoscope
         try {
-            console.log(`[HOROSCOPE-HANDLER] Generating ${range} horoscope in ${oracleLanguage} (page UI: ${userLanguage})...`);
             const horoscopePrompt = buildHoroscopePrompt(userInfo, astrologyInfo, range, userGreeting);
             
             const systemPrompt = baseSystemPrompt + `
@@ -92,9 +86,7 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
 `;
             
             // Call Oracle - response is already in user's preferred language
-            console.log(`[HOROSCOPE-HANDLER] Calling OpenAI for ${range} horoscope...`);
             const oracleResponses = await callOracle(systemPrompt, [], horoscopePrompt, true);
-            console.log(`[HOROSCOPE-HANDLER] ✓ OpenAI response received`);
             
             // Store horoscope in database (already in user's language)
             const horoscopeDataFull = {
@@ -112,7 +104,6 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
             };
             
             // Store message (no translation needed - response is already in user's language)
-            console.log(`[HOROSCOPE-HANDLER] Storing ${range} horoscope to database with local date: ${todayLocalDate}...`);
             await storeMessage(
                 userId, 
                 'horoscope', 
@@ -126,7 +117,6 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
                 null,   // contentType
                 todayLocalDate
             );
-            console.log(`[HOROSCOPE-HANDLER] ✓ ${range} horoscope generated and stored`);
             
         } catch (err) {
             console.error(`[HOROSCOPE-HANDLER] Error generating ${range} horoscope:`, err.message);
@@ -211,3 +201,4 @@ export function extractHoroscopeRange(message) {
     }
     return 'daily';
 }
+

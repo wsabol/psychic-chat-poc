@@ -18,5 +18,5 @@ export const auth = getAuth(app);
 // This ensures temporary accounts continue from where they left off
 setPersistence(auth, browserLocalPersistence)
   .catch((error) => {
-    console.warn('Failed to set auth persistence:', error);
   });
+

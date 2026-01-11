@@ -51,7 +51,6 @@ export function useAuthHandlers(auth, modals, tempFlow) {
                 });
                 
             } catch (err) {
-                console.warn('[ONBOARDING] Migration registration failed:', err);
             }
         }
         
@@ -115,3 +114,4 @@ export function useAuthHandlers(auth, modals, tempFlow) {
         handleAstrologyPromptNo,
     };
 }
+

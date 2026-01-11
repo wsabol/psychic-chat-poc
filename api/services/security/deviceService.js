@@ -63,7 +63,6 @@ export async function logoutDevice(userId, deviceId) {
     try {
       await admin.auth().revokeRefreshTokens(userId);
     } catch (err) {
-      console.warn('[SECURITY] Could not revoke Firebase tokens:', err.message);
     }
 
     return { success: true };
@@ -72,3 +71,4 @@ export async function logoutDevice(userId, deviceId) {
     throw err;
   }
 }
+

@@ -33,13 +33,11 @@ export async function generateCosmicWeather(userId) {
         // Fetch user's timezone preference (stored from client-side detection)
         let userTimezone = await fetchUserTimezonePreference(db, userId);
         if (!userTimezone) {
-            console.warn(`[COSMIC-WEATHER-HANDLER] No timezone preference found for user, defaulting to GMT`);
             userTimezone = 'GMT';
         }
         
         // Get today's date in user's LOCAL timezone (not GMT)
         const today = getTodayInUserTimezone(userTimezone);
-        console.log(`[COSMIC-WEATHER-HANDLER] User timezone: ${userTimezone}, Today's date: ${today}`);
         
         const userIdHash = hashUserId(userId);
         
@@ -54,7 +52,6 @@ export async function generateCosmicWeather(userId) {
             const existingData = typeof rows[0].content === 'string' ? JSON.parse(rows[0].content) : rows[0].content;
             const existingDate = existingData.date?.split('T')[0];
             if (existingDate === today) {
-                console.log(`[COSMIC-WEATHER-HANDLER] Cosmic weather already generated for today (${today}), skipping`);
                 return;
             }
         }
@@ -135,24 +132,19 @@ Do NOT include tarot cards - this is pure astrological forecasting enriched by t
         let cosmicWeatherDataBriefLang = null;
         
         if (userLanguage && userLanguage !== 'en-US') {
-            console.log(`[COSMIC-WEATHER-HANDLER] Translating cosmic weather to ${userLanguage}...`);
             cosmicWeatherDataLang = await translateContentObject(cosmicWeatherDataFull, userLanguage);
             cosmicWeatherDataBriefLang = await translateContentObject(cosmicWeatherDataBrief, userLanguage);
             
             // VALIDATION: Check if translation actually succeeded
             if (cosmicWeatherDataLang?.text === cosmicWeatherDataFull?.text) {
-                console.warn(`[COSMIC-WEATHER-HANDLER] ⚠️ WARNING: Translation returned SAME text as English!`);
-                console.warn(`[COSMIC-WEATHER-HANDLER] ⚠️ Translation likely failed. Storing English only.`);
                 cosmicWeatherDataLang = null;
                 cosmicWeatherDataBriefLang = null;
             } else {
-                console.log(`[COSMIC-WEATHER-HANDLER] ✓ Translation successful`);
             }
         }
         
         // Store message with both English and translated versions (if applicable)
         // Always pass userLanguage (even if en-US) so it's tracked
-        console.log(`[COSMIC-WEATHER-HANDLER] Storing cosmic weather to database...`);
         await storeMessage(
             userId, 
             'cosmic_weather', 
@@ -163,7 +155,6 @@ Do NOT include tarot cards - this is pure astrological forecasting enriched by t
             userLanguage !== 'en-US' ? cosmicWeatherDataBriefLang : null
         );
         
-        console.log(`[COSMIC-WEATHER-HANDLER] ✓ Cosmic weather generated and stored`);
         
     } catch (err) {
         console.error('[COSMIC-WEATHER-HANDLER] Error:', err.message);
@@ -212,3 +203,4 @@ function buildCosmicWeatherPrompt(userInfo, astrologyInfo, planets, planetsDetai
 export function isCosmicWeatherRequest(message) {
     return message.includes('[SYSTEM]') && message.includes('cosmic weather');
 }
+

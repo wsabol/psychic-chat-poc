@@ -50,7 +50,6 @@ export async function logAudit(db, options) {
 
   // Validate status
   if (!['SUCCESS', 'FAILURE', 'BLOCKED'].includes(status)) {
-    console.warn('[AUDIT] WARNING: Invalid status', status, '- defaulting to SUCCESS');
     status = 'SUCCESS';
   }
 
@@ -76,7 +75,6 @@ export async function logAudit(db, options) {
         );
         encryptedIp = encResult.rows[0]?.encrypted;
       } catch (encErr) {
-        console.warn('[AUDIT] WARNING: Failed to encrypt IP address:', encErr.message);
       }
     }
 
@@ -90,7 +88,6 @@ export async function logAudit(db, options) {
         );
         encryptedEmail = encResult.rows[0]?.encrypted;
       } catch (encErr) {
-        console.warn('[AUDIT] WARNING: Failed to encrypt email:', encErr.message);
       }
     }
 
@@ -104,7 +101,6 @@ export async function logAudit(db, options) {
         );
         encryptedUserAgent = encResult.rows[0]?.encrypted;
       } catch (encErr) {
-        console.warn('[AUDIT] WARNING: Failed to encrypt user_agent:', encErr.message);
       }
     }
 
@@ -281,3 +277,4 @@ export async function exportUserAuditLogs(db, userId, daysBack = 365) {
 }
 
 export default { logAudit, getUserAuditLogs, findBruteForceAttempts, findSuspiciousIPs, getDataAccessLogs, exportUserAuditLogs };
+

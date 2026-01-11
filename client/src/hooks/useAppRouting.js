@@ -85,11 +85,6 @@ export function useAppRouting(auth, appExited, showRegisterMode = false, skipPay
             // Subscription check is complete (not checking)
             if (!auth.hasActiveSubscription) {
                 // No active subscription - show subscription required screen
-                console.log('[ROUTING-DEBUG] No active subscription:', {
-                    authEmail: auth.authEmail,
-                    hasActiveSubscription: auth.hasActiveSubscription,
-                    subscriptionChecking: auth.subscriptionChecking
-                });
                 return 'subscriptionRequired';
             }
         }

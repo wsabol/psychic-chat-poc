@@ -121,7 +121,6 @@ function HoroscopeModal({ userId, token, isOpen, onClose }) {
                 }
             }
         } catch (err) {
-            console.warn('Failed to fetch zodiac info:', err);
         }
         
         return {
@@ -156,7 +155,6 @@ function HoroscopeModal({ userId, token, isOpen, onClose }) {
                 return true; // Stop polling
             }
         } catch (err) {
-            console.warn('Polling failed:', err);
         }
         return false;
     };
@@ -259,3 +257,4 @@ function HoroscopeModal({ userId, token, isOpen, onClose }) {
 }
 
 export default HoroscopeModal;
+

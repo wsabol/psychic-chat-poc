@@ -22,12 +22,9 @@ export function NavDesktop({
   };
 
   const handlePageClick = (pageId) => {
-    console.log('[NAV-HANDLER] pageId:', pageId, 'isTemporaryAccount:', isTemporaryAccount);
     if (isTemporaryAccount) return;
     const index = pages.findIndex(p => p.id === pageId);
-    console.log('[NAV-HANDLER] index:', index);
     if (index !== -1) {
-      console.log('[NAV-HANDLER] calling onNavigate');
       onNavigate(index);
     }
   };
@@ -49,7 +46,6 @@ export function NavDesktop({
               <button
                 className={`nav-item ${isPageActive(item.pageId) ? 'active' : ''}`}
                 onClick={() => {
-                  console.log('[NAV-CLICK] Clicked:', getLabel(item));
                   handlePageClick(item.pageId);
                 }}
                 disabled={isTemporaryAccount}
@@ -104,3 +100,4 @@ export function NavDesktop({
     </nav>
   );
 }
+

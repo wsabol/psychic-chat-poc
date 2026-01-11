@@ -16,7 +16,6 @@ export function usePersonalInfo(userId, token) {
     const fetchPersonalInfo = useCallback(async () => {
         try {
             if (!userId || !token) {
-                console.warn('[PERSONAL-INFO] Missing userId or token');
                 return;
             }
             const headers = { 'Authorization': `Bearer ${token}` };
@@ -56,3 +55,4 @@ export function usePersonalInfo(userId, token) {
         fetchPersonalInfo,
     };
 }
+

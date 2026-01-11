@@ -73,7 +73,6 @@ export async function generateHoroscope(userId, range = 'daily') {
                         };
                     }
                 } catch (calcErr) {
-                    console.warn('[HOROSCOPE-HANDLER] Birth chart calculation failed:', calcErr.message);
                     // Continue with basic horoscope using just birth date
                 }
             }
@@ -196,3 +195,4 @@ export function extractHoroscopeRange(message) {
     }
     return 'daily'; // default
 }
+

@@ -50,7 +50,6 @@ router.post('/register', async (req, res) => {
       message: 'User registered successfully. Please sign in.'
     });
   } catch (err) {
-    logger.error('Registration error:', err.message);
     if (err.code === 'auth/email-already-exists') {
       return res.status(409).json({ error: 'Email already registered' });
     }
@@ -148,7 +147,6 @@ router.post('/register-and-migrate', async (req, res) => {
       });
       
     } catch (migrationErr) {
-      logger.error('Migration failed after account creation:', migrationErr.message);
       return res.status(201).json({
         success: true,
         uid: newUserId,
@@ -159,7 +157,6 @@ router.post('/register-and-migrate', async (req, res) => {
     }
     
   } catch (err) {
-    logger.error('Registration with migration error:', err.message);
     if (err.code === 'auth/email-already-exists') {
       return res.status(409).json({ error: 'Email already registered' });
     }
@@ -171,3 +168,4 @@ router.post('/register-and-migrate', async (req, res) => {
 });
 
 export default router;
+

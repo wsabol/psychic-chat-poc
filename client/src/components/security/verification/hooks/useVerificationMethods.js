@@ -36,13 +36,11 @@ export function useVerificationMethods(userId, token, apiUrl) {
         return data.methods || DEFAULT_METHODS;
       } else {
         // API error - set default empty data instead of showing error
-        console.warn('[VERIFICATION] API returned error, using default empty methods');
         setMethods(DEFAULT_METHODS);
         return DEFAULT_METHODS;
       }
     } catch (err) {
       // Network or parsing error - set default empty data instead of showing error
-      console.warn('[VERIFICATION] Error loading methods, using default empty methods:', err.message);
       setMethods(DEFAULT_METHODS);
       setError(null); // Don't show error message to user
       return DEFAULT_METHODS;
@@ -57,3 +55,4 @@ export function useVerificationMethods(userId, token, apiUrl) {
 
   return { methods: methods || DEFAULT_METHODS, loading, error, reload: loadMethods };
 }
+

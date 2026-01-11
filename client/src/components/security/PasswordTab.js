@@ -80,7 +80,6 @@ export default function PasswordTab({ userId, token, apiUrl }) {
           headers: { 'Authorization': `Bearer ${token}` }
         });
       } catch (err) {
-        console.warn('[PASSWORD] Could not notify backend:', err);
       }
     } catch (err) {
       console.error('[PASSWORD] Error changing password:', err);
@@ -238,3 +237,4 @@ export default function PasswordTab({ userId, token, apiUrl }) {
     </div>
   );
 }
+

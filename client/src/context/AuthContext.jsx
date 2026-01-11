@@ -17,7 +17,6 @@ export function AuthProvider({ children }) {
       if (firebaseUser) {
         const newToken = await firebaseUser.getIdToken(true); // force refresh
         setUser(prev => prev ? { ...prev, token: newToken } : null);
-        console.log('[AUTH] Token refreshed successfully');
       }
     } catch (err) {
       console.error('[AUTH] Error refreshing token:', err);
@@ -28,7 +27,6 @@ export function AuthProvider({ children }) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
         if (firebaseUser) {
-          console.log('[AUTH] User logged in:', firebaseUser.uid);
           
           // Get ID token
           const token = await firebaseUser.getIdToken();
@@ -43,7 +41,6 @@ export function AuthProvider({ children }) {
                     try {
             const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
             const consentUrl = `${API_URL}/auth/check-consent/${firebaseUser.uid}`;
-            console.log('[AUTH] Checking consent at:', consentUrl);
             
             const consentResponse = await fetch(consentUrl, {
               method: 'POST',
@@ -53,19 +50,13 @@ export function AuthProvider({ children }) {
               }
             });
             
-            console.log('[AUTH] Consent check response status:', consentResponse.status);
             
             if (consentResponse.ok) {
               consentStatus = await consentResponse.json();
-              console.log('[AUTH] Consent status returned:', consentStatus);
-              console.log('[AUTH] hasConsent =', consentStatus.hasConsent, '| terms =', consentStatus.terms_accepted, '| privacy =', consentStatus.privacy_accepted);
             } else {
-              console.warn('[AUTH] Consent check returned non-200:', consentResponse.status);
               const errorText = await consentResponse.text();
-              console.warn('[AUTH] Error response:', errorText);
             }
           } catch (consentErr) {
-            console.warn('[AUTH] Could not check consent:', consentErr.message);
             console.error('[AUTH] Consent error details:', consentErr);
           }
           
@@ -83,7 +74,6 @@ export function AuthProvider({ children }) {
             needsConsent: !consentStatus.hasConsent
           };
           
-          console.log('[AUTH] Setting user with needsConsent =', newUser.needsConsent);
           setUser(newUser);
 
           // Save timezone to user_preferences
@@ -95,12 +85,10 @@ export function AuthProvider({ children }) {
             clearInterval(tokenRefreshIntervalRef.current);
           }
           tokenRefreshIntervalRef.current = setInterval(() => {
-            console.log('[AUTH] Auto-refreshing token');
             refreshToken(firebaseUser);
           }, 45 * 60 * 1000); // 45 minutes
 
         } else {
-          console.log('[AUTH] User logged out');
           setUser(null);
           // Clear token refresh interval
           if (tokenRefreshIntervalRef.current) {
@@ -136,3 +124,4 @@ export function AuthProvider({ children }) {
 export function useAuth() {
   return useContext(AuthContext);
 }
+

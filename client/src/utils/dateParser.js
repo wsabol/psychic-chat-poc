@@ -67,10 +67,10 @@ export function parseDateForStorage(dateString) {
         
         const paddedDay = dayNum.toString().padStart(2, '0');
         const result = `${yearNum}-${month}-${paddedDay}`;
-        console.log('[DATE] Parsed successfully:', dateString, '→', result);
         return result;
     } catch (e) {
         console.error('[DATE] Exception:', e.message);
         return dateString;
     }
 }
+

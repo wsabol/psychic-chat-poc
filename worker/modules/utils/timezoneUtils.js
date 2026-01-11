@@ -13,7 +13,6 @@
  */
 export function getTodayInUserTimezone(userTimezone) {
   if (!userTimezone) {
-    console.warn('[TIMEZONE] No timezone provided, falling back to GMT');
     return new Date().toISOString().split('T')[0];
   }
 
@@ -36,7 +35,6 @@ export function getTodayInUserTimezone(userTimezone) {
     return `${year}-${month}-${day}`;
   } catch (err) {
     console.error(`[TIMEZONE] Error formatting date for timezone ${userTimezone}:`, err.message);
-    console.warn('[TIMEZONE] Falling back to GMT');
     return new Date().toISOString().split('T')[0];
   }
 }
@@ -163,7 +161,6 @@ export async function storeUserTimezonePreference(db, userId, timezone) {
       [timezone, userIdHash]
     );
     
-    console.log(`[TIMEZONE] Stored timezone ${timezone} for user ${userId}`);
   } catch (err) {
     console.error('[TIMEZONE] Error storing user timezone:', err.message);
   }
@@ -273,3 +270,4 @@ export function formatDateInUserTimezone(date, userTimezone, options = {}) {
   const formatOptions = { ...defaultOptions, ...options };
   return dateObj.toLocaleString('en-US', formatOptions);
 }
+

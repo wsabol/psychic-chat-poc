@@ -7,15 +7,8 @@ export function getAvailableVoices() {
   const synth = window.speechSynthesis;
   const voices = synth.getVoices();
   
-  console.log('=== AVAILABLE VOICES ===');
-  console.log(`Total voices: ${voices.length}\n`);
   
   voices.forEach((voice, index) => {
-    console.log(`${index + 1}. ${voice.name}`);
-    console.log(`   Lang: ${voice.lang}`);
-    console.log(`   Default: ${voice.default}`);
-    console.log(`   Local Service: ${voice.localService}`);
-    console.log('');
   });
   
   return voices;
@@ -25,3 +18,4 @@ export function getAvailableVoices() {
 if (typeof window !== 'undefined') {
   window.getAvailableVoices = getAvailableVoices;
 }
+

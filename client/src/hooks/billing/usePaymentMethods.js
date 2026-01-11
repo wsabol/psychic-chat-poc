@@ -15,7 +15,6 @@ export function usePaymentMethods(token) {
       // If loading takes more than 30 seconds, force reset
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(() => {
-        console.warn('[BILLING] Loading timeout (30s) - forcing reset');
         setLoading(false);
       }, 30000); // Increased to 30 seconds
     } else {
@@ -221,3 +220,4 @@ export function usePaymentMethods(token) {
     attachUnattachedMethods,
   };
 }
+

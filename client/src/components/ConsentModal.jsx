@@ -36,7 +36,6 @@ export function ConsentModal({ userId, token, onConsentAccepted }) {
         throw new Error(data.error || 'Failed to record consent');
       }
 
-      console.log('[CONSENT] ✓ Consent accepted and recorded');
       onConsentAccepted();
     } catch (err) {
       console.error('[CONSENT] Error:', err);
@@ -102,3 +101,4 @@ export function ConsentModal({ userId, token, onConsentAccepted }) {
 }
 
 export default ConsentModal;
+

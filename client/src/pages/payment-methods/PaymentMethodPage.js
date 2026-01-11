@@ -131,7 +131,6 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
         try {
           await onboarding.updateOnboardingStep('payment_method');
         } catch (err) {
-          console.warn('[ONBOARDING] Failed to update payment method step:', err);
         }
       }
 
@@ -245,4 +244,5 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
     </div>
   );
 }
+
 

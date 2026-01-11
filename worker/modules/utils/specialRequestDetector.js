@@ -113,7 +113,6 @@ async function handleMoonPhaseInChat(userId, userInfo, phase) {
                 const moonData = await getCurrentMoonPhase();
                 currentPhase = moonData.phase || 'fullMoon';
             } catch (calcErr) {
-                console.warn('[SPECIAL-REQUEST] Failed to calculate moon phase, using default:', calcErr.message);
                 currentPhase = 'fullMoon'; // fallback
             }
         }
@@ -240,3 +239,4 @@ export async function detectAndHandleSpecialRequest(userId, message, userInfo, a
         return false;
     }
 }
+

@@ -12,7 +12,6 @@ async function getClient() {
         connectPromise = (async () => {
             client = createClient({ url: process.env.REDIS_URL || 'redis://redis:6379' });
             await client.connect();
-            console.log('[REDIS] Connected successfully');
             return client;
         })();
     }
@@ -33,3 +32,4 @@ export const redis = {
         return redisClient.setEx(key, ttl, value);
     }
 };
+

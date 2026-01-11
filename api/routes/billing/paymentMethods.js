@@ -67,7 +67,6 @@ router.get('/payment-methods', authenticateToken, async (req, res) => {
       } catch (stripeError) {
         // If customer doesn't exist in Stripe anymore, return empty (user needs to add payment method again)
         if (stripeError.code === 'resource_missing' || stripeError.message?.includes('No such customer')) {
-          console.warn(`[BILLING] Stripe customer ${customerId} not found - returning empty methods`);
           const result = { cards: [], defaultPaymentMethodId: null };
           await redis.setEx(cacheKey, 10, JSON.stringify(result));
           return result;
@@ -248,3 +247,4 @@ router.post('/payment-methods/attach-unattached', authenticateToken, async (req,
 });
 
 export default router;
+

@@ -259,7 +259,6 @@ export function validateRequest(schema) {
  */
 export async function logSecurityEvent(type, details, req) {
   try {
-    console.warn(`[SECURITY] ${type}:`, details);
 
     // Could send to security monitoring service
     // await sendToSecurityMonitoring(type, details);
@@ -279,3 +278,4 @@ export default {
   validateRequest,
   logSecurityEvent
 };
+

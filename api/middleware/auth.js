@@ -31,7 +31,6 @@ export async function authenticateToken(req, res, next) {
       });
     }
     
-    logger.error('Authentication error:', err.message || err);
     return res.status(403).json({ error: 'Invalid token' });
   }
 }
@@ -51,3 +50,4 @@ export function verify2FA(req, res, next) {
   // Firebase 2FA is handled by Firebase SDK, not by this middleware
   next();
 }
+

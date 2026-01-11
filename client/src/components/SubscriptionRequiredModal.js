@@ -43,7 +43,6 @@ export default function SubscriptionRequiredModal({ onNavigateToSubscriptions, i
 
         <button 
           onClick={() => {
-            console.log('[SUBSCRIPTION-MODAL] Clicked View Subscription Plans');
             onNavigateToSubscriptions();
           }}
           style={styles.button}
@@ -176,3 +175,4 @@ const styles = {
     marginBottom: '0',
   },
 };
+

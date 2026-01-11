@@ -11,7 +11,6 @@ try {
     client = twilio(accountSid, authToken);
   }
 } catch (err) {
-  console.warn('Warning: Twilio client initialization failed. SMS service will not work:', err.message);
 }
 
 /**
@@ -20,7 +19,6 @@ try {
 export async function sendSMS(toPhoneNumber, code) {
   try {
     if (!client || !twilioPhoneNumber) {
-      console.warn('SMS service not configured - code would be: ' + code);
       return {
         success: true,
         sid: 'MOCK-' + code,
@@ -53,7 +51,6 @@ export async function sendSMS(toPhoneNumber, code) {
 export async function sendPasswordResetSMS(toPhoneNumber, code) {
   try {
     if (!client || !twilioPhoneNumber) {
-      console.warn('SMS service not configured - reset code would be: ' + code);
       return {
         success: true,
         sid: 'MOCK-' + code,
@@ -79,3 +76,4 @@ export async function sendPasswordResetSMS(toPhoneNumber, code) {
     };
   }
 }
+

@@ -128,7 +128,6 @@ export function validateRequestPayload(req, res, next) {
 
   for (const pattern of suspiciousPatterns) {
     if (url.includes(pattern)) {
-      console.warn(`[VALIDATION] Suspicious URL pattern detected: ${pattern} in ${req.originalUrl}`);
       return res.status(400).json({
         error: 'Invalid request'
       });
@@ -315,3 +314,4 @@ export default {
   sanitizeUserObject,
   rateLimit
 };
+

@@ -103,7 +103,6 @@ export function ChatScreen({
                             timestamp: new Date().toISOString()
                         }));
                     } catch (e) {
-                        console.warn('[ONBOARDING] Could not save to sessionStorage:', e);
                     }
                 }
                 
@@ -152,7 +151,6 @@ export function ChatScreen({
                     timestamp: new Date().toISOString()
                 }));
             } catch (e) {
-                console.warn('[ONBOARDING] Could not save horoscope to sessionStorage:', e);
             }
         }
     }, [personalInfo.horoscope, isOnboardingFlow, auth.isTemporaryAccount]);
@@ -411,3 +409,4 @@ export function ChatScreen({
         </div>
     );
 }
+

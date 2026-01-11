@@ -9,7 +9,6 @@
  * 
  * Usage:
  *   const chunks = smartChunkBySentence(text, 450);
- *   chunks.forEach(c => console.log(`${c.text} (${c.charCount} chars)`));
  */
 
 /**
@@ -255,3 +254,4 @@ export function formatChunksSummary(chunks) {
   
   return summary;
 }
+

@@ -43,7 +43,6 @@ export async function createSession(userId, req) {
         );
         encryptedUserAgent = encResult.rows[0]?.encrypted;
       } catch (encErr) {
-        console.warn('[SESSION] Failed to encrypt user_agent:', encErr.message);
       }
     }
 
@@ -55,7 +54,6 @@ export async function createSession(userId, req) {
         );
         encryptedIpAddress = encResult.rows[0]?.encrypted;
       } catch (encErr) {
-        console.warn('[SESSION] Failed to encrypt ip_address:', encErr.message);
       }
     }
 
@@ -293,3 +291,4 @@ export default {
   revokeSession,
   revokeAllSessions
 };
+

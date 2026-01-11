@@ -20,7 +20,6 @@ import { db } from './db.js';
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 
 if (!ENCRYPTION_KEY || ENCRYPTION_KEY === 'your_encryption_key_here') {
-  console.warn('⚠️  WARNING: ENCRYPTION_KEY not properly set in environment!');
 }
 
 /**
@@ -190,3 +189,4 @@ export default {
   isEncryptionKeyConfigured,
   getEncryptionKey
 };
+

@@ -81,7 +81,6 @@ router.post('/reactivate', async (req, res) => {
     }
 
   } catch (error) {
-    logger.error('Account reactivation error:', error.message);
     
     // Log failed attempt
     try {

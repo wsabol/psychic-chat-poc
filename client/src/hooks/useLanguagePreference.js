@@ -15,14 +15,12 @@ export function useLanguagePreference() {
   // ✅ CRITICAL: Fetch preferences from database when user authenticates
   useEffect(() => {
     if (!authUserId || !token) {
-      console.log('[LANGUAGE-PREF] No auth - skipping fetch');
       return;
     }
 
     const fetchAndApplyPreferences = async () => {
       try {
         const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
-        console.log('[LANGUAGE-PREF] Fetching preferences for userId:', authUserId);
 
         const response = await fetch(`${API_URL}/user-profile/${authUserId}/preferences`, {
           headers: {
@@ -32,16 +30,13 @@ export function useLanguagePreference() {
         });
 
         if (!response.ok) {
-          console.warn('[LANGUAGE-PREF] Failed to fetch preferences:', response.status);
           return;
         }
 
         const data = await response.json();
-        console.log('[LANGUAGE-PREF] Fetched from DB:', data);
 
         // Apply the language from database (only on initial load)
         if (data.language) {
-          console.log('[LANGUAGE-PREF] Applying language from DB:', data.language);
           await changeLanguage(data.language);
         }
       } catch (err) {
@@ -93,10 +88,8 @@ export function useLanguagePreference() {
               voice_selected: data.voice_selected || 'sophia',
               oracle_language: data.oracle_language || 'en-US'
             };
-            console.log('[LANGUAGE-PREF] Fetched current preferences:', currentPrefs);
           }
         } catch (fetchErr) {
-          console.warn('[LANGUAGE-PREF] Could not fetch current preferences:', fetchErr.message);
         }
 
         // Now save with language update + all other preferences preserved
@@ -108,7 +101,6 @@ export function useLanguagePreference() {
           oracle_language: currentPrefs.oracle_language
         };
 
-        console.log('[LANGUAGE-PREF] Saving with payload:', savePayload);
 
         const response = await fetch(`${API_URL}/user-profile/${authUserId}/preferences`, {
           method: 'POST',
@@ -120,14 +112,11 @@ export function useLanguagePreference() {
         });
 
         if (response.ok) {
-          console.log(`[LANGUAGE-PREF] ✅ Language saved to DB: ${newLanguage}`);
           return true;
         } else {
-          console.warn('[LANGUAGE-PREF] Failed to save language preference to DB');
           return true; // Still successful locally
         }
       } catch (err) {
-        console.warn('[LANGUAGE-PREF] Error saving language preference:', err);
         return true; // Still successful locally
       }
     }
@@ -140,3 +129,4 @@ export function useLanguagePreference() {
     currentLanguage: language
   };
 }
+

@@ -50,12 +50,6 @@ export default function OracleLanguageSection({ oracleLanguage, onLanguageChange
       // Get the base page language for this oracle variant
       const basePageLanguage = getBaseLanguageForOracle(selectedOracleCode);
       
-      console.log('[ORACLE-LANG-SELECT]', {
-        selected: selectedOracleCode,
-        label: selectedOption.label,
-        basePageLanguage: basePageLanguage
-      });
-      
       // Update BOTH oracle language AND base page language in single call
       onLanguageChange(selectedOracleCode, basePageLanguage);
     }

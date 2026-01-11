@@ -74,7 +74,6 @@ export function useAppState() {
       setStartingPage(0);
       if (onboarding.updateOnboardingStep) {
         onboarding.updateOnboardingStep('subscription').catch(err => {
-          console.warn('[ONBOARDING] Failed to update subscription step:', err);
         });
       }
     }
@@ -146,7 +145,6 @@ export function useAppState() {
         await onboarding.updateOnboardingStep('subscription');
       }
     } catch (err) {
-      console.warn('[ONBOARDING] Failed to mark onboarding complete on close:', err);
     } finally {
       setOnboardingClosed(true);
     }
@@ -189,3 +187,4 @@ export function useAppState() {
     setVerificationFailed,
   };
 }
+

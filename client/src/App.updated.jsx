@@ -44,9 +44,7 @@ function App() {
           
           if (response.ok) {
             const data = await response.json();
-            console.log('[TIMEZONE] Saved user timezone:', data.timezone);
           } else {
-            console.warn('[TIMEZONE] Failed to save timezone:', response.statusText);
           }
         }
       } catch (err) {
@@ -90,3 +88,4 @@ function App() {
 }
 
 export default App;
+

@@ -132,7 +132,6 @@ export function useAuthState(checkBillingStatus) {
                 console.error('[AUTH-LISTENER] /auth/check-2fa FAILED:', err.message, err.name);
                 
                 if (err.name === 'AbortError') {
-                  console.warn('[AUTH-LISTENER] 2FA check timed out - assuming 2FA required');
                   setShowTwoFactor(true);
                   setIsAuthenticated(false);
                 } else {
@@ -224,4 +223,5 @@ export function useAuthState(checkBillingStatus) {
     complete2FA,
   };
 }
+
 

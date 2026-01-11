@@ -161,10 +161,8 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
             await savePersonalInfo(dataToSend);
 
             // CALL SYNC-CALCULATE WITH PROPER POST REQUEST
-            console.warn('🔮 Astrology sync-calculate attempt');
             if (isTemporaryAccount && formData.birthCountry && formData.birthProvince && formData.birthCity && formData.birthTime) {
                 try {
-                    console.warn('🔮🔮🔮 CALLING SYNC-CALCULATE NOW');
                     const resp = await fetch(`${API_URL}/astrology/sync-calculate/${userId}`, {
                         method: 'POST',
                         headers: {
@@ -173,7 +171,6 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
                         },
                         body: JSON.stringify({})
                     });
-                    console.log('🔮 Response status:', resp.status);
                 } catch (err) {
                     console.error('🔮 Error:', err);
                 }
@@ -183,9 +180,7 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
 
             if (onboarding?.updateOnboardingStep) {
                 try {
-                    console.log('[PERSONALINFO] Calling updateOnboardingStep(personal_info)');
                     await onboarding.updateOnboardingStep('personal_info');
-                    console.log('[PERSONALINFO] updateOnboardingStep completed');
                 } catch (err) {
                     console.error('[PERSONALINFO] Failed to update personal info step:', err);
                 }
@@ -272,3 +267,4 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
         </div>
     );
 }
+

@@ -160,7 +160,6 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
                 return true;
             }
         } catch (err) {
-            console.warn('Moon phase polling failed:', err);
         }
         return false;
     };
@@ -262,3 +261,4 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
 }
 
 export default MoonPhaseModal;
+

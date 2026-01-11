@@ -22,18 +22,15 @@ import { getTodayInUserTimezone, fetchUserTimezonePreference } from '../utils/ti
  */
 export async function generateHoroscope(userId, range = 'daily') {
     try {
-        console.log(`[HOROSCOPE-HANDLER] Starting horoscope generation - userId: ${userId}, range: ${range}`);
         
         // Fetch user's timezone preference (stored from client-side detection)
         let userTimezone = await fetchUserTimezonePreference(db, userId);
         if (!userTimezone) {
-            console.warn(`[HOROSCOPE-HANDLER] No timezone preference found for user, defaulting to GMT`);
             userTimezone = 'GMT';
         }
         
         // Get today's date in user's LOCAL timezone (not GMT)
         const today = getTodayInUserTimezone(userTimezone);
-        console.log(`[HOROSCOPE-HANDLER] User timezone: ${userTimezone}, Today's date: ${today}`);
         
         const userIdHash = hashUserId(userId);
         
@@ -49,10 +46,8 @@ export async function generateHoroscope(userId, range = 'daily') {
         );
         
         if (existingHoroscopes.length > 0) {
-            console.log(`[HOROSCOPE-HANDLER] ${range} horoscope already generated today, skipping`);
             return;
         }
-        console.log(`[HOROSCOPE-HANDLER] No existing ${range} horoscope found for today, proceeding with generation`);
         
         // Fetch user context
         const userInfo = await fetchUserPersonalInfo(userId);
@@ -80,7 +75,6 @@ export async function generateHoroscope(userId, range = 'daily') {
         
         for (const currentRange of ranges) {
             try {
-                console.log(`[HOROSCOPE-HANDLER] Generating ${currentRange} horoscope...`);
                 const horoscopePrompt = buildHoroscopePrompt(userInfo, astrologyInfo, currentRange, userGreeting);
                 
                 const systemPrompt = baseSystemPrompt + `
@@ -97,9 +91,7 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
                 
                 // Call Oracle with just the user's birth data (no chat history for horoscopes)
                 // Always generate in English first
-                console.log(`[HOROSCOPE-HANDLER] Calling OpenAI for ${currentRange} horoscope...`);
                 const oracleResponses = await callOracle(systemPrompt, [], horoscopePrompt, true);
-                console.log(`[HOROSCOPE-HANDLER] ✓ OpenAI response received`);
                 
                 // Store horoscope in database with metadata (in English)
                 const horoscopeDataFull = {
@@ -123,24 +115,18 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
                 let horoscopeDataBriefLang = null;
                 
                 if (userLanguage && userLanguage !== 'en-US') {
-                    console.log(`[HOROSCOPE-HANDLER] Translating ${currentRange} horoscope to ${userLanguage}...`);
                     horoscopeDataFullLang = await translateContentObject(horoscopeDataFull, userLanguage);
                     horoscopeDataBriefLang = await translateContentObject(horoscopeDataBrief, userLanguage);
                     
                     // VALIDATION: Check if translation actually succeeded
                     if (horoscopeDataFullLang?.text === horoscopeDataFull?.text) {
-                        console.warn(`[HOROSCOPE-HANDLER] ⚠️ WARNING: Translation returned SAME text as English!`);
-                        console.warn(`[HOROSCOPE-HANDLER] ⚠️ Translation likely failed. Storing English only.`);
-                        console.warn(`[HOROSCOPE-HANDLER] ⚠️ Check logs for MyMemory API errors (429 rate limiting)`)
                         horoscopeDataFullLang = null;
                         horoscopeDataBriefLang = null;
                     } else {
-                        console.log(`[HOROSCOPE-HANDLER] ✓ Translation successful`);
                     }
                 }
                 
                 // Store message with both English and translated versions (if applicable)
-                console.log(`[HOROSCOPE-HANDLER] Storing ${currentRange} horoscope to database...`);
                 await storeMessage(
                     userId, 
                     'horoscope', 
@@ -151,7 +137,6 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
                     userLanguage !== 'en-US' ? horoscopeDataBriefLang : null,
                     currentRange  // ← HOROSCOPE RANGE (daily/weekly)
                 );
-                console.log(`[HOROSCOPE-HANDLER] ✓ ${currentRange} horoscope generated and stored`);
                 
             } catch (err) {
                 console.error(`[HOROSCOPE-HANDLER] Error generating ${currentRange} horoscope:`, err.message);
@@ -239,3 +224,4 @@ export function extractHoroscopeRange(message) {
     }
     return 'daily'; // default
 }
+

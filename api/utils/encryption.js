@@ -52,7 +52,6 @@ function decrypt(encryptedData) {
     const parts = encryptedData.split(':');
     if (parts.length !== 3) {
       // Invalid format - return null instead of throwing
-      console.warn('[ENCRYPTION] Invalid encrypted data format, returning null');
       return null;
     }
 
@@ -75,7 +74,6 @@ function decrypt(encryptedData) {
 
     return decrypted;
   } catch (err) {
-    console.warn('[ENCRYPTION] Error decrypting (returning null):', err.message);
     return null;
   }
 }
@@ -88,3 +86,4 @@ function generateVerificationCode() {
 }
 
 export { encrypt, decrypt, generateVerificationCode };
+

@@ -2,7 +2,6 @@ import sgMail from '@sendgrid/mail';
 
 // Initialize SendGrid
 if (!process.env.SENDGRID_API_KEY) {
-    console.warn('[EMAIL] SendGrid API key not configured');
 }
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -283,3 +282,4 @@ function generateReactivationToken(userId) {
     const hash = Buffer.from(`${userId}:${Date.now()}`).toString('base64');
     return encodeURIComponent(hash);
 }
+

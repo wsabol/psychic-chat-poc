@@ -30,7 +30,6 @@ export function useHoroscopeData(userId, token, horoscopeRange, astroInfo) {
 
       // CHECK FOR COMPLIANCE REQUIREMENT (HTTP 451)
       if (result.status === 451) {
-        console.log('[HOROSCOPE] Compliance required:', result.data);
         setComplianceStatus(result.data.details);
         setLoading(false);
         return;
@@ -103,3 +102,4 @@ export function useHoroscopeData(userId, token, horoscopeRange, astroInfo) {
     stopPolling
   };
 }
+

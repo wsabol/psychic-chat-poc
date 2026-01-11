@@ -62,7 +62,6 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
     if (onExit) {
       onExit();
     } else {
-      console.warn('[HOROSCOPE] onExit prop not provided!');
     }
   };
 
@@ -169,3 +168,4 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
     </div>
   );
 }
+

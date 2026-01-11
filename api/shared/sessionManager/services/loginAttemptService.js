@@ -24,7 +24,6 @@ export async function logLoginAttempt(options) {
 
     // Validate required fields
     if (!emailAttempted || !attemptType) {
-      console.warn('[LOGIN-ATTEMPT] Missing required fields');
       return false;
     }
 
@@ -160,3 +159,4 @@ export default {
   countFailedAttemptsFromIp,
   countUniqueUsersFromIp
 };
+

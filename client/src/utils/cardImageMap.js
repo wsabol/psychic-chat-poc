@@ -115,7 +115,6 @@ export function getCardImageByID(cardId) {
     return cardIdToImageMap[id];
   }
   
-  console.warn(`[CARD-MAP] Could not find image for card ID: ${cardId}`);
   return null;
 }
 
@@ -231,3 +230,4 @@ export function getCardImageByName(cardName) {
 }
 
 export default getCardImageByID;
+

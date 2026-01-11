@@ -34,7 +34,6 @@ export function useAstrologyPolling() {
         let attempts = 0;
         const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
 
-        console.log('[ASTRO-POLLING] Starting astrology poll');
 
         while (attempts < maxAttempts) {
           try {
@@ -50,11 +49,6 @@ export function useAstrologyPolling() {
               // Check if calculation complete (has moon and rising signs)
               if (astroData?.moon_sign && astroData?.rising_sign) {
                 const elapsedMs = attempts * intervalMs;
-                console.log(`[ASTRO-POLLING] ✓ Ready after ${elapsedMs}ms`, {
-                  sun: astroData.sun_sign,
-                  moon: astroData.moon_sign,
-                  rising: astroData.rising_sign
-                });
 
                 if (onReady) onReady();
                 setIsChecking(false);
@@ -93,3 +87,4 @@ export function useAstrologyPolling() {
     isChecking
   };
 }
+

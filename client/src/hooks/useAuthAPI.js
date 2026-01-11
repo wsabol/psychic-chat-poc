@@ -22,7 +22,6 @@ export function useAuthAPI() {
       });
 
       if (dbResponse.ok) {
-        console.log('[AUTH-DB] ✓ Database record created');
         return true;
       } else {
         const errorData = await dbResponse.json();
@@ -41,7 +40,6 @@ export function useAuthAPI() {
    */
   const recordConsent = async (userId, termsAccepted, privacyAccepted, token) => {
     try {
-      console.log('[CONSENT] Recording consent for user:', userId);
       
       const consentResponse = await fetch(`${API_BASE}/auth/record-consent/${userId}`, {
         method: 'POST',
@@ -62,7 +60,6 @@ export function useAuthAPI() {
         throw new Error(responseData.error || 'Failed to record consent');
       }
 
-      console.log('[CONSENT] ✓ Consent recorded successfully', responseData);
       return true;
     } catch (consentErr) {
       console.error('[CONSENT] ✗ CRITICAL: Could not record consent:', consentErr.message);
@@ -84,7 +81,6 @@ export function useAuthAPI() {
       });
 
       const data = await response.json();
-      console.log('[CONSENT-CHECK] Status:', data);
       return data;
     } catch (err) {
       console.error('[CONSENT-CHECK] ✗ Error checking consent:', err.message);
@@ -113,7 +109,6 @@ export function useAuthAPI() {
       await user.reload();
       return user.emailVerified;
     } catch (err) {
-      console.warn('[EMAIL-VERIFY] Error checking status:', err);
       return false;
     }
   };
@@ -121,12 +116,12 @@ export function useAuthAPI() {
   /**
    * Log login success to audit
    */
-  const logLoginSuccess = async (userId, email) => {
+    const logLoginSuccess = async (userId, email) => {
     fetch(`${API_BASE}/auth/log-login-success`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId, email })
-    }).catch(err => console.warn('[AUDIT] Login log skipped'));
+    }).catch(() => {});
   };
 
   return {
@@ -140,3 +135,4 @@ export function useAuthAPI() {
 }
 
 export default useAuthAPI;
+

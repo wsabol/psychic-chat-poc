@@ -42,7 +42,6 @@ export async function ensureUserAstrology(userInfo, astrologyInfo, userId) {
 
         // Check if calculation was successful
         if (!calculatedChart.success || !calculatedChart.rising_sign || !calculatedChart.moon_sign) {
-            console.warn('[ASTROLOGY-SETUP] Chart calculation incomplete');
             return null;
         }
 
@@ -69,7 +68,6 @@ export async function ensureUserAstrology(userInfo, astrologyInfo, userId) {
             astrology_data: astrologyData
         };
     } catch (err) {
-        console.warn('[ASTROLOGY-SETUP] Astrology calculation failed:', err.message);
         // Return null on error, allow chat to proceed without astrology
         return null;
     }
@@ -94,3 +92,4 @@ async function storeAstrologyData(userId, sunSign, astrologyData) {
         throw err;
     }
 }
+

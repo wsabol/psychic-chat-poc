@@ -49,7 +49,6 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
         throw new Error(data.error || 'Failed to record consent');
       }
 
-      console.log('[COMPLIANCE] ✓ Privacy accepted and recorded');
       // Automatically proceed after success
       onConsentUpdated();
     } catch (err) {
@@ -95,7 +94,6 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
         throw new Error(data.error || 'Failed to record consent');
       }
 
-      console.log('[COMPLIANCE] ✓ Terms accepted and recorded');
       // Automatically proceed after success
       onConsentUpdated();
     } catch (err) {
@@ -231,3 +229,4 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
 }
 
 export default ComplianceUpdateModal;
+

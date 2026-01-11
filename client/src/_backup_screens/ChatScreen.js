@@ -78,7 +78,6 @@ export function ChatScreen({
                             timestamp: new Date().toISOString()
                         }));
                     } catch (e) {
-                        console.warn('Could not save to sessionStorage:', e);
                     }
                 }
                 
@@ -134,7 +133,6 @@ export function ChatScreen({
                     timestamp: new Date().toISOString()
                 }));
             } catch (e) {
-                console.warn('Could not save to sessionStorage:', e);
             }
         }
     }, [personalInfo.horoscope, isOnboardingFlow, auth.isTemporaryAccount]);
@@ -427,3 +425,4 @@ export function ChatScreen({
         </div>
     );
 }
+

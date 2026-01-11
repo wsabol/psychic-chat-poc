@@ -15,7 +15,6 @@ function TarotCard({ card }) {
   const cardLabel = isReversed ? `${card.name} (Reversed)` : card.name;
 
   if (!imageFilename) {
-    console.warn(`[TAROT] Could not find image for card:`, card);
     return null;
   }
 
@@ -195,3 +194,4 @@ export default function ChatMessage({ msg, defaultShowBrief = true, voiceEnabled
     </div>
   );
 }
+

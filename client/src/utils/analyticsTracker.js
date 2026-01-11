@@ -187,9 +187,7 @@ export function initializeAnalytics() {
   }
   
   if (isAnalyticsEnabled()) {
-    console.log('[ANALYTICS] Initialized (enabled)');
   } else {
-    console.log('[ANALYTICS] Initialized (disabled by user)');
   }
 
   // Track page unload
@@ -205,5 +203,5 @@ export function initializeAnalytics() {
  */
 export function setAnalyticsEnabled(enabled) {
   localStorage.setItem('analyticsEnabled', enabled.toString());
-  console.log(`[ANALYTICS] ${enabled ? 'Enabled' : 'Disabled'}`);
 }
+

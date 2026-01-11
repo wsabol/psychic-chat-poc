@@ -63,7 +63,6 @@ export function useEmailVerification() {
                 if (verified) {
                     clearInterval(pollInterval);
                     setIsVerified(true);
-                    try { await fetch('http://localhost:3000/auth/log-email-verified', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.uid }) }); } catch (err) { console.warn('[AUDIT] Email verification logging skipped'); }
                     
                     // Call parent callback if provided (to update auth context)
                     if (onVerified) {
@@ -114,3 +113,4 @@ export function useEmailVerification() {
         resendVerificationEmail,
     };
 }
+

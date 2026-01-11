@@ -50,7 +50,6 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
         throw new Error(data.error || 'Failed to record consent');
       }
 
-      console.log('[COMPLIANCE] ✓ User acceptance recorded successfully');
       // Automatically proceed after success - don't wait for state update
       onConsentUpdated();
     } catch (err) {
@@ -62,13 +61,11 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
   };
 
   const handleAcceptPrivacy = async () => {
-    console.log('[COMPLIANCE-MODAL] Accept Privacy clicked, userId:', userId, 'token:', !!token);
     setLoading(true);
     setError('');
 
     try {
       const apiUrl = `${process.env.REACT_APP_API_URL}/auth/consent/terms-acceptance`;
-      console.log('[COMPLIANCE-MODAL] API URL:', apiUrl);
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
@@ -88,7 +85,6 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
         throw new Error(data.error || 'Failed to record consent');
       }
 
-      console.log('[COMPLIANCE] ✓ User acceptance recorded successfully');
       // Automatically proceed after success - don't wait for state update
       onConsentUpdated();
     } catch (err) {
@@ -230,3 +226,4 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
 }
 
 export default ComplianceUpdateModal;
+

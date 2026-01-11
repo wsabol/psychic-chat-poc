@@ -17,13 +17,11 @@ import { getUserTimezone, getLocalDateForTimezone, needsRegeneration } from '../
  */
 export async function generateMoonPhaseCommentary(userId, phase) {
     try {
-        console.log(`[MOON-PHASE-HANDLER] Starting moon phase generation - userId: ${userId}, phase: ${phase}`);
         const userIdHash = hashUserId(userId);
         
         // Get user timezone and today's local date
         const userTimezone = await getUserTimezone(userIdHash);
         const todayLocalDate = getLocalDateForTimezone(userTimezone);
-        console.log(`[MOON-PHASE-HANDLER] User timezone: ${userTimezone}, Today (local): ${todayLocalDate}`);
         
         // Check if THIS SPECIFIC PHASE was already generated for today (in user's timezone)
         const { rows: existingMoonPhase } = await db.query(
@@ -34,11 +32,9 @@ export async function generateMoonPhaseCommentary(userId, phase) {
         if (existingMoonPhase.length > 0) {
             const createdAtLocalDate = existingMoonPhase[0].created_at_local_date;
             if (!needsRegeneration(createdAtLocalDate, todayLocalDate)) {
-                console.log(`[MOON-PHASE-HANDLER] ${phase} moon phase already generated for today (${todayLocalDate}), skipping`);
                 return;
             }
         } else {
-            console.log(`[MOON-PHASE-HANDLER] No existing ${phase} moon phase found, proceeding with generation`);
         }
         
         // Fetch user context
@@ -74,9 +70,7 @@ Do NOT include tarot cards - this is purely lunar + astrological insight enriche
 `;
         
         // Call Oracle - response is already in user's preferred language
-        console.log(`[MOON-PHASE-HANDLER] Calling OpenAI for ${phase} moon phase...`);
         const oracleResponses = await callOracle(systemPrompt, [], moonPhasePrompt, true);
-        console.log(`[MOON-PHASE-HANDLER] ✓ OpenAI response received`);
         
         // Store moon phase commentary (already in user's language)
         const moonPhaseData = {
@@ -94,7 +88,6 @@ Do NOT include tarot cards - this is purely lunar + astrological insight enriche
         };
         
         // Store message (no translation needed - response is already in user's language)
-        console.log(`[MOON-PHASE-HANDLER] Storing ${phase} moon phase to database...`);
         await storeMessage(
             userId,
             'moon_phase',
@@ -108,7 +101,6 @@ Do NOT include tarot cards - this is purely lunar + astrological insight enriche
             null,  // contentType
             todayLocalDate
         );
-        console.log(`[MOON-PHASE-HANDLER] ✓ ${phase} moon phase generated and stored`);
         
     } catch (err) {
         console.error('[MOON-PHASE-HANDLER] Error generating commentary:', err.message);
@@ -172,3 +164,4 @@ export function extractMoonPhase(message) {
     }
     return 'fullMoon';
 }
+

@@ -39,7 +39,6 @@ export async function saveUserTimezone(userId, token, timezone = null) {
     const tz = timezone || getBrowserTimezone();
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
     
-    console.log(`[TIMEZONE] Saving timezone for user: ${tz}`);
     
     // ✅ CRITICAL FIX: Check if user is actually a temporary account
     // Temp accounts have emails like "temp_<uuid>@psychic.local"
@@ -57,11 +56,8 @@ export async function saveUserTimezone(userId, token, timezone = null) {
       body.language = tempUserLanguage;
       body.oracle_language = tempUserLanguage;
       body.response_type = 'full';  // Default to full for temp users
-      console.log(`[TIMEZONE] ✅ Temp user - applying language: ${tempUserLanguage}`);
     } else if (tempUserLanguage && !isTemporaryAccount) {
       // Real user logged in - DON'T apply temp language, just save timezone
-      console.log(`[TIMEZONE] ⚠️ Real user detected - ignoring temp_user_language: ${tempUserLanguage}`);
-      console.log(`[TIMEZONE] Only saving timezone, preserving user's existing preferences`);
     }
     
     const response = await fetch(`${API_URL}/user-profile/${userId}/preferences`, {
@@ -74,11 +70,9 @@ export async function saveUserTimezone(userId, token, timezone = null) {
     });
     
     if (!response.ok) {
-      console.warn('[TIMEZONE] Failed to save timezone:', response.statusText);
       return false;
     }
     
-    console.log('[TIMEZONE] ✓ Timezone saved successfully');
     return true;
   } catch (err) {
     console.error('[TIMEZONE] Error saving timezone:', err);
@@ -95,3 +89,4 @@ export function isLocalDateAfter(date1String, date2String, timezone) {
   const d2 = new Date(date2String);
   return d1 > d2;
 }
+

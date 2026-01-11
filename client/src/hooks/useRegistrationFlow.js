@@ -33,7 +33,6 @@ export function useRegistrationFlow() {
           onboarding_horoscope = JSON.parse(storedHoroscope);
         }
       } catch (storageErr) {
-        console.warn('[MIGRATION] Could not retrieve onboarding data:', storageErr);
       }
 
       // Check if user is upgrading from temp account
@@ -68,7 +67,6 @@ export function useRegistrationFlow() {
             // Send verification email
             await sendEmailVerification(newUserCred.user);
           } catch (reAuthErr) {
-            console.warn('[AUTH-MIGRATION] Re-authentication error:', reAuthErr.message);
           }
 
           return { success: true, userId: null };
@@ -109,3 +107,4 @@ export function useRegistrationFlow() {
 }
 
 export default useRegistrationFlow;
+

@@ -16,7 +16,6 @@ function ensureStripeConfigured() {
 export async function getOrCreateStripeCustomer(userId, userEmail) {
   try {
     if (!stripe) {
-      console.warn('[STRIPE] Stripe not configured, returning null');
       return null;
     }
     
@@ -47,7 +46,6 @@ export async function getOrCreateStripeCustomer(userId, userEmail) {
 export async function createSetupIntent(customerId) {
   try {
     if (!stripe) {
-      console.warn('[STRIPE] Not configured - cannot create setup intent');
       throw new Error('Stripe is not configured. Please check your STRIPE_SECRET_KEY.');
     }
 
@@ -68,7 +66,6 @@ export async function createSetupIntent(customerId) {
 export async function listPaymentMethods(customerId) {
   try {
     if (!stripe) {
-      console.warn('[STRIPE] Not configured - returning empty methods');
       return { cards: [], bankAccounts: [] };
     }
 
@@ -163,7 +160,6 @@ export async function createSubscription(customerId, priceId) {
 export async function getSubscriptions(customerId) {
   try {
     if (!stripe) {
-      console.warn('[STRIPE] Not configured - returning empty subscriptions');
       return [];
     }
 
@@ -197,7 +193,6 @@ export async function cancelSubscription(subscriptionId) {
 export async function getInvoices(customerId) {
   try {
     if (!stripe) {
-      console.warn('[STRIPE] Not configured - returning empty invoices');
       return [];
     }
 
@@ -215,7 +210,6 @@ export async function getInvoices(customerId) {
 export async function getCharges(customerId) {
   try {
     if (!stripe) {
-      console.warn('[STRIPE] Not configured - returning empty charges');
       return [];
     }
 
@@ -233,7 +227,6 @@ export async function getCharges(customerId) {
 export async function getAvailablePrices() {
   try {
     if (!stripe) {
-      console.warn('[STRIPE] Not configured - returning empty prices list');
       return [];
     }
     const prices = await stripe.prices.list({
@@ -336,3 +329,4 @@ export async function verifyPaymentMethodMicrodeposits(paymentMethodId, amounts)
 }
 
 export default stripe;
+

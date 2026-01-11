@@ -45,7 +45,6 @@ export async function getTranslatedAstrologyData(zodiacSignKey, languageCode = '
       return module.translations[signKey];
     }
   } catch (error) {
-    console.warn(`Failed to load ${languageCode}-signs-${fileRange}.js for ${signKey}, trying en-US:`, error);
     
     // Fallback to English if translation fails
     if (languageCode !== 'en-US') {
@@ -62,3 +61,4 @@ export async function getTranslatedAstrologyData(zodiacSignKey, languageCode = '
   
   return null;
 }
+

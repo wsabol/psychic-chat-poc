@@ -40,7 +40,6 @@ export async function saveUserTimezone(userId, token, timezone = null) {
     const tz = timezone || getBrowserTimezone();
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
     
-    console.log(`[TIMEZONE] Saving timezone for user: ${tz}`);
     
     // ✅ ONLY send timezone - let the API preserve all other preferences
     const body = {
@@ -57,11 +56,9 @@ export async function saveUserTimezone(userId, token, timezone = null) {
     });
     
     if (!response.ok) {
-      console.warn('[TIMEZONE] Failed to save timezone:', response.statusText);
       return false;
     }
     
-    console.log('[TIMEZONE] ✓ Timezone saved successfully (other preferences preserved)');
     return true;
   } catch (err) {
     console.error('[TIMEZONE] Error saving timezone:', err);
@@ -78,3 +75,4 @@ export function isLocalDateAfter(date1String, date2String, timezone) {
   const d2 = new Date(date2String);
   return d1 > d2;
 }
+

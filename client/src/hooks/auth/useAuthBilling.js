@@ -31,7 +31,6 @@ export function useAuthBilling() {
         setHasValidPaymentMethod(hasValid);
         return hasValid;
       } else {
-        console.warn('[AUTH] Could not fetch payment methods:', response.status);
         setHasValidPaymentMethod(false);
         return false;
       }
@@ -54,15 +53,12 @@ export function useAuthBilling() {
 
                   if (response.ok) {
         const subscriptions = await response.json();
-        console.log('[BILLING-DEBUG] Subscriptions response:', subscriptions);
         // Check if user has any active subscriptions
         // Include subscriptions with status 'active' (even if cancel_at_period_end is true, they're still active until period ends)
         const hasActive = subscriptions.some(sub => sub.status === 'active');
-        console.log('[BILLING-DEBUG] Has active subscription:', hasActive);
         setHasActiveSubscription(hasActive);
         return hasActive;
       } else {
-        console.warn('[AUTH] Could not fetch subscriptions:', response.status);
         setHasActiveSubscription(false);
         return false;
       }
@@ -115,3 +111,4 @@ export function useAuthBilling() {
     resetBillingState,
   };
 }
+

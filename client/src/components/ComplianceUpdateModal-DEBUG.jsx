@@ -14,10 +14,6 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
   }
 
   const handleAcceptPrivacy = async () => {
-    console.log('[DEBUG] handleAcceptPrivacy called');
-    console.log('[DEBUG] userId:', userId);
-    console.log('[DEBUG] token:', token ? 'exists' : 'MISSING');
-    console.log('[DEBUG] API_URL env:', process.env.REACT_APP_API_URL);
     
     setLoading(true);
     setError('');
@@ -30,8 +26,6 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
         privacy_accepted: true
       };
       
-      console.log('[DEBUG] Making fetch to:', apiUrl);
-      console.log('[DEBUG] With payload:', payload);
       
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -42,15 +36,12 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
         body: JSON.stringify(payload)
       });
 
-      console.log('[DEBUG] Response status:', response.status);
       const data = await response.json();
-      console.log('[DEBUG] Response data:', data);
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to record consent');
       }
 
-      console.log('[DEBUG] SUCCESS - calling onConsentUpdated');
       onConsentUpdated();
     } catch (err) {
       console.error('[DEBUG] CATCH ERROR:', err);
@@ -124,3 +115,4 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
 }
 
 export default ComplianceUpdateModal;
+

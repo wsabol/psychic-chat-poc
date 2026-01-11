@@ -39,7 +39,6 @@ export function getBaseLanguageFromOracleLanguage(oracleLanguage) {
     const baseLanguage = oracleLanguageMap[oracleLanguage];
     
     if (!baseLanguage) {
-        console.warn(`[ORACLE-LANG-MAP] Unknown oracle language: ${oracleLanguage}, defaulting to en-US`);
         return 'en-US';
     }
     
@@ -68,3 +67,4 @@ export function getOracleLanguagesByBase() {
         ]
     };
 }
+

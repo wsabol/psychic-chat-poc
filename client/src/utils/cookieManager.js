@@ -33,7 +33,6 @@ export function clearNonEssentialCookies() {
     }
   });
 
-  console.log('[COOKIES] Non-essential cookies cleared');
 }
 
 /**
@@ -49,7 +48,6 @@ export function areCookiesEnabled() {
  */
 export function setTrackerCookie(name, value, days = 365) {
   if (!areCookiesEnabled()) {
-    console.log(`[COOKIES] Blocked: ${name} (cookies disabled)`);
     return false;
   }
 
@@ -83,7 +81,6 @@ export function getTrackerCookie(name) {
  */
 export function deleteTrackerCookie(name) {
   document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-  console.log(`[COOKIES] Deleted: ${name}`);
 }
 
 /**
@@ -94,5 +91,5 @@ export function initializeCookieManager() {
   if (!areCookiesEnabled()) {
     clearNonEssentialCookies();
   }
-  console.log(`[COOKIES] Manager initialized. Cookies ${areCookiesEnabled() ? 'enabled' : 'disabled'}`);
 }
+

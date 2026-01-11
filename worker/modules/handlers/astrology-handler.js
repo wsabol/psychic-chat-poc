@@ -16,7 +16,6 @@ export async function handleAstrologyCalculation(userId) {
         `, [process.env.ENCRYPTION_KEY, userId]);
         
         if (personalInfoRows.length === 0) {
-            console.warn('[ASTROLOGY-HANDLER] No personal info found for user', userId);
             return;
         }
         
@@ -24,7 +23,6 @@ export async function handleAstrologyCalculation(userId) {
         
         // Check if we have complete birth data (timezone is optional)
         if (!info.birth_date || !info.birth_time || !info.birth_country || !info.birth_province || !info.birth_city) {
-            console.warn('[ASTROLOGY-HANDLER] Incomplete birth data for user', userId);
             console.warn('[ASTROLOGY-HANDLER] Missing fields:', {
                 birth_date: !info.birth_date,
                 birth_time: !info.birth_time,
@@ -53,7 +51,6 @@ export async function handleAstrologyCalculation(userId) {
         
         // Verify calculation was successful
         if (!calculatedChart.success || !calculatedChart.rising_sign || !calculatedChart.moon_sign) {
-            console.warn('[ASTROLOGY-HANDLER] Birth chart calculation failed:', calculatedChart.error);
             return;
         }
         
@@ -97,3 +94,4 @@ export async function handleAstrologyCalculation(userId) {
 export function isAstrologyRequest(message) {
     return message.includes('[SYSTEM]') && message.includes('birth chart');
 }
+

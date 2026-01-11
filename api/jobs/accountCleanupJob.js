@@ -32,7 +32,6 @@ export async function runAccountCleanupJob() {
     const resultDelete = await permanentlyDeleteOldAccounts();
     results.permanent_deletions = resultDelete;
 
-    console.log('[CLEANUP-JOB] Daily cleanup completed:', results);
     return { success: true, ...results };
 
   } catch (error) {
@@ -91,7 +90,6 @@ async function send6MonthReengagementEmails() {
           );
 
           emailsSent++;
-          console.log(`[REENGAGEMENT-6M] ✓ Email sent to ${account.user_id}`);
         } else {
           console.error(`[REENGAGEMENT-6M] ❌ Failed to send to ${account.user_id}: ${emailSendResult.error}`);
         }
@@ -156,7 +154,6 @@ async function send1YearReengagementEmails() {
           );
 
           emailsSent++;
-          console.log(`[REENGAGEMENT-1Y] ✓ Email sent to ${account.user_id}`);
         } else {
           console.error(`[REENGAGEMENT-1Y] ❌ Failed to send to ${account.user_id}: ${emailSendResult.error}`);
         }
@@ -213,7 +210,6 @@ async function permanentlyDeleteOldAccounts() {
         );
 
         deletedCount++;
-        console.log(`[PERMANENT-DELETE] ✓ Account permanently deleted: ${account.user_id}`);
 
       } catch (e) {
         console.error(`[PERMANENT-DELETE] ❌ ${account.user_id}:`, e.message);
@@ -280,7 +276,6 @@ export async function reactivateAccountFromReengagement(userId) {
         [userId]
       );
 
-      console.log(`[REACTIVATION] ✓ Account reactivated: ${userId}`);
       return { success: true, message: 'Account successfully reactivated' };
     } else {
       return { success: false, message: 'Account not found or not in deletion status' };
@@ -311,7 +306,6 @@ export async function unsubscribeFromReengagementEmails(userId) {
       [userId]
     );
 
-    console.log(`[UNSUBSCRIBE] ✓ User unsubscribed from re-engagement: ${userId}`);
     return { success: true, message: 'You have been unsubscribed from re-engagement emails' };
   } catch (error) {
     console.error('[UNSUBSCRIBE] Error:', error);
@@ -320,3 +314,4 @@ export async function unsubscribeFromReengagementEmails(userId) {
 }
 
 export default { runAccountCleanupJob, getCleanupJobStatus, reactivateAccountFromReengagement, unsubscribeFromReengagementEmails };
+

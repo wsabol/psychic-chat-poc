@@ -55,7 +55,6 @@ export async function complianceGate(req, res, next) {
     // User is compliant or only needs to see notification (MINOR changes)
     next();
   } catch (error) {
-    logger.error('[COMPLIANCE-GATE] Error checking compliance:', error);
     
     // Don't block access on error - log it and allow passage
     // This prevents legitimate users from being locked out
@@ -89,7 +88,6 @@ export async function softComplianceCheck(req, res, next) {
     // ALWAYS allow passage for soft check - just inform
     next();
   } catch (error) {
-    logger.error('[COMPLIANCE-SOFT] Error:', error);
     // Always continue on error
     next();
   }
@@ -126,7 +124,6 @@ export async function strictComplianceCheck(req, res, next) {
     
     next();
   } catch (error) {
-    logger.error('[COMPLIANCE-STRICT] Error:', error);
     next();
   }
 }
@@ -158,3 +155,4 @@ export default {
   getComplianceStatus,
   requiresConsentUpdate
 };
+

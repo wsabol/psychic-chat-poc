@@ -21,7 +21,6 @@ export async function createSetupIntent(customerId) {
 export async function listPaymentMethods(customerId) {
   try {
     if (!stripe) {
-      console.warn('[STRIPE] Not configured - returning empty methods');
       return [];
     }
 
@@ -52,3 +51,4 @@ export async function deletePaymentMethod(paymentMethodId) {
     throw error;
   }
 }
+

@@ -52,10 +52,8 @@ export function AppChat({ state }) {
         const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
         const userId = authState?.authUserId;
         
-        console.log('[TIMEZONE] Detected:', timezone, 'User ID:', userId);
         
         if (userId) {
-          console.log('[TIMEZONE] Saving timezone to server...');
           const response = await fetch('/auth/preferences/timezone', {
             method: 'POST',
             headers: {
@@ -69,9 +67,7 @@ export function AppChat({ state }) {
           
           if (response.ok) {
             const data = await response.json();
-            console.log('[TIMEZONE] ✓ Saved user timezone:', data.timezone);
           } else {
-            console.warn('[TIMEZONE] ✗ Failed to save timezone:', response.statusText);
           }
         }
       } catch (err) {
@@ -89,7 +85,6 @@ export function AppChat({ state }) {
 
   // Force re-render when onboarding status changes
   useEffect(() => {
-    console.log('[APPCHAT] Onboarding status updated:', isUserOnboarding);
   }, [isUserOnboarding]);
 
   // Guard: Don't show modals while onboarding data is loading
@@ -124,7 +119,6 @@ export function AppChat({ state }) {
   // Show chat with optional onboarding modal
   if (isChat) {
     const shouldShowModal = !authState.isTemporaryAccount && onboarding.onboardingStatus?.isOnboarding === true;
-    console.log('[APPCHAT-RENDER] shouldShowModal:', shouldShowModal, 'isTemporaryAccount:', authState.isTemporaryAccount, 'isOnboarding:', onboarding.onboardingStatus?.isOnboarding);
     return (
       <ErrorBoundary>
         {shouldShowModal && (
@@ -160,3 +154,4 @@ export function AppChat({ state }) {
 
   return null;
 }
+

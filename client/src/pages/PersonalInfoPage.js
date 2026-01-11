@@ -102,7 +102,6 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
 
       // Trigger astrology calculation for temp users with complete location data
       if (tempAccountConfig.hasCompleteAstrologyData(formData)) {
-        console.log('[PERSONAL-INFO] Temp user with birth location - triggering sync-calculate');
         await triggerAstrologySync();
       }
 
@@ -125,11 +124,9 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
           maxAttempts: TIMING.ASTROLOGY_POLL_MAX_ATTEMPTS,
           intervalMs: TIMING.ASTROLOGY_POLL_INTERVAL_MS,
           onReady: () => {
-            console.log('[PERSONAL-INFO] Astrology ready, navigating to horoscope');
             onNavigateToPage(postSaveAction.navigationTarget);
           },
           onTimeout: () => {
-            console.warn('[PERSONAL-INFO] Astrology timeout, navigating anyway');
             onNavigateToPage(postSaveAction.navigationTarget);
           }
         });
@@ -309,3 +306,4 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
     </div>
   );
 }
+

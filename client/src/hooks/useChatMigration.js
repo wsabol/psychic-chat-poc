@@ -15,7 +15,6 @@ export function useChatMigration() {
    */
   const migrateChatHistory = async (tempUserId, permanentUserId, token) => {
     if (!tempUserId || !permanentUserId || !token) {
-      console.warn('[CHAT-MIGRATION] Missing required params');
       return false;
     }
 
@@ -59,3 +58,4 @@ export function useChatMigration() {
     migrationError
   };
 }
+

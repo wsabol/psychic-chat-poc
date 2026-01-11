@@ -21,13 +21,11 @@ export function validateUserHash(req, res, next) {
   const jwtUserId = req.user?.userId || req.userId;
 
   if (!jwtUserId) {
-    logger.warn('[USER-HASH] No user ID in JWT token');
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
   // Verify that the hashed ID matches the JWT user ID
   if (!verifyUserHash(jwtUserId, hashedId)) {
-    logger.warn(`[USER-HASH] Hash mismatch - JWT: ${jwtUserId}, provided hash: ${hashedId}`);
     return res.status(403).json({ error: 'Access denied' });
   }
 
@@ -40,3 +38,4 @@ export function validateUserHash(req, res, next) {
 }
 
 export default validateUserHash;
+

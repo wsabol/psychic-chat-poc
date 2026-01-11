@@ -10,7 +10,6 @@ export function useAstroInfo(userId, token) {
   const [astroInfo, setAstroInfo] = useState(null);
 
   const fetch = useCallback(async () => {
-    console.log('[ASTRO-INFO-HOOK] Starting fetch for userId:', userId, 'hasToken:', !!token);
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
       const response = await fetchWithTokenRefresh(
@@ -18,11 +17,9 @@ export function useAstroInfo(userId, token) {
         { headers }
       );
 
-      console.log('[ASTRO-INFO-HOOK] Response status:', response.status);
       
       if (response.ok) {
         const data = await response.json();
-        console.log('[ASTRO-INFO-HOOK] Fetched data:', data);
         let astroDataObj = data.astrology_data;
         
         if (typeof astroDataObj === 'string') {
@@ -33,7 +30,6 @@ export function useAstroInfo(userId, token) {
           ...data,
           astrology_data: astroDataObj
         };
-        console.log('[ASTRO-INFO-HOOK] Setting astroInfo:', finalState);
         setAstroInfo(finalState);
         
         return astroDataObj;
@@ -50,3 +46,4 @@ export function useAstroInfo(userId, token) {
     fetchAstroInfo: fetch
   };
 }
+

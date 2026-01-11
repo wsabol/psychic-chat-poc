@@ -36,7 +36,6 @@ function PreferencesPage({ userId, token, onNavigateToPage }) {
         setError(null);
 
         try {
-            console.log('[PREF-PAGE] Saving preferences:', preferences);
             const savedPrefs = await savePreferences(preferences);
             if (savedPrefs) {
                 setPreferences(savedPrefs);
@@ -122,7 +121,6 @@ function PreferencesPage({ userId, token, onNavigateToPage }) {
                 <OracleLanguageSection
                     oracleLanguage={preferences.oracle_language}
                     onLanguageChange={(oracleLanguage, pageLanguage) => {
-                        console.log('[PREF-PAGE] Language changed:', { oracleLanguage, pageLanguage });
                         // UPDATE BOTH in a SINGLE call to avoid state race condition
                         setPreferences({ ...preferences, oracle_language: oracleLanguage, language: pageLanguage });
                     }}
@@ -157,3 +155,4 @@ function PreferencesPage({ userId, token, onNavigateToPage }) {
 }
 
 export default PreferencesPage;
+

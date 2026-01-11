@@ -47,7 +47,6 @@ async function routeJob(job) {
  */
 async function generateDailyMysticalUpdates() {
     try {
-        console.log('[STARTUP] Generating daily horoscope and moon phase updates for all users...');
         
         // Get all authenticated users (exclude temporary accounts)
         const { rows: users } = await db.query(
@@ -55,11 +54,9 @@ async function generateDailyMysticalUpdates() {
         );
         
         if (users.length === 0) {
-            console.log('[STARTUP] No users found for daily updates');
             return;
         }
         
-        console.log(`[STARTUP] Updating ${users.length} users...`);
         
         let horoscopeCount = 0;
         let moonPhaseCount = 0;
@@ -79,7 +76,6 @@ async function generateDailyMysticalUpdates() {
             }
         }
         
-        console.log(`[STARTUP] ✓ Daily updates complete - Horoscopes: ${horoscopeCount}, Moon phases: ${moonPhaseCount}`);
     } catch (err) {
         console.error('[STARTUP] Error generating daily mystical updates:', err.message);
     }
@@ -110,7 +106,6 @@ async function cleanupOldTempAccounts() {
  * Main worker loop
  */
 export async function workerLoop() {
-    console.log('[WORKER] Starting worker loop...');
     
     // Generate daily horoscope and moon phase on startup
     await generateDailyMysticalUpdates();
@@ -121,7 +116,6 @@ export async function workerLoop() {
     // Also run cleanup once on startup (after 5 seconds delay to let system initialize)
     setTimeout(cleanupOldTempAccounts, 5000);
     
-    console.log('[WORKER] Ready for job processing');
     
     // Main job processing loop
     while (true) {
@@ -134,3 +128,4 @@ export async function workerLoop() {
         await routeJob(job);
     }
 }
+

@@ -15,8 +15,6 @@ export async function sendDeleteVerificationEmail(email, code) {
   try {
     // Check if SendGrid API key is configured
     if (!process.env.SENDGRID_API_KEY) {
-      console.warn('[EMAIL] SENDGRID_API_KEY not configured. Logging code instead (development mode).');
-      console.log(`[EMAIL] Verification code for ${email}: ${code}`);
       return { success: true, email, note: 'Code logged to console (development mode - SendGrid not configured)' };
     }
 
@@ -78,7 +76,6 @@ export async function sendDeleteVerificationEmail(email, code) {
       text: `Your account deletion verification code is: ${code}\n\nThis code expires in 10 minutes. Do not share this code with anyone.`
     });
 
-    console.log(`[EMAIL] Delete verification code sent to ${email}`);
     return { success: true, email };
   } catch (error) {
     console.error('[EMAIL] Failed to send deletion verification email:', error.message);
@@ -215,3 +212,4 @@ export async function performCompleteAccountDeletion(userId, userIdHash, req) {
 
   return results;
 }
+

@@ -22,7 +22,6 @@ export function useDeviceLocation() {
           longitude: data.lon
         };
       } else {
-        console.warn('[DEVICE] Location API error:', data.message);
         return null;
       }
     } catch (err) {
@@ -53,3 +52,4 @@ export function useDeviceLocation() {
     getDeviceInfo
   };
 }
+

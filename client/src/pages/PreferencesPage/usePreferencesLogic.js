@@ -11,7 +11,6 @@ export const useFetchPreferences = (userId, token, API_URL) => {
     if (userId) {
       const cached = localStorage.getItem(`userPreferences_${userId}`);
       if (cached) {
-        console.log('[PREFERENCES-FETCH] Loaded from localStorage:', cached);
         try {
           return JSON.parse(cached);
         } catch (e) {
@@ -36,19 +35,13 @@ export const useFetchPreferences = (userId, token, API_URL) => {
       setLoading(true);
       setError(null);
       
-      console.log('[PREFERENCES-FETCH] Starting fetch...');
-      console.log('[PREFERENCES-FETCH] userId:', userId);
-      console.log('[PREFERENCES-FETCH] token:', token ? token.substring(0, 20) + '...' : 'MISSING');
-      console.log('[PREFERENCES-FETCH] API_URL:', API_URL);
       
       if (!token) {
-        console.log('[PREFERENCES-FETCH] ❌ No token - cannot fetch from API');
         setLoading(false);
         return;
       }
       
       if (!userId) {
-        console.log('[PREFERENCES-FETCH] ❌ No userId - cannot fetch from API');
         setLoading(false);
         return;
       }
@@ -56,10 +49,8 @@ export const useFetchPreferences = (userId, token, API_URL) => {
       const headers = { 'Authorization': `Bearer ${token}` };
       const prefUrl = `${API_URL}/user-profile/${userId}/preferences`;
       
-      console.log('[PREFERENCES-FETCH] Fetching from:', prefUrl);
       const prefResponse = await fetchWithTokenRefresh(prefUrl, { headers });
       
-      console.log('[PREFERENCES-FETCH] Response status:', prefResponse.status);
       
       if (!prefResponse.ok) {
         console.error('[PREFERENCES-FETCH] ❌ API error:', prefResponse.status);
@@ -69,7 +60,6 @@ export const useFetchPreferences = (userId, token, API_URL) => {
       }
       
       const prefData = await prefResponse.json();
-      console.log('[PREFERENCES-FETCH] ✅ Data from API:', prefData);
       
       const newPreferences = {
         language: prefData.language || 'en-US',
@@ -83,7 +73,6 @@ export const useFetchPreferences = (userId, token, API_URL) => {
       
       // Cache in localStorage
       localStorage.setItem(`userPreferences_${userId}`, JSON.stringify(newPreferences));
-      console.log('[PREFERENCES-FETCH] ✅ Cached preferences to localStorage');
 
       const personalResponse = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}`, { headers });
       if (personalResponse.ok) {
@@ -99,7 +88,6 @@ export const useFetchPreferences = (userId, token, API_URL) => {
   };
 
   useEffect(() => {
-    console.log('[PREFERENCES-FETCH] useEffect triggered - userId changed or token changed');
     fetchData();
   }, [userId, token, API_URL]);
 
@@ -121,20 +109,14 @@ export const useSavePreferences = (API_URL, userId, token, changeLanguage) => {
     setSuccess(false);
 
     try {
-      console.log('[PREFERENCES-SAVE] Starting save...');
-      console.log('[PREFERENCES-SAVE] Saving preferences:', preferences);
-      console.log('[PREFERENCES-SAVE] userId:', userId);
-      console.log('[PREFERENCES-SAVE] token:', token ? token.substring(0, 20) + '...' : 'MISSING');
       
       // Update language in context if it changed (page UI language)
       if (preferences.language) {
-        console.log('[PREFERENCES-SAVE] Changing language to:', preferences.language);
         await changeLanguage(preferences.language);
       }
 
       // Save to localStorage immediately as backup
       localStorage.setItem(`userPreferences_${userId}`, JSON.stringify(preferences));
-      console.log('[PREFERENCES-SAVE] ✅ Saved to localStorage as backup');
 
       const response = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}/preferences`, {
         method: 'POST',
@@ -145,7 +127,6 @@ export const useSavePreferences = (API_URL, userId, token, changeLanguage) => {
         body: JSON.stringify(preferences)
       });
 
-      console.log('[PREFERENCES-SAVE] Response status:', response.status);
 
       if (!response.ok) {
         const errData = await response.json();
@@ -154,9 +135,7 @@ export const useSavePreferences = (API_URL, userId, token, changeLanguage) => {
       }
 
       const data = await response.json();
-      console.log('[PREFERENCES-SAVE] ✅ Response data:', data);
       setSuccess(true);
-      console.log('[PREFERENCES-SAVE] ✅ Preferences saved successfully!');
       
       return data.preferences;
     } catch (err) {
@@ -170,3 +149,4 @@ export const useSavePreferences = (API_URL, userId, token, changeLanguage) => {
 
   return { save, saving, error, success, setSuccess, setError };
 };
+

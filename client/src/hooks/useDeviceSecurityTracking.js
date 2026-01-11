@@ -29,7 +29,6 @@ export function useDeviceSecurityTracking() {
           }
         }
       } catch (err) {
-        console.warn('[DEVICE-SECURITY] Could not get geolocation:', err.message);
         // Fall back to browser info
         deviceName = `${navigator.userAgent.substring(0, 50)}...`;
       }
@@ -50,16 +49,15 @@ export function useDeviceSecurityTracking() {
       });
 
       if (!response.ok) {
-        console.warn('[DEVICE-SECURITY] Failed to track device:', response.status);
         return;
       }
 
       const result = await response.json();
     } catch (err) {
-      console.warn('[DEVICE-SECURITY] Error tracking device:', err.message);
       // Don't throw - device tracking is non-critical
     }
   }, []);
 
   return { trackDevice };
 }
+

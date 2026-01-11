@@ -6,7 +6,6 @@ import crypto from 'crypto';
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'your_encryption_key_here';
 
 if (ENCRYPTION_KEY === 'your_encryption_key_here') {
-  console.warn('⚠️  WARNING: Using default encryption key! Set ENCRYPTION_KEY in .env for production');
 }
 
 /**
@@ -109,3 +108,4 @@ export default {
   buildEncryptedUpdateQuery,
   buildDecryptedSelectFields
 };
+

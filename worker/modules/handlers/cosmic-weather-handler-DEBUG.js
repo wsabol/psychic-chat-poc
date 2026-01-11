@@ -29,17 +29,13 @@ function generateCosmicWeatherPlanets() {
 }
 
 export async function generateCosmicWeather(userId) {
-    console.log('[COSMIC-WEATHER] Starting generation for user:', userId);
     
     try {
-        console.log('[COSMIC-WEATHER] Hashing user ID');
         const userIdHash = hashUserId(userId);
         
-        console.log('[COSMIC-WEATHER] Getting timezone');
         const userTimezone = await getUserTimezone(userIdHash);
         const todayLocalDate = getLocalDateForTimezone(userTimezone);
         
-        console.log('[COSMIC-WEATHER] Checking if already generated for:', todayLocalDate);
         const { rows } = await db.query(
             `SELECT id, created_at_local_date FROM messages WHERE user_id_hash = $1 AND role = 'cosmic_weather' ORDER BY created_at DESC LIMIT 1`,
             [userIdHash]
@@ -48,16 +44,12 @@ export async function generateCosmicWeather(userId) {
         if (rows.length > 0) {
             const createdAtLocalDate = rows[0].created_at_local_date;
             if (!needsRegeneration(createdAtLocalDate, todayLocalDate)) {
-                console.log('[COSMIC-WEATHER] Already generated, skipping');
                 return;
             }
         }
         
-        console.log('[COSMIC-WEATHER] Fetching user info');
         const userInfo = await fetchUserPersonalInfo(userId);
-        console.log('[COSMIC-WEATHER] Fetching astrology data');
         const astrologyInfo = await fetchUserAstrology(userId);
-        console.log('[COSMIC-WEATHER] Fetching language preferences');
         const userLanguage = await fetchUserLanguagePreference(userId);
         const oracleLanguage = await fetchUserOracleLanguagePreference(userId);
         
@@ -65,7 +57,6 @@ export async function generateCosmicWeather(userId) {
             throw new Error('No astrology data found');
         }
         
-        console.log('[COSMIC-WEATHER] Generating planets');
         const planets = generateCosmicWeatherPlanets();
         const astro = astrologyInfo.astrology_data;
         const userGreeting = getUserGreeting(userInfo, userId);
@@ -74,7 +65,6 @@ export async function generateCosmicWeather(userId) {
             .map(p => `- ${p.name} at ${p.degree}° in ${p.sign}${p.retrograde ? ' RETROGRADE' : ''}`)
             .join('\n');
         
-        console.log('[COSMIC-WEATHER] Building prompt');
         const systemPrompt = getOracleSystemPrompt(false, oracleLanguage) + `
 
 SPECIAL REQUEST - COSMIC WEATHER:
@@ -91,9 +81,7 @@ Do NOT include tarot cards - this is pure astrological forecasting enriched by t
         
         const prompt = buildCosmicWeatherPrompt(userInfo, astrologyInfo, planets, planetsDetailed, userGreeting);
         
-        console.log('[COSMIC-WEATHER] Calling Oracle API');
         const oracleResponses = await callOracle(systemPrompt, [], prompt, true);
-        console.log('[COSMIC-WEATHER] Oracle response received');
         
         const cosmicWeatherDataFull = {
             text: oracleResponses.full,
@@ -124,12 +112,10 @@ Do NOT include tarot cards - this is pure astrological forecasting enriched by t
         let cosmicWeatherDataBriefLang = null;
         
         if (userLanguage && userLanguage !== 'en-US') {
-            console.log('[COSMIC-WEATHER] Translating to:', userLanguage);
             cosmicWeatherDataLang = await translateContentObject(cosmicWeatherDataFull, userLanguage);
             cosmicWeatherDataBriefLang = await translateContentObject(cosmicWeatherDataBrief, userLanguage);
         }
         
-        console.log('[COSMIC-WEATHER] Storing message');
         await storeMessage(
             userId, 
             'cosmic_weather', 
@@ -144,7 +130,6 @@ Do NOT include tarot cards - this is pure astrological forecasting enriched by t
             todayLocalDate
         );
         
-        console.log('[COSMIC-WEATHER] Complete!');
     } catch (err) {
         console.error('[COSMIC-WEATHER] Error:', err.message);
         console.error('[COSMIC-WEATHER] Stack:', err.stack);
@@ -169,3 +154,4 @@ function buildCosmicWeatherPrompt(userInfo, astrologyInfo, planets, planetsDetai
 export function isCosmicWeatherRequest(message) {
     return message.includes('[SYSTEM]') && message.includes('cosmic weather');
 }
+

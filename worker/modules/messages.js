@@ -87,18 +87,6 @@ export async function storeMessage(
         const userIdHash = hashUserId(userId);
         const fullStr = JSON.stringify(contentFull).substring(0, 200);
         const briefStr = contentBrief ? JSON.stringify(contentBrief).substring(0, 200) : 'NULL';
-                console.log('[MESSAGES] Storing:', { 
-            role, 
-            fullLength: JSON.stringify(contentFull).length, 
-            briefLength: contentBrief ? JSON.stringify(contentBrief).length : 0, 
-            fullPreview: fullStr, 
-            briefPreview: briefStr, 
-            languageCode,
-            horoscopeRange,
-            moonPhase,
-            contentType,
-            createdAtLocalDate
-        });
         
         // Build query based on whether we have language-specific content
         let query;
@@ -168,7 +156,6 @@ export async function storeMessage(
         }
         
         await db.query(query, params);
-        console.log('[MESSAGES] ✓ Message stored successfully with createdAtLocalDate:', createdAtLocalDate);
     } catch (err) {
         console.error('[MESSAGES] Error storing message:', err);
         throw err;
@@ -190,7 +177,6 @@ export async function storeTranslatingMessage(userId, role, languageName, conten
         const translatingText = `I am now translating your ${contentTypeLabel} from English to ${languageName}...`;
         const content = { text: translatingText };
         
-        console.log('[MESSAGES] Storing translating message:', { role, contentTypeLabel, languageName });
         
         const query = `INSERT INTO messages(
             user_id_hash, 
@@ -216,7 +202,6 @@ export async function storeTranslatingMessage(userId, role, languageName, conten
         ];
         
         await db.query(query, params);
-        console.log('[MESSAGES] ✓ Translating message stored');
     } catch (err) {
         console.error('[MESSAGES] Error storing translating message:', err);
         throw err;
@@ -233,3 +218,4 @@ export function formatMessageContent(text, cards = null) {
     }
     return content;
 }
+

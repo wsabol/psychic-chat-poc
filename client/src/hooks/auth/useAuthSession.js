@@ -42,7 +42,6 @@ export function useAuthSession() {
         try {
           userToken = await auth.currentUser.getIdToken();
         } catch (err) {
-          console.warn('[TEMP-ACCOUNT] Could not get ID token:', err.message);
         }
 
         // Call backend to delete from database and Firebase
@@ -60,7 +59,6 @@ export function useAuthSession() {
               console.error('[TEMP-ACCOUNT] Backend deletion failed:', response.status);
             }
           } catch (err) {
-            console.warn('[TEMP-ACCOUNT] Backend cleanup failed:', err.message);
           }
         }
 
@@ -71,7 +69,6 @@ export function useAuthSession() {
             await currentUser.delete();
           }
         } catch (err) {
-          console.warn('[TEMP-ACCOUNT] Firebase client-side deletion note:', err.message);
         }
 
         // Clean up localStorage
@@ -128,7 +125,6 @@ export function useAuthSession() {
       try {
         await deleteTemporaryAccount(isTemporaryAccount);
       } catch (err) {
-        console.warn('[EXIT-APP] Delete failed, signing out anyway:', err);
       }
     }
     // Always sign out at the end
@@ -147,3 +143,4 @@ export function useAuthSession() {
     exitApp,
   };
 }
+

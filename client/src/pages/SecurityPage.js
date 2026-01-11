@@ -43,7 +43,6 @@ export default function SecurityPage({ userId, token, auth, onboarding, onNaviga
       try {
         await onboarding.updateOnboardingStep('security_settings');
       } catch (err) {
-        console.warn('[SECURITY] Failed to update onboarding:', err);
       }
     }
   };
@@ -153,3 +152,4 @@ export default function SecurityPage({ userId, token, auth, onboarding, onNaviga
     </div>
   );
 }
+

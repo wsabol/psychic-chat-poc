@@ -30,13 +30,11 @@ function getCosmicWeatherPlanets() {
 
 export async function generateCosmicWeather(userId) {
     try {
-        console.log(`[COSMIC-WEATHER] Starting cosmic weather generation - userId: ${userId}`);
         const userIdHash = hashUserId(userId);
         
         // 🌍 CRITICAL: Get user's timezone and today's local date
         const userTimezone = await getUserTimezone(userIdHash);
         const todayLocalDate = getLocalDateForTimezone(userTimezone);
-        console.log(`[COSMIC-WEATHER] User timezone: ${userTimezone}, Today (local): ${todayLocalDate}`);
         
         // Check if cosmic weather already exists for today (in user's timezone)
         // No longer need encryption key for date check
@@ -48,13 +46,10 @@ export async function generateCosmicWeather(userId) {
         if (rows.length > 0) {
             const createdAtLocalDate = rows[0].created_at_local_date;
             if (!needsRegeneration(createdAtLocalDate, todayLocalDate)) {
-                console.log(`[COSMIC-WEATHER] Already generated for today (${todayLocalDate}), skipping`);
                 return;
             } else {
-                console.log(`[COSMIC-WEATHER] Previous weather from ${createdAtLocalDate}, today is ${todayLocalDate}, regenerating`);
             }
         } else {
-            console.log(`[COSMIC-WEATHER] No existing cosmic weather found, proceeding with generation`);
         }
         
         const userInfo = await fetchUserPersonalInfo(userId);
@@ -97,9 +92,7 @@ Do NOT include tarot cards - this is pure astrological forecasting enriched by t
         const prompt = buildCosmicWeatherPrompt(userInfo, astrologyInfo, planets, planetsDetailed, userGreeting);
         
         // Call Oracle (always in English first)
-        console.log(`[COSMIC-WEATHER] Calling OpenAI for cosmic weather...`);
         const oracleResponses = await callOracle(systemPrompt, [], prompt, true);
-        console.log(`[COSMIC-WEATHER] ✓ OpenAI response received`);
         
         const cosmicWeatherDataFull = {
             text: oracleResponses.full,
@@ -131,15 +124,12 @@ Do NOT include tarot cards - this is pure astrological forecasting enriched by t
         let cosmicWeatherDataBriefLang = null;
         
         if (userLanguage && userLanguage !== 'en-US') {
-            console.log(`[COSMIC-WEATHER] Translating to ${userLanguage}...`);
             cosmicWeatherDataLang = await translateContentObject(cosmicWeatherDataFull, userLanguage);
             cosmicWeatherDataBriefLang = await translateContentObject(cosmicWeatherDataBrief, userLanguage);
-            console.log(`[COSMIC-WEATHER] ✓ Translation successful`);
         }
         
         // Store message with both English and translated versions (if applicable)
         // CRITICAL: Pass created_at_local_date with today's local date
-        console.log(`[COSMIC-WEATHER] Storing to database with local date: ${todayLocalDate}...`);
         await storeMessage(
             userId, 
             'cosmic_weather', 
@@ -153,7 +143,6 @@ Do NOT include tarot cards - this is pure astrological forecasting enriched by t
             null,
             todayLocalDate  // created_at_local_date ← TIMEZONE-AWARE DATE
         );
-        console.log(`[COSMIC-WEATHER] ✓ Cosmic weather generated and stored`);
         
     } catch (err) {
         console.error('[COSMIC-WEATHER-HANDLER] Error:', err.message);
@@ -203,3 +192,4 @@ function buildCosmicWeatherPrompt(userInfo, astrologyInfo, planets, planetsDetai
 export function isCosmicWeatherRequest(message) {
     return message.includes('[SYSTEM]') && message.includes('cosmic weather');
 }
+

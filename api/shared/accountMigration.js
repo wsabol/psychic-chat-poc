@@ -76,7 +76,6 @@ export async function migrateOnboardingData(options) {
         });
       }
     } catch (msgErr) {
-      console.warn(`[MIGRATION] Could not migrate messages:`, msgErr.message);
       migrationLog.steps.push({
         step: 'migrate_messages',
         status: 'warning',
@@ -113,7 +112,6 @@ export async function migrateOnboardingData(options) {
         });
       }
     } catch (astroErr) {
-      console.warn(`[MIGRATION] Could not migrate astrology data:`, astroErr.message);
       migrationLog.steps.push({ 
         step: 'migrate_astrology', 
         status: 'warning',
@@ -129,7 +127,6 @@ export async function migrateOnboardingData(options) {
         status: 'success'
       });
     } catch (firebaseErr) {
-      console.warn(`[MIGRATION] Could not delete Firebase temp user:`, firebaseErr.message);
       migrationLog.steps.push({ 
         step: 'delete_firebase_temp_user', 
         status: 'warning',
@@ -201,3 +198,4 @@ export async function rollbackMigration(newUserId) {
     throw err;
   }
 }
+

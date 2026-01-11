@@ -69,7 +69,6 @@ export function AppChat({ state }) {
         
         // Show modal only if BOTH terms AND privacy are NOT accepted
         const needsConsent = !data.terms_accepted || !data.privacy_accepted;
-        console.log('[APPCHAT] Consent check:', { terms_accepted: data.terms_accepted, privacy_accepted: data.privacy_accepted, needsConsent });
         setShowConsentModal(needsConsent);
       } catch (err) {
         console.error('[APPCHAT] Error checking consent:', err);
@@ -96,11 +95,9 @@ export function AppChat({ state }) {
 
   // Detect when onboarding COMPLETES (transitions from true to false)
   useEffect(() => {
-    console.log('[APPCHAT] Onboarding status updated:', isUserOnboarding, 'wasOnboarding:', wasOnboarding);
     
     // If was onboarding and now NOT onboarding = onboarding just completed
     if (wasOnboarding && !isUserOnboarding) {
-      console.log('[APPCHAT] *** ONBOARDING COMPLETED - SHOWING WELCOME MESSAGE ***');
       setShowWelcomeMessage(true);
     }
     
@@ -110,12 +107,10 @@ export function AppChat({ state }) {
 
   // Debug: Track welcome message state
   useEffect(() => {
-    console.log('[APPCHAT] showWelcomeMessage state changed to:', showWelcomeMessage);
   }, [showWelcomeMessage]);
 
   // Handle consent accepted
   const handleConsentAccepted = () => {
-    console.log('[APPCHAT] Consent accepted');
     setShowConsentModal(false);
     // User will be redirected or updated by AuthContext
     window.location.reload();
@@ -123,13 +118,11 @@ export function AppChat({ state }) {
 
   // Handle welcome message close
   const handleWelcomeClose = () => {
-    console.log('[APPCHAT] Welcome message dismissed');
     setShowWelcomeMessage(false);
   };
 
   // Handle navigate to chat from welcome
   const handleWelcomeNavigateToChat = () => {
-    console.log('[APPCHAT] Navigating to chat from welcome');
     setShowWelcomeMessage(false);
   };
 
@@ -183,7 +176,6 @@ export function AppChat({ state }) {
   // Show chat with optional onboarding modal and welcome message
   if (isChat) {
     const shouldShowModal = !authState.isTemporaryAccount && onboarding.onboardingStatus?.isOnboarding === true;
-    console.log('[APPCHAT-RENDER]', { shouldShowModal, showWelcomeMessage, isOnboarding: onboarding.onboardingStatus?.isOnboarding });
     return (
       <ErrorBoundary>
         {shouldShowModal && (
@@ -227,3 +219,4 @@ export function AppChat({ state }) {
 
   return null;
 }
+

@@ -111,9 +111,7 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
   });
 
     const goToPage = useCallback((index) => {
-    console.log('[GOTEPAGE] index:', index, 'currentPageIndex:', currentPageIndex);
     const newIndex = Math.max(0, Math.min(index, PAGES.length - 1));
-    console.log('[GOTEPAGE] newIndex:', newIndex);
     if (newIndex !== currentPageIndex) {
       // If leaving billing page and not going back to billing, notify App to re-check subscription
       if (currentPageIndex === 9 && newIndex !== 9 && onNavigateFromBilling) {
@@ -194,3 +192,4 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
     </div>
   );
 }
+

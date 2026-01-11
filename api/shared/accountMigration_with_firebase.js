@@ -63,7 +63,6 @@ export async function migrateOnboardingData(options) {
         tempUserInfo = tempResult.rows[0];
       }
     } catch (err) {
-      console.warn(`[MIGRATION] Could not fetch temp user info:`, err.message);
     }
     
     // Step 1: Create user_personal_info for permanent user with migrated data
@@ -167,7 +166,6 @@ export async function migrateOnboardingData(options) {
         });
       }
     } catch (astroErr) {
-      console.warn(`[MIGRATION] Could not migrate astrology data:`, astroErr.message);
       migrationLog.steps.push({ 
         step: 'migrate_astrology', 
         status: 'warning',
@@ -183,7 +181,6 @@ export async function migrateOnboardingData(options) {
         status: 'success'
       });
     } catch (firebaseErr) {
-      console.warn(`[MIGRATION] Could not delete Firebase temp user:`, firebaseErr.message);
       migrationLog.steps.push({ 
         step: 'delete_firebase_temp_user', 
         status: 'warning',
@@ -257,3 +254,4 @@ export async function rollbackMigration(newUserId) {
     throw err;
   }
 }
+

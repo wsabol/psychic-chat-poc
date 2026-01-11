@@ -34,7 +34,6 @@ export async function fetchWithTokenRefresh(url, options = {}) {
         const currentUser = auth.currentUser;
         if (!currentUser) {
           // No user logged in - log them out completely
-          console.warn('[FETCH] No user logged in, clearing session and redirecting');
           // Use a redirect flag to prevent race conditions
           sessionStorage.setItem('redirecting', 'true');
           setTimeout(() => {
@@ -103,3 +102,4 @@ export async function fetchWithTokenRefresh(url, options = {}) {
     throw err;
   }
 }
+

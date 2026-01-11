@@ -69,7 +69,6 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
         const userId = await extractUserIdFromSubscription(subscription.id);
 
         if (!userId) {
-          console.warn('[WEBHOOK] Could not find user for subscription:', subscription.id);
           return res.json({ received: true });
         }
 
@@ -93,7 +92,6 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
         const userId = await extractUserIdFromSubscription(subscription.id);
 
         if (!userId) {
-          console.warn('[WEBHOOK] Could not find user for subscription:', subscription.id);
           return res.json({ received: true });
         }
 
@@ -114,7 +112,6 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
         const userId = await extractUserIdFromSubscription(subscription.id);
 
         if (!userId) {
-          console.warn('[WEBHOOK] Could not find user for subscription:', subscription.id);
           return res.json({ received: true });
         }
 
@@ -182,3 +179,4 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
 });
 
 export default router;
+

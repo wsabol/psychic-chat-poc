@@ -90,10 +90,8 @@ export function usePersonalInfoAPI(userId, token) {
       );
 
       if (response.ok) {
-        console.log('[PERSONAL-INFO-API] ✓ Sync-calculate endpoint called');
         return { success: true };
       } else {
-        console.warn('[PERSONAL-INFO-API] Sync-calculate returned:', response.status);
         return { success: false, error: `HTTP ${response.status}` };
       }
     } catch (err) {
@@ -108,3 +106,4 @@ export function usePersonalInfoAPI(userId, token) {
     triggerAstrologySync
   };
 }
+

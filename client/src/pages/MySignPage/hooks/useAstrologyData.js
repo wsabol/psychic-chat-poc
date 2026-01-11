@@ -29,10 +29,8 @@ export function useAstrologyData(userId, token) {
         };
         
         const langCode = languageMap[language] || 'en-US';
-        console.log('[ASTROLOGY] Loading zodiac signs for language:', langCode);
         const module = await import(`../../../data/zodiac/translations/${langCode}-module.js`);
         setZodiacSigns(module.zodiacSigns);
-        console.log('[ASTROLOGY] Zodiac signs loaded for:', langCode);
       } catch (err) {
         console.error('[ASTROLOGY] Failed to load zodiac signs:', language, err);
         try {
@@ -49,7 +47,6 @@ export function useAstrologyData(userId, token) {
 
     const fetchAstrologyData = useCallback(async () => {
     if (!zodiacSigns) {
-      console.log('[ASTROLOGY] Waiting for zodiac signs...');
       return;
     }
     setLoading(true);
@@ -121,3 +118,4 @@ export function useAstrologyData(userId, token) {
     fetchAstrologyData
   };
 }
+

@@ -77,9 +77,9 @@ IMPORTANT: Use the above personal and astrological information to:
             briefContentLang
         );
 
-        console.log('[ORACLE-PROCESSOR] ✓ Oracle request processed and stored');
     } catch (err) {
         console.error('[ORACLE-PROCESSOR] Error processing oracle request:', err.message);
         throw err;
     }
 }
+

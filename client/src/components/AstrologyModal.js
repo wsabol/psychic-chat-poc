@@ -52,7 +52,6 @@ function AstrologyModal({ userId, token, isOpen, onClose, birthDate, birthTime, 
                     }
                 }
             } catch (e) {
-                console.warn('Could not fetch astrology data from database:', e);
             }
             
             // Fallback to local zodiac data
@@ -279,3 +278,4 @@ function AstrologyModal({ userId, token, isOpen, onClose, birthDate, birthTime, 
 }
 
 export default AstrologyModal;
+

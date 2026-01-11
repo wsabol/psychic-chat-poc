@@ -58,10 +58,8 @@ export function useLanguagePreference() {
               voice_selected: data.voice_selected || 'sophia',
               oracle_language: data.oracle_language || 'en-US'
             };
-            console.log('[LANGUAGE] Fetched current preferences:', currentPrefs);
           }
         } catch (fetchErr) {
-          console.warn('[LANGUAGE] Could not fetch current preferences, using defaults:', fetchErr.message);
         }
 
         // Now save with language update + all other preferences preserved
@@ -73,7 +71,6 @@ export function useLanguagePreference() {
           oracle_language: currentPrefs.oracle_language
         };
 
-        console.log('[LANGUAGE] Saving with payload:', savePayload);
 
         const response = await fetch(`${API_URL}/user-profile/${authUserId}/preferences`, {
           method: 'POST',
@@ -85,14 +82,11 @@ export function useLanguagePreference() {
         });
 
         if (response.ok) {
-          console.log(`[LANGUAGE] ✅ Language saved to DB: ${newLanguage}`);
           return true;
         } else {
-          console.warn('[LANGUAGE] Failed to save language preference to DB');
           return true; // Still successful locally
         }
       } catch (err) {
-        console.warn('[LANGUAGE] Error saving language preference:', err);
         return true; // Still successful locally
       }
     }
@@ -105,3 +99,4 @@ export function useLanguagePreference() {
     currentLanguage: language
   };
 }
+
