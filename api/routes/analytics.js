@@ -80,7 +80,6 @@ router.post('/track', async (req, res) => {
       );
     } catch (encryptionError) {
       // Fallback: if encryption fails, store without encryption (less secure but resilient)
-      console.warn('[ANALYTICS-TRACK] Encryption failed, storing unencrypted:', encryptionError.message);
       await db.query(
         `INSERT INTO app_analytics (
           event_type,
@@ -110,7 +109,6 @@ router.post('/track', async (req, res) => {
 
     res.status(201).json({ success: true, message: 'Event tracked' });
   } catch (error) {
-    console.error('[ANALYTICS-TRACK] Error:', error);
     // Don't expose error details to client
     res.status(500).json({ error: 'Failed to track event' });
   }
@@ -178,7 +176,6 @@ router.get('/report', async (req, res) => {
         [ENCRYPTION_KEY]
       );
     } catch (decryptError) {
-      console.warn('[ANALYTICS-REPORT] Could not decrypt IPs:', decryptError.message);
     }
 
     // Error tracking (decrypt error messages if available)
@@ -201,7 +198,6 @@ router.get('/report', async (req, res) => {
         [ENCRYPTION_KEY]
       );
     } catch (decryptError) {
-      console.warn('[ANALYTICS-REPORT] Could not decrypt error messages:', decryptError.message);
     }
 
     // Drop-off analysis
@@ -237,7 +233,6 @@ router.get('/report', async (req, res) => {
 
     res.json(report);
   } catch (error) {
-    console.error('[ANALYTICS-REPORT] Error:', error);
     res.status(500).json({ error: 'Failed to generate report', details: error.message });
   }
 });
@@ -262,7 +257,6 @@ router.delete('/data', async (req, res) => {
       rows_deleted: result.rowCount,
     });
   } catch (error) {
-    console.error('[ANALYTICS-DELETE] Error:', error);
     res.status(500).json({ error: 'Failed to delete analytics data', details: error.message });
   }
 });
@@ -291,7 +285,6 @@ router.post('/cleanup', async (req, res) => {
       rows_deleted: result.rowCount,
     });
   } catch (error) {
-    console.error('[ANALYTICS-CLEANUP] Error:', error);
     res.status(500).json({ error: 'Failed to cleanup analytics data', details: error.message });
   }
 });

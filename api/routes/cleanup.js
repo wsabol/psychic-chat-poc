@@ -36,7 +36,6 @@ router.delete("/delete-temp-account/:tempUserId", async (req, res) => {
             firebaseDeleted: firebaseDeleted
         });
     } catch (err) {
-        console.error('[CLEANUP] ERROR in delete-temp-account:', err);
         res.status(500).json({ 
             error: 'Failed to delete temporary account', 
             details: err.message 
@@ -72,8 +71,8 @@ router.delete("/cleanup-old-temp-accounts", async (req, res) => {
                 try { 
                     await firebaseAuth.deleteUser(uid); 
                     deletedCount++; 
-                } catch (err) { 
-                    console.error(`[CLEANUP] Failed to delete Firebase user ${uid}:`, err.code); 
+                } catch (err) {
+                    // Silently continue if Firebase deletion fails
                 }
             }
         }
@@ -88,19 +87,23 @@ router.delete("/cleanup-old-temp-accounts", async (req, res) => {
                     if (dbResult.rows.length === 0) {
                         const createdTime = new Date(user.metadata.creationTime);
                         if (createdTime < oneDayAgo) {
-                            try { await firebaseAuth.deleteUser(user.uid); firebaseDeletedCount++; } catch (err) { console.warn('[CLEANUP] Could not delete orphan:', user.uid); }
+                            try {
+                                await firebaseAuth.deleteUser(user.uid);
+                                firebaseDeletedCount++;
+                            } catch (err) {
+                                // Silently continue if orphan deletion fails
+                            }
                         }
                     }
                 }
             }
         } catch (err) {
-            console.warn('[CLEANUP] Firebase orphan check skipped:', err.message);
+            // Silently continue if orphan check fails
         }
         
         res.json({ success: true, message: `Cleaned up ${deletedCount} DB + ${firebaseDeletedCount} Firebase accounts`, deletedCount: deletedCount + firebaseDeletedCount });
 
     } catch (err) {
-        console.error('[CLEANUP] Batch cleanup error:', err);
         res.status(500).json({ error: 'Failed to cleanup old temp accounts', details: err.message });
     }
 });

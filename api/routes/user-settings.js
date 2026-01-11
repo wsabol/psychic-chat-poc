@@ -60,7 +60,6 @@ router.get('/:userId', authorizeUser, async (req, res) => {
       }
     });
   } catch (error) {
-    logger.error('[USER-SETTINGS-GET]', error);
     res.status(500).json({
       error: 'Failed to fetch settings',
       details: error.message
@@ -138,12 +137,7 @@ router.post('/:userId', authorizeUser, async (req, res) => {
 
     const savedSettings = rows[0];
 
-    logger.info(`[USER-SETTINGS] Updated settings for user ${userId}:`, {
-      cookiesEnabled: savedSettings.cookies_enabled,
-      analyticsEnabled: savedSettings.analytics_enabled,
-      emailEnabled: savedSettings.email_marketing_enabled,
-      pushNotificationsEnabled: savedSettings.push_notifications_enabled
-    });
+    
 
     res.json({
       success: true,
@@ -156,8 +150,7 @@ router.post('/:userId', authorizeUser, async (req, res) => {
         updatedAt: savedSettings.updated_at
       }
     });
-  } catch (error) {
-    logger.error('[USER-SETTINGS-POST]', error);
+    } catch (error) {
     res.status(500).json({
       error: 'Failed to save settings',
       details: error.message

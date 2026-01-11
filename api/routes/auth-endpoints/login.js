@@ -25,7 +25,6 @@ router.post('/log-login-success', async (req, res) => {
       try {
         await createUserDatabaseRecords(userId, email);
       } catch (createErr) {
-        logger.error('Failed to create user records:', createErr.message);
       }
     }
 
@@ -48,12 +47,9 @@ router.post('/log-login-success', async (req, res) => {
           [userIdHash, preferredLanguage, 'full', true]
         );
         
-        if (isTemporaryUser && preferredLanguage !== 'en-US') {
-          logger.info(`[TEMP-ACCOUNT] Created preferences with language: ${preferredLanguage}`);
-        }
+        
       }
-    } catch (prefErr) {
-      logger.warn('Failed to create default preferences:', prefErr.message);
+          } catch (prefErr) {
     }
 
     // For TEMPORARY accounts, automatically set user_consents to avoid blocking consent modal
@@ -70,7 +66,7 @@ router.post('/log-login-success', async (req, res) => {
         if (consentExists.rows.length === 0) {
           const termsVersion = getCurrentTermsVersion();
           const privacyVersion = getCurrentPrivacyVersion();
-          logger.info(`[TEMP-ACCOUNT] Creating consent with versions - Terms: ${termsVersion}, Privacy: ${privacyVersion}`);
+
           
           await db.query(
             `INSERT INTO user_consents (
@@ -87,10 +83,9 @@ router.post('/log-login-success', async (req, res) => {
             ) VALUES ($1, $2, $3, NOW(), $4, $5, NOW(), false, NOW(), NOW())`,
             [userIdHash, termsVersion, true, privacyVersion, true]
           );
-          logger.info('[TEMP-ACCOUNT] Auto-created user_consents for temp user:', userId);
+
         }
-      } catch (consentErr) {
-        logger.warn('[TEMP-ACCOUNT] Failed to create temp user consents:', consentErr.message);
+            } catch (consentErr) {
       }
     }
 
@@ -105,8 +100,7 @@ router.post('/log-login-success', async (req, res) => {
     });
 
     return res.json({ success: true });
-  } catch (err) {
-    logger.error('Login logging error:', err.message);
+    } catch (err) {
     return res.status(500).json({ error: err.message });
   }
 });
@@ -122,8 +116,7 @@ router.post('/log-login-attempt', async (req, res) => {
 
     const result = await recordLoginAttempt(userId, success, reason, req);
     return res.json(result);
-  } catch (error) {
-    logger.error('Login attempt logging error:', error.message);
+    } catch (error) {
     return res.status(500).json({ error: 'Failed to log login attempt' });
   }
 });
@@ -174,8 +167,7 @@ router.post('/check-account-lockout/:userId', async (req, res) => {
       locked: false,
       message: 'Account is not locked'
     });
-  } catch (error) {
-    logger.error('Account lockout check error:', error.message);
+    } catch (error) {
     return res.status(500).json({ error: 'Failed to check account lockout' });
   }
 });

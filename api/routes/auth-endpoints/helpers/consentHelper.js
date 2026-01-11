@@ -38,8 +38,7 @@ export async function checkUserConsent(userId) {
       terms_accepted_at: consent.terms_accepted_at,
       privacy_accepted_at: consent.privacy_accepted_at
     };
-  } catch (error) {
-    console.error('[CONSENT-CHECK] Error:', error);
+    } catch (error) {
     return {
       hasConsent: false,
       terms_accepted: false,
@@ -73,8 +72,7 @@ export async function recordUserConsent(userId, termsAccepted, privacyAccepted, 
           [clientIp, ENCRYPTION_KEY]
         );
         encryptedIp = result.rows[0]?.encrypted;
-      } catch (e) {
-        console.warn('[CONSENT] Failed to encrypt IP:', e.message);
+            } catch (e) {
       }
     }
     
@@ -85,8 +83,7 @@ export async function recordUserConsent(userId, termsAccepted, privacyAccepted, 
           [userAgent, ENCRYPTION_KEY]
         );
         encryptedAgent = result.rows[0]?.encrypted;
-      } catch (e) {
-        console.warn('[CONSENT] Failed to encrypt user agent:', e.message);
+            } catch (e) {
       }
     }
     
@@ -134,14 +131,11 @@ export async function recordUserConsent(userId, termsAccepted, privacyAccepted, 
       ]
     );
     
-    console.log('[CONSENT] Consent recorded for user:', userId);
-    
     return {
       success: true,
       message: 'Consent recorded successfully'
     };
-  } catch (error) {
-    console.error('[CONSENT-RECORD] Error:', error);
+    } catch (error) {
     return {
       success: false,
       message: error.message

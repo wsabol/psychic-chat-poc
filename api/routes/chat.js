@@ -68,7 +68,6 @@ router.get("/opening/:userId", authorizeUser, verify2FA, async (req, res) => {
                 clientName = personalInfoRows[0].familiar_name || personalInfoRows[0].first_name || userId;
             }
         } catch (err) {
-            console.error('Error fetching personal info for greeting:', err);
         }
 
         let opening = await generatePsychicOpening({
@@ -88,7 +87,6 @@ router.get("/opening/:userId", authorizeUser, verify2FA, async (req, res) => {
             content: opening
         })
     } catch (err) {
-        console.error('[CHAT] Error in opening endpoint:', err.message);
         res.status(500).json({ error: 'Failed to generate opening' });
     }
 });
@@ -128,7 +126,6 @@ router.get("/history/:userId", authorizeUser, verify2FA, async (req, res) => {
         
         res.json(transformedRows);
     } catch (err) {
-        logger.error('Chat history query error:', err.message);
         res.status(500).json({ error: 'Database query error: ' + err.message });
     }
 });

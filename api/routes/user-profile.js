@@ -18,7 +18,6 @@ function parseDateForStorage(dateString) {
         }
         return null;
     } catch (e) {
-        console.error('Date parsing error:', e, dateString);
         return null;
     }
 }
@@ -34,8 +33,7 @@ router.get("/:userId", authorizeUser, async (req, res) => {
             return res.json({});
         }
         res.json(rows[0]);
-    } catch (err) {
-        console.error('Error fetching personal info:', err);
+        } catch (err) {
         res.status(500).json({ error: 'Failed to fetch personal information' });
     }
 });
@@ -119,8 +117,7 @@ router.post("/:userId", authorizeUser, async (req, res) => {
                  AND role IN ('horoscope', 'moon_phase', 'cosmic_weather', 'void_of_course', 'lunar_nodes')`,
                 [userIdHash]
             );
-        } catch (err) {
-            console.warn(`Failed to clear cached insights for user ${userId}:`, err.message);
+                } catch (err) {
         }
         
         if (safeTime && safeCountry && safeProvince && safeCity && parsedBirthDate) {
@@ -129,8 +126,7 @@ router.post("/:userId", authorizeUser, async (req, res) => {
                     userId,
                     message: '[SYSTEM] Calculate my birth chart with rising sign and moon sign.'
                 });
-            } catch (err) {
-                console.error('Error enqueueing astrology calculation:', err);
+                        } catch (err) {
             }
         }
 
@@ -149,8 +145,7 @@ router.post("/:userId", authorizeUser, async (req, res) => {
         }
 
         res.json({ success: true, message: "Personal information saved successfully" });
-    } catch (err) {
-        console.error('Error saving personal info:', err);
+        } catch (err) {
         res.status(500).json({ error: 'Failed to save personal information', details: err.message });
     }
 });
@@ -164,8 +159,7 @@ router.delete("/:userId/astrology-cache", authorizeUser, async (req, res) => {
             [userIdHash]
         );
         res.json({ success: true, message: `Cleared astrology cache`, deletedRows: result.rowCount });
-    } catch (err) {
-        console.error('Error clearing astrology cache:', err);
+        } catch (err) {
         res.status(500).json({ error: 'Failed to clear astrology cache', details: err.message });
     }
 });
@@ -193,8 +187,7 @@ router.get("/:userId/preferences", authorizeUser, async (req, res) => {
         }
         
         res.json(rows[0]);
-    } catch (err) {
-        console.error('Error fetching preferences:', err);
+        } catch (err) {
         res.status(500).json({ error: 'Failed to fetch preferences' });
     }
 });
@@ -210,7 +203,6 @@ router.post("/:userId/preferences", authorizeUser, async (req, res) => {
     try {
         // 🌍 CRITICAL: If only timezone is provided, just update that field
         if (timezone && !language && !response_type && !oracle_language) {
-            console.log(`[PREFERENCES] ✓ Updating timezone only for user: ${timezone}`);
             await db.query(
                 `INSERT INTO user_preferences (user_id_hash, timezone)
                  VALUES ($1, $2)
@@ -224,8 +216,6 @@ router.post("/:userId/preferences", authorizeUser, async (req, res) => {
         
         // 🌎 NEW: If timezone + language + oracle_language provided (temp user flow), update all three
         if (timezone && language && oracle_language && response_type) {
-            console.log(`[PREFERENCES] ✓ Updating timezone, language, and oracle_language for temp user`);
-            console.log(`[PREFERENCES] language: ${language}, oracle_language: ${oracle_language}, timezone: ${timezone}`);
             
             // Validate language
             if (!['en-US', 'en-GB', 'es-ES', 'es-MX', 'es-DO', 'fr-FR', 'fr-CA', 'de-DE', 'it-IT', 'pt-BR', 'ja-JP', 'zh-CN'].includes(language)) {
@@ -256,7 +246,6 @@ router.post("/:userId/preferences", authorizeUser, async (req, res) => {
                 [userIdHash, language, response_type, voice_enabled !== false, timezone, oracle_language]
             );
             
-            console.log(`[PREFERENCES] ✓ Preferences updated:`, rows[0]);
             return res.json({ success: true, preferences: rows[0] });
         }
         
@@ -296,8 +285,7 @@ router.post("/:userId/preferences", authorizeUser, async (req, res) => {
         );
         
         res.json({ success: true, preferences: rows[0] });
-    } catch (err) {
-        console.error('Error saving preferences:', err);
+        } catch (err) {
         res.status(500).json({ error: 'Failed to save preferences', details: err.message });
     }
 });

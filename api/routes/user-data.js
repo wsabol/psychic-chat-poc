@@ -78,11 +78,10 @@ router.get('/download-data', authenticateToken, async (req, res) => {
       httpMethod: req.method,
       endpoint: req.path,
       status: 'SUCCESS'
-    }).catch(e => console.error('[AUDIT]', e.message));
+    }).catch(() => {});
 
     res.json(data);
   } catch (error) {
-    console.error('[DOWNLOAD-DATA]', error);
     res.status(500).json({ error: 'Failed to download data', details: error.message });
   }
 });
@@ -123,15 +122,14 @@ router.post('/send-delete-verification', authenticateToken, async (req, res) => 
       httpMethod: req.method,
       endpoint: req.path,
       status: 'SUCCESS'
-    }).catch(e => console.error('[AUDIT]', e.message));
+    }).catch(() => {});
 
     res.json({
       success: true,
       message: 'Verification code sent to email',
       email_masked: maskEmail(userEmail)
     });
-  } catch (error) {
-    console.error('[SEND-DELETE-VERIFICATION]', error);
+    } catch (error) {
     res.status(500).json({ error: 'Failed to send verification email', details: error.message });
   }
 });
@@ -178,7 +176,6 @@ router.delete('/delete-account', authenticateToken, async (req, res) => {
       const auth = getAuth();
       await auth.deleteUser(userId);
     } catch (authErr) {
-      console.error('[DELETE-ACCOUNT] Firebase deletion failed:', authErr.message);
       // Continue with database deletion even if Firebase fails
     }
 
@@ -198,7 +195,6 @@ router.delete('/delete-account', authenticateToken, async (req, res) => {
         }
       }
     } catch (stripeErr) {
-      console.error('[DELETE-ACCOUNT] Stripe deletion failed:', stripeErr.message);
       // Continue with database deletion
     }
 
@@ -215,15 +211,14 @@ router.delete('/delete-account', authenticateToken, async (req, res) => {
       httpMethod: req.method,
       endpoint: req.path,
       status: 'SUCCESS'
-    }).catch(e => console.error('[AUDIT]', e.message));
+    }).catch(() => {});
 
     res.json({
       success: true,
       message: 'Account permanently deleted',
       timestamp: new Date().toISOString()
     });
-  } catch (error) {
-    console.error('[DELETE-ACCOUNT]', error);
+    } catch (error) {
     res.status(500).json({ error: 'Failed to delete account', details: error.message });
   }
 });
@@ -251,14 +246,13 @@ async function deleteAllUserData(userId, userIdHash) {
       const value = column === 'user_id_hash' ? userIdHash : userId;
       await db.query(`DELETE FROM ${table} WHERE ${column} = $1`, [value]);
     } catch (e) {
-      console.error(`[DELETE-DATA] Failed to delete from ${table}:`, e.message);
+
     }
   }
 }
 
 async function sendDeleteVerificationEmail(email, code) {
-  // TODO: Implement with your email service (AWS SES, SendGrid, etc.)
-  console.log(`[EMAIL] Delete verification code sent to ${email}: ${code}`);
+    // TODO: Implement with your email service (AWS SES, SendGrid, etc.)
   // Example with SendGrid:
   // await sgMail.send({
   //   to: email,
@@ -281,7 +275,6 @@ async function decryptStripeCustomerId(encryptedId) {
     );
     return result.rows[0]?.customer_id;
   } catch (e) {
-    console.error('[DECRYPT] Failed to decrypt Stripe customer ID:', e.message);
     return null;
   }
 }
@@ -380,7 +373,7 @@ router.get('/export-data/:userId', authenticateToken, authorizeUser, async (req,
       endpoint: req.path,
       status: 'SUCCESS',
       details: { format, records_exported: messages.rows.length + readings.rows.length }
-    }).catch(e => console.error('[AUDIT]', e.message));
+    }).catch(() => {});
 
     if (format === 'csv') {
       const csv = convertToCSV(exportData);
@@ -394,8 +387,7 @@ router.get('/export-data/:userId', authenticateToken, authorizeUser, async (req,
       return res.json(exportData);
     }
 
-  } catch (error) {
-    console.error('[EXPORT] Error exporting data:', error);
+    } catch (error) {
     await logAudit(db, {
       userId: req.params.userId,
       action: 'DATA_EXPORT_FAILED',
@@ -406,7 +398,7 @@ router.get('/export-data/:userId', authenticateToken, authorizeUser, async (req,
       endpoint: req.path,
       status: 'FAILED',
       details: { error: error.message }
-    }).catch(e => console.error('[AUDIT]', e.message));
+    }).catch(() => {});
 
     return res.status(500).json({ error: 'Failed to export data', details: error.message });
   }
@@ -502,8 +494,7 @@ router.delete('/delete-account/:userId', authenticateToken, authorizeUser, async
       message_detail: `Your account will be permanently deleted on ${new Date(deletionRecord.final_deletion_date).toISOString().split('T')[0]} unless you log in to cancel the deletion within 30 days.`
     });
 
-  } catch (error) {
-    console.error('[DELETE] Error deleting account:', error);
+    } catch (error) {
     await logAudit(db, {
       userId: req.params.userId,
       action: 'ACCOUNT_DELETION_FAILED',
@@ -514,7 +505,7 @@ router.delete('/delete-account/:userId', authenticateToken, authorizeUser, async
       endpoint: req.path,
       status: 'FAILED',
       details: { error: error.message }
-    }).catch(e => console.error('[AUDIT]', e.message));
+    }).catch(() => {});
 
     return res.status(500).json({ error: 'Failed to delete account', details: error.message });
   }
@@ -587,8 +578,7 @@ router.post('/cancel-deletion/:userId', authenticateToken, authorizeUser, async 
       status: 'active'
     });
 
-  } catch (error) {
-    console.error('[CANCEL-DELETE] Error canceling deletion:', error);
+    } catch (error) {
     return res.status(500).json({ error: 'Failed to cancel deletion', details: error.message });
   }
 });

@@ -44,8 +44,6 @@ router.post('/admin/compliance/flag-users', async (req, res) => {
       });
     }
 
-    console.log('[COMPLIANCE-ADMIN] Flagging users for:', documentType);
-
     // Flag users
     const result = await flagUsersForUpdate(documentType);
 
@@ -71,8 +69,7 @@ router.post('/admin/compliance/flag-users', async (req, res) => {
       message: `Flagged ${result.flagged} users for ${documentType} update`,
       ...result
     });
-  } catch (error) {
-    console.error('[COMPLIANCE-ADMIN] Error flagging users:', error);
+    } catch (error) {
     return res.status(500).json({ error: error.message });
   }
 });
@@ -89,8 +86,7 @@ router.get('/admin/compliance/report', async (req, res) => {
       success: true,
       ...report
     });
-  } catch (error) {
-    console.error('[COMPLIANCE-ADMIN] Error getting report:', error);
+    } catch (error) {
     return res.status(500).json({ error: error.message });
   }
 });
@@ -120,8 +116,7 @@ router.get('/admin/compliance/users-requiring-action', async (req, res) => {
       returnedCount: paginatedUsers.length,
       users: paginatedUsers
     });
-  } catch (error) {
-    console.error('[COMPLIANCE-ADMIN] Error getting users:', error);
+    } catch (error) {
     return res.status(500).json({ error: error.message });
   }
 });
@@ -150,12 +145,7 @@ router.post('/admin/compliance/send-notifications', async (req, res) => {
       templateId = null
     } = req.body;
 
-    // Placeholder for email integration
-    console.log('[COMPLIANCE-ADMIN] Would send notifications for:', {
-      userCount: userIds?.length || 'all',
-      documentType,
-      subject
-    });
+        // Placeholder for email integration
 
     // Log action
     await logAudit(db, {
@@ -182,8 +172,7 @@ router.post('/admin/compliance/send-notifications', async (req, res) => {
         nextSteps: 'Integrate with Sendgrid or email service'
       }
     });
-  } catch (error) {
-    console.error('[COMPLIANCE-ADMIN] Error sending notifications:', error);
+    } catch (error) {
     return res.status(500).json({ error: error.message });
   }
 });
@@ -244,8 +233,6 @@ router.post('/admin/compliance/version-change', async (req, res) => {
       }
     });
 
-    console.log(`[COMPLIANCE] Version change recorded: ${documentType} ${oldVersion} -> ${newVersion}`);
-
     return res.json({
       success: true,
       message: `Version change recorded: ${documentType} ${oldVersion} -> ${newVersion}`,
@@ -256,8 +243,7 @@ router.post('/admin/compliance/version-change', async (req, res) => {
         'Monitor adoption with GET /admin/compliance/report'
       ]
     });
-  } catch (error) {
-    console.error('[COMPLIANCE-ADMIN] Error recording version change:', error);
+    } catch (error) {
     return res.status(500).json({ error: error.message });
   }
 });
@@ -287,8 +273,7 @@ router.get('/admin/compliance/version-history', async (req, res) => {
         change: row.details
       }))
     });
-  } catch (error) {
-    console.error('[COMPLIANCE-ADMIN] Error getting history:', error);
+    } catch (error) {
     return res.status(500).json({ error: error.message });
   }
 });
@@ -328,13 +313,6 @@ router.post('/admin/compliance/revert-version', async (req, res) => {
       });
     }
 
-    console.log('[COMPLIANCE] Starting reversion:', {
-      documentType,
-      from: revokedVersion,
-      to: revertToVersion,
-      reason
-    });
-
     // Flag ALL users for re-acceptance
     // CRITICAL: This includes users who already accepted the reverted version
     // because users who only accepted revoked version v3 never consented to v2
@@ -364,8 +342,6 @@ router.post('/admin/compliance/revert-version', async (req, res) => {
       }
     });
 
-    console.log(`[COMPLIANCE] Reversion complete: ${totalFlagged} users flagged`);
-
     return res.json({
       success: true,
       message: `Reverted ${documentType} from v${revokedVersion} to v${revertToVersion}. Flagged ${totalFlagged} users for re-acceptance.`,
@@ -384,9 +360,7 @@ router.post('/admin/compliance/revert-version', async (req, res) => {
         ]
       }
     });
-  } catch (error) {
-    console.error('[COMPLIANCE] Reversion error:', error);
-    
+    } catch (error) {
     await logAudit(db, {
       userId: req.user?.uid || 'admin',
       action: 'COMPLIANCE_VERSION_REVERT_FAILED',

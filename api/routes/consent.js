@@ -27,8 +27,7 @@ router.post('/check-consent/:userId', async (req, res) => {
     
     const consentStatus = await checkUserConsent(userId);
     return res.json(consentStatus);
-  } catch (error) {
-    console.error('[CONSENT-CHECK] Error:', error);
+    } catch (error) {
     return res.status(500).json({ error: error.message });
   }
 });
@@ -38,7 +37,6 @@ router.post('/check-consent/:userId', async (req, res) => {
  * Record user consent
  */
 router.post('/record-consent/:userId', async (req, res) => {
-  console.log('[RECORD-CONSENT-DEBUG] Called with body:', req.body);
   try {
     const { userId } = req.params;
     const { terms_accepted = false, privacy_accepted = false } = req.body;
@@ -54,8 +52,7 @@ router.post('/record-consent/:userId', async (req, res) => {
     } else {
       return res.status(400).json({ error: result.message });
     }
-  } catch (error) {
-    console.error('[CONSENT-RECORD] Error:', error);
+    } catch (error) {
     return res.status(500).json({ error: error.message });
   }
 });
@@ -66,8 +63,6 @@ router.post('/record-consent/:userId', async (req, res) => {
  * Called by client during signup flow
  */
 router.post('/consent/terms-acceptance', async (req, res) => {
-  console.log('[CONSENT-DEBUG] *** ENDPOINT HIT: /auth/consent/terms-acceptance ***');
-  console.log('[CONSENT-DEBUG] Request body:', req.body);
   try {
     const userId = req.body.userId;
     const { terms_accepted = false, privacy_accepted = false } = req.body;
@@ -89,7 +84,7 @@ router.post('/consent/terms-acceptance', async (req, res) => {
     // Encrypt user_agent and ip_address
     let encryptedUserAgent = null;
     let encryptedIpAddress = null;
-    if (userAgent) {
+        if (userAgent) {
       try {
         const encResult = await db.query(
           'SELECT pgp_sym_encrypt($1::text, $2) as encrypted',
@@ -97,7 +92,6 @@ router.post('/consent/terms-acceptance', async (req, res) => {
         );
         encryptedUserAgent = encResult.rows[0]?.encrypted;
       } catch (encErr) {
-        console.warn('[CONSENT] Failed to encrypt user_agent:', encErr.message);
       }
     }
     if (clientIp) {
@@ -108,7 +102,6 @@ router.post('/consent/terms-acceptance', async (req, res) => {
         );
         encryptedIpAddress = encResult.rows[0]?.encrypted;
       } catch (encErr) {
-        console.warn('[CONSENT] Failed to encrypt agreed_from_ip:', encErr.message);
       }
     }
 
@@ -185,9 +178,7 @@ router.post('/consent/terms-acceptance', async (req, res) => {
       }
     });
 
-  } catch (error) {
-    console.error('[CONSENT] Error recording T&C acceptance:', error);
-    
+    } catch (error) {
     await logAudit(db, {
       userId: req.body?.userId,
       action: 'CONSENT_T&C_FAILED',
@@ -237,7 +228,7 @@ router.post('/consents', async (req, res) => {
     // Encrypt user_agent and ip_address
     let encryptedUserAgent = null;
     let encryptedIpAddress = null;
-    if (userAgent) {
+        if (userAgent) {
       try {
         const encResult = await db.query(
           'SELECT pgp_sym_encrypt($1::text, $2) as encrypted',
@@ -245,7 +236,6 @@ router.post('/consents', async (req, res) => {
         );
         encryptedUserAgent = encResult.rows[0]?.encrypted;
       } catch (encErr) {
-        console.warn('[CONSENT] Failed to encrypt user_agent:', encErr.message);
       }
     }
     if (clientIp) {
@@ -256,7 +246,6 @@ router.post('/consents', async (req, res) => {
         );
         encryptedIpAddress = encResult.rows[0]?.encrypted;
       } catch (encErr) {
-        console.warn('[CONSENT] Failed to encrypt agreed_from_ip:', encErr.message);
       }
     }
 
@@ -323,9 +312,7 @@ router.post('/consents', async (req, res) => {
       }
     });
 
-  } catch (error) {
-    console.error('[CONSENT] Error recording consent:', error);
-    
+    } catch (error) {
     await logAudit(db, {
       userId: req.body?.userId,
       action: 'CONSENT_FAILED',
@@ -412,8 +399,7 @@ router.get('/consents/:userId', authenticateToken, authorizeUser, async (req, re
       }
     });
 
-  } catch (error) {
-    console.error('[CONSENT] Error retrieving consent:', error);
+    } catch (error) {
     return res.status(500).json({ 
       error: 'Failed to retrieve consent', 
       details: error.message 
@@ -469,8 +455,7 @@ router.post('/verify-consent/:userId/:consentType', async (req, res) => {
       hasConsent
     });
 
-  } catch (error) {
-    console.error('[CONSENT] Error verifying consent:', error);
+    } catch (error) {
     return res.status(500).json({ 
       error: 'Failed to verify consent', 
       details: error.message 
@@ -538,8 +523,7 @@ router.get('/consent-summary/:userId', authenticateToken, authorizeUser, async (
       }))
     });
 
-  } catch (error) {
-    console.error('[CONSENT] Error retrieving consent summary:', error);
+    } catch (error) {
     return res.status(500).json({ 
       error: 'Failed to retrieve consent summary', 
       details: error.message 
@@ -559,7 +543,6 @@ router.post('/check-compliance/:userId', async (req, res) => {
     const compliance = await checkUserCompliance(userId);
     return res.json(compliance);
   } catch (error) {
-    console.error('[COMPLIANCE-CHECK] Error:', error);
     return res.status(500).json({ error: error.message });
   }
 });
@@ -573,7 +556,6 @@ router.post('/compliance-report', authenticateToken, async (req, res) => {
     const report = await getComplianceReport();
     return res.json(report);
   } catch (error) {
-    console.error('[COMPLIANCE-REPORT] Error:', error);
     return res.status(500).json({ error: error.message });
   }
 });
@@ -587,7 +569,6 @@ router.post('/users-requiring-action', authenticateToken, async (req, res) => {
     const result = await getUsersRequiringAction();
     return res.json(result);
   } catch (error) {
-    console.error('[USERS-ACTION] Error:', error);
     return res.status(500).json({ error: error.message });
   }
 });
@@ -604,7 +585,6 @@ router.post('/mark-user-notified/:userId', async (req, res) => {
     const result = await markUserNotified(userId);
     return res.json(result);
   } catch (error) {
-    console.error('[MARK-NOTIFIED] Error:', error);
     return res.status(500).json({ error: error.message });
   }
 });

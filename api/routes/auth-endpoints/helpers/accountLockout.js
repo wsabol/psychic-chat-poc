@@ -34,7 +34,6 @@ export async function isAccountLocked(userId) {
       minutesRemaining
     };
   } catch (err) {
-    logger.error('Failed to check account lockout:', err.message);
     throw err;
   }
 }
@@ -57,7 +56,6 @@ export async function recordLoginAttempt(userId, success, reason, req) {
         );
         encryptedIp = encResult.rows[0]?.encrypted;
       } catch (encErr) {
-        logger.warn('Failed to encrypt IP for login attempt:', encErr.message);
       }
     }
     
@@ -109,7 +107,6 @@ export async function recordLoginAttempt(userId, success, reason, req) {
             message: `Account locked after ${failedCount} failed attempts. Try again in 15 minutes.`
           };
         } catch (lockErr) {
-          logger.error('Failed to lock account:', lockErr.message);
         }
       }
     }
@@ -120,7 +117,6 @@ export async function recordLoginAttempt(userId, success, reason, req) {
       message: `Login attempt recorded (${success ? 'success' : 'failure'})`
     };
   } catch (err) {
-    logger.error('Failed to record login attempt:', err.message);
     throw err;
   }
 }
@@ -166,7 +162,6 @@ export async function unlockAccount(userId, req) {
         );
         encryptedIp = encResult.rows[0]?.encrypted;
       } catch (encErr) {
-        logger.warn('Failed to encrypt IP for unlock:', encErr.message);
       }
     }
     await db.query(
@@ -180,7 +175,6 @@ export async function unlockAccount(userId, req) {
       message: 'Account unlocked successfully'
     };
   } catch (err) {
-    logger.error('Failed to unlock account:', err.message);
     throw err;
   }
 }

@@ -59,7 +59,6 @@ router.post('/verify-2fa', async (req, res) => {
         }
         
       } catch (trustErr) {
-        console.error('[2FA-VERIFY] Error trusting device:', trustErr.message);
       }
     }
     
@@ -78,7 +77,6 @@ router.post('/verify-2fa', async (req, res) => {
     
     return res.json({ success: true, message: '2FA verified', deviceTrusted: shouldTrustDevice || false });
   } catch (err) {
-    logger.error('2FA verification error:', err.message);
     return res.status(500).json({ error: '2FA verification failed', details: err.message });
   }
 });
@@ -210,14 +208,12 @@ router.post('/check-2fa/:userId', async (req, res) => {
     try {
       const insertResult = await insertVerificationCode(db, userId, email, null, code, 'email');
     } catch (insertErr) {
-      console.error('[2FA-CHECK] FAILED TO INSERT VERIFICATION CODE:', insertErr);
       return res.status(500).json({ error: 'Failed to save 2FA code', details: insertErr.message });
     }
 
     // Send 2FA code via email
     const sendResult = await send2FACodeEmail(email, code);
     if (!sendResult.success) {
-      console.error('[2FA-CHECK] Email send failed:', sendResult.error);
       return res.status(500).json({ error: 'Failed to send 2FA code', details: sendResult.error });
     }
 
@@ -251,8 +247,6 @@ router.post('/check-2fa/:userId', async (req, res) => {
       message: '2FA code sent to your email'
     });
   } catch (error) {
-    console.error('[2FA-CHECK] FATAL ERROR:', error);
-    logger.error('2FA check error:', error.message);
     return res.status(500).json({ error: 'Failed to check 2FA', details: error.message });
   }
 });
@@ -296,7 +290,6 @@ router.get('/check-current-device-trust/:userId', authenticateToken, async (req,
 
     return res.json({ success: true, isTrusted });
   } catch (err) {
-    console.error('[TRUST-CHECK] Error:', err);
     return res.status(500).json({ error: err.message });
   }
 });
@@ -355,7 +348,6 @@ router.post('/trust-current-device/:userId', authenticateToken, async (req, res)
 
     return res.json({ success: true, message: 'Device trusted for 30 days' });
   } catch (err) {
-    console.error('[TRUST-DEVICE] Error:', err);
     return res.status(500).json({ error: err.message });
   }
 });
@@ -399,7 +391,6 @@ router.post('/revoke-current-device-trust/:userId', authenticateToken, async (re
 
     return res.json({ success: true, message: 'Device trust revoked' });
   } catch (err) {
-    console.error('[REVOKE-DEVICE] Error:', err);
     return res.status(500).json({ error: err.message });
   }
 });
@@ -435,7 +426,6 @@ router.get('/trusted-devices/:userId', authenticateToken, async (req, res) => {
 
     return res.json({ success: true, devices: result.rows });
   } catch (err) {
-    console.error('[DEVICES] Error getting trusted devices:', err);
     return res.status(500).json({ error: err.message });
   }
 });
@@ -481,7 +471,6 @@ router.delete('/trusted-device/:userId/:deviceId', authenticateToken, async (req
 
     return res.json({ success: true, message: 'Device trust revoked' });
   } catch (err) {
-    console.error('[DEVICES] Error revoking device:', err);
     return res.status(500).json({ error: err.message });
   }
 });

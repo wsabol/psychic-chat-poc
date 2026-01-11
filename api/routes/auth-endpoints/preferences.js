@@ -40,16 +40,13 @@ router.post('/timezone', async (req, res) => {
       [userIdHash, timezone]
     );
     
-    logger.info(`[PREFERENCES] Timezone saved for user ${userId}: ${timezone}`);
-    
     return res.json({
       success: true,
       timezone: result.rows[0].timezone,
       message: 'Timezone saved successfully'
     });
     
-  } catch (err) {
-    logger.error('[PREFERENCES] Error saving timezone:', err.message);
+    } catch (err) {
     return res.status(500).json({
       error: 'Failed to save timezone',
       details: err.message
@@ -89,8 +86,7 @@ router.get('/timezone', async (req, res) => {
       timezone: rows[0].timezone || 'GMT'
     });
     
-  } catch (err) {
-    logger.error('[PREFERENCES] Error fetching timezone:', err.message);
+    } catch (err) {
     return res.status(500).json({
       error: 'Failed to fetch timezone',
       details: err.message

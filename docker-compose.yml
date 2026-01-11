@@ -116,7 +116,7 @@ services:
       - CHOKIDAR_IGNORED=/app/node_modules,/app/.git,/app/public,/app/build,/app/dist
       - WATCHMAN_DISABLE=true
       - SKIP_PREFLIGHT_CHECK=true
-      - NODE_OPTIONS=--max-old-space-size=1024
+      - NODE_OPTIONS=--max-old-space-size=4096
       - REACT_APP_API_URL=http://localhost:3000
       - REACT_APP_STRIPE_PUBLIC_KEY=${STRIPE_PUBLIC_KEY}
       - REACT_APP_DEV_EMAIL=${REACT_APP_DEV_EMAIL}

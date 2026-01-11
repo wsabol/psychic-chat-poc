@@ -25,12 +25,9 @@ router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
         );
         const userLanguage = prefRows.length > 0 ? prefRows[0].language : 'en-US';
         const userTimezone = prefRows.length > 0 ? prefRows[0].timezone : 'UTC';
-        console.log(`[MOON-PHASE-API] User language: ${userLanguage}, timezone: ${userTimezone}`);
         
         // Get TODAY's date in user's LOCAL timezone
         const todayLocalDate = getLocalDateForTimezone(userTimezone);
-        console.log(`[MOON-PHASE-API] Today (user local): ${todayLocalDate}`);
-        console.log(`[MOON-PHASE-API] DEBUG - userIdHash: ${userIdHash}, phase: ${phase}, todayLocalDate: ${todayLocalDate}`);
         
         // Fetch moon phase
         // NOTE: Only content_full_encrypted and content_brief_encrypted exist in database
@@ -51,14 +48,11 @@ router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
             [userIdHash, process.env.ENCRYPTION_KEY, phase, todayLocalDate]
         );
         
-        console.log(`[MOON-PHASE-API] Found ${rows.length} moon phase record(s)`);
-        
-        if (rows.length === 0) {
-            console.log(`[MOON-PHASE-API] No ${phase} moon phase found for ${todayLocalDate}`);
+                if (rows.length === 0) {
             enqueueMessage({
                 userId,
                 message: `[SYSTEM] Generate moon phase commentary for ${phase}`
-            }).catch(err => console.error('[MOON-PHASE-API] Error queueing:', err));
+            }).catch(() => {});
             
             return res.status(404).json({ error: 'No moon phase commentary found. Generating now...' });
         }
@@ -68,8 +62,7 @@ router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
         let content = row.content_full;
         let brief = row.content_brief;
         
-        if (!content) {
-            console.warn(`[MOON-PHASE-API] No content found in moon phase row`);
+                if (!content) {
             return res.status(404).json({ error: `Moon phase data is empty` });
         }
         
@@ -83,17 +76,13 @@ router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
                     ? JSON.parse(brief)
                     : brief;
             }
-        } catch (e) {
-            console.error(`[MOON-PHASE-API] Failed to parse:`, e.message);
+                } catch (e) {
             return res.status(500).json({ error: `Failed to parse moon phase data` });
         }
         
-        if (!commentary || !commentary.generated_at) {
-            console.warn(`[MOON-PHASE-API] Moon phase missing generated_at`);
+                if (!commentary || !commentary.generated_at) {
             return res.status(404).json({ error: `Moon phase data is incomplete` });
         }
-        
-        console.log(`[MOON-PHASE-API] ✓ Returning ${phase} moon phase for ${todayLocalDate}`);
         
         res.json({ 
             commentary: commentary.text, 
@@ -101,8 +90,7 @@ router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
             generated_at: commentary.generated_at 
         });
         
-    } catch (err) {
-        console.error('[MOON-PHASE-API] Error:', err);
+        } catch (err) {
         res.status(500).json({ error: 'Failed to fetch moon phase commentary' });
     }
 });
@@ -127,8 +115,7 @@ router.post("/:userId", authenticateToken, authorizeUser, async (req, res) => {
             phase: phase
         });
         
-    } catch (err) {
-        console.error('[MOON-PHASE-API] Error queueing commentary:', err);
+        } catch (err) {
         res.status(500).json({ error: 'Failed to queue moon phase commentary generation' });
     }
 });
