@@ -7,6 +7,7 @@
 
 import { Router } from 'express';
 import { db } from '../shared/db.js';
+import { validationError, serverError } from '../utils/responses.js';
 
 const router = Router();
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
@@ -33,9 +34,9 @@ router.post('/track', async (req, res) => {
       error_stack,
     } = req.body;
 
-    // Validate required fields
+        // Validate required fields
     if (!event_type || !page_name) {
-      return res.status(400).json({ error: 'event_type and page_name required' });
+      return validationError(res, 'event_type and page_name are required');
     }
 
     // Get IP address from request
@@ -107,10 +108,9 @@ router.post('/track', async (req, res) => {
       );
     }
 
-    res.status(201).json({ success: true, message: 'Event tracked' });
+        res.status(201).json({ success: true, message: 'Event tracked' });
   } catch (error) {
-    // Don't expose error details to client
-    res.status(500).json({ error: 'Failed to track event' });
+    return serverError(res, 'Failed to track event');
   }
 });
 
@@ -231,9 +231,9 @@ router.get('/report', async (req, res) => {
       dropoff_analysis: dropoff.rows,
     };
 
-    res.json(report);
+        res.json(report);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to generate report', details: error.message });
+    return serverError(res, 'Failed to generate analytics report');
   }
 });
 
@@ -255,9 +255,9 @@ router.delete('/data', async (req, res) => {
       success: true,
       message: 'All analytics data deleted',
       rows_deleted: result.rowCount,
-    });
+        });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to delete analytics data', details: error.message });
+    return serverError(res, 'Failed to delete analytics data');
   }
 });
 
@@ -283,9 +283,9 @@ router.post('/cleanup', async (req, res) => {
       success: true,
       message: 'Old analytics data deleted',
       rows_deleted: result.rowCount,
-    });
+        });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to cleanup analytics data', details: error.message });
+    return serverError(res, 'Failed to cleanup analytics data');
   }
 });
 

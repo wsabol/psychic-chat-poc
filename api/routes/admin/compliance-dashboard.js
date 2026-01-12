@@ -9,6 +9,7 @@ import { Router } from 'express';
 import { db } from '../../shared/db.js';
 import { getCurrentTermsVersion, getCurrentPrivacyVersion } from '../../shared/versionConfig.js';
 import VERSION_CONFIG from '../../shared/versionConfig.js';
+import { serverError } from '../../utils/responses.js';
 
 const router = Router();
 
@@ -77,9 +78,8 @@ router.get('/compliance-dashboard/overview', async (req, res) => {
           : 0
       }
     });
-  } catch (error) {
-    console.error('[COMPLIANCE-DASHBOARD] Error getting overview:', error);
-    return res.status(500).json({ error: error.message });
+    } catch (error) {
+    return serverError(res, 'Failed to get compliance overview');
   }
 });
 
@@ -135,9 +135,8 @@ router.get('/compliance-dashboard/acceptance-by-version', async (req, res) => {
         latestAcceptance: row.latest_acceptance
       }))
     });
-  } catch (error) {
-    console.error('[COMPLIANCE-DASHBOARD] Error getting breakdown:', error);
-    return res.status(500).json({ error: error.message });
+    } catch (error) {
+    return serverError(res, 'Failed to get acceptance breakdown');
   }
 });
 
@@ -239,9 +238,8 @@ router.get('/compliance-dashboard/user-status', async (req, res) => {
         }
       }))
     });
-  } catch (error) {
-    console.error('[COMPLIANCE-DASHBOARD] Error getting user status:', error);
-    return res.status(500).json({ error: error.message });
+    } catch (error) {
+    return serverError(res, 'Failed to get user status');
   }
 });
 
@@ -291,9 +289,8 @@ router.get('/compliance-dashboard/notification-metrics', async (req, res) => {
         }
       }
     });
-  } catch (error) {
-    console.error('[COMPLIANCE-DASHBOARD] Error getting notification metrics:', error);
-    return res.status(500).json({ error: error.message });
+    } catch (error) {
+    return serverError(res, 'Failed to get notification metrics');
   }
 });
 
@@ -360,9 +357,8 @@ router.get('/compliance-dashboard/timeline', async (req, res) => {
       documentType,
       timeline: Object.values(timeline).sort((a, b) => new Date(b.date) - new Date(a.date))
     });
-  } catch (error) {
-    console.error('[COMPLIANCE-DASHBOARD] Error getting timeline:', error);
-    return res.status(500).json({ error: error.message });
+    } catch (error) {
+    return serverError(res, 'Failed to get compliance timeline');
   }
 });
 
@@ -415,9 +411,8 @@ router.get('/compliance-dashboard/export', async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="compliance-export-${new Date().getTime()}.json"`);
 
     return res.json(exportData);
-  } catch (error) {
-    console.error('[COMPLIANCE-DASHBOARD] Error exporting data:', error);
-    return res.status(500).json({ error: error.message });
+    } catch (error) {
+    return serverError(res, 'Failed to export compliance data');
   }
 });
 

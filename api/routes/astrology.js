@@ -7,6 +7,7 @@ import { authorizeUser } from '../middleware/auth.js';
 import { spawn } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { validationError, notFoundError, serverError } from '../utils/responses.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -52,10 +53,7 @@ router.post('/validate-location', authorizeUser, async (req, res) => {
         const { birth_city, birth_province, birth_country, birth_date, birth_time } = req.body;
         
         if (!birth_city || !birth_province || !birth_country || !birth_date) {
-            return res.status(400).json({ 
-                error: 'Missing required fields for location validation',
-                success: false
-            });
+            return validationError(res, 'Required fields: birth_city, birth_province, birth_country, birth_date');
         }
         
         const result = await calculateBirthChartSync({
@@ -124,15 +122,15 @@ router.post('/sync-calculate/:userId', authorizeUser, async (req, res) => {
             [process.env.ENCRYPTION_KEY, userId]
         );
         
-        if (!personalInfoRows.length) {
-            return res.status(404).json({ error: 'Personal info not found' });
+                if (!personalInfoRows.length) {
+            return notFoundError(res, 'Personal information not found');
         }
         
         const info = personalInfoRows[0];
         
         // Validate birth data (timezone is optional, defaults to UTC)
-        if (!info.birth_date || !info.birth_time || !info.birth_country || !info.birth_province || !info.birth_city) {
-            return res.status(400).json({ error: 'Incomplete birth information' });
+                if (!info.birth_date || !info.birth_time || !info.birth_country || !info.birth_province || !info.birth_city) {
+            return validationError(res, 'Incomplete birth information');
         }
         
         // Calculate birth chart
@@ -144,8 +142,8 @@ router.post('/sync-calculate/:userId', authorizeUser, async (req, res) => {
             birth_city: info.birth_city
         });
         
-        if (!calculatedChart.success || !calculatedChart.rising_sign || !calculatedChart.moon_sign) {
-            return res.status(500).json({ error: calculatedChart.error || 'Calculation failed' });
+                if (!calculatedChart.success || !calculatedChart.rising_sign || !calculatedChart.moon_sign) {
+            return serverError(res, 'Astrology calculation failed');
         }
         
         // Store in database
@@ -178,7 +176,7 @@ router.post('/sync-calculate/:userId', authorizeUser, async (req, res) => {
             data: astrologyData
         });
     } catch (err) {
-        res.status(500).json({ error: 'Calculation failed', details: err.message });
+        return serverError(res, 'Failed to calculate astrology');
     }
 });
 
@@ -193,7 +191,7 @@ router.post('/calculate/:userId', authorizeUser, async (req, res) => {
         
         res.json({ status: 'Astrology calculation job enqueued', userId });
     } catch (error) {
-        res.status(500).json({ error: 'Internal server error', details: error.message });
+        return serverError(res, 'Failed to enqueue astrology calculation');
     }
 });
 
@@ -206,7 +204,7 @@ router.get("/:userId", authorizeUser, async (req, res) => {
             [userIdHash]
         );
         if (rows.length === 0) {
-            return res.status(404).json({ error: 'No astrology data found for this user' });
+            return notFoundError(res, 'No astrology data found');
         }
         
         const result = rows[0];
@@ -220,7 +218,7 @@ router.get("/:userId", authorizeUser, async (req, res) => {
         
         res.json(result);
     } catch (err) {
-        res.status(500).json({ error: 'Failed to fetch astrology information' });
+        return serverError(res, 'Failed to fetch astrology data');
     }
 });
 
@@ -236,7 +234,7 @@ router.post("/:userId", async (req, res) => {
         );
         
         if (rows.length === 0) {
-            return res.status(404).json({ error: 'No astrology data found for this user' });
+            return notFoundError(res, 'No astrology data found');
         }
         
         let existingData = rows[0].astrology_data;
@@ -258,7 +256,7 @@ router.post("/:userId", async (req, res) => {
         
         res.json({ success: true, message: "Astrology data updated successfully", data: updatedData });
     } catch (err) {
-        res.status(500).json({ error: 'Failed to update astrology data' });
+        return serverError(res, 'Failed to update astrology data');
     }
 });
 
