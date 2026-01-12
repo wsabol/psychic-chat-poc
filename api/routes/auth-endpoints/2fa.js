@@ -7,6 +7,7 @@ import { isAccountLocked } from './helpers/accountLockout.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { insertVerificationCode, getVerificationCode } from '../../shared/encryptedQueries.js';
 import { extractDeviceName } from '../../shared/deviceFingerprint.js';
+import { validationError, serverError } from '../../utils/responses.js';
 
 const router = Router();
 
@@ -15,13 +16,13 @@ const router = Router();
  * Verify 2FA code and optionally trust device
  */
 router.post('/verify-2fa', async (req, res) => {
-  try {
+    try {
     const { userId, code, trustDevice: shouldTrustDevice } = req.body;
-    if (!userId || !code) return res.status(400).json({ error: 'userId and code required' });
+    if (!userId || !code) return validationError(res, 'userId and code are required');
     
     // Verify code exists and is valid
     const codeResult = await getVerificationCode(db, userId, code);
-    if (codeResult.rows.length === 0) return res.status(400).json({ error: 'Invalid or expired 2FA code' });
+    if (codeResult.rows.length === 0) return validationError(res, 'Invalid or expired 2FA code');
     
     // Mark code as used
     await db.query('UPDATE verification_codes SET verified_at = NOW() WHERE id = $1', [codeResult.rows[0].id]);
@@ -77,7 +78,7 @@ router.post('/verify-2fa', async (req, res) => {
     
     return res.json({ success: true, message: '2FA verified', deviceTrusted: shouldTrustDevice || false });
   } catch (err) {
-    return res.status(500).json({ error: '2FA verification failed', details: err.message });
+    return serverError(res, 'Failed to verify 2FA code');
   }
 });
 
@@ -88,9 +89,9 @@ router.post('/verify-2fa', async (req, res) => {
  * Otherwise, send 2FA code
  */
 router.post('/check-2fa/:userId', async (req, res) => {
-  try {
+    try {
     const { userId } = req.params;
-    if (!userId) return res.status(400).json({ error: 'userId required' });
+    if (!userId) return validationError(res, 'userId is required');
 
     // Check if account is locked
     const lockStatus = await isAccountLocked(userId);
@@ -199,7 +200,7 @@ router.post('/check-2fa/:userId', async (req, res) => {
     );
 
     if (userResult.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return serverError(res, 'User account not found');
     }
 
     const email = userResult.rows[0].email;
@@ -208,13 +209,13 @@ router.post('/check-2fa/:userId', async (req, res) => {
     try {
       const insertResult = await insertVerificationCode(db, userId, email, null, code, 'email');
     } catch (insertErr) {
-      return res.status(500).json({ error: 'Failed to save 2FA code', details: insertErr.message });
+      return serverError(res, 'Failed to save 2FA code');
     }
 
     // Send 2FA code via email
     const sendResult = await send2FACodeEmail(email, code);
     if (!sendResult.success) {
-      return res.status(500).json({ error: 'Failed to send 2FA code', details: sendResult.error });
+      return serverError(res, 'Failed to send 2FA code');
     }
 
     // Generate temporary JWT token
@@ -247,7 +248,7 @@ router.post('/check-2fa/:userId', async (req, res) => {
       message: '2FA code sent to your email'
     });
   } catch (error) {
-    return res.status(500).json({ error: 'Failed to check 2FA', details: error.message });
+    return serverError(res, 'Failed to process 2FA request');
   }
 });
 
@@ -290,7 +291,7 @@ router.get('/check-current-device-trust/:userId', authenticateToken, async (req,
 
     return res.json({ success: true, isTrusted });
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    return serverError(res, 'Failed to check device trust status');
   }
 });
 
@@ -348,7 +349,7 @@ router.post('/trust-current-device/:userId', authenticateToken, async (req, res)
 
     return res.json({ success: true, message: 'Device trusted for 30 days' });
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    return serverError(res, 'Failed to trust device');
   }
 });
 
@@ -375,7 +376,7 @@ router.post('/revoke-current-device-trust/:userId', authenticateToken, async (re
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Device session not found' });
+      return serverError(res, 'Device session not found');
     }
 
     await logAudit(db, {
@@ -391,7 +392,7 @@ router.post('/revoke-current-device-trust/:userId', authenticateToken, async (re
 
     return res.json({ success: true, message: 'Device trust revoked' });
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    return serverError(res, 'Failed to revoke device trust');
   }
 });
 
@@ -426,7 +427,7 @@ router.get('/trusted-devices/:userId', authenticateToken, async (req, res) => {
 
     return res.json({ success: true, devices: result.rows });
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    return serverError(res, 'Failed to fetch trusted devices');
   }
 });
 
@@ -454,7 +455,7 @@ router.delete('/trusted-device/:userId/:deviceId', authenticateToken, async (req
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Device not found' });
+      return serverError(res, 'Device not found');
     }
 
     await logAudit(db, {
@@ -471,7 +472,7 @@ router.delete('/trusted-device/:userId/:deviceId', authenticateToken, async (req
 
     return res.json({ success: true, message: 'Device trust revoked' });
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    return serverError(res, 'Failed to revoke device trust');
   }
 });
 

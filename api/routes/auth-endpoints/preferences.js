@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { db } from '../../shared/db.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import logger from '../../shared/logger.js';
+import { validationError, serverError } from '../../utils/responses.js';
 
 const router = Router();
 
@@ -15,16 +16,16 @@ router.post('/timezone', async (req, res) => {
     const { userId, timezone } = req.body;
     
     if (!userId) {
-      return res.status(400).json({ error: 'userId required' });
+      return validationError(res, 'userId is required');
     }
-    
+
     if (!timezone) {
-      return res.status(400).json({ error: 'timezone required' });
+      return validationError(res, 'timezone is required');
     }
-    
+
     // Validate timezone is IANA format (basic check)
     if (typeof timezone !== 'string' || timezone.length < 3) {
-      return res.status(400).json({ error: 'Invalid timezone format' });
+      return validationError(res, 'Invalid timezone format');
     }
     
     const userIdHash = hashUserId(userId);
@@ -45,12 +46,8 @@ router.post('/timezone', async (req, res) => {
       timezone: result.rows[0].timezone,
       message: 'Timezone saved successfully'
     });
-    
-    } catch (err) {
-    return res.status(500).json({
-      error: 'Failed to save timezone',
-      details: err.message
-    });
+  } catch (err) {
+    return serverError(res, 'Failed to save timezone');
   }
 });
 
@@ -63,7 +60,7 @@ router.get('/timezone', async (req, res) => {
     const { userId } = req.query;
     
     if (!userId) {
-      return res.status(400).json({ error: 'userId required' });
+      return validationError(res, 'userId is required');
     }
     
     const userIdHash = hashUserId(userId);
@@ -85,12 +82,8 @@ router.get('/timezone', async (req, res) => {
       success: true,
       timezone: rows[0].timezone || 'GMT'
     });
-    
-    } catch (err) {
-    return res.status(500).json({
-      error: 'Failed to fetch timezone',
-      details: err.message
-    });
+  } catch (err) {
+    return serverError(res, 'Failed to fetch timezone');
   }
 });
 

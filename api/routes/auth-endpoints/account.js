@@ -5,6 +5,7 @@ import { db } from '../../shared/db.js';
 import { migrateOnboardingData } from '../../shared/accountMigration.js';
 import { logAudit } from '../../shared/auditLog.js';
 import { createUserDatabaseRecords } from './helpers/userCreation.js';
+import { validationError, serverError } from '../../utils/responses.js';
 
 const router = Router();
 
@@ -17,7 +18,7 @@ router.post('/register', async (req, res) => {
     const { email, password, firstName, lastName } = req.body;
     
     if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password required' });
+      return validationError(res, 'Email and password are required');
     }
     
     // Create user in Firebase
@@ -51,9 +52,9 @@ router.post('/register', async (req, res) => {
     });
   } catch (err) {
     if (err.code === 'auth/email-already-exists') {
-      return res.status(409).json({ error: 'Email already registered' });
+      return validationError(res, 'Email address already registered');
     }
-    return res.status(500).json({ error: 'Registration failed', details: err.message });
+    return serverError(res, 'Failed to register user');
   }
 });
 
@@ -64,7 +65,7 @@ router.post('/register', async (req, res) => {
 router.post('/register-firebase-user', async (req, res) => {
   try {
     const { userId, email } = req.body;
-    if (!userId || !email) return res.status(400).json({ error: 'userId and email required' });
+    if (!userId || !email) return validationError(res, 'userId and email are required');
 
     // Check if already exists
     const exists = await db.query('SELECT user_id FROM user_personal_info WHERE user_id = $1', [userId]);
@@ -88,7 +89,7 @@ router.post('/register-firebase-user', async (req, res) => {
 
     return res.json({ success: true, userId });
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    return serverError(res, 'Failed to register user');
   }
 });
 
@@ -109,9 +110,7 @@ router.post('/register-and-migrate', async (req, res) => {
     } = req.body;
     
     if (!email || !password || !temp_user_id) {
-      return res.status(400).json({ 
-        error: 'Email, password, and temp_user_id required' 
-      });
+      return validationError(res, 'Email, password, and temp_user_id are required');
     }
 
     // Step 1: Create permanent Firebase user
@@ -158,12 +157,9 @@ router.post('/register-and-migrate', async (req, res) => {
     
   } catch (err) {
     if (err.code === 'auth/email-already-exists') {
-      return res.status(409).json({ error: 'Email already registered' });
+      return validationError(res, 'Email address already registered');
     }
-    return res.status(500).json({ 
-      error: 'Registration with migration failed', 
-      details: err.message 
-    });
+    return serverError(res, 'Failed to register and migrate account');
   }
 });
 

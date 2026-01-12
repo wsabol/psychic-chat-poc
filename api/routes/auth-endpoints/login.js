@@ -7,6 +7,7 @@ import { recordLoginAttempt } from './helpers/accountLockout.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { encrypt } from '../../utils/encryption.js';
 import { getCurrentTermsVersion, getCurrentPrivacyVersion } from '../../shared/versionConfig.js';
+import { validationError, serverError } from '../../utils/responses.js';
 
 const router = Router();
 
@@ -17,14 +18,15 @@ const router = Router();
 router.post('/log-login-success', async (req, res) => {
   try {
     const { userId, email } = req.body;
-    if (!userId || !email) return res.status(400).json({ error: 'userId and email required' });
-    
+    if (!userId || !email) return validationError(res, 'userId and email are required');
+
     // Ensure user record exists (prevent FK constraint violations)
     const exists = await db.query('SELECT user_id FROM user_personal_info WHERE user_id = $1', [userId]);
     if (exists.rows.length === 0) {
       try {
         await createUserDatabaseRecords(userId, email);
       } catch (createErr) {
+        // User creation failed silently
       }
     }
 
@@ -35,21 +37,20 @@ router.post('/log-login-success', async (req, res) => {
         'SELECT user_id_hash FROM user_preferences WHERE user_id_hash = $1',
         [userIdHash]
       );
-      
+
       // Only create if doesn't exist - never overwrite saved preferences
       if (prefExists.rows.length === 0) {
         const isTemporaryUser = email && email.startsWith('temp_');
         const preferredLanguage = (isTemporaryUser && req.body?.temp_user_language) ? req.body.temp_user_language : 'en-US';
-        
+
         await db.query(
           `INSERT INTO user_preferences (user_id_hash, language, response_type, voice_enabled)
            VALUES ($1, $2, $3, $4)`,
           [userIdHash, preferredLanguage, 'full', true]
         );
-        
-        
       }
-          } catch (prefErr) {
+    } catch (prefErr) {
+      // Preferences creation failed silently
     }
 
     // For TEMPORARY accounts, automatically set user_consents to avoid blocking consent modal
@@ -61,13 +62,12 @@ router.post('/log-login-success', async (req, res) => {
           'SELECT user_id_hash FROM user_consents WHERE user_id_hash = $1',
           [userIdHash]
         );
-        
+
         // Only create if doesn't exist
         if (consentExists.rows.length === 0) {
           const termsVersion = getCurrentTermsVersion();
           const privacyVersion = getCurrentPrivacyVersion();
 
-          
           await db.query(
             `INSERT INTO user_consents (
               user_id_hash,
@@ -83,13 +83,13 @@ router.post('/log-login-success', async (req, res) => {
             ) VALUES ($1, $2, $3, NOW(), $4, $5, NOW(), false, NOW(), NOW())`,
             [userIdHash, termsVersion, true, privacyVersion, true]
           );
-
         }
-            } catch (consentErr) {
+      } catch (consentErr) {
+        // Consent creation failed silently
       }
     }
 
-    // Log successful login - audit_log schema: user_id_hash, action, details, ip_address_encrypted, user_agent, created_at
+    // Log successful login
     await logAudit(db, {
       userId,
       action: 'USER_LOGIN_SUCCESS',
@@ -100,8 +100,8 @@ router.post('/log-login-success', async (req, res) => {
     });
 
     return res.json({ success: true });
-    } catch (err) {
-    return res.status(500).json({ error: err.message });
+  } catch (err) {
+    return serverError(res, 'Failed to log login');
   }
 });
 
@@ -112,12 +112,12 @@ router.post('/log-login-success', async (req, res) => {
 router.post('/log-login-attempt', async (req, res) => {
   try {
     const { userId, success, reason } = req.body;
-    if (!userId) return res.status(400).json({ error: 'userId required' });
+    if (!userId) return validationError(res, 'userId is required');
 
     const result = await recordLoginAttempt(userId, success, reason, req);
     return res.json(result);
-    } catch (error) {
-    return res.status(500).json({ error: 'Failed to log login attempt' });
+  } catch (error) {
+    return serverError(res, 'Failed to log login attempt');
   }
 });
 
@@ -128,7 +128,7 @@ router.post('/log-login-attempt', async (req, res) => {
 router.post('/check-account-lockout/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    if (!userId) return res.status(400).json({ error: 'userId required' });
+    if (!userId) return validationError(res, 'userId is required');
 
     const userIdHash = hashUserId(userId);
     const lockoutResult = await db.query(
@@ -143,7 +143,7 @@ router.post('/check-account-lockout/:userId', async (req, res) => {
         (new Date(lockout.lock_expires_at) - new Date()) / 1000 / 60
       );
 
-      // Log blocked login attempt - audit_log schema: user_id_hash, action, details, ip_address_encrypted, user_agent, created_at
+      // Log blocked login attempt
       await logAudit(db, {
         userId,
         action: 'LOGIN_BLOCKED_ACCOUNT_LOCKED',
@@ -167,8 +167,8 @@ router.post('/check-account-lockout/:userId', async (req, res) => {
       locked: false,
       message: 'Account is not locked'
     });
-    } catch (error) {
-    return res.status(500).json({ error: 'Failed to check account lockout' });
+  } catch (error) {
+    return serverError(res, 'Failed to check account lockout');
   }
 });
 
