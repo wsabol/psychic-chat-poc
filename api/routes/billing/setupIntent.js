@@ -1,6 +1,7 @@
 import express from 'express';
 import { authenticateToken } from '../../middleware/auth.js';
 import { getOrCreateStripeCustomer, createSetupIntent } from '../../services/stripeService.js';
+import { validationError, billingError } from '../../utils/responses.js';
 
 const router = express.Router();
 
@@ -15,7 +16,7 @@ router.post('/setup-intent', authenticateToken, async (req, res) => {
     const customerId = await getOrCreateStripeCustomer(userId, userEmail);
     
     if (!customerId) {
-      return res.status(400).json({ error: 'Stripe is not configured. Please check your STRIPE_SECRET_KEY.' });
+      return validationError(res, 'Stripe is not configured');
     }
 
     const setupIntent = await createSetupIntent(customerId);
@@ -26,8 +27,7 @@ router.post('/setup-intent', authenticateToken, async (req, res) => {
       customerId: customerId,
     });
   } catch (error) {
-    console.error('[BILLING] Setup intent error:', error);
-    res.status(500).json({ error: error.message });
+    return billingError(res, 'Failed to create setup intent');
   }
 });
 

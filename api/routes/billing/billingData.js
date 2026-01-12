@@ -6,6 +6,7 @@ import {
   getCharges,
   getAvailablePrices,
 } from '../../services/stripeService.js';
+import { billingError } from '../../utils/responses.js';
 
 const router = express.Router();
 
@@ -26,8 +27,7 @@ router.get('/invoices', authenticateToken, async (req, res) => {
     const invoices = await getInvoices(customerId);
     res.json(invoices);
   } catch (error) {
-    console.error('[BILLING] Get invoices error:', error);
-    res.status(500).json({ error: error.message });
+    return billingError(res, 'Failed to fetch invoices');
   }
 });
 
@@ -48,8 +48,7 @@ router.get('/payments', authenticateToken, async (req, res) => {
     const charges = await getCharges(customerId);
     res.json(charges);
   } catch (error) {
-    console.error('[BILLING] Get payments error:', error);
-    res.status(500).json({ error: error.message });
+    return billingError(res, 'Failed to fetch payments');
   }
 });
 
@@ -61,8 +60,7 @@ router.get('/prices', async (req, res) => {
     const prices = await getAvailablePrices();
     res.json(prices);
   } catch (error) {
-    console.error('[BILLING] Get available prices error:', error);
-    res.status(500).json({ error: error.message });
+    return billingError(res, 'Failed to fetch pricing information');
   }
 });
 

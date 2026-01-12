@@ -6,6 +6,7 @@ import {
   storeSubscriptionData,
 } from '../../services/stripeService.js';
 import Stripe from 'stripe';
+import { serverError } from '../../utils/responses.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2024-04-10',
@@ -32,8 +33,7 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
     try {
       event = verifyWebhookSignature(req.body, req.headers['stripe-signature']);
     } catch (error) {
-      console.error('[WEBHOOK] Signature verification failed:', error.message);
-      return res.status(400).json({ error: 'Webhook signature verification failed' });
+      return serverError(res, 'Webhook signature verification failed');
     }
 
     // Extract user ID from Stripe metadata
@@ -173,8 +173,7 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
 
     res.json({ received: true });
   } catch (error) {
-    console.error('[WEBHOOK] Unexpected error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return serverError(res, 'Webhook processing failed');
   }
 });
 

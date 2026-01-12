@@ -12,6 +12,7 @@ import { logAudit } from '../shared/auditLog.js';
 import { hashUserId } from '../shared/hashUtils.js';
 import { getAuth } from 'firebase-admin/auth';
 import admin from 'firebase-admin';
+import { notFoundError, validationError, serverError } from '../utils/responses.js';
 
 const router = Router();
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
@@ -42,7 +43,7 @@ router.get('/download-data', authenticateToken, async (req, res) => {
     );
 
     if (personalInfo.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return notFoundError(res, 'User not found');
     }
 
     // Fetch settings
@@ -82,7 +83,7 @@ router.get('/download-data', authenticateToken, async (req, res) => {
 
     res.json(data);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to download data', details: error.message });
+    return serverError(res, 'Failed to download data');
   }
 });
 
@@ -96,7 +97,7 @@ router.post('/send-delete-verification', authenticateToken, async (req, res) => 
     const userEmail = req.user.email;
 
     if (!userEmail) {
-      return res.status(400).json({ error: 'User email not found' });
+      return validationError(res, 'User email not found');
     }
 
     // Generate 6-digit code
@@ -129,8 +130,8 @@ router.post('/send-delete-verification', authenticateToken, async (req, res) => 
       message: 'Verification code sent to email',
       email_masked: maskEmail(userEmail)
     });
-    } catch (error) {
-    res.status(500).json({ error: 'Failed to send verification email', details: error.message });
+  } catch (error) {
+    return serverError(res, 'Failed to send verification email');
   }
 });
 
@@ -146,7 +147,7 @@ router.delete('/delete-account', authenticateToken, async (req, res) => {
     const userIdHash = hashUserId(userId);
 
     if (!verificationCode) {
-      return res.status(400).json({ error: 'Verification code required' });
+      return validationError(res, 'Verification code is required');
     }
 
     // Verify code
@@ -161,7 +162,7 @@ router.delete('/delete-account', authenticateToken, async (req, res) => {
     );
 
     if (codeCheck.rows.length === 0) {
-      return res.status(400).json({ error: 'Invalid or expired verification code' });
+      return validationError(res, 'Invalid or expired verification code');
     }
 
     // Mark code as used
@@ -218,8 +219,8 @@ router.delete('/delete-account', authenticateToken, async (req, res) => {
       message: 'Account permanently deleted',
       timestamp: new Date().toISOString()
     });
-    } catch (error) {
-    res.status(500).json({ error: 'Failed to delete account', details: error.message });
+  } catch (error) {
+    return serverError(res, 'Failed to delete account');
   }
 });
 
@@ -290,7 +291,7 @@ router.get('/export-data/:userId', authenticateToken, authorizeUser, async (req,
     const { format = 'json' } = req.query;
 
     if (!['json', 'csv'].includes(format)) {
-      return res.status(400).json({ error: 'Format must be json or csv' });
+      return validationError(res, 'Format must be json or csv');
     }
 
     // Fetch all user data
@@ -306,12 +307,12 @@ router.get('/export-data/:userId', authenticateToken, authorizeUser, async (req,
               pgp_sym_decrypt(birth_city_encrypted, $2) as birth_city,
               pgp_sym_decrypt(birth_timezone_encrypted, $2) as birth_timezone,
               created_at
-       FROM user_personal_info WHERE user_id = $1`,
+        FROM user_personal_info WHERE user_id = $1`,
       [userId, ENCRYPTION_KEY]
     );
 
     if (personalInfo.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return notFoundError(res, 'User not found');
     }
 
     const personal = personalInfo.rows[0];
@@ -400,7 +401,7 @@ router.get('/export-data/:userId', authenticateToken, authorizeUser, async (req,
       details: { error: error.message }
     }).catch(() => {});
 
-    return res.status(500).json({ error: 'Failed to export data', details: error.message });
+    return serverError(res, 'Failed to export data');
   }
 });
 
@@ -414,32 +415,29 @@ router.delete('/delete-account/:userId', authenticateToken, authorizeUser, async
     const { password } = req.body;
 
     if (!password) {
-      return res.status(400).json({ error: 'Password required for account deletion' });
+      return validationError(res, 'Password is required for account deletion');
     }
 
     // Verify user exists
     const user = await db.query(
-      'SELECT user_id, deletion_status FROM user_personal_info WHERE user_id = $1',
+        'SELECT user_id, deletion_status FROM user_personal_info WHERE user_id = $1',
       [userId]
     );
 
     if (user.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return notFoundError(res, 'User not found');
     }
 
     const currentStatus = user.rows[0].deletion_status;
 
     // Check if already deleted
     if (currentStatus === 'deleted') {
-      return res.status(400).json({ error: 'Account already permanently deleted' });
+      return validationError(res, 'Account already permanently deleted');
     }
 
     // Check if already pending deletion
     if (currentStatus === 'pending_deletion') {
-      return res.status(400).json({ 
-        error: 'Account deletion already in progress',
-        message: 'Your account is scheduled for deletion. Contact support to cancel.'
-      });
+      return validationError(res, 'Account deletion already in progress');
     }
 
     // TODO: Verify password with Firebase auth
@@ -507,7 +505,7 @@ router.delete('/delete-account/:userId', authenticateToken, authorizeUser, async
       details: { error: error.message }
     }).catch(() => {});
 
-    return res.status(500).json({ error: 'Failed to delete account', details: error.message });
+    return serverError(res, 'Failed to delete account');
   }
 });
 
@@ -525,19 +523,19 @@ router.post('/cancel-deletion/:userId', authenticateToken, authorizeUser, async 
     );
 
     if (user.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return notFoundError(res, 'User not found');
     }
 
     const { deletion_status, deletion_requested_at } = user.rows[0];
 
     if (deletion_status !== 'pending_deletion') {
-      return res.status(400).json({ error: 'Account deletion not in progress' });
+      return validationError(res, 'Account deletion not in progress');
     }
 
     // Check if grace period has expired
     const daysSinceDeletion = Math.floor((Date.now() - new Date(deletion_requested_at).getTime()) / (1000 * 60 * 60 * 24));
     if (daysSinceDeletion > 30) {
-      return res.status(400).json({ error: 'Grace period has expired. Account cannot be recovered.' });
+      return validationError(res, 'Grace period has expired. Account cannot be recovered.');
     }
 
     // Reactivate account
@@ -577,9 +575,8 @@ router.post('/cancel-deletion/:userId', authenticateToken, authorizeUser, async 
       userId,
       status: 'active'
     });
-
-    } catch (error) {
-    return res.status(500).json({ error: 'Failed to cancel deletion', details: error.message });
+  } catch (error) {
+    return serverError(res, 'Failed to cancel deletion');
   }
 });
 

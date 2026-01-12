@@ -9,6 +9,7 @@ import {
   getAvailablePrices,
   storeSubscriptionData,
 } from '../../services/stripeService.js';
+import { validationError, billingError } from '../../utils/responses.js';
 
 const router = express.Router();
 
@@ -24,13 +25,13 @@ router.post('/create-subscription', authenticateToken, async (req, res) => {
     const userEmail = req.user.email;
 
     if (!priceId) {
-      return res.status(400).json({ error: 'priceId is required' });
+      return validationError(res, 'priceId is required');
     }
     const customerStart = Date.now();
     const customerId = await getOrCreateStripeCustomer(userId, userEmail);
     
     if (!customerId) {
-      return res.status(400).json({ error: 'Stripe is not configured.' });
+      return validationError(res, 'Stripe is not configured');
     }
     
     const stripeStart = Date.now();
@@ -58,8 +59,7 @@ router.post('/create-subscription', authenticateToken, async (req, res) => {
       invoiceId: subscription.latest_invoice?.id,
     });
   } catch (error) {
-    console.error('[BILLING] Create subscription error:', error);
-    res.status(500).json({ error: error.message });
+    return billingError(res, 'Failed to create subscription');
   }
 });
 
@@ -80,8 +80,7 @@ router.get('/subscriptions', authenticateToken, async (req, res) => {
     const subscriptions = await getSubscriptions(customerId);
     res.json(subscriptions);
   } catch (error) {
-    console.error('[BILLING] Get subscriptions error:', error);
-    res.status(500).json({ error: error.message });
+    return billingError(res, 'Failed to fetch subscriptions');
   }
 });
 
@@ -102,7 +101,7 @@ router.post('/complete-subscription/:subscriptionId', authenticateToken, async (
     const { subscriptionId } = req.params;
 
     if (!subscriptionId) {
-      return res.status(400).json({ error: 'subscriptionId is required' });
+      return validationError(res, 'subscriptionId is required');
     }
 
     // Retrieve subscription with latest invoice and payment intent
@@ -124,7 +123,7 @@ router.post('/complete-subscription/:subscriptionId', authenticateToken, async (
     }
 
     if (!subscription.latest_invoice) {
-      return res.status(400).json({ error: 'No invoice found for subscription' });
+      return billingError(res, 'No invoice found for subscription');
     }
 
     const invoiceId = subscription.latest_invoice.id;
@@ -162,11 +161,10 @@ router.post('/complete-subscription/:subscriptionId', authenticateToken, async (
           clientSecret: updatedSub.latest_invoice?.payment_intent?.client_secret || null,
           amountDue: updatedSub.latest_invoice?.amount_due || 0,
         },
-      });
+        });
     }
   } catch (error) {
-    console.error('[BILLING] Complete subscription error:', error.message);
-    res.status(500).json({ error: error.message });
+    return billingError(res, 'Failed to complete subscription');
   }
 });
 
@@ -185,8 +183,7 @@ router.post('/cancel-subscription/:subscriptionId', authenticateToken, async (re
       cancelAtPeriodEnd: subscription.cancel_at_period_end,
     });
   } catch (error) {
-    console.error('[BILLING] Cancel subscription error:', error);
-    res.status(500).json({ error: error.message });
+    return billingError(res, 'Failed to cancel subscription');
   }
 });
 
@@ -198,8 +195,7 @@ router.get('/available-prices', async (req, res) => {
     const prices = await getAvailablePrices();
     res.json(prices);
   } catch (error) {
-    console.error('[BILLING] Get available prices error:', error);
-    res.status(500).json({ error: error.message });
+    return billingError(res, 'Failed to fetch pricing');
   }
 });
 

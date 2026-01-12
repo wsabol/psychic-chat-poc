@@ -8,6 +8,7 @@ import {
   deletePaymentMethod,
   setDefaultPaymentMethod,
 } from '../../services/stripeService.js';
+import { validationError, billingError } from '../../utils/responses.js';
 
 const router = express.Router();
 
@@ -86,9 +87,8 @@ router.get('/payment-methods', authenticateToken, async (req, res) => {
     // Remove from in-flight map after short delay
     setTimeout(() => inflightRequests.delete(requestKey), 100);
   } catch (error) {
-    console.error('[BILLING] Get payment methods error:', error);
     inflightRequests.delete(`payment-methods:${req.user.userId}`);
-    res.status(500).json({ error: error.message });
+    return billingError(res, 'Failed to fetch payment methods');
   }
 });
 
@@ -102,17 +102,17 @@ router.post('/payment-methods/attach', authenticateToken, async (req, res) => {
     const userEmail = req.user.email;
 
     if (!paymentMethodId) {
-      return res.status(400).json({ error: 'paymentMethodId is required' });
+      return validationError(res, 'paymentMethodId is required');
     }
 
     const customerId = await getOrCreateStripeCustomer(userId, userEmail);
-    
+
     if (!customerId) {
-      return res.status(400).json({ error: 'Customer not found' });
+      return validationError(res, 'Customer not found');
     }
 
     if (!stripe) {
-      return res.status(400).json({ error: 'Stripe is not configured' });
+      return validationError(res, 'Stripe is not configured');
     }
 
     const paymentMethod = await stripe.paymentMethods.attach(paymentMethodId, {
@@ -138,7 +138,7 @@ router.post('/payment-methods/attach', authenticateToken, async (req, res) => {
         message: 'Payment method already attached' 
       });
     }
-    res.status(500).json({ error: error.message || 'Failed to attach payment method' });
+    return billingError(res, 'Failed to attach payment method');
   }
 });
 
@@ -151,7 +151,7 @@ router.delete('/payment-methods/:id', authenticateToken, async (req, res) => {
     const userId = req.user.userId;
 
     if (!id) {
-      return res.status(400).json({ error: 'Payment method ID is required' });
+      return validationError(res, 'Payment method ID is required');
     }
 
     const result = await deletePaymentMethod(id);
@@ -164,11 +164,9 @@ router.delete('/payment-methods/:id', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error(`[BILLING] Delete payment method error:`, error.message);
     if (error.message && (error.message.includes('pending') || error.message.includes('verification'))) {
-      return res.status(400).json({ 
-        error: 'This bank account cannot be deleted while verification is pending. Please try again later or contact support.' 
-      });
+      return validationError(res, 'Bank account verification in progress. Please try again later.');
     }
-    res.status(500).json({ error: error.message || 'Failed to delete payment method' });
+    return billingError(res, 'Failed to delete payment method');
   }
 });
 
@@ -185,7 +183,7 @@ router.post('/payment-methods/set-default', authenticateToken, async (req, res) 
     const customerId = await getOrCreateStripeCustomer(userId, userEmail);
     
     if (!customerId) {
-      return res.status(400).json({ error: 'Stripe is not configured.' });
+      return validationError(res, 'Stripe is not configured');
     }
     
     const customer = await setDefaultPaymentMethod(customerId, paymentMethodId);
@@ -196,8 +194,7 @@ router.post('/payment-methods/set-default', authenticateToken, async (req, res) 
 
     res.json({ success: true, defaultPaymentMethod: customer.invoice_settings?.default_payment_method });
   } catch (error) {
-    console.error('[BILLING] Set default payment method error:', error);
-    res.status(500).json({ error: error.message });
+    return billingError(res, 'Failed to set default payment method');
   }
 });
 
@@ -209,7 +206,7 @@ router.post('/payment-methods/attach-unattached', authenticateToken, async (req,
     const userId = req.user.userId;
     const userEmail = req.user.email;
     const customerId = await getOrCreateStripeCustomer(userId, userEmail);
-    if (!customerId) return res.status(400).json({ error: 'No Stripe customer found' });
+    if (!customerId) return validationError(res, 'No Stripe customer found');
 
     const attachedMethods = await stripe.paymentMethods.list({ customer: customerId, limit: 100 });
     const attachedIds = new Set(attachedMethods.data.map(m => m.id));
@@ -241,8 +238,7 @@ router.post('/payment-methods/attach-unattached', authenticateToken, async (req,
 
     res.json({ success: true, attachedCount: attached.length, attachedIds: attached, errors: errors.length > 0 ? errors : undefined });
   } catch (error) {
-    console.error('[BILLING] Attach unattached methods error:', error);
-    res.status(500).json({ error: error.message });
+    return billingError(res, 'Failed to attach payment methods');
   }
 });
 

@@ -1,6 +1,7 @@
 import express from 'express';
 import { authenticateToken } from '../../middleware/auth.js';
 import { db } from '../../shared/db.js';
+import { validationError, serverError } from '../../utils/responses.js';
 
 const router = express.Router();
 
@@ -71,8 +72,7 @@ router.get('/onboarding-status', authenticateToken, async (req, res) => {
       subscriptionStatus: subscription_status
     });
   } catch (error) {
-    console.error('[ONBOARDING] Get status error:', error);
-    res.status(500).json({ error: error.message });
+    return serverError(res, 'Failed to fetch onboarding status');
   }
 });
 
@@ -92,7 +92,7 @@ router.post('/onboarding-step/:step', authenticateToken, async (req, res) => {
     const validSteps = ['create_account', 'payment_method', 'subscription', 'personal_info', 'security_settings'];
     // Note: security_settings is optional and doesn't affect onboarding completion
     if (!validSteps.includes(step)) {
-      return res.status(400).json({ error: 'Invalid step' });
+      return validationError(res, 'Invalid onboarding step');
     }
     
     // Onboarding is COMPLETE when personal_info step is saved (all required steps done)
@@ -124,8 +124,7 @@ router.post('/onboarding-step/:step', authenticateToken, async (req, res) => {
       message: isOnboardingComplete ? 'Required onboarding steps complete!' : `Step ${step} updated`
     });
   } catch (error) {
-    console.error('[ONBOARDING] Update step error:', error);
-    res.status(500).json({ error: error.message });
+    return serverError(res, 'Failed to update onboarding step');
   }
 });
 
