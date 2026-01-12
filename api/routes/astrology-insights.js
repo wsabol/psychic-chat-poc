@@ -3,6 +3,7 @@ import { hashUserId } from "../shared/hashUtils.js";
 import { enqueueMessage } from "../shared/queue.js";
 import { authenticateToken, authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
+import { processingResponse, serverError } from "../utils/responses.js";
 
 
 const router = Router();
@@ -50,8 +51,8 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
             }
         }
         
-        if (!todaysWeather) {
-            return res.status(404).json({ error: 'Generating today\'s cosmic weather...' });
+                if (!todaysWeather) {
+            return processingResponse(res, 'Generating today\'s cosmic weather...', 'generating');
         }
         
         res.json({
@@ -60,9 +61,8 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
             birthChart: todaysWeather.birth_chart,
             currentPlanets: todaysWeather.planets
         });
-    } catch (err) {
-        console.error('[ASTROLOGY-INSIGHTS] Error fetching cosmic weather:', err);
-        res.status(500).json({ error: 'Failed to fetch cosmic weather' });
+        } catch (err) {
+        return serverError(res, 'Failed to fetch cosmic weather');
     }
 });
 
@@ -72,9 +72,8 @@ router.post("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (
     try {
         await enqueueMessage({ userId, message: '[SYSTEM] Generate cosmic weather' });
         res.json({ status: 'Generating today\'s cosmic weather...' });
-    } catch (err) {
-        console.error('[ASTROLOGY-INSIGHTS] Error queuing cosmic weather:', err);
-        res.status(500).json({ error: 'Failed to queue cosmic weather' });
+        } catch (err) {
+        return serverError(res, 'Failed to queue cosmic weather');
     }
 });
 
@@ -94,15 +93,14 @@ router.get("/lunar-nodes/:userId", authenticateToken, authorizeUser, async (req,
             [userIdHash, ENCRYPTION_KEY]
         );
         
-        if (rows.length === 0) {
-            return res.status(404).json({ error: 'Generating lunar nodes insight...' });
+                if (rows.length === 0) {
+            return processingResponse(res, 'Generating lunar nodes insight...', 'generating');
         }
         
         const data = typeof rows[0].content === 'string' ? JSON.parse(rows[0].content) : rows[0].content;
         res.json({ insight: data.text, nodes: { north: data.north_node_sign, south: data.south_node_sign } });
-    } catch (err) {
-        console.error('[ASTROLOGY-INSIGHTS] Error fetching lunar nodes:', err);
-        res.status(500).json({ error: 'Failed to fetch lunar nodes' });
+        } catch (err) {
+        return serverError(res, 'Failed to fetch lunar nodes');
     }
 });
 
@@ -111,9 +109,8 @@ router.post("/lunar-nodes/:userId", authenticateToken, authorizeUser, async (req
     try {
         await enqueueMessage({ userId, message: '[SYSTEM] Generate lunar nodes insight' });
         res.json({ status: 'Generating lunar nodes insight...' });
-    } catch (err) {
-        console.error('[ASTROLOGY-INSIGHTS] Error queuing lunar nodes:', err);
-        res.status(500).json({ error: 'Failed to queue lunar nodes' });
+        } catch (err) {
+        return serverError(res, 'Failed to queue lunar nodes');
     }
 });
 
@@ -157,8 +154,8 @@ router.get("/void-of-course/:userId", authenticateToken, authorizeUser, async (r
             }
         }
         
-        if (!todaysAlert) {
-            return res.status(404).json({ error: 'Calculating void of course moon...' });
+                if (!todaysAlert) {
+            return processingResponse(res, 'Calculating void of course moon...', 'generating');
         }
         
         res.json({ 
@@ -166,9 +163,8 @@ router.get("/void-of-course/:userId", authenticateToken, authorizeUser, async (r
             alert: todaysAlert.text || todaysAlert.message,
             phase: todaysAlert.phase
         });
-    } catch (err) {
-        console.error('[ASTROLOGY-INSIGHTS] Error fetching void of course:', err);
-        res.status(500).json({ error: 'Failed to fetch void of course' });
+        } catch (err) {
+        return serverError(res, 'Failed to fetch void of course');
     }
 });
 
@@ -177,9 +173,8 @@ router.post("/void-of-course/:userId", authenticateToken, authorizeUser, async (
     try {
         await enqueueMessage({ userId, message: '[SYSTEM] Generate void of course alert' });
         res.json({ status: 'Checking void of course moon...' });
-    } catch (err) {
-        console.error('[ASTROLOGY-INSIGHTS] Error queuing void of course:', err);
-        res.status(500).json({ error: 'Failed to queue void of course' });
+        } catch (err) {
+        return serverError(res, 'Failed to queue void of course');
     }
 });
 
@@ -208,8 +203,8 @@ router.get("/moon-phase/:userId", authenticateToken, authorizeUser, async (req, 
             ORDER BY created_at DESC LIMIT 1`;
         const { rows } = await db.query(query, [userIdHash, ENCRYPTION_KEY, phase]);
         
-        if (rows.length === 0) {
-            return res.status(404).json({ error: 'Generating moon phase commentary...' });
+                if (rows.length === 0) {
+            return processingResponse(res, 'Generating moon phase commentary...', 'generating');
         }
         
         const row = rows[0];
@@ -225,9 +220,8 @@ router.get("/moon-phase/:userId", authenticateToken, authorizeUser, async (req, 
             generated_at: moonPhaseData.generated_at,
             phase: phase
         });
-    } catch (err) {
-        console.error('[ASTROLOGY-INSIGHTS] Error fetching moon phase:', err);
-        res.status(500).json({ error: 'Failed to fetch moon phase' });
+        } catch (err) {
+        return serverError(res, 'Failed to fetch moon phase');
     }
 });
 
@@ -238,9 +232,8 @@ router.post("/moon-phase/:userId", authenticateToken, authorizeUser, async (req,
     try {
         await enqueueMessage({ userId, message: `[SYSTEM] Generate moon phase commentary for ${phase}` });
         res.json({ status: `Generating ${phase} moon phase commentary...` });
-    } catch (err) {
-        console.error('[ASTROLOGY-INSIGHTS] Error queuing moon phase:', err);
-        res.status(500).json({ error: 'Failed to queue moon phase' });
+        } catch (err) {
+        return serverError(res, 'Failed to queue moon phase');
     }
 });
 
