@@ -4,6 +4,7 @@ import { enqueueMessage } from "../shared/queue.js";
 import { authenticateToken, authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
 import { getLocalDateForTimezone } from "../shared/timezoneHelper.js";
+import { validationError, serverError } from "../utils/responses.js";
 
 const router = Router();
 
@@ -13,7 +14,7 @@ router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
     
     try {
         if (!phase) {
-            return res.status(400).json({ error: 'Moon phase name required' });
+            return validationError(res, 'Moon phase name required');
         }
         
         const userIdHash = hashUserId(userId);
@@ -91,7 +92,7 @@ router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
         });
         
         } catch (err) {
-        res.status(500).json({ error: 'Failed to fetch moon phase commentary' });
+        return serverError(res, 'Failed to fetch moon phase commentary');
     }
 });
 
@@ -101,7 +102,7 @@ router.post("/:userId", authenticateToken, authorizeUser, async (req, res) => {
     
     try {
         if (!phase) {
-            return res.status(400).json({ error: 'Moon phase name required in request body' });
+            return validationError(res, 'Moon phase name required in request body');
         }
         
         await enqueueMessage({
@@ -116,7 +117,7 @@ router.post("/:userId", authenticateToken, authorizeUser, async (req, res) => {
         });
         
         } catch (err) {
-        res.status(500).json({ error: 'Failed to queue moon phase commentary generation' });
+        return serverError(res, 'Failed to queue moon phase commentary generation');
     }
 });
 

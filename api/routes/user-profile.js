@@ -5,6 +5,7 @@ import { hashUserId } from "../shared/hashUtils.js";
 import { enqueueMessage } from "../shared/queue.js";
 import { validateAge } from "../shared/ageValidator.js";
 import { handleAgeViolation } from "../shared/violationHandler.js";
+import { validationError, forbiddenError, serverError } from "../utils/responses.js";
 
 const router = Router();
 
@@ -34,7 +35,7 @@ router.get("/:userId", authorizeUser, async (req, res) => {
         }
         res.json(rows[0]);
         } catch (err) {
-        res.status(500).json({ error: 'Failed to fetch personal information' });
+        return serverError(res, 'Failed to fetch personal information');
     }
 });
 
@@ -46,39 +47,34 @@ router.post("/:userId", authorizeUser, async (req, res) => {
         const isTemporary = email && email.startsWith('tempuser');
         
         if (!isTemporary && (!firstName || !lastName || !email || !birthDate || !sex)) {
-            return res.status(400).json({ error: 'Missing required fields: firstName, lastName, email, birthDate, sex' });
+            return validationError(res, 'Missing required fields: firstName, lastName, email, birthDate, sex');
         }
 
         if (!email || !birthDate) {
-            return res.status(400).json({ error: 'Missing required fields: email, birthDate' });
+            return validationError(res, 'Missing required fields: email, birthDate');
         }
 
         const parsedBirthDate = parseDateForStorage(birthDate);
         
         if (!parsedBirthDate || parsedBirthDate === 'Invalid Date') {
-            return res.status(400).json({ error: 'Invalid birth date format' });
+            return validationError(res, 'Invalid birth date format');
         }
 
         const ageValidation = validateAge(parsedBirthDate);
         if (!ageValidation.isValid) {
-            return res.status(400).json({ error: ageValidation.error });
+            return validationError(res, ageValidation.error + ' (This app requires users to be 18 years or older)');
         }
 
+        // CRITICAL: Age >= 18 is a legal requirement - allow 3 attempts to fix typos
         if (!ageValidation.isAdult) {
             const violationResult = await handleAgeViolation(userId, ageValidation.age);
 
             if (violationResult.deleted) {
-                return res.status(403).json({
-                    error: 'Account has been terminated due to policy violation.',
-                    reason: 'Users must be 18 years or older',
-                    deleted: true
-                });
+                // All 3 attempts used - account is deleted
+                return forbiddenError(res, violationResult.error);
             } else {
-                return res.status(403).json({
-                    error: ageValidation.error,
-                    warning: 'This is your first age restriction warning. A second violation will result in account deletion.',
-                    violationCount: violationResult.violationCount
-                });
+                // Still allow attempts - provide clear feedback about attempts remaining
+                return forbiddenError(res, violationResult.message);
             }
         }
 
@@ -146,7 +142,7 @@ router.post("/:userId", authorizeUser, async (req, res) => {
 
         res.json({ success: true, message: "Personal information saved successfully" });
         } catch (err) {
-        res.status(500).json({ error: 'Failed to save personal information', details: err.message });
+        return serverError(res, 'Failed to save personal information');
     }
 });
 
@@ -160,7 +156,7 @@ router.delete("/:userId/astrology-cache", authorizeUser, async (req, res) => {
         );
         res.json({ success: true, message: `Cleared astrology cache`, deletedRows: result.rowCount });
         } catch (err) {
-        res.status(500).json({ error: 'Failed to clear astrology cache', details: err.message });
+        return serverError(res, 'Failed to clear astrology cache');
     }
 });
 
@@ -188,7 +184,7 @@ router.get("/:userId/preferences", authorizeUser, async (req, res) => {
         
         res.json(rows[0]);
         } catch (err) {
-        res.status(500).json({ error: 'Failed to fetch preferences' });
+        return serverError(res, 'Failed to fetch preferences');
     }
 });
 
@@ -203,7 +199,7 @@ router.post("/:userId/preferences", authorizeUser, async (req, res) => {
     try {
         // 🌍 CRITICAL: If only timezone is provided, just update that field
         if (timezone && !language && !response_type && !oracle_language) {
-            await db.query(
+                await db.query(
                 `INSERT INTO user_preferences (user_id_hash, timezone)
                  VALUES ($1, $2)
                  ON CONFLICT (user_id_hash) DO UPDATE SET
@@ -219,17 +215,17 @@ router.post("/:userId/preferences", authorizeUser, async (req, res) => {
             
             // Validate language
             if (!['en-US', 'en-GB', 'es-ES', 'es-MX', 'es-DO', 'fr-FR', 'fr-CA', 'de-DE', 'it-IT', 'pt-BR', 'ja-JP', 'zh-CN'].includes(language)) {
-                return res.status(400).json({ error: 'Invalid language: ' + language });
+                return validationError(res, 'Invalid language: ' + language);
             }
             
             // Validate response_type
             if (!['full', 'brief'].includes(response_type)) {
-                return res.status(400).json({ error: 'Invalid response_type: ' + response_type });
+                return validationError(res, 'Invalid response_type: ' + response_type);
             }
             
             const validOracleLanguages = ['en-US', 'en-GB', 'es-ES', 'es-MX', 'es-DO', 'fr-FR', 'fr-CA'];
             if (!validOracleLanguages.includes(oracle_language)) {
-                return res.status(400).json({ error: 'Invalid oracle_language: ' + oracle_language });
+                return validationError(res, 'Invalid oracle_language: ' + oracle_language);
             }
             
             const { rows } = await db.query(
@@ -251,15 +247,15 @@ router.post("/:userId/preferences", authorizeUser, async (req, res) => {
         
         // Otherwise require language and response_type for full preference update
         if (!language || !response_type) {
-            return res.status(400).json({ error: 'Missing required fields: language, response_type' });
+            return validationError(res, 'Missing required fields: language, response_type');
         }
         
         if (!['en-US', 'en-GB', 'es-ES', 'fr-FR', 'de-DE', 'it-IT', 'pt-BR', 'ja-JP', 'zh-CN'].includes(language)) {
-            return res.status(400).json({ error: 'Invalid language' });
+            return validationError(res, 'Invalid language');
         }
         
         if (!['full', 'brief'].includes(response_type)) {
-            return res.status(400).json({ error: 'Invalid response_type' });
+            return validationError(res, 'Invalid response_type');
         }
 
         // Validate oracle_language if provided
@@ -286,7 +282,7 @@ router.post("/:userId/preferences", authorizeUser, async (req, res) => {
         
         res.json({ success: true, preferences: rows[0] });
         } catch (err) {
-        res.status(500).json({ error: 'Failed to save preferences', details: err.message });
+        return serverError(res, 'Failed to save preferences');
     }
 });
 

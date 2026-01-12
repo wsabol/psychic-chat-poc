@@ -10,6 +10,7 @@ import { authorizeUser } from '../../middleware/auth.js';
 import { logAudit } from '../../shared/auditLog.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { db } from '../../shared/db.js';
+import { validationError, notFoundError, serverError } from '../../utils/responses.js';
 import {
   fetchPersonalInfo,
   fetchMessages
@@ -35,7 +36,7 @@ router.get('/download-data', async (req, res) => {
     // Fetch personal info
     const personalInfo = await fetchPersonalInfo(userId);
     if (personalInfo.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return notFoundError(res, 'User not found');
     }
 
     // Fetch only messages (lightweight download)
@@ -63,7 +64,7 @@ router.get('/download-data', async (req, res) => {
     res.json(data);
   } catch (error) {
     console.error('[DOWNLOAD-DATA]', error);
-    res.status(500).json({ error: 'Failed to download data', details: error.message });
+    return serverError(res, 'Failed to download data');
   }
 });
 
@@ -79,7 +80,7 @@ router.get('/export-data/:userId', authorizeUser, async (req, res) => {
     const { format = 'json' } = req.query;
 
     if (!['json', 'csv'].includes(format)) {
-      return res.status(400).json({ error: 'Format must be json or csv' });
+      return validationError(res, 'Format must be json or csv');
     }
 
     const userIdHash = hashUserId(userId);
@@ -87,7 +88,7 @@ router.get('/export-data/:userId', authorizeUser, async (req, res) => {
     // Fetch all user data
     const personalInfo = await fetchPersonalInfo(userId);
     if (personalInfo.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return notFoundError(res, 'User not found');
     }
 
     // Compile complete export data
@@ -138,7 +139,7 @@ router.get('/export-data/:userId', authorizeUser, async (req, res) => {
       details: { error: error.message }
     }).catch(e => console.error('[AUDIT]', e.message));
 
-    return res.status(500).json({ error: 'Failed to export data', details: error.message });
+    return serverError(res, 'Failed to export data');
   }
 });
 

@@ -14,6 +14,7 @@ import { authenticateToken, authorizeUser } from '../../middleware/auth.js';
 import { logAudit } from '../../shared/auditLog.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { db } from '../../shared/db.js';
+import { validationError, notFoundError, serverError, unprocessableError } from '../../utils/responses.js';
 import {
   fetchDeletionCode,
   storeDeletionCode,
@@ -43,7 +44,7 @@ router.post('/send-delete-verification', authenticateToken, async (req, res) => 
     const userEmail = req.user.email;
 
     if (!userEmail) {
-      return res.status(400).json({ error: 'User email not found' });
+      return validationError(res, 'User email not found');
     }
 
     // Generate 6-digit code
@@ -74,7 +75,7 @@ router.post('/send-delete-verification', authenticateToken, async (req, res) => 
     });
   } catch (error) {
     console.error('[SEND-DELETE-VERIFICATION]', error);
-    res.status(500).json({ error: 'Failed to send verification email', details: error.message });
+    return serverError(res, 'Failed to send verification email');
   }
 });
 
@@ -90,13 +91,13 @@ router.delete('/delete-account', authenticateToken, async (req, res) => {
     const userIdHash = hashUserId(userId);
 
     if (!verificationCode) {
-      return res.status(400).json({ error: 'Verification code required' });
+      return validationError(res, 'Verification code required');
     }
 
     // Verify code
     const codeCheck = await fetchDeletionCode(userId, verificationCode);
     if (codeCheck.rows.length === 0) {
-      return res.status(400).json({ error: 'Invalid or expired verification code' });
+      return validationError(res, 'Invalid or expired verification code');
     }
 
     // Mark code as used
@@ -113,7 +114,7 @@ router.delete('/delete-account', authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error('[DELETE-ACCOUNT]', error);
-    res.status(500).json({ error: 'Failed to delete account', details: error.message });
+    return serverError(res, 'Failed to delete account');
   }
 });
 
@@ -129,22 +130,19 @@ router.delete('/delete-account/:userId', authorizeUser, async (req, res) => {
     // Verify user exists and get current status
     const user = await fetchDeletionStatus(userId);
     if (user.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return notFoundError(res, 'User not found');
     }
 
     const currentStatus = user.rows[0].deletion_status;
 
     // Check if already permanently deleted
     if (currentStatus === 'deleted') {
-      return res.status(400).json({ error: 'Account already permanently deleted' });
+      return unprocessableError(res, 'Account already permanently deleted');
     }
 
     // Check if already pending deletion
     if (currentStatus === 'pending_deletion') {
-      return res.status(400).json({
-        error: 'Account deletion already in progress',
-        message: 'Your account is scheduled for deletion. Contact support to cancel.'
-      });
+      return unprocessableError(res, 'Account deletion already in progress. Your account is scheduled for deletion. Contact support to cancel.');
     }
 
     // Mark account for deletion (30-day grace period)
@@ -196,7 +194,7 @@ router.delete('/delete-account/:userId', authorizeUser, async (req, res) => {
       details: { error: error.message }
     }).catch(e => console.error('[AUDIT]', e.message));
 
-    return res.status(500).json({ error: 'Failed to delete account', details: error.message });
+    return serverError(res, 'Failed to delete account');
   }
 });
 
@@ -216,7 +214,7 @@ router.post('/cancel-deletion/:userId', authorizeUser, async (req, res) => {
     const { deletion_status, deletion_requested_at } = user.rows[0];
 
     if (deletion_status !== 'pending_deletion') {
-      return res.status(400).json({ error: 'Account deletion not in progress' });
+      return unprocessableError(res, 'Account deletion not in progress');
     }
 
     // Check if grace period has expired
@@ -224,7 +222,7 @@ router.post('/cancel-deletion/:userId', authorizeUser, async (req, res) => {
       (Date.now() - new Date(deletion_requested_at).getTime()) / (1000 * 60 * 60 * 24)
     );
     if (daysSinceDeletion > 30) {
-      return res.status(400).json({ error: 'Grace period has expired. Account cannot be recovered.' });
+      return unprocessableError(res, 'Grace period has expired. Account cannot be recovered.');
     }
 
     // Reactivate account
@@ -254,7 +252,7 @@ router.post('/cancel-deletion/:userId', authorizeUser, async (req, res) => {
     });
   } catch (error) {
     console.error('[CANCEL-DELETE] Error canceling deletion:', error);
-    return res.status(500).json({ error: 'Failed to cancel deletion', details: error.message });
+    return serverError(res, 'Failed to cancel deletion');
   }
 });
 

@@ -8,6 +8,7 @@ import { db } from "../shared/db.js";
 import { containsHealthContent, detectHealthKeywords, getBlockedResponse } from "../shared/healthGuardrail.js";
 import { logAudit } from "../shared/auditLog.js";
 import { hashUserId } from "../shared/hashUtils.js";
+import { validationError, serverError } from "../utils/responses.js";
 
 const router = Router();
 
@@ -87,7 +88,7 @@ router.get("/opening/:userId", authorizeUser, verify2FA, async (req, res) => {
             content: opening
         })
     } catch (err) {
-        res.status(500).json({ error: 'Failed to generate opening' });
+        return serverError(res, 'Failed to generate opening');
     }
 });
 
@@ -126,7 +127,7 @@ router.get("/history/:userId", authorizeUser, verify2FA, async (req, res) => {
         
         res.json(transformedRows);
     } catch (err) {
-        res.status(500).json({ error: 'Database query error: ' + err.message });
+        return serverError(res, 'Database query error');
     }
 });
 

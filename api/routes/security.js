@@ -2,6 +2,7 @@ import express from 'express';
 import { authenticateToken } from '../middleware/auth.js';
 import { db } from '../shared/db.js';
 import * as securityService from '../services/securityService.js';
+import { validationError, forbiddenError, serverError } from '../utils/responses.js';
 
 const router = express.Router();
 
@@ -18,11 +19,11 @@ router.post('/track-device/:userId', async (req, res) => {
     const { deviceName, ipAddress } = req.body;
     
     if (req.user.uid !== userId) {
-      return res.status(403).json({ error: 'Unauthorized' });
+      return forbiddenError(res, 'Unauthorized');
     }
 
     if (!deviceName || !ipAddress) {
-      return res.status(400).json({ error: 'deviceName and ipAddress required' });
+      return validationError(res, 'deviceName and ipAddress required');
     }
 
     // Import hashUserId
@@ -49,7 +50,7 @@ router.post('/track-device/:userId', async (req, res) => {
     res.json({ success: true, device: result.rows[0] });
   } catch (err) {
     console.error('[SECURITY] Error tracking device:', err);
-    res.status(500).json({ error: err.message });
+    return serverError(res, err.message);
   }
 });
 
@@ -62,14 +63,14 @@ router.get('/devices/:userId', async (req, res) => {
     const { userId } = req.params;
     
     if (req.user.uid !== userId) {
-      return res.status(403).json({ error: 'Unauthorized' });
+      return forbiddenError(res, 'Unauthorized');
     }
 
     const result = await securityService.getDevices(userId);
     res.json(result);
   } catch (err) {
     console.error('[SECURITY] Error in GET /devices:', err);
-    res.status(500).json({ error: err.message });
+    return serverError(res, err.message);
   }
 });
 
@@ -82,14 +83,14 @@ router.delete('/devices/:userId/:deviceId', async (req, res) => {
     const { userId, deviceId } = req.params;
     
     if (req.user.uid !== userId) {
-      return res.status(403).json({ error: 'Unauthorized' });
+      return forbiddenError(res, 'Unauthorized');
     }
 
     const result = await securityService.logoutDevice(userId, deviceId);
     res.json(result);
   } catch (err) {
     console.error('[SECURITY] Error in DELETE /devices:', err);
-    res.status(500).json({ error: err.message });
+    return serverError(res, err.message);
   }
 });
 
@@ -102,14 +103,14 @@ router.get('/phone/:userId', async (req, res) => {
     const { userId } = req.params;
     
     if (req.user.uid !== userId) {
-      return res.status(403).json({ error: 'Unauthorized' });
+      return forbiddenError(res, 'Unauthorized');
     }
 
     const data = await securityService.getPhoneData(userId);
     res.json(data);
   } catch (err) {
     console.error('[SECURITY] Error in GET /phone:', err);
-    res.status(500).json({ error: err.message });
+    return serverError(res, err.message);
   }
 });
 
@@ -123,18 +124,18 @@ router.post('/phone/:userId', async (req, res) => {
     const { phoneNumber, recoveryPhone } = req.body;
     
     if (req.user.uid !== userId) {
-      return res.status(403).json({ error: 'Unauthorized' });
+      return forbiddenError(res, 'Unauthorized');
     }
 
     if (!phoneNumber || typeof phoneNumber !== 'string') {
-      return res.status(400).json({ error: 'Phone number is required' });
+      return validationError(res, 'Phone number is required');
     }
 
     const result = await securityService.savePhoneNumber(userId, phoneNumber, recoveryPhone);
     res.json(result);
   } catch (err) {
     console.error('[SECURITY] Error in POST /phone:', err);
-    res.status(500).json({ error: err.message });
+    return serverError(res, err.message);
   }
 });
 
@@ -148,18 +149,18 @@ router.post('/phone/:userId/verify', async (req, res) => {
     const { code } = req.body;
     
     if (req.user.uid !== userId) {
-      return res.status(403).json({ error: 'Unauthorized' });
+      return forbiddenError(res, 'Unauthorized');
     }
 
     if (!code || typeof code !== 'string') {
-      return res.status(400).json({ error: 'Verification code is required' });
+      return validationError(res, 'Verification code is required');
     }
 
     const result = await securityService.verifyPhoneCode(userId, code);
     res.json(result);
   } catch (err) {
     console.error('[SECURITY] Error in POST /phone/verify:', err);
-    res.status(400).json({ error: err.message });
+    return validationError(res, err.message);
   }
 });
 
@@ -172,14 +173,14 @@ router.get('/email/:userId', async (req, res) => {
     const { userId } = req.params;
     
     if (req.user.uid !== userId) {
-      return res.status(403).json({ error: 'Unauthorized' });
+      return forbiddenError(res, 'Unauthorized');
     }
 
     const data = await securityService.getEmailData(userId);
     res.json(data);
   } catch (err) {
     console.error('[SECURITY] Error in GET /email:', err);
-    res.status(500).json({ error: err.message });
+    return serverError(res, err.message);
   }
 });
 
@@ -193,18 +194,18 @@ router.post('/email/:userId', async (req, res) => {
     const { recoveryEmail } = req.body;
     
     if (req.user.uid !== userId) {
-      return res.status(403).json({ error: 'Unauthorized' });
+      return forbiddenError(res, 'Unauthorized');
     }
 
     if (!recoveryEmail || typeof recoveryEmail !== 'string') {
-      return res.status(400).json({ error: 'Recovery email is required' });
+      return validationError(res, 'Recovery email is required');
     }
 
     const result = await securityService.saveRecoveryEmail(userId, recoveryEmail);
     res.json(result);
   } catch (err) {
     console.error('[SECURITY] Error in POST /email:', err);
-    res.status(500).json({ error: err.message });
+    return serverError(res, err.message);
   }
 });
 
@@ -218,18 +219,18 @@ router.post('/email/:userId/verify', async (req, res) => {
     const { code } = req.body;
     
     if (req.user.uid !== userId) {
-      return res.status(403).json({ error: 'Unauthorized' });
+      return forbiddenError(res, 'Unauthorized');
     }
 
     if (!code || typeof code !== 'string') {
-      return res.status(400).json({ error: 'Verification code is required' });
+      return validationError(res, 'Verification code is required');
     }
 
     const result = await securityService.verifyEmailCode(userId, code);
     res.json(result);
   } catch (err) {
     console.error('[SECURITY] Error in POST /email/verify:', err);
-    res.status(400).json({ error: err.message });
+    return validationError(res, err.message);
   }
 });
 
@@ -242,14 +243,14 @@ router.delete('/email/:userId', async (req, res) => {
     const { userId } = req.params;
     
     if (req.user.uid !== userId) {
-      return res.status(403).json({ error: 'Unauthorized' });
+      return forbiddenError(res, 'Unauthorized');
     }
 
     const result = await securityService.removeRecoveryEmail(userId);
     res.json(result);
   } catch (err) {
     console.error('[SECURITY] Error in DELETE /email:', err);
-    res.status(500).json({ error: err.message });
+    return serverError(res, err.message);
   }
 });
 
@@ -262,14 +263,14 @@ router.post('/password-changed/:userId', async (req, res) => {
     const { userId } = req.params;
     
     if (req.user.uid !== userId) {
-      return res.status(403).json({ error: 'Unauthorized' });
+      return forbiddenError(res, 'Unauthorized');
     }
 
     const result = await securityService.recordPasswordChange(userId);
     res.json(result);
   } catch (err) {
     console.error('[SECURITY] Error in POST /password-changed:', err);
-    res.status(500).json({ error: err.message });
+    return serverError(res, err.message);
   }
 });
 
@@ -282,14 +283,14 @@ router.get('/2fa-settings/:userId', async (req, res) => {
     const { userId } = req.params;
     
     if (req.user.uid !== userId) {
-      return res.status(403).json({ error: 'Unauthorized' });
+      return forbiddenError(res, 'Unauthorized');
     }
 
     const settings = await securityService.get2FASettings(userId);
     res.json({ success: true, settings });
   } catch (err) {
     console.error('[SECURITY] Error in GET /2fa-settings:', err);
-    res.status(500).json({ error: err.message });
+    return serverError(res, err.message);
   }
 });
 
@@ -303,15 +304,15 @@ router.post('/2fa-settings/:userId', async (req, res) => {
     const { enabled, method } = req.body;
     
     if (req.user.uid !== userId) {
-      return res.status(403).json({ error: 'Unauthorized' });
+      return forbiddenError(res, 'Unauthorized');
     }
 
     if (typeof enabled !== 'boolean') {
-      return res.status(400).json({ error: 'enabled must be boolean' });
+      return validationError(res, 'enabled must be boolean');
     }
 
     if (!method || !['sms', 'email'].includes(method)) {
-      return res.status(400).json({ error: 'method must be sms or email' });
+      return validationError(res, 'method must be sms or email');
     }
 
     const settings = await securityService.update2FASettings(userId, { enabled, method });
@@ -323,7 +324,7 @@ router.post('/2fa-settings/:userId', async (req, res) => {
     });
   } catch (err) {
     console.error('[SECURITY] Error in POST /2fa-settings:', err);
-    res.status(500).json({ error: err.message });
+    return serverError(res, err.message);
   }
 });
 
@@ -337,11 +338,11 @@ router.post('/session-preference/:userId', async (req, res) => {
     const { persistentSession } = req.body;
     
     if (req.user.uid !== userId) {
-      return res.status(403).json({ error: 'Unauthorized' });
+      return forbiddenError(res, 'Unauthorized');
     }
 
     if (typeof persistentSession !== 'boolean') {
-      return res.status(400).json({ error: 'persistentSession must be boolean' });
+      return validationError(res, 'persistentSession must be boolean');
     }
 
     const result = await securityService.updateSessionPreference(userId, persistentSession);
@@ -355,7 +356,7 @@ router.post('/session-preference/:userId', async (req, res) => {
     });
   } catch (err) {
     console.error('[SECURITY] Error in POST /session-preference:', err);
-    res.status(500).json({ error: err.message });
+    return serverError(res, err.message);
   }
 });
 
@@ -368,7 +369,7 @@ router.get('/verification-methods/:userId', async (req, res) => {
     const { userId } = req.params;
     
     if (req.user.uid !== userId) {
-      return res.status(403).json({ error: 'Unauthorized' });
+      return forbiddenError(res, 'Unauthorized');
     }
 
     // Get user email from database
@@ -382,7 +383,7 @@ router.get('/verification-methods/:userId', async (req, res) => {
     res.json({ success: true, methods });
   } catch (err) {
     console.error('[SECURITY] Error in GET /verification-methods:', err);
-    res.status(500).json({ error: err.message });
+    return serverError(res, err.message);
   }
 });
 

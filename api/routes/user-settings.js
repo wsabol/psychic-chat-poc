@@ -12,6 +12,7 @@ import { db } from '../shared/db.js';
 import { hashUserId } from '../shared/hashUtils.js';
 import { authorizeUser } from '../middleware/auth.js';
 import logger from '../shared/logger.js';
+import { validationError, serverError } from '../utils/responses.js';
 
 const router = Router();
 
@@ -60,10 +61,7 @@ router.get('/:userId', authorizeUser, async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({
-      error: 'Failed to fetch settings',
-      details: error.message
-    });
+    return serverError(res, 'Failed to fetch settings');
   }
 });
 
@@ -93,16 +91,16 @@ router.post('/:userId', authorizeUser, async (req, res) => {
 
     // Validate input types
     if (typeof cookiesEnabled !== 'boolean' && cookiesEnabled !== undefined) {
-      return res.status(400).json({ error: 'cookiesEnabled must be a boolean' });
+      return validationError(res, 'cookiesEnabled must be a boolean');
     }
     if (typeof analyticsEnabled !== 'boolean' && analyticsEnabled !== undefined) {
-      return res.status(400).json({ error: 'analyticsEnabled must be a boolean' });
+      return validationError(res, 'analyticsEnabled must be a boolean');
     }
     if (typeof emailEnabled !== 'boolean' && emailEnabled !== undefined) {
-      return res.status(400).json({ error: 'emailEnabled must be a boolean' });
+      return validationError(res, 'emailEnabled must be a boolean');
     }
     if (typeof pushNotificationsEnabled !== 'boolean' && pushNotificationsEnabled !== undefined) {
-      return res.status(400).json({ error: 'pushNotificationsEnabled must be a boolean' });
+      return validationError(res, 'pushNotificationsEnabled must be a boolean');
     }
 
     // Use UPSERT to insert or update
@@ -151,10 +149,7 @@ router.post('/:userId', authorizeUser, async (req, res) => {
       }
     });
     } catch (error) {
-    res.status(500).json({
-      error: 'Failed to save settings',
-      details: error.message
-    });
+    return serverError(res, 'Failed to save settings');
   }
 });
 

@@ -15,6 +15,7 @@
 import { Router } from 'express';
 import { db } from '../shared/db.js';
 import { logAudit } from '../shared/auditLog.js';
+import { validationError, serverError } from '../utils/responses.js';
 import { 
   flagUsersForUpdate,
   getComplianceReport,
@@ -39,9 +40,7 @@ router.post('/admin/compliance/flag-users', async (req, res) => {
 
     // Validate input
     if (!['terms', 'privacy', 'both'].includes(documentType)) {
-      return res.status(400).json({ 
-        error: 'Invalid documentType. Must be: terms, privacy, or both' 
-      });
+      return validationError(res, 'Invalid documentType. Must be: terms, privacy, or both');
     }
 
     // Flag users
@@ -70,7 +69,7 @@ router.post('/admin/compliance/flag-users', async (req, res) => {
       ...result
     });
     } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return serverError(res, error.message);
   }
 });
 
@@ -87,7 +86,7 @@ router.get('/admin/compliance/report', async (req, res) => {
       ...report
     });
     } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return serverError(res, error.message);
   }
 });
 
@@ -117,7 +116,7 @@ router.get('/admin/compliance/users-requiring-action', async (req, res) => {
       users: paginatedUsers
     });
     } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return serverError(res, error.message);
   }
 });
 
@@ -173,7 +172,7 @@ router.post('/admin/compliance/send-notifications', async (req, res) => {
       }
     });
     } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return serverError(res, error.message);
   }
 });
 
@@ -209,11 +208,11 @@ router.post('/admin/compliance/version-change', async (req, res) => {
 
     // Validate
     if (!['terms', 'privacy'].includes(documentType)) {
-      return res.status(400).json({ error: 'Invalid documentType' });
+      return validationError(res, 'Invalid documentType');
     }
 
     if (!['MAJOR', 'MINOR', 'PATCH'].includes(changeType)) {
-      return res.status(400).json({ error: 'Invalid changeType' });
+      return validationError(res, 'Invalid changeType');
     }
 
     // Insert into audit log as a record of this change
@@ -244,7 +243,7 @@ router.post('/admin/compliance/version-change', async (req, res) => {
       ]
     });
     } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return serverError(res, error.message);
   }
 });
 
@@ -274,7 +273,7 @@ router.get('/admin/compliance/version-history', async (req, res) => {
       }))
     });
     } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return serverError(res, error.message);
   }
 });
 
@@ -304,13 +303,11 @@ router.post('/admin/compliance/revert-version', async (req, res) => {
     } = req.body;
 
     if (!['terms', 'privacy', 'both'].includes(documentType)) {
-      return res.status(400).json({ error: 'Invalid documentType' });
+      return validationError(res, 'Invalid documentType');
     }
 
     if (!revokedVersion || !revertToVersion || !reason) {
-      return res.status(400).json({ 
-        error: 'revokedVersion, revertToVersion, and reason are required' 
-      });
+      return validationError(res, 'revokedVersion, revertToVersion, and reason are required');
     }
 
     // Flag ALL users for re-acceptance
@@ -370,7 +367,7 @@ router.post('/admin/compliance/revert-version', async (req, res) => {
       details: { error: error.message }
     });
 
-    return res.status(500).json({ error: error.message });
+    return serverError(res, error.message);
   }
 });
 

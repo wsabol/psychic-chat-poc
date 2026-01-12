@@ -5,6 +5,7 @@ import { authenticateToken, authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
 import { getUserTimezone, getLocalDateForTimezone, needsRegeneration } from "../shared/timezoneHelper.js";
 import { checkUserCompliance } from "../shared/complianceChecker.js";
+import { validationError, serverError } from "../utils/responses.js";
 
 
 const router = Router();
@@ -20,7 +21,7 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
     try {
         // Validate range
         if (!['daily', 'weekly'].includes(range.toLowerCase())) {
-            return res.status(400).json({ error: 'Invalid range. Must be daily or weekly.' });
+            return validationError(res, 'Invalid range. Must be daily or weekly.');
         }
         
         const userIdHash = hashUserId(userId);
@@ -143,7 +144,7 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
         });
         
         } catch (err) {
-        res.status(500).json({ error: 'Failed to fetch horoscope' });
+        return serverError(res, 'Failed to fetch horoscope');
     }
 });
 
@@ -157,7 +158,7 @@ router.post("/:userId/:range", authenticateToken, authorizeUser, async (req, res
     try {
         // Validate range
         if (!['daily', 'weekly'].includes(range.toLowerCase())) {
-            return res.status(400).json({ error: 'Invalid range. Must be daily or weekly.' });
+            return validationError(res, 'Invalid range. Must be daily or weekly.');
         }
         
         // Enqueue horoscope generation job
@@ -173,7 +174,7 @@ router.post("/:userId/:range", authenticateToken, authorizeUser, async (req, res
         });
         
         } catch (err) {
-        res.status(500).json({ error: 'Failed to queue horoscope generation' });
+        return serverError(res, 'Failed to queue horoscope generation');
     }
 });
 

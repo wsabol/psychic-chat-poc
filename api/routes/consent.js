@@ -23,12 +23,12 @@ const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
 router.post('/check-consent/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    if (!userId) return res.status(400).json({ error: 'userId required' });
+    if (!userId) return validationError(res, 'userId required');
     
     const consentStatus = await checkUserConsent(userId);
     return res.json(consentStatus);
     } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return serverError(res, error.message);
   }
 });
 
@@ -40,7 +40,7 @@ router.post('/record-consent/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     const { terms_accepted = false, privacy_accepted = false } = req.body;
-    if (!userId) return res.status(400).json({ error: 'userId required' });
+    if (!userId) return validationError(res, 'userId required');
     
     const clientIp = req.ip || req.connection.remoteAddress;
     const userAgent = req.get('user-agent') || '';
@@ -50,10 +50,10 @@ router.post('/record-consent/:userId', async (req, res) => {
     if (result.success) {
       return res.json({ success: true, message: result.message });
     } else {
-      return res.status(400).json({ error: result.message });
+      return validationError(res, result.message);
     }
     } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return serverError(res, error.message);
   }
 });
 
@@ -68,7 +68,7 @@ router.post('/consent/terms-acceptance', async (req, res) => {
     const { terms_accepted = false, privacy_accepted = false } = req.body;
 
     if (!userId) {
-      return res.status(400).json({ error: 'userId required' });
+      return validationError(res, 'userId required');
     }
 
     const userIdHash = hashUserId(userId);
@@ -191,10 +191,7 @@ router.post('/consent/terms-acceptance', async (req, res) => {
       details: { error: error.message }
     });
 
-    return res.status(500).json({ 
-      error: 'Failed to record T&C acceptance', 
-      details: error.message 
-    });
+    return serverError(res, 'Failed to record T&C acceptance');
   }
 });
 
@@ -212,7 +209,7 @@ router.post('/consents', async (req, res) => {
     } = req.body;
 
     if (!userId) {
-      return res.status(400).json({ error: 'userId required' });
+      return validationError(res, 'userId required');
     }
 
     const userIdHash = hashUserId(userId);
@@ -325,10 +322,7 @@ router.post('/consents', async (req, res) => {
       details: { error: error.message }
     });
 
-    return res.status(500).json({ 
-      error: 'Failed to record consent', 
-      details: error.message 
-    });
+    return serverError(res, 'Failed to record consent');
   }
 });
 
@@ -341,7 +335,7 @@ router.get('/consents/:userId', authenticateToken, authorizeUser, async (req, re
     const { userId } = req.params;
 
     if (!userId) {
-      return res.status(400).json({ error: 'userId required' });
+      return validationError(res, 'userId required');
     }
 
     const userIdHash = hashUserId(userId);
@@ -400,10 +394,7 @@ router.get('/consents/:userId', authenticateToken, authorizeUser, async (req, re
     });
 
     } catch (error) {
-    return res.status(500).json({ 
-      error: 'Failed to retrieve consent', 
-      details: error.message 
-    });
+    return serverError(res, 'Failed to retrieve consent');
   }
 });
 
@@ -416,7 +407,7 @@ router.post('/verify-consent/:userId/:consentType', async (req, res) => {
     const { userId, consentType } = req.params;
 
     if (!userId || !consentType) {
-      return res.status(400).json({ error: 'userId and consentType required' });
+      return validationError(res, 'userId and consentType required');
     }
 
     const userIdHash = hashUserId(userId);
@@ -424,9 +415,7 @@ router.post('/verify-consent/:userId/:consentType', async (req, res) => {
     // Validate consent type
     const validTypes = ['astrology', 'health_data', 'chat_analysis'];
     if (!validTypes.includes(consentType)) {
-      return res.status(400).json({ 
-        error: 'Invalid consentType. Must be: ' + validTypes.join(', ')
-      });
+      return validationError(res, 'Invalid consentType. Must be: ' + validTypes.join(', '));
     }
 
     // Map consent type to column name
@@ -456,10 +445,7 @@ router.post('/verify-consent/:userId/:consentType', async (req, res) => {
     });
 
     } catch (error) {
-    return res.status(500).json({ 
-      error: 'Failed to verify consent', 
-      details: error.message 
-    });
+    return serverError(res, 'Failed to verify consent');
   }
 });
 
@@ -472,7 +458,7 @@ router.get('/consent-summary/:userId', authenticateToken, authorizeUser, async (
     const { userId } = req.params;
 
     if (!userId) {
-      return res.status(400).json({ error: 'userId required' });
+      return validationError(res, 'userId required');
     }
 
     const userIdHash = hashUserId(userId);
@@ -524,10 +510,7 @@ router.get('/consent-summary/:userId', authenticateToken, authorizeUser, async (
     });
 
     } catch (error) {
-    return res.status(500).json({ 
-      error: 'Failed to retrieve consent summary', 
-      details: error.message 
-    });
+    return serverError(res, 'Failed to retrieve consent summary');
   }
 });
 
@@ -538,12 +521,12 @@ router.get('/consent-summary/:userId', authenticateToken, authorizeUser, async (
 router.post('/check-compliance/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    if (!userId) return res.status(400).json({ error: 'userId required' });
+    if (!userId) return validationError(res, 'userId required');
     
     const compliance = await checkUserCompliance(userId);
     return res.json(compliance);
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return serverError(res, error.message);
   }
 });
 
@@ -556,7 +539,7 @@ router.post('/compliance-report', authenticateToken, async (req, res) => {
     const report = await getComplianceReport();
     return res.json(report);
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return serverError(res, error.message);
   }
 });
 
@@ -569,7 +552,7 @@ router.post('/users-requiring-action', authenticateToken, async (req, res) => {
     const result = await getUsersRequiringAction();
     return res.json(result);
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return serverError(res, error.message);
   }
 });
 
@@ -580,12 +563,12 @@ router.post('/users-requiring-action', authenticateToken, async (req, res) => {
 router.post('/mark-user-notified/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    if (!userId) return res.status(400).json({ error: 'userId required' });
+    if (!userId) return validationError(res, 'userId required');
     
     const result = await markUserNotified(userId);
     return res.json(result);
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return serverError(res, error.message);
   }
 });
 

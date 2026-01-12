@@ -12,6 +12,7 @@
 
 import express from 'express';
 import { db } from '../shared/db.js';
+import { validationError, notFoundError, serverError } from '../utils/responses.js';
 
 const router = express.Router();
 
@@ -28,8 +29,7 @@ const DATA_PERIOD_DAYS = 90;
  * Standardized error handler for routes
  */
 const handleError = (res, label, err, fallback = {}) => {
-  console.error(`[${label}] Error:`, err);
-  return res.status(500).json({ error: `Failed to ${label.toLowerCase()}` });
+  return serverError(res, `Failed to ${label.toLowerCase()}`);
 };
 
 // ============ Row Parsers ============
@@ -128,7 +128,7 @@ router.post('/false-positive', async (req, res) => {
     const { violationId, reason, context } = req.body;
 
     if (!violationId || !reason) {
-      return res.status(400).json({ error: 'violationId and reason required' });
+      return validationError(res, 'violationId and reason required');
     }
 
     // Get the violation
@@ -138,7 +138,7 @@ router.post('/false-positive', async (req, res) => {
     );
 
     if (violations.length === 0) {
-      return res.status(404).json({ error: 'Violation not found' });
+      return notFoundError(res, 'Violation not found');
     }
 
     const violation = violations[0];
@@ -169,8 +169,7 @@ router.post('/false-positive', async (req, res) => {
 
     res.json({ success: true, message: 'Violation marked as false positive' });
   } catch (err) {
-    console.error('[VIOLATIONS-FP-MARK] Error marking false positive:', err);
-    res.status(500).json({ error: 'Failed to mark false positive' });
+    return serverError(res, 'Failed to mark false positive');
   }
 });
 
@@ -311,7 +310,7 @@ async function getRedemptionAnalytics() {
       };
     });
   } catch (err) {
-    console.error('[VIOLATIONS-REDEMPTION] Error:', err);
+    //console.error('[VIOLATIONS-REDEMPTION] Error:', err);
     return [];
   }
 }

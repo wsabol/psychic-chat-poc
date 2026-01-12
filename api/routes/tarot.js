@@ -2,6 +2,7 @@ import express from 'express';
 const router = express.Router();
 import { db } from '../shared/db.js';
 import { authorizeUser } from '../middleware/auth.js';
+import { serverError } from '../utils/responses.js';
 
 // Endpoint to get a tarot card reading
 router.post('/reading', authorizeUser, async (req, res) => {
@@ -17,7 +18,7 @@ router.post('/reading', authorizeUser, async (req, res) => {
         res.json(reading);
     } catch (error) {
         console.error('Error in tarot reading:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        return serverError(res, 'Internal server error');
     }
 });
 

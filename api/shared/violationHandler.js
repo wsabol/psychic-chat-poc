@@ -138,48 +138,70 @@ export async function deleteUserAccount(userId) {
 
 /**
  * Handle age restriction violation
- * 1st violation: Log warning
- * 2nd violation: Delete account
+ * POLICY: Users are given 3 chances to fix their birth date
+ * - 1st violation: Log warning (1 of 3 attempts remaining)
+ * - 2nd violation: Log warning (2 of 3 attempts, 1 remaining)
+ * - 3rd violation: Delete account (all 3 attempts used)
+ * 
  * @param {string} userId - User ID
- * @param {number} userAge - User's calculated age
- * @returns {object} { violationCount: number, deleted: boolean, error: string | null }
+ * @param {number} userAge - User's calculated age (should be < 18)
+ * @returns {object} { violationCount: number, attemptsRemaining: number, deleted: boolean, error: string | null }
  */
 export async function handleAgeViolation(userId, userAge) {
   try {
     // Get existing age violations
     const violationCount = await getActiveViolationCount(userId, 'age_restriction');
     const newViolationCount = violationCount + 1;
+    const attemptsRemaining = Math.max(0, 3 - newViolationCount);
 
     if (newViolationCount === 1) {
-      // First violation: Log warning
+      // First violation: Log warning (2 attempts remaining)
       await logViolation(
         userId,
         'age_restriction',
-        'critical',
-        `User is ${userAge} years old (under 18). First age restriction violation.`
+        'warning',
+        `User is ${userAge} years old (under 18). Attempt 1 of 3. This appears to be a typo in your birth date.`
       );
 
       return {
         violationCount: 1,
+        attemptsRemaining: 2,
         deleted: false,
         error: null,
-        message: 'Age violation logged. This is your first warning.'
+        message: 'Birth date error detected. This is attempt 1 of 3. Please correct your birth date. You have 2 more attempts.'
       };
-    } else if (newViolationCount >= 2) {
-      // Second+ violation: Delete account
+    } else if (newViolationCount === 2) {
+      // Second violation: Log warning (1 attempt remaining)
+      await logViolation(
+        userId,
+        'age_restriction',
+        'warning',
+        `User is ${userAge} years old (under 18). Attempt 2 of 3.`
+      );
+
+      return {
+        violationCount: 2,
+        attemptsRemaining: 1,
+        deleted: false,
+        error: null,
+        message: 'Birth date error detected again. This is attempt 2 of 3. Please correct your birth date. You have 1 more attempt before your account is deleted.'
+      };
+    } else if (newViolationCount >= 3) {
+      // Third+ violation: Delete account (no attempts remaining)
       await logViolation(
         userId,
         'age_restriction',
         'critical',
-        `User is ${userAge} years old (under 18). Second age restriction violation - ACCOUNT DELETED.`
+        `User is ${userAge} years old (under 18). Attempt 3 of 3 - ACCOUNT DELETED. All 3 correction attempts have been used.`
       );
 
       await deleteUserAccount(userId);
 
       return {
         violationCount: newViolationCount,
+        attemptsRemaining: 0,
         deleted: true,
-        error: 'Account has been deleted due to policy violation.',
+        error: 'Account has been terminated. All 3 attempts to correct your birth date have been used. Users must be 18 years or older.',
         message: 'Account deleted.'
       };
     }
@@ -187,6 +209,7 @@ export async function handleAgeViolation(userId, userAge) {
     console.error('[AGE-VIOLATION] Error handling age violation:', err);
     return {
       violationCount: 0,
+      attemptsRemaining: 3,
       deleted: false,
       error: err.message
     };

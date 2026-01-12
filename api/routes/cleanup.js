@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { db } from "../shared/db.js";
 import { auth as firebaseAuth } from "../shared/firebase-admin.js";
+import { serverError } from "../utils/responses.js";
 
 const router = Router();
 
@@ -36,10 +37,7 @@ router.delete("/delete-temp-account/:tempUserId", async (req, res) => {
             firebaseDeleted: firebaseDeleted
         });
     } catch (err) {
-        res.status(500).json({ 
-            error: 'Failed to delete temporary account', 
-            details: err.message 
-        });
+        return serverError(res, 'Failed to delete temporary account');
     }
 });
 
@@ -104,7 +102,7 @@ router.delete("/cleanup-old-temp-accounts", async (req, res) => {
         res.json({ success: true, message: `Cleaned up ${deletedCount} DB + ${firebaseDeletedCount} Firebase accounts`, deletedCount: deletedCount + firebaseDeletedCount });
 
     } catch (err) {
-        res.status(500).json({ error: 'Failed to cleanup old temp accounts', details: err.message });
+        return serverError(res, 'Failed to cleanup old temp accounts');
     }
 });
 

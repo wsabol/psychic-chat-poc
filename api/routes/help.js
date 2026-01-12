@@ -5,6 +5,7 @@ import { authenticateToken } from '../middleware/auth.js';
 import { logAudit } from '../shared/auditLog.js';
 import { db } from '../shared/db.js';
 import { hashUserId } from '../shared/hashUtils.js';
+import { validationError, serverError } from '../utils/responses.js';
 
 const router = Router();
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -66,8 +67,8 @@ router.post('/ask', authenticateToken, async (req, res) => {
     const { question, currentPage, conversationHistory } = req.body;
     const userId = req.user.uid;
 
-    if (!question || !question.trim()) {
-      return res.status(400).json({ error: 'Question cannot be empty' });
+        if (!question || !question.trim()) {
+      return validationError(res, 'Question cannot be empty');
     }
 
     // Build context message with current page
@@ -135,12 +136,9 @@ router.post('/ask', authenticateToken, async (req, res) => {
       response: assistantResponse,
       question: question
     });
-  } catch (error) {
+    } catch (error) {
     console.error('[HELP] Error:', error);
-    return res.status(500).json({
-      error: 'Failed to get help response',
-      details: error.message
-    });
+    return serverError(res, 'Failed to get help response');
   }
 });
 
