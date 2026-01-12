@@ -111,11 +111,13 @@ services:
     env_file:
       - .env
     environment:
-      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_USEPOLLING=false
       - CHOKIDAR_INTERVAL=100
-      - CHOKIDAR_IGNORED=/app/node_modules,/app/.git,/app/public,/app/build,/app/dist
+      - CHOKIDAR_IGNORED=node_modules|build|dist|.git|public|coverage|.next|.cache
       - WATCHMAN_DISABLE=true
       - SKIP_PREFLIGHT_CHECK=true
+      - GENERATE_SOURCEMAP=false
+      - FAST_REFRESH=true
       - NODE_OPTIONS=--max-old-space-size=4096
       - REACT_APP_API_URL=http://localhost:3000
       - REACT_APP_STRIPE_PUBLIC_KEY=${STRIPE_PUBLIC_KEY}
