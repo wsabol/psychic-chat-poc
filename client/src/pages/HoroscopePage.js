@@ -7,7 +7,7 @@ import BirthChartCard from '../components/BirthChartCard';
 import ExitButton from '../components/ExitButton';
 import SunSignInfo from '../components/SunSignInfo';
 import HoroscopeTextSection from '../components/HoroscopeTextSection';
-import { ComplianceUpdateModal } from '../components/ComplianceUpdateModal-CLEAN';
+import { ComplianceUpdateModal } from '../components/ComplianceUpdateModal';
 import { useAstroInfo } from '../hooks/useAstroInfo';
 import { getTranslatedAstrologyData } from '../utils/translatedAstroUtils';
 import { isBirthInfoMissing } from '../utils/birthInfoErrorHandler';

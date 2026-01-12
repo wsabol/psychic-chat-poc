@@ -1,0 +1,24 @@
+FROM node:latest
+
+# Install Python3
+RUN apt-get update && apt-get install -y python3 && rm -rf /var/lib/apt/lists/*
+
+ENV NODE_ENV=development
+ENV OPENAI_API_KEY=${OPENAI_API_KEY}
+ENV REDIS_URL=${REDIS_URL}
+ENV DATABASE_URL=${DATABASE_URL}
+ENV PORT=${PORT}
+ENV CORS_ORIGIN=${CORS_ORIGIN}
+ENV FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
+
+WORKDIR /app
+
+# Install dependencies (include dev deps for development)
+COPY package*.json ./
+RUN npm install
+
+# Copy source code
+COPY . .
+
+EXPOSE 3000
+CMD ["npm", "run", "dev"]
