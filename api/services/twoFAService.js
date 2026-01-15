@@ -29,13 +29,13 @@ export async function generateAndSend2FACode(userId, email, method = 'email') {
     }
 
     if (!sendResult.success) {
-      console.error('[2FA] Failed to send code:', sendResult.error);
+      logErrorFromCatch(error, 'app', 'Error handling');
       return { success: false, error: 'Failed to send 2FA code' };
     }
 
     return { success: true, code };
   } catch (error) {
-    console.error('[2FA] Error generating code:', error);
+    logErrorFromCatch(error, 'app', 'Error handling');
     return { success: false, error: error.message };
   }
 }
@@ -68,7 +68,7 @@ export async function verify2FACode(userId, code, codeType = 'login') {
 
     return { success: true };
   } catch (error) {
-    console.error('[2FA] Error verifying code:', error);
+    logErrorFromCatch(error, 'app', 'Error handling');
     return { success: false, error: error.message };
   }
 }
@@ -89,7 +89,7 @@ export async function get2FASettings(userId) {
 
     return result.rows[0];
   } catch (error) {
-    console.error('[2FA] Error getting settings:', error);
+    logErrorFromCatch(error, 'app', 'Error handling');
     return null;
   }
 }
@@ -158,7 +158,7 @@ export async function update2FASettings(userId, settings) {
 
     return { success: true, settings: result.rows[0] };
   } catch (error) {
-    console.error('[2FA] Error updating settings:', error);
+    logErrorFromCatch(error, 'app', 'Error handling');
     return { success: false, error: error.message };
   }
 }

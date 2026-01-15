@@ -33,7 +33,7 @@ router.post("/", verify2FA, async (req, res) => {
 
         res.json({ status: "queued" });
     } catch (err) {
-        console.error('[CHAT] Error queueing message:', err.message);
+        logErrorFromCatch(error, 'app', 'chat');
         return serverError(res, 'Failed to process message');
     }
 });
@@ -171,7 +171,7 @@ router.get("/history/:userId", authorizeUser, verify2FA, async (req, res) => {
         
         res.json(transformedRows);
         } catch (err) {
-        console.error('[CHAT] Error fetching history:', err.message);
+        logErrorFromCatch(error, 'app', 'chat');
         return serverError(res, 'Failed to retrieve message history');
     }
 });

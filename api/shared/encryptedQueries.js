@@ -107,7 +107,7 @@ export async function getVerificationCode(db, userId, code) {
   try {
     return await db.query(query, [ENCRYPTION_KEY, userIdHash, code]);
   } catch (decryptErr) {
-    console.error('[SECURITY] Decryption failed, attempting plaintext fallback:', decryptErr.message);
+    logErrorFromCatch(error, 'app', 'security');
     // If decryption fails, the data might be plaintext - return empty to let caller handle
     return { rows: [] };
   }

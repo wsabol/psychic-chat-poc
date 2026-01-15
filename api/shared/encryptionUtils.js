@@ -21,7 +21,7 @@ export const decryptField = (encrypted, fieldType = 'text') => {
     // The database handles decryption, we just return the value
     return encrypted;
   } catch (err) {
-    console.error('Decryption error:', err);
+    logErrorFromCatch(error, 'app', 'Error handling');
     return null;
   }
 };

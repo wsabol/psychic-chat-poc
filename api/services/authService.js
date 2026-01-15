@@ -16,7 +16,7 @@ export async function getUserByEmail(email) {
 
     return result.rows.length > 0 ? result.rows[0] : null;
   } catch (error) {
-    console.error('[AUTH-SERVICE] Error getting user by email:', error);
+    logErrorFromCatch(error, 'app', 'auth service');
     return null;
   }
 }
@@ -33,7 +33,7 @@ export async function getUserEmail(userId) {
 
     return result.rows.length > 0 ? result.rows[0].email : null;
   } catch (error) {
-    console.error('[AUTH-SERVICE] Error getting user email:', error);
+    logErrorFromCatch(error, 'app', 'auth service');
     return null;
   }
 }
@@ -74,7 +74,7 @@ export async function createUserWithEmail(email, password, phoneNumber) {
     return { success: true, userId };
   } catch (error) {
     await db.query('ROLLBACK');
-    console.error('[AUTH-SERVICE] Error creating user:', error);
+    logErrorFromCatch(error, 'app', 'auth service');
     return { success: false, error: error.message };
   }
 }
@@ -122,7 +122,7 @@ export async function createFirebaseUser(userId, email) {
     return { success: true, userId };
   } catch (error) {
     await db.query('ROLLBACK');
-    console.error('[AUTH-SERVICE] Error creating Firebase user:', error);
+    logErrorFromCatch(error, 'app', 'auth service');
     return { success: false, error: error.message };
   }
 }
@@ -139,7 +139,7 @@ export async function emailExists(email) {
 
     return result.rows.length > 0;
   } catch (error) {
-    console.error('[AUTH-SERVICE] Error checking email:', error);
+    logErrorFromCatch(error, 'app', 'auth service');
     return false;
   }
 }
@@ -151,7 +151,7 @@ export async function verifyPassword(password, passwordHash) {
   try {
     return await comparePassword(password, passwordHash);
   } catch (error) {
-    console.error('[AUTH-SERVICE] Error verifying password:', error);
+    logErrorFromCatch(error, 'app', 'auth service');
     return false;
   }
 }
@@ -170,7 +170,7 @@ export async function markEmailVerified(userId) {
 
     return { success: true };
   } catch (error) {
-    console.error('[AUTH-SERVICE] Error marking email verified:', error);
+    logErrorFromCatch(error, 'app', 'auth service');
     return { success: false, error: error.message };
   }
 }
@@ -191,7 +191,7 @@ export async function resetPassword(userId, newPassword) {
 
     return { success: true };
   } catch (error) {
-    console.error('[AUTH-SERVICE] Error resetting password:', error);
+    logErrorFromCatch(error, 'app', 'auth service');
     return { success: false, error: error.message };
   }
 }
@@ -218,7 +218,7 @@ export async function sendVerificationEmail(userId, email) {
 
     return { success: true };
   } catch (error) {
-    console.error('[AUTH-SERVICE] Error sending verification email:', error);
+    logErrorFromCatch(error, 'app', 'auth service');
     return { success: false, error: error.message };
   }
 }
