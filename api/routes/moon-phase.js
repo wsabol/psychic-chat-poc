@@ -78,7 +78,7 @@ router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
                     : brief;
             }
                 } catch (e) {
-            return res.status(500).json({ error: `Failed to parse moon phase data` });
+            return serverError(res, `Failed to parse moon phase data` );
         }
         
                 if (!commentary || !commentary.generated_at) {

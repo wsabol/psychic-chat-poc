@@ -4,6 +4,7 @@
  */
 
 import { db } from '../shared/db.js';
+import { authError, validationError, forbiddenError, serverError } from '../utils/responses.js';
 
 /**
  * Middleware factory: Verify user has specific consent
@@ -15,8 +16,8 @@ export function requireConsent(consentType) {
     try {
       const userId = req.user?.uid || req.userId;
       
-      if (!userId) {
-        Replace: return authError(res, 'User not authenticated' );
+            if (!userId) {
+        return authError(res, 'User not authenticated');
       }
 
       // Map consent type to column name
@@ -26,9 +27,9 @@ export function requireConsent(consentType) {
         'chat_analysis': 'consent_chat_analysis'
       };
 
-      const columnName = consentColumnMap[consentType];
+            const columnName = consentColumnMap[consentType];
       if (!columnName) {
-        return validationError(res, 'Invalid consent type' );
+        return validationError(res, 'Invalid consent type');
       }
 
       // Check consent in database
@@ -41,12 +42,8 @@ export function requireConsent(consentType) {
 
       const hasConsent = result.rows.length > 0 ? result.rows[0].has_consent : false;
 
-      if (!hasConsent) {
-        return res.status(403).json({
-          error: `User has not consented to ${consentType}`,
-          consentRequired: consentType,
-          message: `Please enable ${consentType} consent in account settings to use this feature`
-        });
+            if (!hasConsent) {
+        return forbiddenError(res, `User has not consented to ${consentType}`);
       }
 
       // Store consent info in request for logging
@@ -56,12 +53,8 @@ export function requireConsent(consentType) {
       };
 
       next();
-    } catch (error) {
-      console.error('[CONSENT-CHECK] Error verifying consent:', error);
-      return res.status(500).json({
-        error: 'Failed to verify consent',
-        details: error.message
-      });
+        } catch (error) {
+      return serverError(res, 'Failed to verify consent');
     }
   };
 }
@@ -74,8 +67,8 @@ export async function checkConsentExists(req, res, next) {
   try {
     const userId = req.user?.uid || req.userId;
     
-    if (!userId) {
-      Replace: return authError(res, 'User not authenticated' });
+        if (!userId) {
+      return authError(res, 'User not authenticated');
     }
 
     const result = await db.query(
@@ -83,16 +76,12 @@ export async function checkConsentExists(req, res, next) {
       [userId]
     );
 
-    if (result.rows.length === 0) {
-      return res.status(403).json({
-        error: 'Consent required',
-        message: 'Please complete consent setup before accessing this feature'
-      });
+        if (result.rows.length === 0) {
+      return forbiddenError(res, 'Consent required');
     }
 
     next();
-  } catch (error) {
-    console.error('[CONSENT-CHECK] Error checking consent existence:', error);
-    return res.status(500).json({ error: 'Failed to check consent' });
+    } catch (error) {
+    return serverError(res, 'Failed to check consent');
   }
 }

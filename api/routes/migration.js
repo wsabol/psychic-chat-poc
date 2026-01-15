@@ -4,6 +4,7 @@ import { db } from "../shared/db.js";
 import { auth as firebaseAuth } from "../shared/firebase-admin.js";
 import { getEncryptionKey } from "../shared/decryptionHelper.js";
 import { hashTempUserId } from "../shared/hashUtils.js";
+import { validationError, serverError } from "../utils/responses.js";
 
 const router = Router();
 
@@ -16,16 +17,12 @@ const router = Router();
 router.post("/register-migration", async (req, res) => {
     const { tempUserId, email } = req.body;
 
-    if (!tempUserId || !email) {
-        return res.status(400).json(
-            res, 'Missing tempUserId or email' 
-        );
+        if (!tempUserId || !email) {
+        return validationError(res, 'Missing tempUserId or email');
     }
 
-    if (!tempUserId.startsWith('temp_')) {
-         return authError( 
-            error: 'Invalid temp user ID format' 
-        });
+        if (!tempUserId.startsWith('temp_')) {
+        return validationError(res, 'Invalid temp user ID format');
     }
 
     try {
@@ -50,11 +47,8 @@ router.post("/register-migration", async (req, res) => {
             success: true, 
             message: 'Migration registered' 
         });
-    } catch (error) {
-        console.error('[MIGRATION] Error registering migration:', error);
-        res.status(500).json({ 
-            error: 'Failed to register migration: ' + error.message 
-        });
+        } catch (error) {
+        return serverError(res, 'Failed to register migration');
     }
 });
 
@@ -66,10 +60,8 @@ router.post("/migrate-chat-history", authenticateToken, async (req, res) => {
     const newUserId = req.userId;
     const { email } = req.body;
 
-    if (!email) {
-        return res.status(400).json( 
-            res, 'Email is required' 
-        );
+        if (!email) {
+        return validationError(res, 'Email is required');
     }
 
     const client = await db.connect();
@@ -179,13 +171,9 @@ router.post("/migrate-chat-history", authenticateToken, async (req, res) => {
             tempUserDeleted: firebaseDeleted
         });
 
-    } catch (error) {
+        } catch (error) {
         await client.query('ROLLBACK');
-        console.error('[MIGRATION] ✗ Error:', error);
-        res.status(500).json({ 
-            error: 'Migration failed: ' + error.message,
-            success: false
-        });
+        return serverError(res, 'Migration failed');
     } finally {
         client.release();
     }

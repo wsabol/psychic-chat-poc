@@ -9,6 +9,7 @@ import { triggerCleanupJobManually, getSchedulerStatus } from '../jobs/scheduler
 import { getCleanupJobStatus } from '../jobs/accountCleanupJob.js';
 import { logAudit } from '../shared/auditLog.js';
 import { db } from '../shared/db.js';
+import { serverError } from '../utils/responses.js';
 
 const router = Router();
 
@@ -26,12 +27,8 @@ router.get('/status', async (req, res) => {
       ...status
     });
 
-  } catch (error) {
-    console.error('[CLEANUP-STATUS] Error:', error);
-    res.status(500).json({
-      error: 'Failed to get cleanup status',
-      details: error.message
-    });
+    } catch (error) {
+    return serverError(res, 'Failed to get cleanup status');
   }
 });
 
@@ -63,12 +60,8 @@ router.post('/trigger', authenticateToken, async (req, res) => {
       result
     });
 
-  } catch (error) {
-    console.error('[CLEANUP-TRIGGER] Error:', error);
-    res.status(500).json({
-      error: 'Failed to trigger cleanup job',
-      details: error.message
-    });
+    } catch (error) {
+    return serverError(res, 'Failed to trigger cleanup job');
   }
 });
 
@@ -108,12 +101,8 @@ router.get('/stats', async (req, res) => {
       deletion_events: auditStats.rows
     });
 
-  } catch (error) {
-    console.error('[CLEANUP-STATS] Error:', error);
-    res.status(500).json({
-      error: 'Failed to get cleanup statistics',
-      details: error.message
-    });
+    } catch (error) {
+    return serverError(res, 'Failed to get cleanup statistics');
   }
 });
 
@@ -183,12 +172,8 @@ router.get('/pending-actions', async (req, res) => {
       }
     });
 
-  } catch (error) {
-    console.error('[CLEANUP-PENDING] Error:', error);
-    res.status(500).json({
-      error: 'Failed to get pending actions',
-      details: error.message
-    });
+    } catch (error) {
+    return serverError(res, 'Failed to get pending actions');
   }
 });
 

@@ -627,7 +627,7 @@ router.post('/login', loginLimiter, async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    return res.status(500).json({ error: 'Login failed' });
+    return serverError(res, 'Login failed' });
   }
 });
 ```
@@ -683,7 +683,7 @@ router.post('/auth/refresh', async (req, res) => {
     });
   } catch (error) {
     console.error('Token refresh error:', error);
-    return res.status(500).json({ error: 'Token refresh failed' });
+    return serverError(res, 'Token refresh failed' });
   }
 });
 ```
@@ -721,7 +721,7 @@ router.post('/auth/logout', authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Logout error:', error);
-    return res.status(500).json({ error: 'Logout failed' });
+    return serverError(res, 'Logout failed' );
   }
 });
 ```

@@ -1,5 +1,6 @@
 import { auth } from '../shared/firebase-admin.js';
 import logger from '../shared/logger.js';
+import { authError, forbiddenError } from '../utils/responses.js';
 
 // Middleware to verify Firebase ID token
 export async function authenticateToken(req, res, next) {
@@ -21,16 +22,14 @@ export async function authenticateToken(req, res, next) {
     req.userId = decodedToken.uid;
     
     next();
-    } catch (err) {
+        } catch (err) {
     // Distinguish between token expired vs other auth errors
     if (err.code === 'auth/id-token-expired') {
       // Token refresh is automatic and expected - no noise logging needed
-      return authError(res, 
-        res, 'Token expired',
-      );
+      return authError(res, 'Token expired');
     }
     
-    return res.status(403).json({ error: 'Invalid token' });
+    return forbiddenError(res, 'Invalid token');
   }
 }
 
@@ -38,8 +37,8 @@ export async function authenticateToken(req, res, next) {
 export function authorizeUser(req, res, next) {
   const requestedUserId = req.params.userId;
   
-  if (req.userId !== requestedUserId) {
-    return res.status(403).json({ error: 'Unauthorized: You can only access your own data' });
+    if (req.userId !== requestedUserId) {
+    return forbiddenError(res, 'You can only access your own data');
   }
   
   next();

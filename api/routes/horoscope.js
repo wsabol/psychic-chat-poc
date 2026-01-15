@@ -130,7 +130,7 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
                     : brief;
             }
                 } catch (e) {
-            return res.status(500).json({ error: `Failed to parse horoscope data` });
+            return serverError(res, `Failed to parse horoscope data` );
         }
         
                 if (!horoscope || !horoscope.generated_at) {
