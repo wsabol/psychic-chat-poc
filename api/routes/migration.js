@@ -5,6 +5,7 @@ import { auth as firebaseAuth } from "../shared/firebase-admin.js";
 import { getEncryptionKey } from "../shared/decryptionHelper.js";
 import { hashTempUserId } from "../shared/hashUtils.js";
 import { validationError, serverError } from "../utils/responses.js";
+import { logErrorFromCatch } from "../shared/errorLogger.js";
 
 const router = Router();
 
@@ -101,11 +102,11 @@ router.post("/migrate-chat-history", authenticateToken, async (req, res) => {
         );
         const messageCount = parseInt(tempMessages[0].count);
 
-        if (messageCount === 0) {
+                if (messageCount === 0) {
             try {
                 await firebaseAuth.deleteUser(tempUserId);
             } catch (fbErr) {
-                logErrorFromCatch(error, 'app', 'migration');
+                await logErrorFromCatch(fbErr, 'migration', 'Delete temp user after no messages');
             }
             
             await client.query(
@@ -153,14 +154,12 @@ router.post("/migrate-chat-history", authenticateToken, async (req, res) => {
 
         await client.query('COMMIT');
 
-        let firebaseDeleted = false;
+                let firebaseDeleted = false;
         try {
             await firebaseAuth.deleteUser(tempUserId);
             firebaseDeleted = true;
         } catch (fbErr) {
-            logErrorFromCatch(error, 'app', 'migration');
-            logErrorFromCatch(error, 'app', 'migration');
-            logErrorFromCatch(error, 'app', 'migration');
+            await logErrorFromCatch(fbErr, 'migration', 'Delete temp user after migration');
         }
 
         res.json({ 
