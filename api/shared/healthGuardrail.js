@@ -8,8 +8,6 @@
  * Accuracy: 95%+ for common health discussions
  */
 
-import { healthContentBlockedError } from '../utils/responses.js';
-
 // Health-related keywords that trigger blocking
 const HEALTH_KEYWORDS = [
   // Physical health conditions
@@ -161,9 +159,15 @@ export function healthContentMiddleware(req, res, next) {
   try {
     const userMessage = req.body?.message || req.body?.content || '';
     
-        if (containsHealthContent(userMessage)) {
+            if (containsHealthContent(userMessage)) {
       const detectedKeywords = detectHealthKeywords(userMessage);
-      return healthContentBlockedError(res, getBlockedResponse().message);
+      
+      return res.status(400).json({
+        success: false,
+        error: getBlockedResponse().message,
+        reason: 'health_content_blocked',
+        timestamp: new Date().toISOString()
+      });
     }
     
     next();

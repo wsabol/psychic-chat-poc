@@ -25,10 +25,9 @@ export async function authenticateToken(req, res, next) {
     // Distinguish between token expired vs other auth errors
     if (err.code === 'auth/id-token-expired') {
       // Token refresh is automatic and expected - no noise logging needed
-      return res.status(401).json({ 
-        error: 'Token expired',
-        code: 'TOKEN_EXPIRED'
-      });
+      return authError(res, 
+        res, 'Token expired',
+      );
     }
     
     return res.status(403).json({ error: 'Invalid token' });
