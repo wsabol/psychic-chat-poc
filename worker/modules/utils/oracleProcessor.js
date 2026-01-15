@@ -67,24 +67,31 @@ IMPORTANT: Use the above personal and astrological information to:
             briefContentLang = await translateContentObject(briefContent, userLanguage);
         }
 
-                // Store message with both English and translated versions (if applicable)
+                        // Store message with both English and translated versions (if applicable)
         const storedAt = new Date().toISOString();
-        await storeMessage(
-            userId,
-            'assistant',
-            fullContent,
-            briefContent,
-            userLanguage !== 'en-US' ? userLanguage : null,
-            fullContentLang,
-            briefContentLang
-        );
+        try {
+            await storeMessage(
+                userId,
+                'assistant',
+                fullContent,
+                briefContent,
+                userLanguage !== 'en-US' ? userLanguage : null,
+                fullContentLang,
+                briefContentLang
+            );
+        } catch (storageErr) {
+            throw new Error(`Failed to store oracle message: ${storageErr.message}`);
+        }
 
         // Notify that response is ready so frontend can fetch it immediately
-        await notifyResponseReady(userId, 'assistant', storedAt);
+        try {
+            await notifyResponseReady(userId, 'assistant', storedAt);
+        } catch (notifyErr) {
+            // Log but don't fail - notification is secondary
+        }
 
-    } catch (err) {
-        console.error('[ORACLE-PROCESSOR] Error processing oracle request:', err.message);
-        throw err;
+        } catch (err) {
+        throw new Error(`[ORACLE-PROCESSOR] Error processing oracle request: ${err.message}`);
     }
 }
 

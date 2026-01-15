@@ -36,8 +36,9 @@ async function routeJob(job) {
         } else {
             await handleChatMessage(userId, message);
         }
-    } catch (err) {
-        console.error(`[PROCESSOR] Error processing job for user ${userId}:`, err.message);
+        } catch (err) {
+        console.error(`[PROCESSOR] Error processing job for user ${userId}: ${err.message}`);
+        if (err.stack) console.error('[PROCESSOR] Stack:', err.stack);
     }
 }
 

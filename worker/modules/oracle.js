@@ -5,6 +5,22 @@ import { db } from '../shared/db.js';
 import { hashUserId } from '../shared/hashUtils.js';
 import OpenAI from 'openai';
 
+/**
+ * =============================================================================
+ * ORACLE.JS - Mystical Guidance Engine
+ * =============================================================================
+ * Organized into 5 sections for maintainability:
+ * 1. OpenAI Client Factory
+ * 2. Database Queries (User Data Loading)
+ * 3. Context Building (System Prompts & User Context)
+ * 4. Oracle API Interactions
+ * 5. Utilities
+ * =============================================================================
+ */
+
+// ============================================================================
+// 1. OPENAI CLIENT FACTORY
+// ============================================================================
 let client = null;
 
 function getOpenAIClient() {
@@ -14,6 +30,17 @@ function getOpenAIClient() {
   return client;
 }
 
+// ============================================================================
+// 2. DATABASE QUERIES - USER DATA LOADING
+// ============================================================================
+// Functions that fetch user information from encrypted database
+// All queries use pgp_sym_decrypt for sensitive data
+
+/**
+ * Fetch user's personal information (name, birth details, location)
+ * @param {string} userId - User ID
+ * @returns {object} Personal info object with decrypted fields
+ */
 export async function fetchUserPersonalInfo(userId) {
     try {
         const { rows } = await db.query(`
@@ -22,11 +49,15 @@ export async function fetchUserPersonalInfo(userId) {
         `, [process.env.ENCRYPTION_KEY, userId]);
         return rows.length > 0 ? rows[0] : null;
     } catch (err) {
-        console.error('[ORACLE] Error fetching personal info:', err);
         return null;
     }
 }
 
+/**
+ * Fetch user's astrology profile (sun, moon, rising signs + birth chart data)
+ * @param {string} userId - User ID
+ * @returns {object} Astrology info with parsed astrology_data JSON
+ */
 export async function fetchUserAstrology(userId) {
     try {
         const userIdHash = hashUserId(userId);
@@ -40,11 +71,16 @@ export async function fetchUserAstrology(userId) {
         }
         return null;
     } catch (err) {
-        console.error('[ORACLE] Error fetching astrology info:', err);
         return null;
     }
 }
 
+/**
+ * Check if user is on a trial/temporary account
+ * Temporary accounts have emails starting with 'temp_'
+ * @param {string} userId - User ID
+ * @returns {boolean} True if temporary user, false if established
+ */
 export async function isTemporaryUser(userId) {
     try {
         const { rows } = await db.query(
@@ -52,19 +88,20 @@ export async function isTemporaryUser(userId) {
             [process.env.ENCRYPTION_KEY, userId]
         );
         if (rows.length > 0 && rows[0].email) {
-            // Temporary accounts have emails starting with 'temp_' (matches Firebase auth logic)
             const isTemp = rows[0].email.startsWith('temp_');
             return isTemp;
         }
-        // If no personal info found, assume established (premium) user
         return false;
     } catch (err) {
-        console.error('[ORACLE] Error checking if user is temporary:', err);
-        // On error, assume established (premium) user to be safe
         return false;
     }
 }
 
+/**
+ * Fetch user's language preference (for UI/display)
+ * @param {string} userId - User ID
+ * @returns {string} Language code (e.g., 'en-US', 'es-ES', 'fr-FR')
+ */
 export async function fetchUserLanguagePreference(userId) {
     try {
         const userIdHash = hashUserId(userId);
@@ -75,13 +112,18 @@ export async function fetchUserLanguagePreference(userId) {
         if (rows.length > 0 && rows[0].language) {
             return rows[0].language;
         }
-        return 'en-US'; // Default to English US
+        return 'en-US';
     } catch (err) {
-        console.error('[ORACLE] Error fetching language preference:', err);
-        return 'en-US'; // Default to English US on error
+        return 'en-US';
     }
 }
 
+/**
+ * Fetch user's oracle language preference (for oracle responses)
+ * Separate from UI language - oracle can respond in different language than UI
+ * @param {string} userId - User ID
+ * @returns {string} Language code for oracle responses
+ */
 export async function fetchUserOracleLanguagePreference(userId) {
     try {
         const userIdHash = hashUserId(userId);
@@ -92,13 +134,24 @@ export async function fetchUserOracleLanguagePreference(userId) {
         if (rows.length > 0 && rows[0].oracle_language) {
             return rows[0].oracle_language;
         }
-        return 'en-US'; // Default to English US
+        return 'en-US';
     } catch (err) {
-        console.error('[ORACLE] Error fetching oracle language preference:', err);
-        return 'en-US'; // Default to English US on error
+        return 'en-US';
     }
 }
 
+// ============================================================================
+// 3. CONTEXT BUILDING - SYSTEM PROMPTS & USER CONTEXT
+// ============================================================================
+// Functions that build the context for oracle responses
+// Includes personal info, astrology, and system prompts
+
+/**
+ * Format user's personal information into context string
+ * Used to personalize oracle readings with user data
+ * @param {object} userInfo - Personal info from database
+ * @returns {string} Formatted context block for system prompt
+ */
 export function buildPersonalInfoContext(userInfo) {
     if (!userInfo || Object.keys(userInfo).length === 0) return '';
     return `
@@ -111,6 +164,13 @@ ${userInfo.sex ? `- Gender: ${userInfo.sex}` : ''}
 `;
 }
 
+/**
+ * Format user's astrology profile into context string
+ * Includes sun, moon, rising signs and birth chart coordinates
+ * @param {object} astrologyInfo - Astrology data from database
+ * @param {object} userInfo - Personal info (for location)
+ * @returns {string} Formatted astrology context block for system prompt
+ */
 export function buildAstrologyContext(astrologyInfo, userInfo) {
     if (!astrologyInfo || !astrologyInfo.astrology_data) return '';
     const astro = astrologyInfo.astrology_data;
@@ -130,10 +190,10 @@ ${astrologyLines.join('\n')}
 }
 
 /**
- * Build language-aware system prompt
- * Tells the oracle to respond in the user's preferred language
+ * Build language instruction for oracle system prompt
+ * Tells oracle which language to use for responses
  * @param {string} language - Language code (e.g., 'es-ES', 'fr-FR')
- * @returns {string} Language instruction
+ * @returns {string} Language instruction (empty for English)
  */
 function buildLanguageInstruction(language) {
     const languageMap = {
@@ -151,7 +211,7 @@ function buildLanguageInstruction(language) {
     const languageName = languageMap[language] || 'English';
     
     if (language === 'en-US') {
-        return ''; // No instruction needed for English
+        return '';
     }
     
     return `\n\nLANGUAGE REQUIREMENT:
@@ -160,6 +220,13 @@ Do NOT include English translations, code-switching, or explanations in any othe
 All HTML tags and structure remain the same, but all content must be ${languageName}.`;
 }
 
+/**
+ * Generate complete system prompt for oracle
+ * Combines base instructions with user type and language preferences
+ * @param {boolean} isTemporaryUser - True for trial/free accounts
+ * @param {string} language - Language code for oracle responses
+ * @returns {string} Complete system prompt for OpenAI
+ */
 export function getOracleSystemPrompt(isTemporaryUser = false, language = 'en-US') {
     const basePrompt = `You are The Oracle of Starship Psychics — a mystical guide who seamlessly blends tarot, astrology, and crystals into unified, holistic readings.
 
@@ -258,10 +325,23 @@ You are reading for a valued, established member. Engage authentically:
     return basePrompt + accountAddition + languageAddition;
 }
 
+// ============================================================================
+// 4. ORACLE API INTERACTIONS
+// ============================================================================
+// Direct OpenAI API calls for oracle readings
+
+/**
+ * Call Oracle API (OpenAI GPT) to generate response
+ * Generates both full reading and brief summary in a single flow
+ * @param {string} systemPrompt - System prompt with oracle instructions
+ * @param {array} messageHistory - Previous messages in conversation
+ * @param {string} userMessage - Current user message
+ * @param {boolean} generateBrief - Whether to also generate brief summary
+ * @returns {object} { full: fullResponse, brief: briefResponse }
+ */
 export async function callOracle(systemPrompt, messageHistory, userMessage, generateBrief = true) {
-    try {
-        // Create reversed copy without mutating original array
-        // History comes in ASC order (oldest first), reverse to DESC (most recent context closer to current message)
+        try {
+        // Reverse history: input is ASC (oldest first), reverse to DESC for context relevance
         const reversedHistory = messageHistory.slice().reverse();
         const openaiClient = getOpenAIClient();
         const fullCompletion = await openaiClient.chat.completions.create({
@@ -274,6 +354,8 @@ export async function callOracle(systemPrompt, messageHistory, userMessage, gene
         });
         const fullResponse = fullCompletion.choices[0]?.message?.content || "";
         if (!generateBrief) return { full: fullResponse, brief: null };
+        
+        // Generate brief summary from full response
         const briefSystemPrompt = `You are creating a BRIEF summary of a mystical reading.
 IMPORTANT:
 1. Output MUST be valid HTML: start with <h3>Brief Reading</h3>, end with </p>
@@ -291,31 +373,41 @@ IMPORTANT:
         });
         return { full: fullResponse, brief: briefCompletion.choices[0]?.message?.content || "" };
     } catch (err) {
-        console.error('[ORACLE] Error calling API:', err);
         throw err;
     }
 }
 
+// ============================================================================
+// 5. UTILITIES & HELPERS
+// ============================================================================
+// General utility functions
+
+/**
+ * Get personalized greeting for user
+ * Trial/temporary users get default "Seaker"
+ * Established users get their first/familiar name
+ * @param {object} userInfo - User personal info
+ * @param {string} userId - User ID
+ * @param {boolean} isTemporaryUser - True for trial accounts
+ * @returns {string} Greeting name
+ */
 export function getUserGreeting(userInfo, userId, isTemporaryUser = false) {
-    // For temporary/trial accounts, use the default familiar name "Seaker"
     if (isTemporaryUser) {
         return "Seaker";
     }
     
-    // For established accounts, use their first name or familiar name preference
     if (!userInfo) return "Friend";
     
-    // address_preference column contains the familiar_name from the DB query
     const greeting = userInfo.address_preference || userInfo.first_name;
     if (!greeting) return "Friend";
     return greeting;
 }
 
 /**
- * Extract scent recommendations from oracle response
- * Utility function for potential future use (logging, analytics, etc.)
+ * Extract aromatherapy guidance section from oracle response
+ * Utility for future analytics/logging features
  * @param {string} responseText - The oracle's HTML response
- * @returns {object} Scent data found in response
+ * @returns {object} { hasScentGuidance, content }
  */
 export function extractScentDataFromResponse(responseText) {
     if (!responseText) return null;

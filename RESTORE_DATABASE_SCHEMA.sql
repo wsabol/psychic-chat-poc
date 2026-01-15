@@ -303,10 +303,16 @@ CREATE INDEX IF NOT EXISTS idx_user_preferences_voice ON user_preferences(voice_
 CREATE TABLE IF NOT EXISTS messages (
     id SERIAL PRIMARY KEY,
     role VARCHAR(50),
-    content_encrypted BYTEA,
     user_id_hash VARCHAR(255),
+    content_full_encrypted BYTEA,
+    content_brief_encrypted BYTEA,
+    content_full_lang_encrypted BYTEA,
+    content_brief_lang_encrypted BYTEA,
+    language_code VARCHAR(10),
+    response_type VARCHAR(50),
+    content_type VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_at_local_date VARCHAR(255),
+    created_at_local_date DATE,
     horoscope_range VARCHAR(50),
     moon_phase VARCHAR(50)
 );

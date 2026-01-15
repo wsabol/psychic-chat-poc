@@ -16,11 +16,18 @@ router.post("/", verify2FA, async (req, res) => {
     const { message } = req.body;
     const userId = req.userId;
 
-    await insertMessage(userId, 'user', message)
+    try {
+        // Store user message with proper encryption
+        await insertMessage(userId, 'user', message);
+        
+        // Enqueue for worker processing
+        await enqueueMessage({ userId, message });
 
-    await enqueueMessage({ userId, message });
-
-    res.json({ status: "queued" });
+        res.json({ status: "queued" });
+    } catch (err) {
+        console.error('[CHAT] Error queueing message:', err.message);
+        return serverError(res, 'Failed to process message');
+    }
 });
 
 router.get("/opening/:userId", authorizeUser, verify2FA, async (req, res) => {
@@ -102,32 +109,50 @@ router.get("/history/:userId", authorizeUser, verify2FA, async (req, res) => {
     try {
         const userIdHash = hashUserId(userId);
         
-        // Fetch messages from database
-        // Note: Only content_full_encrypted and content_brief_encrypted columns exist
+                // Fetch messages from database
+        // Safe decrypt: handle NULL values gracefully with COALESCE
         const query = `SELECT 
             id, 
             role, 
             language_code,
-            pgp_sym_decrypt(content_full_encrypted, $2)::text as content_full, 
-            pgp_sym_decrypt(content_brief_encrypted, $2)::text as brief_full
+            COALESCE(pgp_sym_decrypt(content_full_encrypted, $2)::text, '{}') as content_full,
+            COALESCE(pgp_sym_decrypt(content_brief_encrypted, $2)::text, '{}') as brief_full
         FROM messages 
         WHERE user_id_hash = $1 
         ORDER BY created_at ASC`;
         
         const { rows } = await db.query(query, [userIdHash, ENCRYPTION_KEY]);
         
-        // Transform: format for frontend
-        const transformedRows = rows.map(msg => ({
-            id: msg.id,
-            role: msg.role,
-            language_code: msg.language_code,
-            content: msg.content_full || msg.brief_full,
-            brief_content: msg.brief_full || msg.content_full
-        }));
+                // Transform: format for frontend
+        const transformedRows = rows.map(msg => {
+            let fullContent = msg.content_full;
+            let briefContent = msg.brief_full;
+            
+            // Parse JSON if valid
+            try {
+                if (fullContent && fullContent !== '{}') fullContent = JSON.parse(fullContent);
+            } catch (e) {
+                // Keep as string if not JSON
+            }
+            try {
+                if (briefContent && briefContent !== '{}') briefContent = JSON.parse(briefContent);
+            } catch (e) {
+                // Keep as string if not JSON
+            }
+            
+            return {
+                id: msg.id,
+                role: msg.role,
+                language_code: msg.language_code,
+                content: fullContent || briefContent,
+                brief_content: briefContent || fullContent
+            };
+        });
         
         res.json(transformedRows);
-    } catch (err) {
-        return serverError(res, 'Database query error');
+        } catch (err) {
+        console.error('[CHAT] Error fetching history:', err.message);
+        return serverError(res, 'Failed to retrieve message history');
     }
 });
 
