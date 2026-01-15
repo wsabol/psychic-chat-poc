@@ -48,8 +48,9 @@ export async function generateMoonPhaseCommentary(userId, phase) {
             throw new Error('User personal info not found');
         }
         
-        if (!astrologyInfo?.astrology_data) {
-            throw new Error('User astrology data not found');
+                if (!astrologyInfo?.astrology_data) {
+            // Skip users without astrology data (not an error - they just haven't completed birth info yet)
+            return;
         }
         
         // Build moon phase prompt

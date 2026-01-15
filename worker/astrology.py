@@ -5,6 +5,11 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 try:
+    import pytz
+except ImportError:
+    pytz = None
+
+try:
     import swisseph as swe
 except ImportError:
     print(json.dumps({"error": "pyswisseph not installed"}), file=sys.stdout)
@@ -204,8 +209,16 @@ def calculate_birth_chart(birth_data):
         if lat is not None and lng is not None:
             try:
                 local_dt = datetime.combine(birth_date, birth_time)
-                local_dt = local_dt.replace(tzinfo=ZoneInfo(timezone_str))
-                utc_dt = local_dt.astimezone(ZoneInfo("UTC"))
+                # Use pytz for timezone handling (works better on Windows)
+                if pytz:
+                    tz = pytz.timezone(timezone_str)
+                    local_dt = tz.localize(local_dt)
+                    utc_dt = local_dt.astimezone(pytz.UTC)
+                else:
+                    # Fallback to ZoneInfo if pytz not available
+                    from zoneinfo import ZoneInfo
+                    local_dt = local_dt.replace(tzinfo=ZoneInfo(timezone_str))
+                    utc_dt = local_dt.astimezone(ZoneInfo("UTC"))
                 
                 jd = swe.julday(utc_dt.year, utc_dt.month, utc_dt.day, utc_dt.hour + utc_dt.minute / 60.0 + utc_dt.second / 3600.0)
                 
@@ -241,7 +254,11 @@ def calculate_birth_chart(birth_data):
 
 def calculate_current_moon_phase():
     try:
-        now_utc = datetime.now(ZoneInfo("UTC"))
+        if pytz:
+            now_utc = datetime.now(pytz.UTC)
+        else:
+            from zoneinfo import ZoneInfo
+            now_utc = datetime.now(ZoneInfo("UTC"))
         jd = swe.julday(now_utc.year, now_utc.month, now_utc.day, now_utc.hour + now_utc.minute / 60.0 + now_utc.second / 3600.0)
         
         sun_pos = swe.calc_ut(jd, swe.SUN)
@@ -275,7 +292,11 @@ def calculate_current_moon_phase():
 
 def calculate_current_planets():
     try:
-        now_utc = datetime.now(ZoneInfo("UTC"))
+        if pytz:
+            now_utc = datetime.now(pytz.UTC)
+        else:
+            from zoneinfo import ZoneInfo
+            now_utc = datetime.now(ZoneInfo("UTC"))
         jd = swe.julday(now_utc.year, now_utc.month, now_utc.day, now_utc.hour + now_utc.minute / 60.0 + now_utc.second / 3600.0)
         # Include all 10 planets with emoji icons
         planets = [

@@ -17,7 +17,7 @@ const getPythonPath = () => {
 };
 
 const PYTHON_PATH = getPythonPath();
-const ASTROLOGY_SCRIPT = path.join(__dirname, 'astrology.py');
+const ASTROLOGY_SCRIPT = path.join(__dirname, '..', 'astrology.py');
 
 export async function calculateBirthChart(birthData) {
     return new Promise((resolve, reject) => {
@@ -28,11 +28,9 @@ export async function calculateBirthChart(birthData) {
         python.stdout.on('data', (data) => { outputData += data.toString(); });
         python.stderr.on('data', (data) => { errorData += data.toString(); });
         
-        python.on('close', (code) => {
-            if (code !== 0) {
-                console.error(`[ASTROLOGY] Python script exited with code ${code}`);
-                if (errorData) console.error(`[ASTROLOGY] Python stderr:`, errorData);
-                reject(new Error(`Python script failed: ${errorData}`));
+                python.on('close', (code) => {
+                        if (code !== 0) {
+                reject(new Error(`Python script failed: ${errorData || outputData}`));
                 return;
             }
             try {

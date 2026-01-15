@@ -218,6 +218,9 @@ CREATE TABLE IF NOT EXISTS user_consents (
     consent_health_wellness BOOLEAN DEFAULT FALSE,
     agreed_from_ip_encrypted BYTEA,
     user_agent_encrypted BYTEA,
+    requires_consent_update BOOLEAN DEFAULT FALSE,
+    last_notified_at TIMESTAMP,
+    notification_count INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

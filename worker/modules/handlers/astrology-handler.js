@@ -46,7 +46,7 @@ export async function handleAstrologyCalculation(userId) {
             chartData.birth_timezone = info.birth_timezone;
         }
         
-        // Calculate birth chart
+                        // Calculate birth chart
         const calculatedChart = await calculateBirthChart(chartData);
         
         // Verify calculation was successful

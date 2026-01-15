@@ -18,7 +18,6 @@ async function routeJob(job) {
     const { userId, message } = job;
     
     try {
-        
         if (isAstrologyRequest(message)) {
             await handleAstrologyCalculation(userId);
         } else if (isHoroscopeRequest(message)) {
@@ -36,20 +35,16 @@ async function routeJob(job) {
         } else {
             await handleChatMessage(userId, message);
         }
-        } catch (err) {
-        console.error(`[PROCESSOR] Error processing job for user ${userId}: ${err.message}`);
-        if (err.stack) console.error('[PROCESSOR] Stack:', err.stack);
+    } catch (err) {
+        console.error(`[PROCESSOR] Error processing job for user ${userId}:`, err.message);
     }
 }
 
 /**
  * Generate daily horoscope and moon phase for all users on app startup
- * Only generates if not already done today (checks happen in handlers)
  */
 async function generateDailyMysticalUpdates() {
     try {
-        
-        // Get all authenticated users (exclude temporary accounts)
         const { rows: users } = await db.query(
             `SELECT user_id as id FROM user_personal_info WHERE created_at > NOW() - INTERVAL '1 year' AND user_id NOT LIKE 'temp_%'`
         );
@@ -58,25 +53,14 @@ async function generateDailyMysticalUpdates() {
             return;
         }
         
-        
-        let horoscopeCount = 0;
-        let moonPhaseCount = 0;
-        
         for (const user of users) {
             try {
-                // Generate horoscope (will skip if already done today)
                 await generateHoroscope(user.id, 'daily');
-                horoscopeCount++;
-                
-                // Generate moon phase (will skip if already done today)
                 await generateMoonPhaseCommentary(user.id, 'waxing');
-                moonPhaseCount++;
             } catch (err) {
                 console.error(`[STARTUP] Error updating user ${user.id}:`, err.message);
-                // Continue with next user even if one fails
             }
         }
-        
     } catch (err) {
         console.error('[STARTUP] Error generating daily mystical updates:', err.message);
     }
@@ -84,7 +68,6 @@ async function generateDailyMysticalUpdates() {
 
 /**
  * Cleanup old temporary accounts every 24 hours
- * Deletes temp accounts older than 7 days from Firebase and database
  */
 async function cleanupOldTempAccounts() {
     try {
@@ -108,25 +91,25 @@ async function cleanupOldTempAccounts() {
  */
 export async function workerLoop() {
     
-    // Generate daily horoscope and moon phase on startup
-    await generateDailyMysticalUpdates();
+    try {
+        await generateDailyMysticalUpdates();
+    } catch (err) {
+        console.error('[WORKER] Failed to generate daily updates:', err.message);
+    }
     
-    // Run cleanup job every 24 hours (86400000 ms)
     setInterval(cleanupOldTempAccounts, 86400000);
-    
-    // Also run cleanup once on startup (after 5 seconds delay to let system initialize)
     setTimeout(cleanupOldTempAccounts, 5000);
-    
-    
-    // Main job processing loop
     while (true) {
-        const job = await getMessageFromQueue();
-        if (!job) {
-            await new Promise((r) => setTimeout(r, 500)); // poll interval
-            continue;
+        try {
+            const job = await getMessageFromQueue();
+            if (!job) {
+                await new Promise((r) => setTimeout(r, 500));
+                continue;
+            }
+            await routeJob(job);
+        } catch (err) {
+            console.error('[WORKER] Fatal error in job loop:', err.message);
+            await new Promise((r) => setTimeout(r, 1000));
         }
-        
-        await routeJob(job);
     }
 }
-

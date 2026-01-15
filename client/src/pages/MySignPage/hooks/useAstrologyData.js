@@ -74,7 +74,15 @@ export function useAstrologyData(userId, token) {
         return;
       }
 
-      const data = await response.json();
+            const data = await response.json();
+      
+      // Check if astrology data exists
+      if (!data.astrology_data) {
+        setError('BIRTH_INFO_MISSING');
+        setLoading(false);
+        return;
+      }
+      
       let astroDataObj = data.astrology_data;
       if (typeof astroDataObj === 'string') {
         astroDataObj = JSON.parse(astroDataObj);

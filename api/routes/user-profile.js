@@ -6,6 +6,7 @@ import { enqueueMessage } from "../shared/queue.js";
 import { validateAge } from "../shared/ageValidator.js";
 import { handleAgeViolation } from "../shared/violationHandler.js";
 import { validationError, forbiddenError, serverError } from "../utils/responses.js";
+import { calculateSunSignFromDate } from "../shared/zodiacUtils.js";
 
 const router = Router();
 
@@ -40,6 +41,7 @@ router.get("/:userId", authorizeUser, async (req, res) => {
 });
 
 router.post("/:userId", authorizeUser, async (req, res) => {
+
     const { userId } = req.params;
     const { firstName, lastName, email, birthDate, birthTime, birthCountry, birthProvince, birthCity, birthTimezone, sex, addressPreference, zodiacSign, astrologyData } = req.body;
 
@@ -105,24 +107,58 @@ router.post("/:userId", authorizeUser, async (req, res) => {
             [process.env.ENCRYPTION_KEY, userId, firstName || 'Temporary', lastName || 'User', email, parsedBirthDate, safeTime, safeCountry, safeProvince, safeCity, safeTimezone, sex || 'Unspecified', safeAddressPreference]
         );
 
+                const userIdHash = hashUserId(userId);
+        
+        // Calculate and store sun sign immediately (only needs birth date)
         try {
-            const userIdHash = hashUserId(userId);
+                        const sunSign = calculateSunSignFromDate(parsedBirthDate);
+            if (sunSign) {
+                const minimalAstrologyData = {
+                    sun_sign: sunSign,
+                    sun_degree: 0,
+                    moon_sign: null,
+                    moon_degree: null,
+                    rising_sign: null,
+                    rising_degree: null,
+                    calculated_at: new Date().toISOString()
+                };
+                
+                await db.query(
+                    `INSERT INTO user_astrology (user_id_hash, zodiac_sign, astrology_data)
+                     VALUES ($1, $2, $3)
+                     ON CONFLICT (user_id_hash) DO UPDATE SET
+                     zodiac_sign = EXCLUDED.zodiac_sign,
+                     astrology_data = EXCLUDED.astrology_data,
+                     updated_at = CURRENT_TIMESTAMP`,
+                    [userIdHash, sunSign, JSON.stringify(minimalAstrologyData)]
+                );
+            }
+        } catch (err) {
+        }
+        
+        // Clear old astrology messages
+        try {
             await db.query(
                 `DELETE FROM messages 
                  WHERE user_id_hash = $1 
                  AND role IN ('horoscope', 'moon_phase', 'cosmic_weather', 'void_of_course', 'lunar_nodes')`,
                 [userIdHash]
             );
-                } catch (err) {
+        } catch (err) {
         }
         
-        if (safeTime && safeCountry && safeProvince && safeCity && parsedBirthDate) {
+                if (safeTime && safeCountry && safeProvince && safeCity && parsedBirthDate) {
             try {
+                // Delay before enqueueing to ensure data is committed to database
+                // Start with 200ms, with 3 second fallback if needed
+                const delayMs = 200;
+                await new Promise(resolve => setTimeout(resolve, delayMs));
+                
                 await enqueueMessage({
                     userId,
                     message: '[SYSTEM] Calculate my birth chart with rising sign and moon sign.'
                 });
-                        } catch (err) {
+            } catch (err) {
             }
         }
 

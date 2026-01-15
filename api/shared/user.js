@@ -1,5 +1,6 @@
 import { db } from './db.js';
 import { hashUserId } from './hashUtils.js';
+import { getLocalDateForTimezone } from './timezoneHelper.js';
 
 export async function getRecentMessages(userId) {
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
@@ -17,12 +18,13 @@ export async function getRecentMessages(userId) {
     return history.map(msg => msg.content);
 }
 
-export async function insertMessage(userId, role, content, contentBrief = null) {
+export async function insertMessage(userId, role, content, contentBrief = null, timezone = 'UTC') {
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
     const userIdHash = hashUserId(userId);
+    const localDate = getLocalDateForTimezone(timezone);
     await db.query(
-        `INSERT INTO messages(user_id_hash, role, content_full_encrypted, content_brief_encrypted, response_type) 
-         VALUES($1, $2, pgp_sym_encrypt($3, $4), ${contentBrief ? 'pgp_sym_encrypt($5, $4)' : 'NULL'}, ${contentBrief ? "'both'" : "'full'"})`,
-        contentBrief ? [userIdHash, role, content, ENCRYPTION_KEY, contentBrief] : [userIdHash, role, content, ENCRYPTION_KEY]
+        `INSERT INTO messages(user_id_hash, role, content_full_encrypted, content_brief_encrypted, response_type, created_at_local_date) 
+         VALUES($1, $2, pgp_sym_encrypt($3, $4), ${contentBrief ? 'pgp_sym_encrypt($5, $4)' : 'NULL'}, ${contentBrief ? "'both'" : "'full'"}, $6)`,
+        contentBrief ? [userIdHash, role, content, ENCRYPTION_KEY, contentBrief, localDate] : [userIdHash, role, content, ENCRYPTION_KEY, localDate]
     );
 }

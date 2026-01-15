@@ -9,6 +9,7 @@ import { containsHealthContent, detectHealthKeywords, getBlockedResponse } from 
 import { logAudit } from "../shared/auditLog.js";
 import { hashUserId } from "../shared/hashUtils.js";
 import { validationError, serverError } from "../utils/responses.js";
+import { getLocalDateForTimezone } from "../shared/timezoneHelper.js";
 
 const router = Router();
 
@@ -33,18 +34,26 @@ router.post("/", verify2FA, async (req, res) => {
 router.get("/opening/:userId", authorizeUser, verify2FA, async (req, res) => {
     const userId = req.userId;
 
-    try {
-        // Check if an opening message was already sent today
-        const today = new Date().toISOString().split('T')[0];
+        try {
+        // Get user's local timezone date
         const userIdHash = hashUserId(userId);
-        const { rows: existingOpenings } = await db.query(
+        const { rows: tzRows } = await db.query(
+            `SELECT timezone FROM user_preferences WHERE user_id_hash = $1`,
+            [userIdHash]
+        );
+        const userTimezone = tzRows.length > 0 && tzRows[0].timezone ? tzRows[0].timezone : 'UTC';
+        const todayLocalDate = getLocalDateForTimezone(userTimezone);
+        
+        // Old code to remove:
+        // const today = new Date().toISOString().split('T')[0];
+                const { rows: existingOpenings } = await db.query(
             `SELECT id, created_at FROM messages 
              WHERE user_id_hash = $1 
              AND role = 'assistant' 
-             AND created_at::date = $2::date
+             AND created_at_local_date = $2
              ORDER BY created_at ASC 
              LIMIT 1`,
-            [userIdHash, today]
+            [userIdHash, todayLocalDate]
         );
 
         // If we already have an assistant message from today (opening), return without adding another
@@ -88,7 +97,7 @@ router.get("/opening/:userId", authorizeUser, verify2FA, async (req, res) => {
             opening = `Hi ${clientName}, thank you for being here today. Before we begin, is there an area of your life you're hoping to get clarity on?`;
         }
 
-        await insertMessage(userId, 'assistant', opening)
+                await insertMessage(userId, 'assistant', opening, null, userTimezone);
 
         res.json({
             role: 'assistant',
