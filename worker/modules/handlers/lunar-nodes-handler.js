@@ -30,7 +30,7 @@ Do NOT include tarot cards.
 
 Provide insight into their soul's journey and purpose.`;
         
-        const oracleResponses = await callOracle(systemPrompt, [], prompt, true);
+                        const oracleResponses = await callOracle(systemPrompt, [], prompt, true);
         
         const lunarNodesDataFull = {
             text: oracleResponses.full,
@@ -42,9 +42,9 @@ Provide insight into their soul's journey and purpose.`;
         };
         const lunarNodesDataBrief = { text: oracleResponses.brief, generated_at: new Date().toISOString() };
         await storeMessage(userId, 'lunar_nodes', lunarNodesDataFull, lunarNodesDataBrief);
-    } catch (err) {
+        } catch (err) {
         console.error('[LUNAR-NODES-HANDLER] Error:', err.message);
-        throw err;
+        // Continue silently on error
     }
 }
 

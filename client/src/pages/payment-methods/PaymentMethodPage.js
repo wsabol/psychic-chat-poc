@@ -8,7 +8,8 @@ import PaymentMethodsList from './components/PaymentMethodsList';
 import PaymentMethodsEmpty from './components/PaymentMethodsEmpty';
 import '../PaymentMethodPage.css';
 
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
+const stripePublicKey = process.env.REACT_APP_STRIPE_PUBLIC_KEY || 'pk_test_51RvatUJMQqFkSDqnqnpj19zERg4ECXj9ZpSUloXyNEf6SqusJ0N6PJQXnyrap5POm8ynwuXomOSJh1RUX7AlieyI007B3VSIru';
+const stripePromise = loadStripe(stripePublicKey);
 
 /**
  * PaymentMethodPage - Manage payment methods

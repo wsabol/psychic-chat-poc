@@ -1,15 +1,22 @@
 import OpenAI from "openai";
 
-// Initialize the OpenAI client with your API key
-const client = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy-load OpenAI client to ensure .env is loaded first
+let client = null;
+
+function getOpenAIClient() {
+  if (!client) {
+    client = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return client;
+}
 
 export async function generatePsychicOpening({
-                                          clientName,
-                                          recentMessages,
-                                          userLanguage = 'en-US'
-                                      }) {
+    clientName,
+    recentMessages,
+    userLanguage = 'en-US'
+}) {
 
     const languageMap = {
         'en-US': 'English',
@@ -42,7 +49,8 @@ recent_messages: ${recentMessages?.join(" | ") || "None"}
 Generate a single opening message for this client.
 `;
 
-    const response = await client.chat.completions.create({
+    const openaiClient = getOpenAIClient();
+    const response = await openaiClient.chat.completions.create({
         model: "gpt-4-turbo",
         messages: [
             { role: "system", content: systemPrompt },

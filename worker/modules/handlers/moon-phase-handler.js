@@ -90,7 +90,7 @@ Do NOT include tarot cards - this is purely lunar + astrological insight enriche
             zodiac_sign: astrologyInfo.zodiac_sign 
         };
         
-        // Store message (no translation needed - response is already in user's language)
+                        // Store message (no translation needed - response is already in user's language)
         await storeMessage(
             userId,
             'moon_phase',
@@ -105,7 +105,7 @@ Do NOT include tarot cards - this is purely lunar + astrological insight enriche
             todayLocalDate
         );
         
-    } catch (err) {
+            } catch (err) {
         console.error('[MOON-PHASE-HANDLER] Error generating commentary:', err.message);
         console.error('[MOON-PHASE-HANDLER] Stack:', err.stack);
         throw err;

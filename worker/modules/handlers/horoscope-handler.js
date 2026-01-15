@@ -52,12 +52,14 @@ export async function generateHoroscope(userId, range = 'daily') {
         const userLanguage = await fetchUserLanguagePreference(userId);
         const oracleLanguage = await fetchUserOracleLanguagePreference(userId);
         
+                // Skip if user hasn't completed personal info yet
         if (!userInfo) {
-            throw new Error('User personal info not found');
+            return;
         }
         
+        // Skip if user hasn't completed astrology setup yet (will be generated once they do)
         if (!astrologyInfo?.astrology_data) {
-            throw new Error('User astrology data not found');
+            return;
         }
         
         // Check if user is temporary/trial account
@@ -103,7 +105,7 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
                 zodiac_sign: astrologyInfo.zodiac_sign 
             };
             
-            // Store message (no translation needed - response is already in user's language)
+                                    // Store message (no translation needed - response is already in user's language)
             await storeMessage(
                 userId, 
                 'horoscope', 
@@ -118,7 +120,7 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
                 todayLocalDate
             );
             
-        } catch (err) {
+                        } catch (err) {
             console.error(`[HOROSCOPE-HANDLER] Error generating ${range} horoscope:`, err.message);
             console.error(`[HOROSCOPE-HANDLER] Stack:`, err.stack);
         }

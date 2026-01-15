@@ -1,8 +1,18 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import { db } from '../shared/db.js';
 import { hashUserId } from '../shared/hashUtils.js';
 import OpenAI from 'openai';
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+let client = null;
+
+function getOpenAIClient() {
+  if (!client) {
+    client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+  return client;
+}
 
 export async function fetchUserPersonalInfo(userId) {
     try {
@@ -253,7 +263,8 @@ export async function callOracle(systemPrompt, messageHistory, userMessage, gene
         // Create reversed copy without mutating original array
         // History comes in ASC order (oldest first), reverse to DESC (most recent context closer to current message)
         const reversedHistory = messageHistory.slice().reverse();
-        const fullCompletion = await client.chat.completions.create({
+        const openaiClient = getOpenAIClient();
+        const fullCompletion = await openaiClient.chat.completions.create({
             model: "gpt-4o-mini",
             messages: [
                 { role: "system", content: systemPrompt },
@@ -270,7 +281,8 @@ IMPORTANT:
 3. Focus on actionable insight, not details
 4. Keep under 150 words
 5. Use <p>content</p> tags for body text`;
-        const briefCompletion = await client.chat.completions.create({
+        const openaiClient2 = getOpenAIClient();
+        const briefCompletion = await openaiClient2.chat.completions.create({
             model: "gpt-4o-mini",
             messages: [
                 { role: "system", content: briefSystemPrompt },

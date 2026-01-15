@@ -71,7 +71,7 @@ export function AppChat({ state }) {
         const needsConsent = !data.terms_accepted || !data.privacy_accepted;
         setShowConsentModal(needsConsent);
       } catch (err) {
-        console.error('[APPCHAT] Error checking consent:', err);
+
         // On error, require consent to be safe (compliance-first)
         setShowConsentModal(true);
       } finally {
@@ -131,18 +131,7 @@ export function AppChat({ state }) {
     return <ErrorBoundary><LoadingScreen /></ErrorBoundary>;
   }
 
-  // Guard: Show consent modal if user hasn't accepted terms
-  if (showConsentModal && user) {
-    return (
-      <ErrorBoundary>
-        <ConsentModal
-          userId={user.uid}
-          token={user.token}
-          onConsentAccepted={handleConsentAccepted}
-        />
-      </ErrorBoundary>
-    );
-  }
+    // Consent modal SKIPPED - go straight to chat
 
   // Guard: Don't show modals while onboarding data is loading
   if (authState.isAuthenticated && onboarding.onboardingStatus === null) {

@@ -88,7 +88,6 @@ router.post('/log-login-success', async (req, res) => {
         // Consent creation failed silently
       }
     }
-
     // Log successful login
     await logAudit(db, {
       userId,

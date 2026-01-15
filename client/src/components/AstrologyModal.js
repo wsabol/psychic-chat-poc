@@ -1,14 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { getZodiacSignFromDate, getAstrologyData } from '../utils/astroUtils';
-import { zodiacSigns } from '../data/ZodiacSigns';
+import { getZodiacSignFromDate } from '../utils/astroUtils';
 import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
+import { loadZodiacSignsForLanguage } from '../data/zodiac/index.js';
 
 function AstrologyModal({ userId, token, isOpen, onClose, birthDate, birthTime, birthCity, birthState }) {
     const [astroData, setAstroData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [zodiacSigns, setZodiacSigns] = useState(null);
 
     const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
+    
+    // Load zodiac signs for current language (default to en-US)
+    useEffect(() => {
+        const loadZodiacData = async () => {
+            try {
+                const signs = await loadZodiacSignsForLanguage('en-US');
+                setZodiacSigns(signs);
+            } catch (err) {
+                console.error('Failed to load zodiac signs:', err);
+            }
+        };
+        loadZodiacData();
+    }, []);
 
     useEffect(() => {
         if (isOpen) {
@@ -34,11 +48,13 @@ function AstrologyModal({ userId, token, isOpen, onClose, birthDate, birthTime, 
                     }
                     
                     if (astroDataObj && astroDataObj.sun_sign) {
-                        const zodiacSignData = getAstrologyData(astroDataObj.sun_sign.toLowerCase());
-                        const mergedData = {
+                        // Get zodiac sign data from dynamically loaded zodiac signs
+                        const sunSignKey = astroDataObj.sun_sign?.toLowerCase();
+                        const zodiacSignData = zodiacSigns && zodiacSigns[sunSignKey] ? zodiacSigns[sunSignKey] : null;
+                        const mergedData = zodiacSignData ? {
                             ...zodiacSignData,
                             ...astroDataObj
-                        };
+                        } : astroDataObj;
                         setAstroData({
                             ...dbAstroData,
                             astrology_data: mergedData
@@ -87,7 +103,15 @@ function AstrologyModal({ userId, token, isOpen, onClose, birthDate, birthTime, 
                 return;
             }
             
-            const astrologyData = getAstrologyData(zodiacSign);
+            // Get astrology data from dynamically loaded zodiac signs
+            if (!zodiacSigns) {
+                setError('Astrology data not loaded. Please refresh the page.');
+                setAstroData(null);
+                setLoading(false);
+                return;
+            }
+
+            const astrologyData = zodiacSigns[zodiacSign];
             if (!astrologyData) {
                 setError('Could not retrieve astrology data for your sign.');
                 setAstroData(null);
@@ -278,4 +302,3 @@ function AstrologyModal({ userId, token, isOpen, onClose, birthDate, birthTime, 
 }
 
 export default AstrologyModal;
-

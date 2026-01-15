@@ -305,7 +305,10 @@ CREATE TABLE IF NOT EXISTS messages (
     role VARCHAR(50),
     content_encrypted BYTEA,
     user_id_hash VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at_local_date VARCHAR(255),
+    horoscope_range VARCHAR(50),
+    moon_phase VARCHAR(50)
 );
 
 CREATE INDEX IF NOT EXISTS idx_messages_user_id_hash ON messages(user_id_hash);

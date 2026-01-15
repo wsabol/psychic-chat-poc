@@ -1,8 +1,27 @@
 import { spawn } from 'child_process';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Get the directory of this file
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Determine Python path based on OS
+const getPythonPath = () => {
+  if (process.platform === 'win32') {
+    // Windows: use python.exe from system PATH
+    return 'python.exe';
+  } else {
+    // Linux/Mac: use venv python
+    return '/opt/venv/bin/python3';
+  }
+};
+
+const PYTHON_PATH = getPythonPath();
+const ASTROLOGY_SCRIPT = path.join(__dirname, 'astrology.py');
 
 export async function calculateBirthChart(birthData) {
     return new Promise((resolve, reject) => {
-        const python = spawn('/opt/venv/bin/python3', ['./astrology.py']);
+        const python = spawn(PYTHON_PATH, [ASTROLOGY_SCRIPT]);
         let outputData = '';
         let errorData = '';
         
@@ -37,7 +56,7 @@ export async function calculateBirthChart(birthData) {
 
 export async function getCurrentTransits(birthData) {
     return new Promise((resolve, reject) => {
-        const python = spawn('/opt/venv/bin/python3', ['./astrology.py']);
+        const python = spawn(PYTHON_PATH, [ASTROLOGY_SCRIPT]);
         let outputData = '';
         let errorData = '';
         
@@ -64,7 +83,7 @@ export async function getCurrentTransits(birthData) {
 
 export async function getCurrentMoonPhase() {
     return new Promise((resolve, reject) => {
-        const python = spawn('/opt/venv/bin/python3', ['./astrology.py']);
+        const python = spawn(PYTHON_PATH, [ASTROLOGY_SCRIPT]);
         let outputData = '';
         let errorData = '';
         
@@ -94,7 +113,7 @@ export async function getCurrentMoonPhase() {
 
 export async function getCurrentPlanets() {
     return new Promise((resolve, reject) => {
-        const python = spawn('/opt/venv/bin/python3', ['./astrology.py']);
+        const python = spawn(PYTHON_PATH, [ASTROLOGY_SCRIPT]);
         let outputData = '';
         let errorData = '';
         

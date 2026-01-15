@@ -1,3 +1,5 @@
+import { zodiacSigns } from '../data/ZodiacSigns';
+
 // Map sign names to their numbers (1-12)
 const SIGN_NUMBER_MAP = {
   aries: 1,
@@ -13,6 +15,14 @@ const SIGN_NUMBER_MAP = {
   aquarius: 11,
   pisces: 12
 };
+
+// Get the file range (1-4, 5-8, or 9-12) for a sign number
+function getSignFileRange(signNumber) {
+  if (signNumber >= 1 && signNumber <= 4) return '1-4';
+  if (signNumber >= 5 && signNumber <= 8) return '5-8';
+  if (signNumber >= 9 && signNumber <= 12) return '9-12';
+  return null;
+}
 
 /**
  * Calculate zodiac sign from birth date
@@ -70,26 +80,25 @@ export function getZodiacSignFromDate(dateString) {
 
 /**
  * Get complete astrology data for a zodiac sign
- * DEPRECATED: Use loadZodiacSignsForLanguage() from ../data/zodiac/index.js instead
- * This function is kept for backward compatibility but returns null
  * @param {string} zodiacSignKey - Zodiac sign key (lowercase, e.g., 'aries')
- * @returns {null} - Always returns null; use dynamic loading for actual data
+ * @returns {object|null} - Complete astrology data object or null
  */
 export function getAstrologyData(zodiacSignKey) {
-  // Deprecated: zodiac data is now loaded dynamically per language
-  // Use loadZodiacSignsForLanguage() from ../data/zodiac/index.js instead
-  return null;
+  if (!zodiacSignKey || !zodiacSigns[zodiacSignKey]) {
+    return null;
+  }
+  return zodiacSigns[zodiacSignKey];
 }
 
 /**
  * Get astrology data for a given birth date
- * DEPRECATED: Use loadZodiacSignsForLanguage() instead
  * @param {string} dateString - Birth date in YYYY-MM-DD format
- * @returns {null} - Returns null; use dynamic loading instead
+ * @returns {object|null} - Complete astrology data or null
  */
 export function getAstrologyFromBirthDate(dateString) {
-  // Deprecated: use dynamic loading instead
-  return null;
+  const sign = getZodiacSignFromDate(dateString);
+  if (!sign) return null;
+  return getAstrologyData(sign);
 }
 
 /**

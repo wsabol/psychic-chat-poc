@@ -8,7 +8,15 @@ import { hashUserId } from '../shared/hashUtils.js';
 import { validationError, serverError } from '../utils/responses.js';
 
 const router = Router();
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+let client = null;
+
+// Lazy-load OpenAI client to ensure .env is loaded first
+function getOpenAIClient() {
+  if (!client) {
+    client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+  return client;
+}
 
 const SYSTEM_PROMPT = `You are a helpful assistant for a spiritual wellness app called "Psychic Chat". The app helps users connect with their cosmic side through various features and manage their account.
 
@@ -93,8 +101,9 @@ router.post('/ask', authenticateToken, async (req, res) => {
       content: question + pageContext
     });
 
-    // Call OpenAI
-    const completion = await client.chat.completions.create({
+        // Call OpenAI
+    const openaiClient = getOpenAIClient();
+    const completion = await openaiClient.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         {

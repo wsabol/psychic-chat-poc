@@ -120,7 +120,7 @@ Do NOT include tarot cards - this is pure astrological forecasting enriched by t
             generated_at: new Date().toISOString()
         };
         
-        // Store message (no translation needed - response is already in user's language)
+                        // Store message (no translation needed - response is already in user's language)
         await storeMessage(
             userId, 
             'cosmic_weather', 
@@ -135,7 +135,7 @@ Do NOT include tarot cards - this is pure astrological forecasting enriched by t
             todayLocalDate
         );
         
-    } catch (err) {
+            } catch (err) {
         console.error('[COSMIC-WEATHER-HANDLER] Error:', err.message);
         console.error('[COSMIC-WEATHER-HANDLER] Stack:', err.stack);
         throw err;

@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import fs from "fs";
 import https from "https";
@@ -26,6 +29,7 @@ import { authenticateToken } from "./middleware/auth.js";
 import { validateUserHash } from "./middleware/userHashValidation.js";
 import cors from "cors";
 import cleanupStatusRoutes from "./routes/cleanup-status.js";
+import responseStatusRoutes from "./routes/response-status.js";
 import { initializeScheduler } from "./jobs/scheduler.js";
 import { validateRequestPayload, rateLimit } from "./middleware/inputValidation.js";
 import { errorHandler } from "./middleware/errorHandler.js";
@@ -142,6 +146,9 @@ app.use("/astrology-insights", authenticateToken, validateUserHash, astrologyIns
 
 app.use("/security", authenticateToken, validateUserHash, securityRoutes);
 
+// Response status routes (authentication + user hash validation required)
+app.use("/response-status", authenticateToken, validateUserHash, responseStatusRoutes);
+
 // User settings routes (authentication + user hash validation required)
 app.use("/user-settings", authenticateToken, validateUserHash, userSettingsRoutes);
 
@@ -168,9 +175,25 @@ if (fs.existsSync('./certificates/key.pem') && fs.existsSync('./certificates/cer
     };
     server = https.createServer(options, app);
     server.listen(PORT, () => {
+        console.log(`🔐 Psychic Chat API listening on HTTPS port ${PORT}`);
+    });
+    server.on('error', (err) => {
+        console.error(`❌ HTTPS Server Error: ${err.message}`);
+        if (err.code === 'EADDRINUSE') {
+            console.error(`❌ Port ${PORT} is already in use`);
+        }
+        process.exit(1);
     });
 } else {
     server = app.listen(PORT, () => {
+        console.log(`✅ Psychic Chat API listening on HTTP port ${PORT}`);
+    });
+    server.on('error', (err) => {
+        console.error(`❌ Server Error: ${err.message}`);
+        if (err.code === 'EADDRINUSE') {
+            console.error(`❌ Port ${PORT} is already in use`);
+        }
+        process.exit(1);
     });
 }
 

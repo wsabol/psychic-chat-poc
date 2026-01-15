@@ -8,6 +8,7 @@ import { extractCardsFromResponse, formatCardsForStorage } from '../cards.js';
 import { buildPersonalInfoContext, buildAstrologyContext, getOracleSystemPrompt, callOracle } from '../oracle.js';
 import { formatMessageContent, storeMessage, getMessageHistory } from '../messages.js';
 import { translateContentObject } from '../translator.js';
+import { notifyResponseReady } from '../../shared/notifications.js';
 
 /**
  * Process oracle request: call API, extract cards, translate, and store
@@ -66,7 +67,8 @@ IMPORTANT: Use the above personal and astrological information to:
             briefContentLang = await translateContentObject(briefContent, userLanguage);
         }
 
-        // Store message with both English and translated versions (if applicable)
+                // Store message with both English and translated versions (if applicable)
+        const storedAt = new Date().toISOString();
         await storeMessage(
             userId,
             'assistant',
@@ -76,6 +78,9 @@ IMPORTANT: Use the above personal and astrological information to:
             fullContentLang,
             briefContentLang
         );
+
+        // Notify that response is ready so frontend can fetch it immediately
+        await notifyResponseReady(userId, 'assistant', storedAt);
 
     } catch (err) {
         console.error('[ORACLE-PROCESSOR] Error processing oracle request:', err.message);

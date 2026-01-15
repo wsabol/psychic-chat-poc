@@ -30,10 +30,11 @@ export default function SubscriptionsPage({ userId, token, auth }) {
   const state = useSubscriptionState(token);
   const billing = useBilling(token);
 
-  // Get Stripe instance from window (or create one)
+    // Get Stripe instance from window (or create one)
   const stripeRef = React.useRef(null);
   if (!stripeRef.current && window.Stripe) {
-    stripeRef.current = window.Stripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
+    const stripeKey = process.env.REACT_APP_STRIPE_PUBLIC_KEY || 'pk_test_51RvatUJMQqFkSDqnqnpj19zERg4ECXj9ZpSUloXyNEf6SqusJ0N6PJQXnyrap5POm8ynwuXomOSJh1RUX7AlieyI007B3VSIru';
+    stripeRef.current = window.Stripe(stripeKey);
   }
 
   // Load available prices, subscriptions, and payment methods on mount

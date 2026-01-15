@@ -13,7 +13,7 @@ export async function generateVoidOfCourseMoonAlert(userId) {
             throw new Error('Failed to calculate moon phase');
         }
         
-        if (!moonPhaseData.void_of_course) {
+                if (!moonPhaseData.void_of_course) {
             // Not void of course, store as normal
             await storeMessage(userId, 'void_of_course', {
                 is_void: false,
@@ -40,7 +40,7 @@ What should they know? What should they avoid starting? What reflective activiti
         
         const oracleResponses = await callOracle(systemPrompt, [], prompt, true);
         
-        const voidOfCourseDataFull = {
+                        const voidOfCourseDataFull = {
             is_void: true,
             phase: moonPhaseData.phase,
             text: oracleResponses.full,
@@ -50,9 +50,9 @@ What should they know? What should they avoid starting? What reflective activiti
         const voidOfCourseBrief = { is_void: true, phase: moonPhaseData.phase, text: oracleResponses.brief, generated_at: new Date().toISOString() };
         await storeMessage(userId, 'void_of_course', voidOfCourseDataFull, voidOfCourseBrief);
         
-    } catch (err) {
+        } catch (err) {
         console.error('[VOID-OF-COURSE-HANDLER] Error:', err.message);
-        throw err;
+        // Continue silently on error
     }
 }
 
