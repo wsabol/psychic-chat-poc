@@ -175,7 +175,6 @@ if (fs.existsSync('./certificates/key.pem') && fs.existsSync('./certificates/cer
     };
     server = https.createServer(options, app);
     server.listen(PORT, () => {
-        console.log(`🔐 Psychic Chat API listening on HTTPS port ${PORT}`);
     });
     server.on('error', (err) => {
         console.error(`❌ HTTPS Server Error: ${err.message}`);
@@ -186,7 +185,6 @@ if (fs.existsSync('./certificates/key.pem') && fs.existsSync('./certificates/cer
     });
 } else {
     server = app.listen(PORT, () => {
-        console.log(`✅ Psychic Chat API listening on HTTP port ${PORT}`);
     });
     server.on('error', (err) => {
         console.error(`❌ Server Error: ${err.message}`);

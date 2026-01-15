@@ -33,7 +33,6 @@ export async function generateCosmicWeather(userId) {
         // Get user's timezone and today's local date
         const userTimezone = await getUserTimezone(userIdHash);
         const todayLocalDate = getLocalDateForTimezone(userTimezone);
-        console.log(`[COSMIC-WEATHER] User timezone: ${userTimezone}, Today (local): ${todayLocalDate}`);
         const userIdHash = hashUserId(userId);
         
         // Check if cosmic weather already exists for today (in user's timezone)
@@ -46,7 +45,6 @@ export async function generateCosmicWeather(userId) {
         if (rows.length > 0) {
             const createdAtLocalDate = rows[0].created_at_local_date;
             if (!needsRegeneration(createdAtLocalDate, todayLocalDate)) {
-                            console.log(`[COSMIC-WEATHER] Already generated for today (${todayLocalDate}), skipping`);
                 return;
             }
         }
