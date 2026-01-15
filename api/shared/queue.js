@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import { createClient } from "redis";
+import { logErrorFromCatch } from './errorLogger.js';
 
 let client = null;
 
@@ -17,11 +18,13 @@ async function getClient() {
                 reconnectStrategy: (retries) => Math.min(retries * 50, 500)
             }
         });
-        client.on('error', (err) => console.error('Redis Client Error', err));
+        client.on('error', (err) => {
+            logErrorFromCatch(err, 'queue', 'Redis connection error').catch(() => {});
+        });
         try {
             await client.connect();
         } catch (err) {
-            console.error('[QUEUE] Failed to connect to Redis:', err.message);
+            await logErrorFromCatch(err, 'queue', 'Connect to Redis');
             client = null;
             throw err;
         }
