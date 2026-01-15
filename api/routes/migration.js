@@ -105,7 +105,7 @@ router.post("/migrate-chat-history", authenticateToken, async (req, res) => {
             try {
                 await firebaseAuth.deleteUser(tempUserId);
             } catch (fbErr) {
-                console.error('[MIGRATION] ✗ Failed to delete temp user from Firebase:', fbErr.code, fbErr.message);
+                logErrorFromCatch(error, 'app', 'migration');
             }
             
             await client.query(
@@ -158,9 +158,9 @@ router.post("/migrate-chat-history", authenticateToken, async (req, res) => {
             await firebaseAuth.deleteUser(tempUserId);
             firebaseDeleted = true;
         } catch (fbErr) {
-            console.error('[MIGRATION] ✗ Failed to delete temp user from Firebase');
-            console.error('[MIGRATION] Error code:', fbErr.code);
-            console.error('[MIGRATION] Error message:', fbErr.message);
+            logErrorFromCatch(error, 'app', 'migration');
+            logErrorFromCatch(error, 'app', 'migration');
+            logErrorFromCatch(error, 'app', 'migration');
         }
 
         res.json({ 
