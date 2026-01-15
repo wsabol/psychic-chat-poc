@@ -13,6 +13,12 @@ export async function fetchCosmicWeather(userId, token) {
     { headers }
   );
 
+    // Handle 202 (processing/generating) response
+  if (response.status === 202) {
+    const data = await response.json();
+    throw new Error(data.message || 'Generating cosmic weather...');
+  }
+
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}`);
   }
@@ -50,7 +56,7 @@ export async function generateCosmicWeather(userId, token) {
  * Poll for cosmic weather until ready
  * Returns data when ready, throws error if timeout
  */
-export async function pollForCosmicWeather(userId, token, maxPolls = 120, pollInterval = 1000) {
+export async function pollForCosmicWeather(userId, token, maxPolls = 30, pollInterval = 1000) {
   const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
   let pollCount = 0;
 
@@ -64,6 +70,12 @@ export async function pollForCosmicWeather(userId, token, maxPolls = 120, pollIn
           { headers }
         );
 
+                // Continue polling if still processing (202), otherwise resolve if successful (200)
+        if (response.status === 202) {
+          // Still generating, continue polling
+          return;
+        }
+        
         if (response.ok) {
           const data = await response.json();
           clearInterval(intervalId);
@@ -73,6 +85,14 @@ export async function pollForCosmicWeather(userId, token, maxPolls = 120, pollIn
             birthChart: data.birthChart,
             planets: data.currentPlanets || []
           });
+          return;
+        }
+        
+        // If not 202 and not ok, there's an error
+        if (!response.ok) {
+          const errorData = await response.json();
+          clearInterval(intervalId);
+          reject(new Error(errorData.error || `HTTP ${response.status}`));
           return;
         }
       } catch (err) {

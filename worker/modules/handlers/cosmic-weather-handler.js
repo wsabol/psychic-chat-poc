@@ -3,51 +3,32 @@ import { storeMessage } from '../messages.js';
 import { getUserTimezone, getLocalDateForTimezone, needsRegeneration } from '../utils/timezoneHelper.js';
 import { db } from '../../shared/db.js';
 import { hashUserId } from '../../shared/hashUtils.js';
-import { spawn } from 'child_process';
+import { getCurrentPlanets } from '../astrology.js';
 
-function getCosmicWeatherPlanets() {
-    return new Promise((resolve, reject) => {
-        const python = spawn('python3', ['/app/astrology.py']);
-        let output = '';
-        python.stdin.write(JSON.stringify({ type: 'current_planets' }));
-        python.stdin.end();
-        python.stdout.on('data', (data) => { output += data.toString(); });
-        python.stderr.on('data', (data) => console.error('[PYTHON]', data.toString()));
-        python.on('close', (code) => {
-            if (code !== 0) {
-                reject(new Error(`Python exited with code ${code}`));
-                return;
-            }
-            try {
-                resolve(JSON.parse(output));
-            } catch (err) {
-                reject(err);
-            }
-        });
-    });
-}
+
 
 export async function generateCosmicWeather(userId) {
+    console.log('[CW-START] userId=' + userId + ' time=' + new Date().toISOString());
     try {
         const userIdHash = hashUserId(userId);
+        console.log('[CW-STEP] Got hash');
         
         // Get user's timezone and today's local date
         const userTimezone = await getUserTimezone(userIdHash);
         const todayLocalDate = getLocalDateForTimezone(userTimezone);
+        console.log('[CW-STEP] Got timezone: ' + userTimezone + ', today: ' + todayLocalDate);
         
-        // Check if cosmic weather already exists for today (in user's timezone)
-        const { rows } = await db.query(
+                // Check if cosmic weather already exists for today (in user's timezone)
+        const { rows: existingWeather } = await db.query(
             `SELECT id, created_at_local_date FROM messages WHERE user_id_hash = $1 AND role = 'cosmic_weather' ORDER BY created_at DESC LIMIT 1`,
             [userIdHash]
         );
         
-        if (rows.length > 0) {
-            const createdAtLocalDate = rows[0].created_at_local_date;
+        if (existingWeather.length > 0) {
+            const createdAtLocalDate = existingWeather[0].created_at_local_date;
             if (!needsRegeneration(createdAtLocalDate, todayLocalDate)) {
                 return;
-            } else {
             }
-        } else {
         }
         
         const userInfo = await fetchUserPersonalInfo(userId);
@@ -55,12 +36,15 @@ export async function generateCosmicWeather(userId) {
         const userLanguage = await fetchUserLanguagePreference(userId);
         const oracleLanguage = await fetchUserOracleLanguagePreference(userId);
         
+        // Skip if user hasn't completed astrology setup yet (will be generated once they do)
         if (!astrologyInfo?.astrology_data) {
-            throw new Error('No astrology data found');
+            return;
         }
         
-        // Get planets with retrograde status and calculated degrees
-        const planetsData = await getCosmicWeatherPlanets();
+                // Get planets with retrograde status and calculated degrees
+        console.log('[CW-STEP] Getting planets...');
+        const planetsData = await getCurrentPlanets();
+        console.log('[CW-STEP] Got planets - count=' + planetsData.planets?.length);
         if (!planetsData.success) {
             throw new Error('Failed to calculate planets');
         }
@@ -92,8 +76,10 @@ Do NOT include tarot cards - this is pure astrological forecasting enriched by t
         
         const prompt = buildCosmicWeatherPrompt(userInfo, astrologyInfo, planets, planetsDetailed, userGreeting);
         
-        // Call Oracle - response is already in user's preferred language
+                // Call Oracle - response is already in user's preferred language
+        console.log('[CW-ORACLE-CALL] Starting oracle call...');
         const oracleResponses = await callOracle(systemPrompt, [], prompt, true);
+        console.log('[CW-ORACLE-DONE] Oracle returned. Full=' + (oracleResponses.full ? oracleResponses.full.length : 0) + ' Brief=' + (oracleResponses.brief ? oracleResponses.brief.length : 0));
         
         const cosmicWeatherDataFull = {
             text: oracleResponses.full,
@@ -120,8 +106,9 @@ Do NOT include tarot cards - this is pure astrological forecasting enriched by t
             generated_at: new Date().toISOString()
         };
         
-                        // Store message (no translation needed - response is already in user's language)
-        await storeMessage(
+                                // Store message (no translation needed - response is already in user's language)
+        console.log('[CW-STORE] Storing message...');
+        const storeResult = await storeMessage(
             userId, 
             'cosmic_weather', 
             cosmicWeatherDataFull, 
@@ -134,10 +121,11 @@ Do NOT include tarot cards - this is pure astrological forecasting enriched by t
             null,
             todayLocalDate
         );
+        console.log('[CW-STORED] Message stored. Result=' + storeResult);
         
+                    console.log('[CW-DONE] Generation complete!');
             } catch (err) {
-        console.error('[COSMIC-WEATHER-HANDLER] Error:', err.message);
-        console.error('[COSMIC-WEATHER-HANDLER] Stack:', err.stack);
+        console.error('[CW-ERROR] ' + err.message);
         throw err;
     }
 }

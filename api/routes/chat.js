@@ -18,8 +18,15 @@ router.post("/", verify2FA, async (req, res) => {
     const userId = req.userId;
 
     try {
-        // Store user message with proper encryption
-        await insertMessage(userId, 'user', message);
+                // Store user message with proper encryption
+        const userContent = { text: message };
+        const userIdHash = hashUserId(userId);
+        const { rows: tzRows } = await db.query(
+            `SELECT timezone FROM user_preferences WHERE user_id_hash = $1`,
+            [userIdHash]
+        );
+        const userTimezone = tzRows.length > 0 && tzRows[0].timezone ? tzRows[0].timezone : 'UTC';
+        await insertMessage(userId, 'user', userContent, null, userTimezone);
         
         // Enqueue for worker processing
         await enqueueMessage({ userId, message });
@@ -56,20 +63,19 @@ router.get("/opening/:userId", authorizeUser, verify2FA, async (req, res) => {
             [userIdHash, todayLocalDate]
         );
 
-        // If we already have an assistant message from today (opening), return without adding another
+                // If we already have an assistant message from today (opening), don't create a new one
         if (existingOpenings.length > 0) {
-            return res.json({
-                role: 'assistant',
-                content: 'Opening already sent today'
-            });
+            console.log('[CHAT] Opening already exists for today, skipping generation');
+            return res.status(204).json({});
         }
 
         // Fetch user's language preference
-        const { rows: prefRows } = await db.query(
-            `SELECT language FROM user_preferences WHERE user_id_hash = $1`,
+                const { rows: prefRows } = await db.query(
+            `SELECT language, oracle_language FROM user_preferences WHERE user_id_hash = $1`,
             [userIdHash]
         );
         const userLanguage = prefRows.length > 0 ? prefRows[0].language : 'en-US';
+        const oracleLanguage = prefRows.length > 0 ? prefRows[0].oracle_language : 'en-US';
 
         // Only generate opening if no messages exist yet OR if last message was from user
         const recentMessages = await getRecentMessages(userId)
@@ -87,17 +93,21 @@ router.get("/opening/:userId", authorizeUser, verify2FA, async (req, res) => {
         } catch (err) {
         }
 
-        let opening = await generatePsychicOpening({
+                        let opening = await generatePsychicOpening({
             clientName: clientName,
             recentMessages: recentMessages,
-            userLanguage: userLanguage
+            oracleLanguage: oracleLanguage
         });
+
+        // Store opening as proper content object
+        let openingContent = { text: opening };
 
         if (opening === '') {
             opening = `Hi ${clientName}, thank you for being here today. Before we begin, is there an area of your life you're hoping to get clarity on?`;
+            openingContent.text = opening;
         }
 
-                await insertMessage(userId, 'assistant', opening, null, userTimezone);
+        await insertMessage(userId, 'assistant', openingContent, null, userTimezone);
 
         res.json({
             role: 'assistant',

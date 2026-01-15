@@ -76,7 +76,7 @@ export default function ChatMessage({ msg, defaultShowBrief = true, voiceEnabled
   const { speak, stop, pause, resume, isPlaying, isPaused, isLoading, error, isSupported, progress } = useSpeech();
   const [hasAutoPlayed, setHasAutoPlayed] = useState(false);
   
-  let fullText = msg.content;
+  let fullText = msg.content || '';
   let briefText = null;
   let cards = null;
 

@@ -18,8 +18,7 @@ export async function generatePsychicOpening({
     recentMessages,
     oracleLanguage = 'en-US'
 }) {
-    // Map oracle language code to friendly name for LLM instruction
-    // Supports: en-US, en-GB, es-ES, es-MX, es-DO, fr-FR, fr-CA, de-DE, it-IT, ja-JP, pt-BR, zh-CN
+    // Use shared language mapper - supports all regional variants (es-MX, fr-CA, es-DO, etc.)
     const languageName = getLanguageNameForOracle(oracleLanguage);
     
     // Mystical system prompt - oracle generates varied, authentic greetings

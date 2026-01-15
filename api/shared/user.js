@@ -22,9 +22,24 @@ export async function insertMessage(userId, role, content, contentBrief = null, 
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
     const userIdHash = hashUserId(userId);
     const localDate = getLocalDateForTimezone(timezone);
-    await db.query(
-        `INSERT INTO messages(user_id_hash, role, content_full_encrypted, content_brief_encrypted, response_type, created_at_local_date) 
-         VALUES($1, $2, pgp_sym_encrypt($3, $4), ${contentBrief ? 'pgp_sym_encrypt($5, $4)' : 'NULL'}, ${contentBrief ? "'both'" : "'full'"}, $6)`,
-        contentBrief ? [userIdHash, role, content, ENCRYPTION_KEY, contentBrief, localDate] : [userIdHash, role, content, ENCRYPTION_KEY, localDate]
-    );
+    
+    // Ensure content is stringified if it's an object
+    const contentStr = typeof content === 'object' ? JSON.stringify(content) : content;
+    const contentBriefStr = contentBrief ? (typeof contentBrief === 'object' ? JSON.stringify(contentBrief) : contentBrief) : null;
+    const responseType = contentBriefStr ? 'both' : 'full';
+    
+    // Use parameterized query - no string interpolation
+    if (contentBriefStr) {
+        await db.query(
+            `INSERT INTO messages(user_id_hash, role, content_full_encrypted, content_brief_encrypted, response_type, created_at_local_date) 
+             VALUES($1, $2, pgp_sym_encrypt($3, $4), pgp_sym_encrypt($5, $4), $6, $7)`,
+            [userIdHash, role, contentStr, ENCRYPTION_KEY, contentBriefStr, responseType, localDate]
+        );
+    } else {
+        await db.query(
+            `INSERT INTO messages(user_id_hash, role, content_full_encrypted, content_brief_encrypted, response_type, created_at_local_date) 
+             VALUES($1, $2, pgp_sym_encrypt($3, $4), NULL, $5, $6)`,
+            [userIdHash, role, contentStr, ENCRYPTION_KEY, responseType, localDate]
+        );
+    }
 }

@@ -55,11 +55,36 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
             return processingResponse(res, 'Generating today\'s cosmic weather...', 'generating');
         }
         
+                // Ensure birth_chart is properly formatted for frontend
+        const formattedBirthChart = todaysWeather.birth_chart ? {
+          rising_sign: todaysWeather.birth_chart.rising_sign,
+          moon_sign: todaysWeather.birth_chart.moon_sign,
+          sun_sign: todaysWeather.birth_chart.sun_sign,
+          sun_degree: todaysWeather.birth_chart.sun_degree,
+          moon_degree: todaysWeather.birth_chart.moon_degree,
+          rising_degree: todaysWeather.birth_chart.rising_degree,
+          venus_sign: todaysWeather.birth_chart.venus_sign,
+          venus_degree: todaysWeather.birth_chart.venus_degree,
+          mars_sign: todaysWeather.birth_chart.mars_sign,
+          mars_degree: todaysWeather.birth_chart.mars_degree,
+          mercury_sign: todaysWeather.birth_chart.mercury_sign,
+          mercury_degree: todaysWeather.birth_chart.mercury_degree
+        } : null;
+        
+        // Ensure planets array has all required fields
+        const formattedPlanets = Array.isArray(todaysWeather.planets) ? todaysWeather.planets.map(p => ({
+          icon: p.icon,
+          name: p.name,
+          sign: p.sign,
+          degree: p.degree,
+          retrograde: p.retrograde || false
+        })) : [];
+        
         res.json({
             weather: todaysWeather.text,
             brief: briefWeather?.text || null,
-            birthChart: todaysWeather.birth_chart,
-            currentPlanets: todaysWeather.planets
+            birthChart: formattedBirthChart,
+            currentPlanets: formattedPlanets
         });
         } catch (err) {
         return serverError(res, 'Failed to fetch cosmic weather');
