@@ -12,6 +12,7 @@
 import { checkUserCompliance } from '../shared/complianceChecker.js';
 import logger from '../shared/logger.js';
 import { complianceError } from '../utils/responses.js';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 /**
  * Middleware: Compliance gate
@@ -47,13 +48,14 @@ export async function complianceGate(req, res, next) {
       });
     }
     
-    // User is compliant or only needs to see notification (MINOR changes)
+        // User is compliant or only needs to see notification (MINOR changes)
     next();
   } catch (error) {
-    
     // Don't block access on error - log it and allow passage
     // This prevents legitimate users from being locked out
-    console.error('[COMPLIANCE-GATE] Error:', error.message);
+    logErrorFromCatch(error, 'middleware-compliance', 'Compliance check').catch(() => {
+      // Silent fail - don't crash
+    });
     next();
   }
 }

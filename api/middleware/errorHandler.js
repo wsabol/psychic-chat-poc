@@ -8,6 +8,8 @@
  * - User existence (don't confirm/deny user exists)
  */
 
+import { logErrorToDB } from '../shared/errorLogger.js';
+
 /**
  * Safe error response
  * Returns generic error to client, logs details internally
@@ -97,7 +99,17 @@ function logErrorDetails(err, req) {
     // Don't include the full SQL query or field names
   }
 
-  console.error('[ERROR]', JSON.stringify(details, null, 2));
+  // Log to database asynchronously
+  logErrorToDB({
+    service: 'error-handler',
+    errorMessage: `${req.method} ${req.path}: ${err.message}`,
+    severity: 'error',
+    context: `${req.method} ${req.path}`,
+    errorStack: err.stack,
+    ipAddress: req.ip
+  }).catch(() => {
+    // Silent fail - don't crash if logging fails
+  });
 }
 
 /**
@@ -258,11 +270,19 @@ export function validateRequest(schema) {
  */
 export async function logSecurityEvent(type, details, req) {
   try {
+    // Log security event to database
+    await logErrorToDB({
+      service: 'security',
+      errorMessage: `Security event: ${type}`,
+      severity: 'warning',
+      context: type,
+      ipAddress: req?.ip
+    });
 
     // Could send to security monitoring service
     // await sendToSecurityMonitoring(type, details);
   } catch (error) {
-    console.error('[SECURITY] Failed to log security event:', error);
+    // Silent fail - don't crash if logging fails
   }
 }
 

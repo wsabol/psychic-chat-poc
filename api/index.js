@@ -173,23 +173,23 @@ if (fs.existsSync('./certificates/key.pem') && fs.existsSync('./certificates/cer
         key: fs.readFileSync('./certificates/key.pem'),
         cert: fs.readFileSync('./certificates/cert.pem')
     };
-    server = https.createServer(options, app);
+        server = https.createServer(options, app);
     server.listen(PORT, () => {
+        console.log(`🔐 Psychic Chat API listening on HTTPS port ${PORT}`);
     });
     server.on('error', (err) => {
-        console.error(`❌ HTTPS Server Error: ${err.message}`);
         if (err.code === 'EADDRINUSE') {
-            console.error(`❌ Port ${PORT} is already in use`);
+            process.exit(1);
         }
         process.exit(1);
     });
 } else {
     server = app.listen(PORT, () => {
+        console.log(`✅ Psychic Chat API listening on HTTP port ${PORT}`);
     });
     server.on('error', (err) => {
-        console.error(`❌ Server Error: ${err.message}`);
         if (err.code === 'EADDRINUSE') {
-            console.error(`❌ Port ${PORT} is already in use`);
+            process.exit(1);
         }
         process.exit(1);
     });

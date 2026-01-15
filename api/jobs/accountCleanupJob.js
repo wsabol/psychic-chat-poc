@@ -9,6 +9,7 @@
 
 import { db } from '../shared/db.js';
 import { sendAccountReengagementEmail } from '../shared/emailService.js';
+import { logErrorFromCatch, logWarning } from '../shared/errorLogger.js';
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
 
@@ -34,8 +35,8 @@ export async function runAccountCleanupJob() {
 
     return { success: true, ...results };
 
-  } catch (error) {
-    console.error('[CLEANUP-JOB] Error:', error);
+    } catch (error) {
+    await logErrorFromCatch(error, 'cleanup', 'Run account cleanup job');
     return { success: false, error: error.message };
   }
 }
@@ -90,16 +91,20 @@ async function send6MonthReengagementEmails() {
           );
 
           emailsSent++;
-        } else {
-          console.error(`[REENGAGEMENT-6M] ❌ Failed to send to ${account.user_id}: ${emailSendResult.error}`);
+                } else {
+          await logWarning({
+            service: 'cleanup',
+            message: `Failed to send 6M reengagement email to ${account.user_id}`,
+            context: '6-month reengagement email'
+          });
         }
       } catch (e) {
-        console.error(`[REENGAGEMENT-6M] ❌ ${account.user_id}:`, e.message);
+        await logErrorFromCatch(e, 'cleanup', '6-month reengagement email');
       }
     }
     return emailsSent;
-  } catch (error) {
-    console.error('[REENGAGEMENT-6M] Error:', error);
+    } catch (error) {
+    await logErrorFromCatch(error, 'cleanup', 'Send 6-month reengagement emails');
     return 0;
   }
 }
@@ -154,16 +159,20 @@ async function send1YearReengagementEmails() {
           );
 
           emailsSent++;
-        } else {
-          console.error(`[REENGAGEMENT-1Y] ❌ Failed to send to ${account.user_id}: ${emailSendResult.error}`);
+                } else {
+          await logWarning({
+            service: 'cleanup',
+            message: `Failed to send 1Y reengagement email to ${account.user_id}`,
+            context: '1-year reengagement email'
+          });
         }
       } catch (e) {
-        console.error(`[REENGAGEMENT-1Y] ❌ ${account.user_id}:`, e.message);
+        await logErrorFromCatch(e, 'cleanup', '1-year reengagement email');
       }
     }
     return emailsSent;
-  } catch (error) {
-    console.error('[REENGAGEMENT-1Y] Error:', error);
+    } catch (error) {
+    await logErrorFromCatch(error, 'cleanup', 'Send 1-year reengagement emails');
     return 0;
   }
 }
@@ -211,13 +220,13 @@ async function permanentlyDeleteOldAccounts() {
 
         deletedCount++;
 
-      } catch (e) {
-        console.error(`[PERMANENT-DELETE] ❌ ${account.user_id}:`, e.message);
+            } catch (e) {
+        await logErrorFromCatch(e, 'cleanup', 'Permanent account deletion');
       }
     }
     return deletedCount;
-  } catch (error) {
-    console.error('[PERMANENT-DELETE] Error:', error);
+    } catch (error) {
+    await logErrorFromCatch(error, 'cleanup', 'Permanently delete old accounts');
     return 0;
   }
 }
@@ -236,8 +245,8 @@ export async function getCleanupJobStatus() {
       `
     );
     return stats.rows[0];
-  } catch (error) {
-    console.error('[CLEANUP-STATUS] Error:', error);
+    } catch (error) {
+    await logErrorFromCatch(error, 'cleanup', 'Get cleanup job status');
     return null;
   }
 }
@@ -280,8 +289,8 @@ export async function reactivateAccountFromReengagement(userId) {
     } else {
       return { success: false, message: 'Account not found or not in deletion status' };
     }
-  } catch (error) {
-    console.error('[REACTIVATION] Error:', error);
+    } catch (error) {
+    await logErrorFromCatch(error, 'cleanup', 'Reactivate account from reengagement');
     return { success: false, error: error.message };
   }
 }
@@ -307,8 +316,8 @@ export async function unsubscribeFromReengagementEmails(userId) {
     );
 
     return { success: true, message: 'You have been unsubscribed from re-engagement emails' };
-  } catch (error) {
-    console.error('[UNSUBSCRIBE] Error:', error);
+    } catch (error) {
+    await logErrorFromCatch(error, 'cleanup', 'Unsubscribe from reengagement emails');
     return { success: false, error: error.message };
   }
 }

@@ -6,6 +6,7 @@
 
 import cron from 'node-cron';
 import { runAccountCleanupJob, getCleanupJobStatus } from './accountCleanupJob.js';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 let cleanupJobHandle = null;
 
@@ -20,9 +21,11 @@ export function initializeScheduler() {
     await runAccountCleanupJob();
   });
 
-  // Optional: For testing, run immediately
+    // Optional: For testing, run immediately
   if (process.env.CLEANUP_RUN_ON_STARTUP === 'true') {
-    runAccountCleanupJob().catch(e => console.error('[SCHEDULER] Error:', e));
+    runAccountCleanupJob().catch(e => {
+      logErrorFromCatch(e, 'scheduler', 'Run cleanup job on startup');
+    });
   }
 
   return {
