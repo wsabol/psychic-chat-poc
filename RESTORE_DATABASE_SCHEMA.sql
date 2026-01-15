@@ -1,10 +1,13 @@
 -- Master SQL file for restoring database schema
--- Last Updated: 2025-01-09
--- This file restores the complete database schema for the Psychic Chat POC
+-- Last Updated: 2025-01-14
+-- This file contains the EXACT schema of the current production database
+-- plus the 3 missing tables required by the application code
 
--- Note: All user IDs are hashed using SHA-256
--- Note: All sensitive data (PII, tokens, IPs) are encrypted
--- Note: Default encryption uses database-level encryption keys from environment
+-- IMPORTANT: All user IDs are hashed using SHA-256
+-- IMPORTANT: All sensitive data (PII, tokens, IPs) are encrypted with pgcrypto
+-- IMPORTANT: Encryption key must match ENCRYPTION_KEY environment variable
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
 
 -- TABLE: user_personal_info
 CREATE TABLE IF NOT EXISTS user_personal_info (

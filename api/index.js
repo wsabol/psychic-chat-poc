@@ -154,8 +154,8 @@ app.use("/billing", authenticateToken, billingRoutes);
 
 
 
-// Initialize scheduled jobs
-initializeScheduler();
+// Initialize scheduled jobs (DISABLED - causing startup hang)
+// initializeScheduler();
 
 // Phase 5: Safe error handling (LATE in middleware chain - after all routes)
 app.use(errorHandler);
