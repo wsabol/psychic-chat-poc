@@ -6,6 +6,7 @@ import { migrateOnboardingData } from '../../shared/accountMigration.js';
 import { logAudit } from '../../shared/auditLog.js';
 import { createUserDatabaseRecords } from './helpers/userCreation.js';
 import { validationError, conflictError, serverError } from '../../utils/responses.js';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 const router = Router();
 
@@ -44,13 +45,12 @@ router.post('/register', async (req, res) => {
       details: { email }
     });
     
-    return res.status(201).json({
+        return res.status(201).json({
       success: true,
-      uid: userRecord.uid,
-      email: userRecord.email,
       message: 'User registered successfully. Please sign in.'
     });
-  } catch (err) {
+    } catch (err) {
+    await logErrorFromCatch(err, 'auth', 'User registration');
     if (err.code === 'auth/email-already-exists') {
       return conflictError(res, 'Email address already registered');
     }
@@ -87,8 +87,9 @@ router.post('/register-firebase-user', async (req, res) => {
       details: { email }
     });
 
-    return res.json({ success: true, userId });
+    return res.json({ success: true, message: 'User registered successfully.' });
   } catch (err) {
+    await logErrorFromCatch(err, 'auth', 'Firebase user registration');
     return serverError(res, 'Failed to register user');
   }
 });
@@ -137,25 +138,22 @@ router.post('/register-and-migrate', async (req, res) => {
         onboarding_horoscope
       });
       
-      return res.status(201).json({
+            return res.status(201).json({
         success: true,
-        uid: newUserId,
-        email: userRecord.email,
         message: 'Account created and onboarding data migrated successfully',
         migration: migrationResult
       });
       
     } catch (migrationErr) {
-      return res.status(201).json({
+            return res.status(201).json({
         success: true,
-        uid: newUserId,
-        email: userRecord.email,
         message: 'Account created but data migration encountered issues',
         warning: migrationErr.message
       });
-    }
+  }
     
   } catch (err) {
+    await logErrorFromCatch(err, 'auth', 'Register and migrate account');
     if (err.code === 'auth/email-already-exists') {
       return conflictError(res, 'Email address already registered');
     }

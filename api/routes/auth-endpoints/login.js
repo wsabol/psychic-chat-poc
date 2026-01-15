@@ -2,6 +2,7 @@ import { Router } from 'express';
 import logger from '../../shared/logger.js';
 import { db } from '../../shared/db.js';
 import { logAudit } from '../../shared/auditLog.js';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 import { createUserDatabaseRecords, getUserProfile } from './helpers/userCreation.js';
 import { recordLoginAttempt } from './helpers/accountLockout.js';
 import { hashUserId } from '../../shared/hashUtils.js';
@@ -99,7 +100,8 @@ router.post('/log-login-success', async (req, res) => {
     });
 
     return res.json({ success: true });
-  } catch (err) {
+    } catch (err) {
+    await logErrorFromCatch(err, 'auth', 'User login success logging');
     return serverError(res, 'Failed to log login');
   }
 });
@@ -115,7 +117,8 @@ router.post('/log-login-attempt', async (req, res) => {
 
     const result = await recordLoginAttempt(userId, success, reason, req);
     return res.json(result);
-  } catch (error) {
+    } catch (error) {
+    await logErrorFromCatch(error, 'auth', 'Login attempt recording');
     return serverError(res, 'Failed to log login attempt');
   }
 });
@@ -166,7 +169,8 @@ router.post('/check-account-lockout/:userId', async (req, res) => {
       locked: false,
       message: 'Account is not locked'
     });
-  } catch (error) {
+    } catch (error) {
+    await logErrorFromCatch(error, 'auth', 'Account lockout check');
     return serverError(res, 'Failed to check account lockout');
   }
 });

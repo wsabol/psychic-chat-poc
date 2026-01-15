@@ -76,10 +76,12 @@
 
 .message-content {
   max-width: 85%;
+  min-width: 50px;
   padding: var(--spacing-md) var(--spacing-lg);
   border-radius: 12px;
   word-wrap: break-word;
   line-height: 1.5;
+  width: fit-content;
 }
 
 .chat-message-user .message-content {
@@ -98,8 +100,10 @@
 @media (max-width: 767px) {
   .message-content {
     max-width: 90%;
+    min-width: 50px;
     padding: var(--spacing-md) var(--spacing-md);
     font-size: 0.9rem;
+    width: fit-content;
   }
 }
 

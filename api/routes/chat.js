@@ -130,12 +130,12 @@ router.get("/history/:userId", authorizeUser, verify2FA, async (req, res) => {
         
                 // Fetch messages from database
         // Safe decrypt: handle NULL values gracefully with COALESCE
-        const query = `SELECT 
+                const query = `SELECT 
             id, 
             role, 
             language_code,
-            COALESCE(pgp_sym_decrypt(content_full_encrypted, $2)::text, '{}') as content_full,
-            COALESCE(pgp_sym_decrypt(content_brief_encrypted, $2)::text, '{}') as brief_full
+            pgp_sym_decrypt(content_full_encrypted, $2)::text as content_full,
+            pgp_sym_decrypt(content_brief_encrypted, $2)::text as brief_full
         FROM messages 
         WHERE user_id_hash = $1 
         ORDER BY created_at ASC`;
@@ -147,9 +147,11 @@ router.get("/history/:userId", authorizeUser, verify2FA, async (req, res) => {
             let fullContent = msg.content_full;
             let briefContent = msg.brief_full;
             
-            // Parse JSON if valid
+                        // Parse JSON if valid (skip if null or empty object string)
             try {
-                if (fullContent && fullContent !== '{}') fullContent = JSON.parse(fullContent);
+                if (fullContent && fullContent !== '{}' && fullContent !== null) {
+                    fullContent = JSON.parse(fullContent);
+                }
             } catch (e) {
                 // Keep as string if not JSON
             }
@@ -159,12 +161,12 @@ router.get("/history/:userId", authorizeUser, verify2FA, async (req, res) => {
                 // Keep as string if not JSON
             }
             
-            return {
+                        return {
                 id: msg.id,
                 role: msg.role,
                 language_code: msg.language_code,
                 content: fullContent || briefContent,
-                brief_content: briefContent || fullContent
+                brief_content: briefContent  // DO NOT fallback to fullContent - greetings have NO brief
             };
         });
         

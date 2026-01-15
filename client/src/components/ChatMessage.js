@@ -114,8 +114,10 @@ export default function ChatMessage({ msg, defaultShowBrief = true, voiceEnabled
     }
   }
 
-  // Check if we have both brief and full (determines if toggle should show)
-  const hasToggle = msg.role === 'assistant' && briefText;
+    // Check if we have both brief and full (determines if toggle should show)
+  // If briefText is empty object, treat as no brief content
+  // Only show toggle if briefText is not null (greeting has null brief_content)
+  const hasToggle = msg.role === 'assistant' && briefText !== null;
   const displayText = (showingBrief && briefText) ? briefText : fullText;
 
   // Auto-play if voice_enabled and this is a new assistant message

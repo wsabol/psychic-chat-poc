@@ -349,3 +349,66 @@ CREATE INDEX IF NOT EXISTS idx_app_analytics_device_type ON app_analytics(device
 CREATE INDEX IF NOT EXISTS idx_app_analytics_os_name ON app_analytics(os_name);
 CREATE INDEX IF NOT EXISTS idx_app_analytics_browser_name ON app_analytics(browser_name);
 CREATE INDEX IF NOT EXISTS idx_app_analytics_event_action ON app_analytics(event_action);
+
+-- TABLE: error_logs (NEW - Centralized error tracking)
+CREATE TABLE IF NOT EXISTS error_logs (
+    id SERIAL PRIMARY KEY,
+    service VARCHAR(50) NOT NULL,
+    error_message VARCHAR(500) NOT NULL,
+    severity VARCHAR(20) DEFAULT 'error',
+    user_id_hash VARCHAR(255),
+    context VARCHAR(255),
+    error_stack_encrypted BYTEA,
+    ip_address_encrypted BYTEA,
+    is_resolved BOOLEAN DEFAULT FALSE,
+    resolution_notes VARCHAR(1000),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_error_logs_service ON error_logs(service);
+CREATE INDEX IF NOT EXISTS idx_error_logs_severity ON error_logs(severity);
+CREATE INDEX IF NOT EXISTS idx_error_logs_created_at ON error_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_error_logs_user_id_hash ON error_logs(user_id_hash);
+CREATE INDEX IF NOT EXISTS idx_error_logs_resolved ON error_logs(is_resolved);
+
+CREATE SEQUENCE IF NOT EXISTS error_logs_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER SEQUENCE error_logs_id_seq OWNED BY error_logs.id;
+ALTER TABLE ONLY error_logs ALTER COLUMN id SET DEFAULT nextval('error_logs_id_seq'::regclass);
+
+CREATE OR REPLACE FUNCTION update_error_logs_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS update_error_logs_timestamp_trigger ON error_logs;
+CREATE TRIGGER update_error_logs_timestamp_trigger
+BEFORE UPDATE ON error_logs
+FOR EACH ROW
+EXECUTE FUNCTION update_error_logs_timestamp();
+
+CREATE OR REPLACE VIEW critical_errors_unresolved AS
+SELECT id, service, error_message, user_id_hash, context, created_at, severity
+FROM error_logs
+WHERE severity = 'critical' 
+  AND is_resolved = false 
+  AND created_at > NOW() - INTERVAL '24 hours'
+ORDER BY created_at DESC;
+
+CREATE OR REPLACE VIEW error_logs_summary AS
+SELECT service, severity, COUNT(*) AS error_count,
+       DATE(created_at) AS error_date, COUNT(DISTINCT user_id_hash) AS affected_users
+FROM error_logs
+WHERE created_at > NOW() - INTERVAL '7 days'
+GROUP BY service, severity, DATE(created_at)
+ORDER BY DATE(created_at) DESC, COUNT(*) DESC;

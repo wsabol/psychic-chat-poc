@@ -31,9 +31,12 @@ export async function getUserTimezone(userIdHash) {
 export function getLocalDateForTimezone(timezone = 'UTC') {
   const now = new Date();
   
+  // Ensure timezone is a valid string, default to UTC if null/undefined
+  const validTimezone = timezone && typeof timezone === 'string' ? timezone : 'UTC';
+  
   try {
     const formatter = new Intl.DateTimeFormat('en-CA', {
-      timeZone: timezone,
+      timeZone: validTimezone,
       year: 'numeric',
       month: '2-digit',
       day: '2-digit'
@@ -41,7 +44,10 @@ export function getLocalDateForTimezone(timezone = 'UTC') {
     
     return formatter.format(now);
   } catch (err) {
-    console.error(`[TIMEZONE] Invalid timezone: ${timezone}, defaulting to UTC`);
+    // Only log error if timezone is actually invalid (not just null)
+    if (timezone && timezone !== 'UTC') {
+      console.error(`[TIMEZONE] Invalid timezone: ${timezone}, defaulting to UTC`);
+    }
     return new Date().toISOString().split('T')[0];
   }
 }
