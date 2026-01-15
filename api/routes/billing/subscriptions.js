@@ -47,7 +47,7 @@ router.post('/create-subscription', authenticateToken, async (req, res) => {
       price_amount: subscription.items?.data?.[0]?.price?.unit_amount,
       price_interval: subscription.items?.data?.[0]?.price?.recurring?.interval,
     }).catch(err => {
-      console.error('[BILLING] Warning - failed to store subscription in DB:', err.message);
+      logErrorFromCatch(error, 'app', 'billing');
       // Don't fail - subscription was created in Stripe
     });
     res.json({
