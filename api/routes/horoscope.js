@@ -5,7 +5,7 @@ import { authenticateToken, authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
 import { getUserTimezone, getLocalDateForTimezone, needsRegeneration } from "../shared/timezoneHelper.js";
 import { checkUserCompliance } from "../shared/complianceChecker.js";
-import { validationError, serverError, notFoundError } from "../utils/responses.js";
+import { validationError, serverError, notFoundError, complianceError } from "../utils/responses.js";
 
 
 const router = Router();
@@ -59,28 +59,23 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
         
 
         
-        // Check if user is temporary (free trial) - EXEMPT from compliance checks
+                // Check if user is temporary (free trial) - EXEMPT from compliance checks
         const { rows: userRows } = await db.query(
             `SELECT pgp_sym_decrypt(email_encrypted, $1) as email FROM user_personal_info WHERE user_id = $2`,
             [process.env.ENCRYPTION_KEY, userId]
         );
         const isTemporaryUser = userRows.length > 0 && userRows[0].email && userRows[0].email.startsWith('temp_');
         
-                // Only enforce compliance for established (permanent) users
+        // Only enforce compliance for established (permanent) users
         // Temporary/free trial users are EXEMPT
         if (!isTemporaryUser) {
             const compliance = await checkUserCompliance(userId);
             if (compliance.blocksAccess && compliance.termsVersion && compliance.privacyVersion) {
-                return res.status(451).json({
-                    error: 'COMPLIANCE_UPDATE_REQUIRED',
-                    message: 'Your acceptance of updated terms is required to continue',
-                    details: {
-                        requiresTermsUpdate: compliance.termsVersion.requiresReacceptance,
-                        requiresPrivacyUpdate: compliance.privacyVersion.requiresReacceptance,
-                        termsVersion: compliance.termsVersion.current,
-                        privacyVersion: compliance.privacyVersion.current
-                    },
-                    redirect: '/update-consent'
+                return complianceError(res, 'Your acceptance of updated terms is required to continue', {
+                    requiresTermsUpdate: compliance.termsVersion.requiresReacceptance,
+                    requiresPrivacyUpdate: compliance.privacyVersion.requiresReacceptance,
+                    termsVersion: compliance.termsVersion.current,
+                    privacyVersion: compliance.privacyVersion.current
                 });
             }
         }
@@ -129,8 +124,8 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
                     ? JSON.parse(brief)
                     : brief;
             }
-                } catch (e) {
-            return res.status(500).json({ error: `Failed to parse horoscope data` });
+                                } catch (e) {
+            return serverError(res, 'Failed to parse horoscope data');
         }
         
                 if (!horoscope || !horoscope.generated_at) {

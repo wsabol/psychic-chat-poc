@@ -89,6 +89,9 @@ export function validateJSON(jsonString) {
   }
 }
 
+// Import response functions
+import { validationError, payloadTooLargeError, rateLimitError } from '../utils/responses.js';
+
 /**
  * Express middleware to validate request payload
  */
@@ -103,13 +106,11 @@ export function validateRequestPayload(req, res, next) {
     }
   }
 
-  // Check payload size (5MB limit)
+    // Check payload size (5MB limit)
   const maxSize = 5 * 1024 * 1024;
   const contentLength = parseInt(req.get('content-length') || 0);
   if (contentLength > maxSize) {
-    return res.status(413).json({
-      error: 'Payload too large. Maximum size is 5MB'
-    });
+    return payloadTooLargeError(res);
   }
 
   // Check for suspicious patterns in URL
@@ -126,11 +127,9 @@ export function validateRequestPayload(req, res, next) {
     '..%2f'
   ];
 
-  for (const pattern of suspiciousPatterns) {
+    for (const pattern of suspiciousPatterns) {
     if (url.includes(pattern)) {
-      return res.status(400).json(
-        res, 'Invalid request'
-      );
+      return validationError(res, 'Invalid request');
     }
   }
 
@@ -290,12 +289,9 @@ export function rateLimit(requests = {}, maxRequests = 100, windowMs = 60000) {
       requests[ip].push(now);
     }
 
-    // Check limit
+        // Check limit
     if (requests[ip].length > maxRequests) {
-      return res.status(429).json({
-        error: 'Too many requests',
-        retryAfter: Math.ceil(windowMs / 1000)
-      });
+      return rateLimitError(res, Math.ceil(windowMs / 1000));
     }
 
     next();

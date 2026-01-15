@@ -155,12 +155,13 @@ router.post('/check-account-lockout/:userId', async (req, res) => {
         details: { minutesRemaining }
       });
 
-      return res.status(429).json({
+            return res.status(429).json({
         success: false,
         locked: true,
         message: `Account locked due to too many failed login attempts. Try again in ${minutesRemaining} minute${minutesRemaining !== 1 ? 's' : ''}.`,
         unlockAt: lockout.lock_expires_at,
-        minutesRemaining
+        minutesRemaining,
+        errorCode: 'ACCOUNT_LOCKED_429'
       });
     }
 

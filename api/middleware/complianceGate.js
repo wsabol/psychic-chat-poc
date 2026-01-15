@@ -11,6 +11,7 @@
 
 import { checkUserCompliance } from '../shared/complianceChecker.js';
 import logger from '../shared/logger.js';
+import { complianceError } from '../utils/responses.js';
 
 /**
  * Middleware: Compliance gate
@@ -36,19 +37,13 @@ export async function complianceGate(req, res, next) {
     // Attach compliance info to request for later use
     req.compliance = compliance;
     
-    // If user has MAJOR version changes, block access and require re-consent
+        // If user has MAJOR version changes, block access and require re-consent
     if (compliance.blocksAccess) {
-      return res.status(451).json({
-        error: 'COMPLIANCE_UPDATE_REQUIRED',
-        message: 'You must review and accept updated terms to continue',
-        details: {
-          requiresTermsUpdate: compliance.termsVersion.requiresReacceptance,
-          requiresPrivacyUpdate: compliance.privacyVersion.requiresReacceptance,
-          termsVersion: compliance.termsVersion,
-          privacyVersion: compliance.privacyVersion
-        },
-        // HTTP 451 = "Unavailable For Legal Reasons"
-        redirect: '/update-consent'
+      return complianceError(res, 'You must review and accept updated terms to continue', {
+        requiresTermsUpdate: compliance.termsVersion.requiresReacceptance,
+        requiresPrivacyUpdate: compliance.privacyVersion.requiresReacceptance,
+        termsVersion: compliance.termsVersion,
+        privacyVersion: compliance.privacyVersion
       });
     }
     
@@ -112,14 +107,9 @@ export async function strictComplianceCheck(req, res, next) {
     
     const compliance = await checkUserCompliance(userId);
     
-    // Block if NOT compliant (any version mismatch)
+        // Block if NOT compliant (any version mismatch)
     if (!compliance.compliant) {
-      return res.status(451).json({
-        error: 'COMPLIANCE_UPDATE_REQUIRED',
-        message: 'You must review and accept updated terms to continue',
-        details: compliance,
-        redirect: '/update-consent'
-      });
+      return complianceError(res, 'You must review and accept updated terms to continue', compliance);
     }
     
     next();

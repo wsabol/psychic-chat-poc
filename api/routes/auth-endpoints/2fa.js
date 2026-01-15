@@ -7,7 +7,7 @@ import { isAccountLocked } from './helpers/accountLockout.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { insertVerificationCode, getVerificationCode } from '../../shared/encryptedQueries.js';
 import { extractDeviceName } from '../../shared/deviceFingerprint.js';
-import { validationError, serverError, forbiddenError } from '../../utils/responses.js';
+import { validationError, serverError, forbiddenError, rateLimitError } from '../../utils/responses.js';
 
 const router = Router();
 
@@ -95,7 +95,7 @@ router.post('/check-2fa/:userId', async (req, res) => {
 
     // Check if account is locked
     const lockStatus = await isAccountLocked(userId);
-    if (lockStatus.locked) {
+        if (lockStatus.locked) {
       await logAudit(db, {
         userId,
         action: 'LOGIN_BLOCKED_ACCOUNT_LOCKED',
@@ -108,12 +108,14 @@ router.post('/check-2fa/:userId', async (req, res) => {
         details: { minutesRemaining: lockStatus.minutesRemaining }
       });
 
+      // Return custom rate limit with lock details
       return res.status(429).json({
         success: false,
         locked: true,
         message: `Account locked. Try again in ${lockStatus.minutesRemaining} minute${lockStatus.minutesRemaining !== 1 ? 's' : ''}.`,
         unlockAt: lockStatus.unlockAt,
-        minutesRemaining: lockStatus.minutesRemaining
+        minutesRemaining: lockStatus.minutesRemaining,
+        errorCode: 'ACCOUNT_LOCKED_429'
       });
     }
 

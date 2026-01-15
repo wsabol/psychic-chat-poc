@@ -8,7 +8,7 @@ import { db } from "../shared/db.js";
 import { containsHealthContent, detectHealthKeywords, getBlockedResponse } from "../shared/healthGuardrail.js";
 import { logAudit } from "../shared/auditLog.js";
 import { hashUserId } from "../shared/hashUtils.js";
-import { validationError, serverError } from "../utils/responses.js";
+import { validationError, serverError, noContentResponse } from "../utils/responses.js";
 import { getLocalDateForTimezone } from "../shared/timezoneHelper.js";
 
 const router = Router();
@@ -63,10 +63,9 @@ router.get("/opening/:userId", authorizeUser, verify2FA, async (req, res) => {
             [userIdHash, todayLocalDate]
         );
 
-                // If we already have an assistant message from today (opening), don't create a new one
+                        // If we already have an assistant message from today (opening), don't create a new one
         if (existingOpenings.length > 0) {
-            console.log('[CHAT] Opening already exists for today, skipping generation');
-            return res.status(204).json({});
+            return noContentResponse(res);
         }
 
         // Fetch user's language preference

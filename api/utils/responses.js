@@ -32,6 +32,15 @@ export const ErrorCodes = {
   UNPROCESSABLE: 'UNPROCESSABLE_422',
   INVALID_STATE: 'INVALID_STATE_422',
   
+  // Rate limiting (429)
+  RATE_LIMIT_EXCEEDED: 'RATE_LIMIT_EXCEEDED_429',
+  
+  // Payload errors (413)
+  PAYLOAD_TOO_LARGE: 'PAYLOAD_TOO_LARGE_413',
+  
+  // Compliance errors (451)
+  COMPLIANCE_UPDATE_REQUIRED: 'COMPLIANCE_UPDATE_REQUIRED_451',
+  
   // Server errors (500)
   SERVER_ERROR: 'SERVER_ERROR_500',
   DATABASE_ERROR: 'DATABASE_ERROR_500',
@@ -137,4 +146,40 @@ export function healthContentBlockedError(res, message = 'Request contains healt
     reason: 'health_content_blocked',
     timestamp: new Date().toISOString()
   });
+}
+
+// Compliance Error (451) - Unavailable For Legal Reasons
+export function complianceError(res, message = 'Compliance update required', details = {}) {
+  return res.status(451).json({
+    error: 'COMPLIANCE_UPDATE_REQUIRED',
+    message,
+    details,
+    redirect: '/update-consent',
+    errorCode: ErrorCodes.COMPLIANCE_UPDATE_REQUIRED
+  });
+}
+
+// Rate Limit Error (429) - Too Many Requests
+export function rateLimitError(res, retryAfterSeconds = 60) {
+  return res.status(429).json({
+    error: 'RATE_LIMIT_EXCEEDED',
+    message: 'Too many requests',
+    retryAfter: retryAfterSeconds,
+    errorCode: ErrorCodes.RATE_LIMIT_EXCEEDED
+  });
+}
+
+// Payload Too Large (413) - Request Entity Too Large
+export function payloadTooLargeError(res, message = 'Payload too large. Maximum size is 5MB') {
+  return res.status(413).json({
+    error: 'PAYLOAD_TOO_LARGE',
+    message,
+    maxSize: '5MB',
+    errorCode: ErrorCodes.PAYLOAD_TOO_LARGE
+  });
+}
+
+// No Content Response (204) - Successful with no content
+export function noContentResponse(res) {
+  return res.status(204).json({});
 }
