@@ -4,7 +4,7 @@ import { enqueueMessage } from "../shared/queue.js";
 import { authenticateToken, authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
 import { getLocalDateForTimezone } from "../shared/timezoneHelper.js";
-import { validationError, serverError } from "../utils/responses.js";
+import { validationError, serverError, notFoundError } from "../utils/responses.js";
 
 const router = Router();
 
@@ -55,7 +55,7 @@ router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
                 message: `[SYSTEM] Generate moon phase commentary for ${phase}`
             }).catch(() => {});
             
-            return res.status(404).json({ error: 'No moon phase commentary found. Generating now...' });
+            return notFoundError(res,  'No moon phase commentary found. Generating now...' );
         }
         
         // Process the moon phase row
@@ -64,7 +64,7 @@ router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
         let brief = row.content_brief;
         
                 if (!content) {
-            return res.status(404).json({ error: `Moon phase data is empty` });
+            return notFoundError(res, `Moon phase data is empty` );
         }
         
         let commentary, briefContent;
@@ -82,7 +82,7 @@ router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
         }
         
                 if (!commentary || !commentary.generated_at) {
-            return res.status(404).json({ error: `Moon phase data is incomplete` });
+            return notFoundError(res, 'Moon phase data is incomplete');
         }
         
         res.json({ 

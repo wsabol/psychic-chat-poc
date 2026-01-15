@@ -540,7 +540,7 @@ export function authenticateToken(req, res, next) {
           code: 'TOKEN_EXPIRED'
         });
       }
-      return res.status(403).json({ error: 'Invalid token' });
+      return forbiddenError(res, 'Invalid token' );
     }
     req.user = user;
     next();

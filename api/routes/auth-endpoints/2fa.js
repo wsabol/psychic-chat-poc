@@ -7,7 +7,7 @@ import { isAccountLocked } from './helpers/accountLockout.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { insertVerificationCode, getVerificationCode } from '../../shared/encryptedQueries.js';
 import { extractDeviceName } from '../../shared/deviceFingerprint.js';
-import { validationError, serverError } from '../../utils/responses.js';
+import { validationError, serverError, forbiddenError } from '../../utils/responses.js';
 
 const router = Router();
 
@@ -261,7 +261,7 @@ router.get('/check-current-device-trust/:userId', authenticateToken, async (req,
     const { userId } = req.params;
     
     if (req.user.uid !== userId) {
-      return res.status(403).json({ error: 'Unauthorized' });
+      return forbiddenError(res, 'Unauthorized');
     }
 
     const userIdHash = hashUserId(userId);
@@ -304,7 +304,7 @@ router.post('/trust-current-device/:userId', authenticateToken, async (req, res)
     const { userId } = req.params;
     
     if (req.user.uid !== userId) {
-      return res.status(403).json({ error: 'Unauthorized' });
+      return forbiddenError(res, 'Unauthorized');
     }
 
     const userIdHash = hashUserId(userId);
@@ -362,7 +362,7 @@ router.post('/revoke-current-device-trust/:userId', authenticateToken, async (re
     const { userId } = req.params;
     
     if (req.user.uid !== userId) {
-      return res.status(403).json({ error: 'Unauthorized' });
+      return forbiddenError(res, 'Unauthorized');
     }
 
     const userIdHash = hashUserId(userId);
@@ -405,7 +405,7 @@ router.get('/trusted-devices/:userId', authenticateToken, async (req, res) => {
     const { userId } = req.params;
     
     if (req.user.uid !== userId) {
-      return res.status(403).json({ error: 'Unauthorized' });
+      return forbiddenError(res, 'Unauthorized');
     }
 
     const userIdHash = hashUserId(userId);
@@ -440,7 +440,7 @@ router.delete('/trusted-device/:userId/:deviceId', authenticateToken, async (req
     const { userId, deviceId } = req.params;
     
     if (req.user.uid !== userId) {
-      return res.status(403).json({ error: 'Unauthorized' });
+      return forbiddenError(res, 'Unauthorized');
     }
 
     const userIdHash = hashUserId(userId);

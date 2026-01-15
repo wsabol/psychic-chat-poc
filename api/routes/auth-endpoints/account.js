@@ -5,7 +5,7 @@ import { db } from '../../shared/db.js';
 import { migrateOnboardingData } from '../../shared/accountMigration.js';
 import { logAudit } from '../../shared/auditLog.js';
 import { createUserDatabaseRecords } from './helpers/userCreation.js';
-import { validationError, serverError } from '../../utils/responses.js';
+import { validationError, serverError, createdResponse } from '../../utils/responses.js';
 
 const router = Router();
 
@@ -44,7 +44,7 @@ router.post('/register', async (req, res) => {
       details: { email }
     });
     
-    return res.status(201).json({
+        return createdResponse(res, {
       success: true,
       uid: userRecord.uid,
       email: userRecord.email,
@@ -137,7 +137,7 @@ router.post('/register-and-migrate', async (req, res) => {
         onboarding_horoscope
       });
       
-      return res.status(201).json({
+            return createdResponse(res, {
         success: true,
         uid: newUserId,
         email: userRecord.email,
@@ -146,7 +146,7 @@ router.post('/register-and-migrate', async (req, res) => {
       });
       
     } catch (migrationErr) {
-      return res.status(201).json({
+            return createdResponse(res, {
         success: true,
         uid: newUserId,
         email: userRecord.email,

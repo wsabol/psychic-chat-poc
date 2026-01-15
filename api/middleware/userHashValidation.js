@@ -26,7 +26,7 @@ export function validateUserHash(req, res, next) {
 
   // Verify that the hashed ID matches the JWT user ID
   if (!verifyUserHash(jwtUserId, hashedId)) {
-    return res.status(403).json({ error: 'Access denied' });
+    return forbiddenError(res, 'Access denied' );
   }
 
   // Hash is valid - replace the hashed param with the real user ID for downstream handlers

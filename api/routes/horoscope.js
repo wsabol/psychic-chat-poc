@@ -5,7 +5,7 @@ import { authenticateToken, authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
 import { getUserTimezone, getLocalDateForTimezone, needsRegeneration } from "../shared/timezoneHelper.js";
 import { checkUserCompliance } from "../shared/complianceChecker.js";
-import { validationError, serverError } from "../utils/responses.js";
+import { validationError, serverError, notFoundError } from "../utils/responses.js";
 
 
 const router = Router();
@@ -96,7 +96,7 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
                 }).catch(() => {});
                 
                 // Return 404 to trigger frontend regeneration request
-                return res.status(404).json({ error: `${range} horoscope is stale. Generating fresh one...` });
+                return notFoundError(res, `${range} horoscope is stale. Generating fresh one...`);
             }
         }
         
@@ -107,7 +107,7 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
                 message: `[SYSTEM] Generate horoscope for ${range.toLowerCase()}`
             }).catch(() => {});
             
-            return res.status(404).json({ error: `No ${range} horoscope found. Generating now...` });
+            return notFoundError(res, `No ${range} horoscope found. Generating now...`);
         }
         
         // Get content from the row
@@ -116,7 +116,7 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
         let brief = row.content_brief;
         
                 if (!content) {
-            return res.status(404).json({ error: `Horoscope data is empty` });
+            return notFoundError(res, 'Horoscope data is empty');
         }
         
         let horoscope, briefContent;
@@ -130,11 +130,11 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
                     : brief;
             }
                 } catch (e) {
-            return serverError(res, `Failed to parse horoscope data` );
+            return res.status(500).json({ error: `Failed to parse horoscope data` });
         }
         
                 if (!horoscope || !horoscope.generated_at) {
-            return res.status(404).json({ error: `Horoscope data is incomplete` });
+            return notFoundError(res, 'Horoscope data is incomplete');
         }
         
         res.json({ 

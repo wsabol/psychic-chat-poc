@@ -208,7 +208,7 @@ router.post('/cancel-deletion/:userId', authorizeUser, async (req, res) => {
 
     const user = await fetchDeletionStatus(userId);
     if (user.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return notFoundError(res,  'User not found' );
     }
 
     const { deletion_status, deletion_requested_at } = user.rows[0];

@@ -7,7 +7,7 @@
 
 import { Router } from 'express';
 import { db } from '../shared/db.js';
-import { validationError, serverError } from '../utils/responses.js';
+import { validationError, serverError, createdResponse, forbiddenError } from '../utils/responses.js';
 
 const router = Router();
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
@@ -108,7 +108,7 @@ router.post('/track', async (req, res) => {
       );
     }
 
-        res.status(201).json({ success: true, message: 'Event tracked' });
+    return createdResponse(res, { success: true, message: 'Event tracked' });
   } catch (error) {
     return serverError(res, 'Failed to track event');
   }
@@ -124,7 +124,7 @@ router.get('/report', async (req, res) => {
     // Verify admin email
     const adminEmail = req.user?.email;
     if (adminEmail !== process.env.ADMIN_EMAIL) {
-      return res.status(403).json({ error: 'Unauthorized - admin access required' });
+      return forbiddenError(res, 'Unauthorized - admin access required' );
     }
 
     // Fetch all analytics data (last 90 days)
@@ -247,15 +247,15 @@ router.delete('/data', async (req, res) => {
     // Verify admin email
     const adminEmail = req.user?.email;
     if (adminEmail !== process.env.ADMIN_EMAIL) {
-      return res.status(403).json({ error: 'Unauthorized - admin access required' });
+      return forbiddenError(res, 'Unauthorized - admin access required');
     }
 
     const result = await db.query('DELETE FROM app_analytics');
     res.json({
       success: true,
       message: 'All analytics data deleted',
-      rows_deleted: result.rowCount,
-        });
+      rows_deleted: result.rowCount
+    });
   } catch (error) {
     return serverError(res, 'Failed to delete analytics data');
   }
@@ -271,7 +271,7 @@ router.post('/cleanup', async (req, res) => {
     // Verify admin email
     const adminEmail = req.user?.email;
     if (adminEmail !== process.env.ADMIN_EMAIL) {
-      return res.status(403).json({ error: 'Unauthorized - admin access required' });
+      return forbiddenError(res, 'Unauthorized - admin access required');
     }
 
     const result = await db.query(
@@ -282,8 +282,8 @@ router.post('/cleanup', async (req, res) => {
     res.json({
       success: true,
       message: 'Old analytics data deleted',
-      rows_deleted: result.rowCount,
-        });
+      rows_deleted: result.rowCount
+    });
   } catch (error) {
     return serverError(res, 'Failed to cleanup analytics data');
   }

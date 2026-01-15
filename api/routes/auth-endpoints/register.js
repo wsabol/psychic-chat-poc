@@ -5,7 +5,7 @@ import { db } from '../../shared/db.js';
 import { migrateOnboardingData } from '../../shared/accountMigration.js';
 import { logAudit } from '../../shared/auditLog.js';
 import { createUserDatabaseRecords } from './helpers/userCreation.js';
-import { validationError, conflictError, serverError } from '../../utils/responses.js';
+import { validationError, conflictError, serverError, createdResponse } from '../../utils/responses.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 const router = Router();
@@ -45,11 +45,11 @@ router.post('/register', async (req, res) => {
       details: { email }
     });
     
-        return res.status(201).json({
+            return createdResponse(res, {
       success: true,
       message: 'User registered successfully. Please sign in.'
     });
-    } catch (err) {
+  } catch (err) {
     await logErrorFromCatch(err, 'auth', 'User registration');
     if (err.code === 'auth/email-already-exists') {
       return conflictError(res, 'Email address already registered');
@@ -138,19 +138,19 @@ router.post('/register-and-migrate', async (req, res) => {
         onboarding_horoscope
       });
       
-            return res.status(201).json({
+                  return createdResponse(res, {
         success: true,
         message: 'Account created and onboarding data migrated successfully',
         migration: migrationResult
       });
       
     } catch (migrationErr) {
-            return res.status(201).json({
+                  return createdResponse(res, {
         success: true,
         message: 'Account created but data migration encountered issues',
         warning: migrationErr.message
       });
-  }
+    }
     
   } catch (err) {
     await logErrorFromCatch(err, 'auth', 'Register and migrate account');
