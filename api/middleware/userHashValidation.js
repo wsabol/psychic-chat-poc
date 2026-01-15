@@ -21,7 +21,7 @@ export function validateUserHash(req, res, next) {
   const jwtUserId = req.user?.userId || req.userId;
 
   if (!jwtUserId) {
-    return res.status(401).json({ error: 'Unauthorized' });
+    return authError(res,  'Unauthorized' );
   }
 
   // Verify that the hashed ID matches the JWT user ID

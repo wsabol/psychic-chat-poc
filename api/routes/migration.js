@@ -17,13 +17,13 @@ router.post("/register-migration", async (req, res) => {
     const { tempUserId, email } = req.body;
 
     if (!tempUserId || !email) {
-        return res.status(400).json({ 
-            error: 'Missing tempUserId or email' 
-        });
+        return res.status(400).json(
+            res, 'Missing tempUserId or email' 
+        );
     }
 
     if (!tempUserId.startsWith('temp_')) {
-        return res.status(400).json({ 
+         return authError( 
             error: 'Invalid temp user ID format' 
         });
     }
@@ -67,9 +67,9 @@ router.post("/migrate-chat-history", authenticateToken, async (req, res) => {
     const { email } = req.body;
 
     if (!email) {
-        return res.status(400).json({ 
-            error: 'Email is required' 
-        });
+        return res.status(400).json( 
+            res, 'Email is required' 
+        );
     }
 
     const client = await db.connect();

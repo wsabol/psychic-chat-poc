@@ -97,9 +97,9 @@ export function validateRequestPayload(req, res, next) {
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     const contentType = req.get('content-type');
     if (contentType && !contentType.includes('application/json')) {
-      return res.status(400).json({
-        error: 'Invalid Content-Type. Expected application/json'
-      });
+      return res.status(400).json(
+        res, 'Invalid Content-Type. Expected application/json'
+      );
     }
   }
 
@@ -128,9 +128,9 @@ export function validateRequestPayload(req, res, next) {
 
   for (const pattern of suspiciousPatterns) {
     if (url.includes(pattern)) {
-      return res.status(400).json({
-        error: 'Invalid request'
-      });
+      return res.status(400).json(
+        res, 'Invalid request'
+      );
     }
   }
 

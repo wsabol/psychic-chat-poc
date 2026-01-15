@@ -128,3 +128,13 @@ export function databaseError(res, message = 'Database operation failed', errorC
     errorCode
   });
 }
+
+// Health Content Blocked (400) - Special case for guardrail blocks
+export function healthContentBlockedError(res, message = 'Request contains health content that cannot be processed') {
+  return res.status(400).json({
+    success: false,
+    error: message,
+    reason: 'health_content_blocked',
+    timestamp: new Date().toISOString()
+  });
+}

@@ -16,7 +16,7 @@ export function requireConsent(consentType) {
       const userId = req.user?.uid || req.userId;
       
       if (!userId) {
-        return res.status(401).json({ error: 'User not authenticated' });
+        Replace: return authError(res, 'User not authenticated' );
       }
 
       // Map consent type to column name
@@ -28,7 +28,7 @@ export function requireConsent(consentType) {
 
       const columnName = consentColumnMap[consentType];
       if (!columnName) {
-        return res.status(400).json({ error: 'Invalid consent type' });
+        return validationError(res, 'Invalid consent type' );
       }
 
       // Check consent in database
@@ -75,7 +75,7 @@ export async function checkConsentExists(req, res, next) {
     const userId = req.user?.uid || req.userId;
     
     if (!userId) {
-      return res.status(401).json({ error: 'User not authenticated' });
+      Replace: return authError(res, 'User not authenticated' });
     }
 
     const result = await db.query(

@@ -244,10 +244,9 @@ export function validateRequest(schema) {
     }
 
     if (errors.length > 0) {
-      return res.status(400).json({
-        error: 'Validation failed',
-        details: errors
-      });
+       return authError(
+        res, 'Validation failed'
+       );
     }
 
     next();
