@@ -13,6 +13,7 @@ import { hashUserId } from '../shared/hashUtils.js';
 import { getAuth } from 'firebase-admin/auth';
 import admin from 'firebase-admin';
 import { notFoundError, validationError, serverError } from '../utils/responses.js';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 const router = Router();
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
@@ -473,12 +474,14 @@ router.delete('/delete-account/:userId', authenticateToken, authorizeUser, async
       }
     });
 
-    // Log to deletion audit table
+        // Log to deletion audit table
     await db.query(
       `INSERT INTO account_deletion_audit (user_id, action, reason, ip_address, user_agent)
        VALUES ($1, 'DELETION_REQUESTED', 'User requested deletion', $2, $3)`,
       [userId, req.ip, req.get('user-agent')]
-    ).catch(e => console.error('[DELETION-AUDIT]', e.message));
+    ).catch(e => {
+      logErrorFromCatch(e, 'user-data', 'Log deletion audit');
+    });
 
     const graceEndDate = new Date();
     graceEndDate.setDate(graceEndDate.getDate() + 30);
@@ -563,11 +566,13 @@ router.post('/cancel-deletion/:userId', authenticateToken, authorizeUser, async 
       details: { days_since_deletion: daysSinceDeletion }
     });
 
-    await db.query(
+        await db.query(
       `INSERT INTO account_deletion_audit (user_id, action, ip_address, user_agent)
        VALUES ($1, 'REACTIVATED', $2, $3)`,
       [userId, req.ip, req.get('user-agent')]
-    ).catch(e => console.error('[DELETION-AUDIT]', e.message));
+    ).catch(e => {
+      logErrorFromCatch(e, 'user-data', 'Log deletion reactivation');
+    });
 
     return res.json({
       success: true,

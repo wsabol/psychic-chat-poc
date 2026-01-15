@@ -206,7 +206,7 @@ async function generateSummary() {
       data_period_days: DATA_PERIOD_DAYS,
     };
   } catch (err) {
-    console.error('[VIOLATIONS-SUMMARY] Error:', err);
+    logErrorFromCatch(error, 'app', 'violations summary');
     return {};
   }
 }
@@ -242,7 +242,7 @@ async function getViolationsByType() {
       false_positive_rate: parseFloat(row.reported_false_positives) / parseFloat(row.total) || 0,
     }));
   } catch (err) {
-    console.error('[VIOLATIONS-BY-TYPE] Error:', err);
+    logErrorFromCatch(error, 'app', 'violations by type');
     return [];
   }
 }
@@ -275,7 +275,7 @@ async function getEscalationMetrics() {
       };
     });
   } catch (err) {
-    console.error('[VIOLATIONS-ESCALATION] Error:', err);
+    logErrorFromCatch(error, 'app', 'violations escalation');
     return [];
   }
 }
@@ -310,7 +310,7 @@ async function getRedemptionAnalytics() {
       };
     });
   } catch (err) {
-    //console.error('[VIOLATIONS-REDEMPTION] Error:', err);
+    //logErrorFromCatch(error, 'app', 'violations redemption');
     return [];
   }
 }
@@ -355,7 +355,7 @@ async function getFalsePositiveAnalysis() {
       })),
     };
   } catch (err) {
-    console.error('[VIOLATIONS-FP-ANALYSIS] Error:', err);
+    logErrorFromCatch(error, 'app', 'violations fp analysis');
     return { by_type: [], top_reasons: [] };
   }
 }
@@ -402,7 +402,7 @@ async function getPatternAnalysis() {
       })),
     };
   } catch (err) {
-    console.error('[VIOLATIONS-PATTERNS] Error:', err);
+    logErrorFromCatch(error, 'app', 'violations patterns');
     return { patterns_detected: [], requiring_manual_review: [] };
   }
 }
@@ -452,7 +452,7 @@ async function getTrendingAnalysis() {
       })),
     };
   } catch (err) {
-    console.error('[VIOLATIONS-TRENDING] Error:', err);
+    logErrorFromCatch(error, 'app', 'violations trending');
     return { trending_messages: [], daily_trend: [] };
   }
 }

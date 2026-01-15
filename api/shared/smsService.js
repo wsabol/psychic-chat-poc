@@ -37,7 +37,7 @@ export async function sendSMS(toPhoneNumber, code) {
       messageId: message.sid
     };
   } catch (error) {
-    console.error('Twilio SMS error:', error);
+    logErrorFromCatch(error, 'app', 'Error handling');
     return {
       success: false,
       error: error.message
@@ -69,7 +69,7 @@ export async function sendPasswordResetSMS(toPhoneNumber, code) {
       messageId: message.sid
     };
   } catch (error) {
-    console.error('Twilio SMS error:', error);
+    logErrorFromCatch(error, 'app', 'Error handling');
     return {
       success: false,
       error: error.message

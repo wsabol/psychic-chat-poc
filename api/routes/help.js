@@ -137,7 +137,7 @@ router.post('/ask', authenticateToken, async (req, res) => {
         }
       });
     } catch (auditErr) {
-      console.error('[HELP] Audit log error:', auditErr.message);
+      logErrorFromCatch(error, 'app', 'help');
     }
 
     return res.json({
@@ -146,7 +146,7 @@ router.post('/ask', authenticateToken, async (req, res) => {
       question: question
     });
     } catch (error) {
-    console.error('[HELP] Error:', error);
+    logErrorFromCatch(error, 'app', 'help');
     return serverError(res, 'Failed to get help response');
   }
 });

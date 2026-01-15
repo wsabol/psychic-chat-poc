@@ -13,7 +13,7 @@ const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'noreply@starshippsychics.c
 export async function sendEmailVerification(userEmail, verificationCode) {
     try {
         if (!process.env.SENDGRID_API_KEY) {
-            console.error('[EMAIL] SendGrid API key missing');
+            logErrorFromCatch(error, 'app', 'email');
             throw new Error('Email service not configured');
         }
 
@@ -42,7 +42,7 @@ export async function sendEmailVerification(userEmail, verificationCode) {
             messageId: result[0].headers['x-message-id']
         };
     } catch (error) {
-        console.error('[EMAIL] Email verification error:', error.message);
+        logErrorFromCatch(error, 'app', 'email');
         return {
             success: false,
             error: error.message
@@ -56,7 +56,7 @@ export async function sendEmailVerification(userEmail, verificationCode) {
 export async function sendPasswordResetEmail(userEmail, resetCode) {
     try {
         if (!process.env.SENDGRID_API_KEY) {
-            console.error('[EMAIL] SendGrid API key missing');
+            logErrorFromCatch(error, 'app', 'email');
             throw new Error('Email service not configured');
         }
 
@@ -85,7 +85,7 @@ export async function sendPasswordResetEmail(userEmail, resetCode) {
             messageId: result[0].headers['x-message-id']
         };
     } catch (error) {
-        console.error('[EMAIL] Password reset error:', error.message);
+        logErrorFromCatch(error, 'app', 'email');
         return {
             success: false,
             error: error.message
@@ -99,7 +99,7 @@ export async function sendPasswordResetEmail(userEmail, resetCode) {
 export async function sendEmailVerificationCode(userEmail, code) {
     try {
         if (!process.env.SENDGRID_API_KEY) {
-            console.error('[EMAIL] SendGrid API key missing');
+            logErrorFromCatch(error, 'app', 'email');
             throw new Error('Email service not configured');
         }
 
@@ -127,7 +127,7 @@ export async function sendEmailVerificationCode(userEmail, code) {
             messageId: result[0].headers['x-message-id']
         };
     } catch (error) {
-        console.error('[EMAIL] Verification code error:', error.message);
+        logErrorFromCatch(error, 'app', 'email');
         return {
             success: false,
             error: error.message
@@ -141,7 +141,7 @@ export async function sendEmailVerificationCode(userEmail, code) {
 export async function send2FACodeEmail(userEmail, code) {
     try {
         if (!process.env.SENDGRID_API_KEY) {
-            console.error('[EMAIL] SendGrid API key missing');
+            logErrorFromCatch(error, 'app', 'email');
             throw new Error('Email service not configured');
         }
 
@@ -169,7 +169,7 @@ export async function send2FACodeEmail(userEmail, code) {
             messageId: result[0].headers['x-message-id']
         };
     } catch (error) {
-        console.error('[EMAIL] 2FA email error:', error.message);
+        logErrorFromCatch(error, 'app', 'email');
         return {
             success: false,
             error: error.message
@@ -184,7 +184,7 @@ export async function send2FACodeEmail(userEmail, code) {
 export async function sendAccountReengagementEmail(userEmail, userId, emailType) {
     try {
         if (!process.env.SENDGRID_API_KEY) {
-            console.error('[EMAIL] SendGrid API key missing');
+            logErrorFromCatch(error, 'app', 'email');
             throw new Error('Email service not configured');
         }
 
@@ -265,7 +265,7 @@ export async function sendAccountReengagementEmail(userEmail, userId, emailType)
             messageId: result[0].headers['x-message-id']
         };
     } catch (error) {
-        console.error('[EMAIL] Account re-engagement error:', error.message);
+        logErrorFromCatch(error, 'app', 'email');
         return {
             success: false,
             error: error.message

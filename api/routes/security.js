@@ -49,7 +49,7 @@ router.post('/track-device/:userId', async (req, res) => {
 
     res.json({ success: true, device: result.rows[0] });
   } catch (err) {
-    console.error('[SECURITY] Error tracking device:', err);
+    logErrorFromCatch(error, 'app', 'security');
     return serverError(res, err.message);
   }
 });
@@ -69,7 +69,7 @@ router.get('/devices/:userId', async (req, res) => {
     const result = await securityService.getDevices(userId);
     res.json(result);
   } catch (err) {
-    console.error('[SECURITY] Error in GET /devices:', err);
+    logErrorFromCatch(error, 'app', 'security');
     return serverError(res, err.message);
   }
 });
@@ -89,7 +89,7 @@ router.delete('/devices/:userId/:deviceId', async (req, res) => {
     const result = await securityService.logoutDevice(userId, deviceId);
     res.json(result);
   } catch (err) {
-    console.error('[SECURITY] Error in DELETE /devices:', err);
+    logErrorFromCatch(error, 'app', 'security');
     return serverError(res, err.message);
   }
 });
@@ -109,7 +109,7 @@ router.get('/phone/:userId', async (req, res) => {
     const data = await securityService.getPhoneData(userId);
     res.json(data);
   } catch (err) {
-    console.error('[SECURITY] Error in GET /phone:', err);
+    logErrorFromCatch(error, 'app', 'security');
     return serverError(res, err.message);
   }
 });
@@ -134,7 +134,7 @@ router.post('/phone/:userId', async (req, res) => {
     const result = await securityService.savePhoneNumber(userId, phoneNumber, recoveryPhone);
     res.json(result);
   } catch (err) {
-    console.error('[SECURITY] Error in POST /phone:', err);
+    logErrorFromCatch(error, 'app', 'security');
     return serverError(res, err.message);
   }
 });
@@ -159,7 +159,7 @@ router.post('/phone/:userId/verify', async (req, res) => {
     const result = await securityService.verifyPhoneCode(userId, code);
     res.json(result);
   } catch (err) {
-    console.error('[SECURITY] Error in POST /phone/verify:', err);
+    logErrorFromCatch(error, 'app', 'security');
     return validationError(res, err.message);
   }
 });
@@ -179,7 +179,7 @@ router.get('/email/:userId', async (req, res) => {
     const data = await securityService.getEmailData(userId);
     res.json(data);
   } catch (err) {
-    console.error('[SECURITY] Error in GET /email:', err);
+    logErrorFromCatch(error, 'app', 'security');
     return serverError(res, err.message);
   }
 });
@@ -204,7 +204,7 @@ router.post('/email/:userId', async (req, res) => {
     const result = await securityService.saveRecoveryEmail(userId, recoveryEmail);
     res.json(result);
   } catch (err) {
-    console.error('[SECURITY] Error in POST /email:', err);
+    logErrorFromCatch(error, 'app', 'security');
     return serverError(res, err.message);
   }
 });
@@ -229,7 +229,7 @@ router.post('/email/:userId/verify', async (req, res) => {
     const result = await securityService.verifyEmailCode(userId, code);
     res.json(result);
   } catch (err) {
-    console.error('[SECURITY] Error in POST /email/verify:', err);
+    logErrorFromCatch(error, 'app', 'security');
     return validationError(res, err.message);
   }
 });
@@ -249,7 +249,7 @@ router.delete('/email/:userId', async (req, res) => {
     const result = await securityService.removeRecoveryEmail(userId);
     res.json(result);
   } catch (err) {
-    console.error('[SECURITY] Error in DELETE /email:', err);
+    logErrorFromCatch(error, 'app', 'security');
     return serverError(res, err.message);
   }
 });
@@ -269,7 +269,7 @@ router.post('/password-changed/:userId', async (req, res) => {
     const result = await securityService.recordPasswordChange(userId);
     res.json(result);
   } catch (err) {
-    console.error('[SECURITY] Error in POST /password-changed:', err);
+    logErrorFromCatch(error, 'app', 'security');
     return serverError(res, err.message);
   }
 });
@@ -289,7 +289,7 @@ router.get('/2fa-settings/:userId', async (req, res) => {
     const settings = await securityService.get2FASettings(userId);
     res.json({ success: true, settings });
   } catch (err) {
-    console.error('[SECURITY] Error in GET /2fa-settings:', err);
+    logErrorFromCatch(error, 'app', 'security');
     return serverError(res, err.message);
   }
 });
@@ -323,7 +323,7 @@ router.post('/2fa-settings/:userId', async (req, res) => {
       message: enabled ? '2FA enabled' : '2FA disabled'
     });
   } catch (err) {
-    console.error('[SECURITY] Error in POST /2fa-settings:', err);
+    logErrorFromCatch(error, 'app', 'security');
     return serverError(res, err.message);
   }
 });
@@ -355,7 +355,7 @@ router.post('/session-preference/:userId', async (req, res) => {
         : 'You will log out when closing the browser'
     });
   } catch (err) {
-    console.error('[SECURITY] Error in POST /session-preference:', err);
+    logErrorFromCatch(error, 'app', 'security');
     return serverError(res, err.message);
   }
 });
@@ -382,7 +382,7 @@ router.get('/verification-methods/:userId', async (req, res) => {
     const methods = await securityService.getVerificationMethods(userId, userEmail);
     res.json({ success: true, methods });
   } catch (err) {
-    console.error('[SECURITY] Error in GET /verification-methods:', err);
+    logErrorFromCatch(error, 'app', 'security');
     return serverError(res, err.message);
   }
 });
