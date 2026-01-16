@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -49,7 +50,7 @@ export async function translateContent(text, targetLanguage = 'en-US') {
 
         return translationCompletion.choices[0]?.message?.content || text;
     } catch (err) {
-        console.error(`[TRANSLATOR] Error translating to ${targetLanguage}:`, err);
+        logErrorFromCatch(`[TRANSLATOR] Error translating to ${targetLanguage}:`, err);
         // Return original text on translation error
         return text;
     }
@@ -80,7 +81,7 @@ export async function translateContentObject(contentObj, targetLanguage = 'en-US
 
         return contentObj;
     } catch (err) {
-        console.error('[TRANSLATOR] Error translating content object:', err);
+        logErrorFromCatch('[TRANSLATOR] Error translating content object:', err);
         return contentObj;
     }
 }

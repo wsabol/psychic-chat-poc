@@ -8,6 +8,7 @@ import { isCosmicWeatherRequest, generateCosmicWeather } from "./modules/handler
 import { isVoidOfCourseRequest, generateVoidOfCourseMoonAlert } from "./modules/handlers/void-of-course-handler.js";
 import { handleChatMessage } from "./modules/handlers/chat-handler.js";
 import { db } from "./shared/db.js";
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 const API_URL = process.env.API_URL || 'http://localhost:3000';
 
@@ -36,7 +37,7 @@ async function routeJob(job) {
             await handleChatMessage(userId, message);
         }
     } catch (err) {
-        console.error(`[PROCESSOR] Error processing job for user ${userId}:`, err.message);
+        logErrorFromCatch(`[PROCESSOR] Error processing job for user ${userId}:`, err.message);
     }
 }
 
@@ -58,11 +59,11 @@ async function generateDailyMysticalUpdates() {
                 await generateHoroscope(user.id, 'daily');
                 await generateMoonPhaseCommentary(user.id, 'waxing');
             } catch (err) {
-                console.error(`[STARTUP] Error updating user ${user.id}:`, err.message);
+                logErrorFromCatch(`[STARTUP] Error updating user ${user.id}:`, err.message);
             }
         }
     } catch (err) {
-        console.error('[STARTUP] Error generating daily mystical updates:', err.message);
+        logErrorFromCatch('[STARTUP] Error generating daily mystical updates:', err.message);
     }
 }
 
@@ -79,10 +80,10 @@ async function cleanupOldTempAccounts() {
         if (response.ok) {
             const result = await response.json();
         } else {
-            console.error('[CLEANUP] ✗ Cleanup failed with status:', response.status);
+            logErrorFromCatch('[CLEANUP] ✗ Cleanup failed with status:', response.status);
         }
     } catch (err) {
-        console.error('[CLEANUP] Error running cleanup job:', err.message);
+        logErrorFromCatch('[CLEANUP] Error running cleanup job:', err.message);
     }
 }
 
@@ -94,7 +95,7 @@ export async function workerLoop() {
     try {
         await generateDailyMysticalUpdates();
     } catch (err) {
-        console.error('[WORKER] Failed to generate daily updates:', err.message);
+        logErrorFromCatch('[WORKER] Failed to generate daily updates:', err.message);
     }
     
     setInterval(cleanupOldTempAccounts, 86400000);
@@ -108,7 +109,7 @@ export async function workerLoop() {
             }
             await routeJob(job);
         } catch (err) {
-            console.error('[WORKER] Fatal error in job loop:', err.message);
+            logErrorFromCatch('[WORKER] Fatal error in job loop:', err.message);
             await new Promise((r) => setTimeout(r, 1000));
         }
     }

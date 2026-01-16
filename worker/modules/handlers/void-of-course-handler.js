@@ -1,6 +1,7 @@
 import { getCurrentMoonPhase } from '../astrology.js';
 import { fetchUserAstrology, getOracleSystemPrompt, callOracle, getUserGreeting, fetchUserPersonalInfo } from '../oracle.js';
 import { storeMessage } from '../messages.js';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 export async function generateVoidOfCourseMoonAlert(userId) {
     try {
@@ -51,7 +52,7 @@ What should they know? What should they avoid starting? What reflective activiti
         await storeMessage(userId, 'void_of_course', voidOfCourseDataFull, voidOfCourseBrief);
         
         } catch (err) {
-        console.error('[VOID-OF-COURSE-HANDLER] Error:', err.message);
+        logErrorFromCatch('[VOID-OF-COURSE-HANDLER] Error:', err.message);
         // Continue silently on error
     }
 }

@@ -6,6 +6,7 @@
 import { db } from '../../shared/db.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { calculateBirthChart } from '../astrology.js';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * Ensure user has astrology data, calculating if necessary
@@ -88,7 +89,7 @@ async function storeAstrologyData(userId, sunSign, astrologyData) {
             [userIdHash, sunSign, JSON.stringify(astrologyData)]
         );
     } catch (err) {
-        console.error('[ASTROLOGY-SETUP] Error storing astrology:', err.message);
+        logErrorFromCatch('[ASTROLOGY-SETUP] Error storing astrology:', err.message);
         throw err;
     }
 }

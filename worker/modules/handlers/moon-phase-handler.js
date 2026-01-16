@@ -11,6 +11,7 @@ import {
 } from '../oracle.js';
 import { storeMessage } from '../messages.js';
 import { getUserTimezone, getLocalDateForTimezone, needsRegeneration } from '../utils/timezoneHelper.js';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * Generate personalized moon phase commentary based on user's birth chart
@@ -107,8 +108,8 @@ Do NOT include tarot cards - this is purely lunar + astrological insight enriche
         );
         
             } catch (err) {
-        console.error('[MOON-PHASE-HANDLER] Error generating commentary:', err.message);
-        console.error('[MOON-PHASE-HANDLER] Stack:', err.stack);
+        logErrorFromCatch('[MOON-PHASE-HANDLER] Error generating commentary:', err.message);
+        logErrorFromCatch('[MOON-PHASE-HANDLER] Stack:', err.stack);
         throw err;
     }
 }

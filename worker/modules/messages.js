@@ -1,5 +1,6 @@
 import { db } from '../shared/db.js';
 import { hashUserId } from '../shared/hashUtils.js';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * Get message history for a user
@@ -47,7 +48,7 @@ export async function getMessageHistory(userId, limit = 10) {
             };
         });
     } catch (err) {
-        console.error('[MESSAGES] Error fetching history:', err);
+        logErrorFromCatch('[MESSAGES] Error fetching history:', err);
         return [];
     }
 }
@@ -157,7 +158,7 @@ export async function storeMessage(
         
         await db.query(query, params);
     } catch (err) {
-        console.error('[MESSAGES] Error storing message:', err);
+        logErrorFromCatch('[MESSAGES] Error storing message:', err);
         throw err;
     }
 }
@@ -203,7 +204,7 @@ export async function storeTranslatingMessage(userId, role, languageName, conten
         
         await db.query(query, params);
     } catch (err) {
-        console.error('[MESSAGES] Error storing translating message:', err);
+        logErrorFromCatch('[MESSAGES] Error storing translating message:', err);
         throw err;
     }
 }

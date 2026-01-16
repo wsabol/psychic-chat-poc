@@ -1,5 +1,6 @@
 import admin from 'firebase-admin';
 import fs from 'fs';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 // Try multiple possible paths for the firebase key
 const possiblePaths = [
@@ -17,8 +18,8 @@ for (const p of possiblePaths) {
 }
 
 if (!serviceAccountPath) {
-  console.error('ERROR: firebase-adminsdk-key.json not found');
-  console.error('Checked paths:', possiblePaths);
+  logErrorFromCatch('ERROR: firebase-adminsdk-key.json not found');
+  logErrorFromCatch('Checked paths:', possiblePaths);
   process.exit(1);
 }
 

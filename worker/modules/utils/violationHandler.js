@@ -5,6 +5,7 @@
 
 import { detectViolation, recordViolationAndGetAction, getSelfHarmHotlineResponse } from '../violationEnforcement.js';
 import { storeMessage } from '../messages.js';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * Check message for violations and handle enforcement
@@ -40,7 +41,7 @@ export async function handleViolation(userId, message, tempUser) {
         // No violation detected
         return null;
     } catch (err) {
-        console.error('[VIOLATION-HANDLER] Error checking violation:', err.message);
+        logErrorFromCatch('[VIOLATION-HANDLER] Error checking violation:', err.message);
         throw err;
     }
 }

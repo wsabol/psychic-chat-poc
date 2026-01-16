@@ -15,6 +15,7 @@
 import { db } from '../../shared/db.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { VIOLATION_TYPES } from './violationDetector.js';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * Configuration for redemption policies
@@ -130,7 +131,7 @@ export async function checkViolationRedemption(userId, violationType) {
     };
 
   } catch (err) {
-    console.error('[VIOLATION-REDEMPTION] Error checking redemption eligibility:', err);
+    logErrorFromCatch('[VIOLATION-REDEMPTION] Error checking redemption eligibility:', err);
     return {
       canRedeem: false,
       reason: 'Error checking redemption status'
@@ -168,7 +169,7 @@ export async function resetViolationCount(userId, violationType) {
     }
 
   } catch (err) {
-    console.error('[VIOLATION-REDEMPTION] Error resetting violation count:', err);
+    logErrorFromCatch('[VIOLATION-REDEMPTION] Error resetting violation count:', err);
     return false;
   }
 }
@@ -229,7 +230,7 @@ export async function applyPendingRedemptions(userId) {
     return redeemedViolations;
 
   } catch (err) {
-    console.error('[VIOLATION-REDEMPTION] Error applying pending redemptions:', err);
+    logErrorFromCatch('[VIOLATION-REDEMPTION] Error applying pending redemptions:', err);
     return [];
   }
 }

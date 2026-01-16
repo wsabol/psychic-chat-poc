@@ -34,7 +34,7 @@ export function getTodayInUserTimezone(userTimezone) {
     
     return `${year}-${month}-${day}`;
   } catch (err) {
-    console.error(`[TIMEZONE] Error formatting date for timezone ${userTimezone}:`, err.message);
+    logErrorFromCatch(`[TIMEZONE] Error formatting date for timezone ${userTimezone}:`, err.message);
     return new Date().toISOString().split('T')[0];
   }
 }
@@ -85,7 +85,7 @@ export function getCurrentTimeInUserTimezone(userTimezone) {
       timezone: userTimezone
     };
   } catch (err) {
-    console.error(`[TIMEZONE] Error getting time for timezone ${userTimezone}:`, err.message);
+    logErrorFromCatch(`[TIMEZONE] Error getting time for timezone ${userTimezone}:`, err.message);
     return getCurrentTimeInTimezone('UTC');
   }
 }
@@ -136,7 +136,7 @@ export async function fetchUserTimezonePreference(db, userId) {
     
     return null;
   } catch (err) {
-    console.error('[TIMEZONE] Error fetching user timezone:', err.message);
+    logErrorFromCatch('[TIMEZONE] Error fetching user timezone:', err.message);
     return null;
   }
 }
@@ -162,7 +162,7 @@ export async function storeUserTimezonePreference(db, userId, timezone) {
     );
     
   } catch (err) {
-    console.error('[TIMEZONE] Error storing user timezone:', err.message);
+    logErrorFromCatch('[TIMEZONE] Error storing user timezone:', err.message);
   }
 }
 

@@ -17,6 +17,7 @@ import {
   getRedemptionMessage
 } from './violationRedemption.js';
 import { VIOLATION_TYPES } from './violationDetector.js';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * Record violation and get enforcement action
@@ -127,7 +128,7 @@ export async function recordViolationAndGetAction(userId, violationType, userMes
       };
     }
   } catch (err) {
-    console.error('[VIOLATION] Error recording violation:', err);
+    logErrorFromCatch('[VIOLATION] Error recording violation:', err);
     throw err;
   }
 }

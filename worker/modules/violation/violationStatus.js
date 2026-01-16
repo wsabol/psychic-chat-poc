@@ -5,6 +5,7 @@
 
 import { db } from '../../shared/db.js';
 import { hashUserId } from '../../shared/hashUtils.js';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * Check if account is currently suspended
@@ -34,7 +35,7 @@ export async function isAccountSuspended(userId) {
 
     return true;
   } catch (err) {
-    console.error('[VIOLATION] Error checking account suspension:', err);
+    logErrorFromCatch('[VIOLATION] Error checking account suspension:', err);
     return false;
   }
 }
@@ -52,7 +53,7 @@ export async function isAccountDisabled(userId) {
 
     return rows.length > 0;
   } catch (err) {
-    console.error('[VIOLATION] Error checking if account is disabled:', err);
+    logErrorFromCatch('[VIOLATION] Error checking if account is disabled:', err);
     return false;
   }
 }

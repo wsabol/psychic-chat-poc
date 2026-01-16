@@ -4,6 +4,7 @@
  */
 
 import { isAccountDisabled, isAccountSuspended } from '../violationEnforcement.js';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * Check if account is locked (disabled or suspended)
@@ -35,7 +36,7 @@ export async function checkAccountStatus(userId, tempUser) {
         // Account is good
         return null;
     } catch (err) {
-        console.error('[ACCOUNT-STATUS] Error checking account:', err.message);
+        logErrorFromCatch('[ACCOUNT-STATUS] Error checking account:', err.message);
         // On error, allow access (fail-safe)
         return null;
     }

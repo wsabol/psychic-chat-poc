@@ -7,6 +7,7 @@ import { db } from '../../shared/db.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { getUserGreeting } from '../oracle.js';
 import { storeMessage } from '../messages.js';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * Detect if user is asking for horoscope in chat
@@ -87,11 +88,11 @@ async function handleHoroscopeInChat(userId, userInfo) {
             // Trigger horoscope generation directly (don't await)
             const { generateHoroscope } = await import('../handlers/horoscope-handler.js');
             generateHoroscope(userId, defaultRange).catch(err =>
-                console.error('[SPECIAL-REQUEST] Error triggering horoscope:', err.message)
+                logErrorFromCatch('[SPECIAL-REQUEST] Error triggering horoscope:', err.message)
             );
         }
     } catch (err) {
-        console.error('[SPECIAL-REQUEST] Error handling horoscope in chat:', err.message);
+        logErrorFromCatch('[SPECIAL-REQUEST] Error handling horoscope in chat:', err.message);
         const response = `I encountered an error retrieving your horoscope. Please try again in a moment.`;
         await storeMessage(userId, 'assistant', { text: response });
     }
@@ -150,11 +151,11 @@ async function handleMoonPhaseInChat(userId, userInfo, phase) {
             // Trigger moon phase generation directly (don't await)
             const { generateMoonPhaseCommentary } = await import('../handlers/moon-phase-handler.js');
             generateMoonPhaseCommentary(userId, currentPhase).catch(err =>
-                console.error('[SPECIAL-REQUEST] Error triggering moon phase:', err.message)
+                logErrorFromCatch('[SPECIAL-REQUEST] Error triggering moon phase:', err.message)
             );
         }
     } catch (err) {
-        console.error('[SPECIAL-REQUEST] Error handling moon phase in chat:', err.message);
+        logErrorFromCatch('[SPECIAL-REQUEST] Error handling moon phase in chat:', err.message);
         const response = `I encountered an error retrieving the lunar insight. Please try again in a moment.`;
         await storeMessage(userId, 'assistant', { text: response });
     }
@@ -193,11 +194,11 @@ async function handleCosmicWeatherInChat(userId) {
             // Trigger cosmic weather generation directly (don't await)
             const { generateCosmicWeather } = await import('../handlers/cosmic-weather-handler.js');
             generateCosmicWeather(userId).catch(err => 
-                console.error('[SPECIAL-REQUEST] Error triggering cosmic weather:', err.message)
+                logErrorFromCatch('[SPECIAL-REQUEST] Error triggering cosmic weather:', err.message)
             );
         }
     } catch (err) {
-        console.error('[SPECIAL-REQUEST] Error handling cosmic weather in chat:', err.message);
+        logErrorFromCatch('[SPECIAL-REQUEST] Error handling cosmic weather in chat:', err.message);
         const response = `I encountered an error reading the cosmic energy. Please try again in a moment.`;
         await storeMessage(userId, 'assistant', { text: response });
     }
@@ -234,7 +235,7 @@ export async function detectAndHandleSpecialRequest(userId, message, userInfo, a
         // No special request detected
         return false;
     } catch (err) {
-        console.error('[SPECIAL-REQUEST] Error detecting special request:', err.message);
+        logErrorFromCatch('[SPECIAL-REQUEST] Error detecting special request:', err.message);
         // Return false to allow normal chat to proceed on error
         return false;
     }

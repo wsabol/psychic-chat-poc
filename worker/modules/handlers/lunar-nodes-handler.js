@@ -1,5 +1,6 @@
 import { fetchUserAstrology, getOracleSystemPrompt, callOracle, getUserGreeting, fetchUserPersonalInfo } from '../oracle.js';
 import { storeMessage } from '../messages.js';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 export async function generateLunarNodesInsight(userId) {
     try {
@@ -43,7 +44,7 @@ Provide insight into their soul's journey and purpose.`;
         const lunarNodesDataBrief = { text: oracleResponses.brief, generated_at: new Date().toISOString() };
         await storeMessage(userId, 'lunar_nodes', lunarNodesDataFull, lunarNodesDataBrief);
         } catch (err) {
-        console.error('[LUNAR-NODES-HANDLER] Error:', err.message);
+        logErrorFromCatch('[LUNAR-NODES-HANDLER] Error:', err.message);
         // Continue silently on error
     }
 }
