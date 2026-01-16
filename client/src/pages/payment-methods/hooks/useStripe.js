@@ -1,4 +1,5 @@
 import { useRef, useMemo } from 'react';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * useStripe - Creates and caches a single Stripe instance
@@ -13,7 +14,7 @@ export function useStripe() {
     }
 
     if (!window.Stripe) {
-      console.error('Stripe.js not loaded');
+      logErrorFromCatch('Stripe.js not loaded');
       return null;
     }
 
@@ -22,7 +23,7 @@ export function useStripe() {
       stripeRef.current = window.Stripe(stripeKey);
       return stripeRef.current;
     } catch (err) {
-      console.error('Failed to initialize Stripe:', err);
+      logErrorFromCatch('Failed to initialize Stripe:', err);
       return null;
     }
   }, []);

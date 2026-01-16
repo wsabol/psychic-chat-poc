@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from '../context/TranslationContext';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 import '../styles/screens/TwoFAScreen.css';
 
 /**
@@ -82,7 +83,7 @@ export default function TwoFAScreen({
         onVerified();
       }
     } catch (err) {
-      console.error('[2FA-SCREEN] Error:', err);
+      logErrorFromCatch('[2FA-SCREEN] Error:', err);
       setError(t('errors.server'));
       setCode('');
     } finally {

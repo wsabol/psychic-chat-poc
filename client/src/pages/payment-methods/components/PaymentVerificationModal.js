@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * PaymentVerificationModal - Verify bank account with microdeposit amounts
@@ -36,7 +37,7 @@ export default function PaymentVerificationModal({
       }
       await onVerify([amt1, amt2]);
     } catch (err) {
-      console.error('[VERIFY-MODAL] Error:', err);
+      logErrorFromCatch('[VERIFY-MODAL] Error:', err);
       setError(err.message || 'Verification failed');
       setVerifying(false);
     }

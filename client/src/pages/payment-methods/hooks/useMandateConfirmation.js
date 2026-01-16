@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { fetchWithTokenRefresh } from '../../../utils/fetchWithTokenRefresh';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 import {
   validatePaymentMethodResponse,
   validateConfirmationResponse,
@@ -45,7 +46,7 @@ export function useMandateConfirmation(token) {
     } catch (err) {
       const message = err.message || 'Failed to create payment method';
       setError(message);
-      console.error('[MANDATE] Error:', err);
+      logErrorFromCatch('[MANDATE] Error:', err);
       throw err;
     } finally {
       setLoading(false);
@@ -90,7 +91,7 @@ export function useMandateConfirmation(token) {
     } catch (err) {
       const message = err.message || 'Failed to confirm mandate';
       setError(message);
-      console.error('[MANDATE] Error:', err);
+      logErrorFromCatch('[MANDATE] Error:', err);
       throw err;
     } finally {
       setLoading(false);

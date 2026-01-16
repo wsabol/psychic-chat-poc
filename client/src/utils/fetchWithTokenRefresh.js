@@ -1,4 +1,5 @@
 import { auth } from '../firebase';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 // Prevent multiple simultaneous token refresh attempts
 let tokenRefreshPromise = null;
@@ -62,7 +63,7 @@ export async function fetchWithTokenRefresh(url, options = {}) {
         
         if (!freshToken) {
           // Failed to get fresh token
-          console.error('[FETCH] Failed to get fresh token from Firebase');
+          logErrorFromCatch('[FETCH] Failed to get fresh token from Firebase');
           sessionStorage.setItem('redirecting', 'true');
           setTimeout(() => {
             localStorage.clear();
@@ -81,7 +82,7 @@ export async function fetchWithTokenRefresh(url, options = {}) {
         response = await fetch(url, { ...options, headers });
         return response;
       } catch (err) {
-        console.error('[FETCH] Token refresh failed:', err.message);
+        logErrorFromCatch('[FETCH] Token refresh failed:', err.message);
         // Token refresh failed, redirect to login
         sessionStorage.setItem('redirecting', 'true');
         setTimeout(() => {
@@ -98,7 +99,7 @@ export async function fetchWithTokenRefresh(url, options = {}) {
 
     return response;
   } catch (err) {
-    console.error('[FETCH] Request error:', err);
+    logErrorFromCatch('[FETCH] Request error:', err);
     throw err;
   }
 }

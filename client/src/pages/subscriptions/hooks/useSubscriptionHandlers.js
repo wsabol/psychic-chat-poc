@@ -4,6 +4,7 @@
  */
 
 import { useCallback } from 'react';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 export function useSubscriptionHandlers({ 
   billing, 
@@ -45,12 +46,12 @@ export function useSubscriptionHandlers({
       // ✅ OPTIMIZED: Background refreshes (don't wait/don't await)
       // Button becomes responsive immediately
       billing.fetchSubscriptions().catch(err => {
-        console.error('[SUBSCRIPTIONS] Background refresh failed:', err.message);
+        logErrorFromCatch('[SUBSCRIPTIONS] Background refresh failed:', err.message);
       });
       
       if (auth?.token && auth?.authUserId && auth.recheckSubscriptionOnly) {
         auth.recheckSubscriptionOnly(auth.token, auth.authUserId).catch(err => {
-          console.error('[AUTH] Background recheck failed:', err.message);
+          logErrorFromCatch('[AUTH] Background recheck failed:', err.message);
         });
       }
       
@@ -77,12 +78,12 @@ export function useSubscriptionHandlers({
       
       // ✅ OPTIMIZED: Background refreshes (don't wait/don't await)
       billing.fetchSubscriptions().catch(err => {
-        console.error('[SUBSCRIPTIONS] Background refresh failed:', err.message);
+        logErrorFromCatch('[SUBSCRIPTIONS] Background refresh failed:', err.message);
       });
       
       if (auth?.token && auth?.authUserId && auth.recheckSubscriptionOnly) {
         auth.recheckSubscriptionOnly(auth.token, auth.authUserId).catch(err => {
-          console.error('[AUTH] Background recheck failed:', err.message);
+          logErrorFromCatch('[AUTH] Background recheck failed:', err.message);
         });
       }
       
@@ -116,12 +117,12 @@ export function useSubscriptionHandlers({
         
         // ✅ OPTIMIZED: Background refreshes
         billing.fetchSubscriptions().catch(err => {
-          console.error('[SUBSCRIPTIONS] Background refresh failed:', err.message);
+          logErrorFromCatch('[SUBSCRIPTIONS] Background refresh failed:', err.message);
         });
         
         if (auth?.token && auth?.authUserId && auth.recheckSubscriptionOnly) {
           auth.recheckSubscriptionOnly(auth.token, auth.authUserId).catch(err => {
-            console.error('[AUTH] Background recheck failed:', err.message);
+            logErrorFromCatch('[AUTH] Background recheck failed:', err.message);
           });
         }
         
@@ -171,12 +172,12 @@ export function useSubscriptionHandlers({
       
       // ✅ OPTIMIZED: Background refreshes
       billing.fetchSubscriptions().catch(err => {
-        console.error('[SUBSCRIPTIONS] Background refresh failed:', err.message);
+        logErrorFromCatch('[SUBSCRIPTIONS] Background refresh failed:', err.message);
       });
       
       if (auth?.token && auth?.authUserId && auth.recheckSubscriptionOnly) {
         auth.recheckSubscriptionOnly(auth.token, auth.authUserId).catch(err => {
-          console.error('[AUTH] Background recheck failed:', err.message);
+          logErrorFromCatch('[AUTH] Background recheck failed:', err.message);
         });
       }
       

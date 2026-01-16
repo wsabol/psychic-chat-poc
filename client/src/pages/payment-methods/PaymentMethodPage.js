@@ -6,6 +6,7 @@ import { useBilling } from '../../hooks/useBilling';
 import CardPaymentForm from './components/CardPaymentForm';
 import PaymentMethodsList from './components/PaymentMethodsList';
 import PaymentMethodsEmpty from './components/PaymentMethodsEmpty';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 import '../PaymentMethodPage.css';
 
 const stripePublicKey = process.env.REACT_APP_STRIPE_PUBLIC_KEY || 'pk_test_51RvatUJMQqFkSDqnqnpj19zERg4ECXj9ZpSUloXyNEf6SqusJ0N6PJQXnyrap5POm8ynwuXomOSJh1RUX7AlieyI007B3VSIru';
@@ -140,7 +141,7 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
       setCardSuccess(true);
       setTimeout(() => setCardSuccess(false), 3000);
         } catch (err) {
-      console.error('[CARD] Error:', err);
+      logErrorFromCatch('[CARD] Error:', err);
       setCardError(err.message || t('paymentMethods.failedToPrepare'));
     } finally {
       setLoading(false);

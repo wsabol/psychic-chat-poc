@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
@@ -26,7 +27,7 @@ export function useUserPreferences(userId, token) {
           setShowingBrief(preference === 'brief');
         }
       } catch (err) {
-        console.error('[USER-PREFERENCES-HOOK] Error fetching preferences:', err);
+        logErrorFromCatch('[USER-PREFERENCES-HOOK] Error fetching preferences:', err);
       }
     };
 

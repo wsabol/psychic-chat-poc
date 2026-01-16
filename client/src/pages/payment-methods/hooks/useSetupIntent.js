@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { fetchWithTokenRefresh } from '../../../utils/fetchWithTokenRefresh';
 import { validateSetupIntentResponse } from '../utils/bankAccountUtils';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -38,7 +39,7 @@ export function useSetupIntent(token) {
     } catch (err) {
       const message = err.message || 'Failed to create SetupIntent';
       setError(message);
-      console.error('[SETUP_INTENT] Error:', err);
+      logErrorFromCatch('[SETUP_INTENT] Error:', err);
       throw err;
     } finally {
       setLoading(false);

@@ -36,7 +36,7 @@ export async function hashUserIdForUrl(userId) {
     
     return hashBase64;
   } catch (err) {
-    console.error('[USER-HASH] Client-side hashing failed:', err);
+    logErrorFromCatch('[USER-HASH] Client-side hashing failed:', err);
     // Fallback: return original userId if hashing fails
     // (server will re-hash with its secret anyway)
     return userId;

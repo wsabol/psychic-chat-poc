@@ -37,13 +37,13 @@ export function parseDateForStorage(dateString) {
         }
         
         if (!day || !monthStr || !year) {
-            console.error('[DATE] Could not parse:', dateString);
+            logErrorFromCatch('[DATE] Could not parse:', dateString);
             return dateString;
         }
         
         const month = months[monthStr];
         if (!month) {
-            console.error('[DATE] Unknown month:', monthStr);
+            logErrorFromCatch('[DATE] Unknown month:', monthStr);
             return dateString;
         }
         
@@ -51,17 +51,17 @@ export function parseDateForStorage(dateString) {
         const yearNum = parseInt(year, 10);
         
         if (isNaN(dayNum) || isNaN(yearNum)) {
-            console.error('[DATE] NaN parsing day/year');
+            logErrorFromCatch('[DATE] NaN parsing day/year');
             return dateString;
         }
         
         if (dayNum < 1 || dayNum > 31) {
-            console.error('[DATE] Day out of range:', dayNum);
+            logErrorFromCatch('[DATE] Day out of range:', dayNum);
             return dateString;
         }
         
         if (yearNum < 1800 || yearNum > 2100) {
-            console.error('[DATE] Year out of range:', yearNum);
+            logErrorFromCatch('[DATE] Year out of range:', yearNum);
             return dateString;
         }
         
@@ -69,7 +69,7 @@ export function parseDateForStorage(dateString) {
         const result = `${yearNum}-${month}-${paddedDay}`;
         return result;
     } catch (e) {
-        console.error('[DATE] Exception:', e.message);
+        logErrorFromCatch('[DATE] Exception:', e.message);
         return dateString;
     }
 }

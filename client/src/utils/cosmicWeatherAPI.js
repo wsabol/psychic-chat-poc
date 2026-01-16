@@ -1,4 +1,5 @@
 import { fetchWithTokenRefresh } from './fetchWithTokenRefresh';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
@@ -96,7 +97,7 @@ export async function pollForCosmicWeather(userId, token, maxPolls = 30, pollInt
           return;
         }
       } catch (err) {
-        console.error('[COSMIC-WEATHER-API] Polling error:', err);
+        logErrorFromCatch('[COSMIC-WEATHER-API] Polling error:', err);
       }
 
       if (pollCount >= maxPolls) {

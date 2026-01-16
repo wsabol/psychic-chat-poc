@@ -75,7 +75,7 @@ export async function saveUserTimezone(userId, token, timezone = null) {
     
     return true;
   } catch (err) {
-    console.error('[TIMEZONE] Error saving timezone:', err);
+    logErrorFromCatch('[TIMEZONE] Error saving timezone:', err);
     return false;
   }
 }

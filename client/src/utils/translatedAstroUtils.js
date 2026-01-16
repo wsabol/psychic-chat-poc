@@ -54,7 +54,7 @@ export async function getTranslatedAstrologyData(zodiacSignKey, languageCode = '
           return enModule.translations[signKey];
         }
       } catch (enError) {
-        console.error(`Failed to load en-US-signs-${fileRange}.js:`, enError);
+        logErrorFromCatch(`Failed to load en-US-signs-${fileRange}.js:`, enError);
       }
     }
   }

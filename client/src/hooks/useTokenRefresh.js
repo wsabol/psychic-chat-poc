@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 export function useTokenRefresh() {
   const refreshInterval = useRef(null);
@@ -22,14 +23,14 @@ export function useTokenRefresh() {
         });
         
         if (!res.ok) {
-          console.error('⚠️ Token refresh failed, session may need renewal');
+          logErrorFromCatch('⚠️ Token refresh failed, session may need renewal');
           return;
         }
         
         const data = await res.json();
         localStorage.setItem('token', data.token);
       } catch (err) {
-        console.error('Token refresh error:', err);
+        logErrorFromCatch('Token refresh error:', err);
       }
     }, 10 * 60 * 1000);  // Every 10 minutes
     

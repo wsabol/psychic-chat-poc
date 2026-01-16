@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { fetchWithTokenRefresh } from '../../../utils/fetchWithTokenRefresh';
 import { isBirthInfoError } from '../../../utils/birthInfoErrorHandler';
 import { useTranslation } from '../../../context/TranslationContext';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * Hook to fetch and merge astrology data with zodiac enrichment
@@ -32,12 +33,12 @@ export function useAstrologyData(userId, token) {
         const module = await import(`../../../data/zodiac/translations/${langCode}-module.js`);
         setZodiacSigns(module.zodiacSigns);
       } catch (err) {
-        console.error('[ASTROLOGY] Failed to load zodiac signs:', language, err);
+        logErrorFromCatch('[ASTROLOGY] Failed to load zodiac signs:', language, err);
         try {
           const module = await import('../../../data/zodiac/translations/en-US-module.js');
           setZodiacSigns(module.zodiacSigns);
         } catch (fallbackErr) {
-          console.error('[ASTROLOGY] Fallback failed:', fallbackErr);
+          logErrorFromCatch('[ASTROLOGY] Fallback failed:', fallbackErr);
           setError('Unable to load zodiac data');
         }
       }

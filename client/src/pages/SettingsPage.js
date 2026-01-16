@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../context/TranslationContext';
 import { getAuth } from 'firebase/auth';
 import DeleteAccountModal from '../components/settings/DeleteAccountModal';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
@@ -47,7 +48,7 @@ export default function SettingsPage({ userId, token, auth, onboarding }) {
           await loadSettingsFromDatabase();
         }
       } catch (error) {
-        console.error('Error loading user data:', error);
+        logErrorFromCatch('Error loading user data:', error);
       }
     };
 
@@ -77,7 +78,7 @@ export default function SettingsPage({ userId, token, auth, onboarding }) {
         }
       }
     } catch (error) {
-      console.error('Error loading settings from database:', error);
+      logErrorFromCatch('Error loading settings from database:', error);
       // Fall back to localStorage on error
       setSettings({
         cookiesEnabled: localStorage.getItem('cookiesEnabled') !== 'false',
@@ -124,7 +125,7 @@ export default function SettingsPage({ userId, token, auth, onboarding }) {
 
       setMessage({ type: 'success', text: t('settings.downloadSuccess') });
     } catch (error) {
-      console.error('Download data error:', error);
+      logErrorFromCatch('Download data error:', error);
       setMessage({ type: 'error', text: error.message || t('settings.downloadError') });
     } finally {
       setIsLoading(false);
@@ -156,7 +157,7 @@ export default function SettingsPage({ userId, token, auth, onboarding }) {
 
       setMessage({ type: 'success', text: t('settings.clearSuccess') });
     } catch (error) {
-      console.error('Clear browsing data error:', error);
+      logErrorFromCatch('Clear browsing data error:', error);
       setMessage({ type: 'error', text: error.message || t('settings.clearError') });
     } finally {
       setIsLoading(false);
@@ -193,7 +194,7 @@ export default function SettingsPage({ userId, token, auth, onboarding }) {
 
       if (!response.ok) {
         const error = await response.json();
-        console.error('Error saving settings:', error);
+        logErrorFromCatch('Error saving settings:', error);
         setMessage({ 
           type: 'error', 
           text: t('settings.saveError') || 'Failed to save settings'
@@ -213,7 +214,7 @@ export default function SettingsPage({ userId, token, auth, onboarding }) {
         setTimeout(() => setMessage({ type: '', text: '' }), 3000);
       }
     } catch (error) {
-      console.error('Error saving settings to database:', error);
+      logErrorFromCatch('Error saving settings to database:', error);
       setMessage({ 
         type: 'error', 
         text: t('settings.saveError') || 'Failed to save settings'
@@ -254,7 +255,7 @@ export default function SettingsPage({ userId, token, auth, onboarding }) {
         window.location.href = '/';
       }, 2000);
     } catch (error) {
-      console.error('Delete account error:', error);
+      logErrorFromCatch('Delete account error:', error);
       setMessage({ type: 'error', text: error.message || t('settings.deleteError') });
     } finally {
       setIsLoading(false);

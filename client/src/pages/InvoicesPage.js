@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from '../context/TranslationContext';
 import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 import '../styles/responsive.css';
 import './MySignPage.css';
 
@@ -32,7 +33,7 @@ export default function InvoicesPage({ userId, token, auth }) {
       setInvoices(Array.isArray(data) ? data : []);
       setLoading(false);
     } catch (err) {
-      console.error('[INVOICES] Error loading invoices:', err);
+      logErrorFromCatch('[INVOICES] Error loading invoices:', err);
       setError(t('invoices.unableToLoadYour'));
       setLoading(false);
     }

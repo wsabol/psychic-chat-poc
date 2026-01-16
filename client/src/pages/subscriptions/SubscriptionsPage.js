@@ -21,6 +21,7 @@ import AvailablePlansSection from './components/AvailablePlansSection';
 import PastSubscriptionsSection from './components/PastSubscriptionsSection';
 import SubscriptionInfo from './components/SubscriptionInfo';
 import SubscriptionConfirmationModal from './components/SubscriptionConfirmationModal';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 import '../SubscriptionsPage.css';
 import '../../styles/modals.css';
 
@@ -47,7 +48,7 @@ export default function SubscriptionsPage({ userId, token, auth }) {
           billing.fetchPaymentMethods(),
         ]);
       } catch (err) {
-        console.error('[SUBSCRIPTIONS] Failed to load data:', err);
+        logErrorFromCatch('[SUBSCRIPTIONS] Failed to load data:', err);
       }
     };
 

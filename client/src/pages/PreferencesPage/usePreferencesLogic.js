@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { fetchWithTokenRefresh } from '../../utils/fetchWithTokenRefresh';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * Hook for fetching and managing user preferences
@@ -14,7 +15,7 @@ export const useFetchPreferences = (userId, token, API_URL) => {
         try {
           return JSON.parse(cached);
         } catch (e) {
-          console.error('[PREFERENCES-FETCH] Failed to parse cached preferences');
+          logErrorFromCatch('[PREFERENCES-FETCH] Failed to parse cached preferences');
         }
       }
     }
@@ -53,9 +54,9 @@ export const useFetchPreferences = (userId, token, API_URL) => {
       
       
       if (!prefResponse.ok) {
-        console.error('[PREFERENCES-FETCH] ❌ API error:', prefResponse.status);
+        logErrorFromCatch('[PREFERENCES-FETCH] ❌ API error:', prefResponse.status);
         const errorText = await prefResponse.text();
-        console.error('[PREFERENCES-FETCH] Error response:', errorText);
+        logErrorFromCatch('[PREFERENCES-FETCH] Error response:', errorText);
         throw new Error(`HTTP ${prefResponse.status}`);
       }
       
@@ -80,7 +81,7 @@ export const useFetchPreferences = (userId, token, API_URL) => {
         setPersonalInfo({ familiar_name: personalData.address_preference || 'Friend' });
       }
     } catch (err) {
-      console.error('[PREFERENCES-FETCH] ❌ Error:', err.message);
+      logErrorFromCatch('[PREFERENCES-FETCH] ❌ Error:', err.message);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -130,7 +131,7 @@ export const useSavePreferences = (API_URL, userId, token, changeLanguage) => {
 
       if (!response.ok) {
         const errData = await response.json();
-        console.error('[PREFERENCES-SAVE] ❌ API error:', errData);
+        logErrorFromCatch('[PREFERENCES-SAVE] ❌ API error:', errData);
         throw new Error(errData.error || 'Failed to save preferences');
       }
 
@@ -139,7 +140,7 @@ export const useSavePreferences = (API_URL, userId, token, changeLanguage) => {
       
       return data.preferences;
     } catch (err) {
-      console.error('[PREFERENCES-SAVE] ❌ Exception:', err.message);
+      logErrorFromCatch('[PREFERENCES-SAVE] ❌ Exception:', err.message);
       setError(err.message);
       throw err;
     } finally {

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSetupIntent } from './useSetupIntent';
 import { useFinancialConnections } from './useFinancialConnections';
 import { useMandateConfirmation } from './useMandateConfirmation';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * Master hook that orchestrates the entire bank account addition flow
@@ -52,7 +53,7 @@ export function useBankAccountFlow(token) {
       const message = err.message || 'Failed to connect bank account';
       setGlobalError(message);
       setStep('error');
-      console.error('[FLOW] Error in bank connection:', err);
+      logErrorFromCatch('[FLOW] Error in bank connection:', err);
     }
   };
 
@@ -87,7 +88,7 @@ export function useBankAccountFlow(token) {
       const message = err.message || 'Failed to confirm mandate';
       setGlobalError(message);
       setStep('error');
-      console.error('[FLOW] Error in mandate confirmation:', err);
+      logErrorFromCatch('[FLOW] Error in mandate confirmation:', err);
       throw err;
     }
   };

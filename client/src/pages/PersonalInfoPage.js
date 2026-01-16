@@ -15,6 +15,7 @@ import { validatePersonalInfoForm } from '../utils/validatePersonalInfoForm';
 import { usePersonalInfoAPI } from '../hooks/usePersonalInfoAPI';
 import { useTempAccountConfig } from '../hooks/useTempAccountConfig';
 import { useAstrologyPolling } from '../hooks/useAstrologyPolling';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 import '../styles/responsive.css';
 import './PersonalInfoPage.css';
 
@@ -112,7 +113,7 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
         try {
           await onboarding.updateOnboardingStep('personal_info');
         } catch (err) {
-          console.error('[PERSONAL-INFO] Failed to update onboarding:', err);
+          logErrorFromCatch('[PERSONAL-INFO] Failed to update onboarding:', err);
         }
       }
 
@@ -134,7 +135,7 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
         setTimeout(() => setSuccess(false), TIMING.SUCCESS_DISPLAY_MS);
       }
     } catch (err) {
-      console.error('[PERSONAL-INFO] Submission error:', err);
+      logErrorFromCatch('[PERSONAL-INFO] Submission error:', err);
       setError(err.message);
     } finally {
       setLoading(false);

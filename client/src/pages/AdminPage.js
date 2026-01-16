@@ -8,6 +8,7 @@ import { useTranslation } from '../context/TranslationContext';
 import { getAuth } from 'firebase/auth';
 import ViolationReportTab from '../components/AdminTabs/ViolationReportTab';
 import { ComplianceDashboard } from '../components/admin/ComplianceDashboard';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -55,7 +56,7 @@ export default function AdminPage({ token, userId }) {
       setReport(data);
       setMessage('Report loaded successfully');
     } catch (err) {
-      console.error('Error fetching report:', err);
+      logErrorFromCatch('Error fetching report:', err);
       setError(err.message || 'Failed to fetch analytics report');
     } finally {
       setIsLoading(false);
@@ -105,7 +106,7 @@ export default function AdminPage({ token, userId }) {
       setMessage(`✅ Deleted ${result.rows_deleted} analytics records`);
       setReport(null);
     } catch (err) {
-      console.error('Error deleting data:', err);
+      logErrorFromCatch('Error deleting data:', err);
       setError(err.message || 'Failed to delete analytics data');
     } finally {
       setIsLoading(false);
@@ -138,7 +139,7 @@ export default function AdminPage({ token, userId }) {
       setMessage(`✅ Deleted ${result.rows_deleted} old analytics records`);
       setReport(null);
     } catch (err) {
-      console.error('Error cleaning up data:', err);
+      logErrorFromCatch('Error cleaning up data:', err);
       setError(err.message || 'Failed to cleanup old data');
     } finally {
       setIsLoading(false);

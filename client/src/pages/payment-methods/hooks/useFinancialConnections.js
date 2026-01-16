@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { fetchWithTokenRefresh } from '../../../utils/fetchWithTokenRefresh';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 import {
   validateFinancialConnectionsResponse,
   validateAccountsResponse,
@@ -42,7 +43,7 @@ export function useFinancialConnections(token) {
     } catch (err) {
       const message = err.message || 'Failed to create Financial Connections session';
       setError(message);
-      console.error('[FC] Error:', err);
+      logErrorFromCatch('[FC] Error:', err);
       throw err;
     } finally {
       setLoading(false);
@@ -77,7 +78,7 @@ export function useFinancialConnections(token) {
     } catch (err) {
       const message = err.message || 'Failed to collect accounts';
       setError(message);
-      console.error('[FC] Error:', err);
+      logErrorFromCatch('[FC] Error:', err);
       throw err;
     } finally {
       setLoading(false);
@@ -115,7 +116,7 @@ export function useFinancialConnections(token) {
     } catch (err) {
       const message = err.message || 'Failed to fetch linked accounts';
       setError(message);
-      console.error('[FC] Error:', err);
+      logErrorFromCatch('[FC] Error:', err);
       throw err;
     } finally {
       setLoading(false);

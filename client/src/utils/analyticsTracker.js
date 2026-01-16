@@ -138,7 +138,7 @@ export async function trackEvent(eventType, pageName, eventAction = null, sessio
       // Don't include auth token - truly anonymous
     });
   } catch (error) {
-    console.error('[ANALYTICS] Error tracking event:', error);
+    logErrorFromCatch('[ANALYTICS] Error tracking event:', error);
     // Fail silently - don't break app functionality
   }
 }

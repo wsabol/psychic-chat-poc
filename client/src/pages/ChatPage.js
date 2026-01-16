@@ -4,6 +4,7 @@ import { useChat } from '../hooks/useChat';
 import ChatMessageList from '../components/ChatMessageList';
 import ChatInputForm from '../components/ChatInputForm';
 import CircleTimer from '../components/CircleTimer';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 import '../styles/responsive.css';
 import './ChatPage.css';
 
@@ -37,7 +38,7 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
           setDefaultShowBrief(responseType === 'brief');
         }
       } catch (err) {
-        console.error('[CHAT-PAGE] Error fetching preferences:', err);
+        logErrorFromCatch('[CHAT-PAGE] Error fetching preferences:', err);
       }
     };
     

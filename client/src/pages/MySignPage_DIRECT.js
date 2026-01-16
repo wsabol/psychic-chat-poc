@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 import '../styles/responsive.css';
 import './MySignPage.css';
 
@@ -42,7 +43,7 @@ export default function MySignPage({ userId, token, auth }) {
       });
       setLoading(false);
     } catch (err) {
-      console.error('[MY-SIGN] Error:', err);
+      logErrorFromCatch('[MY-SIGN] Error:', err);
       setError('Unable to load your birth chart. Please try again.');
       setLoading(false);
     }

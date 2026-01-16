@@ -7,6 +7,7 @@ import { isBirthInfoError, isBirthInfoMissing } from '../utils/birthInfoErrorHan
 import BirthInfoMissingPrompt from '../components/BirthInfoMissingPrompt';
 import { formatDateByLanguage } from '../utils/dateLocaleUtils';
 import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 import '../styles/responsive.css';
 import './MoonPhasePage.css';
 
@@ -81,7 +82,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
           setShowingBrief(data.response_type === 'brief');
         }
       } catch (err) {
-        console.error('[MOON-PHASE] Error fetching preferences:', err);
+        logErrorFromCatch('[MOON-PHASE] Error fetching preferences:', err);
       }
     };
     fetchPreferences();
@@ -128,7 +129,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
         return astroDataObj;
       }
     } catch (err) {
-      console.error('[MOON-PHASE] Error fetching astro info:', err);
+      logErrorFromCatch('[MOON-PHASE] Error fetching astro info:', err);
     }
     return null;
   };
@@ -216,7 +217,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
             return;
           }
         } catch (err) {
-          console.error('[MOON-PHASE] Polling error:', err);
+          logErrorFromCatch('[MOON-PHASE] Polling error:', err);
         }
 
                 if (pollCount >= maxPolls) {
@@ -227,7 +228,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
         }
       }, 1000);
     } catch (err) {
-      console.error('[MOON-PHASE] Error loading moon phase:', err);
+      logErrorFromCatch('[MOON-PHASE] Error loading moon phase:', err);
       setError('Unable to load moon phase data. Please try again.');
       setLoading(false);
     }

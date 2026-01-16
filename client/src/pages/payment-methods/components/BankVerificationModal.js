@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * BankVerificationModal - Micro-deposit verification with amounts input
@@ -42,7 +43,7 @@ export default function BankVerificationModal({
       }
       onSuccess();
     } catch (err) {
-      console.error('[BANK-VERIFY] Error:', err);
+      logErrorFromCatch('[BANK-VERIFY] Error:', err);
       setError(err.message || 'Verification failed');
       setVerifying(false);
     }
