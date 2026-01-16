@@ -9,6 +9,7 @@
 
 import { getEncryptionKey } from './decryptionHelper.js';
 import { hashUserId } from './hashUtils.js';
+import { logErrorFromCatch } from './errorLogger.js';
 
 /**
  * Log an action to the audit_log table
@@ -34,9 +35,9 @@ export async function logAudit(db, options) {
     durationMs = null                 // Request duration in milliseconds
   } = options;
 
-  // Validate required fields
+    // Validate required fields
   if (!action) {
-    logErrorFromCatch(error, 'app', 'audit');
+    logErrorFromCatch(new Error('Missing required action field'), 'audit', 'logAudit');
     return;
   }
 
@@ -117,12 +118,8 @@ export async function logAudit(db, options) {
         encryptedUserAgent
       ]
     );
-  } catch (err) {
-    console.error('[AUDIT] ERROR: Failed to write audit log:', {
-      action,
-      error: err.message,
-      code: err.code
-    });
+    } catch (err) {
+    logErrorFromCatch(err, 'audit', 'write audit log');
   }
 }
 
@@ -150,8 +147,8 @@ export async function getUserAuditLogs(db, userId, limit = 100) {
       [ENCRYPTION_KEY, userIdHash, limit]
     );
     return result.rows;
-  } catch (err) {
-    logErrorFromCatch(error, 'app', 'audit');
+    } catch (err) {
+    logErrorFromCatch(err, 'audit', 'get user audit logs');
     return [];
   }
 }
@@ -176,8 +173,8 @@ export async function findBruteForceAttempts(db, threshold = 5) {
       [threshold]
     );
     return result.rows;
-  } catch (err) {
-    logErrorFromCatch(error, 'app', 'audit');
+    } catch (err) {
+    logErrorFromCatch(err, 'audit', 'find brute force attempts');
     return [];
   }
 }
@@ -211,8 +208,8 @@ export async function findSuspiciousIPs(db, requestThreshold = 100) {
       ...row,
       ip_address: row.ip_address_encrypted ? '[ENCRYPTED]' : null
     }));
-  } catch (err) {
-    logErrorFromCatch(error, 'app', 'audit');
+    } catch (err) {
+    logErrorFromCatch(err, 'audit', 'find suspicious IPs');
     return [];
   }
 }
@@ -240,8 +237,8 @@ export async function getDataAccessLogs(db, userId, daysBack = 30) {
       [ENCRYPTION_KEY, daysBack]
     );
     return result.rows;
-  } catch (err) {
-    logErrorFromCatch(error, 'app', 'audit');
+    } catch (err) {
+    logErrorFromCatch(err, 'audit', 'get data access logs');
     return [];
   }
 }
@@ -270,8 +267,8 @@ export async function exportUserAuditLogs(db, userId, daysBack = 365) {
       [ENCRYPTION_KEY, userIdHash, daysBack]
     );
     return result.rows;
-  } catch (err) {
-    logErrorFromCatch(error, 'app', 'audit');
+    } catch (err) {
+    logErrorFromCatch(err, 'audit', 'export user audit logs');
     return [];
   }
 }
