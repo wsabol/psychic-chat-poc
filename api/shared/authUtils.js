@@ -120,7 +120,7 @@ export async function logAudit(db, userId, action, details, ipAddress, userAgent
       [userId, action, JSON.stringify(details), ipAddress, userAgent]
     );
   } catch (error) {
-    console.error('Audit log error:', error);
+    logErrorFromCatch(error, 'app', 'Error handling');
     // Don't throw - audit logging should not block main operations
   }
 }
@@ -140,6 +140,6 @@ export async function cleanupExpiredTokens(db) {
       'DELETE FROM password_reset_tokens WHERE expires_at < NOW() AND used = false'
     );
   } catch (error) {
-    console.error('Cleanup error:', error);
+    logErrorFromCatch(error, 'app', 'Error handling');
   }
 }

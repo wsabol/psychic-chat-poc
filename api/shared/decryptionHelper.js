@@ -138,7 +138,7 @@ export async function executeWithDecryption(db, sql, params = []) {
     const result = await db.query(sql, allParams);
     return result;
   } catch (err) {
-    console.error('[DECRYPTION] Query error:', err.message);
+    logErrorFromCatch(error, 'app', 'decryption');
     throw err;
   }
 }

@@ -152,7 +152,7 @@ export async function migrateOnboardingData(options) {
     return migrationLog;
 
   } catch (err) {
-    console.error('[MIGRATION] Error during migration:', err.message);
+    logErrorFromCatch(error, 'app', 'migration');
     migrationLog.status = 'error';
     migrationLog.error = err.message;
     migrationLog.endTime = new Date().toISOString();
@@ -178,7 +178,7 @@ export async function verifyMigration(newUserId) {
       messagesCount: parseInt(result.rows[0].message_count)
     };
   } catch (err) {
-    console.error('[MIGRATION] Verification failed:', err);
+    logErrorFromCatch(error, 'app', 'migration');
     throw err;
   }
 }
@@ -194,7 +194,7 @@ export async function rollbackMigration(newUserId) {
     
     return { success: true };
   } catch (err) {
-    console.error('[MIGRATION] Rollback failed:', err);
+    logErrorFromCatch(error, 'app', 'migration');
     throw err;
   }
 }

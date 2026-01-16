@@ -9,7 +9,7 @@ export function verifyWebhookSignature(body, signature) {
     );
     return event;
   } catch (error) {
-    console.error('[STRIPE] Webhook signature verification failed:', error);
+    logErrorFromCatch(error, 'app', 'stripe');
     throw error;
   }
 }

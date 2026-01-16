@@ -167,7 +167,7 @@ export function healthContentMiddleware(req, res, next) {
     
     next();
   } catch (error) {
-    console.error('[HEALTH-GUARD] Error in health content check:', error);
+    logErrorFromCatch(error, 'app', 'health guard');
     // Don't block on error - just log and continue
     next();
   }
