@@ -25,7 +25,7 @@ export async function getEmailData(userId) {
       recoveryEmailVerified: row.recovery_email_verified
     };
   } catch (err) {
-    console.error('[SECURITY] Error getting email data:', err);
+    logErrorFromCatch(error, 'app', 'security');
     throw err;
   }
 }
@@ -56,7 +56,7 @@ export async function saveRecoveryEmail(userId, recoveryEmail) {
     // FIXED: Actually send the verification email
     const sendResult = await sendEmailVerificationCode(recoveryEmail, code);
     if (!sendResult.success) {
-      console.error('[SECURITY] Failed to send recovery email verification code:', sendResult.error);
+      logErrorFromCatch(error, 'app', 'security');
       throw new Error('Failed to send verification email: ' + sendResult.error);
     }
 
@@ -64,7 +64,7 @@ export async function saveRecoveryEmail(userId, recoveryEmail) {
 
     return { success: true, codeSent: true };
   } catch (err) {
-    console.error('[SECURITY] Error saving recovery email:', err);
+    logErrorFromCatch(error, 'app', 'security');
     throw err;
   }
 }
@@ -101,7 +101,7 @@ export async function verifyEmailCode(userId, code) {
 
     return { success: true, verified: true };
   } catch (err) {
-    console.error('[SECURITY] Error verifying email code:', err);
+    logErrorFromCatch(error, 'app', 'security');
     throw err;
   }
 }
@@ -121,7 +121,7 @@ export async function removeRecoveryEmail(userId) {
 
     return { success: true };
   } catch (err) {
-    console.error('[SECURITY] Error removing recovery email:', err);
+    logErrorFromCatch(error, 'app', 'security');
     throw err;
   }
 }

@@ -25,7 +25,7 @@ export async function logViolation(userId, violationType, severity = 'warning', 
 
     return result.rows[0];
   } catch (err) {
-    console.error('[VIOLATION] Error logging violation:', err);
+    logErrorFromCatch(error, 'app', 'violation');
     throw err;
   }
 }
@@ -47,7 +47,7 @@ export async function getActiveViolationCount(userId, violationType) {
 
     return parseInt(result.rows[0].count, 10) || 0;
   } catch (err) {
-    console.error('[VIOLATION] Error getting violation count:', err);
+    logErrorFromCatch(error, 'app', 'violation');
     return 0;
   }
 }
@@ -70,7 +70,7 @@ export async function getUserViolations(userId) {
 
     return result.rows;
   } catch (err) {
-    console.error('[VIOLATION] Error fetching violations:', err);
+    logErrorFromCatch(error, 'app', 'violation');
     return [];
   }
 }
@@ -86,7 +86,7 @@ export async function resolveViolation(violationId) {
       [violationId]
     );
   } catch (err) {
-    console.error('[VIOLATION] Error resolving violation:', err);
+    logErrorFromCatch(error, 'app', 'violation');
     throw err;
   }
 }
@@ -131,7 +131,7 @@ export async function deleteUserAccount(userId) {
 
     return true;
   } catch (err) {
-    console.error('[VIOLATION] Error deleting account:', err);
+    logErrorFromCatch(error, 'app', 'violation');
     throw err;
   }
 }
@@ -206,7 +206,7 @@ export async function handleAgeViolation(userId, userAge) {
       };
     }
   } catch (err) {
-    console.error('[AGE-VIOLATION] Error handling age violation:', err);
+    logErrorFromCatch(error, 'app', 'age violation');
     return {
       violationCount: 0,
       attemptsRemaining: 3,

@@ -93,7 +93,7 @@ export async function createSession(userId, req) {
     };
 
   } catch (error) {
-    console.error('[SESSION] Error creating session:', error);
+    logErrorFromCatch(error, 'app', 'session');
     throw error;
   }
 }
@@ -143,7 +143,7 @@ export async function validateSession(sessionToken) {
     };
 
   } catch (error) {
-    console.error('[SESSION] Error validating session:', error);
+    logErrorFromCatch(error, 'app', 'session');
     return null;
   }
 }
@@ -177,7 +177,7 @@ export async function getActiveSessions(userId) {
     }));
 
   } catch (error) {
-    console.error('[SESSION] Error getting sessions:', error);
+    logErrorFromCatch(error, 'app', 'session');
     return [];
   }
 }
@@ -201,7 +201,7 @@ export async function revokeSession(sessionId, userId) {
     return result.rowCount > 0;
 
   } catch (error) {
-    console.error('[SESSION] Error revoking session:', error);
+    logErrorFromCatch(error, 'app', 'session');
     return false;
   }
 }
@@ -224,7 +224,7 @@ export async function revokeAllSessions(userId) {
     return result.rowCount;
 
   } catch (error) {
-    console.error('[SESSION] Error revoking all sessions:', error);
+    logErrorFromCatch(error, 'app', 'session');
     return 0;
   }
 }
@@ -240,7 +240,7 @@ async function updateSessionStatus(sessionId, status) {
       [status, sessionId]
     );
   } catch (error) {
-    console.error('[SESSION] Error updating session status:', error);
+    logErrorFromCatch(error, 'app', 'session');
   }
 }
 
@@ -255,7 +255,7 @@ async function updateLastActivity(sessionId) {
       [sessionId]
     );
   } catch (error) {
-    console.error('[SESSION] Error updating last activity:', error);
+    logErrorFromCatch(error, 'app', 'session');
   }
 }
 
@@ -280,7 +280,7 @@ async function cleanupOldSessions(userId) {
     }
 
   } catch (error) {
-    console.error('[SESSION] Error cleaning up old sessions:', error);
+    logErrorFromCatch(error, 'app', 'session');
   }
 }
 

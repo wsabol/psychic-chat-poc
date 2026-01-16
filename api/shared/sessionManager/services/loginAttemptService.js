@@ -47,7 +47,7 @@ export async function logLoginAttempt(options) {
     return true;
 
   } catch (error) {
-    console.error('[LOGIN-ATTEMPT] Error logging attempt:', error);
+    logErrorFromCatch(error, 'app', 'login attempt');
     return false;
   }
 }
@@ -73,7 +73,7 @@ export async function getLoginAttempts(userId, hours = 24) {
     return result.rows;
 
   } catch (error) {
-    console.error('[LOGIN-ATTEMPT] Error retrieving attempts:', error);
+    logErrorFromCatch(error, 'app', 'login attempt');
     return [];
   }
 }
@@ -98,7 +98,7 @@ export async function getAttemptsFromIp(ipAddress, hours = 24) {
     return result.rows;
 
   } catch (error) {
-    console.error('[LOGIN-ATTEMPT] Error getting IP attempts:', error);
+    logErrorFromCatch(error, 'app', 'login attempt');
     return [];
   }
 }
@@ -123,7 +123,7 @@ export async function countFailedAttemptsFromIp(ipAddress, minutes = 60) {
     return parseInt(result.rows[0].count, 10);
 
   } catch (error) {
-    console.error('[LOGIN-ATTEMPT] Error counting failed attempts:', error);
+    logErrorFromCatch(error, 'app', 'login attempt');
     return 0;
   }
 }
@@ -147,7 +147,7 @@ export async function countUniqueUsersFromIp(ipAddress, minutes = 60) {
     return parseInt(result.rows[0].count, 10);
 
   } catch (error) {
-    console.error('[LOGIN-ATTEMPT] Error counting unique users:', error);
+    logErrorFromCatch(error, 'app', 'login attempt');
     return 0;
   }
 }

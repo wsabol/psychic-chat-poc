@@ -16,7 +16,7 @@ export async function createSubscription(customerId, priceId) {
 
     return subscription;
   } catch (error) {
-    console.error('[STRIPE] Error creating subscription:', error);
+    logErrorFromCatch(error, 'app', 'stripe');
     throw error;
   }
 }
@@ -33,7 +33,7 @@ export async function getSubscriptions(customerId) {
     });
     return subscriptions.data;
   } catch (error) {
-    console.error('[STRIPE] Error getting subscriptions:', error);
+    logErrorFromCatch(error, 'app', 'stripe');
     return [];
   }
 }
@@ -49,7 +49,7 @@ export async function cancelSubscription(subscriptionId) {
     });
     return subscription;
   } catch (error) {
-    console.error('[STRIPE] Error canceling subscription:', error);
+    logErrorFromCatch(error, 'app', 'stripe');
     throw error;
   }
 }
@@ -66,7 +66,7 @@ export async function getInvoices(customerId) {
     });
     return invoices.data;
   } catch (error) {
-    console.error('[STRIPE] Error getting invoices:', error);
+    logErrorFromCatch(error, 'app', 'stripe');
     return [];
   }
 }
@@ -83,7 +83,7 @@ export async function getCharges(customerId) {
     });
     return charges.data;
   } catch (error) {
-    console.error('[STRIPE] Error getting charges:', error);
+    logErrorFromCatch(error, 'app', 'stripe');
     return [];
   }
 }
@@ -100,7 +100,7 @@ export async function getAvailablePrices() {
     });
     return prices.data;
   } catch (error) {
-    console.error('[STRIPE] Error getting prices:', error);
+    logErrorFromCatch(error, 'app', 'stripe');
     return [];
   }
 }

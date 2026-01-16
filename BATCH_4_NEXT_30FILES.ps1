@@ -1,0 +1,35 @@
+# Batch 4 - Next 30 Files
+$files = @(
+    "api/routes/astrology-insights.js",
+    "api/routes/billing/paymentMethods.js",
+    "api/routes/billing/invoices.js",
+    "api/routes/billing/charges.js",
+    "api/routes/billing/pricing.js",
+    "api/middleware/inputValidation.js",
+    "api/middleware/consentGate.js",
+    "api/middleware/complianceGate.js",
+    "api/middleware/errorHandler.js",
+    "api/shared/smsService.js",
+    "api/services/twoFAService.js",
+    "api/services/authService.js",
+    "api/services/stripeService.js",
+    "api/routes/auth-endpoints/register.js",
+    "api/routes/auth-endpoints/account.js",
+    "api/routes/auth-endpoints/account-reactivation.js",
+    "api/routes/auth-endpoints/preferences.js",
+    "api/routes/auth-endpoints/2fa.js",
+    "api/routes/chat.js",
+    "api/routes/astrology.js",
+    "api/routes/horoscope.js",
+    "api/routes/moon-phase.js",
+    "api/routes/cleanup.js",
+    "api/routes/help.js",
+    "api/routes/analytics.js",
+    "api/routes/violationReports.js",
+    "api/routes/security.js",
+    "api/shared/firebase-admin.js",
+    "api/shared/db.js",
+    "api/shared/encryptionUtils.js"
+)
+
+& .\BULK_CONSOLE_FIX_V4.ps1 -BatchName "Batch-4-30Files" -Files $files

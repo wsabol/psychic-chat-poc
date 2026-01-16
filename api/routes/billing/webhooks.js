@@ -57,7 +57,7 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
           }
         }
       } catch (error) {
-        console.error('[WEBHOOK] Error extracting user ID:', error);
+        logErrorFromCatch(error, 'app', 'webhook');
       }
       return null;
     };
@@ -82,7 +82,7 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
             price_interval: subscription.items?.data?.[0]?.price?.recurring?.interval,
           });
         } catch (error) {
-          console.error('[WEBHOOK] Error storing subscription:', error);
+          logErrorFromCatch(error, 'app', 'webhook');
         }
         break;
       }
@@ -102,7 +102,7 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
             current_period_end: subscription.current_period_end,
           });
         } catch (error) {
-          console.error('[WEBHOOK] Error updating subscription:', error);
+          logErrorFromCatch(error, 'app', 'webhook');
         }
         break;
       }
@@ -122,7 +122,7 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
             current_period_end: subscription.current_period_end,
           });
         } catch (error) {
-          console.error('[WEBHOOK] Error canceling subscription:', error);
+          logErrorFromCatch(error, 'app', 'webhook');
         }
         break;
       }
@@ -141,7 +141,7 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
               });
 
             } catch (error) {
-              console.error('[WEBHOOK] Error updating subscription to active:', error);
+              logErrorFromCatch(error, 'app', 'webhook');
             }
           }
         }
@@ -161,7 +161,7 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
                 current_period_end: invoice.period_end,
               });
             } catch (error) {
-              console.error('[WEBHOOK] Error updating subscription to past_due:', error);
+              logErrorFromCatch(error, 'app', 'webhook');
             }
           }
         }

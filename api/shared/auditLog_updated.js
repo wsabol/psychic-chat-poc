@@ -48,7 +48,7 @@ export async function logAudit(db, options) {
 
   // Validate required fields
   if (!action) {
-    console.error('[AUDIT] ERROR: action is required for audit log');
+    logErrorFromCatch(error, 'app', 'audit');
     return;
   }
 
@@ -128,7 +128,7 @@ export async function getUserAuditLogs(db, userId, limit = 100) {
     );
     return result.rows;
   } catch (err) {
-    console.error('[AUDIT] Error querying user logs:', err.message);
+    logErrorFromCatch(error, 'app', 'audit');
     return [];
   }
 }
@@ -156,7 +156,7 @@ export async function findBruteForceAttempts(db, threshold = 5) {
     );
     return result.rows;
   } catch (err) {
-    console.error('[AUDIT] Error finding brute force attempts:', err.message);
+    logErrorFromCatch(error, 'app', 'audit');
     return [];
   }
 }
@@ -193,7 +193,7 @@ export async function findSuspiciousIPs(db, requestThreshold = 100) {
       ip_address: row.ip_address_encrypted ? '[ENCRYPTED]' : null
     }));
   } catch (err) {
-    console.error('[AUDIT] Error finding suspicious IPs:', err.message);
+    logErrorFromCatch(error, 'app', 'audit');
     return [];
   }
 }
@@ -221,7 +221,7 @@ export async function getDataAccessLogs(db, userId, daysBack = 30) {
     );
     return result.rows;
   } catch (err) {
-    console.error('[AUDIT] Error getting data access logs:', err.message);
+    logErrorFromCatch(error, 'app', 'audit');
     return [];
   }
 }
@@ -249,7 +249,7 @@ export async function exportUserAuditLogs(db, userId, daysBack = 365) {
     );
     return result.rows;
   } catch (err) {
-    console.error('[AUDIT] Error exporting user logs:', err.message);
+    logErrorFromCatch(error, 'app', 'audit');
     return [];
   }
 }

@@ -12,6 +12,7 @@
 
 import { db } from './db.js';
 import { logAudit } from './auditLog.js';
+import { logErrorFromCatch } from './errorLogger.js';
 
 // Thresholds for detection
 const THRESHOLDS = {
@@ -92,7 +93,7 @@ async function checkBruteForce(ipAddress) {
     return { detected: false };
 
   } catch (error) {
-    console.error('[IDS] Error checking brute force:', error);
+    logErrorFromCatch(error, 'app', 'ids');
     return { detected: false };
   }
 }
@@ -134,7 +135,7 @@ async function checkAccountEnumeration(ipAddress) {
     return { detected: false };
 
   } catch (error) {
-    console.error('[IDS] Error checking account enumeration:', error);
+    logErrorFromCatch(error, 'app', 'ids');
     return { detected: false };
   }
 }
@@ -172,7 +173,7 @@ async function checkRapidRequests(ipAddress) {
     return { detected: false };
 
   } catch (error) {
-    console.error('[IDS] Error checking rapid requests:', error);
+    logErrorFromCatch(error, 'app', 'ids');
     return { detected: false };
   }
 }
@@ -226,7 +227,7 @@ async function raiseAlert(event, anomalies) {
       .map(a => `${a.type} (${a.severity})`)
       .join(', ');
 
-    // Log to security audit trail
+        // Log to security audit trail
     await logAudit(db, {
       userId: event.userId || 'unknown',
       action: 'INTRUSION_DETECTION_ALERT',
@@ -243,7 +244,9 @@ async function raiseAlert(event, anomalies) {
           details: a.details
         }))
       }
-    }).catch(e => console.error('[AUDIT] Error logging alert:', e));
+    }).catch(e => {
+      logErrorFromCatch(e, 'intrusion-detection', 'Log anomaly alert').catch(() => {});
+    });
 
     // TODO: Send email alert to security team
     // TODO: Page on-call security engineer (for CRITICAL)
@@ -252,7 +255,7 @@ async function raiseAlert(event, anomalies) {
     return true;
 
   } catch (error) {
-    console.error('[IDS] Error raising alert:', error);
+    logErrorFromCatch(error, 'app', 'ids');
     return false;
   }
 }
@@ -294,7 +297,7 @@ export async function getIPSecurityScore(ipAddress) {
     return Math.max(0, Math.min(100, score));
 
   } catch (error) {
-    console.error('[IDS] Error calculating security score:', error);
+    logErrorFromCatch(error, 'app', 'ids');
     return 0;
   }
 }
@@ -306,7 +309,7 @@ export async function blockIP(ipAddress, reason, durationHours = 24) {
   try {
     // TODO: Implement IP blocking in firewall/WAF
     
-    // Log to audit trail
+        // Log to audit trail
     await logAudit(db, {
       userId: 'system',
       action: 'IP_BLOCKED',
@@ -317,12 +320,14 @@ export async function blockIP(ipAddress, reason, durationHours = 24) {
         reason,
         durationHours
       }
-    }).catch(e => console.error('[AUDIT] Error logging IP block:', e));
+    }).catch(e => {
+      logErrorFromCatch(e, 'intrusion-detection', 'Log IP block').catch(() => {});
+    });
 
     return true;
 
   } catch (error) {
-    console.error('[IDS] Error blocking IP:', error);
+    logErrorFromCatch(error, 'app', 'ids');
     return false;
   }
 }
@@ -379,7 +384,7 @@ export async function getSecurityMetrics() {
     };
 
   } catch (error) {
-    console.error('[IDS] Error getting metrics:', error);
+    logErrorFromCatch(error, 'app', 'ids');
     return null;
   }
 }

@@ -65,7 +65,7 @@ export async function isDeviceTrusted(db, userIdHash, deviceFingerprint) {
 
     return result.rows.length > 0;
   } catch (err) {
-    console.error('[DEVICE] Error checking if device is trusted:', err);
+    logErrorFromCatch(error, 'app', 'device');
     return false;
   }
 }
@@ -92,7 +92,7 @@ export async function trustDevice(db, userIdHash, deviceFingerprint, deviceName)
 
     return result.rows.length > 0;
   } catch (err) {
-    console.error('[DEVICE] Error trusting device:', err);
+    logErrorFromCatch(error, 'app', 'device');
     throw err;
   }
 }
@@ -122,7 +122,7 @@ export async function getTrustedDevices(db, userIdHash) {
 
     return result.rows;
   } catch (err) {
-    console.error('[DEVICE] Error getting trusted devices:', err);
+    logErrorFromCatch(error, 'app', 'device');
     throw err;
   }
 }
@@ -143,7 +143,7 @@ export async function revokeTrustedDevice(db, userIdHash, deviceSessionId) {
 
     return result.rows.length > 0;
   } catch (err) {
-    console.error('[DEVICE] Error revoking trusted device:', err);
+    logErrorFromCatch(error, 'app', 'device');
     throw err;
   }
 }
@@ -162,7 +162,7 @@ export async function cleanupExpiredTrustedDevices(db) {
 
     return result.rowCount;
   } catch (err) {
-    console.error('[DEVICE] Error cleaning up expired devices:', err);
+    logErrorFromCatch(error, 'app', 'device');
     throw err;
   }
 }

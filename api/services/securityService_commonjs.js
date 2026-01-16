@@ -26,7 +26,7 @@ async function getDevices(userId) {
 
     return { devices, count: devices.length };
   } catch (err) {
-    console.error('[SECURITY] Error getting devices:', err);
+    logErrorFromCatch(error, 'app', 'security');
     throw err;
   }
 }
@@ -63,7 +63,7 @@ async function logoutDevice(userId, deviceId) {
 
     return { success: true };
   } catch (err) {
-    console.error('[SECURITY] Error logging out device:', err);
+    logErrorFromCatch(error, 'app', 'security');
     throw err;
   }
 }
@@ -90,7 +90,7 @@ async function getPhoneData(userId) {
       recoveryPhoneVerified: row.recovery_phone_verified
     };
   } catch (err) {
-    console.error('[SECURITY] Error getting phone data:', err);
+    logErrorFromCatch(error, 'app', 'security');
     throw err;
   }
 }
@@ -131,7 +131,7 @@ async function savePhoneNumber(userId, phoneNumber, recoveryPhone) {
 
     return { success: true, codeSent: true };
   } catch (err) {
-    console.error('[SECURITY] Error saving phone:', err);
+    logErrorFromCatch(error, 'app', 'security');
     throw err;
   }
 }
@@ -171,7 +171,7 @@ async function verifyPhoneCode(userId, code) {
 
     return { success: true, verified: true };
   } catch (err) {
-    console.error('[SECURITY] Error verifying phone code:', err);
+    logErrorFromCatch(error, 'app', 'security');
     throw err;
   }
 }
@@ -196,7 +196,7 @@ async function getEmailData(userId) {
       recoveryEmailVerified: row.recovery_email_verified
     };
   } catch (err) {
-    console.error('[SECURITY] Error getting email data:', err);
+    logErrorFromCatch(error, 'app', 'security');
     throw err;
   }
 }
@@ -232,7 +232,7 @@ async function saveRecoveryEmail(userId, recoveryEmail) {
 
     return { success: true, codeSent: true };
   } catch (err) {
-    console.error('[SECURITY] Error saving recovery email:', err);
+    logErrorFromCatch(error, 'app', 'security');
     throw err;
   }
 }
@@ -271,7 +271,7 @@ async function verifyEmailCode(userId, code) {
 
     return { success: true, verified: true };
   } catch (err) {
-    console.error('[SECURITY] Error verifying email code:', err);
+    logErrorFromCatch(error, 'app', 'security');
     throw err;
   }
 }
@@ -289,7 +289,7 @@ async function removeRecoveryEmail(userId) {
 
     return { success: true };
   } catch (err) {
-    console.error('[SECURITY] Error removing recovery email:', err);
+    logErrorFromCatch(error, 'app', 'security');
     throw err;
   }
 }
@@ -315,7 +315,7 @@ async function recordPasswordChange(userId) {
 
     return { success: true };
   } catch (err) {
-    console.error('[SECURITY] Error recording password change:', err);
+    logErrorFromCatch(error, 'app', 'security');
     throw err;
   }
 }

@@ -8,6 +8,7 @@
 import { Router } from 'express';
 import { authorizeUser } from '../../middleware/auth.js';
 import { logAudit } from '../../shared/auditLog.js';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { db } from '../../shared/db.js';
 import { validationError, notFoundError, serverError } from '../../utils/responses.js';
@@ -58,12 +59,14 @@ router.get('/download-data', async (req, res) => {
       userAgent: req.get('user-agent'),
       httpMethod: req.method,
       endpoint: req.path,
-      status: 'SUCCESS'
-    }).catch(e => console.error('[AUDIT]', e.message));
+                  status: 'SUCCESS'
+    }).catch(e => {
+      logErrorFromCatch(e, 'user-data-download', 'Log download request').catch(() => {});
+    });
 
     res.json(data);
   } catch (error) {
-    console.error('[DOWNLOAD-DATA]', error);
+    logErrorFromCatch(error, 'app', 'download data');
     return serverError(res, 'Failed to download data');
   }
 });
@@ -105,11 +108,13 @@ router.get('/export-data/:userId', authorizeUser, async (req, res) => {
       httpMethod: req.method,
       endpoint: req.path,
       status: 'SUCCESS',
-      details: {
+                  details: {
         format,
         records_exported: exportData.chat_messages.length + exportData.astrology_readings.length
       }
-    }).catch(e => console.error('[AUDIT]', e.message));
+    }).catch(e => {
+      logErrorFromCatch(e, 'user-data-download', 'Log export request').catch(() => {});
+    });
 
     // Return in requested format
     if (format === 'csv') {
@@ -126,7 +131,7 @@ router.get('/export-data/:userId', authorizeUser, async (req, res) => {
       return res.json(exportData);
     }
   } catch (error) {
-    console.error('[EXPORT] Error exporting data:', error);
+    logErrorFromCatch(error, 'app', 'export');
     await logAudit(db, {
       userId: req.params.userId,
       action: 'DATA_EXPORT_FAILED',
@@ -136,8 +141,10 @@ router.get('/export-data/:userId', authorizeUser, async (req, res) => {
       httpMethod: req.method,
       endpoint: req.path,
       status: 'FAILED',
-      details: { error: error.message }
-    }).catch(e => console.error('[AUDIT]', e.message));
+                  details: { error: error.message }
+    }).catch(e => {
+      logErrorFromCatch(e, 'user-data-download', 'Log export failed').catch(() => {});
+    });
 
     return serverError(res, 'Failed to export data');
   }

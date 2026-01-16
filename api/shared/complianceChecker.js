@@ -108,7 +108,7 @@ export async function checkUserCompliance(userId) {
       notificationCount: consent.notification_count
     };
   } catch (error) {
-    console.error('[COMPLIANCE] Error checking user compliance:', error);
+    logErrorFromCatch(error, 'app', 'compliance');
     throw error;
   }
 }
@@ -151,7 +151,7 @@ export async function flagUsersForUpdate(documentType = 'both') {
       timestamp: new Date().toISOString()
     };
   } catch (error) {
-    console.error('[COMPLIANCE] Error flagging users:', error);
+    logErrorFromCatch(error, 'app', 'compliance');
     throw error;
   }
 }
@@ -201,7 +201,7 @@ export async function getComplianceReport() {
       totalUsers: await getTotalUserCount()
     };
   } catch (error) {
-    console.error('[COMPLIANCE] Error getting report:', error);
+    logErrorFromCatch(error, 'app', 'compliance');
     throw error;
   }
 }
@@ -238,7 +238,7 @@ export async function getUsersRequiringAction() {
       users: result.rows
     };
   } catch (error) {
-    console.error('[COMPLIANCE] Error getting users requiring action:', error);
+    logErrorFromCatch(error, 'app', 'compliance');
     throw error;
   }
 }
@@ -275,7 +275,7 @@ export async function markUserNotified(userId) {
       notificationCount: result.rows[0].notification_count
     };
   } catch (error) {
-    console.error('[COMPLIANCE] Error marking user notified:', error);
+    logErrorFromCatch(error, 'app', 'compliance');
     throw error;
   }
 }
@@ -308,7 +308,7 @@ export async function clearComplianceFlagForUser(userId) {
       complianceFlagCleared: true
     };
   } catch (error) {
-    console.error('[COMPLIANCE] Error clearing compliance flag:', error);
+    logErrorFromCatch(error, 'app', 'compliance');
     throw error;
   }
 }
@@ -322,7 +322,7 @@ async function getTotalUserCount() {
     const result = await db.query('SELECT COUNT(*) as count FROM user_personal_info');
     return parseInt(result.rows[0].count, 10);
   } catch (error) {
-    console.error('[COMPLIANCE] Error getting user count:', error);
+    logErrorFromCatch(error, 'app', 'compliance');
     return 0;
   }
 }

@@ -78,7 +78,7 @@ export async function sendDeleteVerificationEmail(email, code) {
 
     return { success: true, email };
   } catch (error) {
-    console.error('[EMAIL] Failed to send deletion verification email:', error.message);
+    logErrorFromCatch(error, 'app', 'email');
     throw new Error(`Failed to send verification email: ${error.message}`);
   }
 }
@@ -107,7 +107,7 @@ export async function deleteFromFirebase(userId) {
     await auth.deleteUser(userId);
     return { success: true };
   } catch (error) {
-    console.error('[DELETE-ACCOUNT] Firebase deletion failed:', error.message);
+    logErrorFromCatch(error, 'app', 'delete account');
     return { success: false, error: error.message };
   }
 }
@@ -131,7 +131,7 @@ export async function deleteFromStripe(userId) {
     }
     return { success: true };
   } catch (error) {
-    console.error('[DELETE-ACCOUNT] Stripe deletion failed:', error.message);
+    logErrorFromCatch(error, 'app', 'delete account');
     return { success: false, error: error.message };
   }
 }
@@ -147,7 +147,7 @@ export async function decryptStripeCustomerId(encryptedId) {
     );
     return result.rows[0]?.customer_id;
   } catch (error) {
-    console.error('[DECRYPT] Failed to decrypt Stripe customer ID:', error.message);
+    logErrorFromCatch(error, 'app', 'decrypt');
     return null;
   }
 }
@@ -161,7 +161,7 @@ export async function deleteAllUserData(userId, userIdHash) {
       const value = column === 'user_id_hash' ? userIdHash : userId;
       await deleteFromTable(table, column, value);
     } catch (error) {
-      console.error(`[DELETE-DATA] Failed to delete from ${table}:`, error.message);
+      logErrorFromCatch(error, 'app', 'delete data');
     }
   }
 }
@@ -206,7 +206,7 @@ export async function performCompleteAccountDeletion(userId, userIdHash, req) {
     });
     results.audit = { success: true };
   } catch (error) {
-    console.error('[AUDIT]', error.message);
+    logErrorFromCatch(error, 'app', 'audit');
     results.audit = { success: false, error: error.message };
   }
 

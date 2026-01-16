@@ -12,6 +12,7 @@
 import { Router } from 'express';
 import { authenticateToken, authorizeUser } from '../../middleware/auth.js';
 import { logAudit } from '../../shared/auditLog.js';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { db } from '../../shared/db.js';
 import { validationError, notFoundError, serverError, unprocessableError } from '../../utils/responses.js';
@@ -65,8 +66,10 @@ router.post('/send-delete-verification', authenticateToken, async (req, res) => 
       userAgent: req.get('user-agent'),
       httpMethod: req.method,
       endpoint: req.path,
-      status: 'SUCCESS'
-    }).catch(e => console.error('[AUDIT]', e.message));
+                  status: 'SUCCESS'
+    }).catch(e => {
+      logErrorFromCatch(e, 'user-data-deletion', 'Log deletion verification sent').catch(() => {});
+    });
 
     res.json({
       success: true,
@@ -74,7 +77,7 @@ router.post('/send-delete-verification', authenticateToken, async (req, res) => 
       email_masked: maskEmail(userEmail)
     });
   } catch (error) {
-    console.error('[SEND-DELETE-VERIFICATION]', error);
+    logErrorFromCatch(error, 'app', 'send delete verification');
     return serverError(res, 'Failed to send verification email');
   }
 });
@@ -113,7 +116,7 @@ router.delete('/delete-account', authenticateToken, async (req, res) => {
       details: results
     });
   } catch (error) {
-    console.error('[DELETE-ACCOUNT]', error);
+    logErrorFromCatch(error, 'app', 'delete account');
     return serverError(res, 'Failed to delete account');
   }
 });
@@ -165,9 +168,11 @@ router.delete('/delete-account/:userId', authorizeUser, async (req, res) => {
       }
     });
 
-    // Log to deletion audit table
+        // Log to deletion audit table
     await logDeletionAudit(userId, 'DELETION_REQUESTED', req.ip, req.get('user-agent'))
-      .catch(e => console.error('[DELETION-AUDIT]', e.message));
+      .catch(e => {
+        logErrorFromCatch(e, 'user-data-deletion', 'Log deletion audit').catch(() => {});
+      });
 
     const graceEndDate = new Date();
     graceEndDate.setDate(graceEndDate.getDate() + 30);
@@ -181,7 +186,7 @@ router.delete('/delete-account/:userId', authorizeUser, async (req, res) => {
       message_detail: `Your account will be permanently deleted on ${new Date(deletionRecord.final_deletion_date).toISOString().split('T')[0]} unless you log in to cancel the deletion within 30 days.`
     });
   } catch (error) {
-    console.error('[DELETE] Error deleting account:', error);
+    logErrorFromCatch(error, 'app', 'delete');
     await logAudit(db, {
       userId: req.params.userId,
       action: 'ACCOUNT_DELETION_FAILED',
@@ -190,9 +195,11 @@ router.delete('/delete-account/:userId', authorizeUser, async (req, res) => {
       userAgent: req.get('user-agent'),
       httpMethod: req.method,
       endpoint: req.path,
-      status: 'FAILED',
+            status: 'FAILED',
       details: { error: error.message }
-    }).catch(e => console.error('[AUDIT]', e.message));
+    }).catch(e => {
+      logErrorFromCatch(e, 'user-data-deletion', 'Log deletion failed').catch(() => {});
+    });
 
     return serverError(res, 'Failed to delete account');
   }
@@ -241,8 +248,10 @@ router.post('/cancel-deletion/:userId', authorizeUser, async (req, res) => {
       details: { days_since_deletion: daysSinceDeletion }
     });
 
-    await logDeletionAudit(userId, 'REACTIVATED', req.ip, req.get('user-agent'))
-      .catch(e => console.error('[DELETION-AUDIT]', e.message));
+        await logDeletionAudit(userId, 'REACTIVATED', req.ip, req.get('user-agent'))
+      .catch(e => {
+        logErrorFromCatch(e, 'user-data-deletion', 'Log reactivation audit').catch(() => {});
+      });
 
     return res.json({
       success: true,
@@ -251,7 +260,7 @@ router.post('/cancel-deletion/:userId', authorizeUser, async (req, res) => {
       status: 'active'
     });
   } catch (error) {
-    console.error('[CANCEL-DELETE] Error canceling deletion:', error);
+    logErrorFromCatch(error, 'app', 'cancel delete');
     return serverError(res, 'Failed to cancel deletion');
   }
 });

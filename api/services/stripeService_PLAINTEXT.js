@@ -38,7 +38,7 @@ export async function getOrCreateStripeCustomer(userId, userEmail) {
 
     return customer.id;
   } catch (error) {
-    console.error('[STRIPE] Error getting/creating customer:', error);
+    logErrorFromCatch(error, 'app', 'stripe');
     throw error;
   }
 }
@@ -55,10 +55,10 @@ export async function createSetupIntent(customerId) {
     });
     return intent;
   } catch (error) {
-    console.error('[STRIPE] Error creating setup intent');
-    console.error('[STRIPE] Error message:', error.message);
-    console.error('[STRIPE] Status code:', error.statusCode);
-    console.error('[STRIPE] Error type:', error.type);
+    logErrorFromCatch(error, 'app', 'stripe');
+    logErrorFromCatch(error, 'app', 'stripe');
+    logErrorFromCatch(error, 'app', 'stripe');
+    logErrorFromCatch(error, 'app', 'stripe');
     throw error;
   }
 }
@@ -86,7 +86,7 @@ export async function listPaymentMethods(customerId) {
           const fullDetails = await stripe.paymentMethods.retrieve(bank.id);
           enrichedBanks.push(fullDetails);
         } catch (err) {
-          console.error(`[STRIPE] Error retrieving ${bank.id}:`, err.message);
+          logErrorFromCatch(error, 'app', 'stripe');
           enrichedBanks.push(bank);
         }
       }
@@ -99,7 +99,7 @@ export async function listPaymentMethods(customerId) {
       bankAccounts: bankAccounts,
     };
   } catch (error) {
-    console.error('[STRIPE] Error listing payment methods:', error);
+    logErrorFromCatch(error, 'app', 'stripe');
     throw error;
   }
 }
@@ -113,7 +113,7 @@ export async function deletePaymentMethod(paymentMethodId) {
     const result = await stripe.paymentMethods.detach(paymentMethodId);
     return result;
   } catch (error) {
-    console.error('[STRIPE] Error deleting payment method:', error);
+    logErrorFromCatch(error, 'app', 'stripe');
     throw error;
   }
 }
@@ -131,7 +131,7 @@ export async function setDefaultPaymentMethod(customerId, paymentMethodId) {
     });
     return customer;
   } catch (error) {
-    console.error('[STRIPE] Error setting default payment method:', error);
+    logErrorFromCatch(error, 'app', 'stripe');
     throw error;
   }
 }
@@ -152,7 +152,7 @@ export async function createSubscription(customerId, priceId) {
     
     return subscription;
   } catch (error) {
-    console.error('[STRIPE] Error creating subscription:', error);
+    logErrorFromCatch(error, 'app', 'stripe');
     throw error;
   }
 }
@@ -169,7 +169,7 @@ export async function getSubscriptions(customerId) {
     });
     return subscriptions.data;
   } catch (error) {
-    console.error('[STRIPE] Error getting subscriptions:', error);
+    logErrorFromCatch(error, 'app', 'stripe');
     return [];
   }
 }
@@ -185,7 +185,7 @@ export async function cancelSubscription(subscriptionId) {
     });
     return subscription;
   } catch (error) {
-    console.error('[STRIPE] Error canceling subscription:', error);
+    logErrorFromCatch(error, 'app', 'stripe');
     throw error;
   }
 }
@@ -202,7 +202,7 @@ export async function getInvoices(customerId) {
     });
     return invoices.data;
   } catch (error) {
-    console.error('[STRIPE] Error getting invoices:', error);
+    logErrorFromCatch(error, 'app', 'stripe');
     return [];
   }
 }
@@ -219,7 +219,7 @@ export async function getCharges(customerId) {
     });
     return charges.data;
   } catch (error) {
-    console.error('[STRIPE] Error getting charges:', error);
+    logErrorFromCatch(error, 'app', 'stripe');
     return [];
   }
 }
@@ -236,7 +236,7 @@ export async function getAvailablePrices() {
     });
     return prices.data;
   } catch (error) {
-    console.error('[STRIPE] Error getting prices:', error);
+    logErrorFromCatch(error, 'app', 'stripe');
     return [];
   }
 }
@@ -250,7 +250,7 @@ export function verifyWebhookSignature(body, signature) {
     );
     return event;
   } catch (error) {
-    console.error('[STRIPE] Webhook signature verification failed:', error);
+    logErrorFromCatch(error, 'app', 'stripe');
     throw error;
   }
 }
@@ -285,7 +285,7 @@ export async function verifyBankSetupIntent(setupIntentId, amounts) {
 
     return result;
   } catch (error) {
-    console.error('[STRIPE] Error verifying bank setup intent:', error.message);
+    logErrorFromCatch(error, 'app', 'stripe');
     throw error;
   }
 }
@@ -300,7 +300,7 @@ export async function getPaymentMethodDetails(paymentMethodId) {
 
     return paymentMethod;
   } catch (error) {
-    console.error('[STRIPE] Error retrieving payment method:', error.message);
+    logErrorFromCatch(error, 'app', 'stripe');
     throw error;
   }
 }
@@ -323,7 +323,7 @@ export async function verifyPaymentMethodMicrodeposits(paymentMethodId, amounts)
 
     return result;
   } catch (error) {
-    console.error('[STRIPE] Error verifying payment method:', error.message);
+    logErrorFromCatch(error, 'app', 'stripe');
     throw error;
   }
 }

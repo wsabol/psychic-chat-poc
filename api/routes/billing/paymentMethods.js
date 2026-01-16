@@ -128,7 +128,7 @@ router.post('/payment-methods/attach', authenticateToken, async (req, res) => {
       paymentMethod: paymentMethod 
     });
   } catch (error) {
-    console.error('[BILLING] Attach payment method error:', error);
+    logErrorFromCatch(error, 'app', 'billing');
     // Check for Stripe error about payment method already attached to customer
     const errorMsg = error.message || '';
     const alreadyAttached = errorMsg.includes('already been attached') || errorMsg.includes('already attached');
@@ -162,7 +162,7 @@ router.delete('/payment-methods/:id', authenticateToken, async (req, res) => {
 
     res.json({ success: true, message: 'Payment method deleted' });
   } catch (error) {
-    console.error(`[BILLING] Delete payment method error:`, error.message);
+    logErrorFromCatch(error, 'app', 'billing');
     if (error.message && (error.message.includes('pending') || error.message.includes('verification'))) {
       return validationError(res, 'Bank account verification in progress. Please try again later.');
     }
@@ -227,7 +227,7 @@ router.post('/payment-methods/attach-unattached', authenticateToken, async (req,
         await stripe.paymentMethods.attach(method.id, { customer: customerId });
         attached.push(method.id);
       } catch (err) {
-        console.error(`[BILLING] Error attaching ${method.id}:`, err.message);
+        logErrorFromCatch(error, 'app', 'billing');
         errors.push({ id: method.id, error: err.message });
       }
     }
