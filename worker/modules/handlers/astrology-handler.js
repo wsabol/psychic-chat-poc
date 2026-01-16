@@ -73,7 +73,7 @@ export async function handleAstrologyCalculation(userId) {
             calculated_at: new Date().toISOString()
         };
         
-        // Store in database
+                // Store in database with verification
         const userIdHash = hashUserId(userId);
         await db.query(
             `INSERT INTO user_astrology (user_id_hash, zodiac_sign, astrology_data)
@@ -81,8 +81,19 @@ export async function handleAstrologyCalculation(userId) {
             ON CONFLICT (user_id_hash) DO UPDATE SET
             astrology_data = EXCLUDED.astrology_data,
             updated_at = CURRENT_TIMESTAMP`,
-            [userIdHash, calculatedChart.sun_sign, JSON.stringify(astrologyData)]
+                        [userIdHash, calculatedChart.sun_sign, JSON.stringify(astrologyData)]
         );
+
+        // CRITICAL: Verify data is safely saved before completing
+        const { rows: verifyRows } = await db.query(
+            `SELECT astrology_data FROM user_astrology WHERE user_id_hash = $1`,
+            [userIdHash]
+        );
+
+        if (verifyRows.length === 0) {
+            logErrorFromCatch('[ASTROLOGY-HANDLER] Failed to verify birth chart save for user:', userId);
+            return;
+        }
         
     } catch (err) {
         logErrorFromCatch('[ASTROLOGY-HANDLER] Error:', err.message, err);

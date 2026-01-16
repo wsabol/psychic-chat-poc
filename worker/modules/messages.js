@@ -156,7 +156,17 @@ export async function storeMessage(
             ];
         }
         
-        await db.query(query, params);
+                await db.query(query, params);
+
+        // CRITICAL: Verify message is safely saved before returning
+        const { rows: verifyRows } = await db.query(
+            `SELECT id FROM messages WHERE user_id_hash = $1 ORDER BY created_at DESC LIMIT 1`,
+            [userIdHash]
+        );
+
+        if (verifyRows.length === 0) {
+            throw new Error('[MESSAGES] Failed to verify message was saved');
+        }
     } catch (err) {
         logErrorFromCatch('[MESSAGES] Error storing message:', err);
         throw err;

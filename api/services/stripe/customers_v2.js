@@ -14,10 +14,10 @@ export async function getOrCreateStripeCustomer(userId, userEmail) {
 
     // If another request is creating a customer for this user, wait for it
     if (customerCreationLock.has(userId)) {
+      console.log(`[STRIPE] Waiting for in-flight creation: ${userId}`);
       return await customerCreationLock.get(userId);
     }
 
-    // ✅ CRITICAL: Create promise and IMMEDIATELY set lock BEFORE any async work
     const creationPromise = (async () => {
       // Try to get existing customer from DB
       let storedId = null;
@@ -35,9 +35,11 @@ export async function getOrCreateStripeCustomer(userId, userEmail) {
       if (storedId) {
         try {
           await stripe.customers.retrieve(storedId);
+          console.log(`[STRIPE] ✓ Using existing customer: ${storedId}`);
           return storedId;
         } catch (err) {
           // Customer doesn't exist in Stripe, clear it and create new one
+          console.log(`[STRIPE] Stored customer invalid: ${err.message}, creating new`);
           try {
             await db.query(`UPDATE user_personal_info SET stripe_customer_id_encrypted = NULL WHERE user_id = $1`, [userId]);
           } catch (e) {}
@@ -45,10 +47,12 @@ export async function getOrCreateStripeCustomer(userId, userEmail) {
       }
 
       // Create new Stripe customer
+      console.log(`[STRIPE] Creating new customer for ${userEmail}`);
       const customer = await stripe.customers.create({
         email: userEmail,
         metadata: { userId },
       });
+      console.log(`[STRIPE] ✓ Created: ${customer.id}`);
 
       // Store in database
       try {
@@ -63,15 +67,12 @@ export async function getOrCreateStripeCustomer(userId, userEmail) {
       return customer.id;
     })();
 
-    // ✅ Set lock RIGHT AFTER promise creation (synchronously)
     customerCreationLock.set(userId, creationPromise);
 
     try {
-      const result = await creationPromise;
-      return result;
+      return await creationPromise;
     } finally {
-      // Clean up lock
-      customerCreationLock.delete(userId);
+      setTimeout(() => customerCreationLock.delete(userId), 100);
     }
   } catch (error) {
     console.error(`[STRIPE] FATAL:`, error.message);

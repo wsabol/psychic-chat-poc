@@ -170,6 +170,16 @@ router.post('/sync-calculate/:userId', authorizeUser, async (req, res) => {
             [userIdHash, calculatedChart.sun_sign, JSON.stringify(astrologyData)]
         );
         
+                // CRITICAL: Verify data is safely saved before returning success
+        const { rows: verifyRows } = await db.query(
+            `SELECT astrology_data FROM user_astrology WHERE user_id_hash = $1`,
+            [userIdHash]
+        );
+
+        if (verifyRows.length === 0) {
+            return serverError(res, 'Failed to confirm astrology data was saved');
+        }
+        
         res.json({
             success: true,
             message: 'Astrology calculated and stored',

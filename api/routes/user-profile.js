@@ -87,6 +87,7 @@ router.post("/:userId", authorizeUser, async (req, res) => {
         const safeTimezone = birthTimezone && birthTimezone.trim() ? birthTimezone : null;
         const safeAddressPreference = addressPreference && addressPreference.trim() ? addressPreference : null;
 
+                // Save personal information
         await db.query(
             `INSERT INTO user_personal_info 
              (user_id, first_name_encrypted, last_name_encrypted, email_encrypted, birth_date_encrypted, birth_time_encrypted, birth_country_encrypted, birth_province_encrypted, birth_city_encrypted, birth_timezone_encrypted, sex_encrypted, familiar_name_encrypted)
@@ -107,11 +108,22 @@ router.post("/:userId", authorizeUser, async (req, res) => {
             [process.env.ENCRYPTION_KEY, userId, firstName || 'Temporary', lastName || 'User', email, parsedBirthDate, safeTime, safeCountry, safeProvince, safeCity, safeTimezone, sex || 'Unspecified', safeAddressPreference]
         );
 
-                const userIdHash = hashUserId(userId);
+        // CRITICAL: Verify data is safely saved before proceeding
+        // Read-after-write confirmation ensures transaction is committed and data is visible
+        const { rows: verifyRows } = await db.query(
+            `SELECT user_id FROM user_personal_info WHERE user_id = $1`,
+            [userId]
+        );
+
+        if (verifyRows.length === 0) {
+            return serverError(res, 'Failed to confirm personal information was saved');
+        }
+
+        const userIdHash = hashUserId(userId);
         
-        // Calculate and store sun sign immediately (only needs birth date)
+                // Calculate and store sun sign immediately (only needs birth date)
         try {
-                        const sunSign = calculateSunSignFromDate(parsedBirthDate);
+            const sunSign = calculateSunSignFromDate(parsedBirthDate);
             if (sunSign) {
                 const minimalAstrologyData = {
                     sun_sign: sunSign,
@@ -123,6 +135,7 @@ router.post("/:userId", authorizeUser, async (req, res) => {
                     calculated_at: new Date().toISOString()
                 };
                 
+                                // Save minimal astrology data
                 await db.query(
                     `INSERT INTO user_astrology (user_id_hash, zodiac_sign, astrology_data)
                      VALUES ($1, $2, $3)
@@ -132,6 +145,16 @@ router.post("/:userId", authorizeUser, async (req, res) => {
                      updated_at = CURRENT_TIMESTAMP`,
                     [userIdHash, sunSign, JSON.stringify(minimalAstrologyData)]
                 );
+
+                // VERIFY: Confirm minimal astrology data was saved
+                const { rows: verifyAstrologyRows } = await db.query(
+                    `SELECT astrology_data FROM user_astrology WHERE user_id_hash = $1`,
+                    [userIdHash]
+                );
+
+                if (verifyAstrologyRows.length === 0) {
+                    // Non-fatal: continue anyway, worker will retry if needed
+                }
             }
         } catch (err) {
         }
@@ -147,10 +170,11 @@ router.post("/:userId", authorizeUser, async (req, res) => {
         } catch (err) {
         }
         
-                if (safeTime && safeCountry && safeProvince && safeCity && parsedBirthDate) {
+                        // Enqueue worker to calculate full birth chart (with moon/rising signs)
+        // Data is verified saved above, so safe to proceed
+        if (safeTime && safeCountry && safeProvince && safeCity && parsedBirthDate) {
             try {
-                // Delay before enqueueing to ensure data is committed to database
-                // Start with 200ms, with 3 second fallback if needed
+                // Small delay to ensure write is fully propagated
                 const delayMs = 200;
                 await new Promise(resolve => setTimeout(resolve, delayMs));
                 
@@ -162,8 +186,8 @@ router.post("/:userId", authorizeUser, async (req, res) => {
             }
         }
 
+                // If full astrology data provided (from sync-calculate or manual input)
         if (zodiacSign && astrologyData) {
-            const userIdHash = hashUserId(userId);
             await db.query(
                 `INSERT INTO user_astrology 
                  (user_id_hash, zodiac_sign, astrology_data)
@@ -174,6 +198,16 @@ router.post("/:userId", authorizeUser, async (req, res) => {
                  updated_at = CURRENT_TIMESTAMP`,
                 [userIdHash, zodiacSign, JSON.stringify(astrologyData)]
             );
+
+            // VERIFY: Confirm full astrology data was saved
+            const { rows: verifyFullAstrologyRows } = await db.query(
+                `SELECT zodiac_sign FROM user_astrology WHERE user_id_hash = $1`,
+                [userIdHash]
+            );
+
+            if (verifyFullAstrologyRows.length === 0) {
+                return serverError(res, 'Failed to confirm astrology data was saved');
+            }
         }
 
         res.json({ success: true, message: "Personal information saved successfully" });

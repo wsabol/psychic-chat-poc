@@ -28,7 +28,6 @@ router.get('/payment-methods', authenticateToken, async (req, res) => {
     const userId = req.user.userId;
     const userEmail = req.user.email;
     userIdHash = hashUserId(userId);
-    console.log(`[PAYMENT-METHODS] Request for user: ${userId}, email: ${userEmail}`);
 
     // ✅ REQUEST DEDUPLICATION: If another request is already fetching for this user, wait for it
     const requestKey = `payment-methods:${userId}`;
@@ -46,9 +45,7 @@ router.get('/payment-methods', authenticateToken, async (req, res) => {
 
         // Create a promise for this request so others can wait for it
     const fetchPromise = (async () => {
-      console.log(`[PAYMENT-METHODS] Getting/creating Stripe customer for user ${userId}`);
       const customerId = await getOrCreateStripeCustomer(userId, userEmail);
-      console.log(`[PAYMENT-METHODS] Got Stripe customer: ${customerId}`);
       
       if (!customerId) {
         return { cards: [], defaultPaymentMethodId: null };
