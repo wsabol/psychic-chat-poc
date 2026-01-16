@@ -5,6 +5,7 @@ import { AppShells } from './screens/AppShells';
 import { AppChat } from './screens/AppChat';
 import { PoliciesPage } from './pages/PoliciesPage';
 import StarField from './components/StarField';
+import Footer from './components/Footer';
 
 /**
  * App - Main application component
@@ -21,11 +22,12 @@ function App() {
   // Check if viewing a policy page
   const isPoliciesPage = location.pathname === '/policies';
 
-  if (isPoliciesPage) {
+    if (isPoliciesPage) {
     return (
       <>
         <StarField />
         <PoliciesPage />
+        <Footer />
       </>
     );
   }

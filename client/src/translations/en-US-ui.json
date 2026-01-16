@@ -85,5 +85,8 @@
     "passwordsMismatch": "✗ Passwords do not match",
     "required": "This field is required",
     "invalid": "Invalid input"
+  },
+  "footer": {
+    "copyright": "© Copyright {year} - Starship Psychics LLC. All rights reserved."
   }
 }

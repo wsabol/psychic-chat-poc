@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useSwipeable } from 'react-swipeable';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navigation from './Navigation';
+import Footer from '../components/Footer';
 import { HelpIcon } from '../components/help/HelpIcon';
 import { HelpChatWindow } from '../components/help/HelpChatWindow';
 import { useHelpChat } from '../hooks/useHelpChat';
@@ -147,7 +148,7 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
 
       <div className="pages-container" {...swipeHandlers}>
         <AnimatePresence mode="wait">
-          <motion.div
+                    <motion.div
             key={currentPage.id}
             initial={{ opacity: 0, x: swipeDirection * 100 }}
             animate={{ opacity: 1, x: 0 }}
@@ -165,11 +166,13 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
               onboarding={onboarding}
               billingTab={currentPage.id === 'billing' ? billingTab : undefined}
             />
+            {/* Footer at bottom of scrollable content */}
+            <Footer />
           </motion.div>
         </AnimatePresence>
       </div>
 
-      {/* Help Icon - Show when chat is closed */}
+            {/* Help Icon - Show when chat is closed */}
       {!isHelpOpen && (
         <HelpIcon 
           isOpen={isHelpOpen} 

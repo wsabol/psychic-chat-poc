@@ -4,5 +4,6 @@
   "modals": {"confirmDelete": "您确定吗？", "deleteWarning": "此操作无法撤消。", "ok": "确定", "cancel": "取消", "yes": "是", "no": "否", "close": "关闭"},
   "timers": {"secondsRemaining": "还剩{{count}}秒", "minutesRemaining": "还剩{{count}}分钟", "expired": "已过期"},
   "voice": {"play": "播放", "pause": "暂停", "stop": "停止", "error": "音频播放错误", "enabled": "启用语音", "disabled": "禁用语音", "playing": "播放中...", "paused": "已暂停"},
-  "validation": {"passwordRequirements": "密码要求:", "requirement8Chars": "至少8个字符", "requirementUppercase": "一个大写字母 (A-Z)", "requirementLowercase": "一个小写字母 (a-z)", "requirementNumber": "一个数字 (0-9)", "requirementSpecial": "一个特殊字符 (!@#$%...)", "passwordsMatch": "✓ 密码匹配", "passwordsMismatch": "✗ 密码不匹配", "required": "此字段为必填项", "invalid": "输入无效"}
+  "validation": {"passwordRequirements": "密码要求:", "requirement8Chars": "至少8个字符", "requirementUppercase": "一个大写字母 (A-Z)", "requirementLowercase": "一个小写字母 (a-z)", "requirementNumber": "一个数字 (0-9)", "requirementSpecial": "一个特殊字符 (!@#$%...)", "passwordsMatch": "✓ 密码匹配", "passwordsMismatch": "✗ 密码不匹配", "required": "此字段为必填项", "invalid": "输入无效"},
+  "footer": {"copyright": "© Copyright {year} - Starship Psychics LLC. 版权所有。"}
 }

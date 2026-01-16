@@ -75,7 +75,7 @@
     "paused": "En pausa"
   },
   
-  "validation": {
+    "validation": {
     "passwordRequirements": "Requisitos de Contraseña:",
     "requirement8Chars": "Al menos 8 caracteres",
     "requirementUppercase": "Una letra mayúscula (A-Z)",
@@ -86,5 +86,8 @@
     "passwordsMismatch": "✗ Las contraseñas no coinciden",
     "required": "Este campo es obligatorio",
     "invalid": "Entrada inválida"
+  },
+  "footer": {
+    "copyright": "© Copyright {year} - Starship Psychics LLC. Todos los derechos reservados."
   }
 }

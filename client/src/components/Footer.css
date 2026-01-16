@@ -1,0 +1,27 @@
+.app-footer {
+  background-color: rgba(0, 0, 0, 0.9);
+  border-top: 1px solid rgba(138, 43, 226, 0.3);
+  padding: 12px 16px;
+  margin-top: 20px;
+}
+
+.footer-text {
+  margin: 0;
+  font-size: 10px;
+  color: rgba(200, 200, 200, 0.8);
+  text-align: center;
+  letter-spacing: 0.5px;
+  font-family: 'Courier New', monospace;
+}
+
+/* Adjust padding on mobile */
+@media (max-width: 768px) {
+  .app-footer {
+    padding: 10px 12px;
+    margin-top: 15px;
+  }
+
+  .footer-text {
+    font-size: 9px;
+  }
+}
