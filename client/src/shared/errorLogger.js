@@ -3,7 +3,7 @@
  * 
  * Features:
  * - api/: Logs errors to encrypted database
- * - client/: Sends errors to server via beacon (production) or logs (dev)
+ * - client/: Sends errors to server via fetch/beacon (both dev and production)
  * - worker/: Structured logging to stdout (Docker captures it)
  */
 
@@ -44,11 +44,10 @@ export async function logErrorFromCatch(error, service, context = null, userIdHa
 }
 
 function logErrorFromClient({ service, errorMessage, severity, context, stack }) {
-  if (process.env.NODE_ENV === 'development') {
-    console.error(`[${service}] ${severity}: ${errorMessage}`, stack);
-    return;
-  }
+  // Always log to console for visibility in dev
+  console.error(`[${service}] ${severity}: ${errorMessage}`, stack);
 
+  // Always send to server (both dev and production)
   const errorData = {
     service,
     errorMessage,
@@ -61,9 +60,27 @@ function logErrorFromClient({ service, errorMessage, severity, context, stack })
   };
 
   try {
-    navigator.sendBeacon('/api/logs/error', JSON.stringify(errorData));
+    // Use fetch for dev mode, sendBeacon for production
+    if (process.env.NODE_ENV === 'development') {
+      fetch('http://localhost:3000/api/logs/error', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(errorData),
+        keepalive: true
+      })
+        .then(response => {
+          if (!response.ok) {
+            console.warn(`[ERROR-LOGGER] Server returned ${response.status}`);
+          }
+        })
+        .catch(err => {
+          console.warn('[ERROR-LOGGER] Failed to send error to server:', err.message);
+        });
+    } else {
+      navigator.sendBeacon('/api/logs/error', JSON.stringify(errorData));
+    }
   } catch (e) {
-    // Silent fail
+    console.warn('[ERROR-LOGGER] Exception in fetch:', e.message);
   }
 }
 

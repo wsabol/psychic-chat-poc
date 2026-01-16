@@ -11,17 +11,87 @@ By accessing and using this Psychic Chat application ("Service"), you accept and
 
 ---
 
-## 2. Use License
+## 2. Software License and Intellectual Property
 
-Permission is granted to temporarily download one copy of the materials (information or software) on our Service for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title, and under this license you may not:
+### 2.1 License Grant
 
-- Modify or copy the materials
-- Use the materials for any commercial purpose or for any public display
-- Attempt to decompile or reverse engineer any software contained on the Service
-- Remove any copyright or other proprietary notations from the materials
-- Transfer the materials to another person or "mirror" the materials on any other server
-- Use automated tools or bots to access the Service
+Subject to your compliance with these Terms and payment of applicable subscription fees, Starship Psychics LLC grants you a limited, non-exclusive, non-transferable, revocable license to access and use the Psychic Chat application ("Software") solely for your personal, non-commercial use during your active subscription period.
 
+### 2.2 Ownership and Copyright
+
+The Software, including all content, features, functionality, source code, object code, designs, graphics, user interface, audio, video, text, databases, and all intellectual property rights therein, is owned by Starship Psychics LLC and is protected by United States and international copyright, trademark, patent, trade secret, and other intellectual property laws.
+
+**Copyright Notice**: © 2025-2026 Starship Psychics LLC. All rights reserved.
+
+### 2.3 Restrictions on Use
+
+You agree that you will NOT:
+
+- Copy, modify, adapt, translate, or create derivative works of the Software
+- Reverse engineer, decompile, disassemble, or attempt to derive the source code of the Software
+- Rent, lease, lend, sell, sublicense, assign, distribute, publish, transfer, or otherwise make available the Software to any third party
+- Remove, alter, or obscure any copyright, trademark, or other proprietary rights notices from the Software
+- Use the Software for any commercial purpose or for any public display without our express written permission
+- Use automated tools, bots, scripts, or scrapers to access or interact with the Software
+- Frame or mirror any part of the Software on any other server or device
+- Access the Software to build a competitive product or service
+- Circumvent or disable any security features or technological protection measures in the Software
+- Use the Software in any manner that could damage, disable, overburden, or impair our servers or networks
+- Attempt to gain unauthorized access to any systems, data, or networks connected to the Software
+
+### 2.4 Subscription-Based Access
+
+Your license to use the Software is contingent upon maintaining an active, paid subscription. Upon cancellation or termination of your subscription:
+
+- Your license to access and use the Software immediately terminates
+- You must cease all use of the Software
+- We reserve the right to delete your account data in accordance with Section 14 (Account Termination and Data Deletion)
+- No refunds will be provided for unused portions of your subscription period unless required by law
+
+### 2.5 Updates and Modifications
+
+We reserve the right to modify, update, or discontinue the Software (or any part thereof) at any time with or without notice. We may:
+
+- Add, modify, or remove features
+- Update the user interface or functionality
+- Perform maintenance or technical upgrades
+- Change subscription pricing with 30 days advance notice to active subscribers
+
+You acknowledge that such modifications may require you to update your browser or device to continue accessing the Software.
+
+### 2.6 Third-Party Components
+
+The Software may include or incorporate third-party software components, libraries, or services that are subject to their own license terms. Your use of such third-party components is governed by their respective licenses, which may include open-source licenses.
+
+### 2.7 Feedback and Suggestions
+
+If you provide us with any feedback, suggestions, or ideas about the Software ("Feedback"), you grant us a perpetual, irrevocable, worldwide, royalty-free license to use, modify, and incorporate such Feedback into our products and services without any obligation to compensate you or obtain your further consent.
+
+### 2.8 License Termination
+
+This license is effective until terminated. Your rights under this license will terminate automatically without notice if you fail to comply with any of these Terms. Upon termination:
+
+- You must immediately cease all use of the Software
+- All provisions of these Terms that by their nature should survive termination shall survive, including ownership provisions, warranty disclaimers, indemnity, and limitations of liability
+- We may pursue any available legal remedies for violations
+
+### 2.9 No Transfer of Rights
+
+Nothing in these Terms grants you any ownership rights in the Software or any of our intellectual property. All rights not expressly granted to you are reserved by Starship Psychics LLC.
+
+### 2.10 DMCA Compliance
+
+We respect the intellectual property rights of others. If you believe any content on our Software infringes your copyright, please contact us at legal@starshippsychics.com with:
+
+- A description of the copyrighted work you claim has been infringed
+- The location of the infringing material on our Software
+- Your contact information
+- A statement of good faith belief that the use is not authorized
+- A statement, under penalty of perjury, that the information is accurate and you are authorized to act on behalf of the copyright owner
+
+---
+
+**By subscribing to and using this Software, you acknowledge that you have read, understood, and agree to be bound by this Software License and all other Terms of Service.**
 ---
 
 ## 3. Disclaimer

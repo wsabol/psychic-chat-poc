@@ -8,13 +8,15 @@ import { useTranslation } from '../context/TranslationContext';
 import { getAuth } from 'firebase/auth';
 import ViolationReportTab from '../components/AdminTabs/ViolationReportTab';
 import { ComplianceDashboard } from '../components/admin/ComplianceDashboard';
+import ErrorLogsReport from '../components/admin/ErrorLogsReport';
+import ErrorLoggerTestHarness from '../components/admin/ErrorLoggerTestHarness';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 export default function AdminPage({ token, userId }) {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState('analytics');
+  const [activeTab, setActiveTab] = useState('logs');
   const [isLoading, setIsLoading] = useState(false);
   const [report, setReport] = useState(null);
   const [error, setError] = useState('');
@@ -172,6 +174,11 @@ export default function AdminPage({ token, userId }) {
           marginBottom: '1.5rem',
           borderBottom: '2px solid #e0e0e0',
         }}>
+                    <TabButton
+            label="🚨 Error Logs"
+            isActive={activeTab === 'logs'}
+            onClick={() => setActiveTab('logs')}
+          />
           <TabButton
             label="📊 Analytics"
             isActive={activeTab === 'analytics'}
@@ -188,6 +195,14 @@ export default function AdminPage({ token, userId }) {
             onClick={() => setActiveTab('compliance')}
           />
         </div>
+
+                {/* Error Logs Tab */}
+        {activeTab === 'logs' && (
+          <div>
+            <ErrorLogsReport token={token} apiUrl={API_URL} />
+            <ErrorLoggerTestHarness />
+          </div>
+        )}
 
         {/* Analytics Tab */}
         {activeTab === 'analytics' && (

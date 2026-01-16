@@ -25,6 +25,8 @@ import analyticsRoutes from "./routes/analytics.js";
 import violationReportsRoutes from "./routes/violationReports.js";
 import userSettingsRoutes from "./routes/user-settings.js";
 import complianceDashboardRoutes from "./routes/admin/compliance-dashboard.js";
+import errorLogsRoutes from "./routes/admin/error-logs.js";
+import logsRoutes from "./routes/logs.js";
 import { authenticateToken } from "./middleware/auth.js";
 import { validateUserHash } from "./middleware/userHashValidation.js";
 import cors from "cors";
@@ -122,11 +124,17 @@ app.use("/migration", migrationRoutes);
 // Public analytics route (no authentication required - truly anonymous)
 app.use("/analytics", analyticsRoutes);
 
+// Public error logging route (no authentication required)
+app.use("/api/logs", logsRoutes);
+
 // Violation reports (admin only)
 app.use("/violations", authenticateToken, violationReportsRoutes);
 
 // Compliance dashboard (admin only)
 app.use("/admin", authenticateToken, complianceDashboardRoutes);
+
+// Error logs routes (admin only)
+app.use("/admin/errors", authenticateToken, errorLogsRoutes);
 
 // New user data endpoints (authentication only - no validateUserHash)
 // These don't have user IDs in the URL

@@ -3,7 +3,7 @@
  * 
  * Features:
  * - api/: Logs errors to encrypted database
- * - client/: Sends errors to server via beacon (production) or logs (dev)
+ * - client/: Sends errors to server via fetch (dev) or beacon (production)
  * - worker/: Structured logging to stdout (Docker captures it)
  */
 
@@ -24,18 +24,20 @@ async function getDb() {
 
 export async function logErrorFromCatch(error, service, context = null, userIdHash = null, ipAddress = null, severity = 'error') {
   try {
+    // Ensure service is a string, not an object
+    const serviceStr = typeof service === 'string' ? service : JSON.stringify(service);
     const errorMessage = (error?.message || 'Unknown error').split('\n')[0].substring(0, 500);
 
     if (typeof window !== 'undefined') {
-      return logErrorFromClient({ service, errorMessage, severity, context, stack: error?.stack });
+      return logErrorFromClient({ service: serviceStr, errorMessage, severity, context, stack: error?.stack });
     }
 
     const database = await getDb();
     if (database) {
-      return await logErrorToDB({ service, errorMessage, severity, userIdHash, context, errorStack: error?.stack, ipAddress, database });
+      return await logErrorToDB({ service: serviceStr, errorMessage, severity, userIdHash, context, errorStack: error?.stack, ipAddress, database });
     }
 
-    logToStdout(service, errorMessage, severity, context, error?.stack);
+    logToStdout(serviceStr, errorMessage, severity, context, error?.stack);
   } catch (logError) {
     if (typeof window === 'undefined') {
       console.error('[ERROR-LOGGER]', logError.message);
@@ -44,11 +46,12 @@ export async function logErrorFromCatch(error, service, context = null, userIdHa
 }
 
 function logErrorFromClient({ service, errorMessage, severity, context, stack }) {
+  // Always log to console in dev for visibility
   if (process.env.NODE_ENV === 'development') {
     console.error(`[${service}] ${severity}: ${errorMessage}`, stack);
-    return;
   }
 
+  // Always send to server (both dev and production)
   const errorData = {
     service,
     errorMessage,
@@ -56,14 +59,27 @@ function logErrorFromClient({ service, errorMessage, severity, context, stack })
     context,
     stack: stack ? stack.split('\n').slice(0, 3).join('\n') : undefined,
     timestamp: new Date().toISOString(),
-    userAgent: navigator.userAgent,
-    url: window.location.href
+    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
+    url: typeof window !== 'undefined' ? window.location.href : 'unknown'
   };
 
   try {
-    navigator.sendBeacon('/api/logs/error', JSON.stringify(errorData));
+    if (process.env.NODE_ENV === 'development') {
+      // Dev: use fetch for better error visibility
+      fetch('http://localhost:3000/api/logs/error', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(errorData),
+        keepalive: true
+      }).catch(err => {
+        // Silent fail - don't crash if logging fails
+      });
+    } else {
+      // Production: use sendBeacon (doesn't block on unload)
+      navigator.sendBeacon('/api/logs/error', JSON.stringify(errorData));
+    }
   } catch (e) {
-    // Silent fail
+    // Silent fail - logging failure should not crash app
   }
 }
 
@@ -90,7 +106,10 @@ async function logErrorToDB({
   if (!database) return;
 
   try {
-    if (!service || !errorMessage) {
+    // Ensure service is a string
+    const serviceStr = typeof service === 'string' ? service : String(service);
+    
+    if (!serviceStr || !errorMessage) {
       console.error('[ERROR-LOGGER] Missing required fields');
       return;
     }
@@ -98,22 +117,28 @@ async function logErrorToDB({
     const validSeverities = ['error', 'warning', 'critical'];
     const finalSeverity = validSeverities.includes(severity) ? severity : 'error';
 
-    let query = `INSERT INTO error_logs (service, error_message, severity, user_id_hash, context, error_stack_encrypted, ip_address_encrypted) VALUES ($1, $2, $3, $4, $5, ${errorStack ? 'pgp_sym_encrypt($6, $7)' : 'NULL'}, ${ipAddress ? (errorStack ? 'pgp_sym_encrypt($8, $7)' : 'pgp_sym_encrypt($8, $7)') : 'NULL'})`;
+    // Simple query - no complex encryption in template
+    let query = `
+      INSERT INTO error_logs (service, error_message, severity, user_id_hash, context)
+      VALUES ($1, $2, $3, $4, $5)
+    `;
 
-    let params = [service, errorMessage, finalSeverity, userIdHash, context];
-    if (errorStack) {
+    let params = [serviceStr, errorMessage, finalSeverity, userIdHash, context];
+
+    // Add encrypted stack if present
+    if (errorStack && process.env.ENCRYPTION_KEY) {
+      query = `
+        INSERT INTO error_logs (service, error_message, severity, user_id_hash, context, error_stack_encrypted)
+        VALUES ($1, $2, $3, $4, $5, pgp_sym_encrypt($6, $7))
+      `;
       params.push(errorStack);
       params.push(process.env.ENCRYPTION_KEY);
-    }
-    if (ipAddress) {
-      params.push(ipAddress);
-      if (!errorStack) params.push(process.env.ENCRYPTION_KEY);
     }
 
     await database.query(query, params);
 
     if (process.env.NODE_ENV !== 'production') {
-      console.log(`[ERROR-LOG] ${service} | ${finalSeverity} | ${errorMessage}`);
+      console.log(`[ERROR-LOG] ${serviceStr} | ${finalSeverity} | ${errorMessage}`);
     }
   } catch (dbError) {
     console.error('[ERROR-LOGGER] DB write failed:', dbError.message);
