@@ -15,6 +15,7 @@ import { db } from '../shared/db.js';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,8 +32,8 @@ async function removePlainTextMessages() {
         );
         const totalEncrypted = parseInt(encryptedCount.rows[0].total);
         
-        if (totalEncrypted === 0) {
-            console.error('❌ ERROR: No encrypted messages found. Aborting to prevent data loss.');
+                if (totalEncrypted === 0) {
+            logErrorFromCatch(new Error('No encrypted messages found. Aborting to prevent data loss.'), 'migration', 'validation');
             process.exit(1);
         }
         
@@ -54,9 +55,8 @@ async function removePlainTextMessages() {
         );
         
         process.exit(0);
-    } catch (err) {
-        console.error('❌ Removal failed:', err.message);
-        console.error(err);
+        } catch (err) {
+        logErrorFromCatch(err, 'migration', 'remove plaintext messages');
         process.exit(1);
     }
 }

@@ -14,6 +14,7 @@
 import pkg from 'pg';
 const { Pool } = pkg;
 import dotenv from 'dotenv';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 // Load environment variables
 dotenv.config();
@@ -22,12 +23,12 @@ const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 const DATABASE_URL = process.env.DATABASE_URL;
 
 if (!ENCRYPTION_KEY) {
-  console.error('❌ ERROR: ENCRYPTION_KEY not found in .env');
+  logErrorFromCatch(new Error('ENCRYPTION_KEY not found in .env'), 'migration', 'startup');
   process.exit(1);
 }
 
 if (!DATABASE_URL) {
-  console.error('❌ ERROR: DATABASE_URL not found in .env');
+  logErrorFromCatch(new Error('DATABASE_URL not found in .env'), 'migration', 'startup');
   process.exit(1);
 }
 
@@ -94,8 +95,8 @@ async function migrateAuditLogEmails() {
       LIMIT 3
     `);
 
-  } catch (error) {
-    console.error('❌ Migration failed:', error.message);
+    } catch (error) {
+    logErrorFromCatch(error, 'migration', 'encrypt audit emails v2');
     throw error;
   } finally {
     client.release();
@@ -108,8 +109,8 @@ migrateAuditLogEmails()
     pool.end();
     process.exit(0);
   })
-  .catch(error => {
-    console.error('Fatal error:', error);
+    .catch(async (error) => {
+    logErrorFromCatch(error, 'migration', 'fatal error');
     pool.end();
     process.exit(1);
   });

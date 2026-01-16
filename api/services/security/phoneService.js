@@ -25,7 +25,7 @@ export async function getPhoneData(userId) {
       recoveryPhoneVerified: row.recovery_phone_verified
     };
   } catch (err) {
-    console.error('[SECURITY] Error getting phone data:', err);
+    logErrorFromCatch(error, 'app', 'security');
     throw err;
   }
 }
@@ -62,7 +62,7 @@ export async function savePhoneNumber(userId, phoneNumber, recoveryPhone) {
 
     return { success: true, codeSent: false };
   } catch (err) {
-    console.error('[SECURITY] Error saving phone:', err);
+    logErrorFromCatch(error, 'app', 'security');
     throw err;
   }
 }
@@ -82,7 +82,7 @@ export async function verifyPhoneCode(userId, code) {
 
     return { success: true, verified: true };
   } catch (err) {
-    console.error('[SECURITY] Error verifying phone code:', err);
+    logErrorFromCatch(error, 'app', 'security');
     throw err;
   }
 }

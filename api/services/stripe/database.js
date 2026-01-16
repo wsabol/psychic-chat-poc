@@ -29,7 +29,7 @@ export async function storeSubscriptionData(userId, stripeSubscriptionId, subscr
     ]);
     return result;
   } catch (error) {
-    console.error('[STRIPE] Error storing subscription data:', error);
+    logErrorFromCatch(error, 'app', 'stripe');
     throw error;
   }
 }
@@ -58,7 +58,7 @@ export async function getStoredSubscriptionData(userId) {
 
     return result.rows[0];
   } catch (error) {
-    console.error('[STRIPE] Error retrieving subscription data:', error);
+    logErrorFromCatch(error, 'app', 'stripe');
     return null;
   }
 }
@@ -83,7 +83,7 @@ export async function updateSubscriptionStatus(userId, statusUpdate) {
     ]);
     return result;
   } catch (error) {
-    console.error('[STRIPE] Error updating subscription status:', error);
+    logErrorFromCatch(error, 'app', 'stripe');
     throw error;
   }
 }

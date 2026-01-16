@@ -15,6 +15,7 @@ import { db } from '../shared/db.js';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,7 +26,7 @@ dotenv.config({ path: path.join(__dirname, '../../.env') });
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 
 if (!ENCRYPTION_KEY) {
-    console.error('❌ ERROR: ENCRYPTION_KEY not found in .env');
+    logErrorFromCatch(new Error('ENCRYPTION_KEY not found in .env'), 'migration', 'startup');
     process.exit(1);
 }
 
@@ -65,9 +66,8 @@ async function encryptExistingMessages() {
         }
         
         process.exit(0);
-    } catch (err) {
-        console.error('❌ Migration failed:', err.message);
-        console.error(err);
+        } catch (err) {
+        logErrorFromCatch(err, 'migration', 'encrypt messages');
         process.exit(1);
     }
 }

@@ -86,7 +86,7 @@ async function setupProducts() {
       },
     });
   } catch (error) {
-    console.error('❌ Error setting up products:', error.message);
+    logErrorFromCatch(error, 'app', 'Error handling');
     process.exit(1);
   }
 }

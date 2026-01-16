@@ -48,7 +48,7 @@ export async function getVerificationMethods(userId, userEmail) {
       recoveryEmailVerified: sec.recovery_email_verified || false
     };
   } catch (err) {
-    console.error('[SECURITY] Error getting verification methods:', err);
+    logErrorFromCatch(error, 'app', 'security');
     throw err;
   }
 }

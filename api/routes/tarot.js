@@ -17,7 +17,7 @@ router.post('/reading', authorizeUser, async (req, res) => {
         await db.query('INSERT INTO tarot_readings (user_id, card, meaning) VALUES ($1, $2, $3)', [userId, reading.card, reading.meaning]);
         res.json(reading);
     } catch (error) {
-        console.error('Error in tarot reading:', error);
+        logErrorFromCatch(error, 'app', 'Error handling');
         return serverError(res, 'Internal server error');
     }
 });

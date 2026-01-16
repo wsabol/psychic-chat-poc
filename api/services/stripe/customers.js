@@ -43,7 +43,7 @@ export async function getOrCreateStripeCustomer(userId, userEmail) {
 
     return customer.id;
   } catch (error) {
-    console.error('[STRIPE] Error getting/creating customer:', error.message);
+    logErrorFromCatch(error, 'app', 'stripe');
     throw error;
   }
 }
@@ -61,7 +61,7 @@ export async function setDefaultPaymentMethod(customerId, paymentMethodId) {
     });
     return customer;
   } catch (error) {
-    console.error('[STRIPE] Error setting default payment method:', error);
+    logErrorFromCatch(error, 'app', 'stripe');
     throw error;
   }
 }

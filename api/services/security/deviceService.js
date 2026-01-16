@@ -35,7 +35,7 @@ export async function getDevices(userId) {
 
     return { devices, count: devices.length };
   } catch (err) {
-    console.error('[SECURITY] Error getting devices:', err);
+    logErrorFromCatch(error, 'app', 'security');
     throw err;
   }
 }
@@ -67,7 +67,7 @@ export async function logoutDevice(userId, deviceId) {
 
     return { success: true };
   } catch (err) {
-    console.error('[SECURITY] Error logging out device:', err);
+    logErrorFromCatch(error, 'app', 'security');
     throw err;
   }
 }

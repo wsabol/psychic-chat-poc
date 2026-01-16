@@ -23,7 +23,7 @@ export async function recordPasswordChange(userId) {
 
     return { success: true };
   } catch (err) {
-    console.error('[SECURITY] Error recording password change:', err);
+    logErrorFromCatch(error, 'app', 'security');
     throw err;
   }
 }

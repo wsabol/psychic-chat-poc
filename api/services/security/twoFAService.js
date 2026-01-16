@@ -20,7 +20,7 @@ export async function get2FASettings(userId) {
 
     return result.rows[0];
   } catch (err) {
-    console.error('[SECURITY] Error getting 2FA settings:', err);
+    logErrorFromCatch(error, 'app', 'security');
     throw err;
   }
 }
@@ -50,7 +50,7 @@ export async function update2FASettings(userId, { enabled, method }) {
     }
     return result.rows[0];
   } catch (err) {
-    console.error('[SECURITY] Error updating 2FA settings:', err);
+    logErrorFromCatch(error, 'app', 'security');
     throw err;
   }
 }
@@ -79,7 +79,7 @@ export async function updateSessionPreference(userId, persistentSession) {
     }
     return result.rows[0];
   } catch (err) {
-    console.error('[SECURITY] Error updating session preference:', err);
+    logErrorFromCatch(error, 'app', 'security');
     throw err;
   }
 }

@@ -10,6 +10,7 @@ import { getCleanupJobStatus } from '../jobs/accountCleanupJob.js';
 import { logAudit } from '../shared/auditLog.js';
 import { db } from '../shared/db.js';
 import { serverError } from '../utils/responses.js';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 const router = Router();
 
@@ -41,7 +42,7 @@ router.post('/trigger', authenticateToken, async (req, res) => {
     // TODO: Verify admin role
     // For now, just log the request
     
-    await logAudit(db, {
+        await logAudit(db, {
       userId: req.userId,
       action: 'CLEANUP_JOB_TRIGGERED_MANUAL',
       resourceType: 'admin',
@@ -50,7 +51,7 @@ router.post('/trigger', authenticateToken, async (req, res) => {
       httpMethod: req.method,
       endpoint: req.path,
       status: 'INITIATED'
-    }).catch(e => console.error('[AUDIT]', e.message));
+    }).catch(e => logErrorFromCatch(e, 'cleanup-trigger', 'audit log'));
 
     const result = await triggerCleanupJobManually();
 

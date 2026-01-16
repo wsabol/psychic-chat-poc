@@ -14,6 +14,7 @@
 import pkg from 'pg';
 const { Pool } = pkg;
 import dotenv from 'dotenv';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 // Load environment variables
 dotenv.config();
@@ -26,7 +27,7 @@ const DB_PORT = process.env.DB_PORT || 5432;
 const DB_NAME = process.env.DB_NAME || 'chatbot';
 
 if (!ENCRYPTION_KEY) {
-  console.error('❌ ERROR: ENCRYPTION_KEY not found in .env');
+  logErrorFromCatch(error, 'app', 'Error handling');
   process.exit(1);
 }
 
@@ -97,8 +98,8 @@ async function migrateAuditLogEmails() {
       LIMIT 3
     `);
 
-  } catch (error) {
-    console.error('❌ Migration failed:', error.message);
+    } catch (error) {
+    logErrorFromCatch(error, 'migration', 'encrypt audit emails');
     throw error;
   } finally {
     client.release();
@@ -111,8 +112,8 @@ migrateAuditLogEmails()
     pool.end();
     process.exit(0);
   })
-  .catch(error => {
-    console.error('Fatal error:', error);
+    .catch(async (error) => {
+    logErrorFromCatch(error, 'migration', 'fatal error');
     pool.end();
     process.exit(1);
   });
