@@ -1,3 +1,5 @@
+import { logErrorFromCatch } from '../shared/errorLogger.js';
+
 /**
  * Audit Logging Utility
  * Logs all critical actions to audit_log table for compliance and security analysis
@@ -97,7 +99,7 @@ export async function logAudit(db, options) {
   } catch (err) {
     // CRITICAL: Do not fail the main operation if audit logging fails
     // Just log the error and continue
-    console.error('[AUDIT] ERROR: Failed to write audit log:', {
+    logErrorFromCatch('[AUDIT] ERROR: Failed to write audit log:', {
       action,
       error: err.message,
       code: err.code
