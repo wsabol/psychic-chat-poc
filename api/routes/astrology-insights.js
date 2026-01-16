@@ -3,6 +3,7 @@ import { hashUserId } from "../shared/hashUtils.js";
 import { enqueueMessage } from "../shared/queue.js";
 import { authenticateToken, authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
+import { getLocalDateForTimezone, needsRegeneration } from "../shared/timezoneHelper.js";
 import { processingResponse, serverError } from "../utils/responses.js";
 
 
@@ -11,9 +12,24 @@ const router = Router();
 // Cosmic Weather Endpoint - GET
 router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (req, res) => {
     const { userId } = req.params;
-    const today = new Date().toISOString().split('T')[0];
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
     const userIdHash = hashUserId(userId);
+    
+    // Get user's timezone for proper date comparison
+    const { rows: tzRows } = await db.query(
+        `SELECT pgp_sym_decrypt(birth_timezone_encrypted, $1)::text as timezone FROM user_personal_info WHERE user_id = $2`,
+        [ENCRYPTION_KEY, userId]
+    );
+    const userTz = tzRows.length > 0 && tzRows[0].timezone ? tzRows[0].timezone : 'UTC';
+    
+    // Calculate today in user's timezone
+    const formatter = new Intl.DateTimeFormat('en-CA', { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit',
+        timeZone: userTz
+    });
+    const today = formatter.format(new Date());
     
     try {
         // Fetch user's language preference and response type preference
@@ -33,21 +49,28 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
             FROM messages 
             WHERE user_id_hash = $1 AND role = 'cosmic_weather' 
             ORDER BY created_at DESC LIMIT 5`;
-        const { rows } = await db.query(query, [userIdHash, ENCRYPTION_KEY]);
+                const { rows } = await db.query(query, [userIdHash, ENCRYPTION_KEY]);
         
         let todaysWeather = null;
         let briefWeather = null;
+        
+        console.log(`[COSMIC-WEATHER] Found ${rows.length} records, looking for date: ${today}`);
         
         for (const row of rows) {
             const fullContent = row.content_full;
             const briefContent = row.content_brief;
             
-            const data = typeof fullContent === 'string' ? JSON.parse(fullContent) : fullContent;
-            const dataDate = data.generated_at?.split('T')[0];
-            if (dataDate === today) {
-                todaysWeather = data;
-                briefWeather = briefContent ? (typeof briefContent === 'string' ? JSON.parse(briefContent) : briefContent) : null;
-                break;
+            try {
+                const data = typeof fullContent === 'string' ? JSON.parse(fullContent) : fullContent;
+                const dataDate = data.generated_at?.split('T')[0];
+                if (dataDate === today) {
+                    todaysWeather = data;
+                    briefWeather = briefContent ? (typeof briefContent === 'string' ? JSON.parse(briefContent) : briefContent) : null;
+                    break;
+                }
+            } catch (parseErr) {
+                // Skip malformed entries
+                continue;
             }
         }
         
