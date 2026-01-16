@@ -8,6 +8,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { logErrorFromCatch } = require('./shared/errorLogger.js');
 
 const source = path.join(__dirname, 'shared', 'errorLogger.js');
 const dest = path.join(__dirname, 'client', 'src', 'shared', 'errorLogger.js');
@@ -17,7 +18,6 @@ try {
   // Create directory if it doesn't exist
   if (!fs.existsSync(destDir)) {
     fs.mkdirSync(destDir, { recursive: true });
-    console.log(`✅ Created directory: ${destDir}`);
   }
 
   // Read source
@@ -25,8 +25,7 @@ try {
 
   // Write to destination
   fs.writeFileSync(dest, content, 'utf8');
-  console.log(`✅ Synced errorLogger.js: /shared → client/src/shared`);
 } catch (error) {
-  console.error(`❌ Error syncing errorLogger.js:`, error.message);
+  logErrorFromCatch(error, 'sync-errorLogger', 'Error syncing errorLogger.js');
   process.exit(1);
 }

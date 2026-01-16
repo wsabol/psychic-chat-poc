@@ -63,8 +63,6 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
         let todaysWeather = null;
         let briefWeather = null;
         
-        console.log(`[COSMIC-WEATHER] Found ${rows.length} records, looking for date: ${today}`);
-        
         for (const row of rows) {
             const fullContent = row.content_full;
             const briefContent = row.content_brief;

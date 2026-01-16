@@ -4,6 +4,7 @@ dotenv.config();
 
 import pkg from 'pg';
 const { Client } = pkg;
+import { logErrorFromCatch } from './shared/errorLogger.js';
 
 async function migrateEmails() {
   const client = new Client({
@@ -31,8 +32,8 @@ async function migrateEmails() {
 
     await client.end();
     process.exit(0);
-  } catch (error) {
-    console.error('❌ Migration failed:', error.message);
+    } catch (error) {
+    logErrorFromCatch(error, 'migrate-email', 'Migration failed');
     await client.end();
     process.exit(1);
   }

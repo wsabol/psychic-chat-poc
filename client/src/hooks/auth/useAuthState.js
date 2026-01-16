@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { auth } from '../../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { logErrorFromCatch } from '../../shared/errorLogger.js';
+import { logErrorFromCatch, logWarning } from '../../shared/errorLogger.js';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -87,7 +87,7 @@ export function useAuthState(checkBillingStatus) {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ userId: firebaseUser.uid, email: firebaseUser.email })
-            }).catch(err => console.debug('[AUDIT] Login log skipped:', err.message));
+            }).catch(() => {});
 
             // Check if 2FA was already verified in THIS SESSION
             const twoFAVerifiedKey = `2fa_verified_${firebaseUser.uid}`;

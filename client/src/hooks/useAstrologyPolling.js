@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { logErrorFromCatch } from '../shared/errorLogger.js';
+import { logErrorFromCatch, logWarning } from '../shared/errorLogger.js';
 
 /**
  * Hook to poll for astrology calculation completion
@@ -47,17 +47,14 @@ export function useAstrologyPolling() {
                   ? JSON.parse(data.astrology_data)
                   : data.astrology_data;
 
-              // Check if calculation complete (has moon and rising signs)
+                            // Check if calculation complete (has moon and rising signs)
               if (astroData?.moon_sign && astroData?.rising_sign) {
-                const elapsedMs = attempts * intervalMs;
-
                 if (onReady) onReady();
                 setIsChecking(false);
                 return true;
               }
             }
-          } catch (err) {
-            console.debug('[ASTRO-POLLING] Poll attempt error:', err.message);
+                    } catch (err) {
             // Retry on error
           }
 
