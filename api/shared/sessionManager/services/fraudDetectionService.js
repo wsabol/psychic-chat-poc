@@ -8,6 +8,7 @@ import {
   countUniqueUsersFromIp,
   getAttemptsFromIp
 } from './loginAttemptService.js';
+import { logErrorFromCatch } from '../../errorLogger.js';
 
 // Thresholds for suspicious activity
 const THRESHOLDS = {
@@ -64,8 +65,8 @@ export async function detectSuspiciousIP(ipAddress, minutes = 60) {
       recommendations: getSuspiciousIPRecommendations(riskLevel)
     };
 
-  } catch (error) {
-    console.error('[FRAUD] Error detecting suspicious IP:', error);
+    } catch (error) {
+    logErrorFromCatch(error, 'fraud-detection', 'detect suspicious IP');
     return {
       ipAddress,
       suspiciousScore: 0,
@@ -98,8 +99,8 @@ export async function detectSuspiciousUserActivity(userId, hours = 24) {
       recommendations: []
     };
 
-  } catch (error) {
-    console.error('[FRAUD] Error detecting user activity:', error);
+    } catch (error) {
+    logErrorFromCatch(error, 'fraud-detection', 'detect suspicious user activity');
     return {
       userId,
       suspiciousScore: 0,
