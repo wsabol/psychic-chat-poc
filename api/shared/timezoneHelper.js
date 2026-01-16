@@ -1,4 +1,5 @@
 import { db } from './db.js';
+import { logErrorFromCatch } from './errorLogger.js';
 
 /**
  * Get user's timezone from user_preferences
@@ -17,8 +18,8 @@ export async function getUserTimezone(userIdHash) {
     
     // Default to UTC if not set
     return 'UTC';
-  } catch (err) {
-    console.error('[TIMEZONE] Error fetching timezone:', err);
+    } catch (err) {
+    logErrorFromCatch(err, 'timezone', 'fetch user timezone');
     return 'UTC';
   }
 }
@@ -43,10 +44,10 @@ export function getLocalDateForTimezone(timezone = 'UTC') {
     });
     
     return formatter.format(now);
-  } catch (err) {
+    } catch (err) {
     // Only log error if timezone is actually invalid (not just null)
     if (timezone && timezone !== 'UTC') {
-      console.error(`[TIMEZONE] Invalid timezone: ${timezone}, defaulting to UTC`);
+      logErrorFromCatch(err, 'timezone', `Invalid timezone: ${timezone}`);
     }
     return new Date().toISOString().split('T')[0];
   }

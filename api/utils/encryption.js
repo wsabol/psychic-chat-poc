@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'your-secret-key-change-this-in-production';
 const ALGORITHM = 'aes-256-gcm';
@@ -29,8 +30,8 @@ function encrypt(text) {
 
     // Return IV:authTag:encrypted
     return `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted}`;
-  } catch (err) {
-    console.error('[ENCRYPTION] Error encrypting:', err);
+    } catch (err) {
+    logErrorFromCatch(err, 'encryption', 'encrypt data');
     throw new Error('Encryption failed');
   }
 }
