@@ -8,6 +8,7 @@ import { db } from './shared/db.js';
 import { spawn } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -26,12 +27,12 @@ async function calculateBirthChart(birthData) {
         
         python.stderr.on('data', (data) => {
             errorData += data.toString();
-            console.error('[PYTHON ERROR]', data.toString());
+            logErrorFromCatch('[PYTHON ERROR]', data.toString());
         });
         
         python.on('close', (code) => {
             if (code !== 0) {
-                console.error('[ASTROLOGY] Python script failed:', errorData);
+                logErrorFromCatch('[ASTROLOGY] Python script failed:', errorData);
                 reject(new Error(`Python script failed: ${errorData}`));
                 return;
             }
@@ -39,13 +40,13 @@ async function calculateBirthChart(birthData) {
                 const result = JSON.parse(outputData);
                 resolve(result);
             } catch (e) {
-                console.error('[ASTROLOGY] Failed to parse result:', outputData);
+                logErrorFromCatch('[ASTROLOGY] Failed to parse result:', outputData);
                 reject(new Error(`Invalid JSON from astrology script: ${e.message}`));
             }
         });
         
         python.on('error', (err) => {
-            console.error('[ASTROLOGY] Failed to spawn Python:', err);
+            logErrorFromCatch('[ASTROLOGY] Failed to spawn Python:', err);
             reject(err);
         });
         
@@ -102,7 +103,7 @@ async function fixAstrologyData() {
                 });
                 
                 if (!calculatedChart.success || !calculatedChart.rising_sign || !calculatedChart.moon_sign) {
-                    console.error(`[FIX-ASTROLOGY] Calculation failed for ${userId}:`, calculatedChart.error);
+                    logErrorFromCatch(`[FIX-ASTROLOGY] Calculation failed for ${userId}:`, calculatedChart.error);
                     continue;
                 }
                 
@@ -137,12 +138,12 @@ async function fixAstrologyData() {
                 );
                 
             } catch (err) {
-                console.error(`[FIX-ASTROLOGY] Error processing user ${userId}:`, err.message);
+                logErrorFromCatch(`[FIX-ASTROLOGY] Error processing user ${userId}:`, err.message);
             }
         }
         
     } catch (err) {
-        console.error('[FIX-ASTROLOGY] Fatal error:', err.message);
+        logErrorFromCatch('[FIX-ASTROLOGY] Fatal error:', err.message);
         process.exit(1);
     }
 }

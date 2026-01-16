@@ -4,6 +4,7 @@ import { getUserTimezone, getLocalDateForTimezone, needsRegeneration } from '../
 import { db } from '../../shared/db.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { getCurrentPlanets } from '../astrology.js';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 
 
@@ -115,7 +116,7 @@ Do NOT include tarot cards - this is pure astrological forecasting enriched by t
         );
         
             } catch (err) {
-        console.error('[CW-ERROR] ' + err.message);
+        logErrorFromCatch('[CW-ERROR] ' + err.message);
         throw err;
     }
 }

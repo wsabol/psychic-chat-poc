@@ -1,5 +1,6 @@
 import { spawn } from 'child_process';
 import path from 'path';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 export async function calculateBirthChart(birthData) {
     return new Promise((resolve, reject) => {
@@ -14,8 +15,8 @@ export async function calculateBirthChart(birthData) {
         
         python.on('close', (code) => {
             if (code !== 0) {
-                console.error(`[ASTROLOGY] Python script exited with code ${code}`);
-                if (errorData) console.error(`[ASTROLOGY] Python stderr:`, errorData);
+                logErrorFromCatch(`[ASTROLOGY] Python script exited with code ${code}`);
+                if (errorData) logErrorFromCatch(`[ASTROLOGY] Python stderr:`, errorData);
                 reject(new Error(`Python script failed: ${errorData}`));
                 return;
             }
@@ -23,13 +24,13 @@ export async function calculateBirthChart(birthData) {
                 const result = JSON.parse(outputData);
                 resolve(result);
             } catch (e) {
-                console.error(`[ASTROLOGY] Failed to parse result:`, outputData);
+                logErrorFromCatch(`[ASTROLOGY] Failed to parse result:`, outputData);
                 reject(new Error(`Invalid JSON: ${e.message}`));
             }
         });
         
         python.on('error', (err) => {
-            console.error(`[ASTROLOGY] Failed to spawn Python:`, err);
+            logErrorFromCatch(`[ASTROLOGY] Failed to spawn Python:`, err);
             reject(err);
         });
         
@@ -80,15 +81,15 @@ export async function getCurrentMoonPhase() {
         
         python.on('close', (code) => {
             if (code !== 0) {
-                console.error(`[ASTROLOGY] Moon phase script exited with code ${code}`);
-                if (errorData) console.error(`[ASTROLOGY] Python stderr:`, errorData);
+                logErrorFromCatch(`[ASTROLOGY] Moon phase script exited with code ${code}`);
+                if (errorData) logErrorFromCatch(`[ASTROLOGY] Python stderr:`, errorData);
                 reject(new Error(`Python script failed: ${errorData}`));
                 return;
             }
             try {
                 resolve(JSON.parse(outputData));
             } catch (e) {
-                console.error(`[ASTROLOGY] Failed to parse moon phase:`, outputData);
+                logErrorFromCatch(`[ASTROLOGY] Failed to parse moon phase:`, outputData);
                 reject(new Error(`Invalid JSON: ${e.message}`));
             }
         });
@@ -112,15 +113,15 @@ export async function getCurrentPlanets() {
         
         python.on('close', (code) => {
             if (code !== 0) {
-                console.error(`[ASTROLOGY] Current planets script exited with code ${code}`);
-                if (errorData) console.error(`[ASTROLOGY] Python stderr:`, errorData);
+                logErrorFromCatch(`[ASTROLOGY] Current planets script exited with code ${code}`);
+                if (errorData) logErrorFromCatch(`[ASTROLOGY] Python stderr:`, errorData);
                 reject(new Error(`Current planets failed: ${errorData}`));
                 return;
             }
             try {
                 resolve(JSON.parse(outputData));
             } catch (e) {
-                console.error(`[ASTROLOGY] Failed to parse planets:`, outputData);
+                logErrorFromCatch(`[ASTROLOGY] Failed to parse planets:`, outputData);
                 reject(new Error(`Invalid JSON: ${e.message}`));
             }
         });

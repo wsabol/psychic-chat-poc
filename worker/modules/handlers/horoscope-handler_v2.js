@@ -7,6 +7,7 @@ import {
     getUserGreeting
 } from '../oracle.js';
 import { storeMessage, formatMessageContent } from '../messages.js';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * Generate all three horoscopes (daily, weekly, monthly) for the user at once
@@ -62,13 +63,13 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
                 await storeMessage(userId, 'horoscope', horoscopeData);
                 
             } catch (err) {
-                console.error(`[HOROSCOPE-HANDLER] Error generating ${currentRange} horoscope:`, err.message);
+                logErrorFromCatch(`[HOROSCOPE-HANDLER] Error generating ${currentRange} horoscope:`, err.message);
                 // Continue with next range even if one fails
             }
         }
         
     } catch (err) {
-        console.error('[HOROSCOPE-HANDLER] Error generating horoscopes:', err.message);
+        logErrorFromCatch('[HOROSCOPE-HANDLER] Error generating horoscopes:', err.message);
         throw err;
     }
 }

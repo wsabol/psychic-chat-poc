@@ -62,12 +62,12 @@ function Get-ErrorLoggerImportPath {
         return $ups + 'shared/errorLogger.js'
     }
     
-    # WORKER FILES: Count dirs after 'worker/', add 2 for root (worker dir + project root)
+    # WORKER FILES: Count dirs after 'worker/', add 1 more for project root
     if ($filePath -match '^worker/') {
         $pathAfterWorker = $filePath -replace '^worker/', ''
         $parts = $pathAfterWorker -split '/'
         $dirCount = $parts.Count - 1  # -1 to exclude filename
-        $ups = '../' * ($dirCount + 2)  # +2 to go up through worker dir and to project root
+        $ups = '../' * ($dirCount + 1)  # +1 to go up one more level to project root
         return $ups + 'shared/errorLogger.js'
     }
     

@@ -13,6 +13,7 @@ import { storeMessage, formatMessageContent, updateMessageTranslation } from '..
 import { translateContentObject } from '../simpleTranslator.js';
 import { getTodayInUserTimezone, fetchUserTimezonePreference, getCurrentTimeInUserTimezone } from '../utils/timezoneUtils.js';
 import { cleanMarkdownCodeFences } from '../utils/cleanMarkdown.js';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * Background async translation function
@@ -37,7 +38,7 @@ async function translateAndUpdateHoroscope(userId, horoscopeDataFull, horoscopeD
         
         
     } catch (err) {
-        console.error(`[HOROSCOPE-ASYNC] Error:`, err.message);
+        logErrorFromCatch(`[HOROSCOPE-ASYNC] Error:`, err.message);
     }
 }
 
@@ -148,18 +149,18 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
                     
                     // ✨ START ASYNC TRANSLATION (fire and forget)
                     translateAndUpdateHoroscope(userId, horoscopeDataFull, horoscopeDataBrief, userLanguage, currentRange)
-                        .catch(err => console.error(`[HOROSCOPE-HANDLER] Async error:`, err.message));
+                        .catch(err => logErrorFromCatch(`[HOROSCOPE-HANDLER] Async error:`, err.message));
                 }
                 
             } catch (err) {
-                console.error(`[HOROSCOPE-HANDLER] Error generating ${currentRange}:`, err.message);
-                console.error(`[HOROSCOPE-HANDLER] Stack: ${err.stack}`);
+                logErrorFromCatch(`[HOROSCOPE-HANDLER] Error generating ${currentRange}:`, err.message);
+                logErrorFromCatch(`[HOROSCOPE-HANDLER] Stack: ${err.stack}`);
             }
         }
         
     } catch (err) {
-        console.error('[HOROSCOPE-HANDLER] Error:', err.message);
-        console.error(`[HOROSCOPE-HANDLER] Stack: ${err.stack}`);
+        logErrorFromCatch('[HOROSCOPE-HANDLER] Error:', err.message);
+        logErrorFromCatch(`[HOROSCOPE-HANDLER] Stack: ${err.stack}`);
         throw err;
     }
 }

@@ -12,6 +12,7 @@ import {
 } from '../oracle.js';
 import { storeMessage } from '../messages.js';
 import { getUserTimezone, getLocalDateForTimezone, needsRegeneration } from '../utils/timezoneHelper.js';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * Generate horoscopes for the user based on local timezone date
@@ -121,13 +122,13 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
             );
             
                         } catch (err) {
-            console.error(`[HOROSCOPE-HANDLER] Error generating ${range} horoscope:`, err.message);
-            console.error(`[HOROSCOPE-HANDLER] Stack:`, err.stack);
+            logErrorFromCatch(`[HOROSCOPE-HANDLER] Error generating ${range} horoscope:`, err.message);
+            logErrorFromCatch(`[HOROSCOPE-HANDLER] Stack:`, err.stack);
         }
         
     } catch (err) {
-        console.error('[HOROSCOPE-HANDLER] Error generating horoscopes:', err.message);
-        console.error('[HOROSCOPE-HANDLER] Stack:', err.stack);
+        logErrorFromCatch('[HOROSCOPE-HANDLER] Error generating horoscopes:', err.message);
+        logErrorFromCatch('[HOROSCOPE-HANDLER] Stack:', err.stack);
         throw err;
     }
 }

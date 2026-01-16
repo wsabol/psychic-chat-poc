@@ -2,7 +2,6 @@
 $Files = @(
     "worker/modules/handlers/lunar-nodes-handler.js",
     "worker/modules/handlers/moon-phase-handler.js",
-    "worker/modules/handlers/moon-phase-handler-NEW2.js",
     "worker/modules/handlers/void-of-course-handler.js",
     "worker/modules/messages.js",
     "worker/modules/translator.js",
@@ -10,7 +9,6 @@ $Files = @(
     "worker/modules/utils/astrologySetup.js",
     "worker/modules/utils/specialRequestDetector.js",
     "worker/modules/utils/timezoneHelper.js",
-    "worker/modules/utils/timezoneHelper-fixed.js",
     "worker/modules/utils/timezoneUtils.js",
     "worker/modules/utils/violationHandler.js",
     "worker/modules/violation/violationEnforcementCore.js",

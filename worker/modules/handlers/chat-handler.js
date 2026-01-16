@@ -5,6 +5,7 @@ import { handleViolation } from '../utils/violationHandler.js';
 import { detectAndHandleSpecialRequest } from '../utils/specialRequestDetector.js';
 import { ensureUserAstrology } from '../utils/astrologySetup.js';
 import { processOracleRequest } from '../utils/oracleProcessor.js';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * Handle regular chat messages from users
@@ -46,7 +47,7 @@ export async function handleChatMessage(userId, message) {
         await processOracleRequest(userId, userInfo, astrologyInfo, userLanguage, oracleLanguage, message, tempUser);
 
     } catch (err) {
-        console.error('[CHAT-HANDLER] Error handling chat message:', err.message);
+        logErrorFromCatch('[CHAT-HANDLER] Error handling chat message:', err.message);
         throw err;
     }
 }

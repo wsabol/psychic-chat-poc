@@ -1,6 +1,7 @@
 import { db } from '../../shared/db.js';
 import { calculateBirthChart } from '../astrology.js';
 import { hashUserId } from '../../shared/hashUtils.js';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * Handle system astrology calculation requests
@@ -23,7 +24,7 @@ export async function handleAstrologyCalculation(userId) {
         
         // Check if we have complete birth data (timezone is optional)
         if (!info.birth_date || !info.birth_time || !info.birth_country || !info.birth_province || !info.birth_city) {
-            console.warn('[ASTROLOGY-HANDLER] Missing fields:', {
+            logWarning('[ASTROLOGY-HANDLER] Missing fields:', {
                 birth_date: !info.birth_date,
                 birth_time: !info.birth_time,
                 birth_country: !info.birth_country,
@@ -84,7 +85,7 @@ export async function handleAstrologyCalculation(userId) {
         );
         
     } catch (err) {
-        console.error('[ASTROLOGY-HANDLER] Error:', err.message, err);
+        logErrorFromCatch('[ASTROLOGY-HANDLER] Error:', err.message, err);
     }
 }
 
