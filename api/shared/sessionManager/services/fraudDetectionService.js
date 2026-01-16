@@ -65,7 +65,7 @@ export async function detectSuspiciousIP(ipAddress, minutes = 60) {
     };
 
   } catch (error) {
-    console.error('[FRAUD] Error detecting suspicious IP:', error);
+    logErrorFromCatch(error, 'app', 'fraud');
     return {
       ipAddress,
       suspiciousScore: 0,
@@ -99,7 +99,7 @@ export async function detectSuspiciousUserActivity(userId, hours = 24) {
     };
 
   } catch (error) {
-    console.error('[FRAUD] Error detecting user activity:', error);
+    logErrorFromCatch(error, 'app', 'fraud');
     return {
       userId,
       suspiciousScore: 0,
