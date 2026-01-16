@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef } from 'r
 import { auth } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { saveUserTimezone } from '../utils/timezoneUtils';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 const AuthContext = createContext();
 
@@ -19,7 +20,7 @@ export function AuthProvider({ children }) {
         setUser(prev => prev ? { ...prev, token: newToken } : null);
       }
     } catch (err) {
-      console.error('[AUTH] Error refreshing token:', err);
+      logErrorFromCatch('[AUTH] Error refreshing token:', err);
     }
   };
 
@@ -57,7 +58,7 @@ export function AuthProvider({ children }) {
               const errorText = await consentResponse.text();
             }
           } catch (consentErr) {
-            console.error('[AUTH] Consent error details:', consentErr);
+            logErrorFromCatch('[AUTH] Consent error details:', consentErr);
           }
           
           // Don't fetch /auth/user - we already have Firebase user info
@@ -97,7 +98,7 @@ export function AuthProvider({ children }) {
           }
         }
       } catch (err) {
-        console.error('[AUTH] Error in onAuthStateChanged:', err);
+        logErrorFromCatch('[AUTH] Error in onAuthStateChanged:', err);
         setError(err.message);
         setUser(null);
       } finally {

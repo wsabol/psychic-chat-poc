@@ -8,6 +8,7 @@ import {
   sendPasswordResetEmail
 } from 'firebase/auth';
 import { auth } from '../firebase';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 /**
  * ReAuthModal - Re-authenticate user before accessing security settings
@@ -39,7 +40,7 @@ export default function ReAuthModal({ isOpen, email, onSuccess, onCancel, onFail
       // ✅ Call onSuccess after successful Google re-auth
       onSuccess();
     } catch (err) {
-      console.error('[REAUTH] Google re-auth failed:', err);
+      logErrorFromCatch('[REAUTH] Google re-auth failed:', err);
       
       // Skip popup-closed-by-user error to prevent calling onFailure
       if (err.code === 'auth/popup-closed-by-user') {
@@ -78,7 +79,7 @@ export default function ReAuthModal({ isOpen, email, onSuccess, onCancel, onFail
 
       onSuccess();
     } catch (err) {
-      console.error('[REAUTH] Password re-auth failed:', err);
+      logErrorFromCatch('[REAUTH] Password re-auth failed:', err);
       
       if (err.code === 'auth/wrong-password') {
         setError(t('security.reauth.errorWrongPassword'));
@@ -109,7 +110,7 @@ export default function ReAuthModal({ isOpen, email, onSuccess, onCancel, onFail
         setResetSent(false);
       }, 3000);
     } catch (err) {
-      console.error('[REAUTH] Password reset failed:', err);
+      logErrorFromCatch('[REAUTH] Password reset failed:', err);
       setError(t('security.reauth.errorResetFailed'));
     } finally {
       setLoading(false);

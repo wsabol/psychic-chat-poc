@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import { logErrorFromCatch } from '../../../../shared/errorLogger.js';
 
 /**
  * Custom hook for 2FA settings management
@@ -29,7 +30,7 @@ export function use2FASettings(userId, token, apiUrl) {
         setTwoFAMethod(data.settings.method || 'email');
       }
     } catch (err) {
-      console.error('[2FA] Error loading settings:', err);
+      logErrorFromCatch('[2FA] Error loading settings:', err);
       setTwoFAError(err.message);
     } finally {
       setTwoFALoading(false);

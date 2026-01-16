@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * PasskeyTab - Manage passkeys using Firebase JustPass.me Extension
@@ -26,7 +27,7 @@ export default function PasskeyTab({ userId, token, apiUrl }) {
       const data = await response.json();
       setPasskeys(data.passkeys || []);
     } catch (err) {
-      console.error('[PASSKEY] Error loading passkeys:', err);
+      logErrorFromCatch('[PASSKEY] Error loading passkeys:', err);
       setError(err.message);
     } finally {
       setLoading(false);

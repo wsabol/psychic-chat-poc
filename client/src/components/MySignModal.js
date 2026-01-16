@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getZodiacSignFromDate } from '../utils/astroUtils';
 import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
 import { loadZodiacSignsForLanguage } from '../data/zodiac/index.js';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 function MySignModal({ userId, token, isOpen, onClose, birthDate, birthTime, birthCity, birthState }) {
     const [astroData, setAstroData] = useState(null);
@@ -18,7 +19,7 @@ function MySignModal({ userId, token, isOpen, onClose, birthDate, birthTime, bir
                 const signs = await loadZodiacSignsForLanguage('en-US');
                 setZodiacSigns(signs);
             } catch (err) {
-                console.error('Failed to load zodiac signs:', err);
+                logErrorFromCatch('Failed to load zodiac signs:', err);
             }
         };
         loadZodiacData();
@@ -131,7 +132,7 @@ function MySignModal({ userId, token, isOpen, onClose, birthDate, birthTime, bir
             });
             
         } catch (err) {
-            console.error('Error loading astrology data:', err);
+            logErrorFromCatch('Error loading astrology data:', err);
             setError(err.message);
         } finally {
             setLoading(false);

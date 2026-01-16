@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../../context/TranslationContext';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 import './DocumentViewer.css';
 
 /**
@@ -18,7 +19,7 @@ export function DocumentViewer({ title, docType, onBack }) {
         const text = await response.text();
         setContent(text);
       } catch (err) {
-        console.error(`Error loading ${docType}:`, err);
+        logErrorFromCatch(`Error loading ${docType}:`, err);
         setContent(`Failed to load ${docType} document.`);
       } finally {
         setLoading(false);

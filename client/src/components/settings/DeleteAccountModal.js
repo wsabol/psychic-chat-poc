@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../../context/TranslationContext';
 import { getAuth } from 'firebase/auth';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * DeleteAccountModal - Modal for confirming account deletion
@@ -217,10 +218,10 @@ export default function DeleteAccountModal({ isOpen, userEmail, onConfirm, onCan
         let errorMsg = 'Failed to send verification code';
         try {
           const errorData = await response.json();
-          console.error('[DELETE] API Error:', errorData);
+          logErrorFromCatch('[DELETE] API Error:', errorData);
           errorMsg = errorData.error || errorData.message || errorMsg;
         } catch (e) {
-          console.error('[DELETE] Response status:', response.status, response.statusText);
+          logErrorFromCatch('[DELETE] Response status:', response.status, response.statusText);
         }
         throw new Error(errorMsg);
       }
@@ -228,7 +229,7 @@ export default function DeleteAccountModal({ isOpen, userEmail, onConfirm, onCan
       setStep(STEPS.VERIFY);
       setResendTimer(RESEND_COOLDOWN);
     } catch (err) {
-      console.error('Error sending verification:', err);
+      logErrorFromCatch('Error sending verification:', err);
       setError(t('settings.verificationCodeError'));
     }
   };

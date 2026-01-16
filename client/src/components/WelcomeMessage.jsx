@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../context/TranslationContext';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 import './WelcomeMessage.css';
 
 /**
@@ -33,7 +34,7 @@ export function WelcomeMessage({ userId, onClose, onNavigateToChat }) {
           setUserName(displayName);
         }
       } catch (err) {
-        console.error('[WELCOME] Error fetching user name:', err);
+        logErrorFromCatch('[WELCOME] Error fetching user name:', err);
       } finally {
         setLoading(false);
       }

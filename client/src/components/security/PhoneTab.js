@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * PhoneTab - Manage phone number and recovery phone
@@ -32,7 +33,7 @@ export default function PhoneTab({ userId, token, apiUrl }) {
         setRecoveryPhone(data.recoveryPhone || '');
       }
     } catch (err) {
-      console.error('[PHONE] Error loading phone data:', err);
+      logErrorFromCatch('[PHONE] Error loading phone data:', err);
       setError(err.message);
     } finally {
       setLoading(false);

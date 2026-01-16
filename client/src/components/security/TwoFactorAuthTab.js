@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * TwoFactorAuthTab - Manage 2FA on/off and method selection
@@ -33,7 +34,7 @@ export default function TwoFactorAuthTab({ userId, token, apiUrl }) {
         setMethod(data.settings.method || 'email');
       }
     } catch (err) {
-      console.error('[2FA] Error loading settings:', err);
+      logErrorFromCatch('[2FA] Error loading settings:', err);
       setError(err.message);
     } finally {
       setLoading(false);

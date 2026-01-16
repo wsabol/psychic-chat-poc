@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from '../../context/TranslationContext';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * DevicesTab - Show all logged-in devices and allow logout from specific device
@@ -25,7 +26,7 @@ export default function DevicesTab({ userId, token, apiUrl }) {
       const data = await response.json();
       setDevices(data.devices || []);
     } catch (err) {
-      console.error('[DEVICES] Error loading devices:', err);
+      logErrorFromCatch('[DEVICES] Error loading devices:', err);
       setError(t('security.devices.errorLoading'));
     } finally {
       setLoading(false);
@@ -52,7 +53,7 @@ export default function DevicesTab({ userId, token, apiUrl }) {
       
       setDevices(devices.filter(d => d.id !== deviceId));
     } catch (err) {
-      console.error('[DEVICES] Error logging out device:', err);
+      logErrorFromCatch('[DEVICES] Error logging out device:', err);
       setError(t('security.devices.errorLogout'));
     } finally {
       setLoggingOut(null);

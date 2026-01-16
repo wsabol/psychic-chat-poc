@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * EmailTab - Manage primary and recovery email
@@ -30,7 +31,7 @@ export default function EmailTab({ userEmail, userId, token, apiUrl }) {
         setRecoveryEmail(data.recoveryEmail || '');
       }
     } catch (err) {
-      console.error('[EMAIL] Error loading email data:', err);
+      logErrorFromCatch('[EMAIL] Error loading email data:', err);
       setError(err.message);
     } finally {
       setLoading(false);

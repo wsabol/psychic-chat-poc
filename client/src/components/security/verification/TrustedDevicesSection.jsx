@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * TrustedDevicesSection - Manage trusted devices
@@ -30,7 +31,7 @@ export function TrustedDevicesSection({ userId, token, apiUrl }) {
         setError('Failed to load trusted devices');
       }
     } catch (err) {
-      console.error('[TRUSTED-DEVICES] Error:', err);
+      logErrorFromCatch('[TRUSTED-DEVICES] Error:', err);
       setError('Failed to load trusted devices');
     } finally {
       setLoading(false);
@@ -51,7 +52,7 @@ export function TrustedDevicesSection({ userId, token, apiUrl }) {
         setError('Failed to revoke device');
       }
     } catch (err) {
-      console.error('[TRUSTED-DEVICES] Revoke error:', err);
+      logErrorFromCatch('[TRUSTED-DEVICES] Revoke error:', err);
       setError('Error revoking device');
     }
   };

@@ -12,6 +12,7 @@
  */
 
 import React, { useState } from 'react';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 import './ComplianceUpdateModal.css';
 
 export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpdated }) {
@@ -53,7 +54,7 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
       // Automatically proceed after success - don't wait for state update
       onConsentUpdated();
     } catch (err) {
-      console.error('[COMPLIANCE] Error accepting terms:', err);
+      logErrorFromCatch('[COMPLIANCE] Error accepting terms:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -88,7 +89,7 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
       // Automatically proceed after success - don't wait for state update
       onConsentUpdated();
     } catch (err) {
-      console.error('[COMPLIANCE] Error accepting privacy:', err);
+      logErrorFromCatch('[COMPLIANCE] Error accepting privacy:', err);
       setError(err.message);
     } finally {
       setLoading(false);

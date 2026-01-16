@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from '../../../context/TranslationContext';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * TrustCurrentDeviceSection - Trust the current device
@@ -27,7 +28,7 @@ export function TrustCurrentDeviceSection({ userId, token, apiUrl }) {
         setIsCurrentDeviceTrusted(data.isTrusted || false);
       }
     } catch (err) {
-      console.error('[TRUST-DEVICE] Error checking trust status:', err);
+      logErrorFromCatch('[TRUST-DEVICE] Error checking trust status:', err);
     }
   }, [apiUrl, userId, token]);
 
@@ -55,7 +56,7 @@ export function TrustCurrentDeviceSection({ userId, token, apiUrl }) {
         setError(data.error || t('security.trustDevice.errorTrust'));
       }
     } catch (err) {
-      console.error('[TRUST-DEVICE] Error:', err);
+      logErrorFromCatch('[TRUST-DEVICE] Error:', err);
       setError(t('security.trustDevice.errorTrust'));
     } finally {
       setLoading(false);
@@ -86,7 +87,7 @@ export function TrustCurrentDeviceSection({ userId, token, apiUrl }) {
         setError(data.error || t('security.trustDevice.errorRevoke'));
       }
     } catch (err) {
-      console.error('[TRUST-DEVICE] Error:', err);
+      logErrorFromCatch('[TRUST-DEVICE] Error:', err);
       setError(t('security.trustDevice.errorRevoke'));
     } finally {
       setLoading(false);

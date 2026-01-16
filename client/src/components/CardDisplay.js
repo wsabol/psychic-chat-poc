@@ -1,4 +1,5 @@
 import React from 'react';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 function CardDisplay({ cards }) {
     if (!cards || cards.length === 0) {
@@ -59,7 +60,7 @@ function CardDisplay({ cards }) {
                             transition: 'transform 0.3s ease'
                         }}
                         onError={(e) => {
-                            console.error('Image error for ' + card.name + ': URL ' + e.target.src);
+                            logErrorFromCatch('Image error for ' + card.name + ': URL ' + e.target.src);
                             e.target.src = '/images/theworld.jpeg';
                         }}
                     />

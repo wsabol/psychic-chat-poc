@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from '../../context/TranslationContext';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * SessionPrivacyTab - Manage "Stay Logged In" preference
@@ -25,7 +26,7 @@ export default function SessionPrivacyTab({ userId, token, apiUrl }) {
         setPersistentSession(data.settings.persistent_session || false);
       }
     } catch (err) {
-      console.error('[SESSION] Error loading preference:', err);
+      logErrorFromCatch('[SESSION] Error loading preference:', err);
       setError(t('security.session.errorLoading'));
     } finally {
       setLoading(false);

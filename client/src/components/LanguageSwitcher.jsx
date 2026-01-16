@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from '../context/TranslationContext';
 import { useLanguagePreference } from '../hooks/useLanguagePreference';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 /**
  * LanguageSwitcher Component
@@ -34,7 +35,7 @@ export function LanguageSwitcher({ compact = false, onLanguageChanged, style = {
         }
       }
     } catch (err) {
-      console.error('Error changing language:', err);
+      logErrorFromCatch('Error changing language:', err);
     } finally {
       setIsSaving(false);
     }

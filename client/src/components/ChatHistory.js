@@ -1,6 +1,7 @@
 import React from 'react';
 import CardDisplay from './CardDisplay';
 import ReactMarkdown from 'react-markdown';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 function ChatHistory({ chat }) {
     return (
@@ -18,7 +19,7 @@ function ChatHistory({ chat }) {
                             </div>
                         );
                     } catch (e) {
-                        console.error('Parsing error in ChatHistory:', e);
+                        logErrorFromCatch('Parsing error in ChatHistory:', e);
                         return <div key={key}><p>{msg.content}</p></div>;
                     }
                 } else {

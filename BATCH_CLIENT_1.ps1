@@ -1,9 +1,6 @@
 # Batch CLIENT_1: Files 1-30 of 90
 $Files = @(
     "client/build/static/js/main.de4829ef.js",
-    "client/src/App.updated.jsx",
-    "client/src/App_old.jsx",
-    "client/src/components/admin/ComplianceDashboard.jsx",
     "client/src/components/AdminTabs/ViolationReportTab.jsx",
     "client/src/components/AstrologyModal.js",
     "client/src/components/CardDisplay.js",

@@ -3,6 +3,7 @@ import { useTranslation } from '../../context/TranslationContext';
 import { FAQViewer } from './FAQViewer';
 import { DocumentViewer } from './DocumentViewer';
 import { AboutViewer } from './AboutViewer';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 import './HelpChatWindow.css';
 
 /**
@@ -66,7 +67,7 @@ export function HelpChatWindow({ isOpen, onClose, userId, token, apiUrl, current
         setMessages(prev => [...prev, errorMessage]);
       }
     } catch (err) {
-      console.error('[HELP-CHAT] Error:', err);
+      logErrorFromCatch('[HELP-CHAT] Error:', err);
       const errorMessage = {
         role: 'assistant',
         content: t('help.chat.messages.error')

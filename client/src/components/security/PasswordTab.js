@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from '../../context/TranslationContext';
 import { getAuth, updatePassword } from 'firebase/auth';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * PasswordTab - Change password via Firebase
@@ -82,7 +83,7 @@ export default function PasswordTab({ userId, token, apiUrl }) {
       } catch (err) {
       }
     } catch (err) {
-      console.error('[PASSWORD] Error changing password:', err);
+      logErrorFromCatch('[PASSWORD] Error changing password:', err);
       setError(err.message || t('security.passwordTab.errorGeneric'));
     } finally {
       setLoading(false);

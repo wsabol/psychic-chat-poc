@@ -12,7 +12,7 @@ export function getStripe() {
   if (typeof window !== 'undefined' && window.Stripe) {
     return window.Stripe(STRIPE_PUBLIC_KEY);
   }
-  console.error('Stripe.js not loaded. Make sure it\'s loaded via CDN in index.html');
+  logErrorFromCatch('Stripe.js not loaded. Make sure it\'s loaded via CDN in index.html');
   return null;
 }
 
