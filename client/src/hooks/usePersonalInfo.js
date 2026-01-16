@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { fetchWithTokenRefresh } from "../utils/fetchWithTokenRefresh.js";
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
@@ -32,7 +33,7 @@ export function usePersonalInfo(userId, token) {
             if (data.birth_country) setBirthCountry(data.birth_country);
             if (data.horoscope) setHoroscope(data.horoscope);
         } catch (err) {
-            console.error('[PERSONAL-INFO] Error fetching:', err);
+            logErrorFromCatch('[PERSONAL-INFO] Error fetching:', err);
         }
     }, [userId, token]);
     

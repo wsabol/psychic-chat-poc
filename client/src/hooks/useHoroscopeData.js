@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { fetchHoroscope, generateHoroscope, fetchAstrologyData } from '../utils/horoscopeAPI';
 import { useHoroscopePolling } from './useHoroscopePolling';
 import { isBirthInfoError } from '../utils/birthInfoErrorHandler';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 /**
  * useHoroscopeData Hook
@@ -82,7 +83,7 @@ export function useHoroscopeData(userId, token, horoscopeRange, astroInfo) {
         setLoading(false);
       }
     } catch (err) {
-      console.error('[HOROSCOPE] Error loading horoscope:', err);
+      logErrorFromCatch('[HOROSCOPE] Error loading horoscope:', err);
       setError('Unable to load your horoscope. Please try again.');
       setLoading(false);
     }

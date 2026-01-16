@@ -33,14 +33,14 @@ export async function loadZodiacSignsForLanguage(languageCode) {
     // Return the zodiacSigns object
     return module.zodiacSigns;
   } catch (error) {
-    console.error(`Error loading zodiac signs for language ${languageCode}:`, error);
+    logErrorFromCatch(`Error loading zodiac signs for language ${languageCode}:`, error);
     
     // Fallback to English
     try {
       const fallbackModule = await languageModules['en-US']();
       return fallbackModule.zodiacSigns;
     } catch (fallbackError) {
-      console.error('Failed to load English fallback zodiac signs:', fallbackError);
+      logErrorFromCatch('Failed to load English fallback zodiac signs:', fallbackError);
       throw new Error('Unable to load zodiac data');
     }
   }

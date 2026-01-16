@@ -1,6 +1,7 @@
 import { useEffect, useCallback } from 'react';
 import { useTranslation } from '../context/TranslationContext';
 import { useAuth } from './useAuth';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 /**
  * Hook to sync language preference with user database
@@ -40,7 +41,7 @@ export function useLanguagePreference() {
           await changeLanguage(data.language);
         }
       } catch (err) {
-        console.error('[LANGUAGE-PREF] Error fetching preferences:', err);
+        logErrorFromCatch('[LANGUAGE-PREF] Error fetching preferences:', err);
         // Fail silently - use whatever language is already set
       }
     };

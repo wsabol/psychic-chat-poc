@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { auth } from '../../firebase';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * Two-factor authentication logic
@@ -66,7 +67,7 @@ export function useAuthTwoFactor() {
       setError(null);
       return true;
     } catch (err) {
-      console.error('[2FA] Verification error:', err);
+      logErrorFromCatch('[2FA] Verification error:', err);
       setError('Failed to verify 2FA code');
       return false;
     }

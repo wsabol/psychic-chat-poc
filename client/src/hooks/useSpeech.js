@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 // Voice greetings in multiple languages
 const voiceGreetings = {
@@ -143,7 +144,7 @@ export function useSpeech() {
         setProgress(prev => Math.min(prev + 2, 95));
       }, 100);
     } catch (err) {
-      console.error('Resume error:', err);
+      logErrorFromCatch('Resume error:', err);
     }
   }, [clearProgress]);
 
@@ -154,7 +155,7 @@ export function useSpeech() {
       setIsPaused(true);
       setIsPlaying(false);
     } catch (err) {
-      console.error('Pause error:', err);
+      logErrorFromCatch('Pause error:', err);
     }
   }, [clearProgress]);
 

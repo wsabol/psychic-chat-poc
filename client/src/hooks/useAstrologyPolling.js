@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 /**
  * Hook to poll for astrology calculation completion
@@ -66,7 +67,7 @@ export function useAstrologyPolling() {
 
         // Timeout reached
         const totalWaitMs = maxAttempts * intervalMs;
-        console.warn(
+        logWarning(
           `[ASTRO-POLLING] Timeout after ${totalWaitMs}ms, proceeding without astrology`
         );
 
@@ -74,7 +75,7 @@ export function useAstrologyPolling() {
         setIsChecking(false);
         return false;
       } catch (err) {
-        console.error('[ASTRO-POLLING] Unexpected error:', err);
+        logErrorFromCatch('[ASTRO-POLLING] Unexpected error:', err);
         setIsChecking(false);
         return false;
       }

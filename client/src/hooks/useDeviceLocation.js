@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 /**
  * useDeviceLocation - Get approximate city location from IP
@@ -25,7 +26,7 @@ export function useDeviceLocation() {
         return null;
       }
     } catch (err) {
-      console.error('[DEVICE] Error getting location:', err.message);
+      logErrorFromCatch('[DEVICE] Error getting location:', err.message);
       return null;
     }
   }, []);
@@ -42,7 +43,7 @@ export function useDeviceLocation() {
         timestamp: new Date().toISOString()
       };
     } catch (err) {
-      console.error('[DEVICE] Error getting device info:', err);
+      logErrorFromCatch('[DEVICE] Error getting device info:', err);
       return null;
     }
   }, [getLocationFromIP]);

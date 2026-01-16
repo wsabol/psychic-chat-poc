@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
@@ -35,7 +36,7 @@ export function useAstroInfo(userId, token) {
         return astroDataObj;
       }
     } catch (err) {
-      console.error('[ASTRO-INFO-HOOK] Error fetching astro info:', err);
+      logErrorFromCatch('[ASTRO-INFO-HOOK] Error fetching astro info:', err);
     }
     
     return null;

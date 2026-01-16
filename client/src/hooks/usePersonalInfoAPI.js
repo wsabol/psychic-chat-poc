@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
 import { formatDateForDisplay } from '../utils/dateFormatting';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -42,7 +43,7 @@ export function usePersonalInfoAPI(userId, token) {
         }
       };
     } catch (err) {
-      console.error('[PERSONAL-INFO-API] Error fetching data:', err);
+      logErrorFromCatch('[PERSONAL-INFO-API] Error fetching data:', err);
       return { success: false, error: err.message };
     }
   }, [userId, token]);
@@ -69,7 +70,7 @@ export function usePersonalInfoAPI(userId, token) {
 
         return { success: true };
       } catch (err) {
-        console.error('[PERSONAL-INFO-API] Error saving data:', err);
+        logErrorFromCatch('[PERSONAL-INFO-API] Error saving data:', err);
         return { success: false, error: err.message };
       }
     },
@@ -95,7 +96,7 @@ export function usePersonalInfoAPI(userId, token) {
         return { success: false, error: `HTTP ${response.status}` };
       }
     } catch (err) {
-      console.error('[PERSONAL-INFO-API] Sync-calculate error:', err);
+      logErrorFromCatch('[PERSONAL-INFO-API] Sync-calculate error:', err);
       return { success: false, error: err.message };
     }
   }, [userId, token]);

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { fetchMoonPhase, generateMoonPhase } from '../utils/moonPhaseAPI';
 import { useHoroscopePolling } from './useHoroscopePolling';
 import { isBirthInfoError } from '../utils/birthInfoErrorHandler';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 /**
  * useMoonPhaseData Hook
@@ -78,7 +79,7 @@ export function useMoonPhaseData(userId, token, currentPhase) {
         setLoading(false);
       }
     } catch (err) {
-      console.error('[MOON-PHASE] Error loading moon phase:', err);
+      logErrorFromCatch('[MOON-PHASE] Error loading moon phase:', err);
       setError('Unable to load moon phase data. Please try again.');
       setLoading(false);
     }

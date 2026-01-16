@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { fetchCosmicWeather, generateCosmicWeather, pollForCosmicWeather } from '../utils/cosmicWeatherAPI';
 import { isBirthInfoError } from '../utils/birthInfoErrorHandler';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 /**
  * Custom hook to handle cosmic weather data fetching and polling
@@ -26,7 +27,7 @@ export function useCosmicWeatherData(userId, token) {
       setLoading(false);
       return;
     } catch (err) {
-      console.error('[COSMIC-WEATHER-HOOK] Fetch failed, will generate:', err.message);
+      logErrorFromCatch('[COSMIC-WEATHER-HOOK] Fetch failed, will generate:', err.message);
     }
 
     // If fetch failed, trigger generation
@@ -45,7 +46,7 @@ export function useCosmicWeatherData(userId, token) {
       setGenerating(false);
       setLoading(false);
     } catch (err) {
-      console.error('[COSMIC-WEATHER-HOOK] Generation failed:', err.message);
+      logErrorFromCatch('[COSMIC-WEATHER-HOOK] Generation failed:', err.message);
       
       if (isBirthInfoError(err.message)) {
         setError('BIRTH_INFO_MISSING');

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { fetchAstrologyData } from '../utils/horoscopeAPI';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 /**
  * useAstroData Hook
@@ -18,7 +19,7 @@ export function useAstroData(userId, token) {
         }
         setLoading(false);
       } catch (err) {
-        console.error('[ASTRO] Error fetching astrology data:', err);
+        logErrorFromCatch('[ASTRO] Error fetching astrology data:', err);
         setLoading(false);
       }
     };

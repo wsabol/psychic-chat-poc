@@ -1,6 +1,7 @@
 import { createUserWithEmailAndPassword, sendEmailVerification, signOut, signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
 import { useAuthAPI } from './useAuthAPI';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 /**
  * useRegistrationFlow Hook
@@ -55,7 +56,7 @@ export function useRegistrationFlow() {
 
           if (!migrationResponse.ok) {
             const errorData = await migrationResponse.json();
-            console.error('[AUTH-MIGRATION] ✗ Register-and-migrate failed:', errorData);
+            logErrorFromCatch('[AUTH-MIGRATION] ✗ Register-and-migrate failed:', errorData);
             throw new Error(errorData.error || 'Migration failed');
           }
 
@@ -71,7 +72,7 @@ export function useRegistrationFlow() {
 
           return { success: true, userId: null };
         } catch (migrationErr) {
-          console.error('[AUTH-MIGRATION] Error:', migrationErr.message);
+          logErrorFromCatch('[AUTH-MIGRATION] Error:', migrationErr.message);
           throw new Error('Account upgrade failed: ' + migrationErr.message);
         }
       }
@@ -91,12 +92,12 @@ export function useRegistrationFlow() {
       try {
         await sendEmailVerification(userCredential.user);
       } catch (verifyErr) {
-        console.error('[EMAIL-VERIFY] ✗ Failed to send verification email:', verifyErr.message);
+        logErrorFromCatch('[EMAIL-VERIFY] ✗ Failed to send verification email:', verifyErr.message);
       }
 
       return { success: true, userId };
     } catch (err) {
-      console.error('[AUTH] Registration failed:', err.message);
+      logErrorFromCatch('[AUTH] Registration failed:', err.message);
       throw err;
     }
   };

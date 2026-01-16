@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { auth } from '../../firebase';
 import { signOut, createUserWithEmailAndPassword } from 'firebase/auth';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 // ✅ Set your dev email here for developer testing
 const DEV_EMAIL = 'starshiptechnology1@gmail.com';
@@ -25,7 +26,7 @@ export function useAuthSession() {
       localStorage.setItem('temp_account_email', tempEmail);
       sessionStorage.setItem('temp_user_id', userCredential.user.uid);
     } catch (err) {
-      console.error('[TEMP-ACCOUNT] Failed to create temporary account:', err);
+      logErrorFromCatch('[TEMP-ACCOUNT] Failed to create temporary account:', err);
       throw err;
     } finally {
       if (setLoading) setLoading(false);
@@ -56,7 +57,7 @@ export function useAuthSession() {
             if (response.ok) {
               // Success
             } else {
-              console.error('[TEMP-ACCOUNT] Backend deletion failed:', response.status);
+              logErrorFromCatch('[TEMP-ACCOUNT] Backend deletion failed:', response.status);
             }
           } catch (err) {
           }
@@ -76,7 +77,7 @@ export function useAuthSession() {
         localStorage.removeItem('temp_account_email');
       }
     } catch (err) {
-      console.error('[TEMP-ACCOUNT] Failed to delete temporary account:', err);
+      logErrorFromCatch('[TEMP-ACCOUNT] Failed to delete temporary account:', err);
     }
   }, []);
 
@@ -103,7 +104,7 @@ export function useAuthSession() {
       
       await signOut(auth);
     } catch (err) {
-      console.error('Logout error:', err);
+      logErrorFromCatch('Logout error:', err);
     }
   }, []);
 
@@ -114,7 +115,7 @@ export function useAuthSession() {
         return auth.currentUser.emailVerified;
       }
     } catch (err) {
-      console.error('[EMAIL-VERIFY-REFRESH] Error refreshing email status:', err);
+      logErrorFromCatch('[EMAIL-VERIFY-REFRESH] Error refreshing email status:', err);
     }
     return false;
   }, []);

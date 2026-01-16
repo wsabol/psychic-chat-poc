@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { billingFetch } from './billingApi';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 export function usePaymentMethods(token) {
   const [paymentMethods, setPaymentMethods] = useState([]);
@@ -35,7 +36,7 @@ export function usePaymentMethods(token) {
       setLoadingWithTimeout(false);
       return data;
     } catch (err) {
-      console.error('[PAYMENT-METHODS] Error:', err.message);
+      logErrorFromCatch('[PAYMENT-METHODS] Error:', err.message);
       setError(err.message);
       setLoadingWithTimeout(false);
       throw err;
@@ -54,7 +55,7 @@ export function usePaymentMethods(token) {
       setLoadingWithTimeout(false);
       return data;
     } catch (err) {
-      console.error('[SETUP-INTENT] Error:', err.message);
+      logErrorFromCatch('[SETUP-INTENT] Error:', err.message);
       setError(err.message);
       setLoadingWithTimeout(false);
       throw err;
@@ -74,7 +75,7 @@ export function usePaymentMethods(token) {
       setLoadingWithTimeout(false);
       return true;
     } catch (err) {
-      console.error('[DELETE-METHOD] Error:', err.message);
+      logErrorFromCatch('[DELETE-METHOD] Error:', err.message);
       setError(err.message);
       setLoadingWithTimeout(false);
       throw err;
@@ -95,7 +96,7 @@ export function usePaymentMethods(token) {
       setLoadingWithTimeout(false);
       return data;
     } catch (err) {
-      console.error('[ATTACH-METHOD] Error:', err.message);
+      logErrorFromCatch('[ATTACH-METHOD] Error:', err.message);
       setError(err.message);
       setLoadingWithTimeout(false);
       throw err;
@@ -116,7 +117,7 @@ export function usePaymentMethods(token) {
       setLoadingWithTimeout(false);
       return data;
     } catch (err) {
-      console.error('[SET-DEFAULT] Error:', err.message);
+      logErrorFromCatch('[SET-DEFAULT] Error:', err.message);
       setError(err.message);
       setLoadingWithTimeout(false);
       throw err;
@@ -137,7 +138,7 @@ export function usePaymentMethods(token) {
       setLoadingWithTimeout(false);
       return data;
     } catch (err) {
-      console.error('[VERIFY-BANK] Error:', err.message);
+      logErrorFromCatch('[VERIFY-BANK] Error:', err.message);
       setError(err.message);
       setLoadingWithTimeout(false);
       throw err;
@@ -158,7 +159,7 @@ export function usePaymentMethods(token) {
       setLoadingWithTimeout(false);
       return data;
     } catch (err) {
-      console.error('[VERIFY-METHOD] Error:', err.message);
+      logErrorFromCatch('[VERIFY-METHOD] Error:', err.message);
       setError(err.message);
       setLoadingWithTimeout(false);
       throw err;
@@ -178,7 +179,7 @@ export function usePaymentMethods(token) {
       setLoadingWithTimeout(false);
       return data;
     } catch (err) {
-      console.error('[CLEANUP] Error:', err.message);
+      logErrorFromCatch('[CLEANUP] Error:', err.message);
       setError(err.message);
       setLoadingWithTimeout(false);
       throw err;
@@ -198,7 +199,7 @@ export function usePaymentMethods(token) {
       setLoadingWithTimeout(false);
       return data;
     } catch (err) {
-      console.error('[ATTACH-UNATTACHED] Error:', err.message);
+      logErrorFromCatch('[ATTACH-UNATTACHED] Error:', err.message);
       setError(err.message);
       setLoadingWithTimeout(false);
       throw err;

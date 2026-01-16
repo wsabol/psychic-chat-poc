@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 /**
  * useChatMigration - Migrate chat history from temp account to permanent account
@@ -43,7 +44,7 @@ export function useChatMigration() {
       const data = await response.json();
       return true;
     } catch (err) {
-      console.error('[CHAT-MIGRATION] Error migrating chat:', err);
+      logErrorFromCatch('[CHAT-MIGRATION] Error migrating chat:', err);
       setMigrationError(err.message);
       // Don't throw - migration failure shouldn't block account creation
       return false;

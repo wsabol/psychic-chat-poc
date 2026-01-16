@@ -1,4 +1,5 @@
 import { useRef, useCallback } from 'react';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 /**
  * useHoroscopePolling Hook
@@ -25,7 +26,7 @@ export function useHoroscopePolling() {
             resolve(result);
           }
         } catch (err) {
-          console.error('[POLLING] Poll error:', err);
+          logErrorFromCatch('[POLLING] Poll error:', err);
         }
 
         if (pollCount >= maxPolls) {

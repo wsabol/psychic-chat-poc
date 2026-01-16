@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useDeviceTracking } from './useDeviceTracking';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 /**
  * All authentication and navigation handlers
@@ -23,7 +24,7 @@ export function useAuthHandlers(auth, modals, tempFlow) {
         try {
             await auth.createTemporaryAccount();
         } catch (err) {
-            console.error('Failed to create temporary account:', err);
+            logErrorFromCatch('Failed to create temporary account:', err);
         }
     }, [auth, canTryFree, setShowRegisterMode]);
 
@@ -93,7 +94,7 @@ export function useAuthHandlers(auth, modals, tempFlow) {
             });
             
         } catch (err) {
-            console.error('[ONBOARDING] Error deleting temp account:', err);
+            logErrorFromCatch('[ONBOARDING] Error deleting temp account:', err);
         }
         
         // Reset hasLoggedOut flag and route to landing page

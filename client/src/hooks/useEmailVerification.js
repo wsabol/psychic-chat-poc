@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { sendEmailVerification } from 'firebase/auth';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 /**
  * Manages email verification for email/password accounts
@@ -22,7 +23,7 @@ export function useEmailVerification() {
             setVerificationSent(true);
             return true;
         } catch (err) {
-            console.error('[EMAIL-VERIFY] Failed to send verification email:', err.message);
+            logErrorFromCatch('[EMAIL-VERIFY] Failed to send verification email:', err.message);
             setError(err.message);
             return false;
         } finally {
@@ -39,7 +40,7 @@ export function useEmailVerification() {
             setIsVerified(verified);
             return verified;
         } catch (err) {
-            console.error('[EMAIL-VERIFY] Error checking verification:', err.message);
+            logErrorFromCatch('[EMAIL-VERIFY] Error checking verification:', err.message);
             return false;
         }
     }, []);
@@ -71,7 +72,7 @@ export function useEmailVerification() {
                     return;
                 } 
             } catch (err) {
-                console.error('[EMAIL-VERIFY-POLL] Error during polling:', err.message);
+                logErrorFromCatch('[EMAIL-VERIFY-POLL] Error during polling:', err.message);
             }
             
             if (attemptCount >= maxAttempts) {
@@ -92,7 +93,7 @@ export function useEmailVerification() {
             await sendEmailVerification(user);
             return true;
         } catch (err) {
-            console.error('[EMAIL-VERIFY] Failed to resend verification:', err.message);
+            logErrorFromCatch('[EMAIL-VERIFY] Failed to resend verification:', err.message);
             setError(err.message);
             return false;
         } finally {

@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { billingFetch } from './billing/billingApi';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 /**
  * useOnboarding Hook
@@ -47,7 +48,7 @@ export function useOnboarding(token) {
         setOnboardingStatus(data);
         return data;
     } catch (err) {
-      console.error('[ONBOARDING] Fetch status error:', err);
+      logErrorFromCatch('[ONBOARDING] Fetch status error:', err);
       setError(err.message);
       return null;
     } finally {
@@ -74,7 +75,7 @@ export function useOnboarding(token) {
         await fetchOnboardingStatus();
         return data;
       } catch (err) {
-        console.error('[ONBOARDING] Update step error:', err);
+        logErrorFromCatch('[ONBOARDING] Update step error:', err);
         setError(err.message);
         throw err;
       }

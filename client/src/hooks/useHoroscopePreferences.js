@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 /**
  * Hook to fetch and manage horoscope user preferences
@@ -62,7 +63,7 @@ export function useHoroscopePreferences(userId, token, apiUrl) {
         }
       }
     } catch (err) {
-      console.error('[HOROSCOPE-PREFS] Error fetching preferences:', err);
+      logErrorFromCatch('[HOROSCOPE-PREFS] Error fetching preferences:', err);
       // Try localStorage fallback
       const cached = localStorage.getItem(`horoscope_prefs_${userId}`);
       if (cached) {

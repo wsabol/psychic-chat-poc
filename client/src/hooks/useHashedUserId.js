@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { hashUserIdForUrl } from '../utils/userHashUtils';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 /**
  * Hook to hash a user ID for safe URL usage
@@ -26,7 +27,7 @@ export function useHashedUserId(userId) {
         }
       })
       .catch(err => {
-        console.error('[useHashedUserId] Hashing failed:', err);
+        logErrorFromCatch('[useHashedUserId] Hashing failed:', err);
         if (isMounted) {
           setHashedId(userId); // Fallback to original
         }

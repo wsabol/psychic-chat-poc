@@ -1,4 +1,5 @@
 import { fetchWithTokenRefresh } from '../../utils/fetchWithTokenRefresh';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -7,7 +8,7 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
  */
 function handleError(context, error) {
   const message = error.message || `Failed to ${context}`;
-  console.error(`[BILLING] ${context} error:`, error);
+  logErrorFromCatch(`[BILLING] ${context} error:`, error);
   return message;
 }
 

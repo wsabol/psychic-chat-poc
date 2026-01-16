@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * Billing status checks - payment methods and subscriptions
@@ -35,7 +36,7 @@ export function useAuthBilling() {
         return false;
       }
     } catch (err) {
-      console.error('[AUTH] Error checking payment method:', err);
+      logErrorFromCatch('[AUTH] Error checking payment method:', err);
       setHasValidPaymentMethod(false);
       return false;
     } finally {
@@ -63,7 +64,7 @@ export function useAuthBilling() {
         return false;
       }
     } catch (err) {
-      console.error('[AUTH] Error checking subscription status:', err);
+      logErrorFromCatch('[AUTH] Error checking subscription status:', err);
       setHasActiveSubscription(false);
       return false;
     } finally {
@@ -80,7 +81,7 @@ export function useAuthBilling() {
       // Then check subscription AFTER payment check completes
       await checkSubscriptionStatus(idToken, userId);
     } catch (err) {
-      console.error('[AUTH] Error checking billing status:', err);
+      logErrorFromCatch('[AUTH] Error checking billing status:', err);
     }
   }, [checkPaymentMethod, checkSubscriptionStatus]);
 
@@ -90,7 +91,7 @@ export function useAuthBilling() {
     try {
       await checkSubscriptionStatus(idToken, userId);
     } catch (err) {
-      console.error('[AUTH] Error re-checking subscription:', err);
+      logErrorFromCatch('[AUTH] Error re-checking subscription:', err);
     }
   }, [checkSubscriptionStatus]);
 

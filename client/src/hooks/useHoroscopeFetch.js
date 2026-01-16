@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
 import { isBirthInfoError } from '../utils/birthInfoErrorHandler';
 import { buildHoroscopeData, HOROSCOPE_CONFIG } from '../utils/horoscopeUtils';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 /**
  * Hook to manage horoscope fetching, generation, and polling
@@ -75,7 +76,7 @@ export function useHoroscopeFetch(userId, token, apiUrl, horoscopeRange) {
         // Start polling for generated horoscope
         await pollForHoroscope(headers, horoscopeRange);
       } catch (err) {
-        console.error('[HOROSCOPE-FETCH] Error loading horoscope:', err);
+        logErrorFromCatch('[HOROSCOPE-FETCH] Error loading horoscope:', err);
         setError('Unable to load your horoscope. Please try again.');
         setLoading(false);
       }
@@ -116,7 +117,7 @@ export function useHoroscopeFetch(userId, token, apiUrl, horoscopeRange) {
             return;
           }
         } catch (err) {
-          console.error('[HOROSCOPE-FETCH] Polling error:', err);
+          logErrorFromCatch('[HOROSCOPE-FETCH] Polling error:', err);
         }
 
         // Check if max polls reached

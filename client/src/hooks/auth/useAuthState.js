@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { auth } from '../../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -132,13 +133,13 @@ export function useAuthState(checkBillingStatus) {
                   setLoading(false);
                 }
               } catch (err) {
-                console.error('[AUTH-LISTENER] /auth/check-2fa FAILED:', err.message, err.name);
+                logErrorFromCatch('[AUTH-LISTENER] /auth/check-2fa FAILED:', err.message, err.name);
                 
                 // CRITICAL: If 2FA check fails for any reason (timeout, network error, etc),
                 // assume 2FA is NOT required. This prevents users from being stuck at login
                 // when the API is slow or 2FA is disabled. The endpoint should return
                 // requires2FA: false by default for users without 2FA enabled.
-                console.warn('[AUTH-LISTENER] 2FA check failed - assuming 2FA not required');
+                logWarning('[AUTH-LISTENER] 2FA check failed - assuming 2FA not required');
                 setShowTwoFactor(false);
                 setIsAuthenticated(true);
                 if (!billingCheckedRef.current.has(firebaseUser.uid)) {
@@ -165,7 +166,7 @@ export function useAuthState(checkBillingStatus) {
           setLoading(false);
         }
       } catch (err) {
-        console.error('[AUTH-LISTENER] FATAL ERROR:', err);
+        logErrorFromCatch('[AUTH-LISTENER] FATAL ERROR:', err);
         setIsAuthenticated(false);
         setLoading(false);
       }

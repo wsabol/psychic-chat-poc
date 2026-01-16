@@ -79,6 +79,7 @@ import zhCNLegal from '../translations/zh-CN-legal.json';
 import zhCNAstrology from '../translations/zh-CN-astrology.json';
 import zhCNBilling from '../translations/zh-CN-billing.json';
 import zhCNHints from '../translations/zh-CN-hints.json';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 const TranslationContext = createContext();
 
@@ -182,7 +183,7 @@ export function TranslationProvider({ children, userLanguageFromDB }) {
 
   const changeLanguage = useCallback(async (newLanguage) => {
     if (!LANGUAGES[newLanguage]) {
-      console.error(`Language ${newLanguage} not supported`);
+      logErrorFromCatch(`Language ${newLanguage} not supported`);
       return false;
     }
 

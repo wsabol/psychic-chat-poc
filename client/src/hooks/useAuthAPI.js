@@ -25,11 +25,11 @@ export function useAuthAPI() {
         return true;
       } else {
         const errorData = await dbResponse.json();
-        console.error('[AUTH-DB] ✗ Database record creation failed:', errorData);
+        logErrorFromCatch('[AUTH-DB] ✗ Database record creation failed:', errorData);
         return false;
       }
     } catch (dbErr) {
-      console.error('[AUTH-DB] ✗ Could not create database record:', dbErr.message);
+      logErrorFromCatch('[AUTH-DB] ✗ Could not create database record:', dbErr.message);
       return false;
     }
   };
@@ -56,13 +56,13 @@ export function useAuthAPI() {
       const responseData = await consentResponse.json();
       
       if (!consentResponse.ok) {
-        console.error('[CONSENT] ✗ Failed to record consent:', responseData);
+        logErrorFromCatch('[CONSENT] ✗ Failed to record consent:', responseData);
         throw new Error(responseData.error || 'Failed to record consent');
       }
 
       return true;
     } catch (consentErr) {
-      console.error('[CONSENT] ✗ CRITICAL: Could not record consent:', consentErr.message);
+      logErrorFromCatch('[CONSENT] ✗ CRITICAL: Could not record consent:', consentErr.message);
       throw consentErr; // THROW - don't silently fail
     }
   };
@@ -83,7 +83,7 @@ export function useAuthAPI() {
       const data = await response.json();
       return data;
     } catch (err) {
-      console.error('[CONSENT-CHECK] ✗ Error checking consent:', err.message);
+      logErrorFromCatch('[CONSENT-CHECK] ✗ Error checking consent:', err.message);
       return {
         hasConsent: false,
         terms_accepted: false,
