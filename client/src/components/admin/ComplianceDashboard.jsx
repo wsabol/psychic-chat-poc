@@ -15,6 +15,7 @@
 import React, { useState, useEffect } from 'react';
 import './ComplianceDashboard.css';
 import { API_ENDPOINTS, DASHBOARD_TABS, LOAD_ENDPOINTS } from './complianceConstants';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 import { OverviewTabContent } from './tabs/OverviewTabContent';
 import { VersionsTabContent } from './tabs/VersionsTabContent';
 import { UsersTabContent } from './tabs/UsersTabContent';
@@ -55,8 +56,8 @@ export function ComplianceDashboard({ token }) {
       }
 
       setData(results);
-    } catch (err) {
-      console.error('[DASHBOARD] Error:', err);
+        } catch (err) {
+      logErrorFromCatch(err, 'ComplianceDashboard', '[DASHBOARD] Error:');
       setError(err.message);
     } finally {
       setLoading(false);

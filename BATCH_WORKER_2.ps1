@@ -20,4 +20,4 @@ $Files = @(
     "worker/shared/firebase-admin.js"
 )
 
-& .\BULK_CONSOLE_FIX_V7.ps1 -Files $Files -BatchName "WORKER_BATCH_2"
+& .\BULK_CONSOLE_FIX_V10_CORRECTED.ps1 -Files $Files -BatchName "WORKER_BATCH_2"

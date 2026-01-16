@@ -32,4 +32,4 @@ $Files = @(
     "client/src/utils/userHashUtils.js"
 )
 
-& .\BULK_CONSOLE_FIX_V7.ps1 -Files $Files -BatchName "CLIENT_BATCH_3"
+& .\BULK_CONSOLE_FIX_V10_CORRECTED.ps1 -Files $Files -BatchName "CLIENT_BATCH_3"
