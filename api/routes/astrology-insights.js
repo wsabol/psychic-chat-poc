@@ -31,14 +31,23 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
     });
     const today = formatter.format(new Date());
     
-    try {
-        // Fetch user's language preference and response type preference
+        try {
+        // Fetch user's timezone and preferences
         const { rows: prefRows } = await db.query(
-            `SELECT language, response_type FROM user_preferences WHERE user_id_hash = $1`,
+            `SELECT timezone, language, response_type FROM user_preferences WHERE user_id_hash = $1`,
             [userIdHash]
         );
+        const userTz = prefRows.length > 0 && prefRows[0].timezone ? prefRows[0].timezone : 'UTC';
         const userLanguage = prefRows.length > 0 ? prefRows[0].language : 'en-US';
         const responseType = prefRows.length > 0 ? prefRows[0].response_type : 'full';
+        
+        // Calculate today in user's timezone (YYYY-MM-DD format)
+        const today = new Date().toLocaleDateString('en-CA', {
+            timeZone: userTz,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        });
         
         // Fetch cosmic weather
         // NOTE: Only content_full_encrypted and content_brief_encrypted exist in database
@@ -165,18 +174,26 @@ router.post("/lunar-nodes/:userId", authenticateToken, authorizeUser, async (req
 // Void of Course Moon Endpoint
 router.get("/void-of-course/:userId", authenticateToken, authorizeUser, async (req, res) => {
     const { userId } = req.params;
-    const today = new Date().toISOString().split('T')[0];
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
     const userIdHash = hashUserId(userId);
     
     try {
-        // Fetch user preferences
+                // Fetch user preferences including timezone
         const { rows: prefRows } = await db.query(
-            `SELECT language, response_type FROM user_preferences WHERE user_id_hash = $1`,
+            `SELECT timezone, language, response_type FROM user_preferences WHERE user_id_hash = $1`,
             [userIdHash]
         );
+                const userTz = prefRows.length > 0 && prefRows[0].timezone ? prefRows[0].timezone : 'UTC';
         const userLanguage = prefRows.length > 0 ? prefRows[0].language : 'en-US';
         const responseType = prefRows.length > 0 ? prefRows[0].response_type : 'full';
+        
+        // Calculate today in user's timezone (YYYY-MM-DD format)
+        const today = new Date().toLocaleDateString('en-CA', {
+            timeZone: userTz,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        });
         
         // Fetch void of course
         // NOTE: Only content_full_encrypted and content_brief_encrypted exist in database

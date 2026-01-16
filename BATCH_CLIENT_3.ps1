@@ -1,0 +1,35 @@
+# Batch CLIENT_3: Files 61-90 of 90
+$Files = @(
+    "client/src/hooks/useTokenRefresh.js",
+    "client/src/hooks/useUserPreferences.js",
+    "client/src/pages/AdminPage.js",
+    "client/src/pages/ChatPage.js",
+    "client/src/pages/InvoicesPage.js",
+    "client/src/pages/MoonPhasePage.js",
+    "client/src/pages/MySignPage/hooks/useAstrologyData.js",
+    "client/src/pages/MySignPage_DIRECT.js",
+    "client/src/pages/payment-methods/components/BankVerificationModal.js",
+    "client/src/pages/payment-methods/components/PaymentVerificationModal.js",
+    "client/src/pages/payment-methods/hooks/useBankAccountFlow.js",
+    "client/src/pages/payment-methods/hooks/useFinancialConnections.js",
+    "client/src/pages/payment-methods/hooks/useMandateConfirmation.js",
+    "client/src/pages/payment-methods/hooks/useSetupIntent.js",
+    "client/src/pages/payment-methods/hooks/useStripe.js",
+    "client/src/pages/payment-methods/PaymentMethodPage.js",
+    "client/src/pages/PersonalInfoPage.js",
+    "client/src/pages/PreferencesPage/usePreferencesLogic.js",
+    "client/src/pages/SettingsPage.js",
+    "client/src/pages/subscriptions/hooks/useSubscriptionHandlers.js",
+    "client/src/pages/subscriptions/SubscriptionsPage.js",
+    "client/src/screens/TwoFAScreen.jsx",
+    "client/src/utils/analyticsTracker.js",
+    "client/src/utils/cosmicWeatherAPI.js",
+    "client/src/utils/dateParser.js",
+    "client/src/utils/fetchWithTokenRefresh.js",
+    "client/src/utils/timezoneUtils.js",
+    "client/src/utils/timezoneUtils.PROPER.js",
+    "client/src/utils/translatedAstroUtils.js",
+    "client/src/utils/userHashUtils.js"
+)
+
+& .\BULK_CONSOLE_FIX_V7.ps1 -Files $Files -BatchName "CLIENT_BATCH_3"
