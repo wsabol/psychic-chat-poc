@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+
 import { logErrorFromCatch, logWarning } from '../shared/errorLogger.js';
 
 /**
@@ -46,6 +47,10 @@ export function useAstrologyPolling() {
                 typeof data.astrology_data === 'string'
                   ? JSON.parse(data.astrology_data)
                   : data.astrology_data;
+
+
+
+
 
                             // Check if calculation complete (has moon and rising signs)
               if (astroData?.moon_sign && astroData?.rising_sign) {
