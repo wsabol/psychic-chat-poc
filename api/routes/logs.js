@@ -67,8 +67,6 @@ router.post('/error', async (req, res) => {
     // Insert into database
     const result = await db.query(query, params);
 
-    logger.info(`[ERROR-LOG] Client error logged: ${service} | ${finalSeverity} | ${errorMessage}`);
-
     res.json({
       success: true,
       message: 'Error logged successfully',

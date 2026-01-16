@@ -126,12 +126,23 @@ export function AppChat({ state }) {
     setShowWelcomeMessage(false);
   };
 
-  // Guard: Show loading while checking consent
+    // Guard: Show loading while checking consent
   if (consentLoading) {
     return <ErrorBoundary><LoadingScreen /></ErrorBoundary>;
   }
 
-    // Consent modal SKIPPED - go straight to chat
+  // Show consent modal if user hasn't accepted terms and privacy
+  if (showConsentModal) {
+    return (
+      <ErrorBoundary>
+        <ConsentModal
+          userId={authState.authUserId}
+          token={authState.token}
+          onConsentAccepted={handleConsentAccepted}
+        />
+      </ErrorBoundary>
+    );
+  }
 
   // Guard: Don't show modals while onboarding data is loading
   if (authState.isAuthenticated && onboarding.onboardingStatus === null) {

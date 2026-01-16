@@ -2,6 +2,8 @@ import express from 'express';
 import { authenticateToken } from '../../middleware/auth.js';
 import stripe from '../../services/stripeService.js';
 import redis from '../../shared/redis.js';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
+import { hashUserId } from '../../shared/hashUtils.js';
 import {
   getOrCreateStripeCustomer,
   listPaymentMethods,
@@ -21,9 +23,12 @@ const inflightRequests = new Map();
  * ✅ REQUEST DEDUPLICATION: Multiple simultaneous requests share one Stripe call
  */
 router.get('/payment-methods', authenticateToken, async (req, res) => {
+  let userIdHash = null;
   try {
     const userId = req.user.userId;
     const userEmail = req.user.email;
+    userIdHash = hashUserId(userId);
+    console.log(`[PAYMENT-METHODS] Request for user: ${userId}, email: ${userEmail}`);
 
     // ✅ REQUEST DEDUPLICATION: If another request is already fetching for this user, wait for it
     const requestKey = `payment-methods:${userId}`;
@@ -39,9 +44,11 @@ router.get('/payment-methods', authenticateToken, async (req, res) => {
       return res.json(JSON.parse(cachedResult));
     }
 
-    // Create a promise for this request so others can wait for it
+        // Create a promise for this request so others can wait for it
     const fetchPromise = (async () => {
+      console.log(`[PAYMENT-METHODS] Getting/creating Stripe customer for user ${userId}`);
       const customerId = await getOrCreateStripeCustomer(userId, userEmail);
+      console.log(`[PAYMENT-METHODS] Got Stripe customer: ${customerId}`);
       
       if (!customerId) {
         return { cards: [], defaultPaymentMethodId: null };
@@ -86,8 +93,12 @@ router.get('/payment-methods', authenticateToken, async (req, res) => {
 
     // Remove from in-flight map after short delay
     setTimeout(() => inflightRequests.delete(requestKey), 100);
-  } catch (error) {
+            } catch (error) {
+    console.error(`[PAYMENT-METHODS] ERROR:`, error.message || error);
+    console.error(`[PAYMENT-METHODS] Stack:`, error.stack);
     inflightRequests.delete(`payment-methods:${req.user.userId}`);
+    // Log error in background (don't await)
+    logErrorFromCatch(error, 'billing', 'fetch payment methods', userIdHash, req.ip, 'error').catch(() => {});
     return billingError(res, 'Failed to fetch payment methods');
   }
 });
@@ -127,8 +138,10 @@ router.post('/payment-methods/attach', authenticateToken, async (req, res) => {
       success: true, 
       paymentMethod: paymentMethod 
     });
-  } catch (error) {
-    logErrorFromCatch(error, 'app', 'billing');
+        } catch (error) {
+    const userIdHash = hashUserId(req.user.userId);
+    // Log error in background (don't await)
+    logErrorFromCatch(error, 'billing', 'attach payment method', userIdHash, req.ip, 'error').catch(() => {});
     // Check for Stripe error about payment method already attached to customer
     const errorMsg = error.message || '';
     const alreadyAttached = errorMsg.includes('already been attached') || errorMsg.includes('already attached');
@@ -161,8 +174,10 @@ router.delete('/payment-methods/:id', authenticateToken, async (req, res) => {
     await redis.del(cacheKey);
 
     res.json({ success: true, message: 'Payment method deleted' });
-  } catch (error) {
-    logErrorFromCatch(error, 'app', 'billing');
+        } catch (error) {
+    const userIdHash = hashUserId(req.user.userId);
+    // Log error in background (don't await)
+    logErrorFromCatch(error, 'billing', 'delete payment method', userIdHash, req.ip, 'error').catch(() => {});
     if (error.message && (error.message.includes('pending') || error.message.includes('verification'))) {
       return validationError(res, 'Bank account verification in progress. Please try again later.');
     }
@@ -193,7 +208,10 @@ router.post('/payment-methods/set-default', authenticateToken, async (req, res) 
     await redis.del(cacheKey);
 
     res.json({ success: true, defaultPaymentMethod: customer.invoice_settings?.default_payment_method });
-  } catch (error) {
+        } catch (error) {
+    const userIdHash = hashUserId(req.user.userId);
+    // Log error in background (don't await)
+    logErrorFromCatch(error, 'billing', 'set default payment method', userIdHash, req.ip, 'error').catch(() => {});
     return billingError(res, 'Failed to set default payment method');
   }
 });
@@ -226,8 +244,10 @@ router.post('/payment-methods/attach-unattached', authenticateToken, async (req,
       try {
         await stripe.paymentMethods.attach(method.id, { customer: customerId });
         attached.push(method.id);
-      } catch (err) {
-        logErrorFromCatch(error, 'app', 'billing');
+                  } catch (err) {
+        const userIdHash = hashUserId(req.user.userId);
+        // Log error in background (don't await)
+        logErrorFromCatch(err, 'billing', 'attach unattached payment method', userIdHash, req.ip, 'error').catch(() => {});
         errors.push({ id: method.id, error: err.message });
       }
     }
@@ -237,7 +257,10 @@ router.post('/payment-methods/attach-unattached', authenticateToken, async (req,
     await redis.del(cacheKey);
 
     res.json({ success: true, attachedCount: attached.length, attachedIds: attached, errors: errors.length > 0 ? errors : undefined });
-  } catch (error) {
+        } catch (error) {
+    const userIdHash = hashUserId(req.user.userId);
+    // Log error in background (don't await)
+    logErrorFromCatch(error, 'billing', 'attach unattached payment methods', userIdHash, req.ip, 'error').catch(() => {});
     return billingError(res, 'Failed to attach payment methods');
   }
 });

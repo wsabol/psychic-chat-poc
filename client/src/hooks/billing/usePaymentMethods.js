@@ -1,6 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
 import { billingFetch } from './billingApi';
-import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 export function usePaymentMethods(token) {
   const [paymentMethods, setPaymentMethods] = useState([]);
@@ -35,8 +34,7 @@ export function usePaymentMethods(token) {
       setPaymentMethods(data);
       setLoadingWithTimeout(false);
       return data;
-    } catch (err) {
-      logErrorFromCatch('[PAYMENT-METHODS] Error:', err.message);
+        } catch (err) {
       setError(err.message);
       setLoadingWithTimeout(false);
       throw err;
@@ -54,8 +52,7 @@ export function usePaymentMethods(token) {
       });
       setLoadingWithTimeout(false);
       return data;
-    } catch (err) {
-      logErrorFromCatch('[SETUP-INTENT] Error:', err.message);
+        } catch (err) {
       setError(err.message);
       setLoadingWithTimeout(false);
       throw err;
@@ -74,8 +71,7 @@ export function usePaymentMethods(token) {
       await fetchPaymentMethods();
       setLoadingWithTimeout(false);
       return true;
-    } catch (err) {
-      logErrorFromCatch('[DELETE-METHOD] Error:', err.message);
+        } catch (err) {
       setError(err.message);
       setLoadingWithTimeout(false);
       throw err;
@@ -95,8 +91,7 @@ export function usePaymentMethods(token) {
       await fetchPaymentMethods();
       setLoadingWithTimeout(false);
       return data;
-    } catch (err) {
-      logErrorFromCatch('[ATTACH-METHOD] Error:', err.message);
+        } catch (err) {
       setError(err.message);
       setLoadingWithTimeout(false);
       throw err;
@@ -116,8 +111,7 @@ export function usePaymentMethods(token) {
       await fetchPaymentMethods();
       setLoadingWithTimeout(false);
       return data;
-    } catch (err) {
-      logErrorFromCatch('[SET-DEFAULT] Error:', err.message);
+        } catch (err) {
       setError(err.message);
       setLoadingWithTimeout(false);
       throw err;
@@ -137,8 +131,7 @@ export function usePaymentMethods(token) {
       await fetchPaymentMethods();
       setLoadingWithTimeout(false);
       return data;
-    } catch (err) {
-      logErrorFromCatch('[VERIFY-BANK] Error:', err.message);
+        } catch (err) {
       setError(err.message);
       setLoadingWithTimeout(false);
       throw err;
@@ -158,8 +151,7 @@ export function usePaymentMethods(token) {
       await fetchPaymentMethods();
       setLoadingWithTimeout(false);
       return data;
-    } catch (err) {
-      logErrorFromCatch('[VERIFY-METHOD] Error:', err.message);
+        } catch (err) {
       setError(err.message);
       setLoadingWithTimeout(false);
       throw err;
@@ -178,8 +170,7 @@ export function usePaymentMethods(token) {
       await fetchPaymentMethods();
       setLoadingWithTimeout(false);
       return data;
-    } catch (err) {
-      logErrorFromCatch('[CLEANUP] Error:', err.message);
+        } catch (err) {
       setError(err.message);
       setLoadingWithTimeout(false);
       throw err;
@@ -198,8 +189,7 @@ export function usePaymentMethods(token) {
       await fetchPaymentMethods();
       setLoadingWithTimeout(false);
       return data;
-    } catch (err) {
-      logErrorFromCatch('[ATTACH-UNATTACHED] Error:', err.message);
+        } catch (err) {
       setError(err.message);
       setLoadingWithTimeout(false);
       throw err;

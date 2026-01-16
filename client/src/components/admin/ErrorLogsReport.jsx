@@ -208,12 +208,12 @@ export default function ErrorLogsReport({ token, apiUrl }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {data.map((row, idx) => (
+                  {data.map((row) => (
                     <tr
-                      key={idx}
+                      key={row.id || `${row.service}-${row.error_date}-${row.error_count}`}
                       style={{
                         borderBottom: '1px solid #eee',
-                        backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f9f9f9',
+                        backgroundColor: data.indexOf(row) % 2 === 0 ? '#ffffff' : '#f9f9f9',
                       }}
                     >
                       <td style={{ padding: '0.75rem', fontSize: '12px' }}>{row.service}</td>

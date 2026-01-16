@@ -8,6 +8,7 @@ import { checkUserConsent, recordUserConsent } from './auth-endpoints/helpers/co
 import { checkUserCompliance, getComplianceReport, getUsersRequiringAction, markUserNotified } from '../shared/complianceChecker.js';
 import { getCurrentTermsVersion, getCurrentPrivacyVersion } from '../shared/versionConfig.js';
 import VERSION_CONFIG from '../shared/versionConfig.js';
+import { validationError, serverError } from '../utils/responses.js';
 
 const router = Router();
 

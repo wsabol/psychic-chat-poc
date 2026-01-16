@@ -1,4 +1,5 @@
 import { stripe } from './stripeClient.js';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 export async function createSetupIntent(customerId) {
   try {
@@ -11,9 +12,9 @@ export async function createSetupIntent(customerId) {
       payment_method_types: ['card'],
     });
     return intent;
-  } catch (error) {
-    logErrorFromCatch(error, 'app', 'stripe');
-    logErrorFromCatch(error, 'app', 'stripe');
+    } catch (error) {
+    // Log error in background (don't await)
+    logErrorFromCatch(error, 'stripe', 'create setup intent').catch(() => {});
     throw error;
   }
 }
@@ -31,9 +32,10 @@ export async function listPaymentMethods(customerId) {
 
     const cards = pmResponse.data.filter(pm => pm.type === 'card');
 
-    return cards;
+        return cards;
   } catch (error) {
-    logErrorFromCatch(error, 'app', 'stripe');
+    // Log error in background (don't await)
+    logErrorFromCatch(error, 'stripe', 'list payment methods').catch(() => {});
     throw error;
   }
 }
@@ -45,9 +47,10 @@ export async function deletePaymentMethod(paymentMethodId) {
     }
 
     await stripe.paymentMethods.detach(paymentMethodId);
-    return { success: true };
+        return { success: true };
   } catch (error) {
-    logErrorFromCatch(error, 'app', 'stripe');
+    // Log error in background (don't await)
+    logErrorFromCatch(error, 'stripe', 'delete payment method').catch(() => {});
     throw error;
   }
 }

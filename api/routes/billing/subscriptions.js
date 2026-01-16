@@ -1,6 +1,8 @@
 import express from 'express';
 import { authenticateToken } from '../../middleware/auth.js';
 import stripe from '../../services/stripeService.js';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
+import { hashUserId } from '../../shared/hashUtils.js';
 import {
   getOrCreateStripeCustomer,
   createSubscription,
@@ -46,9 +48,9 @@ router.post('/create-subscription', authenticateToken, async (req, res) => {
       plan_name: subscription.items?.data?.[0]?.plan?.product?.name,
       price_amount: subscription.items?.data?.[0]?.price?.unit_amount,
       price_interval: subscription.items?.data?.[0]?.price?.recurring?.interval,
-    }).catch(err => {
-      logErrorFromCatch(error, 'app', 'billing');
-      // Don't fail - subscription was created in Stripe
+        }).catch(err => {
+      // Non-critical: Database storage failed, but Stripe subscription was created
+      logErrorFromCatch(err, 'billing', 'store subscription data', hashUserId(userId)).catch(() => {});
     });
     res.json({
       subscriptionId: subscription.id,

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { logErrorFromCatch } from '../shared/errorLogger.js';
 import './ConsentModal.css';
 
 export function ConsentModal({ userId, token, onConsentAccepted }) {
@@ -38,8 +37,7 @@ export function ConsentModal({ userId, token, onConsentAccepted }) {
       }
 
       onConsentAccepted();
-    } catch (err) {
-      logErrorFromCatch('[CONSENT] Error:', err);
+        } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);

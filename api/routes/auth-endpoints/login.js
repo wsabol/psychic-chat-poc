@@ -85,10 +85,15 @@ router.post('/log-login-success', async (req, res) => {
             [userIdHash, termsVersion, true, privacyVersion, true]
           );
         }
-      } catch (consentErr) {
+            } catch (consentErr) {
         // Consent creation failed silently
       }
     }
+    
+            // ✅ REMOVED: Don't create Stripe customer on login
+    // Creating it here causes duplicate customers during concurrent requests
+    // It will be created on-demand when user accesses billing page
+    
     // Log successful login
     await logAudit(db, {
       userId,
