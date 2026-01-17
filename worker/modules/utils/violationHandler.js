@@ -40,8 +40,8 @@ export async function handleViolation(userId, message, tempUser) {
 
         // No violation detected
         return null;
-    } catch (err) {
-        logErrorFromCatch('[VIOLATION-HANDLER] Error checking violation:', err.message);
-        throw err;
-    }
+          } catch (err) {
+          logErrorFromCatch(err, '[VIOLATION-HANDLER] Error checking violation');
+          throw err;
+      }
 }

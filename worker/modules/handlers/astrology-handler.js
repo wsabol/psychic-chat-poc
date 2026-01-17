@@ -96,7 +96,7 @@ export async function handleAstrologyCalculation(userId) {
         }
         
     } catch (err) {
-        logErrorFromCatch('[ASTROLOGY-HANDLER] Error:', err.message, err);
+        logErrorFromCatch(err, '[ASTROLOGY-HANDLER] Error calculating birth chart');
     }
 }
 

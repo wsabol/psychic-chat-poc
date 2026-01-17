@@ -24,9 +24,28 @@ async function getDb() {
 
 export async function logErrorFromCatch(error, service, context = null, userIdHash = null, ipAddress = null, severity = 'error') {
   try {
+    // Handle null/undefined error
+    if (!error) {
+      error = new Error('Unknown error');
+    }
+    
     // Ensure service is a string, not an object
     const serviceStr = typeof service === 'string' ? service : JSON.stringify(service);
-    const errorMessage = (error?.message || 'Unknown error').split('\n')[0].substring(0, 500);
+    
+    // Extract error message safely
+    let errorMessage = 'Unknown error';
+    if (error && typeof error === 'object' && error.message) {
+      errorMessage = String(error.message).split('\n')[0].substring(0, 500);
+    } else if (error && typeof error === 'string') {
+      errorMessage = error.split('\n')[0].substring(0, 500);
+    } else if (error) {
+      errorMessage = String(error).split('\n')[0].substring(0, 500);
+    }
+    
+    // Prevent empty messages
+    if (!errorMessage || errorMessage.trim() === '' || errorMessage === '{}') {
+      errorMessage = 'Unknown error';
+    }
 
     if (typeof window !== 'undefined') {
       return logErrorFromClient({ service: serviceStr, errorMessage, severity, context, stack: error?.stack });
@@ -105,14 +124,19 @@ async function logErrorToDB({
 }) {
   if (!database) return;
 
-  try {
-    // Ensure service is a string
-    const serviceStr = typeof service === 'string' ? service : String(service);
-    
-    if (!serviceStr || !errorMessage) {
-      console.error('[ERROR-LOGGER] Missing required fields');
-      return;
-    }
+    try {
+        // Ensure service is a string
+        const serviceStr = typeof service === 'string' ? service : String(service);
+        
+        // Validate required fields
+        if (!serviceStr) {
+          console.error('[ERROR-LOGGER] Missing service name');
+          return;
+        }
+        
+        if (!errorMessage || errorMessage === '{}') {
+          errorMessage = 'Unknown error';
+        }
 
     const validSeverities = ['error', 'warning', 'critical'];
     const finalSeverity = validSeverities.includes(severity) ? severity : 'error';
@@ -123,7 +147,7 @@ async function logErrorToDB({
       VALUES ($1, $2, $3, $4, $5)
     `;
 
-    let params = [serviceStr, errorMessage, finalSeverity, userIdHash, context];
+    let params = [serviceStr, errorMessage || 'Unknown error', finalSeverity, userIdHash, context];
 
     // Add encrypted stack if present
     if (errorStack && process.env.ENCRYPTION_KEY) {

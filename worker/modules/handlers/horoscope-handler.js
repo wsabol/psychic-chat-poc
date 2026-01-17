@@ -121,14 +121,12 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
                 todayLocalDate
             );
             
-                        } catch (err) {
-            logErrorFromCatch(`[HOROSCOPE-HANDLER] Error generating ${range} horoscope:`, err.message);
-            logErrorFromCatch(`[HOROSCOPE-HANDLER] Stack:`, err.stack);
+        } catch (err) {
+            logErrorFromCatch(err, `[HOROSCOPE-HANDLER] Error generating ${range} horoscope`);
         }
         
     } catch (err) {
-        logErrorFromCatch('[HOROSCOPE-HANDLER] Error generating horoscopes:', err.message);
-        logErrorFromCatch('[HOROSCOPE-HANDLER] Stack:', err.stack);
+        logErrorFromCatch(err, '[HOROSCOPE-HANDLER] Error generating horoscopes');
         throw err;
     }
 }

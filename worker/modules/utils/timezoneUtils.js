@@ -5,6 +5,8 @@
  * Uses browser timezone (captured client-side) or calculates from birth location
  */
 
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
+
 /**
  * Get today's date in user's timezone (YYYY-MM-DD format)
  * 
@@ -33,8 +35,8 @@ export function getTodayInUserTimezone(userTimezone) {
     const day = parts.find(p => p.type === 'day')?.value;
     
     return `${year}-${month}-${day}`;
-  } catch (err) {
-    logErrorFromCatch(`[TIMEZONE] Error formatting date for timezone ${userTimezone}:`, err.message);
+    } catch (err) {
+    logErrorFromCatch(err, `[TIMEZONE] Error formatting date for timezone ${userTimezone}`);
     return new Date().toISOString().split('T')[0];
   }
 }
@@ -84,8 +86,8 @@ export function getCurrentTimeInUserTimezone(userTimezone) {
       dayOfWeek,
       timezone: userTimezone
     };
-  } catch (err) {
-    logErrorFromCatch(`[TIMEZONE] Error getting time for timezone ${userTimezone}:`, err.message);
+    } catch (err) {
+    logErrorFromCatch(err, `[TIMEZONE] Error getting time for timezone ${userTimezone}`);
     return getCurrentTimeInTimezone('UTC');
   }
 }
@@ -136,7 +138,7 @@ export async function fetchUserTimezonePreference(db, userId) {
     
     return null;
   } catch (err) {
-    logErrorFromCatch('[TIMEZONE] Error fetching user timezone:', err.message);
+    logErrorFromCatch(err, '[TIMEZONE] Error fetching user timezone');
     return null;
   }
 }
@@ -161,8 +163,9 @@ export async function storeUserTimezonePreference(db, userId, timezone) {
       [timezone, userIdHash]
     );
     
+      
   } catch (err) {
-    logErrorFromCatch('[TIMEZONE] Error storing user timezone:', err.message);
+    logErrorFromCatch(err, '[TIMEZONE] Error storing user timezone');
   }
 }
 

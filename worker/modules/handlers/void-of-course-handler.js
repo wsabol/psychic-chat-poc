@@ -51,8 +51,8 @@ What should they know? What should they avoid starting? What reflective activiti
         const voidOfCourseBrief = { is_void: true, phase: moonPhaseData.phase, text: oracleResponses.brief, generated_at: new Date().toISOString() };
         await storeMessage(userId, 'void_of_course', voidOfCourseDataFull, voidOfCourseBrief);
         
-        } catch (err) {
-        logErrorFromCatch('[VOID-OF-COURSE-HANDLER] Error:', err.message);
+                } catch (err) {
+        logErrorFromCatch(err, '[VOID-OF-COURSE-HANDLER] Error generating void of course alert');
         // Continue silently on error
     }
 }

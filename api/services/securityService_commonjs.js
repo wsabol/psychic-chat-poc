@@ -24,9 +24,9 @@ async function getDevices(userId) {
       isCurrent: false // Frontend can mark current device
     }));
 
-    return { devices, count: devices.length };
+        return { devices, count: devices.length };
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    logErrorFromCatch(err, 'app', 'security');
     throw err;
   }
 }
@@ -61,9 +61,9 @@ async function logoutDevice(userId, deviceId) {
     } catch (err) {
     }
 
-    return { success: true };
+        return { success: true };
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    logErrorFromCatch(err, 'app', 'security');
     throw err;
   }
 }
@@ -85,12 +85,12 @@ async function getPhoneData(userId) {
     const row = result.rows[0];
     return {
       phoneNumber: row.phone_number ? decrypt(row.phone_number) : null,
-      recoveryPhone: row.recovery_phone ? decrypt(row.recovery_phone) : null,
+            recoveryPhone: row.recovery_phone ? decrypt(row.recovery_phone) : null,
       phoneVerified: row.phone_verified,
       recoveryPhoneVerified: row.recovery_phone_verified
     };
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    logErrorFromCatch(err, 'app', 'security');
     throw err;
   }
 }
@@ -129,9 +129,9 @@ async function savePhoneNumber(userId, phoneNumber, recoveryPhone) {
 
     // TODO: Send SMS to phoneNumber with code
 
-    return { success: true, codeSent: true };
+        return { success: true, codeSent: true };
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    logErrorFromCatch(err, 'app', 'security');
     throw err;
   }
 }
@@ -169,9 +169,9 @@ async function verifyPhoneCode(userId, code) {
       [userId, encryptedPhone]
     );
 
-    return { success: true, verified: true };
+        return { success: true, verified: true };
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    logErrorFromCatch(err, 'app', 'security');
     throw err;
   }
 }
@@ -193,10 +193,10 @@ async function getEmailData(userId) {
     const row = result.rows[0];
     return {
       recoveryEmail: row.recovery_email ? decrypt(row.recovery_email) : null,
-      recoveryEmailVerified: row.recovery_email_verified
+            recoveryEmailVerified: row.recovery_email_verified
     };
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    logErrorFromCatch(err, 'app', 'security');
     throw err;
   }
 }
@@ -230,9 +230,9 @@ async function saveRecoveryEmail(userId, recoveryEmail) {
       [userId, recoveryEmail, code, expiresAt]
     );
 
-    return { success: true, codeSent: true };
+        return { success: true, codeSent: true };
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    logErrorFromCatch(err, 'app', 'security');
     throw err;
   }
 }
@@ -269,9 +269,9 @@ async function verifyEmailCode(userId, code) {
       [userId, encryptedEmail]
     );
 
-    return { success: true, verified: true };
+        return { success: true, verified: true };
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    logErrorFromCatch(err, 'app', 'security');
     throw err;
   }
 }
@@ -287,9 +287,9 @@ async function removeRecoveryEmail(userId) {
       [userId]
     );
 
-    return { success: true };
+        return { success: true };
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    logErrorFromCatch(err, 'app', 'security');
     throw err;
   }
 }
@@ -313,9 +313,9 @@ async function recordPasswordChange(userId) {
       [userId]
     );
 
-    return { success: true };
+        return { success: true };
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    logErrorFromCatch(err, 'app', 'security');
     throw err;
   }
 }

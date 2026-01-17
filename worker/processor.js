@@ -37,7 +37,7 @@ async function routeJob(job) {
             await handleChatMessage(userId, message);
         }
     } catch (err) {
-        logErrorFromCatch(`[PROCESSOR] Error processing job for user ${userId}:`, err.message);
+        logErrorFromCatch(err, `[PROCESSOR] Error processing job for user ${userId}`);
     }
 }
 
@@ -58,12 +58,12 @@ async function generateDailyMysticalUpdates() {
             try {
                 await generateHoroscope(user.id, 'daily');
                 await generateMoonPhaseCommentary(user.id, 'waxing');
-            } catch (err) {
-                logErrorFromCatch(`[STARTUP] Error updating user ${user.id}:`, err.message);
+                        } catch (err) {
+                logErrorFromCatch(err, `[STARTUP] Error updating user ${user.id}`);
             }
         }
     } catch (err) {
-        logErrorFromCatch('[STARTUP] Error generating daily mystical updates:', err.message);
+        logErrorFromCatch(err, '[STARTUP] Error generating daily mystical updates');
     }
 }
 
@@ -79,11 +79,11 @@ async function cleanupOldTempAccounts() {
         
         if (response.ok) {
             const result = await response.json();
-        } else {
-            logErrorFromCatch('[CLEANUP] ✗ Cleanup failed with status:', response.status);
+                } else {
+            logErrorFromCatch(new Error(`Cleanup failed with status: ${response.status}`), '[CLEANUP]');
         }
     } catch (err) {
-        logErrorFromCatch('[CLEANUP] Error running cleanup job:', err.message);
+        logErrorFromCatch(err, '[CLEANUP] Error running cleanup job');
     }
 }
 
@@ -92,10 +92,10 @@ async function cleanupOldTempAccounts() {
  */
 export async function workerLoop() {
     
-    try {
+        try {
         await generateDailyMysticalUpdates();
     } catch (err) {
-        logErrorFromCatch('[WORKER] Failed to generate daily updates:', err.message);
+        logErrorFromCatch(err, '[WORKER] Failed to generate daily updates');
     }
     
     setInterval(cleanupOldTempAccounts, 86400000);
@@ -108,8 +108,8 @@ export async function workerLoop() {
                 continue;
             }
             await routeJob(job);
-        } catch (err) {
-            logErrorFromCatch('[WORKER] Fatal error in job loop:', err.message);
+                } catch (err) {
+            logErrorFromCatch(err, '[WORKER] Fatal error in job loop');
             await new Promise((r) => setTimeout(r, 1000));
         }
     }

@@ -115,8 +115,8 @@ Do NOT include tarot cards - this is pure astrological forecasting enriched by t
             todayLocalDate
         );
         
-            } catch (err) {
-        logErrorFromCatch('[CW-ERROR] ' + err.message);
+                        } catch (err) {
+        logErrorFromCatch(err, '[CW-HANDLER] Cosmic weather generation failed');
         throw err;
     }
 }

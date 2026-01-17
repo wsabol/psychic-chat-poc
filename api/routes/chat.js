@@ -32,8 +32,8 @@ router.post("/", verify2FA, async (req, res) => {
         await enqueueMessage({ userId, message });
 
         res.json({ status: "queued" });
-    } catch (err) {
-        logErrorFromCatch(error, 'app', 'chat');
+        } catch (err) {
+        logErrorFromCatch(err, 'app', 'chat');
         return serverError(res, 'Failed to process message');
     }
 });
@@ -170,8 +170,8 @@ router.get("/history/:userId", authorizeUser, verify2FA, async (req, res) => {
         });
         
         res.json(transformedRows);
-        } catch (err) {
-        logErrorFromCatch(error, 'app', 'chat');
+                } catch (err) {
+        logErrorFromCatch(err, 'app', 'chat');
         return serverError(res, 'Failed to retrieve message history');
     }
 });

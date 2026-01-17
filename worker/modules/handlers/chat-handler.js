@@ -47,7 +47,7 @@ export async function handleChatMessage(userId, message) {
         await processOracleRequest(userId, userInfo, astrologyInfo, userLanguage, oracleLanguage, message, tempUser);
 
     } catch (err) {
-        logErrorFromCatch('[CHAT-HANDLER] Error handling chat message:', err.message);
+        logErrorFromCatch(err, '[CHAT-HANDLER] Error handling chat message');
         throw err;
     }
 }

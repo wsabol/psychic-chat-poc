@@ -107,9 +107,8 @@ Do NOT include tarot cards - this is purely lunar + astrological insight enriche
             todayLocalDate
         );
         
-            } catch (err) {
-        logErrorFromCatch('[MOON-PHASE-HANDLER] Error generating commentary:', err.message);
-        logErrorFromCatch('[MOON-PHASE-HANDLER] Stack:', err.stack);
+                        } catch (err) {
+        logErrorFromCatch(err, '[MOON-PHASE-HANDLER] Error generating commentary');
         throw err;
     }
 }

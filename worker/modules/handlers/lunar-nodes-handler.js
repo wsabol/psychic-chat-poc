@@ -43,8 +43,8 @@ Provide insight into their soul's journey and purpose.`;
         };
         const lunarNodesDataBrief = { text: oracleResponses.brief, generated_at: new Date().toISOString() };
         await storeMessage(userId, 'lunar_nodes', lunarNodesDataFull, lunarNodesDataBrief);
-        } catch (err) {
-        logErrorFromCatch('[LUNAR-NODES-HANDLER] Error:', err.message);
+                } catch (err) {
+        logErrorFromCatch(err, '[LUNAR-NODES-HANDLER] Error generating lunar nodes insight');
         // Continue silently on error
     }
 }

@@ -85,14 +85,14 @@ async function handleHoroscopeInChat(userId, userInfo) {
             const response = `✨ I'm preparing your horoscope. Please visit the Horoscope page to see it when it's ready.`;
             await storeMessage(userId, 'assistant', { text: response });
 
-            // Trigger horoscope generation directly (don't await)
+                        // Trigger horoscope generation directly (don't await)
             const { generateHoroscope } = await import('../handlers/horoscope-handler.js');
             generateHoroscope(userId, defaultRange).catch(err =>
-                logErrorFromCatch('[SPECIAL-REQUEST] Error triggering horoscope:', err.message)
+                logErrorFromCatch(err, '[SPECIAL-REQUEST] Error triggering horoscope')
             );
         }
-    } catch (err) {
-        logErrorFromCatch('[SPECIAL-REQUEST] Error handling horoscope in chat:', err.message);
+        } catch (err) {
+        logErrorFromCatch(err, '[SPECIAL-REQUEST] Error handling horoscope in chat');
         const response = `I encountered an error retrieving your horoscope. Please try again in a moment.`;
         await storeMessage(userId, 'assistant', { text: response });
     }
@@ -148,14 +148,14 @@ async function handleMoonPhaseInChat(userId, userInfo, phase) {
             const response = `🌙 I'm preparing your lunar insight. Please visit the Moon Phase page to see it when it's ready.`;
             await storeMessage(userId, 'assistant', { text: response });
 
-            // Trigger moon phase generation directly (don't await)
+                        // Trigger moon phase generation directly (don't await)
             const { generateMoonPhaseCommentary } = await import('../handlers/moon-phase-handler.js');
             generateMoonPhaseCommentary(userId, currentPhase).catch(err =>
-                logErrorFromCatch('[SPECIAL-REQUEST] Error triggering moon phase:', err.message)
+                logErrorFromCatch(err, '[SPECIAL-REQUEST] Error triggering moon phase')
             );
         }
-    } catch (err) {
-        logErrorFromCatch('[SPECIAL-REQUEST] Error handling moon phase in chat:', err.message);
+        } catch (err) {
+        logErrorFromCatch(err, '[SPECIAL-REQUEST] Error handling moon phase in chat');
         const response = `I encountered an error retrieving the lunar insight. Please try again in a moment.`;
         await storeMessage(userId, 'assistant', { text: response });
     }
@@ -191,14 +191,14 @@ async function handleCosmicWeatherInChat(userId) {
             const response = `✨ I'm reading today's planetary energies. Please visit the Cosmic Weather page to see them when ready.`;
             await storeMessage(userId, 'assistant', { text: response });
 
-            // Trigger cosmic weather generation directly (don't await)
+                        // Trigger cosmic weather generation directly (don't await)
             const { generateCosmicWeather } = await import('../handlers/cosmic-weather-handler.js');
             generateCosmicWeather(userId).catch(err => 
-                logErrorFromCatch('[SPECIAL-REQUEST] Error triggering cosmic weather:', err.message)
+                logErrorFromCatch(err, '[SPECIAL-REQUEST] Error triggering cosmic weather')
             );
         }
-    } catch (err) {
-        logErrorFromCatch('[SPECIAL-REQUEST] Error handling cosmic weather in chat:', err.message);
+        } catch (err) {
+        logErrorFromCatch(err, '[SPECIAL-REQUEST] Error handling cosmic weather in chat');
         const response = `I encountered an error reading the cosmic energy. Please try again in a moment.`;
         await storeMessage(userId, 'assistant', { text: response });
     }
@@ -234,8 +234,8 @@ export async function detectAndHandleSpecialRequest(userId, message, userInfo, a
 
         // No special request detected
         return false;
-    } catch (err) {
-        logErrorFromCatch('[SPECIAL-REQUEST] Error detecting special request:', err.message);
+        } catch (err) {
+        logErrorFromCatch(err, '[SPECIAL-REQUEST] Error detecting special request');
         // Return false to allow normal chat to proceed on error
         return false;
     }

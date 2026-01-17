@@ -137,8 +137,8 @@ export async function executeWithDecryption(db, sql, params = []) {
     const allParams = [ENCRYPTION_KEY, ...params];
     const result = await db.query(sql, allParams);
     return result;
-  } catch (err) {
-    logErrorFromCatch(error, 'app', 'decryption');
+    } catch (err) {
+    logErrorFromCatch(err, 'app', 'decryption');
     throw err;
   }
 }
