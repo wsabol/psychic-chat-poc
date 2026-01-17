@@ -5,6 +5,7 @@ const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
 /**
  * Fetch existing cosmic weather or check if generation is needed
+ * Returns null if still generating (202 status) so client knows to wait/poll
  */
 export async function fetchCosmicWeather(userId, token) {
   const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
@@ -14,10 +15,9 @@ export async function fetchCosmicWeather(userId, token) {
     { headers }
   );
 
-    // Handle 202 (processing/generating) response
+  // Handle 202 (processing/generating) response - return null to indicate still generating
   if (response.status === 202) {
-    const data = await response.json();
-    throw new Error(data.message || 'Generating cosmic weather...');
+    return null;
   }
 
   if (!response.ok) {
@@ -96,8 +96,8 @@ export async function pollForCosmicWeather(userId, token, maxPolls = 30, pollInt
           reject(new Error(errorData.error || `HTTP ${response.status}`));
           return;
         }
-      } catch (err) {
-        logErrorFromCatch('[COSMIC-WEATHER-API] Polling error:', err);
+            } catch (err) {
+        logErrorFromCatch(err, '[COSMIC-WEATHER-API] Polling error');
       }
 
       if (pollCount >= maxPolls) {

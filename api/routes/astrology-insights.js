@@ -15,31 +15,13 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
     const userIdHash = hashUserId(userId);
     
-    // Get user's timezone for proper date comparison
-    const { rows: tzRows } = await db.query(
-        `SELECT pgp_sym_decrypt(birth_timezone_encrypted, $1)::text as timezone FROM user_personal_info WHERE user_id = $2`,
-        [ENCRYPTION_KEY, userId]
-    );
-    const userTz = tzRows.length > 0 && tzRows[0].timezone ? tzRows[0].timezone : 'UTC';
-    
-    // Calculate today in user's timezone
-    const formatter = new Intl.DateTimeFormat('en-CA', { 
-        year: 'numeric', 
-        month: '2-digit', 
-        day: '2-digit',
-        timeZone: userTz
-    });
-    const today = formatter.format(new Date());
-    
-        try {
-        // Fetch user's timezone and preferences
+    try {
+        // Fetch user's timezone
         const { rows: prefRows } = await db.query(
-            `SELECT timezone, language, response_type FROM user_preferences WHERE user_id_hash = $1`,
+            `SELECT timezone FROM user_preferences WHERE user_id_hash = $1`,
             [userIdHash]
         );
         const userTz = prefRows.length > 0 && prefRows[0].timezone ? prefRows[0].timezone : 'UTC';
-        const userLanguage = prefRows.length > 0 ? prefRows[0].language : 'en-US';
-        const responseType = prefRows.length > 0 ? prefRows[0].response_type : 'full';
         
         // Calculate today in user's timezone (YYYY-MM-DD format)
         const today = new Date().toLocaleDateString('en-CA', {
@@ -49,27 +31,27 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
             day: '2-digit'
         });
         
-        // Fetch cosmic weather
-        // NOTE: Only content_full_encrypted and content_brief_encrypted exist in database
+        // Fetch cosmic weather - get last 5 to find today's data
         const query = `SELECT 
                 pgp_sym_decrypt(content_full_encrypted, $2)::text as content_full,
-                pgp_sym_decrypt(content_brief_encrypted, $2)::text as content_brief,
-                language_code
+                pgp_sym_decrypt(content_brief_encrypted, $2)::text as content_brief
             FROM messages 
             WHERE user_id_hash = $1 AND role = 'cosmic_weather' 
             ORDER BY created_at DESC LIMIT 5`;
-                const { rows } = await db.query(query, [userIdHash, ENCRYPTION_KEY]);
+        const { rows } = await db.query(query, [userIdHash, ENCRYPTION_KEY]);
         
+        // Find today's cosmic weather
         let todaysWeather = null;
         let briefWeather = null;
         
         for (const row of rows) {
-            const fullContent = row.content_full;
-            const briefContent = row.content_brief;
-            
             try {
+                const fullContent = row.content_full;
+                const briefContent = row.content_brief;
+                
                 const data = typeof fullContent === 'string' ? JSON.parse(fullContent) : fullContent;
                 const dataDate = data.generated_at?.split('T')[0];
+                
                 if (dataDate === today) {
                     todaysWeather = data;
                     briefWeather = briefContent ? (typeof briefContent === 'string' ? JSON.parse(briefContent) : briefContent) : null;
@@ -81,11 +63,11 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
             }
         }
         
-                if (!todaysWeather) {
+        if (!todaysWeather) {
             return processingResponse(res, 'Generating today\'s cosmic weather...', 'generating');
         }
         
-                // Ensure birth_chart is properly formatted for frontend
+        // Ensure birth_chart is properly formatted for frontend
         const formattedBirthChart = todaysWeather.birth_chart ? {
           rising_sign: todaysWeather.birth_chart.rising_sign,
           moon_sign: todaysWeather.birth_chart.moon_sign,
@@ -116,7 +98,7 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
             birthChart: formattedBirthChart,
             currentPlanets: formattedPlanets
         });
-        } catch (err) {
+    } catch (err) {
         return serverError(res, 'Failed to fetch cosmic weather');
     }
 });
@@ -127,7 +109,7 @@ router.post("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (
     try {
         await enqueueMessage({ userId, message: '[SYSTEM] Generate cosmic weather' });
         res.json({ status: 'Generating today\'s cosmic weather...' });
-        } catch (err) {
+    } catch (err) {
         return serverError(res, 'Failed to queue cosmic weather');
     }
 });
@@ -148,13 +130,13 @@ router.get("/lunar-nodes/:userId", authenticateToken, authorizeUser, async (req,
             [userIdHash, ENCRYPTION_KEY]
         );
         
-                if (rows.length === 0) {
+        if (rows.length === 0) {
             return processingResponse(res, 'Generating lunar nodes insight...', 'generating');
         }
         
         const data = typeof rows[0].content === 'string' ? JSON.parse(rows[0].content) : rows[0].content;
         res.json({ insight: data.text, nodes: { north: data.north_node_sign, south: data.south_node_sign } });
-        } catch (err) {
+    } catch (err) {
         return serverError(res, 'Failed to fetch lunar nodes');
     }
 });
@@ -164,7 +146,7 @@ router.post("/lunar-nodes/:userId", authenticateToken, authorizeUser, async (req
     try {
         await enqueueMessage({ userId, message: '[SYSTEM] Generate lunar nodes insight' });
         res.json({ status: 'Generating lunar nodes insight...' });
-        } catch (err) {
+    } catch (err) {
         return serverError(res, 'Failed to queue lunar nodes');
     }
 });
@@ -176,14 +158,12 @@ router.get("/void-of-course/:userId", authenticateToken, authorizeUser, async (r
     const userIdHash = hashUserId(userId);
     
     try {
-                // Fetch user preferences including timezone
+        // Fetch user's timezone
         const { rows: prefRows } = await db.query(
-            `SELECT timezone, language, response_type FROM user_preferences WHERE user_id_hash = $1`,
+            `SELECT timezone FROM user_preferences WHERE user_id_hash = $1`,
             [userIdHash]
         );
-                const userTz = prefRows.length > 0 && prefRows[0].timezone ? prefRows[0].timezone : 'UTC';
-        const userLanguage = prefRows.length > 0 ? prefRows[0].language : 'en-US';
-        const responseType = prefRows.length > 0 ? prefRows[0].response_type : 'full';
+        const userTz = prefRows.length > 0 && prefRows[0].timezone ? prefRows[0].timezone : 'UTC';
         
         // Calculate today in user's timezone (YYYY-MM-DD format)
         const today = new Date().toLocaleDateString('en-CA', {
@@ -193,12 +173,9 @@ router.get("/void-of-course/:userId", authenticateToken, authorizeUser, async (r
             day: '2-digit'
         });
         
-        // Fetch void of course
-        // NOTE: Only content_full_encrypted and content_brief_encrypted exist in database
+        // Fetch void of course - check last 5 records for today's data
         const query = `SELECT 
-                pgp_sym_decrypt(content_full_encrypted, $2)::text as content_full,
-                pgp_sym_decrypt(content_brief_encrypted, $2)::text as content_brief,
-                language_code
+                pgp_sym_decrypt(content_full_encrypted, $2)::text as content_full
             FROM messages 
             WHERE user_id_hash = $1 AND role = 'void_of_course' 
             ORDER BY created_at DESC LIMIT 5`;
@@ -217,7 +194,7 @@ router.get("/void-of-course/:userId", authenticateToken, authorizeUser, async (r
             }
         }
         
-                if (!todaysAlert) {
+        if (!todaysAlert) {
             return processingResponse(res, 'Calculating void of course moon...', 'generating');
         }
         
@@ -226,7 +203,7 @@ router.get("/void-of-course/:userId", authenticateToken, authorizeUser, async (r
             alert: todaysAlert.text || todaysAlert.message,
             phase: todaysAlert.phase
         });
-        } catch (err) {
+    } catch (err) {
         return serverError(res, 'Failed to fetch void of course');
     }
 });
@@ -236,7 +213,7 @@ router.post("/void-of-course/:userId", authenticateToken, authorizeUser, async (
     try {
         await enqueueMessage({ userId, message: '[SYSTEM] Generate void of course alert' });
         res.json({ status: 'Checking void of course moon...' });
-        } catch (err) {
+    } catch (err) {
         return serverError(res, 'Failed to queue void of course');
     }
 });
@@ -249,24 +226,16 @@ router.get("/moon-phase/:userId", authenticateToken, authorizeUser, async (req, 
     const userIdHash = hashUserId(userId);
     
     try {
-        const { rows: prefRows } = await db.query(
-            `SELECT language, response_type FROM user_preferences WHERE user_id_hash = $1`,
-            [userIdHash]
-        );
-        const userLanguage = prefRows.length > 0 ? prefRows[0].language : 'en-US';
-        const responseType = prefRows.length > 0 ? prefRows[0].response_type : 'full';
-        
-        // NOTE: Only content_full_encrypted and content_brief_encrypted exist in database
+        // Fetch moon phase data for requested phase
         const query = `SELECT 
                 pgp_sym_decrypt(content_full_encrypted, $2)::text as content_full,
-                pgp_sym_decrypt(content_brief_encrypted, $2)::text as content_brief,
-                language_code
+                pgp_sym_decrypt(content_brief_encrypted, $2)::text as content_brief
             FROM messages 
             WHERE user_id_hash = $1 AND role = 'moon_phase' AND moon_phase = $3
             ORDER BY created_at DESC LIMIT 1`;
         const { rows } = await db.query(query, [userIdHash, ENCRYPTION_KEY, phase]);
         
-                if (rows.length === 0) {
+        if (rows.length === 0) {
             return processingResponse(res, 'Generating moon phase commentary...', 'generating');
         }
         
@@ -283,7 +252,7 @@ router.get("/moon-phase/:userId", authenticateToken, authorizeUser, async (req, 
             generated_at: moonPhaseData.generated_at,
             phase: phase
         });
-        } catch (err) {
+    } catch (err) {
         return serverError(res, 'Failed to fetch moon phase');
     }
 });
@@ -295,7 +264,7 @@ router.post("/moon-phase/:userId", authenticateToken, authorizeUser, async (req,
     try {
         await enqueueMessage({ userId, message: `[SYSTEM] Generate moon phase commentary for ${phase}` });
         res.json({ status: `Generating ${phase} moon phase commentary...` });
-        } catch (err) {
+    } catch (err) {
         return serverError(res, 'Failed to queue moon phase');
     }
 });

@@ -59,7 +59,6 @@
     "sun": "Sun",
     "moon": "Moon",
     "loading": "Reading cosmic conditions...",
-      "translating.cosmicWeather": "I am now translating your cosmic weather from English to {{language}}...",
     "noWeather": "Cosmic weather information not available"
   },
   "mySign": {

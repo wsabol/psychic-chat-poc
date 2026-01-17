@@ -20,14 +20,20 @@ export function useCosmicWeatherData(userId, token) {
     setCosmicData(null);
     setGenerating(false);
 
-    try {
+        try {
       // Try to fetch existing cosmic weather
       const data = await fetchCosmicWeather(userId, token);
-      setCosmicData(data);
-      setLoading(false);
-      return;
+      
+      // If data exists (not generating), use it
+      if (data) {
+        setCosmicData(data);
+        setLoading(false);
+        return;
+      }
+      
+      // If null, it means still generating (202 response), fall through to polling
     } catch (err) {
-      logErrorFromCatch('[COSMIC-WEATHER-HOOK] Fetch failed, will generate:', err.message);
+      logErrorFromCatch(err, '[COSMIC-WEATHER-HOOK] Fetch failed, will generate');
     }
 
     // If fetch failed, trigger generation
@@ -45,13 +51,13 @@ export function useCosmicWeatherData(userId, token) {
       setCosmicData(data);
       setGenerating(false);
       setLoading(false);
-    } catch (err) {
-      logErrorFromCatch('[COSMIC-WEATHER-HOOK] Generation failed:', err.message);
+        } catch (err) {
+      logErrorFromCatch(err, '[COSMIC-WEATHER-HOOK] Generation failed');
       
-      if (isBirthInfoError(err.message)) {
+            if (isBirthInfoError(err?.message)) {
         setError('BIRTH_INFO_MISSING');
       } else {
-        setError(err.message || 'Unable to load cosmic weather. Please try again.');
+        setError(err?.message || 'Unable to load cosmic weather. Please try again.');
       }
       
       setGenerating(false);
