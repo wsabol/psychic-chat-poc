@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "devDependencies": {
     "@types/express": "^5.0.5",
     "@types/redis": "^4.0.11",
