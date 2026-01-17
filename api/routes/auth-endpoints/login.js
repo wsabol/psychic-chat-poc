@@ -21,6 +21,10 @@ router.post('/log-login-success', async (req, res) => {
     const { userId, email } = req.body;
     if (!userId || !email) return validationError(res, 'userId and email are required');
 
+    // Admin email list
+    const ADMIN_EMAILS = ['starshiptechnology1@gmail.com', 'wsabol39@gmail.com'];
+    const isAdminEmail = ADMIN_EMAILS.includes(email.toLowerCase());
+
     // Ensure user record exists (prevent FK constraint violations)
     const exists = await db.query('SELECT user_id FROM user_personal_info WHERE user_id = $1', [userId]);
     if (exists.rows.length === 0) {
@@ -28,6 +32,18 @@ router.post('/log-login-success', async (req, res) => {
         await createUserDatabaseRecords(userId, email);
       } catch (createErr) {
         // User creation failed silently
+      }
+    }
+
+    // If admin email, ensure is_admin = TRUE in database
+    if (isAdminEmail) {
+      try {
+        await db.query(
+          'UPDATE user_personal_info SET is_admin = TRUE WHERE user_id = $1',
+          [userId]
+        );
+      } catch (adminErr) {
+        // Admin flag update failed silently (non-blocking)
       }
     }
 

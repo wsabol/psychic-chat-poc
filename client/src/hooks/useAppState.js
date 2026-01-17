@@ -16,7 +16,7 @@ import { auth } from '../firebase';
 export function useAppState() {
   useTokenRefresh();
   
-  // Navigation state
+    // Navigation state
   const [skipPaymentCheck, setSkipPaymentCheck] = useState(true);
   const [skipSubscriptionCheck, setSkipSubscriptionCheck] = useState(true);
   const [startingPage, setStartingPage] = useState(0);
@@ -24,6 +24,7 @@ export function useAppState() {
   const [onboardingClosed, setOnboardingClosed] = useState(false);
   const [verificationFailed, setVerificationFailed] = useState(false);
   const [previousAuthState, setPreviousAuthState] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Core hooks
   const authState = useAuth();
@@ -31,7 +32,7 @@ export function useAppState() {
   const tempFlow = useTempAccountFlow(authState);
   const handlers = useAuthHandlers(authState, modals, tempFlow);
   
-  const { isLoading, isThankyou, isRegister, isVerification, isLanding, isLogin, isTwoFactor, isPaymentMethodRequired, isSubscriptionRequired, isChat } = useAppRouting(authState, tempFlow.appExited, modals.showRegisterMode, skipPaymentCheck, skipSubscriptionCheck);
+  const { isLoading, isThankyou, isRegister, isVerification, isLanding, isLogin, isTwoFactor, isPaymentMethodRequired, isSubscriptionRequired, isChat } = useAppRouting(authState, tempFlow.appExited, modals.showRegisterMode, skipPaymentCheck, skipSubscriptionCheck, isAdmin);
   
   const emailVerification = useEmailVerification();
   const onboarding = useOnboarding(authState.token);
@@ -43,6 +44,18 @@ export function useAppState() {
     }
     setPreviousAuthState(authState.isAuthenticated);
   }, [authState.isAuthenticated, previousAuthState, modals]);
+
+    // Effect: Check admin status after authentication
+  useEffect(() => {
+    if (authState.isAuthenticated && authState.token && authState.authUserId) {
+      // Check if user is admin
+      const ADMIN_EMAILS = ['starshiptechnology1@gmail.com', 'wsabol39@gmail.com'];
+      const isUserAdmin = ADMIN_EMAILS.includes(authState.authEmail?.toLowerCase());
+      setIsAdmin(isUserAdmin);
+    } else {
+      setIsAdmin(false);
+    }
+  }, [authState.isAuthenticated, authState.token, authState.authUserId, authState.authEmail]);
 
   // Effect: Start email verification polling
   useEffect(() => {

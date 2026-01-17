@@ -28,8 +28,6 @@ try {
 
   // Write to destination
   fs.writeFileSync(dest, content, 'utf8');
-  console.log(`[sync-errorLogger] Synced ${source} to ${dest}`);
 } catch (error) {
-  console.error('[sync-errorLogger] Error syncing errorLogger.js:', error.message);
   process.exit(1);
 }

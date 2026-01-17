@@ -53,22 +53,12 @@ export function useAuthState(checkBillingStatus) {
             setIsFirstTime(false);
             localStorage.setItem('psychic_app_registered', 'true');
             
-            // Track device on login (non-blocking)
-            (async () => {
-              try {
-                let deviceName = 'Unknown Device', ipAddress = 'unknown';
-                try {
-                  const geo = await fetch('https://ipapi.co/json/').then(r => r.json());
-                  ipAddress = geo.ip || 'unknown';
-                  deviceName = geo.city && geo.country_name ? `${geo.city}, ${geo.country_name}` : (geo.country_name || deviceName);
-                } catch (e) { }
-                fetch(`${API_URL}/security/track-device/${firebaseUser.uid}`, {
-                  method: 'POST',
-                  headers: { 'Authorization': `Bearer ${idToken}`, 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ deviceName, ipAddress })
-                }).catch(() => {});
-              } catch (e) { }
-            })();
+            // Track device on login (non-blocking) - server will detect IP via req.ip
+            fetch(`${API_URL}/security/track-device/${firebaseUser.uid}`, {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${idToken}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({})
+            }).catch(() => {});
 
             // Check email verification
             if (!firebaseUser.emailVerified) {
@@ -101,26 +91,39 @@ export function useAuthState(checkBillingStatus) {
                 checkBillingStatus(idToken, firebaseUser.uid);
               }
               setLoading(false);
-            } else {
+                        } else {
               try {
+                                // Browser info for device tracking (IP detected server-side to avoid CORS issues)
+                const browserInfo = navigator.userAgent.split(' ').slice(-2).join(' ');
+                
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 15000);
                 
+                // Server will detect IP from request headers (req.ip) to avoid CORS issues with ipapi.co
                 const twoFAResponse = await fetch(`${API_URL}/auth/check-2fa/${firebaseUser.uid}`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ browserInfo }),
                   signal: controller.signal
                 });
 
                 clearTimeout(timeoutId);
                 const twoFAData = await twoFAResponse.json();
 
-                if (twoFAData.requires2FA) {
+                                if (twoFAData.requires2FA) {
                   setTempToken(twoFAData.tempToken);
                   setTempUserId(firebaseUser.uid);
                   setShowTwoFactor(true);
                   setTwoFactorMethod(twoFAData.method || 'email');
                   setIsAuthenticated(false);
+                  
+                   // Store browser info for after 2FA (server detects IP/device via req.ip and UAParser)
+                  if (twoFAData.isAdminNewIP) {
+                    sessionStorage.setItem('admin_new_ip', JSON.stringify({
+                      browserInfo
+                    }));
+                  }
+                  
                   setLoading(false);
                 } else {
                   // 2FA not required - proceed to authentication
@@ -175,11 +178,31 @@ export function useAuthState(checkBillingStatus) {
     return unsubscribe;
   }, [checkBillingStatus]);
 
-  const complete2FA = useCallback((userId, idToken) => {
+    const complete2FA = useCallback((userId, idToken) => {
     setShowTwoFactor(false);
     setTempToken(null);
     setTempUserId(null);
     setIsAuthenticated(true);
+    
+    // If admin completed 2FA from new IP, trust the device
+        const adminNewIP = sessionStorage.getItem('admin_new_ip');
+    if (adminNewIP) {
+      try {
+        const { browserInfo } = JSON.parse(adminNewIP);
+        // Server detected IP/device, just confirm 2FA passed
+        fetch(`${API_URL}/auth/trust-admin-device`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${idToken}`,
+            'Content-Type': 'application/json'
+          },
+                    body: JSON.stringify({ browserInfo })
+        }).catch(() => {});
+        sessionStorage.removeItem('admin_new_ip');
+            } catch (err) {
+        // Trust device request is non-critical, silently handle error
+      }
+    }
     
     if (checkBillingStatus && !billingCheckedRef.current.has(userId)) {
       billingCheckedRef.current.add(userId);

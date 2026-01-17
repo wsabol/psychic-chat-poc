@@ -11,9 +11,9 @@ import { recordUserConsent } from './consentHelper.js';
  */
 export async function createUserDatabaseRecords(userId, email, firstName = '', lastName = '') {
   try {
-    // Check if user already exists
+        // Check if user already exists
     const existsCheck = await db.query(
-      'SELECT user_id FROM user_personal_info WHERE user_id = $1',
+      'SELECT user_id, is_admin FROM user_personal_info WHERE user_id = $1',
       [userId]
     );
 

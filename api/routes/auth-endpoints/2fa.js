@@ -7,7 +7,10 @@ import { isAccountLocked } from './helpers/accountLockout.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { insertVerificationCode, getVerificationCode } from '../../shared/encryptedQueries.js';
 import { extractDeviceName } from '../../shared/deviceFingerprint.js';
+import { parseDeviceInfo } from '../../shared/sessionManager/utils/deviceParser.js';
 import { validationError, serverError, forbiddenError, rateLimitError } from '../../utils/responses.js';
+import { isAdmin, checkTrustedIP, recordTrustedIP, logAdminLoginAttempt } from '../../services/adminIpService.js';
+import { buildAdminNewIPEmailHTML } from '../../services/adminEmailBuilder.js';
 
 const router = Router();
 
@@ -86,11 +89,18 @@ router.post('/verify-2fa', async (req, res) => {
  * POST /auth/check-2fa/:userId
  * Check if 2FA is enabled
  * If device is trusted, skip 2FA
+ * For ADMINS: Check if IP is trusted, require 2FA if new IP
  * Otherwise, send 2FA code
  */
 router.post('/check-2fa/:userId', async (req, res) => {
     try {
-    const { userId } = req.params;
+        const { userId } = req.params;
+    const { browserInfo } = req.body;
+    // Get detailed device info using UAParser (server-side detection)
+    const deviceInfo = parseDeviceInfo(req);  // Gets: browser, OS, IP via UAParser
+    const ipAddress = deviceInfo.ipAddress;    // Much better than client-side fetch
+            const deviceName = deviceInfo.deviceName;  // e.g., 'Chrome on Windows'
+    
     if (!userId) return validationError(res, 'userId is required');
 
     // Check if account is locked
@@ -119,7 +129,129 @@ router.post('/check-2fa/:userId', async (req, res) => {
       });
     }
 
-    // Get 2FA settings using user_id_hash
+        // Get user email to check if admin
+    const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+    const userResult = await db.query(
+      `SELECT pgp_sym_decrypt(email_encrypted, $1) as email FROM user_personal_info WHERE user_id = $2`,
+      [ENCRYPTION_KEY, userId]
+    );
+    
+    const userEmail = userResult.rows[0]?.email;
+    const isAdminUser = userEmail ? await isAdmin(userEmail) : false;
+    
+    // For ADMINS: Check IP before checking 2FA settings
+    if (isAdminUser && ipAddress) {
+      const trustedIP = await checkTrustedIP(userId, ipAddress);
+      
+        if (!trustedIP) {
+        // NEW IP detected for admin - FORCE 2FA with ONE email
+        // Check if we already sent a code for this user in the last 30 seconds (deduplicate double requests)
+        const userIdHash = hashUserId(userId);
+                const recentAttempt = await db.query(
+          `SELECT id FROM admin_login_attempts 
+           WHERE user_id_hash = $1 
+           AND attempted_at > NOW() - INTERVAL '60 seconds'`,
+          [userIdHash]
+        );
+        
+        if (recentAttempt.rows.length > 0) {
+          // Already sent alert recently, return existing temp token without sending duplicate email
+          const jwt = await import('jsonwebtoken');
+          const tempToken = jwt.default.sign(
+            { userId, isTempFor2FA: true, isAdminNewIP: true, ipAddress, deviceName, browserInfo },
+            process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+            { expiresIn: '10m' }
+          );
+          return res.json({
+            success: true,
+            userId,
+            tempToken,
+            requires2FA: true,
+            method: 'email',
+            message: '2FA code sent to your email - New login location detected',
+            isAdminNewIP: true
+          });
+        }
+        
+        await logAdminLoginAttempt(userId, ipAddress, deviceName, 'new_ip_detected');
+        
+        // Generate 2FA code
+        const { generate6DigitCode } = await import('../../shared/authUtils.js');
+        const code = generate6DigitCode();
+        
+        // Save verification code
+        try {
+          await insertVerificationCode(db, userId, userEmail, null, code, 'email');
+        } catch (insertErr) {
+          return serverError(res, 'Failed to save 2FA code');
+        }
+
+                // Build and send ONE email with both code AND alert message via SendGrid
+        try {
+          const emailHTML = await buildAdminNewIPEmailHTML(code, ipAddress, deviceName);
+          const sgMail = (await import('@sendgrid/mail')).default;
+          sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+          
+          const msg = {
+            to: userEmail,
+            from: process.env.SENDGRID_FROM_EMAIL || 'noreply@starshippsychics.com',
+            subject: '🔐 New Login Location - 2FA Required',
+            html: emailHTML
+          };
+          
+          await sgMail.send(msg);
+          await logAdminLoginAttempt(userId, ipAddress, deviceName, 'alert_sent', true);
+        } catch (emailErr) {
+          return serverError(res, 'Failed to send 2FA code');
+        }
+
+        // Generate temporary JWT token
+        const jwt = await import('jsonwebtoken');
+        const tempToken = jwt.default.sign(
+          { userId, isTempFor2FA: true, isAdminNewIP: true, ipAddress, deviceName, browserInfo },
+          process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+          { expiresIn: '10m' }
+        );
+        
+        // Log 2FA request
+        await logAudit(db, {
+          userId,
+          action: 'LOGIN_2FA_REQUESTED_ADMIN_NEW_IP',
+          resourceType: 'authentication',
+          ipAddress: ipAddress,
+          userAgent: req.get('user-agent'),
+          httpMethod: req.method,
+          endpoint: req.path,
+          status: 'SUCCESS',
+          details: { method: 'email', email: userEmail, reason: 'new_ip_for_admin' }
+        });
+
+        return res.json({
+          success: true,
+          userId,
+          tempToken,
+          requires2FA: true,
+          method: 'email',
+          message: '2FA code sent to your email - New login location detected',
+          isAdminNewIP: true
+        });
+      } else {
+        // IP is trusted - update last accessed
+        await recordTrustedIP(userId, ipAddress, deviceName, browserInfo);
+        await logAdminLoginAttempt(userId, ipAddress, deviceName, 'success');
+        
+        // Skip 2FA for trusted IP
+        return res.json({
+          success: true,
+          userId,
+          requires2FA: false,
+          message: 'Admin login from trusted IP - no 2FA required',
+          isAdminTrustedIP: true
+        });
+      }
+    }
+    
+    // Get 2FA settings using user_id_hash for non-admin users
     const userIdHash = hashUserId(userId);
     
     const twoFAResult = await db.query(
@@ -129,7 +261,7 @@ router.post('/check-2fa/:userId', async (req, res) => {
 
     const twoFASettings = twoFAResult.rows[0];
 
-    // If 2FA disabled, allow access
+        // If 2FA disabled, allow access (non-admin users)
     if (!twoFASettings || !twoFASettings.enabled) {
       return res.json({
         success: true,
@@ -139,11 +271,9 @@ router.post('/check-2fa/:userId', async (req, res) => {
       });
     }
 
-    // 2FA is enabled - check if device is trusted
+        // 2FA is enabled - check if device is trusted
     
-    const ipAddress = req.ip || '';
     const userAgent = req.get('user-agent') || '';
-    const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
     
     // Fetch the session and decrypt to compare
     const deviceCheckResult = await db.query(
@@ -189,23 +319,23 @@ router.post('/check-2fa/:userId', async (req, res) => {
       });
     }
 
-    // Generate and send 2FA code
+        // Generate and send 2FA code
     const { generate6DigitCode } = await import('../../shared/authUtils.js');
     const { send2FACodeEmail } = await import('../../shared/emailService.js');
     
     const code = generate6DigitCode();
 
     // Get user's email
-    const userResult = await db.query(
+    const userEmailResult = await db.query(
       `SELECT pgp_sym_decrypt(email_encrypted, $1) as email FROM user_personal_info WHERE user_id = $2`,
       [ENCRYPTION_KEY, userId]
     );
 
-    if (userResult.rows.length === 0) {
+    if (userEmailResult.rows.length === 0) {
       return serverError(res, 'User account not found');
     }
 
-    const email = userResult.rows[0].email;
+    const email = userEmailResult.rows[0].email;
 
     // Insert verification code with encryption
     try {
@@ -430,6 +560,55 @@ router.get('/trusted-devices/:userId', authenticateToken, async (req, res) => {
     return res.json({ success: true, devices: result.rows });
   } catch (err) {
     return serverError(res, 'Failed to fetch trusted devices');
+  }
+});
+
+/**
+ * POST /auth/trust-admin-device
+ * After successful 2FA from new IP, add IP to trusted list for admin
+ */
+router.post('/trust-admin-device', authenticateToken, async (req, res) => {
+  try {
+    const { userId } = req.user;
+    const { browserInfo } = req.body;
+    
+    // Detect IP and device server-side (same as in check-2fa)
+    const deviceInfo = parseDeviceInfo(req);
+    const ipAddress = deviceInfo.ipAddress;
+    const deviceName = deviceInfo.deviceName;
+    
+        
+    
+    const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+    const userResult = await db.query(
+      `SELECT is_admin FROM user_personal_info WHERE user_id = $1`,
+      [userId]
+    );
+    
+    const user = userResult.rows[0];
+    if (!user || !user.is_admin) {
+      return forbiddenError(res, 'Not authorized');
+    }
+    
+    await recordTrustedIP(userId, ipAddress, deviceName, browserInfo);
+    await logAdminLoginAttempt(userId, ipAddress, deviceName, '2fa_passed');
+    
+    await logAudit(db, {
+      userId,
+      action: 'ADMIN_DEVICE_TRUSTED_AFTER_2FA',
+      resourceType: 'security',
+      ipAddress: ipAddress,
+      userAgent: req.get('user-agent'),
+      status: 'SUCCESS',
+      details: { deviceName }
+    });
+    
+    return res.json({ 
+      success: true, 
+      message: 'Device trusted. You won\'t need 2FA from this IP again.'
+    });
+  } catch (err) {
+    return serverError(res, 'Failed to trust device');
   }
 });
 

@@ -19,7 +19,7 @@ import { useDeviceTracking } from './useDeviceTracking';
  * - skipPaymentCheck: User clicked "Add Payment Method", bypass check and go to chat/billing
  * - skipSubscriptionCheck: User clicked "Subscribe", bypass check and go to chat/subscriptions
  */
-export function useAppRouting(auth, appExited, showRegisterMode = false, skipPaymentCheck = false, skipSubscriptionCheck = false) {
+export function useAppRouting(auth, appExited, showRegisterMode = false, skipPaymentCheck = false, skipSubscriptionCheck = false, isAdmin = false) {
     const { hasExitedBefore } = useDeviceTracking();
 
     const currentScreen = useMemo(() => {
@@ -67,10 +67,11 @@ export function useAppRouting(auth, appExited, showRegisterMode = false, skipPay
             return 'login';
         }
 
-        // ✅ PAYMENT METHOD CHECK - User must have valid payment method FIRST
+                // ✅ PAYMENT METHOD CHECK - User must have valid payment method FIRST
         // Exception: Temp accounts don't need payment method (trial only)
+        // Exception: Admins don't need payment method
         // Exception: If skipPaymentCheck flag set, bypass this check
-        if (!skipPaymentCheck && !auth.isTemporaryAccount && !auth.paymentMethodChecking) {
+        if (!skipPaymentCheck && !auth.isTemporaryAccount && !isAdmin && !auth.paymentMethodChecking) {
             // Payment method check is complete (not checking)
             if (!auth.hasValidPaymentMethod) {
                 // No valid payment method - show payment method required screen
@@ -78,10 +79,11 @@ export function useAppRouting(auth, appExited, showRegisterMode = false, skipPay
             }
         }
         
-        // ✅ SUBSCRIPTION CHECK - User must have active subscription (AFTER payment method)
+                // ✅ SUBSCRIPTION CHECK - User must have active subscription (AFTER payment method)
         // Exception: Temp accounts don't need subscriptions (trial only)
+        // Exception: Admins don't need subscriptions
         // Exception: If skipSubscriptionCheck flag set, bypass this check
-        if (!skipSubscriptionCheck && !auth.isTemporaryAccount && !auth.subscriptionChecking) {
+        if (!skipSubscriptionCheck && !auth.isTemporaryAccount && !isAdmin && !auth.subscriptionChecking) {
             // Subscription check is complete (not checking)
             if (!auth.hasActiveSubscription) {
                 // No active subscription - show subscription required screen
@@ -93,7 +95,7 @@ export function useAppRouting(auth, appExited, showRegisterMode = false, skipPay
 
         // Authenticated, verified, has payment method (or skipping check), and has active subscription (or skipping check) - show chat
         return 'chat';
-    }, [auth.loading, auth.isAuthenticated, auth.isFirstTime, auth.isTemporaryAccount, auth.isEmailUser, auth.emailVerified, auth.hasLoggedOut, auth.isDevUserLogout, auth.hasValidPaymentMethod, auth.paymentMethodChecking, auth.hasActiveSubscription, auth.subscriptionChecking, auth.showTwoFactor, auth.tempUserId, auth.authUserId, auth.tempToken, appExited, showRegisterMode, skipPaymentCheck, skipSubscriptionCheck, hasExitedBefore]);
+    }, [auth.loading, auth.isAuthenticated, auth.isFirstTime, auth.isTemporaryAccount, auth.isEmailUser, auth.emailVerified, auth.hasLoggedOut, auth.isDevUserLogout, auth.hasValidPaymentMethod, auth.paymentMethodChecking, auth.hasActiveSubscription, auth.subscriptionChecking, auth.showTwoFactor, auth.tempUserId, auth.authUserId, auth.tempToken, appExited, showRegisterMode, skipPaymentCheck, skipSubscriptionCheck, isAdmin, hasExitedBefore]);
 
     return {
         currentScreen,
