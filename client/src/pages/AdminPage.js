@@ -161,10 +161,10 @@ export default function AdminPage({ token, userId }) {
   return (
     <div className="page-safe-area" style={{ padding: '0.75rem' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        {/* Header */}
+                {/* Header */}
         <div style={{ marginBottom: '1.5rem' }}>
-          <h1 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '24px' }}>⚡ Admin Dashboard</h1>
-          <p style={{ color: '#666', marginBottom: 0, fontSize: '13px' }}>Analytics Reports, Violation Monitoring & Data Management</p>
+          <h1 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '24px', color: 'white' }}>⚡ Admin Dashboard</h1>
+          <p style={{ color: '#999', marginBottom: 0, fontSize: '13px' }}>Error Reports, Analytics Reports, Violation Monitoring & Compliance</p>
         </div>
 
         {/* Tabs */}
