@@ -48,7 +48,8 @@ export async function fetchUserPersonalInfo(userId) {
             FROM user_personal_info WHERE user_id = $2
         `, [process.env.ENCRYPTION_KEY, userId]);
         return rows.length > 0 ? rows[0] : null;
-    } catch (err) {
+        } catch (err) {
+        console.error(`[ORACLE] Error fetching personal info for ${userId}:`, err.message);
         return null;
     }
 }
@@ -396,10 +397,16 @@ export function getUserGreeting(userInfo, userId, isTemporaryUser = false) {
         return "Seaker";
     }
     
-    if (!userInfo) return "Friend";
+    if (!userInfo) {
+        console.warn(`[ORACLE] userInfo is null for userId ${userId}, returning Friend`);
+        return "Friend";
+    }
     
     const greeting = userInfo.address_preference || userInfo.first_name;
-    if (!greeting) return "Friend";
+    if (!greeting) {
+        console.warn(`[ORACLE] No greeting found - address_preference: ${userInfo.address_preference}, first_name: ${userInfo.first_name}, returning Friend`);
+        return "Friend";
+    }
     return greeting;
 }
 
