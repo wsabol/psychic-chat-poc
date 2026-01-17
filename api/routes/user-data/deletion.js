@@ -27,10 +27,9 @@ import {
 } from './helpers/queries.js';
 import {
   sendDeleteVerificationEmail,
-  maskEmail,
-  generateVerificationCode,
-  performCompleteAccountDeletion
-} from './helpers/deletionHelper.js';
+  maskEmail
+} from './helpers/emailService.js';
+import { performCompleteAccountDeletion } from './helpers/deletionLogic.js';
 
 const router = Router();
 
@@ -48,8 +47,8 @@ router.post('/send-delete-verification', authenticateToken, async (req, res) => 
       return validationError(res, 'User email not found');
     }
 
-    // Generate 6-digit code
-    const verificationCode = generateVerificationCode();
+        // Generate 6-digit code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
     // Store code temporarily (10 minute expiry)
     await storeDeletionCode(userId, verificationCode);
@@ -126,7 +125,7 @@ router.delete('/delete-account', authenticateToken, async (req, res) => {
  * Request account deletion with 30-day grace period
  * Can be cancelled within 30 days
  */
-router.delete('/delete-account/:userId', authorizeUser, async (req, res) => {
+router.delete('/delete-account/:userId', authenticateToken, authorizeUser, async (req, res) => {
   try {
     const { userId } = req.params;
 
@@ -209,7 +208,7 @@ router.delete('/delete-account/:userId', authorizeUser, async (req, res) => {
  * POST /user/cancel-deletion/:userId
  * Cancel deletion request and reactivate account during grace period
  */
-router.post('/cancel-deletion/:userId', authorizeUser, async (req, res) => {
+router.post('/cancel-deletion/:userId', authenticateToken, authorizeUser, async (req, res) => {
   try {
     const { userId } = req.params;
 

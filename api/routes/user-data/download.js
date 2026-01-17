@@ -6,7 +6,7 @@
  */
 
 import { Router } from 'express';
-import { authorizeUser } from '../../middleware/auth.js';
+import { authenticateToken, authorizeUser } from '../../middleware/auth.js';
 import { logAudit } from '../../shared/auditLog.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
 import { hashUserId } from '../../shared/hashUtils.js';
@@ -29,7 +29,7 @@ const router = Router();
  * Export current user's data as JSON (GDPR Article 20)
  * Uses authenticated user (no URL param needed)
  */
-router.get('/download-data', async (req, res) => {
+router.get('/download-data', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.uid || req.user.userId;
     const userIdHash = hashUserId(userId);
@@ -77,7 +77,7 @@ router.get('/download-data', async (req, res) => {
  * Requires authorization (must be own user or admin)
  * Supports: JSON (full structure), CSV (spreadsheet-friendly)
  */
-router.get('/export-data/:userId', authorizeUser, async (req, res) => {
+router.get('/export-data/:userId', authenticateToken, authorizeUser, async (req, res) => {
   try {
     const { userId } = req.params;
     const { format = 'json' } = req.query;
