@@ -19,7 +19,8 @@ async function getDb() {
       const tryLoadDb = async () => {
         try {
           // This will only work if running in api/ context
-          const module = await import('./db.js');
+          // eslint-disable-next-line import/no-unresolved
+          const module = await import(/* webpackIgnore: true */ './db.js');
           return module.db || null;
         } catch (e) {
           return null;
