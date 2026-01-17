@@ -13,6 +13,7 @@
 import express from 'express';
 import { db } from '../shared/db.js';
 import { validationError, notFoundError, serverError } from '../utils/responses.js';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 const router = express.Router();
 
@@ -34,11 +35,11 @@ const handleError = (res, label, err, fallback = {}) => {
 
 // ============ Row Parsers ============
 /**
- * Parse integer safely from database row
+ * Parse values safely from database rows
  */
-const parseCount = (row) => parseInt(row.count) || 0;
-const parseInt = (val) => parseInt(val) || 0;
-const parseFloat2 = (val) => parseFloat(val) || 0;
+const parseCount = (row) => globalThis.parseInt(row.count) || 0;
+const parseIntVal = (val) => globalThis.parseInt(val) || 0;
+const parseFloatVal = (val) => parseFloat(val) || 0;
 
 /**
  * Calculate percentage safely
@@ -194,19 +195,19 @@ async function generateSummary() {
       WHERE is_active = TRUE
     `);
 
-    const data = rows[0];
+        const data = rows[0];
     return {
-      total_active_violations: parseInt(data.total),
-      warnings_issued: parseInt(data.warnings),
-      suspensions_issued: parseInt(data.suspensions),
-      permanent_bans: parseInt(data.bans),
-      successful_redemptions: parseInt(data.redemptions),
-      reported_false_positives: parseInt(data.false_positives),
-      avg_detection_confidence: parseFloat2(data.avg_confidence),
+      total_active_violations: parseIntVal(data.total),
+      warnings_issued: parseIntVal(data.warnings),
+      suspensions_issued: parseIntVal(data.suspensions),
+      permanent_bans: parseIntVal(data.bans),
+      successful_redemptions: parseIntVal(data.redemptions),
+      reported_false_positives: parseIntVal(data.false_positives),
+      avg_detection_confidence: parseFloatVal(data.avg_confidence),
       data_period_days: DATA_PERIOD_DAYS,
     };
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'violations summary');
+    logErrorFromCatch('Error generating summary:', err);
     return {};
   }
 }
@@ -231,18 +232,18 @@ async function getViolationsByType() {
        ORDER BY total DESC`
     );
 
-    return rows.map(row => ({
+        return rows.map(row => ({
       type: row.violation_type,
-      total: parseInt(row.total),
-      warnings: parseInt(row.warnings),
-      suspensions: parseInt(row.suspensions),
-      escalations: parseInt(row.escalations),
-      reported_false_positives: parseInt(row.reported_false_positives),
-      avg_confidence_score: parseFloat(row.avg_confidence) || 0,
-      false_positive_rate: parseFloat(row.reported_false_positives) / parseFloat(row.total) || 0,
+      total: parseIntVal(row.total),
+      warnings: parseIntVal(row.warnings),
+      suspensions: parseIntVal(row.suspensions),
+      escalations: parseIntVal(row.escalations),
+      reported_false_positives: parseIntVal(row.reported_false_positives),
+      avg_confidence_score: parseFloatVal(row.avg_confidence),
+      false_positive_rate: parseFloatVal(row.reported_false_positives) / parseFloatVal(row.total) || 0,
     }));
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'violations by type');
+    logErrorFromCatch('Error getting violations by type:', err);
     return [];
   }
 }
@@ -264,18 +265,18 @@ async function getEscalationMetrics() {
       GROUP BY violation_type
     `);
 
-    return rows.map(row => {
-      const total = parseInt(row.total);
+        return rows.map(row => {
+      const total = parseIntVal(row.total);
       return {
         violation_type: row.violation_type,
         total,
-        first_offense_pct: calculatePercent(parseInt(row.count_1), total),
-        second_offense_pct: calculatePercent(parseInt(row.count_2), total),
-        permanent_ban_pct: calculatePercent(parseInt(row.count_3_plus), total),
+        first_offense_pct: calculatePercent(parseIntVal(row.count_1), total),
+        second_offense_pct: calculatePercent(parseIntVal(row.count_2), total),
+        permanent_ban_pct: calculatePercent(parseIntVal(row.count_3_plus), total),
       };
     });
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'violations escalation');
+    logErrorFromCatch('Error getting escalation metrics:', err);
     return [];
   }
 }
@@ -298,19 +299,19 @@ async function getRedemptionAnalytics() {
       GROUP BY violation_type
     `, [REDEEMABLE_TYPES]);
 
-    return rows.map(row => {
-      const total = parseInt(row.total);
-      const redeemed = parseInt(row.redeemed);
+        return rows.map(row => {
+      const total = parseIntVal(row.total);
+      const redeemed = parseIntVal(row.redeemed);
       return {
         violation_type: row.violation_type,
         total_eligible: total,
         successfully_redeemed: redeemed,
         redemption_rate: calculatePercent(redeemed, total),
-        avg_hours_to_redemption: parseFloat2(row.avg_hours),
+        avg_hours_to_redemption: parseFloatVal(row.avg_hours),
       };
     });
   } catch (err) {
-    //logErrorFromCatch(error, 'app', 'violations redemption');
+    logErrorFromCatch('Error getting redemption analytics:', err);
     return [];
   }
 }
@@ -343,19 +344,19 @@ async function getFalsePositiveAnalysis() {
       `, [TOP_REASONS_LIMIT]),
     ]);
 
-    return {
+        return {
       by_type: byType.rows.map(row => ({
         type: row.violation_type,
-        reported: parseInt(row.total),
-        unique_reporters: parseInt(row.reporters),
+        reported: parseIntVal(row.total),
+        unique_reporters: parseIntVal(row.reporters),
       })),
       top_reasons: topReasons.rows.map(row => ({
         reason: row.reason,
-        count: parseInt(row.count),
+        count: parseIntVal(row.count),
       })),
     };
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'violations fp analysis');
+    logErrorFromCatch('Error getting false positive analysis:', err);
     return { by_type: [], top_reasons: [] };
   }
 }
@@ -388,21 +389,21 @@ async function getPatternAnalysis() {
       `),
     ]);
 
-    return {
+        return {
       patterns_detected: detected.rows.map(row => ({
         pattern_type: row.pattern_type,
         severity: row.severity,
-        detected_count: parseInt(row.count),
-        reviewed: parseInt(row.reviewed),
-        avg_pattern_score: parseFloat2(row.avg_score),
+        detected_count: parseIntVal(row.count),
+        reviewed: parseIntVal(row.reviewed),
+        avg_pattern_score: parseFloatVal(row.avg_score),
       })),
       requiring_manual_review: pending.rows.map(row => ({
         pattern_type: row.pattern_type,
-        pending_review: parseInt(row.count),
+        pending_review: parseIntVal(row.count),
       })),
     };
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'violations patterns');
+    logErrorFromCatch('Error getting pattern analysis:', err);
     return { patterns_detected: [], requiring_manual_review: [] };
   }
 }
@@ -439,20 +440,20 @@ async function getTrendingAnalysis() {
       `, [TREND_TIME_WINDOW]),
     ]);
 
-    return {
+        return {
       trending_messages: messages.rows.map(row => ({
         message_preview: row.violation_message?.substring(0, 100),
         type: row.violation_type,
-        frequency: parseInt(row.frequency),
+        frequency: parseIntVal(row.frequency),
       })),
       daily_trend: daily.rows.map(row => ({
         date: row.date,
-        violations: parseInt(row.total),
-        unique_types: parseInt(row.types),
+        violations: parseIntVal(row.total),
+        unique_types: parseIntVal(row.types),
       })),
     };
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'violations trending');
+    logErrorFromCatch('Error getting trending analysis:', err);
     return { trending_messages: [], daily_trend: [] };
   }
 }
