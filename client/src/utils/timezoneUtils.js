@@ -1,3 +1,5 @@
+import { logErrorFromCatch } from '../shared/errorLogger.js';
+
 /**
  * Get user's timezone from browser
  * Returns IANA timezone string (e.g., 'America/New_York')

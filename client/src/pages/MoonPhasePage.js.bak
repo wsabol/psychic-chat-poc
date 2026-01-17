@@ -41,7 +41,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
     waningCrescent: '🌘'
   };
 
-  const moonPhaseOrder = ['newMoon', 'waxingCrescent', 'firstQuarter', 'waxingGibbous', 'fullMoon', 'waningGibbous', 'lastQuarter', 'waningCrescent'];
+    const moonPhaseOrder = ['newMoon', 'waxingCrescent', 'firstQuarter', 'waxingGibbous', 'fullMoon', 'waningGibbous', 'lastQuarter', 'waningCrescent'];
 
   // Map phase names to translation keys
   const getPhaseTranslationKey = (phase) => {
@@ -70,7 +70,50 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
     return moonPhaseOrder[phaseIndex];
   };
 
-  const fetchAstroInfo = useCallback(async (headers) => {
+  useEffect(() => {
+    const fetchPreferences = async () => {
+      try {
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const response = await fetch(`${API_URL}/user-profile/${userId}/preferences`, { headers });
+        if (response.ok) {
+          const data = await response.json();
+          setUserPreference(data.response_type || 'full');
+          setVoiceEnabled(data.voice_enabled !== false);
+          setShowingBrief(data.response_type === 'brief');
+        }
+      } catch (err) {
+        logErrorFromCatch('[MOON-PHASE] Error fetching preferences:', err);
+      }
+    };
+    fetchPreferences();
+  }, [userId, token, API_URL]);
+
+    useEffect(() => {
+    if (!loading) {
+      loadMoonPhaseData();
+    }
+  }, [userPreference, loading, loadMoonPhaseData]);
+
+  useEffect(() => {
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+      }
+    };
+  }, []);
+
+  // Auto-play when moon phase data arrives
+  useEffect(() => {
+    if (voiceEnabled && isSupported && moonPhaseData && !hasAutoPlayed && !isPlaying) {
+      setHasAutoPlayed(true);
+      const textToRead = showingBrief && moonPhaseData?.brief ? moonPhaseData.brief : moonPhaseData?.text;
+      setTimeout(() => {
+        speak(textToRead, { rate: 0.95, pitch: 1.2 });
+      }, 500);
+    }
+  }, [voiceEnabled, isSupported, moonPhaseData, hasAutoPlayed, isPlaying, showingBrief, speak]);
+
+  const fetchAstroInfo = async (headers) => {
     try {
       const response = await fetch(`${API_URL}/user-astrology/${userId}`, { headers });
       if (response.ok) {
@@ -89,9 +132,8 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
       logErrorFromCatch('[MOON-PHASE] Error fetching astro info:', err);
     }
     return null;
-  }, [userId, API_URL]);
+  };
 
-  // Define loadMoonPhaseData as useCallback FIRST so dependencies can use it
   const loadMoonPhaseData = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -125,7 +167,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
       }
 
       setGenerating(true);
-      const generateResponse = await fetchWithTokenRefresh(`${API_URL}/moon-phase/${userId}`, {
+            const generateResponse = await fetchWithTokenRefresh(`${API_URL}/moon-phase/${userId}`, {
         method: 'POST',
         headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({ phase: calculatedPhase })
@@ -144,7 +186,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
         return;
       }
 
-      let pollCount = 0;
+                  let pollCount = 0;
       const maxPolls = 60;
 
       if (pollIntervalRef.current) {
@@ -178,7 +220,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
           logErrorFromCatch('[MOON-PHASE] Polling error:', err);
         }
 
-        if (pollCount >= maxPolls) {
+                if (pollCount >= maxPolls) {
           setError('Moon phase commentary generation is taking longer than expected (60+ seconds). Please try again.');
           setGenerating(false);
           setLoading(false);
@@ -188,57 +230,12 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
     } catch (err) {
       logErrorFromCatch('[MOON-PHASE] Error loading moon phase:', err);
       setError('Unable to load moon phase data. Please try again.');
-      setLoading(false);
+            setLoading(false);
     }
-  }, [userId, token, API_URL, astroInfo, fetchAstroInfo]);
+  }, [userId, token, API_URL, astroInfo]);
 
-  // Fetch preferences on mount
-  useEffect(() => {
-    const fetchPreferences = async () => {
-      try {
-        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-        const response = await fetch(`${API_URL}/user-profile/${userId}/preferences`, { headers });
-        if (response.ok) {
-          const data = await response.json();
-          setUserPreference(data.response_type || 'full');
-          setVoiceEnabled(data.voice_enabled !== false);
-          setShowingBrief(data.response_type === 'brief');
-        }
-      } catch (err) {
-        logErrorFromCatch('[MOON-PHASE] Error fetching preferences:', err);
-      }
-    };
-    fetchPreferences();
-  }, [userId, token, API_URL]);
-
-  // Load moon phase data when preferences change
-  useEffect(() => {
-    if (!loading) {
-      loadMoonPhaseData();
-    }
-  }, [userPreference, loadMoonPhaseData]);
-
-  // Cleanup polling interval on unmount
-  useEffect(() => {
-    return () => {
-      if (pollIntervalRef.current) {
-        clearInterval(pollIntervalRef.current);
-      }
-    };
-  }, []);
-
-  // Auto-play when moon phase data arrives
-  useEffect(() => {
-    if (voiceEnabled && isSupported && moonPhaseData && !hasAutoPlayed && !isPlaying) {
-      setHasAutoPlayed(true);
-      const textToRead = showingBrief && moonPhaseData?.brief ? moonPhaseData.brief : moonPhaseData?.text;
-      setTimeout(() => {
-        speak(textToRead, { rate: 0.95, pitch: 1.2 });
-      }, 500);
-    }
-  }, [voiceEnabled, isSupported, moonPhaseData, hasAutoPlayed, isPlaying, showingBrief, speak]);
-
-  // Load translated sun sign data based on language and sun sign
+  
+        // Load translated sun sign data based on language and sun sign
   useEffect(() => {
     const loadSunSignData = async () => {
       if (astroInfo?.astrology_data?.sun_sign) {
@@ -256,7 +253,6 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
     };
     loadSunSignData();
   }, [astroInfo, language]);
-
   const astro = astroInfo?.astrology_data || {};
 
   const handleTogglePause = () => {
@@ -309,7 +305,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
         </div>
       )}
 
-      {currentPhase && !isBirthInfoMissing(astroInfo) && (
+            {currentPhase && !isBirthInfoMissing(astroInfo) && (
         <section className="moon-phase-display">
           <div className="moon-phase-emoji">
             {moonPhaseEmojis[currentPhase]}
@@ -325,7 +321,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
 
       {astro.sun_sign && !isBirthInfoMissing(astroInfo) && (
         <section className="moon-phase-birth-chart">
-          <div className="birth-chart-cards">
+                    <div className="birth-chart-cards">
             {astro.rising_sign && (
               <div className="chart-card rising-card">
                 <span className="chart-icon">↗️</span>
@@ -372,7 +368,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
               />
             )}
             
-            <button onClick={() => setShowingBrief(!showingBrief)} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', backgroundColor: '#7c63d8', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '1rem', fontWeight: '500' }} onMouseEnter={(e) => e.target.style.backgroundColor = '#6b52c1'} onMouseLeave={(e) => e.target.style.backgroundColor = '#7c63d8'}>{showingBrief ? t('chat.toggleMore') : t('chat.toggleLess')}</button>
+                        <button onClick={() => setShowingBrief(!showingBrief)} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', backgroundColor: '#7c63d8', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '1rem', fontWeight: '500' }} onMouseEnter={(e) => e.target.style.backgroundColor = '#6b52c1'} onMouseLeave={(e) => e.target.style.backgroundColor = '#7c63d8'}>{showingBrief ? t('chat.toggleMore') : t('chat.toggleLess')}</button>
           </div>
 
           {sunSignData && (
@@ -381,11 +377,11 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
                 <h3>{sunSignData.emoji} {sunSignData.name}</h3>
               </div>
               <div className="sun-info-grid">
-                <div className="info-item">
+                                <div className="info-item">
                   <strong>{t('mySign.dates')}</strong>
                   <span>{sunSignData.dates}</span>
                 </div>
-                <div className="info-item">
+                                <div className="info-item">
                   <strong>{t('mySign.element')}</strong>
                   <span>{sunSignData._englishElement ? t(`elements.${sunSignData._englishElement.toLowerCase()}`) : sunSignData.element}</span>
                 </div>
@@ -426,7 +422,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
             </div>
           </section>
 
-          <div className="moon-phase-info">
+            <div className="moon-phase-info">
             <p>{t('moonPhase.cycleInfo')}</p>
           </div>
 

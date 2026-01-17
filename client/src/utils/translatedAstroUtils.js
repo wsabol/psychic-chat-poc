@@ -1,3 +1,5 @@
+import { logErrorFromCatch } from '../shared/errorLogger.js';
+
 // Map sign names to their numbers (1-12)
 const SIGN_NUMBER_MAP = {
   aries: 1,

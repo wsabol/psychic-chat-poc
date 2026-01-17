@@ -13,35 +13,44 @@ export default function InvoicesPage({ userId, token, auth }) {
 
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
-  const fetchInvoices = useCallback(async () => {
+        const fetchInvoices = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetchWithTokenRefresh(`${API_URL}/billing/invoices`, { 
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : ''
-        }
-      });
+      // fetchWithTokenRefresh handles Authorization header automatically
+      // Do NOT duplicate it here - it will override the fresh token
+      const url = `${API_URL}/billing/invoices`;
+      
+      const response = await fetchWithTokenRefresh(url);
       
       if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMsg = errorData.error || response.statusText || 'Unknown error';
         setError(t('invoices.unableToLoad'));
+        logErrorFromCatch(new Error(errorMsg), 'invoices', `Server error: ${response.status}`);
         setLoading(false);
         return;
       }
 
-      const data = await response.json();
-      setInvoices(Array.isArray(data) ? data : []);
+                  const data = await response.json();
+      
+      // Ensure data is always an array
+      const invoiceArray = Array.isArray(data) ? data : (data.data ? data.data : []);
+      setInvoices(invoiceArray);
       setLoading(false);
     } catch (err) {
-      logErrorFromCatch('[INVOICES] Error loading invoices:', err);
+      logErrorFromCatch(err, 'invoices', 'Error loading invoices');
       setError(t('invoices.unableToLoadYour'));
       setLoading(false);
     }
-  }, [token, API_URL]);
+  }, [API_URL, t]); // fetchInvoices depends on these, but useEffect uses empty deps []
 
-  useEffect(() => {
+        useEffect(() => {
+    // Only fetch on component mount (empty dependency array)
+    // We don't include fetchInvoices in deps because that causes an infinite loop
+    // since fetchInvoices is recreated every render
     fetchInvoices();
-  }, [fetchInvoices]);
+  }, []);
 
   if (loading) {
     return (

@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { useTranslation } from '../context/TranslationContext';
+
 import ViolationReportTab from '../components/AdminTabs/ViolationReportTab';
 import { ComplianceDashboard } from '../components/admin/ComplianceDashboard';
 import ErrorLogsReport from '../components/admin/ErrorLogsReport';
@@ -19,7 +19,6 @@ import { AnalyticsTab } from './admin-components/AnalyticsTab';
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 export default function AdminPage({ token, userId }) {
-  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('logs');
   const { userEmail, isAdmin } = useAdminCheck();
   const {

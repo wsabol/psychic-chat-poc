@@ -6,9 +6,12 @@
  * One source of truth at /shared/errorLogger.js
  */
 
-const fs = require('fs');
-const path = require('path');
-const { logErrorFromCatch } = require('./shared/errorLogger.js');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const source = path.join(__dirname, 'shared', 'errorLogger.js');
 const dest = path.join(__dirname, 'client', 'src', 'shared', 'errorLogger.js');
@@ -25,7 +28,8 @@ try {
 
   // Write to destination
   fs.writeFileSync(dest, content, 'utf8');
+  console.log(`[sync-errorLogger] Synced ${source} to ${dest}`);
 } catch (error) {
-  logErrorFromCatch(error, 'sync-errorLogger', 'Error syncing errorLogger.js');
+  console.error('[sync-errorLogger] Error syncing errorLogger.js:', error.message);
   process.exit(1);
 }

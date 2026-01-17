@@ -4,6 +4,8 @@
  * User can disable via Settings toggle
  */
 
+import { logErrorFromCatch } from '../shared/errorLogger.js';
+
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 let sessionStartTime = Date.now();
 

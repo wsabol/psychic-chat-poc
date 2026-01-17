@@ -9,14 +9,25 @@
 
 let db = null;
 
-// Lazy-load db when needed (inside api/)
+// Lazy-load db when needed (inside api/ only - skipped in client/worker)
 async function getDb() {
   if (typeof window === 'undefined' && !db) {
     try {
-      const dbModule = await import('./api/shared/db.js').catch(() => null);
-      if (dbModule && dbModule.db) db = dbModule.db;
+      // Only api/ has access to db. Client and worker skip this.
+      // Try to require db from parent directory context
+      // Using dynamic import to avoid webpack static analysis in client
+      const tryLoadDb = async () => {
+        try {
+          // This will only work if running in api/ context
+          const module = await import('./db.js');
+          return module.db || null;
+        } catch (e) {
+          return null;
+        }
+      };
+      db = await tryLoadDb();
     } catch (e) {
-      // db.js might not exist in this environment
+      // Silently fail - db.js not available in this context
     }
   }
   return db;

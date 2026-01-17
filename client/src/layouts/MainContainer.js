@@ -126,12 +126,12 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
 
     const PageComponent = currentPage.component;
 
-  // Track page views
+    // Track page views
   useEffect(() => {
     if (currentPage) {
       trackPageView(currentPage.id);
     }
-  }, [currentPageIndex]);
+  }, [currentPage, currentPageIndex]);
 
     return (
     <div className="main-container">
