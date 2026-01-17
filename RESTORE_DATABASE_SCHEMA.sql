@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS user_personal_info (
     email_verified_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_admin BOOLEAN DEFAULT FALSE,
     is_suspended BOOLEAN DEFAULT FALSE,
     suspension_end_date TIMESTAMP,
     deletion_requested_at TIMESTAMP,
@@ -412,3 +413,35 @@ FROM error_logs
 WHERE created_at > NOW() - INTERVAL '7 days'
 GROUP BY service, severity, DATE(created_at)
 ORDER BY DATE(created_at) DESC, COUNT(*) DESC;
+
+-- TABLE: admin_trusted_ips (Admin IP whitelisting for 2FA)
+CREATE TABLE IF NOT EXISTS admin_trusted_ips (
+    id SERIAL PRIMARY KEY,
+    user_id_hash VARCHAR(255) NOT NULL,
+    ip_address_encrypted BYTEA NOT NULL,
+    device_name VARCHAR(255),
+    browser_info VARCHAR(255),
+    is_trusted BOOLEAN DEFAULT TRUE,
+    first_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_accessed TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT admin_trusted_ips_unique UNIQUE (user_id_hash, ip_address_encrypted)
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_trusted_ips_user_id_hash ON admin_trusted_ips(user_id_hash);
+CREATE INDEX IF NOT EXISTS idx_admin_trusted_ips_is_trusted ON admin_trusted_ips(is_trusted);
+
+-- TABLE: admin_login_attempts (Admin login audit trail)
+CREATE TABLE IF NOT EXISTS admin_login_attempts (
+    id SERIAL PRIMARY KEY,
+    user_id_hash VARCHAR(255),
+    ip_address_encrypted BYTEA,
+    device_name VARCHAR(255),
+    login_status VARCHAR(100),
+    alert_sent BOOLEAN DEFAULT FALSE,
+    attempted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_login_attempts_user_id_hash ON admin_login_attempts(user_id_hash);
+CREATE INDEX IF NOT EXISTS idx_admin_login_attempts_attempted_at ON admin_login_attempts(attempted_at);
+CREATE INDEX IF NOT EXISTS idx_admin_login_attempts_login_status ON admin_login_attempts(login_status);

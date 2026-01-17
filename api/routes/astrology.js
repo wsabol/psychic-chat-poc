@@ -110,19 +110,28 @@ router.post('/sync-calculate/:userId', authorizeUser, async (req, res) => {
         const { userId } = req.params;
         
         // Fetch user's personal information (decrypted)
-        const { rows: personalInfoRows } = await db.query(
-            `SELECT 
-                pgp_sym_decrypt(birth_date_encrypted, $1) as birth_date,
-                pgp_sym_decrypt(birth_time_encrypted, $1) as birth_time,
-                pgp_sym_decrypt(birth_country_encrypted, $1) as birth_country,
-                pgp_sym_decrypt(birth_province_encrypted, $1) as birth_province,
-                pgp_sym_decrypt(birth_city_encrypted, $1) as birth_city
-             FROM user_personal_info 
-             WHERE user_id = $2`,
-            [process.env.ENCRYPTION_KEY, userId]
-        );
+                let personalInfoRows = [];
+        let retries = 0;
         
-                if (!personalInfoRows.length) {
+        // RETRY LOOP: Wait for personal info to persist in database
+        while (!personalInfoRows.length && retries < 5) {
+            const result = await db.query(
+                `SELECT pgp_sym_decrypt(birth_date_encrypted, $1) as birth_date,
+                        pgp_sym_decrypt(birth_time_encrypted, $1) as birth_time,
+                        pgp_sym_decrypt(birth_country_encrypted, $1) as birth_country,
+                        pgp_sym_decrypt(birth_province_encrypted, $1) as birth_province,
+                        pgp_sym_decrypt(birth_city_encrypted, $1) as birth_city
+                 FROM user_personal_info WHERE user_id = $2`,
+                [process.env.ENCRYPTION_KEY, userId]
+            );
+            personalInfoRows = result.rows;
+            if (!personalInfoRows.length && retries < 4) {
+                await new Promise(r => setTimeout(r, 500));
+                retries++;
+            }
+        }
+        
+        if (!personalInfoRows.length) {
             return notFoundError(res, 'Personal information not found');
         }
         
@@ -133,17 +142,22 @@ router.post('/sync-calculate/:userId', authorizeUser, async (req, res) => {
             return validationError(res, 'Incomplete birth information');
         }
         
-        // Calculate birth chart
-        const calculatedChart = await calculateBirthChartSync({
+                // DEBUG: Log input data
+        const birthInputData = {
             birth_date: info.birth_date,
             birth_time: info.birth_time,
             birth_country: info.birth_country,
             birth_province: info.birth_province,
             birth_city: info.birth_city
-        });
+                };
+        console.log('[ASTROLOGY] Sending to Python:', JSON.stringify(birthInputData, null, 2));
+        const calculatedChart = await calculateBirthChartSync(birthInputData);
+        console.log('[ASTROLOGY] Python returned:', JSON.stringify(calculatedChart, null, 2));
         
-                if (!calculatedChart.success || !calculatedChart.rising_sign || !calculatedChart.moon_sign) {
-            return serverError(res, 'Astrology calculation failed');
+        // STRICT: All three signs required
+        if (!calculatedChart.success || !calculatedChart.sun_sign || !calculatedChart.moon_sign || !calculatedChart.rising_sign) {
+            const errorMsg = calculatedChart.location_error || calculatedChart.error || 'Astrology calculation failed - could not find your birth location';
+            return serverError(res, errorMsg);
         }
         
         // Store in database

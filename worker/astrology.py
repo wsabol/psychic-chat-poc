@@ -334,6 +334,7 @@ def calculate_current_planets():
 if __name__ == "__main__":
     try:
         input_data = json.loads(sys.stdin.read())
+        print(f"[PYTHON] Got input: {json.dumps(input_data)}", file=sys.stderr)
     except json.JSONDecodeError as e:
         print(json.dumps({"error": f"Invalid JSON: {str(e)}"}), file=sys.stdout)
         sys.exit(1)
@@ -347,4 +348,5 @@ if __name__ == "__main__":
     else:
         result = calculate_birth_chart(input_data)
     
+    print(f"[PYTHON] Returning: {json.dumps(result)}", file=sys.stderr)
     print(json.dumps(result), file=sys.stdout)

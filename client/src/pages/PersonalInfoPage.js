@@ -98,12 +98,19 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
       const storageBirthDate = parseDateForStorage(formData.birthDate);
       const dataToSend = preparePersonalInfoData(formData, isTemporaryAccount, storageBirthDate);
 
-      // Save personal info
+            // Save personal info FIRST and wait for completion
       await handleSavePersonalInfo(dataToSend);
 
-      // Trigger astrology calculation for temp users with complete location data
+      // ONLY trigger astrology calculation AFTER personal info is confirmed saved
+      // This ensures the database has the data before calculations start
       if (tempAccountConfig.hasCompleteAstrologyData(formData)) {
-        await triggerAstrologySync();
+        // Wait a moment to ensure database persistence
+        await new Promise(resolve => setTimeout(resolve, 500));
+        // NOW trigger astrology calculation
+        const syncResult = await triggerAstrologySync();
+        if (!syncResult?.success) {
+          console.warn('[PERSONAL-INFO] Astrology sync may have failed, continuing anyway');
+        }
       }
 
       setSuccess(true);
