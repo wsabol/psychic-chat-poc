@@ -99,10 +99,10 @@ router.post('/check-2fa/:userId', async (req, res) => {
     // Get detailed device info using UAParser (server-side detection)
     const deviceInfo = parseDeviceInfo(req);  // Gets: browser, OS, IP via UAParser
     const ipAddress = deviceInfo.ipAddress;    // Much better than client-side fetch
-            const deviceName = deviceInfo.deviceName;  // e.g., 'Chrome on Windows'
+                    const deviceName = deviceInfo.deviceName;  // e.g., 'Chrome on Windows'
     
     if (!userId) return validationError(res, 'userId is required');
-
+    
     // Check if account is locked
     const lockStatus = await isAccountLocked(userId);
         if (lockStatus.locked) {

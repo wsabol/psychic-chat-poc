@@ -142,17 +142,14 @@ router.post('/sync-calculate/:userId', authorizeUser, async (req, res) => {
             return validationError(res, 'Incomplete birth information');
         }
         
-                // DEBUG: Log input data
-        const birthInputData = {
+        // Calculate birth chart
+        const calculatedChart = await calculateBirthChartSync({
             birth_date: info.birth_date,
             birth_time: info.birth_time,
             birth_country: info.birth_country,
             birth_province: info.birth_province,
             birth_city: info.birth_city
-                };
-        console.log('[ASTROLOGY] Sending to Python:', JSON.stringify(birthInputData, null, 2));
-        const calculatedChart = await calculateBirthChartSync(birthInputData);
-        console.log('[ASTROLOGY] Python returned:', JSON.stringify(calculatedChart, null, 2));
+                        });
         
         // STRICT: All three signs required
         if (!calculatedChart.success || !calculatedChart.sun_sign || !calculatedChart.moon_sign || !calculatedChart.rising_sign) {

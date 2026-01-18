@@ -10,6 +10,7 @@ import { logAudit } from "../shared/auditLog.js";
 import { hashUserId } from "../shared/hashUtils.js";
 import { validationError, serverError, noContentResponse } from "../utils/responses.js";
 import { getLocalDateForTimezone } from "../shared/timezoneHelper.js";
+import { logErrorFromCatch } from "../shared/errorLogger.js";
 
 const router = Router();
 
