@@ -9,6 +9,7 @@ import ViolationReportTab from '../components/AdminTabs/ViolationReportTab';
 import { ComplianceDashboard } from '../components/admin/ComplianceDashboard';
 import ErrorLogsReport from '../components/admin/ErrorLogsReport';
 import ErrorLoggerTestHarness from '../components/admin/ErrorLoggerTestHarness';
+import SubscriptionReportTab from '../components/admin/SubscriptionReportTab';
 import { useAdminCheck } from './hooks/useAdminCheck';
 import { useAnalyticsReport } from './hooks/useAnalyticsReport';
 import { styles } from './admin-styles';
@@ -19,7 +20,7 @@ import { AnalyticsTab } from './admin-components/AnalyticsTab';
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 export default function AdminPage({ token, userId }) {
-  const [activeTab, setActiveTab] = useState('logs');
+  const [activeTab, setActiveTab] = useState('subscriptions');
   const { userEmail, isAdmin } = useAdminCheck();
   const {
     isLoading,
@@ -44,12 +45,17 @@ export default function AdminPage({ token, userId }) {
         <div style={styles.header}>
           <h1 style={styles.headerTitle}>⚡ Admin Dashboard</h1>
           <p style={styles.headerSubtitle}>
-            Error Reports, Analytics Reports, Violation Monitoring & Compliance
+            Subscriptions, Error Reports, Analytics & Compliance
           </p>
         </div>
 
         {/* Tabs */}
         <div style={styles.tabBar}>
+          <TabButton
+            label="💳 Subscriptions"
+            isActive={activeTab === 'subscriptions'}
+            onClick={() => setActiveTab('subscriptions')}
+          />
           <TabButton
             label="🚨 Error Logs"
             isActive={activeTab === 'logs'}
@@ -71,6 +77,11 @@ export default function AdminPage({ token, userId }) {
             onClick={() => setActiveTab('compliance')}
           />
         </div>
+
+        {/* Subscription Report Tab */}
+        {activeTab === 'subscriptions' && (
+          <SubscriptionReportTab token={token} />
+        )}
 
         {/* Error Logs Tab */}
         {activeTab === 'logs' && (

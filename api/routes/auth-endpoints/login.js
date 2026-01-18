@@ -9,6 +9,7 @@ import { hashUserId } from '../../shared/hashUtils.js';
 import { encrypt } from '../../utils/encryption.js';
 import { getCurrentTermsVersion, getCurrentPrivacyVersion } from '../../shared/versionConfig.js';
 import { validationError, serverError } from '../../utils/responses.js';
+import { validateSubscriptionHealth } from '../../services/stripe/subscriptionValidator.js';
 
 const router = Router();
 
@@ -106,10 +107,52 @@ router.post('/log-login-success', async (req, res) => {
       }
     }
     
-            // ✅ REMOVED: Don't create Stripe customer on login
-    // Creating it here causes duplicate customers during concurrent requests
-    // It will be created on-demand when user accesses billing page
-    
+    // ✅ NEW: Check subscription health before allowing login
+    let subscriptionStatus = null;
+    try {
+      const health = await validateSubscriptionHealth(userId);
+      subscriptionStatus = {
+        healthy: health.healthy,
+        status: health.subscription.status,
+        paymentValid: health.paymentMethod.valid
+      };
+
+      // If subscription is not healthy, block login
+      if (!health.healthy) {
+        await logAudit(db, {
+          userId,
+          action: 'USER_LOGIN_BLOCKED_NO_SUBSCRIPTION',
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+          status: 'BLOCKED',
+          details: { 
+            email,
+            blockedReason: health.blockedReason,
+            subscriptionStatus: health.subscription.status
+          }
+        });
+
+        return res.status(403).json({
+          success: false,
+          error: 'Subscription Required',
+          message: health.blockedMessage,
+          blockedReason: health.blockedReason,
+          subscription: {
+            status: health.subscription.status,
+            paymentValid: health.paymentMethod.valid
+          },
+          action: {
+            type: 'STRIPE_PORTAL',
+            message: 'Please update your subscription to continue using Starship Psychics',
+            link: '/billing/stripe-portal'
+          }
+        });
+      }
+    } catch (subError) {
+      await logErrorFromCatch(subError, 'auth', 'subscription-check', userId);
+      // Continue with login on error
+    }
+
     // Log successful login
     await logAudit(db, {
       userId,
@@ -117,10 +160,13 @@ router.post('/log-login-success', async (req, res) => {
       ipAddress: req.ip,
       userAgent: req.get('user-agent'),
       status: 'SUCCESS',
-      details: { email }
+      details: { email, subscription: subscriptionStatus }
     });
 
-    return res.json({ success: true });
+    return res.json({ 
+      success: true,
+      subscription: subscriptionStatus
+    });
     } catch (err) {
     await logErrorFromCatch(err, 'auth', 'User login success logging');
     return serverError(res, 'Failed to log login');

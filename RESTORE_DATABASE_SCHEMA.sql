@@ -1,7 +1,10 @@
 -- Master SQL file for restoring database schema
--- Last Updated: 2025-01-14
+-- Last Updated: 2025-01-15
 -- This file contains the EXACT schema of the current production database
--- plus the 3 missing tables required by the application code
+-- plus all required tables and columns for subscription billing
+-- 
+-- PHASE 2.0: Stripe Subscriptions Billing
+-- Includes: subscription tracking, payment methods, last status check times
 
 -- IMPORTANT: All user IDs are hashed using SHA-256
 -- IMPORTANT: All sensitive data (PII, tokens, IPs) are encrypted with pgcrypto
@@ -49,11 +52,17 @@ CREATE TABLE IF NOT EXISTS user_personal_info (
     familiar_name_encrypted BYTEA,
     phone_number_encrypted BYTEA,
     email_encrypted BYTEA,
-    stripe_customer_id_encrypted BYTEA,
-    stripe_subscription_id_encrypted BYTEA
+        stripe_customer_id_encrypted BYTEA,
+    stripe_subscription_id_encrypted BYTEA,
+    last_status_check_at TIMESTAMP,
+    subscription_cancelled_at TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_user_personal_info_email_hash ON user_personal_info(email_hash);
+CREATE INDEX IF NOT EXISTS idx_subscription_status ON user_personal_info(subscription_status);
+CREATE INDEX IF NOT EXISTS idx_current_period_end ON user_personal_info(current_period_end);
+CREATE INDEX IF NOT EXISTS idx_subscription_cancelled_at ON user_personal_info(subscription_cancelled_at);
+CREATE INDEX IF NOT EXISTS idx_last_status_check_at ON user_personal_info(last_status_check_at);
 
 -- TABLE: user_astrology
 CREATE TABLE IF NOT EXISTS user_astrology (
