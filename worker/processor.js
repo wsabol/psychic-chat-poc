@@ -98,8 +98,9 @@ export async function workerLoop() {
         logErrorFromCatch(err, '[WORKER] Failed to generate daily updates');
     }
     
+        // Wait 60 seconds before first cleanup (let API start), then every 24 hours
+    setTimeout(cleanupOldTempAccounts, 60000);
     setInterval(cleanupOldTempAccounts, 86400000);
-    setTimeout(cleanupOldTempAccounts, 5000);
     while (true) {
         try {
             const job = await getMessageFromQueue();

@@ -70,10 +70,12 @@ export function AppChat({ state }) {
         // Show modal only if BOTH terms AND privacy are NOT accepted
         const needsConsent = !data.terms_accepted || !data.privacy_accepted;
         setShowConsentModal(needsConsent);
-      } catch (err) {
-
-        // On error, require consent to be safe (compliance-first)
-        setShowConsentModal(true);
+                  } catch (err) {
+        // On network error: check if this is a NEW user (no profile yet)
+        // If new user → require consent to be safe
+        // If existing user → allow access (they likely already consented)
+        const isNewUser = !authState.userProfileLoaded;
+        setShowConsentModal(isNewUser);
       } finally {
         setConsentLoading(false);
       }
