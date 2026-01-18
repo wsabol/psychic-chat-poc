@@ -1,1 +1,137 @@
-{"login": {"title": "ログイン", "email": "メール", "password": "パスワード", "confirmPassword": "パスワードを確認", "rememberMe": "ログイン状態を保持", "forgotPassword": "パスワードをお忘れですか？", "noAccount": "アカウントをお持ちではありませんか？", "createOne": "こちらで作成してください", "signIn": "ログイン", "signingIn": "ログイン中...", "signUp": "登録", "creatingAccount": "アカウント作成中...", "or": "または", "googleSignIn": "Googleでログイン", "pageTitle": "ログイン", "createAccountTitle": "アカウントを作成", "resetPasswordTitle": "パスワードをリセット", "dontHaveAccount": "アカウントをお持ちではありませんか？", "register": "登録", "backToLogin": "ログインに戻る", "forgotPasswordMessage": "パスワードリセットフロー近日公開", "passwordsDontMatch": "パスワードが一致しません", "passwordTooShort": "パスワードは最低6文字である必要があります", "acceptTermsAndPrivacy": "アカウントを作成するには、サービス利用規約とプライバシーポリシーに同意する必要があります", "accountCreated": "アカウントが作成されました。メールを確認してください。", "agreeTerms": "サービス利用規約に同意します", "agreePrivacy": "プライバシーポリシーに同意します", "errors": {"invalidEmail": "有効なメールアドレスを入力してください", "passwordMismatch": "パスワードが一致しません", "passwordTooShort": "パスワードは最低8文字である必要があります", "accountExists": "このメールのアカウントは既に存在します", "invalidCredentials": "無効なメールアドレスまたはパスワード", "userNotFound": "ユーザーが見つかりません"}}, "verification": {"title": "メールを確認してください", "message": "{{email}}に確認コードを送信しました。下に入力してください。", "enterCode": "確認コードを入力", "code": "コード", "verify": "確認", "resendCode": "コードを再送信", "resendSent": "確認コードが送信されました", "checkInbox": "メールとスパムフォルダを確認してください", "errors": {"invalidCode": "無効な確認コード", "expiredCode": "確認コードの有効期限が切れています", "tooManyAttempts": "試行回数が多すぎます。後でもう一度お試しください。"}}, "twoFactor": {"title": "2要素認証", "message": "{{method}}に送信されたコードを入力してください", "enterCode": "確認コードを入力", "verify": "確認", "resend": "コードを再送信", "errors": {"invalidCode": "無効なコード", "expired": "コードの有効期限が切れています", "tooManyAttempts": "試行回数が多すぎます。後でもう一度お試しください。"}}, "passwords": {"title": "パスワードを変更", "current": "現在のパスワード", "new": "新しいパスワード", "confirm": "パスワードを確認", "change": "パスワードを変更", "requirements": "パスワードは最低8文字である必要があります", "errors": {"currentIncorrect": "現在のパスワードが正しくありません", "mismatch": "新しいパスワードが一致しません"}}, "onboarding": {"welcome": "サイキック チャット オラクルへようこそ！", "step1": "個人情報", "step2": "出生チャート", "step3": "支払い方法", "step4": "サブスクリプション", "step5": "設定", "complete": "セットアップが完了しました", "skip": "今はスキップ", "continue": "続行", "enhanceReading": "✨ リーディングを強化", "birthInfoPrompt": "あなたのオラクルとして、占星術でリーディングを強化できます。希望する場合は、生年月日と、オプションで生まれた時間と場所を入力してください。", "enterBirthInfo": "はい、出生情報を入力してください", "clickExitToContinue": "終了をクリックして続行してください"}}
+{
+  "login": {
+    "title": "ログイン",
+    "email": "メール",
+    "password": "パスワード",
+    "confirmPassword": "パスワードを確認",
+    "rememberMe": "ログイン状態を保持",
+    "forgotPassword": "パスワードをお忘れですか？",
+    "noAccount": "アカウントをお持ちではありませんか？",
+    "createOne": "こちらで作成してください",
+    "signIn": "ログイン",
+    "signingIn": "ログイン中...",
+    "signUp": "登録",
+    "creatingAccount": "アカウント作成中...",
+    "or": "または",
+    "googleSignIn": "Googleでログイン",
+    "pageTitle": "ログイン",
+    "createAccountTitle": "アカウントを作成",
+    "resetPasswordTitle": "パスワードをリセット",
+    "dontHaveAccount": "アカウントをお持ちではありませんか？",
+    "register": "登録",
+    "backToLogin": "ログインに戻る",
+    "forgotPasswordMessage": "パスワードリセットフロー近日公開",
+    "passwordsDontMatch": "パスワードが一致しません",
+    "passwordTooShort": "パスワードは最低6文字である必要があります",
+    "acceptTermsAndPrivacy": "アカウントを作成するには、サービス利用規約とプライバシーポリシーに同意する必要があります",
+    "accountCreated": "アカウントが作成されました。メールを確認してください。",
+    "agreeTerms": "サービス利用規約に同意します",
+    "agreePrivacy": "プライバシーポリシーに同意します",
+    "errors": {
+      "invalidEmail": "有効なメールアドレスを入力してください",
+      "passwordMismatch": "パスワードが一致しません",
+      "passwordTooShort": "パスワードは最低8文字である必要があります",
+      "accountExists": "このメールのアカウントは既に存在します",
+      "invalidCredentials": "無効なメールアドレスまたはパスワード",
+      "userNotFound": "ユーザーが見つかりません"
+    }
+  },
+  "verification": {
+    "title": "メールを確認してください",
+    "message": "{{email}}に確認コードを送信しました。下に入力してください。",
+    "enterCode": "確認コードを入力",
+    "code": "コード",
+    "verify": "確認",
+    "resendCode": "コードを再送信",
+    "resendSent": "確認コードが送信されました",
+    "checkInbox": "メールとスパムフォルダを確認してください",
+    "errors": {
+      "invalidCode": "無効な確認コード",
+      "expiredCode": "確認コードの有効期限が切れています",
+      "tooManyAttempts": "試行回数が多すぎます。後でもう一度お試しください。"
+    }
+  },
+  "twoFactor": {
+    "title": "2要素認証",
+    "message": "{{method}}に送信されたコードを入力してください",
+    "enterCode": "確認コードを入力",
+    "verify": "確認",
+    "resend": "コードを再送信",
+    "errors": {
+      "invalidCode": "無効なコード",
+      "expired": "コードの有効期限が切れています",
+      "tooManyAttempts": "試行回数が多すぎます。後でもう一度お試しください。"
+    }
+  },
+  "passwords": {
+    "title": "パスワードを変更",
+    "current": "現在のパスワード",
+    "new": "新しいパスワード",
+    "confirm": "パスワードを確認",
+    "change": "パスワードを変更",
+    "requirements": "パスワードは最低8文字である必要があります",
+    "errors": {
+      "currentIncorrect": "現在のパスワードが正しくありません",
+      "mismatch": "新しいパスワードが一致しません"
+    }
+  },
+  "onboarding": {
+    "welcome": "サイキック チャット オラクルへようこそ！",
+    "step1": "個人情報",
+    "step2": "出生チャート",
+    "step3": "支払い方法",
+    "step4": "サブスクリプション",
+    "step5": "設定",
+    "complete": "セットアップが完了しました",
+    "skip": "今はスキップ",
+    "continue": "続行",
+    "enhanceReading": "✨ リーディングを強化",
+    "birthInfoPrompt": "あなたのオラクルとして、占星術でリーディングを強化できます。希望する場合は、生年月日と、オプションで生まれた時間と場所を入力してください。",
+    "enterBirthInfo": "はい、出生情報を入力してください",
+    "clickExitToContinue": "終了をクリックして続行してください"
+  },
+  "modal": {
+    "title": "🚀 オンボーディング進捗",
+    "subtitle": "アプリにアクセスするために必要な手順を完了してください",
+    "subtitleComplete": "✨ 必要な手順が完了しました！",
+    "steps": {
+      "createAccount": {
+        "title": "アカウントを作成",
+        "description": "アカウントが作成されました"
+      },
+      "paymentMethod": {
+        "title": "支払い方法",
+        "description": "支払い方法を追加"
+      },
+      "subscription": {
+        "title": "サブスクリプション",
+        "description": "サブスクリプションを購入"
+      },
+      "personalInfo": {
+        "title": "知り合いになる",
+        "description": "個人情報"
+      },
+      "welcome": {
+        "title": "ようこそ",
+        "description": "あなたのオラクルに会いましょう"
+      }
+    },
+    "badges": {
+      "required": "必須",
+      "optional": "オプション"
+    },
+    "tooltips": {
+      "disabled": "先に前のステップを完了してください",
+      "goToStep": "{{stepTitle}}に移動",
+      "dragMove": "ドラッグして移動、クリックして展開"
+    },
+    "buttons": {
+      "minimize": "最小化",
+      "close": "閉じてチャットへ"
+    },
+    "footer": {
+      "incomplete": "すべてのステップを完了してアプリを使用開始してください",
+      "complete": "✨ オンボーディングが完了しました！アプリをお楽しみください"
+    }
+  }
+}

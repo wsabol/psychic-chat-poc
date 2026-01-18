@@ -5,8 +5,9 @@
     "paragraph1": "Obrigado por fazer parte de uma comunidade crescente de espiritualistas. Nos honra ter seu tempo em nosso site e genuinamente esperamos que você desfrute de sua visita.",
     "paragraph2": "Convidamos você a visitar Minha Conta/Preferências para aprimorar sua experiência com o oráculo. Você também pode desejar visitar Minha Conta/Configurações e Segurança.",
     "paragraph3": "O oráculo aguarda com entusiasmo sua conversa. As pessoas do Starship Psychics.",
-    "autoNavigate": "Navegando para o chat em {{seconds}} segundos...",
+    "autoNavigate": "Fechando em {{seconds}} segundos...",
     "goToChat": "✨ Ir para o Chat",
-    "exploreFirst": "📖 Explorar Primeiro"
+    "exploreFirst": "📖 Explorar Primeiro",
+    "close": "✨ Fechar e Iniciar"
   }
 }

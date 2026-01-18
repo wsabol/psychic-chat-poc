@@ -107,9 +107,13 @@
         "title": "Suscripción",
         "description": "Comprar suscripción"
       },
-      "personalInfo": {
+            "personalInfo": {
         "title": "Conocernos",
         "description": "Información personal"
+      },
+      "welcome": {
+        "title": "Bienvenida",
+        "description": "Conoce tu oráculo"
       }
     },
     "badges": {

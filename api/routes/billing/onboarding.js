@@ -69,7 +69,7 @@ router.get('/onboarding-status', authenticateToken, async (req, res) => {
       currentStep: onboarding_step,
       isOnboarding: isOnboarding,
       completedSteps: steps,
-      subscriptionStatus: subscription_status
+      subscriptionStatus: subscription_status === 'active' ? 'complete' : 'incomplete'
     });
   } catch (error) {
     return serverError(res, 'Failed to fetch onboarding status');

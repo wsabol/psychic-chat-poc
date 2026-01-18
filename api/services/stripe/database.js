@@ -19,7 +19,7 @@ export async function storeSubscriptionData(userId, stripeSubscriptionId, subscr
     const result = await db.query(query, [
       stripeSubscriptionId,
       process.env.ENCRYPTION_KEY,
-      subscriptionData.status,
+      'active',
       subscriptionData.current_period_start,
       subscriptionData.current_period_end,
       subscriptionData.plan_name || null,

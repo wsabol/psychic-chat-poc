@@ -1,1 +1,137 @@
-{"login": {"title": "Entrar", "email": "Email", "password": "Senha", "confirmPassword": "Confirmar Senha", "rememberMe": "Lembre-se de mim", "forgotPassword": "Esqueceu a senha?", "noAccount": "Não tem uma conta?", "createOne": "Crie uma aqui", "signIn": "Entrar", "signingIn": "Entrando...", "signUp": "Registrar", "creatingAccount": "Criando conta...", "or": "ou", "googleSignIn": "Entrar com Google", "pageTitle": "Entrar", "createAccountTitle": "Criar conta", "resetPasswordTitle": "Redefinir senha", "dontHaveAccount": "Não tem uma conta?", "register": "Registrar", "backToLogin": "Voltar para login", "forgotPasswordMessage": "Fluxo de redefinição de senha em breve", "passwordsDontMatch": "As senhas não correspondem", "passwordTooShort": "A senha deve ter pelo menos 6 caracteres", "acceptTermsAndPrivacy": "Você deve aceitar os Termos de Serviço e Política de Privacidade para criar uma conta", "accountCreated": "Conta criada! Verifique seu email.", "agreeTerms": "Aceito os Termos de Serviço", "agreePrivacy": "Aceito a Política de Privacidade", "errors": {"invalidEmail": "Por favor, insira um endereço de email válido", "passwordMismatch": "As senhas não correspondem", "passwordTooShort": "A senha deve ter pelo menos 8 caracteres", "accountExists": "Já existe uma conta com este email", "invalidCredentials": "Email ou senha inválidos", "userNotFound": "Usuário não encontrado"}}, "verification": {"title": "Verifique Seu Email", "message": "Enviamos um código de verificação para {{email}}. Digite-o abaixo.", "enterCode": "Digite o código de verificação", "code": "Código", "verify": "Verificar", "resendCode": "Reenviar código", "resendSent": "Código de verificação enviado", "checkInbox": "Por favor, verifique seu email e pasta de spam", "errors": {"invalidCode": "Código de verificação inválido", "expiredCode": "O código de verificação expirou", "tooManyAttempts": "Muitas tentativas. Tente novamente mais tarde."}}, "twoFactor": {"title": "Autenticação de Dois Fatores", "message": "Digite o código enviado para {{method}}", "enterCode": "Digite o código de verificação", "verify": "Verificar", "resend": "Reenviar Código", "errors": {"invalidCode": "Código inválido", "expired": "O código expirou", "tooManyAttempts": "Muitas tentativas. Tente novamente mais tarde."}}, "passwords": {"title": "Alterar Senha", "current": "Senha Atual", "new": "Nova Senha", "confirm": "Confirmar Senha", "change": "Alterar Senha", "requirements": "A senha deve ter pelo menos 8 caracteres", "errors": {"currentIncorrect": "A senha atual está incorreta", "mismatch": "As novas senhas não correspondem"}}, "onboarding": {"welcome": "Bem-vindo ao Oracle Chat Psíquico!", "step1": "Informações Pessoais", "step2": "Mapa Natal", "step3": "Método de Pagamento", "step4": "Assinatura", "step5": "Preferências", "complete": "Configuração Concluída", "skip": "Pular por enquanto", "continue": "Continuar", "enhanceReading": "✨ Aprimore Sua Leitura", "birthInfoPrompt": "Como seu oráculo, posso aprimorar sua leitura com astrologia. Se desejar, insira sua data de nascimento e, opcionalmente, hora e local de nascimento.", "enterBirthInfo": "Sim, Insira Minhas Informações de Nascimento", "clickExitToContinue": "Clique em Sair para continuar"}}
+{
+  "login": {
+    "title": "Entrar",
+    "email": "Email",
+    "password": "Senha",
+    "confirmPassword": "Confirmar Senha",
+    "rememberMe": "Lembre-se de mim",
+    "forgotPassword": "Esqueceu a senha?",
+    "noAccount": "Não tem uma conta?",
+    "createOne": "Crie uma aqui",
+    "signIn": "Entrar",
+    "signingIn": "Entrando...",
+    "signUp": "Registrar",
+    "creatingAccount": "Criando conta...",
+    "or": "ou",
+    "googleSignIn": "Entrar com Google",
+    "pageTitle": "Entrar",
+    "createAccountTitle": "Criar conta",
+    "resetPasswordTitle": "Redefinir senha",
+    "dontHaveAccount": "Não tem uma conta?",
+    "register": "Registrar",
+    "backToLogin": "Voltar para login",
+    "forgotPasswordMessage": "Fluxo de redefinição de senha em breve",
+    "passwordsDontMatch": "As senhas não correspondem",
+    "passwordTooShort": "A senha deve ter pelo menos 6 caracteres",
+    "acceptTermsAndPrivacy": "Você deve aceitar os Termos de Serviço e Política de Privacidade para criar uma conta",
+    "accountCreated": "Conta criada! Verifique seu email.",
+    "agreeTerms": "Aceito os Termos de Serviço",
+    "agreePrivacy": "Aceito a Política de Privacidade",
+    "errors": {
+      "invalidEmail": "Por favor, insira um endereço de email válido",
+      "passwordMismatch": "As senhas não correspondem",
+      "passwordTooShort": "A senha deve ter pelo menos 8 caracteres",
+      "accountExists": "Já existe uma conta com este email",
+      "invalidCredentials": "Email ou senha inválidos",
+      "userNotFound": "Usuário não encontrado"
+    }
+  },
+  "verification": {
+    "title": "Verifique Seu Email",
+    "message": "Enviamos um código de verificação para {{email}}. Digite-o abaixo.",
+    "enterCode": "Digite o código de verificação",
+    "code": "Código",
+    "verify": "Verificar",
+    "resendCode": "Reenviar código",
+    "resendSent": "Código de verificação enviado",
+    "checkInbox": "Por favor, verifique seu email e pasta de spam",
+    "errors": {
+      "invalidCode": "Código de verificação inválido",
+      "expiredCode": "O código de verificação expirou",
+      "tooManyAttempts": "Muitas tentativas. Tente novamente mais tarde."
+    }
+  },
+  "twoFactor": {
+    "title": "Autenticação de Dois Fatores",
+    "message": "Digite o código enviado para {{method}}",
+    "enterCode": "Digite o código de verificação",
+    "verify": "Verificar",
+    "resend": "Reenviar Código",
+    "errors": {
+      "invalidCode": "Código inválido",
+      "expired": "O código expirou",
+      "tooManyAttempts": "Muitas tentativas. Tente novamente mais tarde."
+    }
+  },
+  "passwords": {
+    "title": "Alterar Senha",
+    "current": "Senha Atual",
+    "new": "Nova Senha",
+    "confirm": "Confirmar Senha",
+    "change": "Alterar Senha",
+    "requirements": "A senha deve ter pelo menos 8 caracteres",
+    "errors": {
+      "currentIncorrect": "A senha atual está incorreta",
+      "mismatch": "As novas senhas não correspondem"
+    }
+  },
+  "onboarding": {
+    "welcome": "Bem-vindo ao Oracle Chat Psíquico!",
+    "step1": "Informações Pessoais",
+    "step2": "Mapa Natal",
+    "step3": "Método de Pagamento",
+    "step4": "Assinatura",
+    "step5": "Preferências",
+    "complete": "Configuração Concluída",
+    "skip": "Pular por enquanto",
+    "continue": "Continuar",
+    "enhanceReading": "✨ Aprimore Sua Leitura",
+    "birthInfoPrompt": "Como seu oráculo, posso aprimorar sua leitura com astrologia. Se desejar, insira sua data de nascimento e, opcionalmente, hora e local de nascimento.",
+    "enterBirthInfo": "Sim, Insira Minhas Informações de Nascimento",
+    "clickExitToContinue": "Clique em Sair para continuar"
+  },
+  "modal": {
+    "title": "🚀 Progresso da Integração",
+    "subtitle": "Conclua as etapas necessárias para acessar o aplicativo",
+    "subtitleComplete": "✨ Etapas necessárias concluídas!",
+    "steps": {
+      "createAccount": {
+        "title": "Criar Conta",
+        "description": "Conta criada"
+      },
+      "paymentMethod": {
+        "title": "Método de Pagamento",
+        "description": "Adicionar método de pagamento"
+      },
+      "subscription": {
+        "title": "Assinatura",
+        "description": "Comprar assinatura"
+      },
+      "personalInfo": {
+        "title": "Nos Conhecer",
+        "description": "Informações pessoais"
+      },
+      "welcome": {
+        "title": "Bem-vindo",
+        "description": "Conheça seu oráculo"
+      }
+    },
+    "badges": {
+      "required": "Obrigatório",
+      "optional": "Opcional"
+    },
+    "tooltips": {
+      "disabled": "Conclua as etapas anteriores primeiro",
+      "goToStep": "Ir para {{stepTitle}}",
+      "dragMove": "Arraste para mover, clique para expandir"
+    },
+    "buttons": {
+      "minimize": "Minimizar",
+      "close": "Fechar e ir para o Chat"
+    },
+    "footer": {
+      "incomplete": "Conclua todas as etapas para começar a usar o aplicativo",
+      "complete": "✨ Integração concluída! Aproveite o aplicativo"
+    }
+  }
+}

@@ -1,1 +1,137 @@
-{"login": {"title": "登录", "email": "邮箱", "password": "密码", "confirmPassword": "确认密码", "rememberMe": "记住我", "forgotPassword": "忘记密码？", "noAccount": "没有账户？", "createOne": "在这里创建一个", "signIn": "登录", "signingIn": "正在登录...", "signUp": "注册", "creatingAccount": "正在创建账户...", "or": "或", "googleSignIn": "用谷歌登录", "pageTitle": "登录", "createAccountTitle": "创建账户", "resetPasswordTitle": "重置密码", "dontHaveAccount": "没有账户？", "register": "注册", "backToLogin": "返回登录", "forgotPasswordMessage": "密码重置流程即将推出", "passwordsDontMatch": "密码不匹配", "passwordTooShort": "密码至少需要6个字符", "acceptTermsAndPrivacy": "您必须接受服务条款和隐私政策才能创建账户", "accountCreated": "账户已创建！请检查您的邮箱。", "agreeTerms": "我同意服务条款", "agreePrivacy": "我同意隐私政策", "errors": {"invalidEmail": "请输入有效的电子邮件地址", "passwordMismatch": "密码不匹配", "passwordTooShort": "密码至少需要8个字符", "accountExists": "该邮箱已存在一个账户", "invalidCredentials": "邮箱或密码无效", "userNotFound": "找不到用户"}}, "verification": {"title": "验证您的邮箱", "message": "我们已向{{email}}发送了验证码。请在下方输入。", "enterCode": "输入验证码", "code": "代码", "verify": "验证", "resendCode": "重新发送代码", "resendSent": "验证码已发送", "checkInbox": "请检查您的邮箱和垃圾文件夹", "errors": {"invalidCode": "无效的验证码", "expiredCode": "验证码已过期", "tooManyAttempts": "尝试次数过多。请稍后重试。"}}, "twoFactor": {"title": "双因素认证", "message": "输入发送到{{method}}的代码", "enterCode": "输入验证码", "verify": "验证", "resend": "重新发送代码", "errors": {"invalidCode": "无效的代码", "expired": "代码已过期", "tooManyAttempts": "尝试次数过多。请稍后重试。"}}, "passwords": {"title": "更改密码", "current": "当前密码", "new": "新密码", "confirm": "确认密码", "change": "更改密码", "requirements": "密码至少需要8个字符", "errors": {"currentIncorrect": "当前密码不正确", "mismatch": "新密码不匹配"}}, "onboarding": {"welcome": "欢迎来到心理聊天预言！", "step1": "个人信息", "step2": "出生图", "step3": "支付方式", "step4": "订阅", "step5": "偏好设置", "complete": "设置完成", "skip": "暂时跳过", "continue": "继续", "enhanceReading": "✨ 增强您的阅读", "birthInfoPrompt": "作为您的预言，我可以用占星术增强您的阅读。如果您愿意，请输入您的出生日期和可选的出生时间和地点。", "enterBirthInfo": "是的，输入我的出生信息", "clickExitToContinue": "单击退出继续"}}
+{
+  "login": {
+    "title": "登录",
+    "email": "邮箱",
+    "password": "密码",
+    "confirmPassword": "确认密码",
+    "rememberMe": "记住我",
+    "forgotPassword": "忘记密码？",
+    "noAccount": "没有账户？",
+    "createOne": "在这里创建一个",
+    "signIn": "登录",
+    "signingIn": "正在登录...",
+    "signUp": "注册",
+    "creatingAccount": "正在创建账户...",
+    "or": "或",
+    "googleSignIn": "用谷歌登录",
+    "pageTitle": "登录",
+    "createAccountTitle": "创建账户",
+    "resetPasswordTitle": "重置密码",
+    "dontHaveAccount": "没有账户？",
+    "register": "注册",
+    "backToLogin": "返回登录",
+    "forgotPasswordMessage": "密码重置流程即将推出",
+    "passwordsDontMatch": "密码不匹配",
+    "passwordTooShort": "密码至少需要6个字符",
+    "acceptTermsAndPrivacy": "您必须接受服务条款和隐私政策才能创建账户",
+    "accountCreated": "账户已创建！请检查您的邮箱。",
+    "agreeTerms": "我同意服务条款",
+    "agreePrivacy": "我同意隐私政策",
+    "errors": {
+      "invalidEmail": "请输入有效的电子邮件地址",
+      "passwordMismatch": "密码不匹配",
+      "passwordTooShort": "密码至少需要8个字符",
+      "accountExists": "该邮箱已存在一个账户",
+      "invalidCredentials": "邮箱或密码无效",
+      "userNotFound": "找不到用户"
+    }
+  },
+  "verification": {
+    "title": "验证您的邮箱",
+    "message": "我们已向{{email}}发送了验证码。请在下方输入。",
+    "enterCode": "输入验证码",
+    "code": "代码",
+    "verify": "验证",
+    "resendCode": "重新发送代码",
+    "resendSent": "验证码已发送",
+    "checkInbox": "请检查您的邮箱和垃圾文件夹",
+    "errors": {
+      "invalidCode": "无效的验证码",
+      "expiredCode": "验证码已过期",
+      "tooManyAttempts": "尝试次数过多。请稍后重试。"
+    }
+  },
+  "twoFactor": {
+    "title": "双因素认证",
+    "message": "输入发送到{{method}}的代码",
+    "enterCode": "输入验证码",
+    "verify": "验证",
+    "resend": "重新发送代码",
+    "errors": {
+      "invalidCode": "无效的代码",
+      "expired": "代码已过期",
+      "tooManyAttempts": "尝试次数过多。请稍后重试。"
+    }
+  },
+  "passwords": {
+    "title": "更改密码",
+    "current": "当前密码",
+    "new": "新密码",
+    "confirm": "确认密码",
+    "change": "更改密码",
+    "requirements": "密码至少需要8个字符",
+    "errors": {
+      "currentIncorrect": "当前密码不正确",
+      "mismatch": "新密码不匹配"
+    }
+  },
+  "onboarding": {
+    "welcome": "欢迎来到心理聊天预言！",
+    "step1": "个人信息",
+    "step2": "出生图",
+    "step3": "支付方式",
+    "step4": "订阅",
+    "step5": "偏好设置",
+    "complete": "设置完成",
+    "skip": "暂时跳过",
+    "continue": "继续",
+    "enhanceReading": "✨ 增强您的阅读",
+    "birthInfoPrompt": "作为您的预言，我可以用占星术增强您的阅读。如果您愿意，请输入您的出生日期和可选的出生时间和地点。",
+    "enterBirthInfo": "是的，输入我的出生信息",
+    "clickExitToContinue": "单击退出继续"
+  },
+  "modal": {
+    "title": "🚀 入职进度",
+    "subtitle": "完成所需步骤以访问该应用程序",
+    "subtitleComplete": "✨ 完成所需步骤！",
+    "steps": {
+      "createAccount": {
+        "title": "创建账户",
+        "description": "账户已创建"
+      },
+      "paymentMethod": {
+        "title": "支付方式",
+        "description": "添加支付方式"
+      },
+      "subscription": {
+        "title": "订阅",
+        "description": "购买订阅"
+      },
+      "personalInfo": {
+        "title": "认识一下",
+        "description": "个人信息"
+      },
+      "welcome": {
+        "title": "欢迎",
+        "description": "认识您的神谕"
+      }
+    },
+    "badges": {
+      "required": "必需",
+      "optional": "可选"
+    },
+    "tooltips": {
+      "disabled": "请先完成前面的步骤",
+      "goToStep": "转到{{stepTitle}}",
+      "dragMove": "拖动移动，点击展开"
+    },
+    "buttons": {
+      "minimize": "最小化",
+      "close": "关闭并转到聊天"
+    },
+    "footer": {
+      "incomplete": "完成所有步骤开始使用该应用程序",
+      "complete": "✨ 入职完成！享受该应用程序"
+    }
+  }
+}

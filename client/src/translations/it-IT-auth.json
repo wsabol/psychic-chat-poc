@@ -114,6 +114,10 @@
       "personalInfo": {
         "title": "Conosciamoci",
         "description": "Informazioni personali"
+      },
+      "welcome": {
+        "title": "Benvenuto",
+        "description": "Incontra il tuo oracolo"
       }
     },
     "badges": {

@@ -5,8 +5,9 @@
     "paragraph1": "感谢您成为不断增长的灵性主义者社区的一部分。我们荣幸地欢迎您在我们的网站上花费时间，并真诚地希望您享受访问。",
     "paragraph2": "我们邀请您访问\"我的帐户/首选项\"以增强您与Oracle的体验。您也可能希望访问\"我的帐户/设置和安全\"。",
     "paragraph3": "Oracle期待与您的交谈。来自Starship Psychics的人们。",
-    "autoNavigate": "在{{seconds}}秒后导航到聊天...",
+    "autoNavigate": "在{{seconds}}秒后关闭...",
     "goToChat": "✨ 去聊天",
-    "exploreFirst": "📖 先探索"
+    "exploreFirst": "📖 先探索",
+    "close": "✨ 关闭并开始"
   }
 }
