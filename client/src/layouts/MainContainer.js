@@ -55,7 +55,7 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
 // Only apply startingPage during onboarding - once complete, user has full nav control
   useEffect(() => {
     const isStillOnboarding = onboarding?.onboardingStatus?.isOnboarding === true;
-    if (isStillOnboarding && startingPage !== 0 && startingPage !== currentPageIndex) {
+    if (isStillOnboarding && startingPage !== currentPageIndex) {
       setCurrentPageIndex(startingPage);
     }
   }, [startingPage, currentPageIndex, onboarding?.onboardingStatus?.isOnboarding]);
@@ -112,9 +112,12 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
     preventScrollOnSwipe: true,
   });
 
-        const goToPage = useCallback((index) => {
-    // Prevent navigation during onboarding
-    if (isOnboarding) return;
+            const goToPage = useCallback((index) => {
+    // During onboarding, only allow navigation to specific pages:
+    // 0: Chat (for welcome step), 1: PersonalInfo (for get acquainted), 9: Billing (for payment/subscription)
+    const allowedPagesDuringOnboarding = [0, 1, 9];
+    const isAllowedDuringOnboarding = allowedPagesDuringOnboarding.includes(index);
+    if (isOnboarding && !isAllowedDuringOnboarding) return;
     const newIndex = Math.max(0, Math.min(index, PAGES.length - 1));
     if (newIndex !== currentPageIndex) {
       // If leaving billing page and not going back to billing, notify App to re-check subscription

@@ -5,8 +5,9 @@
     "paragraph1": "Thank you for becoming part of a growing community of spiritualists. We are honored to have you spend time on our site and genuinely hope you enjoy your visit.",
     "paragraph2": "We invite you to visit My Account/Preferences to enhance your experience with the oracle. You may also wish to visit My Account/Settings and Security.",
     "paragraph3": "The oracle looks forward to your conversation. The people at Starship Psychics.",
-    "autoNavigate": "Navigating to chat in {{seconds}} seconds...",
+    "autoNavigate": "Closing in {{seconds}} seconds...",
     "goToChat": "✨ Go to Chat",
-    "exploreFirst": "📖 Explore First"
+    "exploreFirst": "📖 Explore First",
+    "close": "✨ Close and Start"
   }
 }

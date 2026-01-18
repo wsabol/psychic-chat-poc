@@ -111,9 +111,13 @@
         "title": "Subscription",
         "description": "Purchase subscription"
       },
-      "personalInfo": {
+            "personalInfo": {
         "title": "Get Acquainted",
         "description": "Personal information"
+      },
+      "welcome": {
+        "title": "Welcome",
+        "description": "Meet your oracle"
       }
     },
     "badges": {

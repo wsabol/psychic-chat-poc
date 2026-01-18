@@ -31,11 +31,10 @@ export function useAppState() {
   const modals = useModalState();
   const tempFlow = useTempAccountFlow(authState);
   const handlers = useAuthHandlers(authState, modals, tempFlow);
-  
-  const { isLoading, isThankyou, isRegister, isVerification, isLanding, isLogin, isTwoFactor, isPaymentMethodRequired, isSubscriptionRequired, isChat } = useAppRouting(authState, tempFlow.appExited, modals.showRegisterMode, skipPaymentCheck, skipSubscriptionCheck, isAdmin);
-  
   const emailVerification = useEmailVerification();
   const onboarding = useOnboarding(authState.token);
+  
+  const { isLoading, isThankyou, isRegister, isVerification, isLanding, isLogin, isTwoFactor, isPaymentMethodRequired, isSubscriptionRequired, isChat } = useAppRouting(authState, tempFlow.appExited, modals.showRegisterMode, skipPaymentCheck, skipSubscriptionCheck, isAdmin, onboarding?.onboardingStatus?.isOnboarding ?? false);
 
   // Effect: Reset modal when authenticated
   useEffect(() => {
@@ -91,7 +90,7 @@ export function useAppState() {
   useEffect(() => {
     if (authState.hasActiveSubscription && skipSubscriptionCheck) {
       setSkipSubscriptionCheck(false);
-      setStartingPage(0);
+      setStartingPage(1);  // ← PersonalInfoPage (Get Acquainted)
       if (onboarding.updateOnboardingStep) {
         onboarding.updateOnboardingStep('subscription').catch(err => {
         });
@@ -135,7 +134,7 @@ export function useAppState() {
     setStartingPage(9); // billing page is now index 9 after adding admin
   }, []);
 
-        const handleOnboardingNavigate = useCallback((step) => {
+  const handleOnboardingNavigate = useCallback((step) => {
     switch(step) {
       case 'payment_method':
         setSkipPaymentCheck(true);
@@ -148,8 +147,14 @@ export function useAppState() {
         setBillingTab('subscriptions');
         setStartingPage(9); // billing page is now index 9 after adding admin
         break;
-            case 'personal_info':
+      case 'personal_info':
         setStartingPage(1);
+        break;
+      case 'welcome':
+        setStartingPage(0);
+        if (onboarding.updateOnboardingStep) {
+          onboarding.updateOnboardingStep('welcome').catch(err => {});
+        }
         break;
       case 'security_settings':
         setStartingPage(6);
@@ -157,7 +162,7 @@ export function useAppState() {
       default:
         break;
     }
-  }, []);
+  }, [onboarding]);
 
   const handleOnboardingClose = useCallback(async () => {
     try {

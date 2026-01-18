@@ -19,7 +19,7 @@ import { useDeviceTracking } from './useDeviceTracking';
  * - skipPaymentCheck: User clicked "Add Payment Method", bypass check and go to chat/billing
  * - skipSubscriptionCheck: User clicked "Subscribe", bypass check and go to chat/subscriptions
  */
-export function useAppRouting(auth, appExited, showRegisterMode = false, skipPaymentCheck = false, skipSubscriptionCheck = false, isAdmin = false) {
+export function useAppRouting(auth, appExited, showRegisterMode = false, skipPaymentCheck = false, skipSubscriptionCheck = false, isAdmin = false, isOnboarding = false) {
     const { hasExitedBefore } = useDeviceTracking();
 
     const currentScreen = useMemo(() => {

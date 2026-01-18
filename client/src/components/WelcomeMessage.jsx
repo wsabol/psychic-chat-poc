@@ -6,30 +6,32 @@ import './WelcomeMessage.css';
 /**
  * WelcomeMessage Component
  * 
- * Displays a welcome modal when user completes onboarding
+ * Displays welcome modal as final onboarding step
  * - Shows user's name (familiar or first name)
- * - Offers navigation to chat or explore
- * - Auto-navigates to chat after 8 seconds
- * - Remembers if dismissed (never shows again)
+ * - Auto-closes after 30 seconds
+ * - User can close with X button or Close button
+ * - Completes onboarding_step = 'welcome' when closing
+ * - Navigates to Chat (index 0)
  */
-export function WelcomeMessage({ userId, onClose, onNavigateToChat }) {
+export function WelcomeMessage({ userId, onClose, onNavigateToChat, onOnboardingComplete, token }) {
   const { t } = useTranslation();
   const [fadeIn, setFadeIn] = useState(false);
-  const [autoNavigateTimer, setAutoNavigateTimer] = useState(8);
+  const [autoCloseTimer, setAutoCloseTimer] = useState(30);
   const [userName, setUserName] = useState('');
   const [loading, setLoading] = useState(true);
+  const [completing, setCompleting] = useState(false);
 
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
-  const STORAGE_KEY = `welcome_message_dismissed_${userId}`;
 
   // Fetch user's name on mount
   useEffect(() => {
     const fetchUserName = async () => {
       try {
-        const response = await fetch(`${API_URL}/user-profile/${userId}`);
+        const response = await fetch(`${API_URL}/user-profile/${userId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
         if (response.ok) {
           const data = await response.json();
-          // Use familiar name if available, fallback to first name
           const displayName = data.familiar_name || data.first_name || '';
           setUserName(displayName);
         }
@@ -40,64 +42,82 @@ export function WelcomeMessage({ userId, onClose, onNavigateToChat }) {
       }
     };
 
-    fetchUserName();
-  }, [userId, API_URL]);
+    if (userId && token) {
+      fetchUserName();
+    }
+  }, [userId, token, API_URL]);
 
   // Trigger fade-in animation
   useEffect(() => {
     setFadeIn(true);
   }, []);
 
-  // Auto-navigate countdown
+  // Auto-close countdown (30 seconds)
   useEffect(() => {
-    if (autoNavigateTimer <= 0) {
-      handleGoToChat();
+    if (autoCloseTimer <= 0) {
+      handleCompleteOnboarding();
       return;
     }
 
     const timer = setTimeout(() => {
-      setAutoNavigateTimer(prev => prev - 1);
+      setAutoCloseTimer(prev => prev - 1);
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [autoNavigateTimer]);
+  }, [autoCloseTimer]);
 
-  const handleGoToChat = () => {
-    // Mark as dismissed
-    localStorage.setItem(STORAGE_KEY, 'true');
-    // Navigate to chat
-    if (onNavigateToChat) {
-      onNavigateToChat();
-    }
-  };
+  // Complete onboarding by marking welcome step as done
+  const handleCompleteOnboarding = async () => {
+    if (completing) return;
+    setCompleting(true);
 
-  const handleExploreFirst = () => {
-    // Mark as dismissed
-    localStorage.setItem(STORAGE_KEY, 'true');
-    // Just close without navigating
-    if (onClose) {
-      onClose();
+    try {
+      if (onOnboardingComplete) {
+        await onOnboardingComplete();
+      }
+      
+      if (onNavigateToChat) {
+        onNavigateToChat();
+      }
+      
+      if (onClose) {
+        onClose();
+      }
+    } catch (err) {
+      logErrorFromCatch('[WELCOME] Error completing onboarding:', err);
+      if (onClose) {
+        onClose();
+      }
+    } finally {
+      setCompleting(false);
     }
   };
 
   return (
     <div className={`welcome-message-overlay ${fadeIn ? 'fade-in' : ''}`}>
       <div className="welcome-message-modal">
-        {/* Header */}
+        {/* Header with close button (X) */}
         <div className="welcome-header">
           <h2>{t('welcome.title')}</h2>
+          <button
+            className="welcome-close-btn"
+            onClick={handleCompleteOnboarding}
+            disabled={completing}
+            title="Close welcome"
+            type="button"
+          >
+            ✕
+          </button>
         </div>
 
         {/* Content */}
         <div className="welcome-content">
-          {/* Personalized greeting */}
           {!loading && userName && (
             <p className="welcome-greeting">
               {t('welcome.personalized', { name: userName })}
             </p>
           )}
 
-          {/* Main message paragraphs */}
           <p className="welcome-paragraph">
             {t('welcome.paragraph1')}
           </p>
@@ -108,27 +128,20 @@ export function WelcomeMessage({ userId, onClose, onNavigateToChat }) {
             {t('welcome.paragraph3')}
           </p>
 
-          {/* Auto-navigate timer */}
           <div className="welcome-timer">
-            {t('welcome.autoNavigate', { seconds: autoNavigateTimer })}
+            {t('welcome.autoNavigate', { seconds: autoCloseTimer })}
           </div>
         </div>
 
-        {/* Footer with buttons */}
+        {/* Footer with button */}
         <div className="welcome-footer">
-          <button 
+          <button
             className="welcome-btn welcome-btn-primary"
-            onClick={handleGoToChat}
+            onClick={handleCompleteOnboarding}
+            disabled={completing}
             type="button"
           >
-            {t('welcome.goToChat')}
-          </button>
-          <button 
-            className="welcome-btn welcome-btn-secondary"
-            onClick={handleExploreFirst}
-            type="button"
-          >
-            {t('welcome.exploreFirst')}
+            {completing ? t('common.saving') : t('welcome.close')}
           </button>
         </div>
       </div>

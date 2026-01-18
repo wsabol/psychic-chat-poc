@@ -89,7 +89,7 @@ router.post('/onboarding-step/:step', authenticateToken, async (req, res) => {
     const userId = req.user.userId;
     const { step } = req.params;
     
-    const validSteps = ['create_account', 'payment_method', 'subscription', 'personal_info', 'security_settings'];
+    const validSteps = ['create_account', 'payment_method', 'subscription', 'personal_info', 'welcome', 'security_settings'];
     // Note: security_settings is optional and doesn't affect onboarding completion
     if (!validSteps.includes(step)) {
       return validationError(res, 'Invalid onboarding step');
@@ -105,7 +105,7 @@ router.post('/onboarding-step/:step', authenticateToken, async (req, res) => {
     
         const currentCompleted = currentResult.rows[0]?.onboarding_completed;
     // Force completion to true if step is personal_info, otherwise keep current value
-    const isOnboardingComplete = step === 'personal_info' ? true : (currentCompleted === true);
+    const isOnboardingComplete = step === 'welcome' ? true : (currentCompleted === true);
     
         // Use proper parameterized query with CASE statement
     const updateQuery = `

@@ -93,7 +93,14 @@ export function AppChat({ state }) {
     trackPageView('app-initialized');
   }, []);
 
-  const isUserOnboarding = onboarding.onboardingStatus?.isOnboarding === true;
+    const isUserOnboarding = onboarding.onboardingStatus?.isOnboarding === true;
+
+  // Show Welcome message when user navigates to Welcome step
+  useEffect(() => {
+    if (onboarding.onboardingStatus?.currentStep === 'welcome') {
+      setShowWelcomeMessage(true);
+    }
+  }, [onboarding.onboardingStatus?.currentStep]);
 
   // Detect when onboarding COMPLETES (transitions from true to false)
   useEffect(() => {
@@ -194,11 +201,22 @@ export function AppChat({ state }) {
           />
         )}
 
-        {showWelcomeMessage && (
+       {showWelcomeMessage && (
           <WelcomeMessage
             userId={authState.authUserId}
+            token={authState.token}
             onClose={handleWelcomeClose}
             onNavigateToChat={handleWelcomeNavigateToChat}
+            onOnboardingComplete={async () => {
+              const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+              try {
+                await fetch(`${API_URL}/billing/onboarding-step/welcome`, {
+                  method: 'POST',
+                  headers: { 'Authorization': `Bearer ${authState.token}` }
+                });
+                await onboarding.fetchOnboardingStatus();
+              } catch (err) {}
+            }}
           />
         )}
 

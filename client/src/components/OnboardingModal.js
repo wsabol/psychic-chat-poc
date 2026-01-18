@@ -3,15 +3,16 @@ import { useTranslation } from '../context/TranslationContext';
 import './OnboardingModal.css';
 
 /**
- * OnboardingModal - Guided 4-step onboarding for new users
+ * OnboardingModal - Guided 5-step onboarding for new users
  * 
  * Steps:
  * 1. Create Account ✅
  * 2. Payment Method (required)
  * 3. Subscription (required)
  * 4. Personal Information (required)
+ * 5. Welcome (required)
  * 
- * All 4 steps must be completed to access the app.
+ * All 5 steps must be completed to access the app.
  */
 export default function OnboardingModal({
   currentStep,
@@ -60,7 +61,7 @@ export default function OnboardingModal({
       complete: completedSteps?.subscription || false,
       disabled: !completedSteps?.payment_method, // Disabled until payment method added
     },
-    {
+        {
       id: 'personal_info',
       number: 4,
       title: t('modal.steps.personalInfo.title'),
@@ -69,6 +70,16 @@ export default function OnboardingModal({
       required: true,
       complete: completedSteps?.personal_info || false,
       disabled: !completedSteps?.subscription,
+    },
+    {
+      id: 'welcome',
+      number: 5,
+      title: t('modal.steps.welcome.title'),
+      icon: '🎉',
+      description: t('modal.steps.welcome.description'),
+      required: true,
+      complete: completedSteps?.welcome || false,
+      disabled: !completedSteps?.personal_info,
     },
 
   ];
@@ -92,7 +103,7 @@ export default function OnboardingModal({
     );
   }
 
-  const allRequiredComplete = completedSteps?.payment_method && completedSteps?.subscription && completedSteps?.personal_info;
+  const allRequiredComplete = completedSteps?.payment_method && completedSteps?.subscription && completedSteps?.personal_info && completedSteps?.welcome;
 
   return (
     <div 
