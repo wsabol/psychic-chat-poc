@@ -171,8 +171,8 @@ app.use("/billing", authenticateToken, billingRoutes);
 
 
 
-// Initialize scheduled jobs (DISABLED - causing startup hang)
-// initializeScheduler();
+// Initialize scheduled jobs - runs daily temp account cleanup at 2:00 AM UTC
+initializeScheduler();
 
 // Phase 5: Safe error handling (LATE in middleware chain - after all routes)
 app.use(errorHandler);
@@ -187,7 +187,7 @@ if (fs.existsSync('./certificates/key.pem') && fs.existsSync('./certificates/cer
     server.listen(PORT, () => {
         console.log(`🔐 Psychic Chat API listening on HTTPS port ${PORT}`);
     });
-    server.on('error', (err) => {
+        server.on('error', (err) => {
         if (err.code === 'EADDRINUSE') {
             process.exit(1);
         }
@@ -197,7 +197,7 @@ if (fs.existsSync('./certificates/key.pem') && fs.existsSync('./certificates/cer
     server = app.listen(PORT, () => {
         console.log(`✅ Psychic Chat API listening on HTTP port ${PORT}`);
     });
-    server.on('error', (err) => {
+                server.on('error', (err) => {
         if (err.code === 'EADDRINUSE') {
             process.exit(1);
         }
@@ -205,11 +205,7 @@ if (fs.existsSync('./certificates/key.pem') && fs.existsSync('./certificates/cer
     });
 }
 
-// Daily cleanup of old temp accounts (disabled - can be called via HTTP endpoint instead)
-// setInterval(async () => {
-//     try {
-//         const res = await fetch(`http://localhost:${PORT}/cleanup/cleanup-old-temp-accounts`, { method: 'DELETE' });
-// }, 24 * 60 * 60 * 1000);
+
 
 export default app;
 export { logger };

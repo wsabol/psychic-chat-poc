@@ -57,17 +57,24 @@ export function useAppState() {
     }
   }, [authState.isAuthenticated, authState.token, authState.authUserId, authState.authEmail]);
 
-  // Effect: Start email verification polling
+    // Effect: Start email verification polling and cleanup old temp account on verification
   useEffect(() => {
     if (isVerification && auth.currentUser) {
-      emailVerification.startVerificationPolling(
-        auth.currentUser,
-        40,
-        () => {
-          authState.setEmailVerified(true);
-          authState.refreshEmailVerificationStatus();
-        }
-      );
+      const onVerified = async () => {
+        authState.setEmailVerified(true);
+        authState.refreshEmailVerificationStatus();
+        try {
+          const newUserId = auth.currentUser?.uid;
+          if (!newUserId) return;
+          const tempAccountUid = localStorage.getItem('temp_account_uid');
+          if (tempAccountUid && tempAccountUid !== newUserId) {
+            await fetch(`http://localhost:3000/cleanup/delete-temp-account/${tempAccountUid}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
+            localStorage.removeItem('temp_account_uid');
+            localStorage.removeItem('temp_account_email');
+          }
+        } catch (err) {}
+      };
+      emailVerification.startVerificationPolling(auth.currentUser, 40, onVerified);
     }
   }, [isVerification, emailVerification, authState]);
 
@@ -128,7 +135,7 @@ export function useAppState() {
     setStartingPage(9); // billing page is now index 9 after adding admin
   }, []);
 
-    const handleOnboardingNavigate = useCallback((step) => {
+        const handleOnboardingNavigate = useCallback((step) => {
     switch(step) {
       case 'payment_method':
         setSkipPaymentCheck(true);
@@ -141,7 +148,7 @@ export function useAppState() {
         setBillingTab('subscriptions');
         setStartingPage(9); // billing page is now index 9 after adding admin
         break;
-      case 'personal_info':
+            case 'personal_info':
         setStartingPage(1);
         break;
       case 'security_settings':

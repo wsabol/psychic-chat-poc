@@ -21,8 +21,9 @@ export function NavDesktop({
     return index === currentPageIndex;
   };
 
-  const handlePageClick = (pageId) => {
-    if (isTemporaryAccount) return;
+    const handlePageClick = (pageId) => {
+    // Prevent navigation if temp account or during onboarding
+    if (isTemporaryAccount || isDisabled) return;
     const index = pages.findIndex(p => p.id === pageId);
     if (index !== -1) {
       onNavigate(index);
@@ -39,27 +40,28 @@ export function NavDesktop({
         <h1>🔮 {t('menu.title')}</h1>
       </div>
 
-      <ul className="nav-menu" style={isTemporaryAccount ? { opacity: 0.5 } : {}}>
+      <ul className="nav-menu" style={isTemporaryAccount || isDisabled ? { opacity: 0.5, pointerEvents: 'none' } : {}}>
         {menuStructure.map((item) => (
           <li key={item.id}>
             {item.type === 'page' ? (
-              <button
+                            <button
                 className={`nav-item ${isPageActive(item.pageId) ? 'active' : ''}`}
                 onClick={() => {
                   handlePageClick(item.pageId);
                 }}
-                disabled={isTemporaryAccount}
-                style={isTemporaryAccount ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
+                disabled={isTemporaryAccount || isDisabled}
+                style={isTemporaryAccount || isDisabled ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
               >
                 <span className="nav-icon">{item.icon}</span>
                 <span className="nav-label">{getLabel(item)}</span>
               </button>
             ) : (
               <>
-                <button
+                                <button
                   className="nav-item nav-category"
-                  onClick={() => setExpandedSubmenu(expandedSubmenu === item.id ? null : item.id)}
-                  style={isTemporaryAccount ? { opacity: 0.6 } : {}}
+                  onClick={() => !isDisabled && setExpandedSubmenu(expandedSubmenu === item.id ? null : item.id)}
+                  disabled={isDisabled}
+                  style={isTemporaryAccount || isDisabled ? { opacity: 0.6, cursor: isDisabled ? 'not-allowed' : 'pointer' } : {}}
                 >
                   <span className="nav-icon">{item.icon}</span>
                   <span className="nav-label">{getLabel(item)}</span>
@@ -69,10 +71,11 @@ export function NavDesktop({
                   <ul className="nav-submenu">
                     {item.submenu.map((subitem) => (
                       <li key={subitem.id}>
-                        <button
+                                                <button
                           className={`nav-subitem ${isPageActive(subitem.pageId) ? 'active' : ''}`}
                           onClick={() => handlePageClick(subitem.pageId)}
-                          style={isTemporaryAccount ? { opacity: 0.6 } : {}}
+                          disabled={isTemporaryAccount || isDisabled}
+                          style={isTemporaryAccount || isDisabled ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
                         >
                           <span className="nav-icon">{subitem.icon}</span>
                           <span className="nav-label">{getLabel(subitem)}</span>

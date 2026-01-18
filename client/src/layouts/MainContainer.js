@@ -103,15 +103,18 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
     return () => window.removeEventListener('popstate', handlePopState);
   }, [auth?.isTemporaryAccount, currentPageIndex, onExit]);
 
-  // Swipe handlers
+    // Swipe handlers - disabled during onboarding
+  const isOnboarding = onboarding?.onboardingStatus?.isOnboarding === true;
   const swipeHandlers = useSwipeable({
-    onSwipedLeft: () => goToPage(currentPageIndex + 1),
-    onSwipedRight: () => goToPage(currentPageIndex - 1),
+    onSwipedLeft: () => !isOnboarding && goToPage(currentPageIndex + 1),
+    onSwipedRight: () => !isOnboarding && goToPage(currentPageIndex - 1),
     trackMouse: false,
     preventScrollOnSwipe: true,
   });
 
-    const goToPage = useCallback((index) => {
+        const goToPage = useCallback((index) => {
+    // Prevent navigation during onboarding
+    if (isOnboarding) return;
     const newIndex = Math.max(0, Math.min(index, PAGES.length - 1));
     if (newIndex !== currentPageIndex) {
       // If leaving billing page and not going back to billing, notify App to re-check subscription
@@ -122,7 +125,7 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
       setCurrentPageIndex(newIndex);
       window.history.pushState({ pageIndex: newIndex }, '');
     }
-  }, [currentPageIndex, onNavigateFromBilling]);
+  }, [currentPageIndex, onNavigateFromBilling, isOnboarding]);
 
     const PageComponent = currentPage.component;
 

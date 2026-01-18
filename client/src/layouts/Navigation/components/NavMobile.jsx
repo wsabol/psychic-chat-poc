@@ -9,6 +9,7 @@ export function NavMobile({
   onNavigate,
   onLogout,
   isTemporaryAccount,
+  isDisabled = false,
   menuStructure,
   mobileMenuOpen,
   setMobileMenuOpen,
@@ -23,7 +24,8 @@ export function NavMobile({
   };
 
   const handlePageClick = (pageId) => {
-    if (isTemporaryAccount) return;
+    // Prevent navigation if temp account or during onboarding
+    if (isTemporaryAccount || isDisabled) return;
     const index = pages.findIndex(p => p.id === pageId);
     if (index !== -1) {
       onNavigate(index);
@@ -72,14 +74,15 @@ export function NavMobile({
               </button>
             </div>
 
-            <ul className="nav-mobile-list" style={isTemporaryAccount ? { opacity: 0.5 } : {}}>
+            <ul className="nav-mobile-list" style={isTemporaryAccount || isDisabled ? { opacity: 0.5, pointerEvents: 'none' } : {}}>
               {menuStructure.map((item) => (
                 <li key={item.id}>
                   {item.type === 'page' ? (
                     <button
                       className={`nav-mobile-item ${isPageActive(item.pageId) ? 'active' : ''}`}
                       onClick={() => handlePageClick(item.pageId)}
-                      style={isTemporaryAccount ? { opacity: 0.6 } : {}}
+                      disabled={isTemporaryAccount || isDisabled}
+                      style={isTemporaryAccount || isDisabled ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
                     >
                       <span className="nav-icon">{item.icon}</span>
                       <span className="nav-label">{getLabel(item)}</span>
@@ -88,7 +91,9 @@ export function NavMobile({
                     <>
                       <button
                         className="nav-mobile-item nav-mobile-category"
-                        onClick={() => setExpandedSubmenu(expandedSubmenu === item.id ? null : item.id)}
+                        disabled={isDisabled}
+                        onClick={() => !isDisabled && setExpandedSubmenu(expandedSubmenu === item.id ? null : item.id)}
+                        style={isDisabled ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
                       >
                         <span className="nav-icon">{item.icon}</span>
                         <span className="nav-label">{getLabel(item)}</span>
@@ -99,9 +104,10 @@ export function NavMobile({
                           {item.submenu.map((subitem) => (
                             <li key={subitem.id}>
                               <button
-                                className={`nav-mobile-subitem ${isPageActive(subitem.pageId) ? 'active' : ''}`}
-                                onClick={() => handlePageClick(subitem.pageId)}
-                                style={isTemporaryAccount ? { opacity: 0.6 } : {}}
+                                                              className={`nav-mobile-subitem ${isPageActive(subitem.pageId) ? 'active' : ''}`}
+                              onClick={() => handlePageClick(subitem.pageId)}
+                              disabled={isTemporaryAccount || isDisabled}
+                              style={isTemporaryAccount || isDisabled ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
                               >
                                 <span className="nav-icon">{subitem.icon}</span>
                                 <span className="nav-label">{getLabel(subitem)}</span>
