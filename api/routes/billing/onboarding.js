@@ -103,25 +103,34 @@ router.post('/onboarding-step/:step', authenticateToken, async (req, res) => {
       [userId]
     );
     
-    const currentCompleted = currentResult.rows[0]?.onboarding_completed;
-    const isOnboardingComplete = step === 'personal_info' ? true : currentCompleted;
+        const currentCompleted = currentResult.rows[0]?.onboarding_completed;
+    // Force completion to true if step is personal_info, otherwise keep current value
+    const isOnboardingComplete = step === 'personal_info' ? true : (currentCompleted === true);
     
-    const query = `
+        // Use proper parameterized query with CASE statement
+    const updateQuery = `
       UPDATE user_personal_info SET 
         onboarding_step = $1,
         onboarding_completed = $2,
-        onboarding_completed_at = ${isOnboardingComplete ? 'NOW()' : 'onboarding_completed_at'},
+        onboarding_completed_at = CASE WHEN $2 = true THEN NOW() ELSE onboarding_completed_at END,
         updated_at = NOW()
       WHERE user_id = $3
+      RETURNING onboarding_completed
     `;
     
-    await db.query(query, [step, isOnboardingComplete, userId]);
+    const updateResult = await db.query(updateQuery, [step, isOnboardingComplete, userId]);
     
-    res.json({ 
+    if (updateResult.rowCount === 0) {
+      return validationError(res, 'User not found');
+    }
+    
+    const actualCompleted = updateResult.rows[0]?.onboarding_completed;
+    
+        res.json({ 
       success: true, 
       step, 
-      completed: isOnboardingComplete,
-      message: isOnboardingComplete ? 'Required onboarding steps complete!' : `Step ${step} updated`
+      completed: actualCompleted === true,
+      message: actualCompleted === true ? 'Onboarding complete!' : `Step ${step} updated`
     });
   } catch (error) {
     return serverError(res, 'Failed to update onboarding step');
