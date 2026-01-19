@@ -174,8 +174,9 @@ router.post("/:userId", authorizeUser, async (req, res) => {
         // Data is verified saved above, so safe to proceed
         if (safeTime && safeCountry && safeProvince && safeCity && parsedBirthDate) {
             try {
-                // Small delay to ensure write is fully propagated
-                const delayMs = 200;
+                                // Delay to ensure write is fully propagated and database transaction committed
+                // 1 second is needed for reliable read-after-write consistency
+                const delayMs = 1000;
                 await new Promise(resolve => setTimeout(resolve, delayMs));
                 
                 await enqueueMessage({

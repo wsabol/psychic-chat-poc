@@ -32,7 +32,8 @@ export function useAppState() {
   const tempFlow = useTempAccountFlow(authState);
   const handlers = useAuthHandlers(authState, modals, tempFlow);
   const emailVerification = useEmailVerification();
-  const onboarding = useOnboarding(authState.token);
+  // CRITICAL: Pass isTemporaryAccount to skip onboarding for free trial users
+  const onboarding = useOnboarding(authState.token, authState.isTemporaryAccount);
   
   const { isLoading, isThankyou, isRegister, isVerification, isLanding, isLogin, isTwoFactor, isPaymentMethodRequired, isSubscriptionRequired, isChat } = useAppRouting(authState, tempFlow.appExited, modals.showRegisterMode, skipPaymentCheck, skipSubscriptionCheck, isAdmin, onboarding?.onboardingStatus?.isOnboarding ?? false);
 
@@ -96,7 +97,15 @@ export function useAppState() {
         });
       }
     }
-  }, [authState.hasActiveSubscription, skipSubscriptionCheck, onboarding]);
+    }, [authState.hasActiveSubscription, skipSubscriptionCheck, onboarding]);
+
+  // CRITICAL: Ensure temporary accounts ALWAYS stay on ChatPage (index 0)
+  // This prevents any effect or initialization from sending them to PersonalInfoPage
+  useEffect(() => {
+    if (authState.isTemporaryAccount && startingPage !== 0) {
+      setStartingPage(0);
+    }
+  }, [authState.isTemporaryAccount, startingPage]);
 
   // Handlers
   const handleVerificationFailed = useCallback(() => {
@@ -135,6 +144,13 @@ export function useAppState() {
   }, []);
 
   const handleOnboardingNavigate = useCallback((step) => {
+    // CRITICAL: For temporary accounts (free trial), DO NOT navigate to PersonalInfoPage automatically
+    // Temp accounts use ChatPage's 60-second timer flow - they explicitly choose to enter birth info
+    // This handler is only for permanent accounts going through onboarding
+    if (authState.isTemporaryAccount && step === 'personal_info') {
+      return; // Skip navigation for temp accounts
+    }
+    
     switch(step) {
       case 'payment_method':
         setSkipPaymentCheck(true);
@@ -159,10 +175,10 @@ export function useAppState() {
       case 'security_settings':
         setStartingPage(6);
         break;
-      default:
+            default:
         break;
     }
-  }, [onboarding]);
+  }, [onboarding, authState.isTemporaryAccount]);
 
   const handleOnboardingClose = useCallback(async () => {
     try {

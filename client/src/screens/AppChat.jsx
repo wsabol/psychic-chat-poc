@@ -61,6 +61,7 @@ export function AppChat({ state }) {
         const fetchConsentStatus = async () => {
       try {
         const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+        console.log('[CONSENT-CHECK] Fetching:', `${API_URL}/auth/check-consent/${user.uid}`);
         const response = await fetch(`${API_URL}/auth/check-consent/${user.uid}`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${user.token}` }
@@ -81,8 +82,10 @@ export function AppChat({ state }) {
       }
     };
     
-    fetchConsentStatus();
-  }, [user?.uid, user?.token]);
+    if (!authState.isTemporaryAccount) {
+      fetchConsentStatus();
+    }
+  }, [user?.uid, user?.token, authState?.isTemporaryAccount]);
 
   // Fetch user's language preference from DB when authenticated
   useLanguagePreference();
@@ -153,8 +156,9 @@ export function AppChat({ state }) {
     );
   }
 
-  // Guard: Don't show modals while onboarding data is loading
-  if (authState.isAuthenticated && onboarding.onboardingStatus === null) {
+    // Guard: Don't show modals while onboarding data is loading
+  // SKIP for temporary accounts - they don't have onboarding data
+  if (authState.isAuthenticated && !authState.isTemporaryAccount && onboarding.onboardingStatus === null) {
     return <ErrorBoundary><LoadingScreen /></ErrorBoundary>;
   }
 

@@ -55,6 +55,7 @@ export const INITIAL_FORM_DATA = {
   birthCity: '',
   birthDate: '',
   birthTime: '',
+  birthTimezone: '',
   sex: '',
   addressPreference: ''
 };

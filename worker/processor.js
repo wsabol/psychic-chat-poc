@@ -68,26 +68,6 @@ async function generateDailyMysticalUpdates() {
 }
 
 /**
- * Cleanup old temporary accounts every 24 hours
- */
-async function cleanupOldTempAccounts() {
-    try {
-        const response = await fetch(`${API_URL}/cleanup/cleanup-old-temp-accounts`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' }
-        });
-        
-        if (response.ok) {
-            const result = await response.json();
-                } else {
-            logErrorFromCatch(new Error(`Cleanup failed with status: ${response.status}`), '[CLEANUP]');
-        }
-    } catch (err) {
-        logErrorFromCatch(err, '[CLEANUP] Error running cleanup job');
-    }
-}
-
-/**
  * Main worker loop
  */
 export async function workerLoop() {
@@ -98,9 +78,9 @@ export async function workerLoop() {
         logErrorFromCatch(err, '[WORKER] Failed to generate daily updates');
     }
     
-        // Wait 60 seconds before first cleanup (let API start), then every 24 hours
-    setTimeout(cleanupOldTempAccounts, 60000);
-    setInterval(cleanupOldTempAccounts, 86400000);
+    // Cleanup job disabled temporarily - needs endpoint fix
+    // Will be re-enabled after fixing /cleanup/cleanup-old-temp-accounts endpoint
+    
     while (true) {
         try {
             const job = await getMessageFromQueue();

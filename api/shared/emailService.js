@@ -1,4 +1,5 @@
 import sgMail from '@sendgrid/mail';
+import { logErrorFromCatch } from './errorLogger.js';
 
 // Initialize SendGrid
 if (!process.env.SENDGRID_API_KEY) {
@@ -13,7 +14,6 @@ const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'noreply@starshippsychics.c
 export async function sendEmailVerification(userEmail, verificationCode) {
     try {
         if (!process.env.SENDGRID_API_KEY) {
-            logErrorFromCatch(error, 'app', 'email');
             throw new Error('Email service not configured');
         }
 
@@ -56,7 +56,6 @@ export async function sendEmailVerification(userEmail, verificationCode) {
 export async function sendPasswordResetEmail(userEmail, resetCode) {
     try {
         if (!process.env.SENDGRID_API_KEY) {
-            logErrorFromCatch(error, 'app', 'email');
             throw new Error('Email service not configured');
         }
 
@@ -99,7 +98,6 @@ export async function sendPasswordResetEmail(userEmail, resetCode) {
 export async function sendEmailVerificationCode(userEmail, code) {
     try {
         if (!process.env.SENDGRID_API_KEY) {
-            logErrorFromCatch(error, 'app', 'email');
             throw new Error('Email service not configured');
         }
 
@@ -141,7 +139,6 @@ export async function sendEmailVerificationCode(userEmail, code) {
 export async function send2FACodeEmail(userEmail, code) {
     try {
         if (!process.env.SENDGRID_API_KEY) {
-            logErrorFromCatch(error, 'app', 'email');
             throw new Error('Email service not configured');
         }
 
@@ -184,7 +181,6 @@ export async function send2FACodeEmail(userEmail, code) {
 export async function sendAccountReengagementEmail(userEmail, userId, emailType) {
     try {
         if (!process.env.SENDGRID_API_KEY) {
-            logErrorFromCatch(error, 'app', 'email');
             throw new Error('Email service not configured');
         }
 

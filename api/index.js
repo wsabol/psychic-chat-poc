@@ -177,7 +177,14 @@ app.use("/billing", authenticateToken, billingRoutes);
 
 
 // Initialize scheduled jobs - runs daily temp account cleanup at 2:00 AM UTC
-initializeScheduler();
+console.log('🔄 Initializing scheduler...');
+try {
+  const schedulerResult = initializeScheduler();
+  console.log('✅ Scheduler initialized successfully');
+} catch (error) {
+  console.error('❌ Failed to initialize scheduler:', error.message);
+  console.error(error.stack);
+}
 
 // Phase 5: Safe error handling (LATE in middleware chain - after all routes)
 app.use(errorHandler);
@@ -202,15 +209,36 @@ if (fs.existsSync('./certificates/key.pem') && fs.existsSync('./certificates/cer
     server = app.listen(PORT, () => {
         console.log(`✅ Psychic Chat API listening on HTTP port ${PORT}`);
     });
-                server.on('error', (err) => {
+    server.on('error', (err) => {
+        console.error('Server error:', err);
         if (err.code === 'EADDRINUSE') {
             process.exit(1);
         }
         process.exit(1);
     });
+    server.on('close', () => {
+        console.log('Server closed');
+    });
 }
 
 
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('\n\n====== UNHANDLED REJECTION ======');
+    if (reason instanceof Error) {
+        console.error('Message:', reason.message);
+        console.error('Stack:', reason.stack);
+    } else {
+        console.error('Reason:', reason);
+    }
+    console.error('==================================\n');
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+});
 
 export default app;
 export { logger };

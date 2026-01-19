@@ -23,7 +23,7 @@ import { logErrorFromCatch } from '../shared/errorLogger.js';
  * - setIsMinimized: Toggle minimize
  * - handleStartDrag: Start dragging modal
  */
-export function useOnboarding(token) {
+export function useOnboarding(token, isTemporaryAccount = false) {
   const [onboardingStatus, setOnboardingStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -126,11 +126,13 @@ export function useOnboarding(token) {
   /**
    * Fetch status on mount and when token changes
    */
-  useEffect(() => {
-    if (token) {
+    useEffect(() => {
+    if (token && !isTemporaryAccount) {
       fetchOnboardingStatus();
+    } else if (isTemporaryAccount) {
+      setLoading(false);
     }
-  }, [token, fetchOnboardingStatus]);
+  }, [token, isTemporaryAccount, fetchOnboardingStatus]);
 
   return {
     // State

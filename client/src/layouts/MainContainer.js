@@ -103,8 +103,9 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
     return () => window.removeEventListener('popstate', handlePopState);
   }, [auth?.isTemporaryAccount, currentPageIndex, onExit]);
 
-    // Swipe handlers - disabled during onboarding
-  const isOnboarding = onboarding?.onboardingStatus?.isOnboarding === true;
+      // Swipe handlers - disabled during onboarding
+  // CRITICAL: Temp accounts (free trial) bypass onboarding restrictions
+  const isOnboarding = auth?.isTemporaryAccount ? false : (onboarding?.onboardingStatus?.isOnboarding === true);
   const swipeHandlers = useSwipeable({
     onSwipedLeft: () => !isOnboarding && goToPage(currentPageIndex + 1),
     onSwipedRight: () => !isOnboarding && goToPage(currentPageIndex - 1),
@@ -112,12 +113,16 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
     preventScrollOnSwipe: true,
   });
 
-            const goToPage = useCallback((index) => {
-    // During onboarding, only allow navigation to specific pages:
+                        const goToPage = useCallback((index) => {
+    // CRITICAL: Temp accounts (free trial) bypass onboarding page restrictions
+    // They can navigate to ANY page after saving personal info
+    const isTemporaryAccount = auth?.isTemporaryAccount;
+    
+    // During onboarding (permanent accounts only), only allow specific pages:
     // 0: Chat (for welcome step), 1: PersonalInfo (for get acquainted), 9: Billing (for payment/subscription)
     const allowedPagesDuringOnboarding = [0, 1, 9];
     const isAllowedDuringOnboarding = allowedPagesDuringOnboarding.includes(index);
-    if (isOnboarding && !isAllowedDuringOnboarding) return;
+    if (isOnboarding && !isAllowedDuringOnboarding && !isTemporaryAccount) return;
     const newIndex = Math.max(0, Math.min(index, PAGES.length - 1));
     if (newIndex !== currentPageIndex) {
       // If leaving billing page and not going back to billing, notify App to re-check subscription

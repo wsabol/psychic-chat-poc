@@ -1,5 +1,5 @@
 /**
- * Job Scheduler
+ * Job Scheduler - Fixed Version
  * Initializes and manages scheduled tasks
  * Currently: Daily account cleanup job
  */
@@ -16,54 +16,93 @@ let subscriptionCheckJobHandle = null;
  * Initialize all scheduled jobs
  */
 export function initializeScheduler() {
-
+  try {
+    console.log('[Scheduler] Creating cleanup job...');
+    
     // Schedule account cleanup job to run daily at 2:00 AM UTC
-  // Format: minute hour day month dayOfWeek
-  cleanupJobHandle = cron.schedule('0 2 * * *', async () => {
-    await runAccountCleanupJob();
-  });
+    cleanupJobHandle = cron.schedule('0 2 * * *', 
+      async () => {
+        try {
+          console.log('[Scheduler] Running cleanup job...');
+          await runAccountCleanupJob();
+        } catch (error) {
+          logErrorFromCatch(error, 'scheduler', 'Account cleanup job failed');
+        }
+      },
+      { 
+        scheduled: true,
+        timezone: 'UTC'
+      }
+    );
 
-  // Schedule subscription check job to run every 4 hours
-  // Runs at: 00:00, 04:00, 08:00, 12:00, 16:00, 20:00 UTC
-  subscriptionCheckJobHandle = cron.schedule('0 */4 * * *', async () => {
-    try {
-      await runSubscriptionCheckJob();
-    } catch (error) {
-      logErrorFromCatch(error, 'scheduler', 'Subscription check job failed');
+    console.log('[Scheduler] Creating subscription check job...');
+    
+    // Schedule subscription check job to run every 4 hours
+    subscriptionCheckJobHandle = cron.schedule('0 */4 * * *',
+      async () => {
+        try {
+          console.log('[Scheduler] Running subscription check job...');
+          await runSubscriptionCheckJob();
+        } catch (error) {
+          logErrorFromCatch(error, 'scheduler', 'Subscription check job failed');
+        }
+      },
+      {
+        scheduled: true,
+        timezone: 'UTC'
+      }
+    );
+
+    console.log('[Scheduler] Both jobs scheduled successfully');
+
+    // Optional: For testing, run immediately (non-blocking)
+    if (process.env.CLEANUP_RUN_ON_STARTUP === 'true') {
+      console.log('[Scheduler] Running cleanup job on startup...');
+      setImmediate(() => {
+        runAccountCleanupJob().catch(e => {
+          logErrorFromCatch(e, 'scheduler', 'Run cleanup job on startup');
+        });
+      });
     }
-  });
 
-  // Optional: For testing, run immediately
-  if (process.env.CLEANUP_RUN_ON_STARTUP === 'true') {
-    runAccountCleanupJob().catch(e => {
-      logErrorFromCatch(e, 'scheduler', 'Run cleanup job on startup');
-    });
+    // Optional: Run subscription check on startup for testing (non-blocking)
+    if (process.env.SUBSCRIPTION_CHECK_RUN_ON_STARTUP === 'true') {
+      console.log('[Scheduler] Running subscription check on startup...');
+      setImmediate(() => {
+        runSubscriptionCheckJob().catch(e => {
+          logErrorFromCatch(e, 'scheduler', 'Run subscription check on startup');
+        });
+      });
+    }
+
+    return {
+      cleanup: cleanupJobHandle,
+      subscriptionCheck: subscriptionCheckJobHandle
+    };
+  } catch (error) {
+    console.error('[Scheduler] FATAL ERROR during initialization:');
+    console.error('Message:', error.message);
+    console.error('Stack:', error.stack);
+    throw error;
   }
-
-  // Optional: Run subscription check on startup for testing
-  if (process.env.SUBSCRIPTION_CHECK_RUN_ON_STARTUP === 'true') {
-    runSubscriptionCheckJob().catch(e => {
-      logErrorFromCatch(e, 'scheduler', 'Run subscription check on startup');
-    });
-  }
-
-  return {
-    cleanup: cleanupJobHandle,
-    subscriptionCheck: subscriptionCheckJobHandle
-  };
 }
 
 /**
  * Stop all scheduled jobs
  */
 export function stopScheduler() {
-  
-  if (cleanupJobHandle) {
-    cleanupJobHandle.stop();
-  }
+  try {
+    if (cleanupJobHandle) {
+      cleanupJobHandle.stop();
+      cleanupJobHandle.destroy();
+    }
 
-  if (subscriptionCheckJobHandle) {
-    subscriptionCheckJobHandle.stop();
+    if (subscriptionCheckJobHandle) {
+      subscriptionCheckJobHandle.stop();
+      subscriptionCheckJobHandle.destroy();
+    }
+  } catch (error) {
+    console.error('[Scheduler] Error stopping scheduler:', error.message);
   }
 }
 

@@ -101,7 +101,7 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
             // Save personal info FIRST and wait for completion
       await handleSavePersonalInfo(dataToSend);
 
-      // ONLY trigger astrology calculation AFTER personal info is confirmed saved
+            // ONLY trigger astrology calculation AFTER personal info is confirmed saved
       // This ensures the database has the data before calculations start
       if (tempAccountConfig.hasCompleteAstrologyData(formData)) {
         // Wait a moment to ensure database persistence
@@ -109,7 +109,7 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
         // NOW trigger astrology calculation
         const syncResult = await triggerAstrologySync();
         if (!syncResult?.success) {
-          console.warn('[PERSONAL-INFO] Astrology sync may have failed, continuing anyway');
+          logErrorFromCatch('[PERSONAL-INFO] Astrology sync may have failed, continuing anyway');
         }
       }
 
@@ -128,9 +128,12 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
       const postSaveAction = tempAccountConfig.getPostSaveAction();
       if (postSaveAction.shouldNavigate && onNavigateToPage) {
         // Poll for astrology completion before navigating
+                // For temp accounts: use longer polling (60 attempts × 200ms = 12 seconds max)
+        const pollAttempts = isTemporaryAccount ? 60 : TIMING.ASTROLOGY_POLL_MAX_ATTEMPTS;
+        const pollInterval = isTemporaryAccount ? 200 : TIMING.ASTROLOGY_POLL_INTERVAL_MS;
         await pollForAstrology(userId, token, API_URL, {
-          maxAttempts: TIMING.ASTROLOGY_POLL_MAX_ATTEMPTS,
-          intervalMs: TIMING.ASTROLOGY_POLL_INTERVAL_MS,
+          maxAttempts: pollAttempts,
+          intervalMs: pollInterval,
           onReady: () => {
             onNavigateToPage(postSaveAction.navigationTarget);
           },

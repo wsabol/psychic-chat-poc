@@ -3,6 +3,7 @@ import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * Billing status checks - payment methods and subscriptions
+ * WITH TIMEOUT TO PREVENT HANGING
  */
 export function useAuthBilling() {
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
@@ -14,24 +15,36 @@ export function useAuthBilling() {
   const checkPaymentMethod = useCallback(async (idToken, userId) => {
     try {
       setPaymentMethodChecking(true);
-      const response = await fetch('http://localhost:3000/billing/payment-methods', {
-        headers: { 'Authorization': `Bearer ${idToken}` }
-      });
+      
+      // Add 8 second timeout to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+      
+      try {
+        const response = await fetch('http://localhost:3000/billing/payment-methods', {
+          headers: { 'Authorization': `Bearer ${idToken}` },
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
 
-      if (response.ok) {
-        const data = await response.json();
-        // User has valid payment method if:
-        // - Has at least one card, OR
-        // - Has at least one VERIFIED bank account
-        const hasCard = data.cards && data.cards.length > 0;
-        const hasVerifiedBank = data.bankAccounts && data.bankAccounts.some(
-          bank => bank.us_bank_account?.verification_status === 'verified'
-        );
-        const hasValid = hasCard || hasVerifiedBank;
+        if (response.ok) {
+          const data = await response.json();
+          const hasCard = data.cards && data.cards.length > 0;
+          const hasVerifiedBank = data.bankAccounts && data.bankAccounts.some(
+            bank => bank.us_bank_account?.verification_status === 'verified'
+          );
+          const hasValid = hasCard || hasVerifiedBank;
 
-        setHasValidPaymentMethod(hasValid);
-        return hasValid;
-      } else {
+          setHasValidPaymentMethod(hasValid);
+          return hasValid;
+        } else {
+          setHasValidPaymentMethod(false);
+          return false;
+        }
+      } catch (timeoutErr) {
+        clearTimeout(timeoutId);
+        // Timeout or abort - assume no payment method and continue
+        logErrorFromCatch('[AUTH] Payment method check timed out', timeoutErr);
         setHasValidPaymentMethod(false);
         return false;
       }
@@ -48,18 +61,31 @@ export function useAuthBilling() {
   const checkSubscriptionStatus = useCallback(async (idToken, userId) => {
     try {
       setSubscriptionChecking(true);
-      const response = await fetch('http://localhost:3000/billing/subscriptions', {
-        headers: { 'Authorization': `Bearer ${idToken}` }
-      });
+      
+      // Add 8 second timeout to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+      
+      try {
+        const response = await fetch('http://localhost:3000/billing/subscriptions', {
+          headers: { 'Authorization': `Bearer ${idToken}` },
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
 
-                  if (response.ok) {
-        const subscriptions = await response.json();
-        // Check if user has any active subscriptions
-        // Include subscriptions with status 'active' (even if cancel_at_period_end is true, they're still active until period ends)
-        const hasActive = subscriptions.some(sub => sub.status === 'active');
-        setHasActiveSubscription(hasActive);
-        return hasActive;
-      } else {
+        if (response.ok) {
+          const subscriptions = await response.json();
+          const hasActive = subscriptions.some(sub => sub.status === 'active');
+          setHasActiveSubscription(hasActive);
+          return hasActive;
+        } else {
+          setHasActiveSubscription(false);
+          return false;
+        }
+      } catch (timeoutErr) {
+        clearTimeout(timeoutId);
+        // Timeout or abort - assume no subscription and continue
+        logErrorFromCatch('[AUTH] Subscription check timed out', timeoutErr);
         setHasActiveSubscription(false);
         return false;
       }
@@ -72,13 +98,10 @@ export function useAuthBilling() {
     }
   }, []);
 
-  // Check both payment method and subscription SEQUENTIALLY (not concurrently)
-  // This prevents duplicate Stripe customer creation from concurrent calls
+  // Check both payment method and subscription SEQUENTIALLY with timeouts
   const checkBillingStatus = useCallback(async (idToken, userId) => {
     try {
-      // Check payment method FIRST
       await checkPaymentMethod(idToken, userId);
-      // Then check subscription AFTER payment check completes
       await checkSubscriptionStatus(idToken, userId);
     } catch (err) {
       logErrorFromCatch('[AUTH] Error checking billing status:', err);
@@ -86,7 +109,6 @@ export function useAuthBilling() {
   }, [checkPaymentMethod, checkSubscriptionStatus]);
 
   // Re-check only subscription (not payment method)
-  // Called when user returns from billing page after adding payment method
   const recheckSubscriptionOnly = useCallback(async (idToken, userId) => {
     try {
       await checkSubscriptionStatus(idToken, userId);
@@ -112,4 +134,3 @@ export function useAuthBilling() {
     resetBillingState,
   };
 }
-

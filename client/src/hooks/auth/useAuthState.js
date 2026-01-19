@@ -45,10 +45,13 @@ export function useAuthState(checkBillingStatus) {
           const isEmail = firebaseUser.providerData.some(p => p.providerId === 'password');
           setIsEmailUser(isEmail);
 
-          if (isTemp) {
+                    if (isTemp) {
+            // TEMPORARY ACCOUNTS: Skip billing checks, go straight to authenticated
             setIsFirstTime(true);
             setIsAuthenticated(true);
             setLoading(false);
+            // Don't call checkBillingStatus for temporary accounts
+            return;
           } else {
             setIsFirstTime(false);
             localStorage.setItem('psychic_app_registered', 'true');
