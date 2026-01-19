@@ -1,4 +1,5 @@
 import twilio from 'twilio';
+import { logErrorFromCatch } from './errorLogger.js';
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -9,8 +10,12 @@ let client = null;
 try {
   if (accountSid && authToken) {
     client = twilio(accountSid, authToken);
+
+  } else {
+
   }
 } catch (err) {
+  console.error('❌ Failed to initialize Twilio:', err.message);
 }
 
 /**
@@ -31,13 +36,15 @@ export async function sendSMS(toPhoneNumber, code) {
       from: twilioPhoneNumber,
       to: toPhoneNumber
     });
-
     return {
       success: true,
       messageId: message.sid
     };
   } catch (error) {
-    logErrorFromCatch(error, 'app', 'Error handling');
+    console.error('❌ SMS send failed:', error.message);
+    console.error('   Error code:', error.code);
+    console.error('   Status:', error.status);
+    logErrorFromCatch(error, 'app', 'SMS Service');
     return {
       success: false,
       error: error.message
@@ -51,29 +58,30 @@ export async function sendSMS(toPhoneNumber, code) {
 export async function sendPasswordResetSMS(toPhoneNumber, code) {
   try {
     if (!client || !twilioPhoneNumber) {
+
       return {
         success: true,
         sid: 'MOCK-' + code,
         message: 'SMS sent (mock - SMS service not configured)'
       };
     }
-
     const message = await client.messages.create({
       body: `Your password reset code is: ${code}. This code will expire in 15 minutes. If you did not request this, please ignore.`,
       from: twilioPhoneNumber,
       to: toPhoneNumber
     });
-
     return {
       success: true,
       messageId: message.sid
     };
   } catch (error) {
-    logErrorFromCatch(error, 'app', 'Error handling');
+    console.error('❌ Password reset SMS send failed:', error.message);
+    console.error('   Error code:', error.code);
+    console.error('   Status:', error.status);
+    logErrorFromCatch(error, 'app', 'SMS Service');
     return {
       success: false,
       error: error.message
     };
   }
 }
-

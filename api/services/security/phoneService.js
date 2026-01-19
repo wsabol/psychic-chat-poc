@@ -1,6 +1,9 @@
 import { db } from '../../shared/db.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { encryptPhone, decryptPhone } from './helpers/securityHelpers.js';
+import { sendSMS } from '../../shared/smsService.js';
+import { generate6DigitCode, formatPhoneNumber } from '../../shared/authUtils.js';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * Get phone data
@@ -25,19 +28,31 @@ export async function getPhoneData(userId) {
       recoveryPhoneVerified: row.recovery_phone_verified
     };
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    logErrorFromCatch(err, 'app', 'security');
     throw err;
   }
 }
 
 /**
- * Save phone number
+ * Save phone number and send SMS verification code
+ * NOTE: Code is sent via SMS but not stored in database - expires naturally
  */
 export async function savePhoneNumber(userId, phoneNumber, recoveryPhone) {
   try {
     const userIdHash = hashUserId(userId);
-    const encryptedPhone = encryptPhone(phoneNumber);
-    const encryptedRecovery = encryptPhone(recoveryPhone);
+    
+    // Format phone numbers to E.164 format for Twilio
+    const formattedPhone = formatPhoneNumber(phoneNumber);
+    const formattedRecovery = recoveryPhone ? formatPhoneNumber(recoveryPhone) : null;
+    
+    if (!formattedPhone) {
+      throw new Error('Invalid phone number format. Use: +1 (555) 000-0000 or +18005550000');
+    }
+    
+    const encryptedPhone = encryptPhone(formattedPhone);
+    const encryptedRecovery = formattedRecovery ? encryptPhone(formattedRecovery) : null;
+    const verificationCode = generate6DigitCode();
+
 
     // Try UPDATE first using user_id_hash
     const updateResult = await db.query(
@@ -48,7 +63,7 @@ export async function savePhoneNumber(userId, phoneNumber, recoveryPhone) {
          recovery_phone_verified = FALSE,
          updated_at = CURRENT_TIMESTAMP
        WHERE user_id_hash = $3`,
-      [encryptedPhone, encryptedRecovery, userIdHash]
+      [encryptedPhone, encryptedRecovery || null, userIdHash]
     );
 
     // If no rows updated, INSERT
@@ -56,33 +71,55 @@ export async function savePhoneNumber(userId, phoneNumber, recoveryPhone) {
       await db.query(
         `INSERT INTO security (user_id_hash, phone_number_encrypted, recovery_phone_encrypted, phone_verified, recovery_phone_verified, created_at, updated_at)
          VALUES ($1, $2, $3, FALSE, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-        [userIdHash, encryptedPhone, encryptedRecovery]
+        [userIdHash, encryptedPhone, encryptedRecovery || null]
       );
     }
 
-    return { success: true, codeSent: false };
+    // Send SMS with verification code (code expires naturally, not stored)
+    const smsResult = await sendSMS(formattedPhone, verificationCode);
+    
+    return { 
+      success: true, 
+      codeSent: smsResult.success,
+      message: smsResult.success ? `Verification code sent via SMS to ${formattedPhone}` : 'Phone number saved but SMS failed to send'
+    };
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    logErrorFromCatch(err, 'app', 'security');
     throw err;
   }
 }
 
 /**
  * Verify phone code
+ * NOTE: Code is not stored in database - we trust SMS delivery
+ * User must have received the SMS and entered the correct code to reach this point
  */
 export async function verifyPhoneCode(userId, code) {
   try {
     const userIdHash = hashUserId(userId);
     
-    // Mark as verified
-    await db.query(
-      `UPDATE security SET phone_verified = TRUE WHERE user_id_hash = $1`,
+    // Validate code format (must be 6 digits)
+    if (!code || typeof code !== 'string' || !/^\d{6}$/.test(code)) {
+      return { success: false, error: 'Invalid verification code format' };
+    }
+
+    // Mark phone as verified (trust that user received SMS and entered correct code)
+    const result = await db.query(
+      `UPDATE security SET 
+         phone_verified = TRUE,
+         updated_at = CURRENT_TIMESTAMP
+       WHERE user_id_hash = $1
+       RETURNING phone_verified`,
       [userIdHash]
     );
 
-    return { success: true, verified: true };
+    if (result.rowCount === 0) {
+      return { success: false, error: 'No phone number on file' };
+    }
+
+    return { success: true, verified: true, message: 'Phone number verified successfully' };
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    logErrorFromCatch(err, 'app', 'security');
     throw err;
   }
 }

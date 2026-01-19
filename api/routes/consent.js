@@ -17,6 +17,28 @@ const CURRENT_TERMS_VERSION = getCurrentTermsVersion();
 const CURRENT_PRIVACY_VERSION = getCurrentPrivacyVersion();
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
 
+// Handle CORS preflight requests for POST endpoints
+router.options('/record-consent/:userId', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.sendStatus(200);
+});
+
+router.options('/consent/terms-acceptance', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.sendStatus(200);
+});
+
+router.options('/consents', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.sendStatus(200);
+});
+
 /**
  * POST /auth/check-consent/:userId
  * Check if user has accepted T&C and privacy
@@ -36,6 +58,7 @@ router.post('/check-consent/:userId', async (req, res) => {
 /**
  * POST /auth/record-consent/:userId
  * Record user consent
+ * NOTE: Public endpoint - can be called during signup before authentication
  */
 router.post('/record-consent/:userId', async (req, res) => {
   try {
@@ -62,6 +85,7 @@ router.post('/record-consent/:userId', async (req, res) => {
  * POST /auth/consent/terms-acceptance
  * Record or update user T&C acceptance during registration
  * Called by client during signup flow
+ * NOTE: Public endpoint - can be called during signup before authentication
  */
 router.post('/consent/terms-acceptance', async (req, res) => {
   try {
@@ -199,6 +223,7 @@ router.post('/consent/terms-acceptance', async (req, res) => {
 /**
  * POST /auth/consents
  * Record or update user consent for data processing
+ * NOTE: Public endpoint - can be called during signup before authentication
  */
 router.post('/consents', async (req, res) => {
   try {

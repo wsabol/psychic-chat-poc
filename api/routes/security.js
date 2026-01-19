@@ -3,6 +3,7 @@ import { authenticateToken } from '../middleware/auth.js';
 import { db } from '../shared/db.js';
 import * as securityService from '../services/securityService.js';
 import { validationError, forbiddenError, serverError } from '../utils/responses.js';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 const router = express.Router();
 
@@ -48,8 +49,8 @@ router.post('/track-device/:userId', async (req, res) => {
     );
 
     res.json({ success: true, device: result.rows[0] });
-  } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    } catch (err) {
+    logErrorFromCatch(err, 'app', 'security');
     return serverError(res, err.message);
   }
 });
@@ -69,7 +70,7 @@ router.get('/devices/:userId', async (req, res) => {
     const result = await securityService.getDevices(userId);
     res.json(result);
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    logErrorFromCatch(err, 'app', 'security');
     return serverError(res, err.message);
   }
 });
@@ -89,7 +90,7 @@ router.delete('/devices/:userId/:deviceId', async (req, res) => {
     const result = await securityService.logoutDevice(userId, deviceId);
     res.json(result);
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    logErrorFromCatch(err, 'app', 'security');
     return serverError(res, err.message);
   }
 });
@@ -109,7 +110,7 @@ router.get('/phone/:userId', async (req, res) => {
     const data = await securityService.getPhoneData(userId);
     res.json(data);
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    logErrorFromCatch(err, 'app', 'security');
     return serverError(res, err.message);
   }
 });
@@ -134,7 +135,7 @@ router.post('/phone/:userId', async (req, res) => {
     const result = await securityService.savePhoneNumber(userId, phoneNumber, recoveryPhone);
     res.json(result);
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    logErrorFromCatch(err, 'app', 'security');
     return serverError(res, err.message);
   }
 });
@@ -158,8 +159,8 @@ router.post('/phone/:userId/verify', async (req, res) => {
 
     const result = await securityService.verifyPhoneCode(userId, code);
     res.json(result);
-  } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    } catch (err) {
+    logErrorFromCatch(err, 'app', 'security');
     return validationError(res, err.message);
   }
 });
@@ -179,7 +180,7 @@ router.get('/email/:userId', async (req, res) => {
     const data = await securityService.getEmailData(userId);
     res.json(data);
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    logErrorFromCatch(err, 'app', 'security');
     return serverError(res, err.message);
   }
 });
@@ -204,7 +205,7 @@ router.post('/email/:userId', async (req, res) => {
     const result = await securityService.saveRecoveryEmail(userId, recoveryEmail);
     res.json(result);
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    logErrorFromCatch(err, 'app', 'security');
     return serverError(res, err.message);
   }
 });
@@ -229,7 +230,7 @@ router.post('/email/:userId/verify', async (req, res) => {
     const result = await securityService.verifyEmailCode(userId, code);
     res.json(result);
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    logErrorFromCatch(err, 'app', 'security');
     return validationError(res, err.message);
   }
 });
@@ -249,7 +250,7 @@ router.delete('/email/:userId', async (req, res) => {
     const result = await securityService.removeRecoveryEmail(userId);
     res.json(result);
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    logErrorFromCatch(err, 'app', 'security');
     return serverError(res, err.message);
   }
 });
@@ -268,8 +269,8 @@ router.post('/password-changed/:userId', async (req, res) => {
 
     const result = await securityService.recordPasswordChange(userId);
     res.json(result);
-  } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    } catch (err) {
+    logErrorFromCatch(err, 'app', 'security');
     return serverError(res, err.message);
   }
 });
@@ -289,7 +290,7 @@ router.get('/2fa-settings/:userId', async (req, res) => {
     const settings = await securityService.get2FASettings(userId);
     res.json({ success: true, settings });
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    logErrorFromCatch(err, 'app', 'security');
     return serverError(res, err.message);
   }
 });
@@ -323,7 +324,7 @@ router.post('/2fa-settings/:userId', async (req, res) => {
       message: enabled ? '2FA enabled' : '2FA disabled'
     });
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    logErrorFromCatch(err, 'app', 'security');
     return serverError(res, err.message);
   }
 });
@@ -355,7 +356,7 @@ router.post('/session-preference/:userId', async (req, res) => {
         : 'You will log out when closing the browser'
     });
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    logErrorFromCatch(err, 'app', 'security');
     return serverError(res, err.message);
   }
 });
@@ -382,7 +383,7 @@ router.get('/verification-methods/:userId', async (req, res) => {
     const methods = await securityService.getVerificationMethods(userId, userEmail);
     res.json({ success: true, methods });
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    logErrorFromCatch(err, 'app', 'security');
     return serverError(res, err.message);
   }
 });
