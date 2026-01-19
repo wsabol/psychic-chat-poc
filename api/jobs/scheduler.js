@@ -17,13 +17,11 @@ let subscriptionCheckJobHandle = null;
  */
 export function initializeScheduler() {
   try {
-    console.log('[Scheduler] Creating cleanup job...');
     
     // Schedule account cleanup job to run daily at 2:00 AM UTC
     cleanupJobHandle = cron.schedule('0 2 * * *', 
       async () => {
         try {
-          console.log('[Scheduler] Running cleanup job...');
           await runAccountCleanupJob();
         } catch (error) {
           logErrorFromCatch(error, 'scheduler', 'Account cleanup job failed');
@@ -34,14 +32,11 @@ export function initializeScheduler() {
         timezone: 'UTC'
       }
     );
-
-    console.log('[Scheduler] Creating subscription check job...');
     
     // Schedule subscription check job to run every 4 hours
     subscriptionCheckJobHandle = cron.schedule('0 */4 * * *',
       async () => {
         try {
-          console.log('[Scheduler] Running subscription check job...');
           await runSubscriptionCheckJob();
         } catch (error) {
           logErrorFromCatch(error, 'scheduler', 'Subscription check job failed');
@@ -53,11 +48,8 @@ export function initializeScheduler() {
       }
     );
 
-    console.log('[Scheduler] Both jobs scheduled successfully');
-
     // Optional: For testing, run immediately (non-blocking)
     if (process.env.CLEANUP_RUN_ON_STARTUP === 'true') {
-      console.log('[Scheduler] Running cleanup job on startup...');
       setImmediate(() => {
         runAccountCleanupJob().catch(e => {
           logErrorFromCatch(e, 'scheduler', 'Run cleanup job on startup');
@@ -67,7 +59,6 @@ export function initializeScheduler() {
 
     // Optional: Run subscription check on startup for testing (non-blocking)
     if (process.env.SUBSCRIPTION_CHECK_RUN_ON_STARTUP === 'true') {
-      console.log('[Scheduler] Running subscription check on startup...');
       setImmediate(() => {
         runSubscriptionCheckJob().catch(e => {
           logErrorFromCatch(e, 'scheduler', 'Run subscription check on startup');

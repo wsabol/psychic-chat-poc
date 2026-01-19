@@ -12,7 +12,6 @@ async function testDecryption() {
 
   try {
     await client.connect();
-    console.log('✓ Connected to database');
 
     const result = await client.query(`
       SELECT 
@@ -22,13 +21,6 @@ async function testDecryption() {
       LIMIT 1;
     `, [process.env.ENCRYPTION_KEY]);
 
-    if (result.rows.length === 0) {
-      console.log('❌ No records in user_personal_info');
-      return;
-    }
-
-    console.log('✓ Decryption successful!');
-    console.log('Result:', result.rows[0]);
   } catch (err) {
     console.error('❌ Error:', err.message);
   } finally {

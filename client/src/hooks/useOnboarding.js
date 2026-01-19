@@ -41,12 +41,12 @@ export function useOnboarding(token, isTemporaryAccount = false) {
       return null;
     }
 
-          try {
-        setError(null);
-        setLoading(true);
-        const data = await billingFetch('/billing/onboarding-status', { token });
-        setOnboardingStatus(data);
-        return data;
+    try {
+      setError(null);
+      setLoading(true);
+      const data = await billingFetch('/billing/onboarding-status', { token });
+      setOnboardingStatus(data);
+      return data;
     } catch (err) {
       logErrorFromCatch('[ONBOARDING] Fetch status error:', err);
       setError(err.message);
@@ -126,7 +126,7 @@ export function useOnboarding(token, isTemporaryAccount = false) {
   /**
    * Fetch status on mount and when token changes
    */
-    useEffect(() => {
+  useEffect(() => {
     if (token && !isTemporaryAccount) {
       fetchOnboardingStatus();
     } else if (isTemporaryAccount) {
@@ -150,4 +150,3 @@ export function useOnboarding(token, isTemporaryAccount = false) {
     handleStartDrag,
   };
 }
-

@@ -12,12 +12,7 @@ async function getClient() {
         connectPromise = (async () => {
             // Use localhost for development, redis service for Docker production
             const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-            console.log(`[REDIS] Connecting to: ${redisUrl}`);
             client = createClient({ url: redisUrl });
-            
-            client.on('error', (err) => console.error('[REDIS] Client error:', err));
-            client.on('connect', () => console.log('[REDIS] Connected'));
-            client.on('ready', () => console.log('[REDIS] Ready'));
             
             await client.connect();
             return client;

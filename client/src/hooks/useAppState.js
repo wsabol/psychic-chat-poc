@@ -16,7 +16,7 @@ import { auth } from '../firebase';
 export function useAppState() {
   useTokenRefresh();
   
-    // Navigation state
+  // Navigation state
   const [skipPaymentCheck, setSkipPaymentCheck] = useState(true);
   const [skipSubscriptionCheck, setSkipSubscriptionCheck] = useState(true);
   const [startingPage, setStartingPage] = useState(0);
@@ -42,10 +42,10 @@ export function useAppState() {
     if (authState.isAuthenticated && previousAuthState !== authState.isAuthenticated) {
       modals.setShowRegisterMode(false);
     }
-    setPreviousAuthState(authState.isAuthenticated);
+        setPreviousAuthState(authState.isAuthenticated);
   }, [authState.isAuthenticated, previousAuthState, modals]);
 
-    // Effect: Check admin status after authentication
+  // Effect: Check admin status after authentication
   useEffect(() => {
     if (authState.isAuthenticated && authState.token && authState.authUserId) {
       // Check if user is admin
@@ -57,7 +57,7 @@ export function useAppState() {
     }
   }, [authState.isAuthenticated, authState.token, authState.authUserId, authState.authEmail]);
 
-    // Effect: Start email verification polling and cleanup old temp account on verification
+  // Effect: Start email verification polling and cleanup old temp account on verification
   useEffect(() => {
     if (isVerification && auth.currentUser) {
       const onVerified = async () => {
@@ -74,30 +74,44 @@ export function useAppState() {
           }
         } catch (err) {}
       };
-      emailVerification.startVerificationPolling(auth.currentUser, 40, onVerified);
+            emailVerification.startVerificationPolling(auth.currentUser, 40, onVerified);
     }
   }, [isVerification, emailVerification, authState]);
 
-  // Effect: Auto-navigate new users to payment methods
+  // Effect: Route established users with COMPLETED onboarding to Chat
+  // CRITICAL: If onboarding_completed = true, user should ALWAYS go to Chat (index 0)
   useEffect(() => {
-    if (authState.emailVerified && !authState.isTemporaryAccount && onboarding.onboardingStatus?.isOnboarding) {
+    // Only for authenticated, non-temp users with loaded onboarding status
+    if (authState.isAuthenticated && !authState.isTemporaryAccount && onboarding.onboardingStatus !== null) {
+      // Check if onboarding is COMPLETE (isOnboarding = false)
+      if (onboarding.onboardingStatus?.isOnboarding === false) {
+        setStartingPage(0); // Chat page
+        setSkipPaymentCheck(true);
+        setSkipSubscriptionCheck(true);
+      }
+    }
+  }, [authState.isAuthenticated, authState.isTemporaryAccount, onboarding.onboardingStatus]);
+
+  // Effect: Auto-navigate NEW users to payment methods (only if still onboarding)
+  useEffect(() => {
+    if (authState.emailVerified && !authState.isTemporaryAccount && onboarding.onboardingStatus?.isOnboarding === true) {
       setSkipPaymentCheck(true);
       setSkipSubscriptionCheck(true);
             setStartingPage(9); // billing page is now index 9 after adding admin
     }
   }, [authState.emailVerified, authState.isTemporaryAccount, onboarding.onboardingStatus?.isOnboarding]);
 
-  // Effect: Update onboarding when subscription completes
+  // Effect: Route new users with active subscription to Personal Info page (only if still onboarding)
   useEffect(() => {
-    if (authState.hasActiveSubscription && skipSubscriptionCheck) {
+    if (authState.hasActiveSubscription && skipSubscriptionCheck && onboarding.onboardingStatus?.isOnboarding === true) {
       setSkipSubscriptionCheck(false);
       setStartingPage(1);  // ← PersonalInfoPage (Get Acquainted)
       if (onboarding.updateOnboardingStep) {
         onboarding.updateOnboardingStep('subscription').catch(err => {
-        });
+                });
       }
     }
-    }, [authState.hasActiveSubscription, skipSubscriptionCheck, onboarding]);
+  }, [authState.hasActiveSubscription, skipSubscriptionCheck, onboarding.onboardingStatus?.isOnboarding, onboarding]);
 
   // CRITICAL: Ensure temporary accounts ALWAYS stay on ChatPage (index 0)
   // This prevents any effect or initialization from sending them to PersonalInfoPage
@@ -120,11 +134,11 @@ export function useAppState() {
     return false;
   }, [emailVerification]);
 
-  const handleSignOutFromVerification = useCallback(async () => {
+    const handleSignOutFromVerification = useCallback(async () => {
     await authState.handleLogout();
   }, [authState]);
 
-        const handleNavigateToBilling = useCallback(() => {
+  const handleNavigateToBilling = useCallback(() => {
     setSkipPaymentCheck(true);
     setSkipSubscriptionCheck(true);
     setStartingPage(9); // billing page is now index 9 after adding admin
@@ -138,7 +152,7 @@ export function useAppState() {
     }
   }, [authState]);
 
-        const handleNavigateToSubscriptions = useCallback(() => {
+  const handleNavigateToSubscriptions = useCallback(() => {
     setSkipSubscriptionCheck(true);
     setStartingPage(9); // billing page is now index 9 after adding admin
   }, []);
@@ -166,7 +180,7 @@ export function useAppState() {
       case 'personal_info':
         setStartingPage(1);
         break;
-      case 'welcome':
+            case 'welcome':
         setStartingPage(0);
         if (onboarding.updateOnboardingStep) {
           onboarding.updateOnboardingStep('welcome').catch(err => {});
@@ -175,7 +189,7 @@ export function useAppState() {
       case 'security_settings':
         setStartingPage(6);
         break;
-            default:
+      default:
         break;
     }
   }, [onboarding, authState.isTemporaryAccount]);

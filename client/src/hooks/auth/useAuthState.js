@@ -56,11 +56,14 @@ export function useAuthState(checkBillingStatus) {
             setIsFirstTime(false);
             localStorage.setItem('psychic_app_registered', 'true');
             
-            // Track device on login (non-blocking) - server will detect IP via req.ip
+                        // Track device on login (non-blocking) - server will detect IP via req.ip
             fetch(`${API_URL}/security/track-device/${firebaseUser.uid}`, {
               method: 'POST',
               headers: { 'Authorization': `Bearer ${idToken}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify({})
+              body: JSON.stringify({
+                deviceName: navigator.userAgent || 'Unknown Device',
+                ipAddress: 'auto-detect' // Backend detects from req.ip
+              })
             }).catch(() => {});
 
             // Check email verification
@@ -187,8 +190,8 @@ export function useAuthState(checkBillingStatus) {
     setTempUserId(null);
     setIsAuthenticated(true);
     
-    // If admin completed 2FA from new IP, trust the device
-        const adminNewIP = sessionStorage.getItem('admin_new_ip');
+        // If admin completed 2FA from new IP, trust the device
+    const adminNewIP = sessionStorage.getItem('admin_new_ip');
     if (adminNewIP) {
       try {
         const { browserInfo } = JSON.parse(adminNewIP);
@@ -199,10 +202,10 @@ export function useAuthState(checkBillingStatus) {
             'Authorization': `Bearer ${idToken}`,
             'Content-Type': 'application/json'
           },
-                    body: JSON.stringify({ browserInfo })
+          body: JSON.stringify({ browserInfo })
         }).catch(() => {});
         sessionStorage.removeItem('admin_new_ip');
-            } catch (err) {
+      } catch (err) {
         // Trust device request is non-critical, silently handle error
       }
     }

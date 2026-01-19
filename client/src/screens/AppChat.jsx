@@ -61,7 +61,6 @@ export function AppChat({ state }) {
         const fetchConsentStatus = async () => {
       try {
         const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
-        console.log('[CONSENT-CHECK] Fetching:', `${API_URL}/auth/check-consent/${user.uid}`);
         const response = await fetch(`${API_URL}/auth/check-consent/${user.uid}`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${user.token}` }
