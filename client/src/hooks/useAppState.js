@@ -178,7 +178,7 @@ export function useAppState() {
     setStartingPage(9); // billing page is now index 9 after adding admin
   }, []);
 
-    const handleOnboardingNavigate = useCallback((step) => {
+      const handleOnboardingNavigate = useCallback((step) => {
     // CRITICAL: This handler is called when user clicks a step in the OnboardingModal
     // For temporary accounts (free trial), DO NOT navigate to PersonalInfoPage automatically
     // Temp accounts use ChatPage's 60-second timer flow - they explicitly choose to enter birth info
@@ -214,7 +214,7 @@ export function useAppState() {
       default:
         break;
     }
-  }, [onboarding, authState.isTemporaryAccount]);
+  }, [authState.isTemporaryAccount]);
 
     const handleOnboardingClose = useCallback(async () => {
     try {

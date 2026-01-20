@@ -84,7 +84,7 @@ export function AppChat({ state }) {
     if (!authState.isTemporaryAccount) {
       fetchConsentStatus();
     }
-  }, [user?.uid, user?.token, authState?.isTemporaryAccount]);
+  }, [user, authState.isTemporaryAccount, authState.userProfileLoaded]);
 
   // Fetch user's language preference from DB when authenticated
   useLanguagePreference();

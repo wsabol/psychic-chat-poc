@@ -171,9 +171,17 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
   // ============================================================
   // VALIDATION
   // ============================================================
-  const validateFields = () => {
+    const validateFields = () => {
     const validation = validatePersonalInfoForm(formData, isTemporaryAccount, t);
     return validation.errors;
+  };
+
+  const handleLastFieldKeyDown = (e) => {
+    // Only submit on Enter key on the last field (addressPreference)
+    if (e.key === 'Enter' && !loading) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
   };
 
   // ============================================================
@@ -300,11 +308,12 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
               optional={isTemporaryAccount}
               error={fieldErrors.sex}
             />
-            <FormInput
+                        <FormInput
               label="How should the oracle address you?"
               name="addressPreference"
               value={formData.addressPreference}
               onChange={handleChange}
+              onKeyDown={handleLastFieldKeyDown}
               optional
               placeholder="e.g., Alex, Sarah"
             />
