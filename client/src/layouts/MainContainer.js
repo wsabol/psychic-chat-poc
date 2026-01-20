@@ -18,6 +18,8 @@ import SecurityPage from '../pages/SecurityPage';
 import SettingsPage from '../pages/SettingsPage';
 import BillingPage from '../pages/BillingPage';
 import AdminPage from '../pages/AdminPage';
+import { useModeDetection } from './MainContainer/hooks/useModeDetection';
+import { useModeRules } from './MainContainer/hooks/useModeRules';
 import './MainContainer.css';
 
 // Define all pages in order (matches menu order)
@@ -53,9 +55,11 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
   const currentPage = PAGES[currentPageIndex];
 
 // Only apply startingPage during onboarding - once complete, user has full nav control
-  useEffect(() => {
+    useEffect(() => {
     const isStillOnboarding = onboarding?.onboardingStatus?.isOnboarding === true;
+    console.log('[MAIN-CONTAINER] startingPage effect - onboarding:', isStillOnboarding, 'startingPage:', startingPage, 'currentPageIndex:', currentPageIndex);
     if (isStillOnboarding && startingPage !== currentPageIndex) {
+      console.log('[MAIN-CONTAINER] Resetting to startingPage:', startingPage);
       setCurrentPageIndex(startingPage);
     }
   }, [startingPage, currentPageIndex, onboarding?.onboardingStatus?.isOnboarding]);
@@ -81,16 +85,20 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
     }
   }, [lastScrollY]);
 
-  // Browser back button support - for temp accounts, exit instead of navigating
+    // Detect current application mode (free trial, onboarding, or normal)
+  const currentMode = useModeDetection(auth, onboarding);
+  const modeRules = useModeRules(currentMode);
+
+  // Browser back button support - behavior depends on mode
   useEffect(() => {
     const handlePopState = (e) => {
-      // For temp accounts, back button triggers exit (show ThankYouScreen)
-      if (auth?.isTemporaryAccount && onExit) {
+      // If mode says back button should exit, trigger exit (free trial mode)
+      if (modeRules.backButtonShouldExit() && onExit) {
         onExit();
         return;
       }
       
-      // For permanent accounts, allow normal page navigation
+      // Otherwise allow normal page navigation
       if (e.state?.pageIndex !== undefined) {
         setCurrentPageIndex(e.state.pageIndex);
       }
@@ -101,39 +109,40 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
     window.addEventListener('popstate', handlePopState);
 
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [auth?.isTemporaryAccount, currentPageIndex, onExit]);
+  }, [currentMode, modeRules, currentPageIndex, onExit]);
 
-      // Swipe handlers - disabled during onboarding
-  // CRITICAL: Temp accounts (free trial) bypass onboarding restrictions
-  const isOnboarding = auth?.isTemporaryAccount ? false : (onboarding?.onboardingStatus?.isOnboarding === true);
+  // Swipe handlers - only enabled for modes that allow it
   const swipeHandlers = useSwipeable({
-    onSwipedLeft: () => !isOnboarding && goToPage(currentPageIndex + 1),
-    onSwipedRight: () => !isOnboarding && goToPage(currentPageIndex - 1),
+    onSwipedLeft: () => modeRules.isSwipeEnabled() && goToPage(currentPageIndex + 1),
+    onSwipedRight: () => modeRules.isSwipeEnabled() && goToPage(currentPageIndex - 1),
     trackMouse: false,
     preventScrollOnSwipe: true,
   });
 
-                        const goToPage = useCallback((index) => {
-    // CRITICAL: Temp accounts (free trial) bypass onboarding page restrictions
-    // They can navigate to ANY page after saving personal info
-    const isTemporaryAccount = auth?.isTemporaryAccount;
-    
-    // During onboarding (permanent accounts only), only allow specific pages:
-    // 0: Chat (for welcome step), 1: PersonalInfo (for get acquainted), 9: Billing (for payment/subscription)
-    const allowedPagesDuringOnboarding = [0, 1, 9];
-    const isAllowedDuringOnboarding = allowedPagesDuringOnboarding.includes(index);
-    if (isOnboarding && !isAllowedDuringOnboarding && !isTemporaryAccount) return;
-    const newIndex = Math.max(0, Math.min(index, PAGES.length - 1));
-    if (newIndex !== currentPageIndex) {
-      // If leaving billing page and not going back to billing, notify App to re-check subscription
-      if (currentPageIndex === 9 && newIndex !== 9 && onNavigateFromBilling) {
-        onNavigateFromBilling();
-      }
-      setSwipeDirection(newIndex > currentPageIndex ? 1 : -1);
-      setCurrentPageIndex(newIndex);
-      window.history.pushState({ pageIndex: newIndex }, '');
+        const goToPage = useCallback((index) => {
+    console.log('[MAIN-CONTAINER] goToPage called with index:', index, 'currentMode:', currentMode);
+    // Check if page is allowed in current mode
+    const isAllowed = modeRules.isPageAllowed(index);
+    console.log('[MAIN-CONTAINER] isAllowed:', isAllowed);
+    if (!isAllowed) {
+      console.log('[MAIN-CONTAINER] Navigation blocked - page not allowed in current mode');
+      return;
     }
-  }, [currentPageIndex, onNavigateFromBilling, isOnboarding]);
+
+        setCurrentPageIndex(prevPageIndex => {
+      const newIndex = Math.max(0, Math.min(index, PAGES.length - 1));
+      console.log('[MAIN-CONTAINER] setCurrentPageIndex:', prevPageIndex, '->', newIndex);
+      if (newIndex !== prevPageIndex) {
+        // If leaving billing page and not going back to billing, notify App to re-check subscription
+        if (prevPageIndex === 9 && newIndex !== 9 && onNavigateFromBilling) {
+          onNavigateFromBilling();
+        }
+        setSwipeDirection(newIndex > prevPageIndex ? 1 : -1);
+        window.history.pushState({ pageIndex: newIndex }, '');
+      }
+      return newIndex;
+    });
+  }, [modeRules, onNavigateFromBilling]);
 
     const PageComponent = currentPage.component;
 
@@ -146,14 +155,14 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
 
     return (
     <div className="main-container">
-      <Navigation
+            <Navigation
         pages={PAGES}
         currentPageIndex={currentPageIndex}
         onNavigate={(index) => goToPage(index)}
         isVisible={navVisible}
         onLogout={onLogout}
         isTemporaryAccount={auth?.isTemporaryAccount}
-        isDisabled={onboarding?.onboardingStatus?.isOnboarding === true}
+        isDisabled={modeRules.isNavDisabled()}
         userEmail={auth?.authEmail}
       />
 

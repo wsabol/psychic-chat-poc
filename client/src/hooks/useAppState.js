@@ -113,13 +113,14 @@ export function useAppState() {
     }
   }, [authState.hasActiveSubscription, skipSubscriptionCheck, onboarding.onboardingStatus?.isOnboarding, onboarding]);
 
-  // CRITICAL: Ensure temporary accounts ALWAYS stay on ChatPage (index 0)
-  // This prevents any effect or initialization from sending them to PersonalInfoPage
+    // CRITICAL: Ensure temporary accounts start on ChatPage (index 0) at login
+  // But allow them to navigate after they explicitly choose to enter personal info
+  // Reset to ChatPage only if not authenticated yet (login flow)
   useEffect(() => {
-    if (authState.isTemporaryAccount && startingPage !== 0) {
+    if (authState.isTemporaryAccount && !authState.isAuthenticated && startingPage !== 0) {
       setStartingPage(0);
     }
-  }, [authState.isTemporaryAccount, startingPage]);
+  }, [authState.isTemporaryAccount, authState.isAuthenticated, startingPage]);
 
   // Handlers
   const handleVerificationFailed = useCallback(() => {

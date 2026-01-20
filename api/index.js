@@ -36,6 +36,7 @@ import { subscriptionGuard } from "./middleware/subscriptionGuard.js";
 import cors from "cors";
 import cleanupStatusRoutes from "./routes/cleanup-status.js";
 import responseStatusRoutes from "./routes/response-status.js";
+import freeTrialRoutes from "./routes/free-trial.js";
 import { initializeScheduler } from "./jobs/scheduler.js";
 import { validateRequestPayload, rateLimit } from "./middleware/inputValidation.js";
 import { errorHandler } from "./middleware/errorHandler.js";
@@ -130,6 +131,9 @@ app.use("/analytics", analyticsRoutes);
 
 // Public error logging route (no authentication required)
 app.use("/api/logs", logsRoutes);
+
+// Public free trial routes (no authentication required - temp users don't have tokens yet)
+app.use("/free-trial", freeTrialRoutes);
 
 // Violation reports (admin only)
 app.use("/violations", authenticateToken, violationReportsRoutes);

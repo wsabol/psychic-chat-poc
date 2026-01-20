@@ -9,6 +9,7 @@ import SunSignInfo from '../components/SunSignInfo';
 import HoroscopeTextSection from '../components/HoroscopeTextSection';
 import { ComplianceUpdateModal } from '../components/ComplianceUpdateModal';
 import { useAstroInfo } from '../hooks/useAstroInfo';
+import { useFreeTrial } from '../hooks/useFreeTrial';
 import { getTranslatedAstrologyData } from '../utils/translatedAstroUtils';
 import { isBirthInfoMissing } from '../utils/birthInfoErrorHandler';
 import BirthInfoMissingPrompt from '../components/BirthInfoMissingPrompt';
@@ -37,11 +38,21 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
   const { showingBrief, setShowingBrief, voiceEnabled } = useHoroscopePreferences(userId, token, API_URL);
   const { horoscopeState, complianceStatus, setComplianceStatus, loadHoroscope, stopPolling } = useHoroscopeFetch(userId, token, API_URL, horoscopeRange);
   const { astroInfo, fetchAstroInfo } = useAstroInfo(userId, token);
+  const { completeTrial: completeFreeTrial } = useFreeTrial(auth?.isTemporaryAccount, userId);
 
   // Fetch astro info on mount only
   useEffect(() => {
     if (!astroInfo) fetchAstroInfo();
   }, []);
+
+  // Mark free trial as completed when horoscope loads (for temp accounts)
+  useEffect(() => {
+    if (auth?.isTemporaryAccount && horoscopeState.data && !horoscopeState.loading) {
+      completeFreeTrial().catch(err => {
+        console.warn('[HOROSCOPE] Failed to mark trial complete:', err);
+      });
+    }
+  }, [auth?.isTemporaryAccount, horoscopeState.data, horoscopeState.loading, completeFreeTrial]);
 
   // ✅ CRITICAL FIX: Load horoscope only on mount and when range changes
   // Do NOT include loadHoroscope in deps - it changes on every render

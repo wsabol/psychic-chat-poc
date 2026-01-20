@@ -1,10 +1,13 @@
 -- Master SQL file for restoring database schema
--- Last Updated: 2025-01-15
+-- Last Updated: 2025-01-19
 -- This file contains the EXACT schema of the current production database
 -- plus all required tables and columns for subscription billing
 -- 
 -- PHASE 2.0: Stripe Subscriptions Billing
 -- Includes: subscription tracking, payment methods, last status check times
+-- 
+-- PHASE 3.0: Free Trial Sessions
+-- Includes: IP-based free trial tracking, fraud prevention, progress tracking
 
 -- IMPORTANT: All user IDs are hashed using SHA-256
 -- IMPORTANT: All sensitive data (PII, tokens, IPs) are encrypted with pgcrypto
@@ -454,3 +457,22 @@ CREATE TABLE IF NOT EXISTS admin_login_attempts (
 CREATE INDEX IF NOT EXISTS idx_admin_login_attempts_user_id_hash ON admin_login_attempts(user_id_hash);
 CREATE INDEX IF NOT EXISTS idx_admin_login_attempts_attempted_at ON admin_login_attempts(attempted_at);
 CREATE INDEX IF NOT EXISTS idx_admin_login_attempts_login_status ON admin_login_attempts(login_status);
+
+-- TABLE: free_trial_sessions (Free trial progress tracking & fraud prevention)
+-- IMPORTANT: ip_address_encrypted must be encrypted with ENCRYPTION_KEY
+-- IMPORTANT: user_id_hash is SHA-256 hash of temp user ID (one-way, cannot decrypt)
+CREATE TABLE IF NOT EXISTS free_trial_sessions (
+    id VARCHAR(36) PRIMARY KEY,
+    ip_address_encrypted VARCHAR(255) NOT NULL,
+    user_id_hash VARCHAR(64) NOT NULL,
+    current_step VARCHAR(50),
+    is_completed BOOLEAN DEFAULT FALSE,
+    started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP NULL,
+    last_activity_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_free_trial_sessions_ip_address_encrypted ON free_trial_sessions(ip_address_encrypted);
+CREATE INDEX IF NOT EXISTS idx_free_trial_sessions_user_id_hash ON free_trial_sessions(user_id_hash);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_free_trial_sessions_unique_ip_user ON free_trial_sessions(ip_address_encrypted, user_id_hash);
+CREATE INDEX IF NOT EXISTS idx_free_trial_sessions_ip_completed ON free_trial_sessions(ip_address_encrypted, is_completed);

@@ -15,6 +15,7 @@ import { validatePersonalInfoForm } from '../utils/validatePersonalInfoForm';
 import { usePersonalInfoAPI } from '../hooks/usePersonalInfoAPI';
 import { useTempAccountConfig } from '../hooks/useTempAccountConfig';
 import { useAstrologyPolling } from '../hooks/useAstrologyPolling';
+import { useFreeTrial } from '../hooks/useFreeTrial';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
 import '../styles/responsive.css';
 import './PersonalInfoPage.css';
@@ -22,6 +23,7 @@ import './PersonalInfoPage.css';
 export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage, onboarding }) {
   const { t } = useTranslation();
   const { pollForAstrology } = useAstrologyPolling();
+  const { updateStep: updateFreeTrialStep } = useFreeTrial(auth?.isTemporaryAccount, userId);
 
   // ============================================================
   // STATE
@@ -101,9 +103,9 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
             // Save personal info FIRST and wait for completion
       await handleSavePersonalInfo(dataToSend);
 
-            // ONLY trigger astrology calculation AFTER personal info is confirmed saved
-      // This ensures the database has the data before calculations start
-      if (tempAccountConfig.hasCompleteAstrologyData(formData)) {
+                  // SKIP astrology sync for temp accounts - they don't have auth tokens
+      // Worker will calculate astrology in background when they reach horoscope page
+      if (!isTemporaryAccount && tempAccountConfig.hasCompleteAstrologyData(formData)) {
         // Wait a moment to ensure database persistence
         await new Promise(resolve => setTimeout(resolve, 500));
         // NOW trigger astrology calculation
@@ -113,10 +115,19 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
         }
       }
 
-      setSuccess(true);
+            setSuccess(true);
 
-      // Update onboarding
-      if (onboarding?.updateOnboardingStep) {
+      // Update free trial progress (if temp account)
+      if (auth?.isTemporaryAccount) {
+        try {
+          await updateFreeTrialStep('personal_info');
+        } catch (err) {
+          logErrorFromCatch('[PERSONAL-INFO] Failed to update free trial:', err);
+        }
+      }
+
+            // Update onboarding (NOT for temp accounts - they don't use onboarding flow)
+      if (!isTemporaryAccount && onboarding?.updateOnboardingStep) {
         try {
           await onboarding.updateOnboardingStep('personal_info');
         } catch (err) {
@@ -124,23 +135,26 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
         }
       }
 
-      // Navigate or show success
+                  // Navigate or show success
       const postSaveAction = tempAccountConfig.getPostSaveAction();
+      console.log('[PERSONAL-INFO] postSaveAction:', postSaveAction);
+      console.log('[PERSONAL-INFO] isTemporaryAccount:', isTemporaryAccount);
+      console.log('[PERSONAL-INFO] onNavigateToPage exists:', !!onNavigateToPage);
       if (postSaveAction.shouldNavigate && onNavigateToPage) {
-        // Poll for astrology completion before navigating
-                // For temp accounts: use longer polling (60 attempts × 200ms = 12 seconds max)
+                // For ALL accounts: poll for astrology data to be saved before navigating
         const pollAttempts = isTemporaryAccount ? 60 : TIMING.ASTROLOGY_POLL_MAX_ATTEMPTS;
         const pollInterval = isTemporaryAccount ? 200 : TIMING.ASTROLOGY_POLL_INTERVAL_MS;
+        
         await pollForAstrology(userId, token, API_URL, {
-          maxAttempts: pollAttempts,
-          intervalMs: pollInterval,
-          onReady: () => {
-            onNavigateToPage(postSaveAction.navigationTarget);
-          },
-          onTimeout: () => {
-            onNavigateToPage(postSaveAction.navigationTarget);
-          }
-        });
+            maxAttempts: pollAttempts,
+            intervalMs: pollInterval,
+            onReady: () => {
+              onNavigateToPage(postSaveAction.navigationTarget);
+            },
+                        onTimeout: () => {
+              onNavigateToPage(postSaveAction.navigationTarget);
+            }
+          });
       } else {
         setTimeout(() => setSuccess(false), TIMING.SUCCESS_DISPLAY_MS);
       }

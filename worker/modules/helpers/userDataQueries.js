@@ -58,7 +58,11 @@ export async function fetchUserAstrology(userId) {
 
 /**
  * Check if user is on a trial/temporary account
- * Temporary accounts have emails starting with 'temp_'
+ * Temporary accounts have emails matching: temp_*@psychic.local
+ * 
+ * Defense-in-depth check requires BOTH:
+ * 1. Starts with 'temp_' prefix
+ * 2. Ends with '@psychic.local' domain (only temp accounts use this)
  */
 export async function isTemporaryUser(userId) {
   try {
@@ -67,7 +71,9 @@ export async function isTemporaryUser(userId) {
       [ENCRYPTION_KEY, userId]
     );
     if (rows.length > 0 && rows[0].email) {
-      return rows[0].email.startsWith('temp_');
+      const email = rows[0].email;
+      // Defense-in-depth: Check both prefix AND domain
+      return email.startsWith('temp_') && email.endsWith('@psychic.local');
     }
     return false;
   } catch (err) {

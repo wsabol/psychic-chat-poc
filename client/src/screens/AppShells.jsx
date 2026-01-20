@@ -58,8 +58,19 @@ export function AppShells({ state }) {
             tempFlow.setAppExited(false);
             setVerificationFailed(false);
           }}
-          onExit={() => {
-            authState.exitApp();
+                              onExit={async () => {
+            try {
+              await authState.exitApp(authState.isTemporaryAccount);
+              // Reset app state like Create Account does
+              tempFlow.setAppExited(false);
+              setVerificationFailed(false);
+              authState.setHasLoggedOut(false);
+            } catch (err) {
+              console.error('[EXIT-BUTTON] Error exiting app:', err);
+              // Still reset state even if error
+              tempFlow.setAppExited(false);
+              setVerificationFailed(false);
+            }
           }}
         />
       </ErrorBoundary>

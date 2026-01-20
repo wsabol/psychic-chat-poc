@@ -60,8 +60,6 @@ export function AuthProvider({ children }) {
             
             if (consentResponse.ok) {
               consentStatus = await consentResponse.json();
-            } else {
-              const errorText = await consentResponse.text();
             }
           } catch (consentErr) {
             logClientError('AUTH-CONSENT', consentErr);

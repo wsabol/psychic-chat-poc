@@ -17,7 +17,18 @@ export function getUserGreeting(userInfo, userId, isTemporaryUser = false) {
     return "Friend";
   }
   
-  return userInfo.address_preference || userInfo.first_name || "Friend";
+  // Try familiar name first, then first name, fallback to Friend
+  const familiarName = userInfo.address_preference?.trim();
+  if (familiarName && familiarName.length > 0) {
+    return familiarName;
+  }
+  
+  const firstName = userInfo.first_name?.trim();
+  if (firstName && firstName.length > 0) {
+    return firstName;
+  }
+  
+  return "Friend";
 }
 
 /**

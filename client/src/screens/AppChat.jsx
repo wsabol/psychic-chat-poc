@@ -97,24 +97,36 @@ export function AppChat({ state }) {
 
     const isUserOnboarding = onboarding.onboardingStatus?.isOnboarding === true;
 
-  // Show Welcome message when user navigates to Welcome step
+        // Show Welcome message when user navigates to Welcome step
+  // ONLY for permanent users going through onboarding (NOT free trial)
+  // Do NOT show if onboarding is already complete
   useEffect(() => {
-    if (onboarding.onboardingStatus?.currentStep === 'welcome') {
+    const isFreeTrial = authState.isTemporaryAccount;
+    const isOnboardingStep = onboarding.onboardingStatus?.currentStep === 'welcome';
+    const isOnboardingComplete = onboarding.onboardingStatus?.isOnboarding === false;
+    
+    if (!isFreeTrial && isOnboardingStep && !isOnboardingComplete) {
       setShowWelcomeMessage(true);
     }
-  }, [onboarding.onboardingStatus?.currentStep]);
+  }, [onboarding.onboardingStatus?.currentStep, onboarding.onboardingStatus?.isOnboarding, authState.isTemporaryAccount]);
 
-  // Detect when onboarding COMPLETES (transitions from true to false)
+    // Detect when onboarding COMPLETES (transitions from true to false)
+  // ONLY for permanent users (NOT free trial)
+  // Do NOT show if welcome message is already shown or onboarding already complete
   useEffect(() => {
+    const isFreeTrial = authState.isTemporaryAccount;
+    const isOnboardingComplete = onboarding.onboardingStatus?.isOnboarding === false;
     
     // If was onboarding and now NOT onboarding = onboarding just completed
-    if (wasOnboarding && !isUserOnboarding) {
+    // But SKIP for free trial users - they never get welcome message
+    // And SKIP if already showed welcome message or onboarding is complete
+    if (!isFreeTrial && wasOnboarding && !isUserOnboarding && !showWelcomeMessage && !isOnboardingComplete) {
       setShowWelcomeMessage(true);
     }
     
-    // Track state for next render
+        // Track state for next render
     setWasOnboarding(isUserOnboarding);
-  }, [isUserOnboarding, wasOnboarding]);
+  }, [isUserOnboarding, wasOnboarding, authState.isTemporaryAccount, onboarding.onboardingStatus?.isOnboarding, showWelcomeMessage]);
 
   // Debug: Track welcome message state
   useEffect(() => {
@@ -204,7 +216,7 @@ export function AppChat({ state }) {
           />
         )}
 
-       {showWelcomeMessage && (
+              {showWelcomeMessage && !authState.isTemporaryAccount && (
           <WelcomeMessage
             userId={authState.authUserId}
             token={authState.token}

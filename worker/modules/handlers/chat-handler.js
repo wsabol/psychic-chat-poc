@@ -34,9 +34,12 @@ export async function handleChatMessage(userId, message) {
         }
 
         // STEP 4: Check for special requests (horoscope, moon phase, cosmic weather)
-        const wasSpecialRequest = await detectAndHandleSpecialRequest(userId, message, userInfo, astrologyInfo);
-        if (wasSpecialRequest) {
-            return;
+        // Skip special requests for temp accounts - they only get tarot readings in ONE message
+        if (!tempUser) {
+            const wasSpecialRequest = await detectAndHandleSpecialRequest(userId, message, userInfo, astrologyInfo);
+            if (wasSpecialRequest) {
+                return;
+            }
         }
 
         // STEP 5: Ensure user has astrology data (calculate if needed)
