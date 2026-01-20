@@ -4,7 +4,7 @@
  * 
  * Features:
  * - User gets full app access after saving personal info
- * - 60-second timer on chat page (triggers astrology prompt)
+ * - 90-second timer on chat page (triggers astrology prompt)
  * - Back button exits the app
  * - Can navigate anywhere via swipes and nav
  */

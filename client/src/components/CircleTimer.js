@@ -4,7 +4,7 @@ import React from 'react';
  * CircleTimer - Circular countdown timer display
  * Shows remaining seconds in a visual clock-like circle
  */
-export default function CircleTimer({ timeRemaining, totalTime = 60 }) {
+export default function CircleTimer({ timeRemaining, totalTime = 90 }) {
   const circumference = 2 * Math.PI * 45; // radius = 45
   const strokeDashoffset = circumference - (timeRemaining / totalTime) * circumference;
 

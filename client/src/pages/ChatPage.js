@@ -11,7 +11,7 @@ import './ChatPage.css';
 /**
  * ChatPage - Main chat page for free trial onboarding
  * - Shows oracle greeting for temp accounts
- * - 60 second countdown timer in circular display
+ * - 90 second countdown timer in circular display
  * - Grays out input after sending message
  * - Shows modal with birth info or exit options after timer
  */
@@ -52,7 +52,7 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
   // Onboarding flow state
   const [firstMessageSent, setFirstMessageSent] = useState(false);
   const [timerActive, setTimerActive] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState(60);
+  const [timeRemaining, setTimeRemaining] = useState(90);
   const [showAstrologyPrompt, setShowAstrologyPrompt] = useState(false);
   const timerRef = useRef(null);
   
@@ -65,19 +65,19 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
     msg.role === 'user' || msg.role === 'assistant'
   );
 
-  // Check for first user message sent and start 60 second timer (temp accounts only)
+    // Check for first user message sent and start 90 second timer (temp accounts only)
   useEffect(() => {
     if (isTemporaryAccount && !firstMessageSent) {
       const userMessages = displayMessages.filter(msg => msg.role === 'user');
       if (userMessages.length > 0) {
         setFirstMessageSent(true);
         setTimerActive(true);
-        setTimeRemaining(60);
+        setTimeRemaining(90);
       }
     }
   }, [isTemporaryAccount, firstMessageSent, displayMessages]);
 
-  // 60 second timer countdown
+  // 90 second timer countdown
   useEffect(() => {
     if (timerActive && timeRemaining > 0) {
       timerRef.current = setTimeout(() => {
@@ -230,7 +230,7 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
             zIndex: 50,
             pointerEvents: 'none'
           }}>
-            <CircleTimer timeRemaining={timeRemaining} totalTime={60} />
+            <CircleTimer timeRemaining={timeRemaining} totalTime={90} />
           </div>
         )}
       </div>
