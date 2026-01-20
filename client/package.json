@@ -24,7 +24,7 @@
   },
     "scripts": {
     "prestart": "node ../sync-errorLogger.js",
-    "start": "react-scripts start",
+    "start": "PORT=3001 react-scripts start",
     "prebuild": "node ../sync-errorLogger.js",
     "build": "react-scripts build",
     "test": "react-scripts test",
