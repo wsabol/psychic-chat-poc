@@ -32,14 +32,22 @@
   box-shadow: var(--shadow-md);
 }
 
+.chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-xs);
+}
+
 .chart-icon {
   font-size: var(--font-size-icon);
-  display: block;
-  margin-bottom: var(--spacing-sm);
+  display: inline-block;
+  margin: 0;
 }
 
 .chart-sign {
-  margin: 0 0 var(--spacing-xs) 0;
+  margin: 0;
   font-size: var(--font-size-lg);
   font-weight: 700;
   color: var(--color-text);
@@ -50,6 +58,7 @@
   font-size: var(--font-size-base);
   color: var(--color-accent-purple);
   font-weight: 600;
+  text-align: center;
 }
 
 /* Card type variants */

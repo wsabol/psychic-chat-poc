@@ -57,10 +57,7 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
 // Only apply startingPage during onboarding - once complete, user has full nav control
     useEffect(() => {
     const isStillOnboarding = onboarding?.onboardingStatus?.isOnboarding === true;
-    console.log('[MAIN-CONTAINER] startingPage effect - onboarding:', isStillOnboarding, 'startingPage:', startingPage, 'currentPageIndex:', currentPageIndex);
     if (isStillOnboarding && startingPage !== currentPageIndex) {
-      console.log('[MAIN-CONTAINER] Resetting to startingPage:', startingPage);
-      setCurrentPageIndex(startingPage);
     }
   }, [startingPage, currentPageIndex, onboarding?.onboardingStatus?.isOnboarding]);
   // Track scroll to hide/show nav on mobile
@@ -120,18 +117,14 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
   });
 
         const goToPage = useCallback((index) => {
-    console.log('[MAIN-CONTAINER] goToPage called with index:', index, 'currentMode:', currentMode);
     // Check if page is allowed in current mode
     const isAllowed = modeRules.isPageAllowed(index);
-    console.log('[MAIN-CONTAINER] isAllowed:', isAllowed);
     if (!isAllowed) {
-      console.log('[MAIN-CONTAINER] Navigation blocked - page not allowed in current mode');
       return;
     }
 
         setCurrentPageIndex(prevPageIndex => {
       const newIndex = Math.max(0, Math.min(index, PAGES.length - 1));
-      console.log('[MAIN-CONTAINER] setCurrentPageIndex:', prevPageIndex, '->', newIndex);
       if (newIndex !== prevPageIndex) {
         // If leaving billing page and not going back to billing, notify App to re-check subscription
         if (prevPageIndex === 9 && newIndex !== 9 && onNavigateFromBilling) {

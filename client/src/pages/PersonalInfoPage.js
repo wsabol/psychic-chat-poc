@@ -137,9 +137,6 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
 
                   // Navigate or show success
       const postSaveAction = tempAccountConfig.getPostSaveAction();
-      console.log('[PERSONAL-INFO] postSaveAction:', postSaveAction);
-      console.log('[PERSONAL-INFO] isTemporaryAccount:', isTemporaryAccount);
-      console.log('[PERSONAL-INFO] onNavigateToPage exists:', !!onNavigateToPage);
       if (postSaveAction.shouldNavigate && onNavigateToPage) {
                 // For ALL accounts: poll for astrology data to be saved before navigating
         const pollAttempts = isTemporaryAccount ? 60 : TIMING.ASTROLOGY_POLL_MAX_ATTEMPTS;

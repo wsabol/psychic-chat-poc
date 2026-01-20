@@ -1,8 +1,9 @@
 /**
  * SignCards - Display Rising, Moon, and Sun signs (in astrological order)
- * Compact vertical layout: card icon + sign name + degree on one line
- * Rising: ↗️, Moon: 🌙, Sun: ☀️
+ * Compact vertical layout: emoji + sign name + degree on second line
  */
+import wheelData from '../../../data/zodiac/wheelData';
+
 export function SignCards({ astro, t }) {
   return (
     <section className="sign-cards-section">
@@ -12,7 +13,7 @@ export function SignCards({ astro, t }) {
           <div className="sign-card-content">
             <h3 className="sign-card-title">{t ? t('astrology.risingSign') : 'Rising Sign'}</h3>
             <div className="sign-card-header">
-              <span className="sign-emoji">↗️</span>
+              <span className="sign-emoji">{wheelData[astro.rising_sign.toLowerCase()]?.emoji || '♑'}</span>
               <span className="sign-name">{t(`mySign.${astro.rising_sign.toLowerCase()}`)}</span>
               {astro.rising_degree && (
                 <span className="sign-degree">{astro.rising_degree}°</span>
@@ -29,7 +30,7 @@ export function SignCards({ astro, t }) {
           <div className="sign-card-content">
             <h3 className="sign-card-title">{t ? t('astrology.moonSign') : 'Moon Sign'}</h3>
             <div className="sign-card-header">
-              <span className="sign-emoji">🌙</span>
+              <span className="sign-emoji">{wheelData[astro.moon_sign.toLowerCase()]?.emoji || '🌙'}</span>
               <span className="sign-name">{t(`mySign.${astro.moon_sign.toLowerCase()}`)}</span>
               {astro.moon_degree && (
                 <span className="sign-degree">{astro.moon_degree}°</span>
@@ -46,7 +47,7 @@ export function SignCards({ astro, t }) {
           <div className="sign-card-content">
             <h3 className="sign-card-title">{t ? t('astrology.sunSign') : 'Sun Sign'}</h3>
             <div className="sign-card-header">
-              <span className="sign-emoji">☀️</span>
+              <span className="sign-emoji">{wheelData[astro.sun_sign.toLowerCase()]?.emoji || '☀️'}</span>
               <span className="sign-name">{t(`mySign.${astro.sun_sign.toLowerCase()}`)}</span>
               {astro.sun_degree && (
                 <span className="sign-degree">{astro.sun_degree}°</span>

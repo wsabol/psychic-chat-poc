@@ -151,9 +151,7 @@ export function ZodiacWheel({ astroData }) {
               const centerAngle = section.centerDegree;
 
               // Positions for each ring (at midpoints)
-              const ring1Mid = getCoords(centerAngle, rings.ring1Mid);
               const ring2Mid = getCoords(centerAngle, rings.ring2Mid);
-              const ring3Mid = getCoords(centerAngle, rings.ring3Mid);
               const ring4Mid = getCoords(centerAngle, rings.ring4Mid);
               const ring5Mid = getCoords(centerAngle, rings.ring5Mid);
 

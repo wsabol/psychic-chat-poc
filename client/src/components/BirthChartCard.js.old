@@ -2,7 +2,6 @@ import { useTranslation } from '../context/TranslationContext';
 
 /**
  * BirthChartCard - Displays a single astrological sign card (Sun, Moon, or Rising)
- * Compact layout: emoji and sign on one line, degree below
  * @param {Object} props
  * @param {string} props.sign - The astrological sign name (e.g., "Aries")
  * @param {number} props.degree - The degree of the sign
@@ -16,10 +15,8 @@ export default function BirthChartCard({ sign, degree, icon, type }) {
 
   return (
     <div className={`chart-card ${type}-card`}>
-      <div className="chart-header">
-        <span className="chart-icon">{icon}</span>
-        <p className="chart-sign">{t(`mySign.${sign.toLowerCase()}`)}</p>
-      </div>
+      <span className="chart-icon">{icon}</span>
+      <p className="chart-sign">{t(`mySign.${sign.toLowerCase()}`)}</p>
       {degree && <p className="chart-degree">{degree}°</p>}
     </div>
   );

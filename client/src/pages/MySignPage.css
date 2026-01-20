@@ -113,6 +113,39 @@
   color: #9370db;
 }
 
+.sign-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  margin: var(--spacing-xs) 0 var(--spacing-sm) 0;
+  flex-wrap: wrap;
+}
+
+.sign-emoji {
+  font-size: 1.2rem;
+}
+
+.sign-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.sign-house {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  min-width: 1.2rem;
+  text-align: center;
+}
+
+.sign-degree {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #9370db;
+}
+
 .sign-card-meaning {
   margin: 0;
   font-size: 0.8rem;
