@@ -1,0 +1,240 @@
+import React, { useMemo } from 'react';
+import { useTranslation } from '../../../context/TranslationContext';
+import '../styles/ZodiacWheel.css';
+
+// Zodiac signs in order (starting with Aries at 0°)
+const ZODIAC_ORDER = [
+  'aries',
+  'taurus',
+  'gemini',
+  'cancer',
+  'leo',
+  'virgo',
+  'libra',
+  'scorpio',
+  'sagittarius',
+  'capricorn',
+  'aquarius',
+  'pisces'
+];
+
+/**
+ * ZodiacWheel Component
+ * Displays a 12-sign zodiac wheel rotated to the user's rising sign position
+ * Shows sign name, emoji, and ruling planet for each sign
+ * Includes horizon line separating day from night
+ */
+export function ZodiacWheel({ astroData }) {
+  const { t } = useTranslation();
+
+  // Get rising degree and sign
+  const risingDegree = astroData?.rising_degree || 0;
+  const risingSgn = astroData?.rising_sign?.toLowerCase() || '';
+
+  // Build wheel data with sign info
+  const wheelSections = useMemo(() => {
+    return ZODIAC_ORDER.map((signKey, index) => {
+      const startDegree = index * 30;
+      const signData = astroData[signKey];
+
+      return {
+        key: signKey,
+        name: signData?.name || t(`mySign.${signKey}`),
+        emoji: signData?.emoji || '',
+        rulingPlanet: signData?.rulingPlanet || '',
+        startDegree: startDegree,
+        endDegree: startDegree + 30,
+        isRising: signKey === risingSgn
+      };
+    });
+  }, [astroData, risingSgn, t]);
+
+  // Calculate wheel rotation: rising sign at 270° (left/ascendant position)
+  const wheelRotation = 270 + risingDegree;
+
+  return (
+    <div className="zodiac-wheel-container">
+      <h3 className="wheel-title">{t('zodiacWheel.title')}</h3>
+      <p className="wheel-subtitle">{t('zodiacWheel.subtitle')}</p>
+
+      <div className="wheel-wrapper">
+        <svg
+          className="zodiac-wheel"
+          viewBox="0 0 400 400"
+          style={{ transform: `rotate(${wheelRotation}deg)` }}
+        >
+          {/* Background circle */}
+          <circle cx="200" cy="200" r="190" className="wheel-background" />
+
+          {/* Horizon line - vertical (Ascendant at left, Descendant at right) */}
+          <line
+            x1="200"
+            y1="10"
+            x2="200"
+            y2="390"
+            className="horizon-line"
+            strokeDasharray="5,5"
+          />
+
+          {/* Zodiac sections */}
+          {wheelSections.map((section, index) => {
+            const angle = section.startDegree + 15; // Center of section
+            const radian = (angle * Math.PI) / 180;
+
+            // Positions for concentric circles
+            const nameRadius = 155;
+            const emojiRadius = 110;
+            const planetRadius = 65;
+
+            // Calculate x, y positions
+            const nameX = 200 + nameRadius * Math.cos(radian);
+            const nameY = 200 + nameRadius * Math.sin(radian);
+
+            const emojiX = 200 + emojiRadius * Math.cos(radian);
+            const emojiY = 200 + emojiRadius * Math.sin(radian);
+
+            const planetX = 200 + planetRadius * Math.cos(radian);
+            const planetY = 200 + planetRadius * Math.sin(radian);
+
+            // Draw section wedge lines
+            const startAngle = section.startDegree;
+            const endAngle = section.endDegree;
+            const startRadian = (startAngle * Math.PI) / 180;
+            const endRadian = (endAngle * Math.PI) / 180;
+
+            const startX = 200 + 190 * Math.cos(startRadian);
+            const startY = 200 + 190 * Math.sin(startRadian);
+            const endX = 200 + 190 * Math.cos(endRadian);
+            const endY = 200 + 190 * Math.sin(endRadian);
+
+            return (
+              <g key={section.key} className="zodiac-section">
+                {/* Section wedge lines */}
+                <line
+                  x1="200"
+                  y1="200"
+                  x2={startX}
+                  y2={startY}
+                  className="section-line"
+                />
+                <line
+                  x1="200"
+                  y1="200"
+                  x2={endX}
+                  y2={endY}
+                  className="section-line"
+                />
+
+                {/* Section background (subtle color for each sign) */}
+                <g className={`section-bg section-bg-${section.key}`}>
+                  <path
+                    d={`M 200,200 L ${startX},${startY} A 190,190 0 0,1 ${endX},${endY} Z`}
+                    className={`section-wedge ${section.isRising ? 'is-rising' : ''}`}
+                  />
+                </g>
+
+                {/* Sign name - outer ring */}
+                <text
+                  x={nameX}
+                  y={nameY}
+                  className="sign-name"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                >
+                  {section.name}
+                </text>
+
+                {/* Sign emoji - middle ring */}
+                <text
+                  x={emojiX}
+                  y={emojiY}
+                  className="sign-emoji"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                >
+                  {section.emoji}
+                </text>
+
+                {/* Ruling planet - inner ring */}
+                <text
+                  x={planetX}
+                  y={planetY}
+                  className="ruling-planet"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                >
+                  {section.rulingPlanet}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* Center circle with rising sign indicator */}
+          <circle cx="200" cy="200" r="45" className="wheel-center" />
+
+          {/* Ascendant marker at left (270°) */}
+          <g className="ascendant-marker">
+            <circle cx="200" cy="20" r="6" className="marker-dot" />
+            <text x="200" y="35" className="marker-label" textAnchor="middle">
+              {t('zodiacWheel.asc')}
+            </text>
+          </g>
+
+          {/* Descendant marker at right (90°) */}
+          <g className="descendant-marker">
+            <circle cx="200" cy="380" r="6" className="marker-dot" />
+            <text x="200" y="370" className="marker-label" textAnchor="middle">
+              {t('zodiacWheel.dsc')}
+            </text>
+          </g>
+
+          {/* Midheaven marker at top (0°) */}
+          <g className="midheaven-marker">
+            <circle cx="380" cy="200" r="6" className="marker-dot" />
+            <text
+              x="360"
+              y="205"
+              className="marker-label"
+              textAnchor="end"
+              dominantBaseline="middle"
+            >
+              {t('zodiacWheel.mc')}
+            </text>
+          </g>
+
+          {/* IC marker at bottom (180°) */}
+          <g className="ic-marker">
+            <circle cx="20" cy="200" r="6" className="marker-dot" />
+            <text
+              x="40"
+              y="205"
+              className="marker-label"
+              textAnchor="start"
+              dominantBaseline="middle"
+            >
+              {t('zodiacWheel.ic')}
+            </text>
+          </g>
+
+          {/* Rising sign text in center */}
+          <text x="200" y="195" className="center-label-top" textAnchor="middle">
+            {t('zodiacWheel.yourRising')}
+          </text>
+          <text x="200" y="215" className="center-label-bottom" textAnchor="middle">
+            {wheelSections.find((s) => s.isRising)?.name}
+          </text>
+        </svg>
+      </div>
+
+      {/* Legend */}
+      <div className="wheel-legend">
+        <div className="legend-item">
+          <span className="legend-label day-night">{t('zodiacWheel.dayNight')}</span>
+        </div>
+        <div className="legend-item">
+          <span className="legend-label">{t('zodiacWheel.horizon')}</span>
+        </div>
+      </div>
+    </div>
+  );
+}

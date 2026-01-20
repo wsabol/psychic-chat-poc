@@ -1,0 +1,13 @@
+{
+  "zodiacWheel": {
+    "title": "あなたの占星術的ハウス",
+    "subtitle": "12の黄道宮記号があなたのライジングサイン位置に回転している",
+    "asc": "ASC",
+    "dsc": "DESC",
+    "mc": "MC",
+    "ic": "IC",
+    "yourRising": "あなたのライジング",
+    "dayNight": "昼夜ホライズン",
+    "horizon": "アセンダント-ディセンダント軸"
+  }
+}

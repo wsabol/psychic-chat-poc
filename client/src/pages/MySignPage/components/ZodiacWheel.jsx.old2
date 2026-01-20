@@ -1,0 +1,225 @@
+import React, { useMemo } from 'react';
+import { useTranslation } from '../../../context/TranslationContext';
+import '../styles/ZodiacWheel.css';
+
+// Zodiac signs in order (starting with Aries at 0°)
+const ZODIAC_ORDER = [
+  'aries',
+  'taurus',
+  'gemini',
+  'cancer',
+  'leo',
+  'virgo',
+  'libra',
+  'scorpio',
+  'sagittarius',
+  'capricorn',
+  'aquarius',
+  'pisces'
+];
+
+// House numbers in Roman numerals
+const HOUSE_NUMBERS = [
+  'I', 'II', 'III', 'IV', 'V', 'VI',
+  'VII', 'VIII', 'IX', 'X', 'XI', 'XII'
+];
+
+// Element emojis
+const ELEMENT_EMOJIS = {
+  'Fire': '🔥',
+  'Earth': '🌍',
+  'Air': '💨',
+  'Water': '💧'
+};
+
+/**
+ * ZodiacWheel Component - 6 Concentric Rings
+ * Ring 1 (outer): Sign names (curved along arc)
+ * Ring 2: Empty space
+ * Ring 3: Ruling planet with emoji
+ * Ring 4: Element name
+ * Ring 5: House number (Roman numerals I-XII)
+ * Ring 6 (inner): Stylized sun emoji
+ * 
+ * 12 segments (30° each) with radial dividers
+ * Horizontal line separates day/night (stays horizontal with page)
+ * Wheel rotates based on rising sign degree
+ */
+export function ZodiacWheel({ astroData }) {
+  const { t } = useTranslation();
+
+  // Get rising degree and sign
+  const risingDegree = astroData?.rising_degree || 0;
+  const risingSgn = astroData?.rising_sign?.toLowerCase() || '';
+
+  // Build wheel data with sign info
+  const wheelSections = useMemo(() => {
+    return ZODIAC_ORDER.map((signKey, index) => {
+      const signData = astroData[signKey];
+
+      return {
+        key: signKey,
+        index: index,
+        name: signData?.name || t(`mySign.${signKey}`),
+        emoji: signData?.emoji || '',
+        rulingPlanet: signData?.rulingPlanet || '',
+        element: signData?.element || '',
+        house: HOUSE_NUMBERS[index],
+        isRising: signKey === risingSgn,
+        startDegree: index * 30,
+        centerDegree: index * 30 + 15 // Center of segment for text placement
+      };
+    });
+  }, [astroData, risingSgn, t]);
+
+  // Calculate wheel rotation: rising sign at 270° (left/ascendant position)
+  const wheelRotation = 270 + risingDegree;
+
+  // Ring radii (concentric circles)
+  const rings = {
+    outer: 180,      // Ring 1: Sign names
+    ring2: 150,      // Ring 2: Empty
+    ring3: 120,      // Ring 3: Planet + emoji
+    ring4: 90,       // Ring 4: Element
+    ring5: 60,       // Ring 5: House number
+    inner: 30        // Ring 6: Sun emoji
+  };
+
+  const centerX = 200;
+  const centerY = 200;
+
+  return (
+    <div className="zodiac-wheel-container">
+      <h3 className="wheel-title">{t('zodiacWheel.title')}</h3>
+      <p className="wheel-subtitle">{t('zodiacWheel.subtitle')}</p>
+
+      <div className="wheel-wrapper">
+        <svg
+          className="zodiac-wheel"
+          viewBox="0 0 400 400"
+          preserveAspectRatio="xMidYMid meet"
+        >
+          {/* Define SVG defs for curved text paths */}
+          <defs>
+            {wheelSections.map((section) => (
+              <path
+                key={`path-${section.key}`}
+                id={`arc-${section.key}`}
+                d={`M ${centerX + rings.outer * Math.cos((section.startDegree * Math.PI) / 180)},${centerY + rings.outer * Math.sin((section.startDegree * Math.PI) / 180)} A ${rings.outer},${rings.outer} 0 0,1 ${centerX + rings.outer * Math.cos(((section.startDegree + 30) * Math.PI) / 180)},${centerY + rings.outer * Math.sin(((section.startDegree + 30) * Math.PI) / 180)}`}
+                fill="none"
+              />
+            ))}
+          </defs>
+
+          {/* Rotating group for all zodiac elements */}
+          <g style={{ transform: `rotate(${wheelRotation}deg)`, transformOrigin: '200px 200px' }}>
+            {/* Background circles for each ring */}
+            <circle cx={centerX} cy={centerY} r={rings.outer} className="ring-bg ring-1" />
+            <circle cx={centerX} cy={centerY} r={rings.ring2} className="ring-bg ring-2" />
+            <circle cx={centerX} cy={centerY} r={rings.ring3} className="ring-bg ring-3" />
+            <circle cx={centerX} cy={centerY} r={rings.ring4} className="ring-bg ring-4" />
+            <circle cx={centerX} cy={centerY} r={rings.ring5} className="ring-bg ring-5" />
+            <circle cx={centerX} cy={centerY} r={rings.inner} className="ring-bg ring-6" />
+
+            {/* 12 Radial dividers (every 30 degrees) */}
+            {ZODIAC_ORDER.map((_, index) => {
+              const angle = (index * 30 * Math.PI) / 180;
+              const x1 = centerX + rings.outer * Math.cos(angle);
+              const y1 = centerY + rings.outer * Math.sin(angle);
+              const x2 = centerX + rings.inner * Math.cos(angle);
+              const y2 = centerY + rings.inner * Math.sin(angle);
+
+              return (
+                <line
+                  key={`divider-${index}`}
+                  x1={x1}
+                  y1={y1}
+                  x2={x2}
+                  y2={y2}
+                  className="radial-divider"
+                />
+              );
+            })}
+
+            {/* Zodiac sections with all rings */}
+            {wheelSections.map((section) => {
+              const centerRad = (section.centerDegree * Math.PI) / 180;
+
+              // Positions for each ring
+              const ring1X = centerX + rings.outer * Math.cos(centerRad);
+              const ring1Y = centerY + rings.outer * Math.sin(centerRad);
+
+              const ring3X = centerX + rings.ring3 * Math.cos(centerRad);
+              const ring3Y = centerY + rings.ring3 * Math.sin(centerRad);
+
+              const ring4X = centerX + rings.ring4 * Math.cos(centerRad);
+              const ring4Y = centerY + rings.ring4 * Math.sin(centerRad);
+
+              const ring5X = centerX + rings.ring5 * Math.cos(centerRad);
+              const ring5Y = centerY + rings.ring5 * Math.sin(centerRad);
+
+              return (
+                <g key={`section-${section.key}`} className="zodiac-section">
+                  {/* Ring 1: Sign name (curved text along arc) */}
+                  <text className={`ring-1-text ${section.isRising ? 'is-rising' : ''}`}>
+                    <textPath
+                      href={`#arc-${section.key}`}
+                      startOffset="50%"
+                      textAnchor="middle"
+                      className="sign-name-curved"
+                    >
+                      {section.name}
+                    </textPath>
+                  </text>
+
+                  {/* Ring 3: Ruling planet + emoji */}
+                  <g className={`ring-3-group ${section.isRising ? 'is-rising' : ''}`}>
+                    <text x={ring3X} y={ring3Y} className="ring-3-text" textAnchor="middle" dominantBaseline="middle">
+                      {section.rulingPlanet}
+                    </text>
+                  </g>
+
+                  {/* Ring 4: Element name */}
+                  <text
+                    x={ring4X}
+                    y={ring4Y}
+                    className="ring-4-text"
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                  >
+                    {section.element}
+                  </text>
+
+                  {/* Ring 5: House number (Roman numerals) */}
+                  <text
+                    x={ring5X}
+                    y={ring5Y}
+                    className="ring-5-text"
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                  >
+                    {section.house}
+                  </text>
+                </g>
+              );
+            })}
+
+            {/* Ring 6: Center stylized sun emoji */}
+            <text x={centerX} y={centerY} className="sun-emoji" textAnchor="middle" dominantBaseline="middle">
+              ☀️
+            </text>
+          </g>
+
+          {/* Horizontal line - NOT ROTATED (stays horizontal with page) */}
+          <line
+            x1={centerX - rings.outer}
+            y1={centerY}
+            x2={centerX + rings.outer}
+            y2={centerY}
+            className="horizon-line-horizontal"
+          />
+        </svg>
+      </div>
+    </div>
+  );
+}

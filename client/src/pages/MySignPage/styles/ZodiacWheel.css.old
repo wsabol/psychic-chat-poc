@@ -1,0 +1,412 @@
+/* ============================================
+   ZODIAC WHEEL COMPONENT STYLES
+   Conservative pastel color scheme
+   ============================================ */
+
+.zodiac-wheel-container {
+  background: white;
+  border-radius: 12px;
+  padding: var(--spacing-lg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: var(--spacing-lg);
+}
+
+.wheel-title {
+  margin: 0 0 var(--spacing-xs) 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-text);
+  text-align: center;
+}
+
+.wheel-subtitle {
+  margin: 0 0 var(--spacing-lg) 0;
+  font-size: 0.9rem;
+  color: var(--color-text-light);
+  text-align: center;
+}
+
+/* ============================================
+   WHEEL WRAPPER & SVG
+   ============================================ */
+
+.wheel-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.zodiac-wheel {
+  width: 100%;
+  max-width: 500px;
+  height: auto;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* ============================================
+   WHEEL BACKGROUND & STRUCTURE
+   ============================================ */
+
+.wheel-background {
+  fill: #fafbff;
+  stroke: #d4c5f9;
+  stroke-width: 2;
+}
+
+.section-line {
+  stroke: #e0d5f7;
+  stroke-width: 1;
+  opacity: 0.6;
+}
+
+.horizon-line {
+  stroke: #a89bd8;
+  stroke-width: 2;
+  opacity: 0.4;
+}
+
+/* ============================================
+   ZODIAC SECTION BACKGROUNDS - PASTEL COLORS
+   ============================================ */
+
+.section-bg-aries .section-wedge {
+  fill: #ffe8e8;
+  opacity: 0.7;
+}
+
+.section-bg-taurus .section-wedge {
+  fill: #e8f5e9;
+  opacity: 0.7;
+}
+
+.section-bg-gemini .section-wedge {
+  fill: #e3f2fd;
+  opacity: 0.7;
+}
+
+.section-bg-cancer .section-wedge {
+  fill: #f3e5f5;
+  opacity: 0.7;
+}
+
+.section-bg-leo .section-wedge {
+  fill: #fff3e0;
+  opacity: 0.7;
+}
+
+.section-bg-virgo .section-wedge {
+  fill: #f1f8e9;
+  opacity: 0.7;
+}
+
+.section-bg-libra .section-wedge {
+  fill: #fce4ec;
+  opacity: 0.7;
+}
+
+.section-bg-scorpio .section-wedge {
+  fill: #ede7f6;
+  opacity: 0.7;
+}
+
+.section-bg-sagittarius .section-wedge {
+  fill: #e0f2f1;
+  opacity: 0.7;
+}
+
+.section-bg-capricorn .section-wedge {
+  fill: #eceff1;
+  opacity: 0.7;
+}
+
+.section-bg-aquarius .section-wedge {
+  fill: #e8eaf6;
+  opacity: 0.7;
+}
+
+.section-bg-pisces .section-wedge {
+  fill: #f0f4c3;
+  opacity: 0.7;
+}
+
+/* Rising sign section - slightly more prominent */
+.section-wedge.is-rising {
+  opacity: 1;
+  fill-opacity: 0.9;
+}
+
+.section-wedge.is-rising {
+  stroke: #9370db;
+  stroke-width: 2;
+}
+
+/* ============================================
+   TEXT ELEMENTS
+   ============================================ */
+
+.sign-name {
+  font-size: 12px;
+  font-weight: 700;
+  fill: #4a3f7a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sign-emoji {
+  font-size: 18px;
+  fill: #333;
+}
+
+.ruling-planet {
+  font-size: 10px;
+  font-weight: 600;
+  fill: #6b5b95;
+  text-transform: capitalize;
+}
+
+/* ============================================
+   CENTER CIRCLE
+   ============================================ */
+
+.wheel-center {
+  fill: white;
+  stroke: #d4c5f9;
+  stroke-width: 2;
+}
+
+.center-label-top {
+  font-size: 10px;
+  fill: #9370db;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.center-label-bottom {
+  font-size: 14px;
+  font-weight: 700;
+  fill: #4a3f7a;
+}
+
+/* ============================================
+   AXIS MARKERS
+   ============================================ */
+
+.marker-dot {
+  fill: #9370db;
+  opacity: 0.8;
+}
+
+.marker-label {
+  font-size: 9px;
+  font-weight: 600;
+  fill: #9370db;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ============================================
+   LEGEND
+   ============================================ */
+
+.wheel-legend {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background: #fafbff;
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 0.85rem;
+  color: var(--color-text);
+}
+
+.legend-label {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+  background: white;
+  border: 1px solid #e0d5f7;
+}
+
+.legend-label.day-night {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.8) 50%,
+    rgba(230, 220, 250, 0.8) 50%
+  );
+  border: 1px solid #d4c5f9;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 480px) {
+  .zodiac-wheel-container {
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+  }
+
+  .wheel-title {
+    font-size: 1.2rem;
+    margin-bottom: var(--spacing-xs);
+  }
+
+  .wheel-subtitle {
+    font-size: 0.85rem;
+    margin-bottom: var(--spacing-md);
+  }
+
+  .zodiac-wheel {
+    max-width: 350px;
+  }
+
+  .sign-name {
+    font-size: 10px;
+  }
+
+  .sign-emoji {
+    font-size: 16px;
+  }
+
+  .ruling-planet {
+    font-size: 9px;
+  }
+
+  .center-label-top {
+    font-size: 9px;
+  }
+
+  .center-label-bottom {
+    font-size: 12px;
+  }
+
+  .marker-label {
+    font-size: 8px;
+  }
+
+  .wheel-legend {
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm);
+  }
+
+  .legend-item {
+    font-size: 0.75rem;
+  }
+
+  .legend-label {
+    padding: 3px 6px;
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .zodiac-wheel {
+    max-width: 400px;
+  }
+}
+
+/* ============================================
+   TABLET & DESKTOP
+   ============================================ */
+
+@media (min-width: 768px) {
+  .zodiac-wheel-container {
+    padding: var(--spacing-xl);
+  }
+
+  .wheel-wrapper {
+    max-width: 100%;
+  }
+
+  .zodiac-wheel {
+    max-width: 550px;
+  }
+}
+
+/* ============================================
+   DARK MODE SUPPORT (if implemented)
+   ============================================ */
+
+@media (prefers-color-scheme: dark) {
+  .zodiac-wheel-container {
+    background: #1e1b29;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .wheel-background {
+    fill: #2a2738;
+    stroke: #6b5b95;
+  }
+
+  .section-line {
+    stroke: #5a4d75;
+  }
+
+  .horizon-line {
+    stroke: #8b7ba8;
+  }
+
+  .center-label-top,
+  .center-label-bottom,
+  .sign-name,
+  .ruling-planet {
+    fill: #e8dff8;
+  }
+
+  .marker-dot,
+  .marker-label {
+    fill: #c9a8e8;
+  }
+
+  .wheel-legend {
+    background: #2a2738;
+    border-color: #5a4d75;
+  }
+
+  .legend-label {
+    background: #3a3648;
+    border-color: #6b5b95;
+    color: #e8dff8;
+  }
+
+  .legend-label.day-night {
+    background: linear-gradient(
+      90deg,
+      rgba(58, 54, 72, 0.8) 50%,
+      rgba(107, 91, 149, 0.3) 50%
+    );
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .zodiac-wheel {
+    animation: none;
+  }
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+  .zodiac-wheel-container {
+    box-shadow: none;
+    page-break-inside: avoid;
+  }
+}

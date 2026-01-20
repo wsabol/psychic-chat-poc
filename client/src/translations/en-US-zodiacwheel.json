@@ -1,0 +1,13 @@
+{
+  "zodiacWheel": {
+    "title": "Your Astrological Houses",
+    "subtitle": "The 12 zodiac signs rotated to your rising sign position",
+    "asc": "ASC",
+    "dsc": "DSC",
+    "mc": "MC",
+    "ic": "IC",
+    "yourRising": "Your Rising",
+    "dayNight": "Day/Night Horizon",
+    "horizon": "Ascendant-Descendant Axis"
+  }
+}

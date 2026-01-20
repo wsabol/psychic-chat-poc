@@ -1,6 +1,7 @@
 import { useAstrologyData } from './MySignPage/hooks/useAstrologyData';
 import { SignCards } from './MySignPage/components/SignCards';
 import { SignDetails } from './MySignPage/components/SignDetails';
+import { ZodiacWheel } from './MySignPage/components/ZodiacWheel';
 import BirthInfoMissingPrompt from '../components/BirthInfoMissingPrompt';
 import { useTranslation } from '../context/TranslationContext';
 import './MySignPage.css';
@@ -70,10 +71,16 @@ export default function MySignPage({ userId, token, auth, onNavigateToPage }) {
       {/* The Three Signs */}
       <SignCards astro={astro} t={t} />
 
+            {/* Divider */}
+      <div className="section-divider"></div>
+
+      {/* Zodiac Wheel - 12 Houses */}
+      <ZodiacWheel astroData={astro} />
+
       {/* Divider */}
       <div className="section-divider"></div>
 
-            {/* Detailed Information */}
+      {/* Detailed Information */}
       <section className="zodiac-details-section">
         <SignDetails astro={astro} t={t} />
       </section>

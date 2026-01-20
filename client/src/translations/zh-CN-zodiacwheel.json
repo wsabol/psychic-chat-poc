@@ -1,0 +1,13 @@
+{
+  "zodiacWheel": {
+    "title": "您的占星术宫位",
+    "subtitle": "12个黄道星座旋转到您的上升星座位置",
+    "asc": "ASC",
+    "dsc": "DESC",
+    "mc": "MC",
+    "ic": "IC",
+    "yourRising": "你的上升星座",
+    "dayNight": "昼夜地平线",
+    "horizon": "上升-下降轴线"
+  }
+}

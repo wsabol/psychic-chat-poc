@@ -1,0 +1,13 @@
+{
+  "zodiacWheel": {
+    "title": "Ihre Astrologischen Häuser",
+    "subtitle": "Die 12 Tierkreiszeichen rotiert zu Ihrer aufsteigenden Zeichenposition",
+    "asc": "ASZ",
+    "dsc": "DSZ",
+    "mc": "MC",
+    "ic": "IC",
+    "yourRising": "Ihr Aszendent",
+    "dayNight": "Tag-/Nacht-Horizont",
+    "horizon": "Aszendent-Deszendent-Achse"
+  }
+}

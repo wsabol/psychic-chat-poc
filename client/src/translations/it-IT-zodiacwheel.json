@@ -1,0 +1,13 @@
+{
+  "zodiacWheel": {
+    "title": "Le Tue Case Astrologiche",
+    "subtitle": "I 12 segni zodiacali ruotati alla tua posizione di segno ascendente",
+    "asc": "ASC",
+    "dsc": "DSC",
+    "mc": "MC",
+    "ic": "IC",
+    "yourRising": "Il Tuo Ascendente",
+    "dayNight": "Orizzonte Giorno/Notte",
+    "horizon": "Asse Ascendente-Discendente"
+  }
+}
