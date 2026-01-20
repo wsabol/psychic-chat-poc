@@ -25,7 +25,7 @@ import { logErrorFromCatch } from '../../shared/errorLogger.js';
 import '../SubscriptionsPage.css';
 import '../../styles/modals.css';
 
-export default function SubscriptionsPage({ userId, token, auth }) {
+export default function SubscriptionsPage({ userId, token, auth, onboarding }) {
   const { t } = useTranslation();
   // State management
   const state = useSubscriptionState(token);
@@ -57,9 +57,10 @@ export default function SubscriptionsPage({ userId, token, auth }) {
   }, []);
 
   // Event handlers
-  const handlers = useSubscriptionHandlers({
+    const handlers = useSubscriptionHandlers({
     billing,
     auth,
+    onboarding,
     setError: state.setError,
     setSuccess: state.setSuccess,
     setActiveSubscriptions: state.setActiveSubscriptions,

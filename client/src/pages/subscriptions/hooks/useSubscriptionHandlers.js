@@ -9,15 +9,17 @@ import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 export function useSubscriptionHandlers({ 
   billing, 
   auth,
+  onboarding,
   setError, 
   setSuccess, 
   setActiveSubscriptions,
   setPendingSubscription,
   setShowSubscriptionConfirmationModal,
 }) {
-  /**
+    /**
    * Subscribe to a plan - Handle incomplete subscriptions
    * ✅ OPTIMIZED: Returns immediately, refreshes happen in background
+   * CRITICAL: If user is onboarding, update onboarding_step to 'subscription'
    */
   const handleSubscribe = useCallback(async (priceId) => {
     try {
@@ -40,8 +42,15 @@ export function useSubscriptionHandlers({
         }
       }
 
-      // Subscription is already active
+            // Subscription is already active
       setSuccess(true);
+      
+      // CRITICAL: Update onboarding step if user is onboarding
+      if (onboarding?.updateOnboardingStep && onboarding.onboardingStatus?.isOnboarding === true) {
+        onboarding.updateOnboardingStep('subscription').catch(err => {
+          logErrorFromCatch('[ONBOARDING] Failed to update step after subscription:', err.message);
+        });
+      }
       
       // ✅ OPTIMIZED: Background refreshes (don't wait/don't await)
       // Button becomes responsive immediately
@@ -64,17 +73,25 @@ export function useSubscriptionHandlers({
         setError(err.message || 'Failed to create subscription');
       }
     }
-  }, [billing, auth, setError, setSuccess, setPendingSubscription, setShowSubscriptionConfirmationModal]);
+  }, [billing, auth, onboarding, setError, setSuccess, setPendingSubscription, setShowSubscriptionConfirmationModal]);
 
-  /**
+    /**
    * Handle subscription confirmation after modal
    * ✅ OPTIMIZED: Returns immediately after confirmation
+   * CRITICAL: If user is onboarding, update onboarding_step to 'subscription'
    */
   const handleSubscriptionConfirmationSuccess = useCallback(async (paymentIntent) => {
     try {
-      setShowSubscriptionConfirmationModal(false);
+            setShowSubscriptionConfirmationModal(false);
       setPendingSubscription(null);
       setSuccess(true);
+      
+      // CRITICAL: Update onboarding step if user is onboarding
+      if (onboarding?.updateOnboardingStep && onboarding.onboardingStatus?.isOnboarding === true) {
+        onboarding.updateOnboardingStep('subscription').catch(err => {
+          logErrorFromCatch('[ONBOARDING] Failed to update step after subscription confirmation:', err.message);
+        });
+      }
       
       // ✅ OPTIMIZED: Background refreshes (don't wait/don't await)
       billing.fetchSubscriptions().catch(err => {
@@ -91,7 +108,7 @@ export function useSubscriptionHandlers({
     } catch (err) {
       setError(err.message || 'Failed to process confirmation');
     }
-  }, [billing, auth, setError, setSuccess, setShowSubscriptionConfirmationModal, setPendingSubscription]);
+  }, [billing, auth, onboarding, setError, setSuccess, setShowSubscriptionConfirmationModal, setPendingSubscription]);
 
   /**
    * Toggle subscription active/inactive
@@ -168,7 +185,14 @@ export function useSubscriptionHandlers({
         return;
       }
 
-      setSuccess(true);
+            setSuccess(true);
+      
+      // CRITICAL: Update onboarding step if user is onboarding
+      if (onboarding?.updateOnboardingStep && onboarding.onboardingStatus?.isOnboarding === true) {
+        onboarding.updateOnboardingStep('subscription').catch(err => {
+          logErrorFromCatch('[ONBOARDING] Failed to update step after plan change:', err.message);
+        });
+      }
       
       // ✅ OPTIMIZED: Background refreshes
       billing.fetchSubscriptions().catch(err => {
@@ -185,7 +209,7 @@ export function useSubscriptionHandlers({
     } catch (err) {
       setError(err.message || 'Failed to change subscription');
     }
-  }, [billing, auth, setError, setSuccess, setPendingSubscription, setShowSubscriptionConfirmationModal]);
+  }, [billing, auth, onboarding, setError, setSuccess, setPendingSubscription, setShowSubscriptionConfirmationModal]);
 
   return {
     handleSubscribe,

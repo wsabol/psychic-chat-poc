@@ -18,7 +18,7 @@ import { initializeAnalytics, trackPageView } from '../utils/analyticsTracker';
  * - Payment required modal (if needed)
  * - Subscription required modal (if needed)
  * - Onboarding modal (if new user)
- * - Welcome message (after onboarding completes)
+ * - Welcome message (after personal info completed)
  * - Main chat container
  */
 export function AppChat({ state }) {
@@ -42,7 +42,7 @@ export function AppChat({ state }) {
   const [showConsentModal, setShowConsentModal] = React.useState(false);
   const [consentLoading, setConsentLoading] = React.useState(true);
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(false);
-  const [wasOnboarding, setWasOnboarding] = useState(false);
+  const [welcomeShownOnce, setWelcomeShownOnce] = useState(false);
 
   // Fetch actual consent status from database
   useEffect(() => {
@@ -58,7 +58,7 @@ export function AppChat({ state }) {
       return;
     }
     
-        const fetchConsentStatus = async () => {
+    const fetchConsentStatus = async () => {
       try {
         const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
         const response = await fetch(`${API_URL}/auth/check-consent/${user.uid}`, {
@@ -70,7 +70,7 @@ export function AppChat({ state }) {
         // Show modal only if BOTH terms AND privacy are NOT accepted
         const needsConsent = !data.terms_accepted || !data.privacy_accepted;
         setShowConsentModal(needsConsent);
-                  } catch (err) {
+      } catch (err) {
         // On network error: check if this is a NEW user (no profile yet)
         // If new user → require consent to be safe
         // If existing user → allow access (they likely already consented)
@@ -95,42 +95,22 @@ export function AppChat({ state }) {
     trackPageView('app-initialized');
   }, []);
 
-    const isUserOnboarding = onboarding.onboardingStatus?.isOnboarding === true;
+  const isUserOnboarding = onboarding.onboardingStatus?.isOnboarding === true;
 
-        // Show Welcome message when user navigates to Welcome step
-  // ONLY for permanent users going through onboarding (NOT free trial)
-  // Do NOT show if onboarding is already complete
+  // CRITICAL: Show Welcome message AUTOMATICALLY after personal_info is completed
+  // NOT based on step, but on completedSteps.personal_info
+  // This allows automatic navigation to chat with welcome modal after saving personal info
   useEffect(() => {
     const isFreeTrial = authState.isTemporaryAccount;
-    const isOnboardingStep = onboarding.onboardingStatus?.currentStep === 'welcome';
-    const isOnboardingComplete = onboarding.onboardingStatus?.isOnboarding === false;
+    const isPersonalInfoCompleted = onboarding.onboardingStatus?.completedSteps?.personal_info === true;
+    const isStillOnboarding = onboarding.onboardingStatus?.isOnboarding === true;
     
-    if (!isFreeTrial && isOnboardingStep && !isOnboardingComplete) {
+    // Show welcome automatically after personal_info is completed, only once per session
+    if (!isFreeTrial && isPersonalInfoCompleted && isStillOnboarding && !welcomeShownOnce) {
       setShowWelcomeMessage(true);
+      setWelcomeShownOnce(true); // Mark that we've shown it
     }
-  }, [onboarding.onboardingStatus?.currentStep, onboarding.onboardingStatus?.isOnboarding, authState.isTemporaryAccount]);
-
-    // Detect when onboarding COMPLETES (transitions from true to false)
-  // ONLY for permanent users (NOT free trial)
-  // Do NOT show if welcome message is already shown or onboarding already complete
-  useEffect(() => {
-    const isFreeTrial = authState.isTemporaryAccount;
-    const isOnboardingComplete = onboarding.onboardingStatus?.isOnboarding === false;
-    
-    // If was onboarding and now NOT onboarding = onboarding just completed
-    // But SKIP for free trial users - they never get welcome message
-    // And SKIP if already showed welcome message or onboarding is complete
-    if (!isFreeTrial && wasOnboarding && !isUserOnboarding && !showWelcomeMessage && !isOnboardingComplete) {
-      setShowWelcomeMessage(true);
-    }
-    
-        // Track state for next render
-    setWasOnboarding(isUserOnboarding);
-  }, [isUserOnboarding, wasOnboarding, authState.isTemporaryAccount, onboarding.onboardingStatus?.isOnboarding, showWelcomeMessage]);
-
-  // Debug: Track welcome message state
-  useEffect(() => {
-  }, [showWelcomeMessage]);
+  }, [onboarding.onboardingStatus?.completedSteps?.personal_info, onboarding.onboardingStatus?.isOnboarding, authState.isTemporaryAccount, welcomeShownOnce]);
 
   // Handle consent accepted
   const handleConsentAccepted = () => {
@@ -149,7 +129,7 @@ export function AppChat({ state }) {
     setShowWelcomeMessage(false);
   };
 
-    // Guard: Show loading while checking consent
+  // Guard: Show loading while checking consent
   if (consentLoading) {
     return <ErrorBoundary><LoadingScreen /></ErrorBoundary>;
   }
@@ -167,7 +147,7 @@ export function AppChat({ state }) {
     );
   }
 
-    // Guard: Don't show modals while onboarding data is loading
+  // Guard: Don't show modals while onboarding data is loading
   // SKIP for temporary accounts - they don't have onboarding data
   if (authState.isAuthenticated && !authState.isTemporaryAccount && onboarding.onboardingStatus === null) {
     return <ErrorBoundary><LoadingScreen /></ErrorBoundary>;
@@ -216,7 +196,7 @@ export function AppChat({ state }) {
           />
         )}
 
-              {showWelcomeMessage && !authState.isTemporaryAccount && (
+        {showWelcomeMessage && !authState.isTemporaryAccount && (
           <WelcomeMessage
             userId={authState.authUserId}
             token={authState.token}
@@ -230,7 +210,9 @@ export function AppChat({ state }) {
                   headers: { 'Authorization': `Bearer ${authState.token}` }
                 });
                 await onboarding.fetchOnboardingStatus();
-              } catch (err) {}
+              } catch (err) {
+                // Error completing welcome step
+              }
             }}
           />
         )}
@@ -254,4 +236,3 @@ export function AppChat({ state }) {
 
   return null;
 }
-

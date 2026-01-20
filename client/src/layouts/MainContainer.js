@@ -54,12 +54,43 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
   const currentPage = PAGES[currentPageIndex];
 
-// Only apply startingPage during onboarding - once complete, user has full nav control
-    useEffect(() => {
-    const isStillOnboarding = onboarding?.onboardingStatus?.isOnboarding === true;
-    if (isStillOnboarding && startingPage !== currentPageIndex) {
+  // Detect current application mode (free trial, onboarding, or normal)
+  const currentMode = useModeDetection(auth, onboarding);
+  const modeRules = useModeRules(currentMode);
+
+  // CRITICAL: Define goToPage FIRST so it can be used in effects and handlers
+  // This must come before any effect that calls it
+  const goToPage = useCallback((index) => {
+    // Check if page is allowed in current mode
+    const isAllowed = modeRules.isPageAllowed(index);
+    if (!isAllowed) {
+      return;
     }
-  }, [startingPage, currentPageIndex, onboarding?.onboardingStatus?.isOnboarding]);
+
+    setCurrentPageIndex(prevPageIndex => {
+      const newIndex = Math.max(0, Math.min(index, PAGES.length - 1));
+      if (newIndex !== prevPageIndex) {
+        // If leaving billing page and not going back to billing, notify App to re-check subscription
+        if (prevPageIndex === 9 && newIndex !== 9 && onNavigateFromBilling) {
+          onNavigateFromBilling();
+        }
+        setSwipeDirection(newIndex > prevPageIndex ? 1 : -1);
+        window.history.pushState({ pageIndex: newIndex }, '');
+      }
+      return newIndex;
+    });
+  }, [modeRules, onNavigateFromBilling]);
+
+  // CRITICAL: Update currentPageIndex when startingPage changes during onboarding
+  // This handles navigation when user clicks onboarding modal buttons or auto-routing
+  useEffect(() => {
+    const isStillOnboarding = onboarding?.onboardingStatus?.isOnboarding === true;
+    // If user is onboarding AND startingPage changes, navigate to that page
+    if (isStillOnboarding && startingPage !== currentPageIndex) {
+      goToPage(startingPage);
+    }
+  }, [startingPage, currentPageIndex, onboarding?.onboardingStatus?.isOnboarding, goToPage]);
+
   // Track scroll to hide/show nav on mobile
   useEffect(() => {
     const handleScroll = (e) => {
@@ -81,10 +112,6 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
       return () => container.removeEventListener('scroll', handleScroll);
     }
   }, [lastScrollY]);
-
-    // Detect current application mode (free trial, onboarding, or normal)
-  const currentMode = useModeDetection(auth, onboarding);
-  const modeRules = useModeRules(currentMode);
 
   // Browser back button support - behavior depends on mode
   useEffect(() => {
@@ -116,39 +143,18 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
     preventScrollOnSwipe: true,
   });
 
-        const goToPage = useCallback((index) => {
-    // Check if page is allowed in current mode
-    const isAllowed = modeRules.isPageAllowed(index);
-    if (!isAllowed) {
-      return;
-    }
+  const PageComponent = currentPage.component;
 
-        setCurrentPageIndex(prevPageIndex => {
-      const newIndex = Math.max(0, Math.min(index, PAGES.length - 1));
-      if (newIndex !== prevPageIndex) {
-        // If leaving billing page and not going back to billing, notify App to re-check subscription
-        if (prevPageIndex === 9 && newIndex !== 9 && onNavigateFromBilling) {
-          onNavigateFromBilling();
-        }
-        setSwipeDirection(newIndex > prevPageIndex ? 1 : -1);
-        window.history.pushState({ pageIndex: newIndex }, '');
-      }
-      return newIndex;
-    });
-  }, [modeRules, onNavigateFromBilling]);
-
-    const PageComponent = currentPage.component;
-
-    // Track page views
+  // Track page views
   useEffect(() => {
     if (currentPage) {
       trackPageView(currentPage.id);
     }
   }, [currentPage, currentPageIndex]);
 
-    return (
+  return (
     <div className="main-container">
-            <Navigation
+      <Navigation
         pages={PAGES}
         currentPageIndex={currentPageIndex}
         onNavigate={(index) => goToPage(index)}
@@ -161,7 +167,7 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
 
       <div className="pages-container" {...swipeHandlers}>
         <AnimatePresence mode="wait">
-                    <motion.div
+          <motion.div
             key={currentPage.id}
             initial={{ opacity: 0, x: swipeDirection * 100 }}
             animate={{ opacity: 1, x: 0 }}
@@ -185,7 +191,7 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
         </AnimatePresence>
       </div>
 
-            {/* Help Icon - Show when chat is closed */}
+      {/* Help Icon - Show when chat is closed */}
       {!isHelpOpen && (
         <HelpIcon 
           isOpen={isHelpOpen} 
@@ -208,4 +214,3 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
     </div>
   );
 }
-

@@ -58,8 +58,8 @@ export default function BillingPage({ userId, token, auth, onboarding, defaultTa
                     {activeTab === 'payment-methods' && (
             <PaymentMethodPage userId={userId} token={token} auth={auth} onboarding={onboarding} />
           )}
-          {activeTab === 'subscriptions' && (
-            <SubscriptionsPage userId={userId} token={token} auth={auth} />
+                    {activeTab === 'subscriptions' && (
+            <SubscriptionsPage userId={userId} token={token} auth={auth} onboarding={onboarding} />
           )}
           {activeTab === 'invoices' && (
             <InvoicesPage userId={userId} token={token} auth={auth} />

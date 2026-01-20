@@ -135,9 +135,14 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
         }
       }
 
-                  // Navigate or show success
+      // Navigate or show success
+      // CRITICAL: For onboarding users (NOT temp), ALWAYS navigate to Chat (0) for welcome modal
+      const isOnboarding = !isTemporaryAccount;
       const postSaveAction = tempAccountConfig.getPostSaveAction();
-      if (postSaveAction.shouldNavigate && onNavigateToPage) {
+      const shouldNavigate = isOnboarding || postSaveAction.shouldNavigate;
+      const targetPage = isOnboarding ? 0 : postSaveAction.navigationTarget; // 0 = Chat
+      
+      if (shouldNavigate && onNavigateToPage) {
                 // For ALL accounts: poll for astrology data to be saved before navigating
         const pollAttempts = isTemporaryAccount ? 60 : TIMING.ASTROLOGY_POLL_MAX_ATTEMPTS;
         const pollInterval = isTemporaryAccount ? 200 : TIMING.ASTROLOGY_POLL_INTERVAL_MS;
@@ -146,10 +151,10 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
             maxAttempts: pollAttempts,
             intervalMs: pollInterval,
             onReady: () => {
-              onNavigateToPage(postSaveAction.navigationTarget);
+              onNavigateToPage(targetPage);
             },
                         onTimeout: () => {
-              onNavigateToPage(postSaveAction.navigationTarget);
+              onNavigateToPage(targetPage);
             }
           });
       } else {

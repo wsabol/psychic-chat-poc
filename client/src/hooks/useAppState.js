@@ -60,7 +60,7 @@ export function useAppState() {
   // Effect: Start email verification polling and cleanup old temp account on verification
   useEffect(() => {
     if (isVerification && auth.currentUser) {
-      const onVerified = async () => {
+              const onVerified = async () => {
         authState.setEmailVerified(true);
         authState.refreshEmailVerificationStatus();
         try {
@@ -72,7 +72,9 @@ export function useAppState() {
             localStorage.removeItem('temp_account_uid');
             localStorage.removeItem('temp_account_email');
           }
-        } catch (err) {}
+        } catch (err) {
+          // Cleanup failed - account verification still successful
+        }
       };
             emailVerification.startVerificationPolling(auth.currentUser, 40, onVerified);
     }
@@ -92,35 +94,50 @@ export function useAppState() {
     }
   }, [authState.isAuthenticated, authState.isTemporaryAccount, onboarding.onboardingStatus]);
 
-  // Effect: Auto-navigate NEW users to payment methods (only if still onboarding)
+    // Effect: Route users based on their current onboarding step
+  // CRITICAL: Check the database field onboarding_step (last completed step)
+  // - If onboarding_step = "create_account" → Route to Billing (payment method)
+  // - If onboarding_step = "payment_method_added" → Route to Billing (subscriptions)
+  // - If onboarding_step = "subscription_complete" → Route to Personal Info
+  // - If onboarding_step = "personal_info_complete" → Route to Chat with Welcome
   useEffect(() => {
-    if (authState.emailVerified && !authState.isTemporaryAccount && onboarding.onboardingStatus?.isOnboarding === true) {
-      setSkipPaymentCheck(true);
-      setSkipSubscriptionCheck(true);
-            setStartingPage(9); // billing page is now index 9 after adding admin
-    }
-  }, [authState.emailVerified, authState.isTemporaryAccount, onboarding.onboardingStatus?.isOnboarding]);
-
-  // Effect: Route new users with active subscription to Personal Info page (only if still onboarding)
-  useEffect(() => {
-    if (authState.hasActiveSubscription && skipSubscriptionCheck && onboarding.onboardingStatus?.isOnboarding === true) {
-      setSkipSubscriptionCheck(false);
-      setStartingPage(1);  // ← PersonalInfoPage (Get Acquainted)
-      if (onboarding.updateOnboardingStep) {
-        onboarding.updateOnboardingStep('subscription').catch(err => {
-                });
+    // Only for authenticated, non-temp users with loaded onboarding status
+    if (authState.isAuthenticated && !authState.isTemporaryAccount && onboarding.onboardingStatus?.isOnboarding === true) {
+      const currentStep = onboarding.onboardingStatus?.currentStep;
+      
+      // Route based on current step
+      if (currentStep === 'create_account' || currentStep === 'payment_method') {
+        setSkipPaymentCheck(true);
+        setSkipSubscriptionCheck(true);
+        setBillingTab('payment-methods');
+        setStartingPage(9); // Billing page
+            } else if (currentStep === 'subscription') {
+        setSkipPaymentCheck(true);
+        setSkipSubscriptionCheck(true);
+        setStartingPage(1); // PersonalInfoPage (Get Acquainted)
+      } else if (currentStep === 'personal_info') {
+        setSkipPaymentCheck(true);
+        setSkipSubscriptionCheck(true);
+        setStartingPage(1); // PersonalInfoPage
+      } else if (currentStep === 'welcome') {
+        setSkipPaymentCheck(true);
+        setSkipSubscriptionCheck(true);
+        setStartingPage(0); // ChatPage with Welcome modal
       }
     }
-  }, [authState.hasActiveSubscription, skipSubscriptionCheck, onboarding.onboardingStatus?.isOnboarding, onboarding]);
+  }, [authState.isAuthenticated, authState.isTemporaryAccount, onboarding.onboardingStatus?.isOnboarding, onboarding.onboardingStatus?.currentStep]);
 
-    // CRITICAL: Ensure temporary accounts start on ChatPage (index 0) at login
-  // But allow them to navigate after they explicitly choose to enter personal info
-  // Reset to ChatPage only if not authenticated yet (login flow)
+    // Note: Subscription completion routing is now handled by the step-based routing effect above
+  // No longer need to check hasActiveSubscription - we check currentStep instead
+
+      // Effect: Ensure temporary (free trial) accounts start on ChatPage (index 0) at login
+  // CRITICAL: Free trial users should ALWAYS start at Chat (index 0)
+  // This is their main interface and they navigate from there
   useEffect(() => {
-    if (authState.isTemporaryAccount && !authState.isAuthenticated && startingPage !== 0) {
-      setStartingPage(0);
+    if (authState.isAuthenticated && authState.isTemporaryAccount) {
+      setStartingPage(0); // Always Chat for free trial
     }
-  }, [authState.isTemporaryAccount, authState.isAuthenticated, startingPage]);
+  }, [authState.isAuthenticated, authState.isTemporaryAccount]);
 
   // Handlers
   const handleVerificationFailed = useCallback(() => {
@@ -139,9 +156,10 @@ export function useAppState() {
     await authState.handleLogout();
   }, [authState]);
 
-  const handleNavigateToBilling = useCallback(() => {
+    const handleNavigateToBilling = useCallback(() => {
     setSkipPaymentCheck(true);
     setSkipSubscriptionCheck(true);
+    setBillingTab('payment-methods');
     setStartingPage(9); // billing page is now index 9 after adding admin
   }, []);
 
@@ -153,13 +171,16 @@ export function useAppState() {
     }
   }, [authState]);
 
-  const handleNavigateToSubscriptions = useCallback(() => {
+    const handleNavigateToSubscriptions = useCallback(() => {
+    setSkipPaymentCheck(true);
     setSkipSubscriptionCheck(true);
+    setBillingTab('subscriptions');
     setStartingPage(9); // billing page is now index 9 after adding admin
   }, []);
 
-  const handleOnboardingNavigate = useCallback((step) => {
-    // CRITICAL: For temporary accounts (free trial), DO NOT navigate to PersonalInfoPage automatically
+    const handleOnboardingNavigate = useCallback((step) => {
+    // CRITICAL: This handler is called when user clicks a step in the OnboardingModal
+    // For temporary accounts (free trial), DO NOT navigate to PersonalInfoPage automatically
     // Temp accounts use ChatPage's 60-second timer flow - they explicitly choose to enter birth info
     // This handler is only for permanent accounts going through onboarding
     if (authState.isTemporaryAccount && step === 'personal_info') {
@@ -170,22 +191,22 @@ export function useAppState() {
       case 'payment_method':
         setSkipPaymentCheck(true);
         setSkipSubscriptionCheck(true);
+        setBillingTab('payment-methods');
         setStartingPage(9); // billing page is now index 9 after adding admin
         break;
-      case 'subscription':
+            case 'subscription':
         setSkipPaymentCheck(true);
         setSkipSubscriptionCheck(true);
-        setBillingTab('subscriptions');
-        setStartingPage(9); // billing page is now index 9 after adding admin
+        setStartingPage(1); // PersonalInfoPage (Get Acquainted)
         break;
       case 'personal_info':
         setStartingPage(1);
         break;
-            case 'welcome':
+              case 'welcome':
         setStartingPage(0);
-        if (onboarding.updateOnboardingStep) {
-          onboarding.updateOnboardingStep('welcome').catch(err => {});
-        }
+        // CRITICAL: Do NOT call updateOnboardingStep here!
+        // The WelcomeMessage will be shown automatically because personal_info is completed
+        // Only call updateOnboardingStep when welcome modal closes (via onOnboardingComplete)
         break;
       case 'security_settings':
         setStartingPage(6);
@@ -195,12 +216,13 @@ export function useAppState() {
     }
   }, [onboarding, authState.isTemporaryAccount]);
 
-  const handleOnboardingClose = useCallback(async () => {
+    const handleOnboardingClose = useCallback(async () => {
     try {
       if (onboarding.updateOnboardingStep) {
         await onboarding.updateOnboardingStep('subscription');
       }
     } catch (err) {
+      // Error updating step - user can retry or continue
     } finally {
       setOnboardingClosed(true);
     }
