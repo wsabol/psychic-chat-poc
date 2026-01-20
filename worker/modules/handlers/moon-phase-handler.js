@@ -54,13 +54,15 @@ export async function generateMoonPhaseCommentary(userId, phase) {
             return;
         }
         
-        // Build moon phase prompt
-        const moonPhasePrompt = buildMoonPhasePrompt(userInfo, astrologyInfo, phase);
+                // Get user greeting first (uses familiar_name if available)
+        const userGreeting = getUserGreeting(userInfo, userId);
+        
+                // Build moon phase prompt with userGreeting already obtained above
+        const moonPhasePrompt = buildMoonPhasePrompt(userInfo, astrologyInfo, phase, userGreeting);
         
         // Get oracle system prompt with ORACLE LANGUAGE SUPPORT
         // Oracle response uses oracleLanguage (can be regional variant), page UI uses userLanguage
         const baseSystemPrompt = getOracleSystemPrompt(false, oracleLanguage);
-        const userGreeting = getUserGreeting(userInfo, userId);
         
         const systemPrompt = baseSystemPrompt + `
 
@@ -116,10 +118,10 @@ Do NOT include tarot cards - this is purely lunar + astrological insight enriche
 /**
  * Build moon phase prompt with user's astrological context
  */
-function buildMoonPhasePrompt(userInfo, astrologyInfo, phase) {
+function buildMoonPhasePrompt(userInfo, astrologyInfo, phase, userGreeting) {
     const astro = astrologyInfo.astrology_data;
     
-    let prompt = `Generate a rich, personalized insight for ${userInfo.first_name || 'this person'} about the ${phase} moon phase:\n\n`;
+    let prompt = `Generate a rich, personalized insight for ${userGreeting} about the ${phase} moon phase:\n\n`;
     
     if (astro.sun_sign) {
         prompt += `COMPLETE BIRTH CHART:\n`;

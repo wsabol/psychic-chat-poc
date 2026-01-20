@@ -1,5 +1,5 @@
 -- Master SQL file for restoring database schema
--- Last Updated: 2025-01-19
+-- Last Updated: 2025-01-20
 -- This file contains the EXACT schema of the current production database
 -- plus all required tables and columns for subscription billing
 -- 
@@ -55,10 +55,13 @@ CREATE TABLE IF NOT EXISTS user_personal_info (
     familiar_name_encrypted BYTEA,
     phone_number_encrypted BYTEA,
     email_encrypted BYTEA,
-        stripe_customer_id_encrypted BYTEA,
+            stripe_customer_id_encrypted BYTEA,
     stripe_subscription_id_encrypted BYTEA,
     last_status_check_at TIMESTAMP,
-    subscription_cancelled_at TIMESTAMP
+    subscription_cancelled_at TIMESTAMP,
+    reengagement_email_6m_sent_at TIMESTAMP DEFAULT NULL,
+    reengagement_email_1y_sent_at TIMESTAMP DEFAULT NULL,
+    reengagement_email_unsub BOOLEAN DEFAULT FALSE
 );
 
 CREATE INDEX IF NOT EXISTS idx_user_personal_info_email_hash ON user_personal_info(email_hash);
