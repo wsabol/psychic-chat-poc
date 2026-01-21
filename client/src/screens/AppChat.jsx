@@ -10,6 +10,7 @@ import MainContainer from '../layouts/MainContainer';
 import { useLanguagePreference } from '../hooks/useLanguagePreference';
 import { useAuth } from '../context/AuthContext';
 import { initializeAnalytics, trackPageView } from '../utils/analyticsTracker';
+import { useFreeTrial } from '../hooks/useFreeTrial';
 
 /**
  * AppChat - Handles authenticated chat flow
@@ -43,6 +44,9 @@ export function AppChat({ state }) {
   const [consentLoading, setConsentLoading] = React.useState(true);
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(false);
   const [welcomeShownOnce, setWelcomeShownOnce] = useState(false);
+  
+  // Initialize free trial tracking for temp users (creates session on mount)
+  const freeTrialState = useFreeTrial(authState.isTemporaryAccount, authState.authUserId);
 
   // Fetch actual consent status from database
   useEffect(() => {
@@ -129,8 +133,54 @@ export function AppChat({ state }) {
     setShowWelcomeMessage(false);
   };
 
-  // Guard: Show loading while checking consent
-  if (consentLoading) {
+  // Guard: Block temp users if they've already completed free trial
+  if (authState.isTemporaryAccount && freeTrialState.isCompleted && freeTrialState.error) {
+    return (
+      <ErrorBoundary>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100vh',
+          padding: '2rem',
+          textAlign: 'center'
+        }}>
+          <h2>🔮 Free Trial Already Completed</h2>
+          <p style={{ marginTop: '1rem', marginBottom: '2rem' }}>
+            {freeTrialState.error}
+          </p>
+          <p style={{ marginBottom: '2rem' }}>
+            Please create an account to continue using Starship Psychics.
+          </p>
+          <button
+            onClick={() => {
+              // Log out the temp user
+              authState.handleLogout();
+              // Force navigation to register screen
+              setTimeout(() => {
+                window.location.href = '/?register=true';
+              }, 100);
+            }}
+            style={{
+              padding: '1rem 2rem',
+              fontSize: '1.1rem',
+              backgroundColor: '#6366f1',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer'
+            }}
+          >
+            Create Account
+          </button>
+        </div>
+      </ErrorBoundary>
+    );
+  }
+
+  // Guard: Show loading while checking consent or free trial
+  if (consentLoading || (authState.isTemporaryAccount && freeTrialState.loading)) {
     return <ErrorBoundary><LoadingScreen /></ErrorBoundary>;
   }
 

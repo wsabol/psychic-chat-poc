@@ -19,15 +19,14 @@ let tempAccountCleanupJobHandle = null;
  */
 export function initializeScheduler() {
   try {
-    console.log('[Scheduler] Initializing scheduler...');
-    console.log('[Scheduler] CLEANUP_RUN_ON_STARTUP =', process.env.CLEANUP_RUN_ON_STARTUP);
+
     
     // Schedule temp account cleanup job to run every 8 hours (0, 8, 16 UTC)
     tempAccountCleanupJobHandle = cron.schedule('0 */8 * * *',
       async () => {
         try {
           const result = await runTempAccountCleanupJob();
-          console.log('[Scheduler] Temp account cleanup completed:', result);
+
         } catch (error) {
           logErrorFromCatch(error, 'scheduler', 'Temp account cleanup job failed');
         }
@@ -70,13 +69,10 @@ export function initializeScheduler() {
 
     // Optional: For testing, run immediately (non-blocking)
     if (process.env.CLEANUP_RUN_ON_STARTUP === 'true') {
-      console.log('[Scheduler] ✓ CLEANUP_RUN_ON_STARTUP enabled - running jobs now...');
       
       setImmediate(async () => {
         try {
-          console.log('[Scheduler] Starting temp account cleanup on startup...');
           const result = await runTempAccountCleanupJob();
-          console.log('[Scheduler] ✓ Temp account cleanup completed:', result);
         } catch (e) {
           console.error('[Scheduler] ✗ Temp account cleanup failed:', e.message);
           logErrorFromCatch(e, 'scheduler', 'Run temp account cleanup job on startup');
@@ -85,29 +81,21 @@ export function initializeScheduler() {
       
       setImmediate(async () => {
         try {
-          console.log('[Scheduler] Starting account cleanup on startup...');
           const result = await runAccountCleanupJob();
-          console.log('[Scheduler] ✓ Account cleanup completed:', result);
         } catch (e) {
           console.error('[Scheduler] ✗ Account cleanup failed:', e.message);
           logErrorFromCatch(e, 'scheduler', 'Run account cleanup job on startup');
         }
       });
-    } else {
-      console.log('[Scheduler] CLEANUP_RUN_ON_STARTUP not set - jobs will run on schedule only');
-    }
-
+    } 
     // Optional: Run subscription check on startup for testing (non-blocking)
     if (process.env.SUBSCRIPTION_CHECK_RUN_ON_STARTUP === 'true') {
-      console.log('[Scheduler] ✓ SUBSCRIPTION_CHECK_RUN_ON_STARTUP enabled');
       setImmediate(() => {
         runSubscriptionCheckJob().catch(e => {
           logErrorFromCatch(e, 'scheduler', 'Run subscription check on startup');
         });
       });
     }
-
-    console.log('[Scheduler] ✓ Scheduler initialized successfully');
     return {
       tempAccountCleanup: tempAccountCleanupJobHandle,
       cleanup: cleanupJobHandle,

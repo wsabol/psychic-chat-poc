@@ -26,7 +26,6 @@ export async function generateMoonPhaseCommentary(userId, phase) {
                 const { getCurrentMoonPhase } = await import('../astrology.js');
                 const moonData = await getCurrentMoonPhase();
                 actualPhase = moonData.phase || 'fullMoon';
-                console.log(`[MOON-PHASE] Converted "current" to actual phase: ${actualPhase}`);
             } catch (err) {
                 console.error('[MOON-PHASE] Failed to get current phase, using fullMoon as fallback');
                 actualPhase = 'fullMoon';

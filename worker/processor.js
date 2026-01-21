@@ -59,8 +59,6 @@ async function generateDailyMysticalUpdates() {
              AND ua.astrology_data IS NOT NULL`
         );
         
-        console.log(`[STARTUP] Found ${users.length} established users with complete data for daily updates`);
-        
         if (users.length === 0) {
             return;
         }
@@ -77,23 +75,18 @@ async function generateDailyMysticalUpdates() {
         } catch (err) {
             logErrorFromCatch(err, '[STARTUP] Error fetching current moon phase');
         }
-        
-        console.log(`[STARTUP] Beginning to process ${users.length} users...`);
         for (let i = 0; i < users.length; i++) {
             const user = users[i];
-            console.log(`[STARTUP] Processing user ${i + 1}/${users.length}: ${user.id}`);
             try {
                 await generateHoroscope(user.id, 'daily');
                 // Only generate moon phase if we successfully got the current phase
                 if (currentPhase) {
                     await generateMoonPhaseCommentary(user.id, currentPhase);
                 }
-                console.log(`[STARTUP] Completed user ${user.id}`);
             } catch (err) {
                 logErrorFromCatch(err, `[STARTUP] Error updating user ${user.id}`);
             }
         }
-        console.log(`[STARTUP] Finished processing all ${users.length} users`);
     } catch (err) {
         logErrorFromCatch(err, '[STARTUP] Error generating daily mystical updates');
     }
@@ -111,8 +104,6 @@ export async function workerLoop() {
     // } catch (err) {
     //     logErrorFromCatch(err, '[WORKER] Failed to generate daily updates');
     // }
-    
-    console.log('[WORKER] Starting job queue processing...');
     
     while (true) {
         try {

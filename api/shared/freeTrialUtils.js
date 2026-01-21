@@ -1,74 +1,10 @@
 import crypto from 'crypto';
-import { hashTempUserId } from './hashUtils.js';
+import { hashTempUserId, hashIpAddress } from './hashUtils.js';
 import { logErrorFromCatch } from './errorLogger.js';
-
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'your_encryption_key_here';
-
-/**
- * Encrypt IP address for storage in database
- * Uses AES-256-CBC encryption
- * @param {string} ipAddress - The IP address to encrypt
- * @returns {string} Encrypted IP as hex string
- */
-export function encryptIpAddress(ipAddress) {
-  if (!ipAddress) return null;
-  
-  try {
-    // Create IV (initialization vector)
-    const iv = crypto.randomBytes(16);
-    
-    // Create cipher with AES-256-CBC
-    const cipher = crypto.createCipheriv(
-      'aes-256-cbc',
-      Buffer.from(ENCRYPTION_KEY.padEnd(32, '0').substring(0, 32)), // Ensure 32 bytes
-      iv
-    );
-    
-    // Encrypt the IP
-    let encrypted = cipher.update(ipAddress, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-    
-    // Return IV + encrypted data (IV needed for decryption)
-    return iv.toString('hex') + ':' + encrypted;
-  } catch (err) {
-    logErrorFromCatch('Error encrypting IP address', err);
-    return null;
-  }
-}
-
-/**
- * Decrypt IP address from database
- * @param {string} encryptedIp - The encrypted IP (IV:encrypted format)
- * @returns {string} Decrypted IP address
- */
-export function decryptIpAddress(encryptedIp) {
-  if (!encryptedIp) return null;
-  
-  try {
-    // Split IV and encrypted data
-    const [ivHex, encrypted] = encryptedIp.split(':');
-    const iv = Buffer.from(ivHex, 'hex');
-    
-    // Create decipher
-    const decipher = crypto.createDecipheriv(
-      'aes-256-cbc',
-      Buffer.from(ENCRYPTION_KEY.padEnd(32, '0').substring(0, 32)),
-      iv
-    );
-    
-    // Decrypt
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-    
-    return decrypted;
-  } catch (err) {
-    logErrorFromCatch('Error decrypting IP address', err);
-    return null;
-  }
-}
 
 /**
  * Create free trial session for temp user
+ * Uses IP HASHING (not encryption) so same IP always produces same hash
  * @param {string} tempUserId - Temporary user ID
  * @param {string} ipAddress - Client IP address
  * @param {Object} pool - Database connection pool
@@ -80,34 +16,49 @@ export async function createFreeTrialSession(tempUserId, ipAddress, db) {
   }
 
   try {
-    // Check if IP has already completed a trial
+    const ipHash = hashIpAddress(ipAddress);
+    
+    // Check if IP has already completed a trial (deterministic hash allows this!)
     const completedCheck = await db.query(
-      `SELECT id FROM free_trial_sessions 
-       WHERE ip_address_encrypted = $1 AND is_completed = true 
+      `SELECT id, current_step FROM free_trial_sessions 
+       WHERE ip_address_hash = $1 
+       ORDER BY started_at DESC
        LIMIT 1`,
-      [encryptIpAddress(ipAddress)]
+      [ipHash]
     );
 
+    // If IP found with completed trial, block access
     if (completedCheck.rows.length > 0) {
-      return { 
-        success: false, 
-        error: 'This IP address has already completed the free trial',
-        alreadyCompleted: true
+      const existingSession = completedCheck.rows[0];
+      
+      if (existingSession.current_step === 'completed') {
+        return { 
+          success: false, 
+          error: 'This IP address has already completed the free trial',
+          alreadyCompleted: true
+        };
+      }
+      
+      // If incomplete trial exists, return it for resumption
+      return {
+        success: true,
+        sessionId: existingSession.id,
+        currentStep: existingSession.current_step,
+        resuming: true,
+        message: `Resuming from step: ${existingSession.current_step}`
       };
     }
 
-    // Generate session ID (UUID)
+    // No existing session - create new one
     const sessionId = crypto.randomUUID();
     const userIdHash = hashTempUserId(tempUserId);
-    const encryptedIp = encryptIpAddress(ipAddress);
 
-    // Create new session
     const result = await db.query(
       `INSERT INTO free_trial_sessions 
-       (id, ip_address_encrypted, user_id_hash, current_step, is_completed, started_at, last_activity_at)
+       (id, ip_address_hash, user_id_hash, current_step, is_completed, started_at, last_activity_at)
        VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
        RETURNING id, current_step, started_at`,
-      [sessionId, encryptedIp, userIdHash, 'chat', false]
+      [sessionId, ipHash, userIdHash, 'chat', false]
     );
 
     return {
@@ -248,8 +199,6 @@ export async function getFreeTrialSession(tempUserId, db) {
 }
 
 export default {
-  encryptIpAddress,
-  decryptIpAddress,
   createFreeTrialSession,
   updateFreeTrialStep,
   completeFreeTrialSession,

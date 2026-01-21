@@ -6,7 +6,7 @@ async function clearQueue() {
         await client.connect();
         
         const deleted = await client.del('chat-jobs');
-        console.log('✅ Queue cleared! Deleted', deleted, 'key(s)');
+
         
         await client.quit();
         process.exit(0);

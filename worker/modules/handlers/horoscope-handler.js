@@ -38,23 +38,12 @@ export async function generateHoroscope(userId, range = 'daily') {
             [userIdHash, range]
         );
         
-        console.log(`[HOROSCOPE-DEBUG] User: ${userId}, Range: ${range}`);
-        console.log(`[HOROSCOPE-DEBUG] Today's local date: ${todayLocalDate}`);
-        console.log(`[HOROSCOPE-DEBUG] Existing entries found: ${existingHoroscopes.length}`);
-        
         if (existingHoroscopes.length > 0) {
             const createdAtLocalDate = existingHoroscopes[0].created_at_local_date;
-            console.log(`[HOROSCOPE-DEBUG] Existing entry date: ${createdAtLocalDate} (type: ${typeof createdAtLocalDate})`);
             const needsRegen = needsRegeneration(createdAtLocalDate, todayLocalDate);
-            console.log(`[HOROSCOPE-DEBUG] Needs regeneration: ${needsRegen}`);
             if (!needsRegen) {
-                console.log(`[HOROSCOPE-DEBUG] Skipping - already generated for today`);
                 return;
-            } else {
-                console.log(`[HOROSCOPE-DEBUG] Regenerating - date is old`);
-            }
-        } else {
-            console.log(`[HOROSCOPE-DEBUG] No existing entry - generating new`);
+            } 
         }
         
         // Fetch user context

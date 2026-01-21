@@ -68,3 +68,19 @@ export function verifyUserHash(userId, hash) {
     return false;
   }
 }
+
+/**
+ * Hash IP address deterministically for free trial tracking
+ * Same IP always produces same hash (unlike encryption)
+ * Cannot be reversed - privacy preserved
+ * @param {string} ipAddress - The IP address to hash
+ * @returns {string} SHA256 hash (64 chars)
+ */
+export function hashIpAddress(ipAddress) {
+  if (!ipAddress) return null;
+  return crypto
+    .createHash('sha256')
+    .update(ipAddress)
+    .digest('hex')
+    .substring(0, 64);
+}
