@@ -1,12 +1,40 @@
 import { Router } from "express";
 import { hashUserId } from "../shared/hashUtils.js";
-import { enqueueMessage } from "../shared/queue.js";
+import { enqueueMessage, getClient } from "../shared/queue.js";
 import { authenticateToken, authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
 import { getLocalDateForTimezone } from "../shared/timezoneHelper.js";
 import { validationError, serverError, notFoundError } from "../utils/responses.js";
 
 const router = Router();
+
+/**
+ * Check if generation is already in progress for this user/phase
+ * Prevents infinite loop of duplicate queue jobs
+ */
+async function isGenerationInProgress(userId, phase) {
+    try {
+        const redis = await getClient();
+        const key = `moon-phase:generating:${userId}:${phase}`;
+        const exists = await redis.get(key);
+        return !!exists;
+    } catch (err) {
+        return false; // If Redis fails, allow queuing
+    }
+}
+
+/**
+ * Mark generation as in progress for 60 seconds
+ */
+async function markGenerationInProgress(userId, phase) {
+    try {
+        const redis = await getClient();
+        const key = `moon-phase:generating:${userId}:${phase}`;
+        await redis.setEx(key, 60, 'true'); // Expires in 60 seconds
+    } catch (err) {
+        // Ignore Redis errors
+    }
+}
 
 router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
     const { userId } = req.params;
@@ -49,13 +77,18 @@ router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
             [userIdHash, process.env.ENCRYPTION_KEY, phase, todayLocalDate]
         );
         
-                if (rows.length === 0) {
-            enqueueMessage({
-                userId,
-                message: `[SYSTEM] Generate moon phase commentary for ${phase}`
-            }).catch(() => {});
+        if (rows.length === 0) {
+            // Only queue if not already generating (prevents infinite loop)
+            const alreadyGenerating = await isGenerationInProgress(userId, phase);
+            if (!alreadyGenerating) {
+                await markGenerationInProgress(userId, phase);
+                enqueueMessage({
+                    userId,
+                    message: `[SYSTEM] Generate moon phase commentary for ${phase}`
+                }).catch(() => {});
+            }
             
-            return notFoundError(res,  'No moon phase commentary found. Generating now...' );
+            return notFoundError(res, 'No moon phase commentary found. Generating now...');
         }
         
         // Process the moon phase row

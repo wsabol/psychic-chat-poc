@@ -55,15 +55,26 @@ export function getLocalDateForTimezone(timezone = 'UTC') {
  * @returns {boolean} True if needs regeneration
  */
 export function needsRegeneration(createdAtLocalDate, todayLocalDate) {
+  console.log(`[TIMEZONE-DEBUG] needsRegeneration called`);
+  console.log(`[TIMEZONE-DEBUG] createdAtLocalDate: "${createdAtLocalDate}" (type: ${typeof createdAtLocalDate})`);
+  console.log(`[TIMEZONE-DEBUG] todayLocalDate: "${todayLocalDate}" (type: ${typeof todayLocalDate})`);
+  
   if (!createdAtLocalDate) {
+    console.log(`[TIMEZONE-DEBUG] createdAtLocalDate is null/undefined - returning TRUE`);
     return true;
   }
   
   const previousDate = new Date(createdAtLocalDate);
   const todayDate = new Date(todayLocalDate);
   
+  console.log(`[TIMEZONE-DEBUG] previousDate object: ${previousDate.toISOString()}`);
+  console.log(`[TIMEZONE-DEBUG] todayDate object: ${todayDate.toISOString()}`);
+  console.log(`[TIMEZONE-DEBUG] previousDate < todayDate: ${previousDate < todayDate}`);
+  console.log(`[TIMEZONE-DEBUG] previousDate.getTime(): ${previousDate.getTime()}`);
+  console.log(`[TIMEZONE-DEBUG] todayDate.getTime(): ${todayDate.getTime()}`);
+  
   const needsRegen = previousDate < todayDate;
   
+  console.log(`[TIMEZONE-DEBUG] Final result - needsRegeneration: ${needsRegen}`);
   return needsRegen;
 }
-

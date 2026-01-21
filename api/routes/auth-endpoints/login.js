@@ -10,8 +10,38 @@ import { encrypt } from '../../utils/encryption.js';
 import { getCurrentTermsVersion, getCurrentPrivacyVersion } from '../../shared/versionConfig.js';
 import { validationError, serverError } from '../../utils/responses.js';
 import { validateSubscriptionHealth } from '../../services/stripe/subscriptionValidator.js';
+import { enqueueMessage } from '../../shared/queue.js';
 
 const router = Router();
+
+/**
+ * Queue mystical background generation for user at login
+ * Creates the mystical UX where data appears ready when user navigates to it
+ */
+async function queueMysticalDataGeneration(userId) {
+  try {
+    // Queue daily horoscope generation in background
+    await enqueueMessage({
+      userId,
+      message: '[SYSTEM] Generate horoscope for daily'
+    }).catch(() => {});
+    
+    // Queue moon phase commentary with "current" - worker will convert to actual phase
+    await enqueueMessage({
+      userId,
+      message: '[SYSTEM] Generate moon phase commentary for current'
+    }).catch(() => {});
+    
+    // Queue cosmic weather
+    await enqueueMessage({
+      userId,
+      message: '[SYSTEM] Generate cosmic weather'
+    }).catch(() => {});
+    
+  } catch (err) {
+    // Silently fail - don't block login if background generation fails
+  }
+}
 
 /**
  * POST /auth/log-login-success
@@ -162,6 +192,11 @@ router.post('/log-login-success', async (req, res) => {
       status: 'SUCCESS',
       details: { email, subscription: subscriptionStatus }
     });
+    
+    // 🔮 MYSTICAL UX: Queue background generation for horoscope, moon phase, cosmic weather
+    // This creates the magical experience where data appears ready when user navigates to it
+    // Jobs are protected by duplicate prevention, won't create infinite loops
+    queueMysticalDataGeneration(userId);
 
     return res.json({ 
       success: true,

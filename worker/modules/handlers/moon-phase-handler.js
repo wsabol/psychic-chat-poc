@@ -19,6 +19,20 @@ import { logErrorFromCatch } from '../../../shared/errorLogger.js';
  */
 export async function generateMoonPhaseCommentary(userId, phase) {
     try {
+        // If phase is "current", get the actual current moon phase
+        let actualPhase = phase;
+        if (phase === 'current') {
+            try {
+                const { getCurrentMoonPhase } = await import('../astrology.js');
+                const moonData = await getCurrentMoonPhase();
+                actualPhase = moonData.phase || 'fullMoon';
+                console.log(`[MOON-PHASE] Converted "current" to actual phase: ${actualPhase}`);
+            } catch (err) {
+                console.error('[MOON-PHASE] Failed to get current phase, using fullMoon as fallback');
+                actualPhase = 'fullMoon';
+            }
+        }
+        
         const userIdHash = hashUserId(userId);
         
         // Get user timezone and today's local date
@@ -26,9 +40,10 @@ export async function generateMoonPhaseCommentary(userId, phase) {
         const todayLocalDate = getLocalDateForTimezone(userTimezone);
         
         // Check if THIS SPECIFIC PHASE was already generated for today (in user's timezone)
+        // Use actualPhase to check (not "current")
         const { rows: existingMoonPhase } = await db.query(
             `SELECT id, created_at_local_date FROM messages WHERE user_id_hash = $1 AND role = 'moon_phase' AND moon_phase = $2 ORDER BY created_at DESC LIMIT 1`,
-            [userIdHash, phase]
+            [userIdHash, actualPhase]
         );
         
         if (existingMoonPhase.length > 0) {
@@ -57,8 +72,9 @@ export async function generateMoonPhaseCommentary(userId, phase) {
                 // Get user greeting first (uses familiar_name if available)
         const userGreeting = getUserGreeting(userInfo, userId);
         
-                // Build moon phase prompt with userGreeting already obtained above
-        const moonPhasePrompt = buildMoonPhasePrompt(userInfo, astrologyInfo, phase, userGreeting);
+        // Build moon phase prompt with userGreeting already obtained above
+        // Use actualPhase for the prompt and storage
+        const moonPhasePrompt = buildMoonPhasePrompt(userInfo, astrologyInfo, actualPhase, userGreeting);
         
         // Get oracle system prompt with ORACLE LANGUAGE SUPPORT
         // Oracle response uses oracleLanguage (can be regional variant), page UI uses userLanguage
@@ -67,7 +83,7 @@ export async function generateMoonPhaseCommentary(userId, phase) {
         const systemPrompt = baseSystemPrompt + `
 
 SPECIAL REQUEST - MOON PHASE INSIGHT:
-Generate a rich, personalized insight about how the current ${phase} moon phase affects ${userGreeting} based on their complete birth chart.
+Generate a rich, personalized insight about how the current ${actualPhase} moon phase affects ${userGreeting} based on their complete birth chart.
 Do NOT keep it brief - provide meaningful depth (3-4 paragraphs minimum).
 Incorporate specific references to their Sun sign (core identity), Moon sign (emotional nature), and Rising sign (how they present to the world).
 Address them directly and personally.
@@ -80,21 +96,23 @@ Do NOT include tarot cards - this is purely lunar + astrological insight enriche
         const oracleResponses = await callOracle(systemPrompt, [], moonPhasePrompt, true);
         
         // Store moon phase commentary (already in user's language)
+        // Use actualPhase for storage so it matches what frontend requests
         const moonPhaseData = {
             text: oracleResponses.full,
-            phase: phase,
+            phase: actualPhase,
             generated_at: new Date().toISOString(),
             zodiac_sign: astrologyInfo.zodiac_sign
         };
         
         const moonPhaseDataBrief = { 
             text: oracleResponses.brief, 
-            phase: phase, 
+            phase: actualPhase, 
             generated_at: new Date().toISOString(), 
             zodiac_sign: astrologyInfo.zodiac_sign 
         };
         
-                        // Store message (no translation needed - response is already in user's language)
+        // Store message (no translation needed - response is already in user's language)
+        // Store with actualPhase so frontend can find it
         await storeMessage(
             userId,
             'moon_phase',
@@ -104,12 +122,12 @@ Do NOT include tarot cards - this is purely lunar + astrological insight enriche
             null,  // no contentFullLang needed
             null,  // no contentBriefLang needed
             null,  // horoscopeRange
-            phase, // moonPhase
+            actualPhase, // moonPhase - use actualPhase not "current"
             null,  // contentType
             todayLocalDate
         );
         
-                        } catch (err) {
+        } catch (err) {
         logErrorFromCatch(err, '[MOON-PHASE-HANDLER] Error generating commentary');
         throw err;
     }
@@ -170,4 +188,3 @@ export function extractMoonPhase(message) {
     }
     return 'fullMoon';
 }
-

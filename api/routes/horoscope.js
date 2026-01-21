@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { hashUserId } from "../shared/hashUtils.js";
-import { enqueueMessage } from "../shared/queue.js";
+import { enqueueMessage, getClient } from "../shared/queue.js";
 import { authenticateToken, authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
 import { getUserTimezone, getLocalDateForTimezone, needsRegeneration } from "../shared/timezoneHelper.js";
@@ -9,6 +9,34 @@ import { validationError, serverError, notFoundError, complianceError } from "..
 
 
 const router = Router();
+
+/**
+ * Check if generation is already in progress for this user/range
+ * Prevents infinite loop of duplicate queue jobs
+ */
+async function isGenerationInProgress(userId, range) {
+    try {
+        const redis = await getClient();
+        const key = `horoscope:generating:${userId}:${range}`;
+        const exists = await redis.get(key);
+        return !!exists;
+    } catch (err) {
+        return false; // If Redis fails, allow queuing
+    }
+}
+
+/**
+ * Mark generation as in progress for 60 seconds
+ */
+async function markGenerationInProgress(userId, range) {
+    try {
+        const redis = await getClient();
+        const key = `horoscope:generating:${userId}:${range}`;
+        await redis.setEx(key, 60, 'true'); // Expires in 60 seconds
+    } catch (err) {
+        // Ignore Redis errors
+    }
+}
 
 /**
  * GET /horoscope/:userId/:range
@@ -81,26 +109,34 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
         }
         
         if (rows.length > 0 && rows[0].created_at_local_date) {
-                        const isStale = needsRegeneration(rows[0].created_at_local_date, todayLocalDate);
+            const isStale = needsRegeneration(rows[0].created_at_local_date, todayLocalDate);
             
             if (isStale) {
-                // Queue regeneration in background
-                                enqueueMessage({
-                    userId,
-                    message: `[SYSTEM] Generate horoscope for ${range.toLowerCase()}`
-                }).catch(() => {});
+                // Only queue if not already generating (prevents infinite loop)
+                const alreadyGenerating = await isGenerationInProgress(userId, range.toLowerCase());
+                if (!alreadyGenerating) {
+                    await markGenerationInProgress(userId, range.toLowerCase());
+                    enqueueMessage({
+                        userId,
+                        message: `[SYSTEM] Generate horoscope for ${range.toLowerCase()}`
+                    }).catch(() => {});
+                }
                 
                 // Return 404 to trigger frontend regeneration request
                 return notFoundError(res, `${range} horoscope is stale. Generating fresh one...`);
             }
         }
         
-                if (rows.length === 0) {
-            // Queue generation in background
-                        enqueueMessage({
-                userId,
-                message: `[SYSTEM] Generate horoscope for ${range.toLowerCase()}`
-            }).catch(() => {});
+        if (rows.length === 0) {
+            // Only queue if not already generating (prevents infinite loop)
+            const alreadyGenerating = await isGenerationInProgress(userId, range.toLowerCase());
+            if (!alreadyGenerating) {
+                await markGenerationInProgress(userId, range.toLowerCase());
+                enqueueMessage({
+                    userId,
+                    message: `[SYSTEM] Generate horoscope for ${range.toLowerCase()}`
+                }).catch(() => {});
+            }
             
             return notFoundError(res, `No ${range} horoscope found. Generating now...`);
         }

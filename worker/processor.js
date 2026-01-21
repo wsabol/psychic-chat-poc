@@ -46,22 +46,54 @@ async function routeJob(job) {
  */
 async function generateDailyMysticalUpdates() {
     try {
+        // Only select established users with valid subscriptions AND complete astrology data
+        // This prevents infinite loop from old temp users or incomplete accounts
         const { rows: users } = await db.query(
-            `SELECT user_id as id FROM user_personal_info WHERE created_at > NOW() - INTERVAL '1 year' AND user_id NOT LIKE 'temp_%'`
+            `SELECT DISTINCT upi.user_id as id 
+             FROM user_personal_info upi
+             INNER JOIN user_astrology ua ON ENCODE(DIGEST(upi.user_id, 'sha256'), 'hex') = ua.user_id_hash
+             WHERE upi.created_at > NOW() - INTERVAL '1 year' 
+             AND upi.user_id NOT LIKE 'temp_%'
+             AND upi.subscription_status IS NOT NULL
+             AND upi.subscription_status != 'trialing'
+             AND ua.astrology_data IS NOT NULL`
         );
+        
+        console.log(`[STARTUP] Found ${users.length} established users with complete data for daily updates`);
         
         if (users.length === 0) {
             return;
         }
         
-        for (const user of users) {
+        // Get current moon phase once for all users
+        let currentPhase = null;
+        try {
+            const moonPhaseData = await getCurrentMoonPhase();
+            if (moonPhaseData && moonPhaseData.success && moonPhaseData.phase) {
+                currentPhase = moonPhaseData.phase;
+            } else {
+                logErrorFromCatch(new Error('Moon phase calculation failed or returned invalid data'), '[STARTUP] Cannot generate moon phase commentaries');
+            }
+        } catch (err) {
+            logErrorFromCatch(err, '[STARTUP] Error fetching current moon phase');
+        }
+        
+        console.log(`[STARTUP] Beginning to process ${users.length} users...`);
+        for (let i = 0; i < users.length; i++) {
+            const user = users[i];
+            console.log(`[STARTUP] Processing user ${i + 1}/${users.length}: ${user.id}`);
             try {
                 await generateHoroscope(user.id, 'daily');
-                await generateMoonPhaseCommentary(user.id, 'waxing');
-                        } catch (err) {
+                // Only generate moon phase if we successfully got the current phase
+                if (currentPhase) {
+                    await generateMoonPhaseCommentary(user.id, currentPhase);
+                }
+                console.log(`[STARTUP] Completed user ${user.id}`);
+            } catch (err) {
                 logErrorFromCatch(err, `[STARTUP] Error updating user ${user.id}`);
             }
         }
+        console.log(`[STARTUP] Finished processing all ${users.length} users`);
     } catch (err) {
         logErrorFromCatch(err, '[STARTUP] Error generating daily mystical updates');
     }
@@ -72,14 +104,15 @@ async function generateDailyMysticalUpdates() {
  */
 export async function workerLoop() {
     
-        try {
-        await generateDailyMysticalUpdates();
-    } catch (err) {
-        logErrorFromCatch(err, '[WORKER] Failed to generate daily updates');
-    }
+    // DISABLED: No need to generate for all users on startup
+    // On-demand generation (when users log in) is sufficient and more efficient
+    // try {
+    //     await generateDailyMysticalUpdates();
+    // } catch (err) {
+    //     logErrorFromCatch(err, '[WORKER] Failed to generate daily updates');
+    // }
     
-    // Cleanup job disabled temporarily - needs endpoint fix
-    // Will be re-enabled after fixing /cleanup/cleanup-old-temp-accounts endpoint
+    console.log('[WORKER] Starting job queue processing...');
     
     while (true) {
         try {
