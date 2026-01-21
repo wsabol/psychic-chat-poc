@@ -10,6 +10,7 @@ import { ComplianceDashboard } from '../components/admin/ComplianceDashboard';
 import ErrorLogsReport from '../components/admin/ErrorLogsReport';
 import ErrorLoggerTestHarness from '../components/admin/ErrorLoggerTestHarness';
 import SubscriptionReportTab from '../components/admin/SubscriptionReportTab';
+import FreeTrialWhitelist from '../components/admin/FreeTrialWhitelist';
 import { useAdminCheck } from './hooks/useAdminCheck';
 import { useAnalyticsReport } from './hooks/useAnalyticsReport';
 import { styles } from './admin-styles';
@@ -76,6 +77,11 @@ export default function AdminPage({ token, userId }) {
             isActive={activeTab === 'compliance'}
             onClick={() => setActiveTab('compliance')}
           />
+          <TabButton
+            label="🔓 Whitelist"
+            isActive={activeTab === 'whitelist'}
+            onClick={() => setActiveTab('whitelist')}
+          />
         </div>
 
         {/* Subscription Report Tab */}
@@ -110,6 +116,9 @@ export default function AdminPage({ token, userId }) {
 
         {/* Compliance Tab */}
         {activeTab === 'compliance' && <ComplianceDashboard token={token} />}
+
+        {/* Free Trial Whitelist Tab */}
+        {activeTab === 'whitelist' && <FreeTrialWhitelist token={token} />}
       </div>
     </div>
   );

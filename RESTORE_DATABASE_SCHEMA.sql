@@ -466,6 +466,7 @@ CREATE INDEX IF NOT EXISTS idx_admin_login_attempts_login_status ON admin_login_
 -- IMPORTANT: user_id_hash is SHA-256 hash of temp user ID (one-way, cannot decrypt)
 CREATE TABLE IF NOT EXISTS free_trial_sessions (
     id VARCHAR(36) PRIMARY KEY,
+    ip_address_hash VARCHAR(64),
     ip_address_encrypted VARCHAR(255) NOT NULL,
     user_id_hash VARCHAR(64) NOT NULL,
     current_step VARCHAR(50),
@@ -475,7 +476,46 @@ CREATE TABLE IF NOT EXISTS free_trial_sessions (
     last_activity_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE INDEX IF NOT EXISTS idx_free_trial_sessions_ip_address_hash ON free_trial_sessions(ip_address_hash);
 CREATE INDEX IF NOT EXISTS idx_free_trial_sessions_ip_address_encrypted ON free_trial_sessions(ip_address_encrypted);
 CREATE INDEX IF NOT EXISTS idx_free_trial_sessions_user_id_hash ON free_trial_sessions(user_id_hash);
+CREATE INDEX IF NOT EXISTS idx_free_trial_sessions_hash_completed ON free_trial_sessions(ip_address_hash, is_completed);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_free_trial_sessions_unique_ip_user ON free_trial_sessions(ip_address_encrypted, user_id_hash);
 CREATE INDEX IF NOT EXISTS idx_free_trial_sessions_ip_completed ON free_trial_sessions(ip_address_encrypted, is_completed);
+
+
+-- TABLE: free_trial_whitelist (Admin IP whitelisting for free trial testing)
+CREATE TABLE IF NOT EXISTS free_trial_whitelist (
+    id SERIAL PRIMARY KEY,
+    ip_address_hash VARCHAR(64) NOT NULL UNIQUE,
+    ip_address_encrypted VARCHAR(255) NOT NULL,
+    device_name VARCHAR(255) DEFAULT 'Unknown Device',
+    browser_info VARCHAR(255) DEFAULT 'Unknown Browser',
+    user_id_hash VARCHAR(255) NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    removed_at TIMESTAMP NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_free_trial_whitelist_ip_hash ON free_trial_whitelist(ip_address_hash);
+CREATE INDEX IF NOT EXISTS idx_free_trial_whitelist_user_id_hash ON free_trial_whitelist(user_id_hash);
+CREATE INDEX IF NOT EXISTS idx_free_trial_whitelist_active ON free_trial_whitelist(is_active);
+CREATE INDEX IF NOT EXISTS idx_free_trial_whitelist_user_hash_active ON free_trial_whitelist(user_id_hash, is_active);
+
+ 
+ - -   T A B L E :   m e s s a g e _ q u e u e   ( A s y n c   m e s s a g e   p r o c e s s i n g   q u e u e   f o r   c o s m i c   w e a t h e r ,   h o r o s c o p e s ,   m o o n   p h a s e s ,   e t c . ) 
+ 
+ - -   W o r k e r   p o l l s   t h i s   t a b l e   f o r   p e n d i n g   m e s s a g e s   a n d   p r o c e s s e s   t h e m   a s y n c h r o n o u s l y 
+ 
+ C R E A T E   T A B L E   I F   N O T   E X I S T S   m e s s a g e _ q u e u e   ( 
+ 
+         i d   S E R I A L   P R I M A R Y   K E Y , 
+ 
+         u s e r _ i d   V A R C H A R ( 2 5 5 )   N O T   N U L L , 
+ 
+         m e s s a g e   T E X T   N O T   N U L L , 
+ 
+         s t a t u s   V A R C H A R ( 5 0 )   D E F A U L T   ' p e n d i n g ' , 
+ 
+         e r r o r _ m e s s a g e   T E X T , 

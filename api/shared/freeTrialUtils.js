@@ -18,6 +18,14 @@ export async function createFreeTrialSession(tempUserId, ipAddress, db) {
   try {
     const ipHash = hashIpAddress(ipAddress);
     
+    // CHECK WHITELIST FIRST - whitelisted IPs get unlimited trials
+    const whitelistCheck = await db.query(
+      'SELECT id FROM free_trial_whitelist WHERE ip_address_hash = $1',
+      [ipHash]
+    );
+
+    const isWhitelisted = whitelistCheck.rows.length > 0;
+    
     // Check if IP has already completed a trial (deterministic hash allows this!)
     const completedCheck = await db.query(
       `SELECT id, current_step FROM free_trial_sessions 
@@ -27,26 +35,33 @@ export async function createFreeTrialSession(tempUserId, ipAddress, db) {
       [ipHash]
     );
 
-    // If IP found with completed trial, block access
+    // If IP found with completed trial, block access UNLESS whitelisted
     if (completedCheck.rows.length > 0) {
       const existingSession = completedCheck.rows[0];
       
       if (existingSession.current_step === 'completed') {
-        return { 
-          success: false, 
-          error: 'This IP address has already completed the free trial',
-          alreadyCompleted: true
-        };
+        // If whitelisted, allow creating new trial session
+        if (!isWhitelisted) {
+          return { 
+            success: false, 
+            error: 'This IP address has already completed the free trial',
+            alreadyCompleted: true
+          };
+        }
+        // Continue to create new session for whitelisted IP
+      } else {
+        // If incomplete trial exists (and not whitelisted), return it for resumption
+        if (!isWhitelisted) {
+          return {
+            success: true,
+            sessionId: existingSession.id,
+            currentStep: existingSession.current_step,
+            resuming: true,
+            message: `Resuming from step: ${existingSession.current_step}`
+          };
+        }
+        // Whitelisted users can start fresh sessions even with incomplete ones
       }
-      
-      // If incomplete trial exists, return it for resumption
-      return {
-        success: true,
-        sessionId: existingSession.id,
-        currentStep: existingSession.current_step,
-        resuming: true,
-        message: `Resuming from step: ${existingSession.current_step}`
-      };
     }
 
     // No existing session - create new one

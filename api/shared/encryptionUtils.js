@@ -3,7 +3,7 @@ import crypto from 'crypto';
 // IMPORTANT: Get encryption key from environment variable
 // In production, this should be a strong, randomly-generated key
 // Store it in .env file or secret manager (NOT in code)
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'your_encryption_key_here';
+export const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'your_encryption_key_here';
 
 if (ENCRYPTION_KEY === 'your_encryption_key_here') {
 }
@@ -108,4 +108,3 @@ export default {
   buildEncryptedUpdateQuery,
   buildDecryptedSelectFields
 };
-
