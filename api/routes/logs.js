@@ -8,6 +8,7 @@
 import express from 'express';
 import { db } from '../shared/db.js';
 import logger from '../shared/logger.js';
+import { validationError, serverError, successResponse } from '../utils/responses.js';
 
 const router = express.Router();
 
@@ -21,10 +22,7 @@ router.post('/error', async (req, res) => {
 
     // Validate required fields
     if (!service || !errorMessage) {
-      return res.status(400).json({
-        success: false,
-        error: 'Missing required fields: service, errorMessage'
-      });
+      return validationError(res, 'Missing required fields: service, errorMessage');
     }
 
     // Validate severity
@@ -67,7 +65,7 @@ router.post('/error', async (req, res) => {
     // Insert into database
     const result = await db.query(query, params);
 
-    res.json({
+    return successResponse(res, {
       success: true,
       message: 'Error logged successfully',
       errorId: result.rows[0]?.id
@@ -76,10 +74,7 @@ router.post('/error', async (req, res) => {
     logger.error('Failed to log client error:', error?.message || String(error));
     
     // Don't expose internal errors to client
-    res.status(500).json({
-      success: false,
-      error: 'Failed to log error'
-    });
+    return serverError(res, 'Failed to log error');
   }
 });
 

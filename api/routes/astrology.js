@@ -7,7 +7,7 @@ import { authorizeUser } from '../middleware/auth.js';
 import { spawn } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { validationError, notFoundError, serverError } from '../utils/responses.js';
+import { validationError, notFoundError, serverError, successResponse } from '../utils/responses.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -275,7 +275,7 @@ router.post("/:userId", async (req, res) => {
             [JSON.stringify(updatedData), userIdHash]
         );
         
-        res.json({ success: true, message: "Astrology data updated successfully", data: updatedData });
+        return successResponse(res, { success: true, message: "Astrology data updated successfully", data: updatedData });
     } catch (err) {
         return serverError(res, 'Failed to update astrology data');
     }
