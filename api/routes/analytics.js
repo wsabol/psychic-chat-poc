@@ -218,7 +218,8 @@ router.get('/report', async (req, res) => {
        ORDER BY event_count DESC`
     );
 
-    const report = {
+    // Sanitize report - remove PII and sensitive internal details
+    const sanitizedReport = {
       generated_at: new Date().toISOString(),
       summary: {
         total_events: events.rows.reduce((sum, row) => sum + parseInt(row.event_count), 0),
@@ -227,12 +228,19 @@ router.get('/report', async (req, res) => {
       },
       all_events: events.rows,
       feature_usage: featureUsage.rows,
-      daily_active_by_location: dailyActive.rows,
-      error_tracking: errors.rows,
+      // SECURITY: DO NOT include daily_active_by_location (contains decrypted IPs)
+      error_tracking: errors.rows.map(e => ({
+        error_count: e.error_count,
+        page_name: e.page_name,
+        browser_name: e.browser_name,
+        os_name: e.os_name,
+        date: e.date
+        // SECURITY: Do not include error_message (could contain sensitive data)
+      })),
       dropoff_analysis: dropoff.rows,
     };
 
-        res.json(report);
+    return successResponse(res, sanitizedReport);
   } catch (error) {
     return serverError(res, 'Failed to generate analytics report');
   }

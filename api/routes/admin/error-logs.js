@@ -10,6 +10,7 @@
 import express from 'express';
 import { db } from '../../shared/db.js';
 import logger from '../../shared/logger.js';
+import { serverError } from '../../utils/responses.js';
 
 const router = express.Router();
 
@@ -45,11 +46,7 @@ router.get('/errors/critical', async (req, res) => {
     });
   } catch (error) {
     logger.error('Error fetching critical errors:', error.message);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch critical errors',
-      details: error.message
-    });
+    serverError(res, 'Failed to fetch critical errors');
   }
 });
 
@@ -81,11 +78,7 @@ router.get('/errors/summary', async (req, res) => {
     });
   } catch (error) {
     logger.error('Error fetching error summary:', error.message);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch error summary',
-      details: error.message
-    });
+    serverError(res, 'Failed to fetch error summary');
   }
 });
 
@@ -137,11 +130,7 @@ router.patch('/errors/:id/resolve', async (req, res) => {
     });
   } catch (error) {
     logger.error('Error updating error log:', error.message);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to update error log',
-      details: error.message
-    });
+    serverError(res, 'Failed to update error log');
   }
 });
 
@@ -167,11 +156,7 @@ router.get('/errors/count/critical', async (req, res) => {
     });
   } catch (error) {
     logger.error('Error fetching critical error count:', error.message);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch error count',
-      details: error.message
-    });
+    serverError(res, 'Failed to fetch error count');
   }
 });
 
@@ -210,11 +195,7 @@ router.get('/errors/by-service/:service', async (req, res) => {
     });
   } catch (error) {
     logger.error(`Error fetching errors for service ${req.params.service}:`, error.message);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch errors',
-      details: error.message
-    });
+    serverError(res, 'Failed to fetch errors');
   }
 });
 

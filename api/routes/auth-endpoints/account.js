@@ -46,8 +46,6 @@ router.post('/register', async (req, res) => {
     
         return createdResponse(res, {
       success: true,
-      uid: userRecord.uid,
-      email: userRecord.email,
       message: 'User registered successfully. Please sign in.'
     });
   } catch (err) {
@@ -87,7 +85,7 @@ router.post('/register-firebase-user', async (req, res) => {
       details: { email }
     });
 
-    return successResponse(res, { success: true, userId });
+    return successResponse(res, { success: true });
   } catch (err) {
     return serverError(res, 'Failed to register user');
   }
@@ -139,19 +137,13 @@ router.post('/register-and-migrate', async (req, res) => {
       
             return createdResponse(res, {
         success: true,
-        uid: newUserId,
-        email: userRecord.email,
-        message: 'Account created and onboarding data migrated successfully',
-        migration: migrationResult
+        message: 'Account created and onboarding data migrated successfully'
       });
       
     } catch (migrationErr) {
             return createdResponse(res, {
         success: true,
-        uid: newUserId,
-        email: userRecord.email,
-        message: 'Account created but data migration encountered issues',
-        warning: migrationErr.message
+        message: 'Account created successfully'
       });
     }
     
