@@ -8,7 +8,7 @@ import { recordLoginAttempt } from './helpers/accountLockout.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { encrypt } from '../../utils/encryption.js';
 import { getCurrentTermsVersion, getCurrentPrivacyVersion } from '../../shared/versionConfig.js';
-import { validationError, serverError, forbiddenError, rateLimitError, ErrorCodes } from '../../utils/responses.js';
+import { validationError, serverError, forbiddenError, rateLimitError, ErrorCodes, successResponse } from '../../utils/responses.js';
 import { validateSubscriptionHealth } from '../../services/stripe/subscriptionValidator.js';
 import { enqueueMessage } from '../../shared/queue.js';
 
@@ -199,7 +199,7 @@ router.post('/log-login-success', async (req, res) => {
     // Jobs are protected by duplicate prevention, won't create infinite loops
     queueMysticalDataGeneration(userId);
 
-    return res.json({ 
+    return successResponse(res, { 
       success: true,
       subscription: subscriptionStatus
     });
@@ -268,7 +268,7 @@ router.post('/check-account-lockout/:userId', async (req, res) => {
       });
     }
 
-    return res.json({
+    return successResponse(res, {
       success: true,
       locked: false,
       message: 'Account is not locked'

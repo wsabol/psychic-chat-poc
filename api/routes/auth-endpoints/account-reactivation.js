@@ -6,7 +6,7 @@ import {
   reactivateAccountFromReengagement, 
   unsubscribeFromReengagementEmails 
 } from '../../jobs/accountCleanupJob.js';
-import { validationError, notFoundError, serverError } from '../../utils/responses.js';
+import { validationError, notFoundError, serverError, successResponse } from '../../utils/responses.js';
 
 const router = Router();
 
@@ -64,7 +64,7 @@ router.post('/reactivate', async (req, res) => {
         details: { via_reengagement: true }
       });
 
-      return res.json({
+      return successResponse(res, {
         success: true,
         message: 'Your account has been successfully reactivated. You can now log in with your credentials.',
         userId: userId
@@ -132,7 +132,7 @@ router.post('/unsubscribe-reengagement', async (req, res) => {
         details: { unsubscribed_from_reengagement_emails: true }
       });
 
-      return res.json({
+      return successResponse(res, {
         success: true,
         message: 'You have been unsubscribed from re-engagement emails. You will not receive further account reactivation offers.'
       });
@@ -191,7 +191,7 @@ router.get('/deletion-status/:userId', async (req, res) => {
 
     const account = result.rows[0];
 
-    return res.json({
+    return successResponse(res, {
       success: true,
       account: {
         user_id: account.user_id,

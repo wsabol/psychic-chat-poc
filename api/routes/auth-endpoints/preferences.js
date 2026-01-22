@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { db } from '../../shared/db.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import logger from '../../shared/logger.js';
-import { validationError, serverError } from '../../utils/responses.js';
+import { validationError, serverError, successResponse } from '../../utils/responses.js';
 
 const router = Router();
 
@@ -41,7 +41,7 @@ router.post('/timezone', async (req, res) => {
       [userIdHash, timezone]
     );
     
-    return res.json({
+    return successResponse(res, {
       success: true,
       timezone: result.rows[0].timezone,
       message: 'Timezone saved successfully'
@@ -71,14 +71,14 @@ router.get('/timezone', async (req, res) => {
     );
     
     if (rows.length === 0) {
-      return res.json({
+      return successResponse(res, {
         success: true,
         timezone: 'GMT',
         message: 'No timezone set, defaulting to GMT'
       });
     }
     
-    return res.json({
+    return successResponse(res, {
       success: true,
       timezone: rows[0].timezone || 'GMT'
     });

@@ -162,7 +162,7 @@ router.post('/check-2fa/:userId', async (req, res) => {
             process.env.JWT_SECRET || 'your-secret-key-change-in-production',
             { expiresIn: '10m' }
           );
-          return res.json({
+          return successResponse(res, {
             success: true,
             userId,
             tempToken,
@@ -226,7 +226,7 @@ router.post('/check-2fa/:userId', async (req, res) => {
           details: { method: 'email', email: userEmail, reason: 'new_ip_for_admin' }
         });
 
-        return res.json({
+        return successResponse(res, {
           success: true,
           userId,
           tempToken,
@@ -241,7 +241,7 @@ router.post('/check-2fa/:userId', async (req, res) => {
         await logAdminLoginAttempt(userId, ipAddress, deviceName, 'success');
         
         // Skip 2FA for trusted IP
-        return res.json({
+        return successResponse(res, {
           success: true,
           userId,
           requires2FA: false,
@@ -263,7 +263,7 @@ router.post('/check-2fa/:userId', async (req, res) => {
 
         // If 2FA disabled, allow access (non-admin users)
     if (!twoFASettings || !twoFASettings.enabled) {
-      return res.json({
+      return successResponse(res, {
         success: true,
         userId,
         requires2FA: false,
@@ -310,7 +310,7 @@ router.post('/check-2fa/:userId', async (req, res) => {
         status: 'SUCCESS'
       });
       
-      return res.json({
+      return successResponse(res, {
         success: true,
         userId,
         requires2FA: false,
@@ -371,7 +371,7 @@ router.post('/check-2fa/:userId', async (req, res) => {
       details: { method: 'email', email }
     });
 
-    return res.json({
+    return successResponse(res, {
       success: true,
       userId,
       tempToken,
@@ -603,7 +603,7 @@ router.post('/trust-admin-device', authenticateToken, async (req, res) => {
       details: { deviceName }
     });
     
-    return res.json({ 
+    return successResponse(res, { 
       success: true, 
       message: 'Device trusted. You won\'t need 2FA from this IP again.'
     });

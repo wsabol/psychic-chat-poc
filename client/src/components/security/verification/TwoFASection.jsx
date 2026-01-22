@@ -33,6 +33,9 @@ export function TwoFASection({
           <h3 style={{ marginTop: 0, marginBottom: '0.25rem', fontSize: '15px' }}>
             {t('security.twoFA.heading')}
           </h3>
+          <p style={{ margin: 0, fontSize: '11px', color: '#666', marginBottom: '0.5rem' }}>
+            Two-Factor Authentication is bypassed on trusted devices
+          </p>
           <p style={{ margin: 0, fontSize: '12px', color: twoFAEnabled ? '#2e7d32' : '#f57f17' }}>
             <strong>{t('security.twoFA.statusLabel')}</strong> {twoFAEnabled ? t('security.twoFA.enabled') : t('security.twoFA.disabled')}
           </p>
