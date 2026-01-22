@@ -12,7 +12,7 @@ import {
   getFreeTrialSession
 } from '../shared/freeTrialUtils.js';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
-import { serverError, validationError, forbiddenError } from '../utils/responses.js';
+import { serverError, validationError, forbiddenError, rateLimitError, notFoundError } from '../utils/responses.js';
 import { validateAge } from '../shared/ageValidator.js';
 import { handleAgeViolation } from '../shared/violationHandler.js';
 import { parseDateForStorage, isValidFreeTrialStep } from '../shared/validationUtils.js';
@@ -46,10 +46,7 @@ router.post('/create-session', async (req, res) => {
 
     if (!result.success) {
       if (result.alreadyCompleted) {
-        return res.status(429).json({ 
-          error: 'Free trial access has been used from this location',
-          alreadyCompleted: true 
-        });
+        return rateLimitError(res, 3600);
       }
       // Log detailed error but return generic message
       await logErrorFromCatch(new Error(result.error), 'free-trial', 'Session creation failed');
@@ -140,7 +137,7 @@ router.get('/session/:tempUserId', async (req, res) => {
 
     if (!result.success) {
       if (result.notFound) {
-        return res.status(404).json({ error: 'Session not found' });
+        return notFoundError(res, 'Session not found');
       }
       // Log detailed error but return generic message
       await logErrorFromCatch(new Error(result.error), 'free-trial', 'Session retrieval failed');

@@ -11,7 +11,7 @@ import {
   getAvailablePrices,
   storeSubscriptionData,
 } from '../../services/stripeService.js';
-import { validationError, billingError } from '../../utils/responses.js';
+import { validationError, billingError, successResponse } from '../../utils/responses.js';
 
 const router = express.Router();
 
@@ -52,7 +52,7 @@ router.post('/create-subscription', authenticateToken, async (req, res) => {
       // Non-critical: Database storage failed, but Stripe subscription was created
       logErrorFromCatch(err, 'billing', 'store subscription data', hashUserId(userId)).catch(() => {});
     });
-    res.json({
+    return successResponse(res, {
       subscriptionId: subscription.id,
       status: subscription.status,
       clientSecret: subscription.latest_invoice?.payment_intent?.client_secret,
@@ -76,11 +76,11 @@ router.get('/subscriptions', authenticateToken, async (req, res) => {
     const customerId = await getOrCreateStripeCustomer(userId, userEmail);
     
     if (!customerId) {
-      return res.json([]);
+      return successResponse(res, []);
     }
     
     const subscriptions = await getSubscriptions(customerId);
-    res.json(subscriptions);
+    return successResponse(res, subscriptions);
   } catch (error) {
     return billingError(res, 'Failed to fetch subscriptions');
   }
@@ -113,7 +113,7 @@ router.post('/complete-subscription/:subscriptionId', authenticateToken, async (
 
     // Only process if incomplete
     if (subscription.status !== 'incomplete') {
-      return res.json({
+      return successResponse(res, {
         success: true,
         subscription: {
           id: subscription.id,
@@ -141,7 +141,7 @@ router.post('/complete-subscription/:subscriptionId', authenticateToken, async (
         expand: ['latest_invoice.payment_intent'],
       });
       
-      return res.json({
+      return successResponse(res, {
         success: true,
         subscription: {
           id: updatedSub.id,
@@ -155,7 +155,7 @@ router.post('/complete-subscription/:subscriptionId', authenticateToken, async (
         expand: ['latest_invoice.payment_intent'],
       });
       
-      return res.json({
+      return successResponse(res, {
         success: true,
         subscription: {
           id: updatedSub.id,
@@ -179,7 +179,7 @@ router.post('/cancel-subscription/:subscriptionId', authenticateToken, async (re
 
     const subscription = await cancelSubscription(subscriptionId);
 
-    res.json({
+    return successResponse(res, {
       success: true,
       status: subscription.status,
       cancelAtPeriodEnd: subscription.cancel_at_period_end,
@@ -195,7 +195,7 @@ router.post('/cancel-subscription/:subscriptionId', authenticateToken, async (re
 router.get('/available-prices', async (req, res) => {
   try {
     const prices = await getAvailablePrices();
-    res.json(prices);
+    return successResponse(res, prices);
   } catch (error) {
     return billingError(res, 'Failed to fetch pricing');
   }

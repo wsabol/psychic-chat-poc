@@ -10,7 +10,7 @@ import {
   deletePaymentMethod,
   setDefaultPaymentMethod,
 } from '../../services/stripeService.js';
-import { validationError, billingError } from '../../utils/responses.js';
+import { validationError, billingError, successResponse } from '../../utils/responses.js';
 
 const router = express.Router();
 
@@ -170,7 +170,7 @@ router.delete('/payment-methods/:id', authenticateToken, async (req, res) => {
     const cacheKey = `billing:payment-methods:${userId}`;
     await redis.del(cacheKey);
 
-    res.json({ success: true, message: 'Payment method deleted' });
+    return successResponse(res, { success: true, message: 'Payment method deleted' });
         } catch (error) {
     const userIdHash = hashUserId(req.user.userId);
     // Log error in background (don't await)
@@ -204,7 +204,7 @@ router.post('/payment-methods/set-default', authenticateToken, async (req, res) 
     const cacheKey = `billing:payment-methods:${userId}`;
     await redis.del(cacheKey);
 
-    res.json({ success: true, defaultPaymentMethod: customer.invoice_settings?.default_payment_method });
+    return successResponse(res, { success: true, defaultPaymentMethod: customer.invoice_settings?.default_payment_method });
         } catch (error) {
     const userIdHash = hashUserId(req.user.userId);
     // Log error in background (don't await)
@@ -253,7 +253,7 @@ router.post('/payment-methods/attach-unattached', authenticateToken, async (req,
     const cacheKey = `billing:payment-methods:${userId}`;
     await redis.del(cacheKey);
 
-    res.json({ success: true, attachedCount: attached.length, attachedIds: attached, errors: errors.length > 0 ? errors : undefined });
+    return successResponse(res, { success: true, attachedCount: attached.length, attachedIds: attached, errors: errors.length > 0 ? errors : undefined });
         } catch (error) {
     const userIdHash = hashUserId(req.user.userId);
     // Log error in background (don't await)
@@ -263,4 +263,3 @@ router.post('/payment-methods/attach-unattached', authenticateToken, async (req,
 });
 
 export default router;
-

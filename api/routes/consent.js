@@ -8,7 +8,7 @@ import { checkUserConsent, recordUserConsent } from './auth-endpoints/helpers/co
 import { checkUserCompliance, getComplianceReport, getUsersRequiringAction, markUserNotified } from '../shared/complianceChecker.js';
 import { getCurrentTermsVersion, getCurrentPrivacyVersion } from '../shared/versionConfig.js';
 import VERSION_CONFIG from '../shared/versionConfig.js';
-import { validationError, serverError } from '../utils/responses.js';
+import { validationError, serverError, successResponse } from '../utils/responses.js';
 
 const router = Router();
 
@@ -72,7 +72,7 @@ router.post('/record-consent/:userId', async (req, res) => {
     const result = await recordUserConsent(userId, terms_accepted, privacy_accepted, clientIp, userAgent);
     
     if (result.success) {
-      return res.json({ success: true, message: result.message });
+      return successResponse(res, { success: true, message: result.message });
     } else {
       return validationError(res, result.message);
     }

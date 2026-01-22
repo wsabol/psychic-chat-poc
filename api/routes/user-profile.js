@@ -5,7 +5,7 @@
 
 import { Router } from "express";
 import { authorizeUser } from "../middleware/auth.js";
-import { validationError, forbiddenError, serverError } from "../utils/responses.js";
+import { validationError, forbiddenError, serverError, successResponse } from "../utils/responses.js";
 import {
   getPersonalInfo,
   savePersonalInfo,
@@ -27,7 +27,7 @@ router.get("/:userId", authorizeUser, async (req, res) => {
   
   try {
     const personalInfo = await getPersonalInfo(userId);
-    res.json(personalInfo);
+    return successResponse(res, personalInfo);
   } catch (err) {
     console.error('[USER-PROFILE] Error fetching personal info:', err);
     return serverError(res, 'Failed to fetch personal information');
@@ -52,7 +52,7 @@ router.post("/:userId", authorizeUser, async (req, res) => {
       return validationError(res, result.error);
     }
 
-    res.json({ success: true, message: result.message });
+    return successResponse(res, { success: true, message: result.message });
   } catch (err) {
     console.error('[USER-PROFILE] Error saving personal info:', err);
     return serverError(res, 'Failed to save personal information');
@@ -68,7 +68,7 @@ router.delete("/:userId/astrology-cache", authorizeUser, async (req, res) => {
   
   try {
     const result = await clearUserAstrologyCache(userId);
-    res.json(result);
+    return successResponse(res, result);
   } catch (err) {
     console.error('[USER-PROFILE] Error clearing astrology cache:', err);
     return serverError(res, 'Failed to clear astrology cache');
@@ -84,7 +84,7 @@ router.get("/:userId/preferences", authorizeUser, async (req, res) => {
 
   try {
     const preferences = await getUserPreferences(userId);
-    res.json(preferences);
+    return successResponse(res, preferences);
   } catch (err) {
     console.error('[USER-PROFILE] Error fetching preferences:', err);
     return serverError(res, 'Failed to fetch preferences');
@@ -107,7 +107,7 @@ router.post("/:userId/preferences", authorizeUser, async (req, res) => {
     // Mode 1: Timezone-only update
     if (timezone && !language && !response_type && !oracle_language) {
       const result = await updateTimezone(userId, timezone);
-      return res.json(result);
+      return successResponse(res, result);
     }
 
     // Mode 2: Language preferences update (temp user flow)
@@ -124,7 +124,7 @@ router.post("/:userId/preferences", authorizeUser, async (req, res) => {
         return validationError(res, result.error);
       }
 
-      return res.json(result);
+      return successResponse(res, result);
     }
 
     // Mode 3: Full preferences update
@@ -145,7 +145,7 @@ router.post("/:userId/preferences", authorizeUser, async (req, res) => {
       return validationError(res, result.error);
     }
 
-    res.json(result);
+    return successResponse(res, result);
   } catch (err) {
     console.error('[USER-PROFILE] Error saving preferences:', err);
     return serverError(res, 'Failed to save preferences');
