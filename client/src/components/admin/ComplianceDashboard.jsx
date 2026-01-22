@@ -14,7 +14,7 @@
  * FIX: Use fetchWithTokenRefresh to handle expired tokens
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './ComplianceDashboard.css';
 import { API_ENDPOINTS, DASHBOARD_TABS, LOAD_ENDPOINTS } from './complianceConstants';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
@@ -37,11 +37,7 @@ export function ComplianceDashboard({ token }) {
     timeline: null
   });
 
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -59,13 +55,17 @@ export function ComplianceDashboard({ token }) {
       }
 
       setData(results);
-        } catch (err) {
+    } catch (err) {
       logErrorFromCatch(err, 'ComplianceDashboard', '[DASHBOARD] Error:');
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
 
   const handleExport = async () => {
     try {

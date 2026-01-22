@@ -1,0 +1,273 @@
+/* Free Trial Whitelist Styles */
+
+.container {
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin: 0;
+}
+
+.description {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 16px;
+}
+
+.refreshButton {
+  padding: 8px 16px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.refreshButton:hover {
+  background-color: #2980b9;
+}
+
+.refreshButton:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+.timestamp {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 16px;
+}
+
+.errorBox {
+  padding: 16px;
+  background-color: #ffe6e6;
+  border: 1px solid #e74c3c;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.errorText {
+  color: #c0392b;
+  margin: 0;
+}
+
+.successBox {
+  padding: 16px;
+  background-color: #d4edda;
+  border: 1px solid #2ecc71;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.successText {
+  color: #155724;
+  margin: 0;
+}
+
+.section {
+  background-color: white;
+  padding: 16px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #3498db;
+}
+
+.currentIpBox {
+  padding: 12px;
+  background-color: #ecf0f1;
+  border-radius: 4px;
+}
+
+.ipInfo {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.ipLabel {
+  font-weight: bold;
+  margin-right: 8px;
+  margin-bottom: 0;
+  font-size: 14px;
+}
+
+.ipValue {
+  margin: 0;
+  font-size: 14px;
+  font-family: monospace;
+}
+
+.whitelisted {
+  color: #2ecc71;
+}
+
+.notWhitelisted {
+  color: #e74c3c;
+}
+
+.whitelistButton {
+  margin-top: 12px;
+  padding: 10px 20px;
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.whitelistButton:hover {
+  background-color: #27ae60;
+}
+
+.whitelistButton:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+.loadingText {
+  color: #666;
+  font-style: italic;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.label {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+}
+
+.input {
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.addButton {
+  padding: 10px 20px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  align-self: flex-start;
+  transition: background-color 0.2s;
+}
+
+.addButton:hover {
+  background-color: #2980b9;
+}
+
+.addButton:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.tableHeader {
+  background-color: #ecf0f1;
+  border-bottom: 2px solid #bdc3c7;
+}
+
+.th {
+  padding: 12px;
+  text-align: left;
+  font-weight: bold;
+  color: #333;
+}
+
+.tableRow {
+  border-bottom: 1px solid #ecf0f1;
+  background-color: #fff;
+  transition: background-color 0.2s;
+}
+
+.tableRow:hover {
+  background-color: #f8f9fa;
+}
+
+.td {
+  padding: 12px;
+  color: #555;
+}
+
+.removeButton {
+  padding: 6px 12px;
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.removeButton:hover {
+  background-color: #c0392b;
+}
+
+.removeButton:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+.emptyMessage {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+}

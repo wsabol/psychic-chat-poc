@@ -45,7 +45,8 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
     if (!loading) {
       loadCosmicWeather();
     }
-  }, [userPreference]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userPreference, loadCosmicWeather]);
 
   // Fetch astro info if needed
   useEffect(() => {

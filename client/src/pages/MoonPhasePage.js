@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useTranslation } from '../context/TranslationContext';
 import { useSpeech } from '../hooks/useSpeech';
 import VoiceBar from '../components/VoiceBar';
@@ -41,7 +41,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
     waningCrescent: '🌘'
   };
 
-  const moonPhaseOrder = ['newMoon', 'waxingCrescent', 'firstQuarter', 'waxingGibbous', 'fullMoon', 'waningGibbous', 'lastQuarter', 'waningCrescent'];
+  const moonPhaseOrder = useMemo(() => ['newMoon', 'waxingCrescent', 'firstQuarter', 'waxingGibbous', 'fullMoon', 'waningGibbous', 'lastQuarter', 'waningCrescent'], []);
 
   // Map phase names to translation keys
   const getPhaseTranslationKey = (phase) => {
@@ -58,7 +58,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
     return keyMap[phase] || phase;
   };
 
-  const calculateMoonPhase = () => {
+  const calculateMoonPhase = useCallback(() => {
     const now = new Date();
     const knownNewMoonDate = new Date(2025, 0, 29).getTime();
     const currentDate = now.getTime();
@@ -68,7 +68,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
     const phaseIndex = Math.floor((daysIntoPhase / 29.53059) * 8) % 8;
     
     return moonPhaseOrder[phaseIndex];
-  };
+  }, [moonPhaseOrder]);
 
   const fetchAstroInfo = useCallback(async (headers) => {
     try {
@@ -190,7 +190,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
       setError('Unable to load moon phase data. Please try again.');
       setLoading(false);
     }
-  }, [userId, token, API_URL, astroInfo, fetchAstroInfo]);
+  }, [userId, token, API_URL, astroInfo, fetchAstroInfo, calculateMoonPhase]);
 
   // Fetch preferences on mount
   useEffect(() => {
@@ -216,6 +216,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
     if (!loading) {
       loadMoonPhaseData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userPreference, loadMoonPhaseData]);
 
   // Cleanup polling interval on unmount
