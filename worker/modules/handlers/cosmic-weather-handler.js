@@ -3,7 +3,7 @@ import { storeMessage } from '../messages.js';
 import { getUserTimezone, getLocalDateForTimezone, needsRegeneration } from '../utils/timezoneHelper.js';
 import { db } from '../../shared/db.js';
 import { hashUserId } from '../../shared/hashUtils.js';
-import { getCurrentPlanets } from '../astrology.js';
+import { getAstronomicalContext, formatPlanetsForPrompt } from '../utils/astronomicalContext.js';
 import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 
@@ -39,20 +39,18 @@ export async function generateCosmicWeather(userId) {
             return;
         }
         
-                // Get planets with retrograde status and calculated degrees
-        const planetsData = await getCurrentPlanets();
-        if (!planetsData.success) {
-            throw new Error('Failed to calculate planets');
+        // Get current astronomical context (planets, moon phase, etc.)
+        const astronomicalContext = await getAstronomicalContext();
+        if (!astronomicalContext.success) {
+            throw new Error('Failed to calculate astronomical context');
         }
-        const planets = planetsData.planets;
+        const planets = astronomicalContext.currentPlanets;
         
         const astro = astrologyInfo.astrology_data;
         const userGreeting = getUserGreeting(userInfo, userId);
         
         // Build detailed planet information with calculated positions and degrees
-        const planetsDetailed = planets
-            .map(p => `- ${p.icon} ${p.name} at ${p.degree}° in ${p.sign}${p.retrograde ? ' ♻️ RETROGRADE' : ''}`)
-            .join('\n');
+        const planetsDetailed = formatPlanetsForPrompt(planets);
         
         // Get oracle system prompt with ORACLE LANGUAGE SUPPORT
         // Oracle response uses oracleLanguage (can be regional variant), page UI uses userLanguage
@@ -70,7 +68,7 @@ Focus on TODAY's cosmic energies with specific, personal insight.
 Do NOT include tarot cards - this is pure astrological forecasting enriched by their unique birth chart.
 `;
         
-        const prompt = buildCosmicWeatherPrompt(userInfo, astrologyInfo, planets, planetsDetailed, userGreeting);
+        const prompt = buildCosmicWeatherPrompt(userInfo, astrologyInfo, astronomicalContext, planetsDetailed, userGreeting);
         
                 // Call Oracle - response is already in user's preferred language
         const oracleResponses = await callOracle(systemPrompt, [], prompt, true);
@@ -123,8 +121,9 @@ Do NOT include tarot cards - this is pure astrological forecasting enriched by t
 
 /**
  * Build comprehensive cosmic weather prompt - let oracle interpret calculated positions
+ * Updated to use unified astronomical context
  */
-function buildCosmicWeatherPrompt(userInfo, astrologyInfo, planets, planetsDetailed, userGreeting) {
+function buildCosmicWeatherPrompt(userInfo, astrologyInfo, astronomicalContext, planetsDetailed, userGreeting) {
     const astro = astrologyInfo.astrology_data;
     
     let prompt = `Generate today's comprehensive cosmic weather for ${userGreeting}:\n\n`;
@@ -138,7 +137,12 @@ function buildCosmicWeatherPrompt(userInfo, astrologyInfo, planets, planetsDetai
     if (astro.mercury_sign) prompt += `- Mercury Sign: ${astro.mercury_sign} (${astro.mercury_degree}°) - Communication, Thinking Style, Mental Processing\n`;
     prompt += `- Birth Location: ${userInfo.birth_city}, ${userInfo.birth_province}, ${userInfo.birth_country}\n\n`;
     
-    prompt += `TODAY'S CALCULATED PLANETARY POSITIONS (use your astrological knowledge to interpret):\n`;
+    prompt += `TODAY'S CALCULATED ASTRONOMICAL POSITIONS (use your astrological knowledge to interpret):\n`;
+    prompt += `Moon Phase: ${astronomicalContext.currentMoonPhase}\n`;
+    if (astronomicalContext.moonPosition) {
+        prompt += `Current Moon: ${astronomicalContext.moonPosition.degree}° ${astronomicalContext.moonPosition.sign}\n`;
+    }
+    prompt += `\nPlanetary Positions:\n`;
     prompt += planetsDetailed + '\n\n';
     
     prompt += `ORACLE INSTRUCTIONS:\n`;
@@ -162,4 +166,3 @@ function buildCosmicWeatherPrompt(userInfo, astrologyInfo, planets, planetsDetai
 export function isCosmicWeatherRequest(message) {
     return message.includes('[SYSTEM]') && message.includes('cosmic weather');
 }
-

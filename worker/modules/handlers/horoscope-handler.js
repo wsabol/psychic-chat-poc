@@ -12,6 +12,7 @@ import {
 } from '../oracle.js';
 import { storeMessage } from '../messages.js';
 import { getUserTimezone, getLocalDateForTimezone, needsRegeneration } from '../utils/timezoneHelper.js';
+import { getAstronomicalContext, formatPlanetsForPrompt } from '../utils/astronomicalContext.js';
 import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
@@ -65,6 +66,9 @@ export async function generateHoroscope(userId, range = 'daily') {
         // Check if user is temporary/trial account
         const isTemporary = await isTemporaryUser(userId);
         
+        // Get current astronomical context (planets, moon phase, etc.)
+        const astronomicalContext = await getAstronomicalContext();
+        
         // Get oracle system prompt with ORACLE LANGUAGE SUPPORT
         // Oracle response uses oracleLanguage (can be regional variant), page UI uses userLanguage
         const baseSystemPrompt = getOracleSystemPrompt(isTemporary, oracleLanguage);
@@ -73,7 +77,7 @@ export async function generateHoroscope(userId, range = 'daily') {
         
         // Generate the horoscope
         try {
-            const horoscopePrompt = buildHoroscopePrompt(userInfo, astrologyInfo, range, userGreeting);
+            const horoscopePrompt = buildHoroscopePrompt(userInfo, astrologyInfo, range, userGreeting, astronomicalContext);
             
             const systemPrompt = baseSystemPrompt + `
 
@@ -131,9 +135,9 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
 }
 
 /**
- * Build horoscope prompt with user context
+ * Build horoscope prompt with user context and REAL astronomical data
  */
-function buildHoroscopePrompt(userInfo, astrologyInfo, range, userGreeting) {
+function buildHoroscopePrompt(userInfo, astrologyInfo, range, userGreeting, astronomicalContext) {
     const astro = astrologyInfo.astrology_data;
     
     let prompt = `Generate a personalized ${range} horoscope for ${userGreeting}:\n\n`;
@@ -152,19 +156,30 @@ function buildHoroscopePrompt(userInfo, astrologyInfo, range, userGreeting) {
         prompt += `Sun Sign: ${astro.name}\n`;
     }
     
+    // ADD CURRENT ASTRONOMICAL POSITIONS
+    if (astronomicalContext.success) {
+        prompt += `\nCURRENT ASTRONOMICAL POSITIONS (calculated, not fictional):\n`;
+        prompt += `Moon Phase: ${astronomicalContext.currentMoonPhase}\n`;
+        if (astronomicalContext.moonPosition) {
+            prompt += `Moon: ${astronomicalContext.moonPosition.degree}° ${astronomicalContext.moonPosition.sign}\n`;
+        }
+        prompt += `\nCurrent Planetary Transits:\n`;
+        prompt += formatPlanetsForPrompt(astronomicalContext.currentPlanets) + '\n';
+    }
+    
     prompt += `\nCONTEXT FOR THIS ${range.toUpperCase()}:\n`;
     
     switch (range.toLowerCase()) {
         case 'daily':
             prompt += `- What energies are prominent TODAY for this person?\n`;
-            prompt += `- How do today's transits interact with their natal chart?\n`;
+            prompt += `- How do today's ACTUAL transits (listed above) interact with their natal chart?\n`;
             prompt += `- What actions or reflections would be most valuable right now?\n`;
-            prompt += `- What lunar phase influences are at play?\n`;
+            prompt += `- How does the current Moon position affect their emotional state?\n`;
             prompt += `- What crystals or practices would support them today?\n`;
             break;
         case 'weekly':
             prompt += `- What themes are emerging THIS WEEK?\n`;
-            prompt += `- How do current planetary positions affect their trajectory?\n`;
+            prompt += `- How do current REAL planetary positions (listed above) affect their trajectory?\n`;
             prompt += `- Which areas of life (relationship, career, health, spiritual growth) are most activated?\n`;
             prompt += `- What should they focus on or prepare for?\n`;
             prompt += `- How can they align with the cosmic flow?\n`;
@@ -174,6 +189,8 @@ function buildHoroscopePrompt(userInfo, astrologyInfo, range, userGreeting) {
     prompt += `\nPROVIDE A RICH, PERSONALIZED READING that:\n`;
     prompt += `- Addresses them directly by name\n`;
     prompt += `- References their Sun, Moon, and Rising signs\n`;
+    prompt += `- Uses the ACTUAL current planetary positions provided above (not fictional ones)\n`;
+    prompt += `- Explains how real transits interact with their natal chart\n`;
     prompt += `- Incorporates their complete birth chart nuances\n`;
     prompt += `- Gives specific, actionable guidance\n`;
     prompt += `- Honors the unique complexity of their chart`;

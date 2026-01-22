@@ -11,6 +11,7 @@ import {
 } from '../oracle.js';
 import { storeMessage } from '../messages.js';
 import { getUserTimezone, getLocalDateForTimezone, needsRegeneration } from '../utils/timezoneHelper.js';
+import { getAstronomicalContext, formatPlanetsForPrompt } from '../utils/astronomicalContext.js';
 import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
@@ -68,12 +69,15 @@ export async function generateMoonPhaseCommentary(userId, phase) {
             return;
         }
         
-                // Get user greeting first (uses familiar_name if available)
+        // Get current astronomical context (planets, moon phase, etc.)
+        const astronomicalContext = await getAstronomicalContext();
+        
+        // Get user greeting first (uses familiar_name if available)
         const userGreeting = getUserGreeting(userInfo, userId);
         
         // Build moon phase prompt with userGreeting already obtained above
         // Use actualPhase for the prompt and storage
-        const moonPhasePrompt = buildMoonPhasePrompt(userInfo, astrologyInfo, actualPhase, userGreeting);
+        const moonPhasePrompt = buildMoonPhasePrompt(userInfo, astrologyInfo, actualPhase, userGreeting, astronomicalContext);
         
         // Get oracle system prompt with ORACLE LANGUAGE SUPPORT
         // Oracle response uses oracleLanguage (can be regional variant), page UI uses userLanguage
@@ -133,9 +137,9 @@ Do NOT include tarot cards - this is purely lunar + astrological insight enriche
 }
 
 /**
- * Build moon phase prompt with user's astrological context
+ * Build moon phase prompt with user's astrological context and REAL astronomical data
  */
-function buildMoonPhasePrompt(userInfo, astrologyInfo, phase, userGreeting) {
+function buildMoonPhasePrompt(userInfo, astrologyInfo, phase, userGreeting, astronomicalContext) {
     const astro = astrologyInfo.astrology_data;
     
     let prompt = `Generate a rich, personalized insight for ${userGreeting} about the ${phase} moon phase:\n\n`;
@@ -151,13 +155,26 @@ function buildMoonPhasePrompt(userInfo, astrologyInfo, phase, userGreeting) {
         prompt += `- Birth Location: ${userInfo.birth_city}, ${userInfo.birth_province}\n\n`;
     }
     
+    // ADD CURRENT ASTRONOMICAL POSITIONS
+    if (astronomicalContext.success) {
+        prompt += `CURRENT ASTRONOMICAL POSITIONS (calculated, not fictional):\n`;
+        prompt += `Moon Phase: ${astronomicalContext.currentMoonPhase}\n`;
+        if (astronomicalContext.moonPosition) {
+            prompt += `Current Moon Position: ${astronomicalContext.moonPosition.degree}° ${astronomicalContext.moonPosition.sign}\n`;
+        }
+        prompt += `\nCurrent Planetary Transits:\n`;
+        prompt += formatPlanetsForPrompt(astronomicalContext.currentPlanets) + '\n\n';
+    }
+    
     prompt += `LUNAR CONTEXT:\n`;
     prompt += `Current Moon Phase: ${phase}\n\n`;
     prompt += `PERSONALIZATION REQUIREMENTS:\n`;
-    prompt += `- Interpret how this moon phase directly activates their natal Moon sign\n`;
-    prompt += `- Show how it amplifies or challenges their Sun sign's core identity\n`;
+    prompt += `- Use the ACTUAL current Moon position (${astronomicalContext.moonPosition?.sign || 'unknown'}) in your interpretation\n`;
+    prompt += `- Interpret how this moon phase directly activates their natal Moon sign (${astro.moon_sign})\n`;
+    prompt += `- Show how the current Moon transit interacts with their Sun sign's core identity\n`;
     prompt += `- Describe what emotional and spiritual themes this phase heightens for them specifically\n`;
     prompt += `- Explain how their Rising sign experiences and reflects this lunar energy to the world\n`;
+    prompt += `- Reference the REAL current planetary positions (not fictional ones) in context of this lunar phase\n`;
     prompt += `- Provide practical, personal guidance uniquely suited to their chart\n`;
     prompt += `- Suggest crystals that align with their birth chart and this specific phase\n`;
     prompt += `- Address them directly and make this deeply personal\n\n`;
