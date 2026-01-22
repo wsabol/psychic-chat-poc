@@ -5,7 +5,7 @@ import { db } from '../../shared/db.js';
 import { migrateOnboardingData } from '../../shared/accountMigration.js';
 import { logAudit } from '../../shared/auditLog.js';
 import { createUserDatabaseRecords } from './helpers/userCreation.js';
-import { validationError, conflictError, serverError, createdResponse } from '../../utils/responses.js';
+import { validationError, conflictError, serverError, createdResponse, successResponse } from '../../utils/responses.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 const router = Router();
@@ -69,7 +69,7 @@ router.post('/register-firebase-user', async (req, res) => {
 
     // Check if already exists
     const exists = await db.query('SELECT user_id FROM user_personal_info WHERE user_id = $1', [userId]);
-    if (exists.rows.length > 0) return res.json({ success: true });
+    if (exists.rows.length > 0) return successResponse(res, { success: true });
 
     // Create records
     await createUserDatabaseRecords(userId, email);
@@ -87,7 +87,7 @@ router.post('/register-firebase-user', async (req, res) => {
       details: { email }
     });
 
-    return res.json({ success: true, message: 'User registered successfully.' });
+    return successResponse(res, { success: true, message: 'User registered successfully.' });
   } catch (err) {
     await logErrorFromCatch(err, 'auth', 'Firebase user registration');
     return serverError(res, 'Failed to register user');
@@ -162,4 +162,3 @@ router.post('/register-and-migrate', async (req, res) => {
 });
 
 export default router;
-

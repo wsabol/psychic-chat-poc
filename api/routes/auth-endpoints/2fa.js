@@ -8,7 +8,7 @@ import { hashUserId } from '../../shared/hashUtils.js';
 import { insertVerificationCode, getVerificationCode } from '../../shared/encryptedQueries.js';
 import { extractDeviceName } from '../../shared/deviceFingerprint.js';
 import { parseDeviceInfo } from '../../shared/sessionManager/utils/deviceParser.js';
-import { validationError, serverError, forbiddenError, rateLimitError } from '../../utils/responses.js';
+import { validationError, serverError, forbiddenError, rateLimitError, successResponse, ErrorCodes } from '../../utils/responses.js';
 import { isAdmin, checkTrustedIP, recordTrustedIP, logAdminLoginAttempt } from '../../services/adminIpService.js';
 import { buildAdminNewIPEmailHTML } from '../../services/adminEmailBuilder.js';
 
@@ -79,7 +79,7 @@ router.post('/verify-2fa', async (req, res) => {
       details: { deviceTrusted: shouldTrustDevice || false }
     });
     
-    return res.json({ success: true, message: '2FA verified', deviceTrusted: shouldTrustDevice || false });
+    return successResponse(res, { success: true, message: '2FA verified', deviceTrusted: shouldTrustDevice || false });
   } catch (err) {
     return serverError(res, 'Failed to verify 2FA code');
   }
@@ -123,9 +123,9 @@ router.post('/check-2fa/:userId', async (req, res) => {
         success: false,
         locked: true,
         message: `Account locked. Try again in ${lockStatus.minutesRemaining} minute${lockStatus.minutesRemaining !== 1 ? 's' : ''}.`,
+        errorCode: ErrorCodes.RATE_LIMIT_EXCEEDED,
         unlockAt: lockStatus.unlockAt,
-        minutesRemaining: lockStatus.minutesRemaining,
-        errorCode: 'ACCOUNT_LOCKED_429'
+        minutesRemaining: lockStatus.minutesRemaining
       });
     }
 
@@ -421,7 +421,7 @@ router.get('/check-current-device-trust/:userId', authenticateToken, async (req,
       }
     }
 
-    return res.json({ success: true, isTrusted });
+    return successResponse(res, { success: true, isTrusted });
   } catch (err) {
     return serverError(res, 'Failed to check device trust status');
   }
@@ -479,7 +479,7 @@ router.post('/trust-current-device/:userId', authenticateToken, async (req, res)
       status: 'SUCCESS'
     });
 
-    return res.json({ success: true, message: 'Device trusted for 30 days' });
+    return successResponse(res, { success: true, message: 'Device trusted for 30 days' });
   } catch (err) {
     return serverError(res, 'Failed to trust device');
   }
@@ -522,7 +522,7 @@ router.post('/revoke-current-device-trust/:userId', authenticateToken, async (re
       status: 'SUCCESS'
     });
 
-    return res.json({ success: true, message: 'Device trust revoked' });
+    return successResponse(res, { success: true, message: 'Device trust revoked' });
   } catch (err) {
     return serverError(res, 'Failed to revoke device trust');
   }
@@ -557,7 +557,7 @@ router.get('/trusted-devices/:userId', authenticateToken, async (req, res) => {
       [ENCRYPTION_KEY, userIdHash]
     );
 
-    return res.json({ success: true, devices: result.rows });
+    return successResponse(res, { success: true, devices: result.rows });
   } catch (err) {
     return serverError(res, 'Failed to fetch trusted devices');
   }
@@ -651,7 +651,7 @@ router.delete('/trusted-device/:userId/:deviceId', authenticateToken, async (req
       details: { deviceId }
     });
 
-    return res.json({ success: true, message: 'Device trust revoked' });
+    return successResponse(res, { success: true, message: 'Device trust revoked' });
   } catch (err) {
     return serverError(res, 'Failed to revoke device trust');
   }
