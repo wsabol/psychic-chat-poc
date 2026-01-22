@@ -15,7 +15,7 @@ import { logAudit } from '../../shared/auditLog.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { db } from '../../shared/db.js';
-import { validationError, notFoundError, serverError, unprocessableError } from '../../utils/responses.js';
+import { validationError, notFoundError, serverError, unprocessableError, successResponse } from '../../utils/responses.js';
 import {
   fetchDeletionCode,
   storeDeletionCode,
@@ -70,7 +70,7 @@ router.post('/send-delete-verification', authenticateToken, async (req, res) => 
       logErrorFromCatch(e, 'user-data-deletion', 'Log deletion verification sent').catch(() => {});
     });
 
-    res.json({
+    successResponse(res, {
       success: true,
       message: 'Verification code sent to email',
       email_masked: maskEmail(userEmail)
@@ -108,7 +108,7 @@ router.delete('/delete-account', authenticateToken, async (req, res) => {
     // Perform complete deletion (Firebase + Stripe + Database)
     const results = await performCompleteAccountDeletion(userId, userIdHash, req);
 
-    res.json({
+    successResponse(res, {
       success: true,
       message: 'Account permanently deleted',
       timestamp: new Date().toISOString(),
@@ -176,7 +176,7 @@ router.delete('/delete-account/:userId', authenticateToken, authorizeUser, async
     const graceEndDate = new Date();
     graceEndDate.setDate(graceEndDate.getDate() + 30);
 
-    return res.json({
+    return successResponse(res, {
       success: true,
       message: 'Account deletion requested',
       userId,
@@ -252,7 +252,7 @@ router.post('/cancel-deletion/:userId', authenticateToken, authorizeUser, async 
         logErrorFromCatch(e, 'user-data-deletion', 'Log reactivation audit').catch(() => {});
       });
 
-    return res.json({
+    return successResponse(res, {
       success: true,
       message: 'Account reactivated successfully',
       userId,

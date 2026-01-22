@@ -4,6 +4,7 @@
  */
 
 import { logErrorFromCatch } from '../shared/errorLogger.js';
+import { successResponse } from '../utils/responses.js';
 
 // Load admin emails from environment variable
 const ADMIN_EMAILS = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim().toLowerCase()) || [];

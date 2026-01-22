@@ -16,6 +16,7 @@
 import express from 'express';
 import { db } from '../../shared/db.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
+import { successResponse } from '../../utils/responses.js';
 
 const router = express.Router();
 
@@ -43,7 +44,7 @@ router.get('/report', async (req, res) => {
     // Get job status
     const jobStatus = getJobStatus();
 
-    res.json({
+    successResponse(res, {
       timestamp: new Date().toISOString(),
       summary,
       usersByStatus,

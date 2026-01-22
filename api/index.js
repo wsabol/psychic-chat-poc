@@ -41,6 +41,7 @@ import freeTrialRoutes from "./routes/free-trial.js";
 import { initializeScheduler } from "./jobs/scheduler.js";
 import { validateRequestPayload, rateLimit } from "./middleware/inputValidation.js";
 import { errorHandler } from "./middleware/errorHandler.js";
+import { successResponse } from './utils/responses.js';
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 const app = express();
@@ -117,7 +118,7 @@ app.use((req, res, next) => {
 
 // Welcome route
 app.get('/', (req, res) => {
-    res.json({ message: 'Welcome to the Psychic Chat API' });
+    successResponse(res, { message: 'Welcome to the Psychic Chat API' });
 });
 
 // Public auth routes (no authentication required)

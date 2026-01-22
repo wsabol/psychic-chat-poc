@@ -12,7 +12,7 @@
 
 import { validateSubscriptionHealth, getCachedSubscriptionStatus } from '../services/stripe/subscriptionValidator.js';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
-import { authError, forbiddenError, ErrorCodes } from '../utils/responses.js';
+import { authError, forbiddenError, ErrorCodes, successResponse } from '../utils/responses.js';
 
 /**
  * Subscription Guard Middleware

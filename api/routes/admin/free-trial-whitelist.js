@@ -7,6 +7,7 @@ import { Router } from 'express';
 import { authenticateToken } from '../../middleware/auth.js';
 import { requireAdmin } from '../../middleware/adminAuth.js';
 import { extractClientIp, isValidIpAddress, sanitizeDescription } from '../../shared/ipUtils.js';
+import { successResponse } from '../../utils/responses.js';
 import { 
   getAllWhitelistedIps, 
   addIpToWhitelist, 
@@ -30,7 +31,7 @@ router.get('/whitelist', authenticateToken, requireAdmin, async (req, res) => {
     });
   }
 
-  return res.json({ 
+  return successResponse(res, { 
     success: true, 
     whitelist: result.whitelist,
     count: result.count
@@ -81,7 +82,7 @@ router.post('/whitelist/add', authenticateToken, requireAdmin, async (req, res) 
     });
   }
 
-  return res.json({
+  return successResponse(res, {
     success: true,
     message: 'IP address whitelisted successfully',
     whitelist: result.whitelist
@@ -112,7 +113,7 @@ router.delete('/whitelist/:id', authenticateToken, requireAdmin, async (req, res
     });
   }
 
-  return res.json({
+  return successResponse(res, {
     success: true,
     message: 'IP address removed from whitelist',
     removed: result.removed
@@ -135,7 +136,7 @@ router.get('/whitelist/current-ip', authenticateToken, requireAdmin, async (req,
     });
   }
 
-  return res.json({
+  return successResponse(res, {
     success: true,
     ipAddress: result.ipAddress,
     ipHash: result.ipHash,
