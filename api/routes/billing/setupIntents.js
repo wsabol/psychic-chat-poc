@@ -3,7 +3,7 @@ import {
   getOrCreateStripeCustomer,
   createSetupIntent,
 } from '../../services/stripeService.js';
-import { validationError, billingError } from '../../utils/responses.js';
+import { validationError, billingError, successResponse } from '../../utils/responses.js';
 
 const router = express.Router();
 
@@ -22,7 +22,7 @@ router.post('/', async (req, res) => {
 
     const setupIntent = await createSetupIntent(customerId);
 
-    res.json({
+    successResponse(res, {
       clientSecret: setupIntent.client_secret,
       customerId: customerId,
     });

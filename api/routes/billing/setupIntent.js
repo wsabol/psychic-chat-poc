@@ -1,7 +1,7 @@
 import express from 'express';
 import { authenticateToken } from '../../middleware/auth.js';
 import { getOrCreateStripeCustomer, createSetupIntent } from '../../services/stripeService.js';
-import { validationError, billingError } from '../../utils/responses.js';
+import { validationError, billingError, successResponse } from '../../utils/responses.js';
 
 const router = express.Router();
 
@@ -21,7 +21,7 @@ router.post('/setup-intent', authenticateToken, async (req, res) => {
 
     const setupIntent = await createSetupIntent(customerId);
 
-    res.json({
+    successResponse(res, {
       setupIntentId: setupIntent.id,
       clientSecret: setupIntent.client_secret,
       customerId: customerId,

@@ -1,7 +1,7 @@
 import express from 'express';
 import { authenticateToken } from '../../middleware/auth.js';
 import { db } from '../../shared/db.js';
-import { validationError, serverError } from '../../utils/responses.js';
+import { validationError, serverError, successResponse } from '../../utils/responses.js';
 
 const router = express.Router();
 
@@ -31,7 +31,7 @@ router.get('/onboarding-status', authenticateToken, async (req, res) => {
     
     // For new users (temp accounts, not yet in DB), return default onboarding state
     if (!result.rows[0]) {
-      return res.json({
+      return successResponse(res, {
         currentStep: 'create_account',
         isOnboarding: true,
         completedSteps: {
@@ -65,7 +65,7 @@ router.get('/onboarding-status', authenticateToken, async (req, res) => {
     // Only FALSE if onboarding_completed = true
     const isOnboarding = onboarding_completed !== true;
     
-    res.json({
+    successResponse(res, {
       currentStep: onboarding_step,
       isOnboarding: isOnboarding,
       completedSteps: steps,
@@ -126,7 +126,7 @@ router.post('/onboarding-step/:step', authenticateToken, async (req, res) => {
     
     const actualCompleted = updateResult.rows[0]?.onboarding_completed;
     
-        res.json({ 
+        successResponse(res, { 
       success: true, 
       step, 
       completed: actualCompleted === true,

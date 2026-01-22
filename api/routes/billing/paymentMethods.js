@@ -131,7 +131,7 @@ router.post('/payment-methods/attach', authenticateToken, async (req, res) => {
     const cacheKey = `billing:payment-methods:${userId}`;
     await redis.del(cacheKey);
 
-    res.json({ 
+    successResponse(res, { 
       success: true, 
       paymentMethod: paymentMethod 
     });
@@ -143,7 +143,7 @@ router.post('/payment-methods/attach', authenticateToken, async (req, res) => {
     const errorMsg = error.message || '';
     const alreadyAttached = errorMsg.includes('already been attached') || errorMsg.includes('already attached');
     if (alreadyAttached) {
-      return res.json({ 
+      return successResponse(res, { 
         success: true, 
         message: 'Payment method already attached' 
       });
