@@ -1,0 +1,172 @@
+{
+  "project": "Psychic Chat POC - JSON Response Standardization",
+  "totalFiles": 40,
+  "completedFiles": 8,
+  "remainingFiles": 32,
+  "groups": {
+    "api_routes": {
+      "description": "API route files needing standardization",
+      "files": [
+        "routes/help.js",
+        "routes/moon-phase.js",
+        "routes/response-status.js",
+        "routes/violationReports.js",
+        "routes/security.js",
+        "routes/migration.js",
+        "routes/horoscope.js",
+        "routes/cleanup.js",
+        "routes/cleanup-status.js",
+        "routes/chat.js",
+        "routes/astrology.js",
+        "routes/astrology-insights.js",
+        "routes/free-trial.js",
+        "routes/tarot.js"
+      ]
+    },
+    "api_routes_billing": {
+      "description": "Billing route files",
+      "files": [
+        "routes/billing/onboarding.js",
+        "routes/billing/paymentMethods.js",
+        "routes/billing/setupIntent.js",
+        "routes/billing/setupIntents.js",
+        "routes/billing/subscriptions.js"
+      ]
+    },
+    "api_routes_auth": {
+      "description": "Auth endpoint files",
+      "files": [
+        "routes/auth-endpoints/2fa.js",
+        "routes/auth-endpoints/login.js",
+        "routes/auth-endpoints/register.js",
+        "routes/auth-endpoints/account-reactivation.js",
+        "routes/auth-endpoints/preferences.js"
+      ]
+    },
+    "api_routes_admin": {
+      "description": "Admin route files",
+      "files": [
+        "routes/admin/free-trial-whitelist.js",
+        "routes/admin/subscriptionReport.js"
+      ]
+    },
+    "api_routes_user": {
+      "description": "User data route files",
+      "files": [
+        "routes/user-data/deletion.js",
+        "routes/user-profile.js"
+      ]
+    },
+    "api_middleware": {
+      "description": "Middleware files",
+      "files": [
+        "middleware/adminAuth.js",
+        "middleware/subscriptionGuard.js"
+      ]
+    },
+    "api_root": {
+      "description": "Root API files",
+      "files": [
+        "index.js"
+      ]
+    }
+  },
+  "batches": [
+    {
+      "batch": 1,
+      "name": "Core Routes 1",
+      "status": "COMPLETED",
+      "files": [
+        "routes/analytics.js",
+        "routes/admin/error-logs.js",
+        "routes/auth-endpoints/account.js",
+        "routes/compliance-admin.js",
+        "routes/consent.js",
+        "routes/user-settings.js",
+        "routes/billing/webhooks.js",
+        "routes/admin/compliance-dashboard.js"
+      ],
+      "filesCount": 8,
+      "changesApplied": 19
+    },
+    {
+      "batch": 2,
+      "name": "Core Routes 2",
+      "status": "PENDING",
+      "files": [
+        "routes/help.js",
+        "routes/moon-phase.js",
+        "routes/response-status.js",
+        "routes/violationReports.js",
+        "routes/security.js",
+        "routes/migration.js",
+        "routes/horoscope.js",
+        "routes/cleanup.js"
+      ],
+      "filesCount": 8
+    },
+    {
+      "batch": 3,
+      "name": "Core Routes 3 + Astrology",
+      "status": "PENDING",
+      "files": [
+        "routes/cleanup-status.js",
+        "routes/chat.js",
+        "routes/astrology.js",
+        "routes/astrology-insights.js",
+        "routes/free-trial.js",
+        "routes/tarot.js"
+      ],
+      "filesCount": 6
+    },
+    {
+      "batch": 4,
+      "name": "Billing Routes",
+      "status": "PENDING",
+      "files": [
+        "routes/billing/onboarding.js",
+        "routes/billing/paymentMethods.js",
+        "routes/billing/setupIntent.js",
+        "routes/billing/setupIntents.js",
+        "routes/billing/subscriptions.js"
+      ],
+      "filesCount": 5
+    },
+    {
+      "batch": 5,
+      "name": "Auth Endpoints",
+      "status": "PENDING",
+      "files": [
+        "routes/auth-endpoints/2fa.js",
+        "routes/auth-endpoints/login.js",
+        "routes/auth-endpoints/register.js",
+        "routes/auth-endpoints/account-reactivation.js",
+        "routes/auth-endpoints/preferences.js"
+      ],
+      "filesCount": 5
+    },
+    {
+      "batch": 6,
+      "name": "Admin + User + Middleware",
+      "status": "PENDING",
+      "files": [
+        "routes/admin/free-trial-whitelist.js",
+        "routes/admin/subscriptionReport.js",
+        "routes/user-data/deletion.js",
+        "routes/user-profile.js",
+        "middleware/adminAuth.js",
+        "middleware/subscriptionGuard.js",
+        "index.js"
+      ],
+      "filesCount": 7
+    }
+  ],
+  "notes": {
+    "excludedFiles": [
+      "api/utils/responses.js - Utility file defining response functions",
+      "api/PRODUCTION_AUDIT_SCRIPT.js - Audit script, not application code"
+    ],
+    "estimatedCompletionTime": "6 batches remaining, ~2-3 minutes per batch = 12-18 minutes total",
+    "testingRequired": "After each batch, verify API starts without syntax errors"
+  }
+}

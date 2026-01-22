@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db } from "../shared/db.js";
 import { auth as firebaseAuth } from "../shared/firebase-admin.js";
 import { serverError } from "../utils/responses.js";
+import { successResponse } from '../utils/responses.js';
 
 const router = Router();
 
@@ -30,7 +31,7 @@ router.delete("/delete-temp-account/:tempUserId", async (req, res) => {
         } catch (fbErr) {
         }
 
-        res.json({ 
+        successResponse(res, { 
             success: true, 
             message: "Temporary account deleted",
             databaseDeleted: true,
@@ -99,7 +100,7 @@ router.delete("/cleanup-old-temp-accounts", async (req, res) => {
             // Silently continue if orphan check fails
         }
         
-        res.json({ success: true, message: `Cleaned up ${deletedCount} DB + ${firebaseDeletedCount} Firebase accounts`, deletedCount: deletedCount + firebaseDeletedCount });
+        successResponse(res, { success: true, message: `Cleaned up ${deletedCount} DB + ${firebaseDeletedCount} Firebase accounts`, deletedCount: deletedCount + firebaseDeletedCount });
 
     } catch (err) {
         return serverError(res, 'Failed to cleanup old temp accounts');

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 /**
- * Security Auto-Fix Script
- * Automatically fixes critical security issues found in JSON response audit
+ * Security Auto-Fix Script - BATCH 2
+ * Standardizes JSON responses to use proper utility functions
  * 
  * Usage: node SECURITY_AUTO_FIX.js [--dry-run]
  */
@@ -32,129 +32,131 @@ const colors = {
   green: '\x1b[32m',
   yellow: '\x1b[33m',
   blue: '\x1b[34m',
-  cyan: '\x1b[36m'
+  cyan: '\x1b[36m',
+  magenta: '\x1b[35m'
 };
 
-console.log(`\n${colors.cyan}╔═══════════════════════════════════════════════════════════════╗${colors.reset}`);
-console.log(`${colors.cyan}║          SECURITY AUTO-FIX SCRIPT                            ║${colors.reset}`);
-console.log(`${colors.cyan}║          Fixing Critical JSON Response Issues                ║${colors.reset}`);
-console.log(`${colors.cyan}╚═══════════════════════════════════════════════════════════════╝${colors.reset}\n`);
+console.log(`\n${colors.magenta}╔═══════════════════════════════════════════════════════════════╗${colors.reset}`);
+console.log(`${colors.magenta}║          SECURITY AUTO-FIX SCRIPT - BATCH 2                  ║${colors.reset}`);
+console.log(`${colors.magenta}║          Core Routes Response Standardization                ║${colors.reset}`);
+console.log(`${colors.magenta}╚═══════════════════════════════════════════════════════════════╝${colors.reset}\n`);
 
 if (isDryRun) {
   console.log(`${colors.yellow}🔍 DRY RUN MODE - No files will be modified${colors.reset}\n`);
 }
 
 /**
- * Fix definitions - each fix has a pattern to find and replacement logic
+ * BATCH 2 FIX DEFINITIONS
+ * Focus: Standardize manual res.json({ to successResponse()
  */
 const fixes = [
   {
-    file: 'routes/admin/error-logs.js',
-    description: 'Remove error.message exposure from admin error responses',
+    file: 'routes/help.js',
+    description: 'Standardize help route responses',
     fixes: [
       {
-        search: /res\.status\(500\)\.json\(\{\s*success:\s*false,\s*error:\s*'([^']+)',\s*details:\s*error\.message\s*\}\)/g,
-        replace: (match, errorMsg) => `serverError(res, '${errorMsg}')`,
-        description: 'Replace 500 error with serverError() utility'
-      }
-    ],
-    requiredImport: "import { serverError } from '../../utils/responses.js';",
-    checkImport: /serverError/
-  },
-  {
-    file: 'routes/auth-endpoints/account.js',
-    description: 'Remove Firebase UID exposure from registration responses',
-    fixes: [
-      {
-        search: /return createdResponse\(res,\s*\{\s*success:\s*true,\s*uid:\s*userRecord\.uid,\s*email:\s*userRecord\.email,\s*message:\s*'User registered successfully\. Please sign in\.'\s*\}\)/g,
-        replace: () => `return createdResponse(res, {\n      success: true,\n      message: 'User registered successfully. Please sign in.'\n    })`,
-        description: 'Remove uid and email from registration response'
-      },
-      {
-        search: /return successResponse\(res,\s*\{\s*success:\s*true,\s*userId\s*\}\)/g,
-        replace: () => `return successResponse(res, { success: true })`,
-        description: 'Remove userId from response'
-      },
-      {
-        search: /return createdResponse\(res,\s*\{\s*success:\s*true,\s*uid:\s*newUserId,\s*email:\s*userRecord\.email,\s*message:\s*'Account created and onboarding data migrated successfully',\s*migration:\s*migrationResult\s*\}\)/g,
-        replace: () => `return createdResponse(res, {\n        success: true,\n        message: 'Account created and onboarding data migrated successfully'\n      })`,
-        description: 'Remove uid, email, and migration details from response'
-      },
-      {
-        search: /return createdResponse\(res,\s*\{\s*success:\s*true,\s*uid:\s*newUserId,\s*email:\s*userRecord\.email,\s*message:\s*'Account created but data migration encountered issues',\s*warning:\s*migrationErr\.message\s*\}\)/g,
-        replace: () => `return createdResponse(res, {\n        success: true,\n        message: 'Account created successfully'\n      })`,
-        description: 'Remove uid, email, and error details from response'
-      }
-    ]
-  },
-  {
-    file: 'routes/compliance-admin.js',
-    description: 'Standardize manual success responses to use successResponse()',
-    fixes: [
-      {
-        search: /return res\.json\(\{\s*success:\s*true,\s*message:\s*'([^']+)'\s*\}\)/g,
-        replace: (match, msg) => `return successResponse(res, { success: true, message: '${msg}' })`,
-        description: 'Replace manual res.json with successResponse()'
-      },
-      {
-        search: /return res\.json\(\{\s*success:\s*true,\s*data:\s*([^}]+)\s*\}\)/g,
-        replace: (match, data) => `return successResponse(res, { success: true, data: ${data} })`,
-        description: 'Standardize data responses'
+        search: /return res\.json\(\{/g,
+        replace: () => `return successResponse(res, {`,
+        description: 'Convert to successResponse()'
       }
     ],
     requiredImport: "import { successResponse } from '../utils/responses.js';",
     checkImport: /successResponse/
   },
   {
-    file: 'routes/consent.js',
-    description: 'Standardize consent endpoint responses',
+    file: 'routes/moon-phase.js',
+    description: 'Standardize moon phase responses',
     fixes: [
       {
-        search: /return res\.json\(\{\s*success:\s*true,\s*([^}]+)\}\)/g,
-        replace: (match, content) => `return successResponse(res, { success: true, ${content}})`,
-        description: 'Use successResponse() for consistency'
+        search: /res\.json\(\{/g,
+        replace: () => `successResponse(res, {`,
+        description: 'Convert to successResponse()'
       }
     ],
     requiredImport: "import { successResponse } from '../utils/responses.js';",
     checkImport: /successResponse/
   },
   {
-    file: 'routes/user-settings.js',
-    description: 'Standardize user settings responses',
+    file: 'routes/response-status.js',
+    description: 'Standardize response status checks',
     fixes: [
       {
-        search: /res\.json\(\{\s*success:\s*true,\s*settings:\s*([^}]+)\}\)/g,
-        replace: (match, settings) => `successResponse(res, { success: true, settings: ${settings}})`,
-        description: 'Use successResponse() utility'
+        search: /return res\.json\(\{/g,
+        replace: () => `return successResponse(res, {`,
+        description: 'Convert to successResponse()'
       }
     ],
     requiredImport: "import { successResponse } from '../utils/responses.js';",
     checkImport: /successResponse/
   },
   {
-    file: 'routes/billing/webhooks.js',
-    description: 'Standardize webhook responses',
+    file: 'routes/violationReports.js',
+    description: 'Standardize violation report responses',
     fixes: [
       {
-        search: /return res\.json\(\{\s*received:\s*true\s*\}\)/g,
-        replace: () => `return successResponse(res, { received: true })`,
-        description: 'Standardize webhook acknowledgment'
+        search: /res\.json\(\{/g,
+        replace: () => `successResponse(res, {`,
+        description: 'Convert to successResponse()'
       }
     ],
-    requiredImport: "import { successResponse } from '../../utils/responses.js';",
+    requiredImport: "import { successResponse } from '../utils/responses.js';",
     checkImport: /successResponse/
   },
   {
-    file: 'routes/admin/compliance-dashboard.js',
-    description: 'Standardize compliance dashboard responses',
+    file: 'routes/security.js',
+    description: 'Standardize security route responses',
     fixes: [
       {
-        search: /return res\.json\(\{\s*success:\s*true,\s*([^}]+)\}\)/g,
-        replace: (match, content) => `return successResponse(res, { success: true, ${content}})`,
-        description: 'Use successResponse() for all responses'
+        search: /res\.json\(\{/g,
+        replace: () => `successResponse(res, {`,
+        description: 'Convert to successResponse()'
       }
     ],
-    requiredImport: "import { successResponse } from '../../utils/responses.js';",
+    requiredImport: "import { successResponse } from '../utils/responses.js';",
+    checkImport: /successResponse/
+  },
+  {
+    file: 'routes/migration.js',
+    description: 'Standardize migration responses',
+    fixes: [
+      {
+        search: /res\.json\(\{/g,
+        replace: () => `successResponse(res, {`,
+        description: 'Convert to successResponse()'
+      },
+      {
+        search: /return res\.json\(\{/g,
+        replace: () => `return successResponse(res, {`,
+        description: 'Convert return statements'
+      }
+    ],
+    requiredImport: "import { successResponse } from '../utils/responses.js';",
+    checkImport: /successResponse/
+  },
+  {
+    file: 'routes/horoscope.js',
+    description: 'Standardize horoscope responses',
+    fixes: [
+      {
+        search: /res\.json\(\{/g,
+        replace: () => `successResponse(res, {`,
+        description: 'Convert to successResponse()'
+      }
+    ],
+    requiredImport: "import { successResponse } from '../utils/responses.js';",
+    checkImport: /successResponse/
+  },
+  {
+    file: 'routes/cleanup.js',
+    description: 'Standardize cleanup responses',
+    fixes: [
+      {
+        search: /res\.json\(\{/g,
+        replace: () => `successResponse(res, {`,
+        description: 'Convert to successResponse()'
+      }
+    ],
+    requiredImport: "import { successResponse } from '../utils/responses.js';",
     checkImport: /successResponse/
   }
 ];
@@ -328,7 +330,7 @@ function processFile(fixDef) {
  * Main execution
  */
 function main() {
-  console.log(`${colors.cyan}Starting security fixes...${colors.reset}\n`);
+  console.log(`${colors.cyan}Processing Batch 2 files...${colors.reset}\n`);
   
   // Process each file
   for (const fixDef of fixes) {
@@ -336,9 +338,9 @@ function main() {
   }
   
   // Print summary
-  console.log(`\n${colors.cyan}╔═══════════════════════════════════════════════════════════════╗${colors.reset}`);
-  console.log(`${colors.cyan}║                      SUMMARY REPORT                          ║${colors.reset}`);
-  console.log(`${colors.cyan}╚═══════════════════════════════════════════════════════════════╝${colors.reset}\n`);
+  console.log(`\n${colors.magenta}╔═══════════════════════════════════════════════════════════════╗${colors.reset}`);
+  console.log(`${colors.magenta}║                  BATCH 2 SUMMARY REPORT                      ║${colors.reset}`);
+  console.log(`${colors.magenta}╚═══════════════════════════════════════════════════════════════╝${colors.reset}\n`);
   
   console.log(`${colors.blue}Files Processed:${colors.reset} ${stats.filesProcessed}`);
   console.log(`${colors.green}Files Changed:${colors.reset}   ${stats.filesChanged}`);
@@ -366,11 +368,9 @@ function main() {
     console.log(`${colors.yellow}⚠ DRY RUN - No files were actually modified${colors.reset}`);
     console.log(`${colors.yellow}  Run without --dry-run to apply changes${colors.reset}\n`);
   } else if (stats.filesChanged > 0 && stats.syntaxErrors.length === 0) {
-    console.log(`${colors.green}✓ All fixes applied successfully!${colors.reset}`);
-    console.log(`${colors.cyan}  Next steps:${colors.reset}`);
-    console.log(`  1. Test the API server: ${colors.yellow}npm start${colors.reset}`);
-    console.log(`  2. Run audit script: ${colors.yellow}node PRODUCTION_AUDIT_SCRIPT.js${colors.reset}`);
-    console.log(`  3. Commit changes: ${colors.yellow}git add . && git commit -m "Security fixes"${colors.reset}\n`);
+    console.log(`${colors.green}✓ Batch 2 complete!${colors.reset}`);
+    console.log(`${colors.cyan}  Progress: Batch 2 of 6 complete${colors.reset}`);
+    console.log(`${colors.cyan}  Next: Update script for Batch 3${colors.reset}\n`);
   }
 }
 

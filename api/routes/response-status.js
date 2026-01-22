@@ -2,6 +2,7 @@ import { Router } from "express";
 import { authenticateToken, authorizeUser } from "../middleware/auth.js";
 import { checkResponseReady } from "../shared/notifications.js";
 import { serverError } from "../utils/responses.js";
+import { successResponse } from '../utils/responses.js';
 
 const router = Router();
 
@@ -20,7 +21,7 @@ router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
         
         if (notification) {
             // Response is ready - return the notification details
-            return res.json({
+            return successResponse(res, {
                 ready: true,
                 messageType: notification.messageType,
                 timestamp: notification.timestamp,
@@ -29,7 +30,7 @@ router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
         }
         
         // No response ready yet
-        return res.json({
+        return successResponse(res, {
             ready: false
         });
     } catch (err) {

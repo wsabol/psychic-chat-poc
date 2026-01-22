@@ -5,6 +5,7 @@ import { authenticateToken, authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
 import { getLocalDateForTimezone } from "../shared/timezoneHelper.js";
 import { validationError, serverError, notFoundError } from "../utils/responses.js";
+import { successResponse } from '../utils/responses.js';
 
 const router = Router();
 
@@ -118,7 +119,7 @@ router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
             return notFoundError(res, 'Moon phase data is incomplete');
         }
         
-        res.json({ 
+        successResponse(res, { 
             commentary: commentary.text, 
             brief: briefContent?.text || null,
             generated_at: commentary.generated_at 
@@ -143,7 +144,7 @@ router.post("/:userId", authenticateToken, authorizeUser, async (req, res) => {
             message: `[SYSTEM] Generate moon phase commentary for ${phase}`
         });
         
-        res.json({ 
+        successResponse(res, { 
             status: 'Moon phase commentary generation queued',
             message: 'Your personalized moon phase insight is being generated. Please wait a moment.',
             phase: phase

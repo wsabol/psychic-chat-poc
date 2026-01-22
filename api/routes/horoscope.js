@@ -6,6 +6,7 @@ import { db } from "../shared/db.js";
 import { getUserTimezone, getLocalDateForTimezone, needsRegeneration } from "../shared/timezoneHelper.js";
 import { checkUserCompliance } from "../shared/complianceChecker.js";
 import { validationError, serverError, notFoundError, complianceError } from "../utils/responses.js";
+import { successResponse } from '../utils/responses.js';
 
 
 const router = Router();
@@ -168,7 +169,7 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
             return notFoundError(res, 'Horoscope data is incomplete');
         }
         
-        res.json({ 
+        successResponse(res, { 
             horoscope: horoscope.text, 
             brief: briefContent?.text || null,
             generated_at: horoscope.generated_at 
@@ -198,7 +199,7 @@ router.post("/:userId/:range", authenticateToken, authorizeUser, async (req, res
             message: `[SYSTEM] Generate horoscope for ${range.toLowerCase()}`
         });
         
-        res.json({ 
+        successResponse(res, { 
             status: 'Horoscope generation queued',
             message: 'Your horoscope is being generated. Please check back in a few seconds.',
             range: range.toLowerCase()

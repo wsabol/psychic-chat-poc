@@ -4,6 +4,7 @@ import { db } from '../shared/db.js';
 import * as securityService from '../services/securityService.js';
 import { validationError, forbiddenError, serverError } from '../utils/responses.js';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
+import { successResponse } from '../utils/responses.js';
 
 const router = express.Router();
 
@@ -48,7 +49,7 @@ router.post('/track-device/:userId', async (req, res) => {
       [userIdHash, token, deviceName, ipAddress, userAgent, process.env.ENCRYPTION_KEY]
     );
 
-    res.json({ success: true, device: result.rows[0] });
+    successResponse(res, { success: true, device: result.rows[0] });
     } catch (err) {
     logErrorFromCatch(err, 'app', 'security');
     return serverError(res, err.message);
@@ -288,7 +289,7 @@ router.get('/2fa-settings/:userId', async (req, res) => {
     }
 
     const settings = await securityService.get2FASettings(userId);
-    res.json({ success: true, settings });
+    successResponse(res, { success: true, settings });
   } catch (err) {
     logErrorFromCatch(err, 'app', 'security');
     return serverError(res, err.message);
@@ -318,7 +319,7 @@ router.post('/2fa-settings/:userId', async (req, res) => {
 
     const settings = await securityService.update2FASettings(userId, { enabled, method });
 
-    res.json({ 
+    successResponse(res, { 
       success: true, 
       settings,
       message: enabled ? '2FA enabled' : '2FA disabled'
@@ -348,7 +349,7 @@ router.post('/session-preference/:userId', async (req, res) => {
 
     const result = await securityService.updateSessionPreference(userId, persistentSession);
 
-    res.json({ 
+    successResponse(res, { 
       success: true, 
       persistentSession: result.persistent_session,
       message: persistentSession 
@@ -381,7 +382,7 @@ router.get('/verification-methods/:userId', async (req, res) => {
     
     const userEmail = userResult.rows[0]?.email || '';
     const methods = await securityService.getVerificationMethods(userId, userEmail);
-    res.json({ success: true, methods });
+    successResponse(res, { success: true, methods });
   } catch (err) {
     logErrorFromCatch(err, 'app', 'security');
     return serverError(res, err.message);

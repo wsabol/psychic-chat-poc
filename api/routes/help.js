@@ -6,6 +6,7 @@ import { logAudit } from '../shared/auditLog.js';
 import { db } from '../shared/db.js';
 import { hashUserId } from '../shared/hashUtils.js';
 import { validationError, serverError } from '../utils/responses.js';
+import { successResponse } from '../utils/responses.js';
 
 const router = Router();
 let client = null;
@@ -140,7 +141,7 @@ router.post('/ask', authenticateToken, async (req, res) => {
       logErrorFromCatch(error, 'app', 'help');
     }
 
-    return res.json({
+    return successResponse(res, {
       success: true,
       response: assistantResponse,
       question: question

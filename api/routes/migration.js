@@ -6,6 +6,7 @@ import { getEncryptionKey } from "../shared/decryptionHelper.js";
 import { hashTempUserId } from "../shared/hashUtils.js";
 import { validationError, serverError } from "../utils/responses.js";
 import { logErrorFromCatch } from "../shared/errorLogger.js";
+import { successResponse } from '../utils/responses.js';
 
 const router = Router();
 
@@ -44,7 +45,7 @@ router.post("/register-migration", async (req, res) => {
             [tempUserId, tempUserIdHash, encryptedEmail]
         );
 
-        res.json({ 
+        successResponse(res, { 
             success: true, 
             message: 'Migration registered' 
         });
@@ -85,7 +86,7 @@ router.post("/migrate-chat-history", authenticateToken, async (req, res) => {
 
         if (migrationRows.length === 0) {
             await client.query('ROLLBACK');
-            return res.json({ 
+            return successResponse(res, { 
                 success: true, 
                 message: 'No pending migration found',
                 migratedCount: 0
@@ -115,7 +116,7 @@ router.post("/migrate-chat-history", authenticateToken, async (req, res) => {
             );
             
             await client.query('COMMIT');
-            return res.json({ 
+            return successResponse(res, { 
                 success: true, 
                 message: 'No messages to migrate',
                 migratedCount: 0,
@@ -162,7 +163,7 @@ router.post("/migrate-chat-history", authenticateToken, async (req, res) => {
             await logErrorFromCatch(fbErr, 'migration', 'Delete temp user after migration');
         }
 
-        res.json({ 
+        successResponse(res, { 
             success: true, 
             message: 'Chat history migrated successfully',
             migratedCount: newMessageIds.length,

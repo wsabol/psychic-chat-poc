@@ -14,6 +14,7 @@ import express from 'express';
 import { db } from '../shared/db.js';
 import { validationError, notFoundError, serverError } from '../utils/responses.js';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
+import { successResponse } from '../utils/responses.js';
 
 const router = express.Router();
 
@@ -65,7 +66,7 @@ router.get('/report', async (req, res) => {
       getTrendingAnalysis(),
     ]);
 
-    res.json({
+    successResponse(res, {
       generated_at: new Date().toISOString(),
       summary,
       by_type: byType,
@@ -168,7 +169,7 @@ router.post('/false-positive', async (req, res) => {
       ]
     );
 
-    res.json({ success: true, message: 'Violation marked as false positive' });
+    successResponse(res, { success: true, message: 'Violation marked as false positive' });
   } catch (err) {
     return serverError(res, 'Failed to mark false positive');
   }
