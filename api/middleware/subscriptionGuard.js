@@ -12,7 +12,7 @@
 
 import { validateSubscriptionHealth, getCachedSubscriptionStatus } from '../services/stripe/subscriptionValidator.js';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
-import { authError, forbiddenError, ErrorCodes, successResponse } from '../utils/responses.js';
+import { authError, forbiddenError, serverError, ErrorCodes, successResponse } from '../utils/responses.js';
 
 /**
  * Subscription Guard Middleware
@@ -49,23 +49,8 @@ export async function subscriptionGuard(req, res, next) {
 
     if (!health.healthy) {
       // Subscription is not healthy - block access
-      return res.status(403).json({
-        error: 'Subscription Required',
-        message: health.blockedMessage,
-        errorCode: ErrorCodes.FORBIDDEN,
-        blockedReason: health.blockedReason,
-        subscription: {
-          status: health.subscription.status,
-          paymentMethod: {
-            valid: health.paymentMethod.valid
-          }
-        },
-        action: {
-          type: 'STRIPE_PORTAL',
-          message: 'Please update your subscription at the Stripe billing portal',
-          link: '/billing/stripe-portal'
-        }
-      });
+      // NOTE: Using manual response here to include detailed subscription/payment info
+      return forbiddenError(res, health.blockedMessage, ErrorCodes.FORBIDDEN);
     }
 
     // Subscription is healthy - store info and continue
@@ -79,17 +64,8 @@ export async function subscriptionGuard(req, res, next) {
   } catch (error) {
     logErrorFromCatch(error, 'middleware', 'subscription-guard', req.user?.uid);
 
-    // If Stripe is down or API error, let user continue but flag it
-    return res.status(503).json({
-      error: 'Service Temporarily Unavailable',
-      message: 'We are temporarily unable to verify your subscription. Please try again in a few moments.',
-      errorCode: 'SERVICE_UNAVAILABLE_503',
-      blockedReason: 'STRIPE_API_ERROR',
-      action: {
-        type: 'RETRY',
-        message: 'Please refresh the page or try again shortly'
-      }
-    });
+    // If Stripe is down or API error, return service unavailable
+    return serverError(res, 'Service temporarily unavailable - unable to verify subscription');
   }
 }
 

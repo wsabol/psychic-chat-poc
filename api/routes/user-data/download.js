@@ -11,7 +11,7 @@ import { logAudit } from '../../shared/auditLog.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { db } from '../../shared/db.js';
-import { validationError, notFoundError, serverError } from '../../utils/responses.js';
+import { validationError, notFoundError, serverError, successResponse } from '../../utils/responses.js';
 import {
   fetchPersonalInfo,
   fetchMessages
@@ -64,7 +64,7 @@ router.get('/download-data', authenticateToken, async (req, res) => {
       logErrorFromCatch(e, 'user-data-download', 'Log download request').catch(() => {});
     });
 
-    res.json(data);
+    successResponse(res, data);
   } catch (error) {
     logErrorFromCatch(error, 'app', 'download data');
     return serverError(res, 'Failed to download data');
@@ -128,7 +128,7 @@ router.get('/export-data/:userId', authenticateToken, authorizeUser, async (req,
       const filename = generateExportFilename(userId, 'json');
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
       res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-      return res.json(exportData);
+      return successResponse(res, exportData);
     }
   } catch (error) {
     logErrorFromCatch(error, 'app', 'export');

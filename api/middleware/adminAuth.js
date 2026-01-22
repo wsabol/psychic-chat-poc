@@ -4,7 +4,7 @@
  */
 
 import { logErrorFromCatch } from '../shared/errorLogger.js';
-import { successResponse } from '../utils/responses.js';
+import { authError, forbiddenError, serverError } from '../utils/responses.js';
 
 // Load admin emails from environment variable
 const ADMIN_EMAILS = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim().toLowerCase()) || [];
@@ -20,19 +20,13 @@ export function requireAdmin(req, res, next) {
   try {
     // Check if user is authenticated (req.user should be set by authenticateToken middleware)
     if (!req.user) {
-      return res.status(401).json({ 
-        error: 'Authentication required',
-        code: 'AUTH_REQUIRED'
-      });
+      return authError(res, 'Authentication required');
     }
 
     const userEmail = req.user.email?.toLowerCase();
 
     if (!userEmail) {
-      return res.status(403).json({ 
-        error: 'User email not found',
-        code: 'EMAIL_MISSING'
-      });
+      return forbiddenError(res, 'User email not found');
     }
 
     // Check if user email is in admin list
@@ -43,20 +37,14 @@ export function requireAdmin(req, res, next) {
         'Non-admin user attempted to access admin endpoint'
       );
       
-      return res.status(403).json({ 
-        error: 'Admin access required',
-        code: 'ADMIN_REQUIRED'
-      });
+      return forbiddenError(res, 'Admin access required');
     }
 
     // User is admin - proceed
     next();
   } catch (err) {
     logErrorFromCatch(err, 'admin-auth', 'Error in requireAdmin middleware');
-    return res.status(500).json({ 
-      error: 'Internal server error',
-      code: 'INTERNAL_ERROR'
-    });
+    return serverError(res, 'Internal server error');
   }
 }
 

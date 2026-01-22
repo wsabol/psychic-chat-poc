@@ -16,7 +16,7 @@
 import express from 'express';
 import { db } from '../../shared/db.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
-import { successResponse } from '../../utils/responses.js';
+import { successResponse, serverError } from '../../utils/responses.js';
 
 const router = express.Router();
 
@@ -55,10 +55,7 @@ router.get('/report', async (req, res) => {
     });
   } catch (error) {
     logErrorFromCatch(error, 'app', 'admin-subscription-report');
-    res.status(500).json({
-      error: 'Failed to generate report',
-      message: error.message
-    });
+    return serverError(res, 'Failed to generate report');
   }
 });
 

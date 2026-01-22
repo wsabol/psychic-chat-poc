@@ -10,7 +10,7 @@
 import express from 'express';
 import { db } from '../../shared/db.js';
 import logger from '../../shared/logger.js';
-import { serverError, successResponse } from '../../utils/responses.js';
+import { serverError, successResponse, validationError, notFoundError } from '../../utils/responses.js';
 
 const router = express.Router();
 
@@ -94,17 +94,11 @@ router.patch('/errors/:id/resolve', async (req, res) => {
     // Validate and convert id to integer
     const errorId = parseInt(id, 10);
     if (isNaN(errorId) || errorId <= 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid error id'
-      });
+      return validationError(res, 'Invalid error id');
     }
 
     if (typeof is_resolved !== 'boolean') {
-      return res.status(400).json({
-        success: false,
-        error: 'is_resolved must be a boolean'
-      });
+      return validationError(res, 'is_resolved must be a boolean');
     }
 
     const query = `
@@ -117,10 +111,7 @@ router.patch('/errors/:id/resolve', async (req, res) => {
     const result = await db.query(query, [is_resolved, errorId]);
 
     if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: 'Error log not found'
-      });
+      return notFoundError(res, 'Error log not found');
     }
 
     successResponse(res, {

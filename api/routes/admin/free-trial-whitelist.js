@@ -7,7 +7,7 @@ import { Router } from 'express';
 import { authenticateToken } from '../../middleware/auth.js';
 import { requireAdmin } from '../../middleware/adminAuth.js';
 import { extractClientIp, isValidIpAddress, sanitizeDescription } from '../../shared/ipUtils.js';
-import { successResponse } from '../../utils/responses.js';
+import { successResponse, validationError, serverError, notFoundError } from '../../utils/responses.js';
 import { 
   getAllWhitelistedIps, 
   addIpToWhitelist, 
@@ -25,10 +25,7 @@ router.get('/whitelist', authenticateToken, requireAdmin, async (req, res) => {
   const result = await getAllWhitelistedIps();
   
   if (!result.success) {
-    return res.status(500).json({ 
-      error: result.error,
-      code: result.code 
-    });
+    return serverError(res, result.error);
   }
 
   return successResponse(res, { 
@@ -48,17 +45,11 @@ router.post('/whitelist/add', authenticateToken, requireAdmin, async (req, res) 
   
   // Validate IP address
   if (!ipAddress) {
-    return res.status(400).json({ 
-      error: 'IP address required',
-      code: 'IP_REQUIRED'
-    });
+    return validationError(res, 'IP address required');
   }
 
   if (!isValidIpAddress(ipAddress)) {
-    return res.status(400).json({ 
-      error: 'Invalid IP address format',
-      code: 'INVALID_IP'
-    });
+    return validationError(res, 'Invalid IP address format');
   }
 
   // Get device/browser info from request
@@ -75,11 +66,10 @@ router.post('/whitelist/add', authenticateToken, requireAdmin, async (req, res) 
   });
 
   if (!result.success) {
-    const statusCode = result.code === 'ALREADY_WHITELISTED' ? 400 : 500;
-    return res.status(statusCode).json({ 
-      error: result.error,
-      code: result.code
-    });
+    if (result.code === 'ALREADY_WHITELISTED') {
+      return validationError(res, result.error);
+    }
+    return serverError(res, result.error);
   }
 
   return successResponse(res, {
@@ -97,20 +87,16 @@ router.delete('/whitelist/:id', authenticateToken, requireAdmin, async (req, res
   const { id } = req.params;
 
   if (!id) {
-    return res.status(400).json({ 
-      error: 'Whitelist ID required',
-      code: 'ID_REQUIRED'
-    });
+    return validationError(res, 'Whitelist ID required');
   }
 
   const result = await removeIpFromWhitelist(id);
 
   if (!result.success) {
-    const statusCode = result.code === 'NOT_FOUND' ? 404 : 500;
-    return res.status(statusCode).json({ 
-      error: result.error,
-      code: result.code
-    });
+    if (result.code === 'NOT_FOUND') {
+      return notFoundError(res, result.error);
+    }
+    return serverError(res, result.error);
   }
 
   return successResponse(res, {
@@ -130,10 +116,7 @@ router.get('/whitelist/current-ip', authenticateToken, requireAdmin, async (req,
   const result = await getWhitelistStatus(clientIp);
 
   if (!result.success) {
-    return res.status(500).json({ 
-      error: result.error,
-      code: result.code
-    });
+    return serverError(res, result.error);
   }
 
   return successResponse(res, {

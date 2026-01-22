@@ -148,7 +148,7 @@
     {
       "batch": 6,
       "name": "Admin + User + Middleware",
-      "status": "PENDING",
+      "status": "COMPLETED",
       "files": [
         "routes/admin/free-trial-whitelist.js",
         "routes/admin/subscriptionReport.js",
@@ -157,6 +157,22 @@
         "middleware/adminAuth.js",
         "middleware/subscriptionGuard.js",
         "index.js"
+      ],
+      "filesCount": 7
+    },
+    {
+      "batch": 7,
+      "name": "Error Response Standardization",
+      "status": "PENDING",
+      "description": "Standardize res.status().json() error responses to use utility functions",
+      "files": [
+        "routes/admin/free-trial-whitelist.js",
+        "routes/admin/error-logs.js",
+        "routes/admin/subscriptionReport.js",
+        "routes/auth-endpoints/2fa.js",
+        "routes/auth-endpoints/login.js",
+        "middleware/adminAuth.js",
+        "middleware/subscriptionGuard.js"
       ],
       "filesCount": 7
     }

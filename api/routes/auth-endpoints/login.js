@@ -219,7 +219,7 @@ router.post('/log-login-attempt', async (req, res) => {
     if (!userId) return validationError(res, 'userId is required');
 
     const result = await recordLoginAttempt(userId, success, reason, req);
-    return res.json(result);
+    return successResponse(res, result);
     } catch (error) {
     await logErrorFromCatch(error, 'auth', 'Login attempt recording');
     return serverError(res, 'Failed to log login attempt');
