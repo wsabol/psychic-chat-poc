@@ -65,7 +65,7 @@ router.post('/validate-location', authorizeUser, async (req, res) => {
         });
         
         if (result.location_error) {
-            return res.json({
+            return successResponse(res, {
                 success: false,
                 location_error: result.location_error,
                 warnings: result.warnings || []
@@ -73,7 +73,7 @@ router.post('/validate-location', authorizeUser, async (req, res) => {
         }
         
         if (result.warnings && result.warnings.length > 0) {
-            return res.json({
+            return successResponse(res, {
                 success: true,
                 warnings: result.warnings,
                 latitude: result.latitude,
@@ -82,7 +82,7 @@ router.post('/validate-location', authorizeUser, async (req, res) => {
         }
         
         if (result.success && result.latitude && result.longitude) {
-            return res.json({
+            return successResponse(res, {
                 success: true,
                 latitude: result.latitude,
                 longitude: result.longitude,
@@ -90,13 +90,13 @@ router.post('/validate-location', authorizeUser, async (req, res) => {
             });
         }
         
-                return res.json({
+                return successResponse(res, {
             success: false,
             location_error: result.error || 'Could not verify location',
             warnings: result.warnings || []
         });
     } catch (err) {
-        return res.json({
+        return successResponse(res, {
             success: false,
             error: 'Location validation service unavailable',
             details: err.message
@@ -191,7 +191,7 @@ router.post('/sync-calculate/:userId', authorizeUser, async (req, res) => {
             return serverError(res, 'Failed to confirm astrology data was saved');
         }
         
-        res.json({
+        successResponse(res, {
             success: true,
             message: 'Astrology calculated and stored',
             data: astrologyData
@@ -210,7 +210,7 @@ router.post('/calculate/:userId', authorizeUser, async (req, res) => {
             message: '[SYSTEM] Calculate my rising sign and moon sign based on my birth information.'
         });
         
-        res.json({ status: 'Astrology calculation job enqueued', userId });
+        successResponse(res, { status: 'Astrology calculation job enqueued', userId });
     } catch (error) {
         return serverError(res, 'Failed to enqueue astrology calculation');
     }

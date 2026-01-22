@@ -9,7 +9,7 @@ import { triggerCleanupJobManually, getSchedulerStatus } from '../jobs/scheduler
 import { getCleanupJobStatus } from '../jobs/accountCleanupJob.js';
 import { logAudit } from '../shared/auditLog.js';
 import { db } from '../shared/db.js';
-import { serverError } from '../utils/responses.js';
+import { serverError, successResponse } from '../utils/responses.js';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 const router = Router();
@@ -22,7 +22,7 @@ router.get('/status', async (req, res) => {
   try {
     const status = await getSchedulerStatus();
     
-    res.json({
+    successResponse(res, {
       success: true,
       message: 'Cleanup job status retrieved',
       ...status
@@ -55,7 +55,7 @@ router.post('/trigger', authenticateToken, async (req, res) => {
 
     const result = await triggerCleanupJobManually();
 
-    res.json({
+    successResponse(res, {
       success: true,
       message: 'Cleanup job triggered',
       result
@@ -95,7 +95,7 @@ router.get('/stats', async (req, res) => {
       ORDER BY count DESC`
     );
 
-    res.json({
+    successResponse(res, {
       success: true,
       summary: stats,
       by_deletion_status: accountStats.rows,
@@ -155,7 +155,7 @@ router.get('/pending-actions', async (req, res) => {
       ORDER BY deletion_requested_at ASC`
     );
 
-    res.json({
+    successResponse(res, {
       success: true,
       pending_actions: {
         ready_for_anonymization: {

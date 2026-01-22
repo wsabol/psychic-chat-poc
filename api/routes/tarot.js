@@ -2,7 +2,7 @@ import express from 'express';
 const router = express.Router();
 import { db } from '../shared/db.js';
 import { authorizeUser } from '../middleware/auth.js';
-import { serverError } from '../utils/responses.js';
+import { serverError, successResponse } from '../utils/responses.js';
 
 // Endpoint to get a tarot card reading
 router.post('/reading', authorizeUser, async (req, res) => {

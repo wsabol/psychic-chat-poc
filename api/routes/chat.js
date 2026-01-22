@@ -8,7 +8,7 @@ import { db } from "../shared/db.js";
 import { containsHealthContent, detectHealthKeywords, getBlockedResponse } from "../shared/healthGuardrail.js";
 import { logAudit } from "../shared/auditLog.js";
 import { hashUserId } from "../shared/hashUtils.js";
-import { validationError, serverError, noContentResponse } from "../utils/responses.js";
+import { validationError, serverError, noContentResponse, successResponse } from "../utils/responses.js";
 import { getLocalDateForTimezone } from "../shared/timezoneHelper.js";
 import { logErrorFromCatch } from "../shared/errorLogger.js";
 
@@ -32,7 +32,7 @@ router.post("/", verify2FA, async (req, res) => {
         // Enqueue for worker processing
         await enqueueMessage({ userId, message });
 
-        res.json({ status: "queued" });
+        successResponse(res, { status: "queued" });
         } catch (err) {
         logErrorFromCatch(err, 'app', 'chat');
         return serverError(res, 'Failed to process message');
@@ -123,7 +123,7 @@ router.get("/opening/:userId", authorizeUser, verify2FA, async (req, res) => {
 
         await insertMessage(userId, 'assistant', openingContent, null, userTimezone);
 
-        res.json({
+        successResponse(res, {
             role: 'assistant',
             content: opening
         })
@@ -184,7 +184,7 @@ router.get("/history/:userId", authorizeUser, verify2FA, async (req, res) => {
             };
         });
         
-        res.json(transformedRows);
+        successResponse(res, transformedRows);
                 } catch (err) {
         logErrorFromCatch(err, 'app', 'chat');
         return serverError(res, 'Failed to retrieve message history');

@@ -12,7 +12,7 @@ import {
   getFreeTrialSession
 } from '../shared/freeTrialUtils.js';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
-import { serverError, validationError, forbiddenError, rateLimitError, notFoundError } from '../utils/responses.js';
+import { serverError, validationError, forbiddenError, rateLimitError, notFoundError, successResponse } from '../utils/responses.js';
 import { validateAge } from '../shared/ageValidator.js';
 import { handleAgeViolation } from '../shared/violationHandler.js';
 import { parseDateForStorage, isValidFreeTrialStep } from '../shared/validationUtils.js';

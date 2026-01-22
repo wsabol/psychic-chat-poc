@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 
 /**
- * Security Auto-Fix Script - BATCH 2
+ * Security Auto-Fix Script - ALL BATCHES
  * Standardizes JSON responses to use proper utility functions
+ * Reads batch configuration from BATCH_FIX_CONFIG.json
  * 
- * Usage: node SECURITY_AUTO_FIX.js [--dry-run]
+ * Usage: node SECURITY_AUTO_FIX.js --batch <number> [--dry-run]
+ * Example: node SECURITY_AUTO_FIX.js --batch 3
+ * Example: node SECURITY_AUTO_FIX.js --batch 3 --dry-run
  */
 
 import fs from 'fs';
@@ -14,7 +17,36 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const isDryRun = process.argv.includes('--dry-run');
+// Parse command line arguments
+const args = process.argv.slice(2);
+const isDryRun = args.includes('--dry-run');
+const batchIndex = args.indexOf('--batch');
+const batchNumber = batchIndex !== -1 ? parseInt(args[batchIndex + 1]) : null;
+
+if (!batchNumber) {
+  console.error('❌ Error: Batch number required!');
+  console.error('Usage: node SECURITY_AUTO_FIX.js --batch <number> [--dry-run]');
+  console.error('Example: node SECURITY_AUTO_FIX.js --batch 3');
+  process.exit(1);
+}
+
+// Load batch configuration
+let batchConfig;
+try {
+  const configPath = path.join(__dirname, 'BATCH_FIX_CONFIG.json');
+  batchConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+} catch (error) {
+  console.error(`❌ Error loading BATCH_FIX_CONFIG.json: ${error.message}`);
+  process.exit(1);
+}
+
+// Find the requested batch
+const batch = batchConfig.batches.find(b => b.batch === batchNumber);
+if (!batch) {
+  console.error(`❌ Error: Batch ${batchNumber} not found in configuration!`);
+  console.error(`Available batches: ${batchConfig.batches.map(b => b.batch).join(', ')}`);
+  process.exit(1);
+}
 
 // Statistics
 const stats = {
@@ -37,129 +69,35 @@ const colors = {
 };
 
 console.log(`\n${colors.magenta}╔═══════════════════════════════════════════════════════════════╗${colors.reset}`);
-console.log(`${colors.magenta}║          SECURITY AUTO-FIX SCRIPT - BATCH 2                  ║${colors.reset}`);
-console.log(`${colors.magenta}║          Core Routes Response Standardization                ║${colors.reset}`);
+console.log(`${colors.magenta}║          SECURITY AUTO-FIX SCRIPT                            ║${colors.reset}`);
+console.log(`${colors.magenta}║          JSON Response Standardization                        ║${colors.reset}`);
 console.log(`${colors.magenta}╚═══════════════════════════════════════════════════════════════╝${colors.reset}\n`);
+
+console.log(`${colors.cyan}Batch ${batch.batch}: ${batch.name}${colors.reset}`);
+console.log(`${colors.cyan}Files to process: ${batch.filesCount}${colors.reset}\n`);
 
 if (isDryRun) {
   console.log(`${colors.yellow}🔍 DRY RUN MODE - No files will be modified${colors.reset}\n`);
 }
 
 /**
- * BATCH 2 FIX DEFINITIONS
- * Focus: Standardize manual res.json({ to successResponse()
+ * Get appropriate import path based on file location
  */
-const fixes = [
-  {
-    file: 'routes/help.js',
-    description: 'Standardize help route responses',
-    fixes: [
-      {
-        search: /return res\.json\(\{/g,
-        replace: () => `return successResponse(res, {`,
-        description: 'Convert to successResponse()'
-      }
-    ],
-    requiredImport: "import { successResponse } from '../utils/responses.js';",
-    checkImport: /successResponse/
-  },
-  {
-    file: 'routes/moon-phase.js',
-    description: 'Standardize moon phase responses',
-    fixes: [
-      {
-        search: /res\.json\(\{/g,
-        replace: () => `successResponse(res, {`,
-        description: 'Convert to successResponse()'
-      }
-    ],
-    requiredImport: "import { successResponse } from '../utils/responses.js';",
-    checkImport: /successResponse/
-  },
-  {
-    file: 'routes/response-status.js',
-    description: 'Standardize response status checks',
-    fixes: [
-      {
-        search: /return res\.json\(\{/g,
-        replace: () => `return successResponse(res, {`,
-        description: 'Convert to successResponse()'
-      }
-    ],
-    requiredImport: "import { successResponse } from '../utils/responses.js';",
-    checkImport: /successResponse/
-  },
-  {
-    file: 'routes/violationReports.js',
-    description: 'Standardize violation report responses',
-    fixes: [
-      {
-        search: /res\.json\(\{/g,
-        replace: () => `successResponse(res, {`,
-        description: 'Convert to successResponse()'
-      }
-    ],
-    requiredImport: "import { successResponse } from '../utils/responses.js';",
-    checkImport: /successResponse/
-  },
-  {
-    file: 'routes/security.js',
-    description: 'Standardize security route responses',
-    fixes: [
-      {
-        search: /res\.json\(\{/g,
-        replace: () => `successResponse(res, {`,
-        description: 'Convert to successResponse()'
-      }
-    ],
-    requiredImport: "import { successResponse } from '../utils/responses.js';",
-    checkImport: /successResponse/
-  },
-  {
-    file: 'routes/migration.js',
-    description: 'Standardize migration responses',
-    fixes: [
-      {
-        search: /res\.json\(\{/g,
-        replace: () => `successResponse(res, {`,
-        description: 'Convert to successResponse()'
-      },
-      {
-        search: /return res\.json\(\{/g,
-        replace: () => `return successResponse(res, {`,
-        description: 'Convert return statements'
-      }
-    ],
-    requiredImport: "import { successResponse } from '../utils/responses.js';",
-    checkImport: /successResponse/
-  },
-  {
-    file: 'routes/horoscope.js',
-    description: 'Standardize horoscope responses',
-    fixes: [
-      {
-        search: /res\.json\(\{/g,
-        replace: () => `successResponse(res, {`,
-        description: 'Convert to successResponse()'
-      }
-    ],
-    requiredImport: "import { successResponse } from '../utils/responses.js';",
-    checkImport: /successResponse/
-  },
-  {
-    file: 'routes/cleanup.js',
-    description: 'Standardize cleanup responses',
-    fixes: [
-      {
-        search: /res\.json\(\{/g,
-        replace: () => `successResponse(res, {`,
-        description: 'Convert to successResponse()'
-      }
-    ],
-    requiredImport: "import { successResponse } from '../utils/responses.js';",
-    checkImport: /successResponse/
+function getImportPath(filePath) {
+  if (filePath.startsWith('routes/billing/') || 
+      filePath.startsWith('routes/admin/') || 
+      filePath.startsWith('routes/auth-endpoints/') ||
+      filePath.startsWith('routes/user-data/')) {
+    return "'../../utils/responses.js'";
+  } else if (filePath.startsWith('middleware/')) {
+    return "'../utils/responses.js'";
+  } else if (filePath.startsWith('routes/')) {
+    return "'../utils/responses.js'";
+  } else if (filePath === 'index.js') {
+    return "'./utils/responses.js'";
   }
-];
+  return "'../utils/responses.js'"; // default
+}
 
 /**
  * Read file content
@@ -192,18 +130,36 @@ function writeFile(filePath, content) {
 /**
  * Check if import exists in file
  */
-function hasImport(content, importCheck) {
-  return importCheck.test(content);
+function hasImport(content, importName) {
+  const importRegex = new RegExp(`import\\s+{[^}]*\\b${importName}\\b[^}]*}\\s+from\\s+['"].*responses\\.js['"]`, 'g');
+  return importRegex.test(content);
 }
 
 /**
- * Add import to file if missing
+ * Add successResponse to existing import or create new import
  */
-function addImport(content, importStatement, importCheck) {
-  if (hasImport(content, importCheck)) {
+function addSuccessResponseImport(content, importPath) {
+  // Check if successResponse is already imported
+  if (hasImport(content, 'successResponse')) {
     return content;
   }
 
+  // Check if there's an existing import from responses.js
+  const existingImportRegex = new RegExp(`import\\s+{([^}]*)}\\s+from\\s+${importPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'g');
+  const match = existingImportRegex.exec(content);
+  
+  if (match) {
+    // Add successResponse to existing import
+    const existingImports = match[1].trim();
+    const newImports = existingImports + ', successResponse';
+    const newImportStatement = `import { ${newImports} } from ${importPath}`;
+    content = content.replace(match[0], newImportStatement);
+    return content;
+  }
+
+  // No existing import, add new one
+  const importStatement = `import { successResponse } from ${importPath};`;
+  
   // Find the last import statement
   const importRegex = /^import .+ from .+;$/gm;
   const imports = content.match(importRegex);
@@ -217,6 +173,32 @@ function addImport(content, importStatement, importCheck) {
   }
   
   return content;
+}
+
+/**
+ * Apply response standardization fixes
+ */
+function applyResponseFixes(content) {
+  let changeCount = 0;
+  
+  // Pattern 1: return res.json({ => return successResponse(res, {
+  const returnPattern = /return\s+res\.json\s*\(\s*\{/g;
+  const returnMatches = (content.match(returnPattern) || []).length;
+  if (returnMatches > 0) {
+    content = content.replace(returnPattern, 'return successResponse(res, {');
+    changeCount += returnMatches;
+  }
+  
+  // Pattern 2: res.json({ => successResponse(res, { (but not return statements)
+  // Use negative lookbehind to avoid matching return statements
+  const plainPattern = /(?<!return\s)(?<!return\s\s)(?<!return\s\s\s)(?<!return\s\s\s\s)res\.json\s*\(\s*\{/g;
+  const plainMatches = (content.match(plainPattern) || []).length;
+  if (plainMatches > 0) {
+    content = content.replace(plainPattern, 'successResponse(res, {');
+    changeCount += plainMatches;
+  }
+  
+  return { content, changeCount };
 }
 
 /**
@@ -250,19 +232,16 @@ function checkSyntax(filePath, content) {
 }
 
 /**
- * Apply fixes to a file
+ * Process a single file
  */
-function processFile(fixDef) {
-  const { file, description, fixes: fileFixes, requiredImport, checkImport } = fixDef;
-  
+function processFile(filePath) {
   console.log(`\n${colors.blue}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${colors.reset}`);
-  console.log(`${colors.cyan}📄 Processing: ${file}${colors.reset}`);
-  console.log(`${colors.cyan}   ${description}${colors.reset}`);
+  console.log(`${colors.cyan}📄 Processing: ${filePath}${colors.reset}`);
   console.log(`${colors.blue}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${colors.reset}`);
   
   stats.filesProcessed++;
   
-  let content = readFile(file);
+  let content = readFile(filePath);
   if (!content) {
     return;
   }
@@ -270,51 +249,49 @@ function processFile(fixDef) {
   let modified = false;
   let fileChanges = 0;
   
-  // Add required import if needed
-  if (requiredImport && checkImport) {
-    const originalContent = content;
-    content = addImport(content, requiredImport, checkImport);
-    if (content !== originalContent) {
-      console.log(`${colors.green}  ✓ Added import: ${requiredImport}${colors.reset}`);
-      modified = true;
-      fileChanges++;
-    }
+  // Check if file needs import
+  const importPath = getImportPath(filePath);
+  const originalContent = content;
+  content = addSuccessResponseImport(content, importPath);
+  
+  if (content !== originalContent) {
+    console.log(`${colors.green}  ✓ Added/updated successResponse import${colors.reset}`);
+    modified = true;
+    fileChanges++;
   }
   
-  // Apply each fix
-  for (const fix of fileFixes) {
-    const matches = content.match(fix.search);
-    if (matches) {
-      const count = matches.length;
-      content = content.replace(fix.search, fix.replace);
-      console.log(`${colors.green}  ✓ ${fix.description} (${count} occurrence${count > 1 ? 's' : ''})${colors.reset}`);
-      modified = true;
-      fileChanges += count;
-      
-      stats.changes.push({
-        file,
-        description: fix.description,
-        count
-      });
-    } else {
-      console.log(`${colors.yellow}  ⊙ ${fix.description} - no matches found${colors.reset}`);
-    }
+  // Apply response standardization fixes
+  const { content: fixedContent, changeCount } = applyResponseFixes(content);
+  
+  if (changeCount > 0) {
+    content = fixedContent;
+    console.log(`${colors.green}  ✓ Converted ${changeCount} response call${changeCount > 1 ? 's' : ''} to successResponse()${colors.reset}`);
+    modified = true;
+    fileChanges += changeCount;
+    
+    stats.changes.push({
+      file: filePath,
+      description: 'Response standardization',
+      count: changeCount
+    });
+  } else {
+    console.log(`${colors.yellow}  ⊙ No res.json() calls found to convert${colors.reset}`);
   }
   
   if (modified) {
     // Check syntax before writing
-    const syntaxErrors = checkSyntax(file, content);
+    const syntaxErrors = checkSyntax(filePath, content);
     if (syntaxErrors.length > 0) {
       console.log(`${colors.red}  ✗ Syntax errors detected:${colors.reset}`);
       syntaxErrors.forEach(err => {
         console.log(`${colors.red}    - ${err}${colors.reset}`);
-        stats.syntaxErrors.push({ file, error: err });
+        stats.syntaxErrors.push({ file: filePath, error: err });
       });
       return;
     }
     
     // Write file
-    if (writeFile(file, content)) {
+    if (writeFile(filePath, content)) {
       stats.filesChanged++;
       stats.totalChanges += fileChanges;
       console.log(`${colors.green}  ✓ File updated successfully (${fileChanges} change${fileChanges > 1 ? 's' : ''})${colors.reset}`);
@@ -330,18 +307,19 @@ function processFile(fixDef) {
  * Main execution
  */
 function main() {
-  console.log(`${colors.cyan}Processing Batch 2 files...${colors.reset}\n`);
+  console.log(`${colors.cyan}Processing Batch ${batch.batch} files...${colors.reset}\n`);
   
-  // Process each file
-  for (const fixDef of fixes) {
-    processFile(fixDef);
+  // Process each file in the batch
+  for (const filePath of batch.files) {
+    processFile(filePath);
   }
   
   // Print summary
   console.log(`\n${colors.magenta}╔═══════════════════════════════════════════════════════════════╗${colors.reset}`);
-  console.log(`${colors.magenta}║                  BATCH 2 SUMMARY REPORT                      ║${colors.reset}`);
+  console.log(`${colors.magenta}║            BATCH ${batch.batch} SUMMARY REPORT                            ║${colors.reset}`);
   console.log(`${colors.magenta}╚═══════════════════════════════════════════════════════════════╝${colors.reset}\n`);
   
+  console.log(`${colors.blue}Batch Name:${colors.reset}      ${batch.name}`);
   console.log(`${colors.blue}Files Processed:${colors.reset} ${stats.filesProcessed}`);
   console.log(`${colors.green}Files Changed:${colors.reset}   ${stats.filesChanged}`);
   console.log(`${colors.green}Total Changes:${colors.reset}   ${stats.totalChanges}`);
@@ -368,9 +346,18 @@ function main() {
     console.log(`${colors.yellow}⚠ DRY RUN - No files were actually modified${colors.reset}`);
     console.log(`${colors.yellow}  Run without --dry-run to apply changes${colors.reset}\n`);
   } else if (stats.filesChanged > 0 && stats.syntaxErrors.length === 0) {
-    console.log(`${colors.green}✓ Batch 2 complete!${colors.reset}`);
-    console.log(`${colors.cyan}  Progress: Batch 2 of 6 complete${colors.reset}`);
-    console.log(`${colors.cyan}  Next: Update script for Batch 3${colors.reset}\n`);
+    console.log(`${colors.green}✓ Batch ${batch.batch} complete!${colors.reset}`);
+    
+    const totalBatches = batchConfig.batches.length;
+    const completedBatches = batchConfig.batches.filter(b => b.status === 'COMPLETED').length + 1;
+    
+    console.log(`${colors.cyan}  Progress: Batch ${batch.batch} of ${totalBatches} complete${colors.reset}`);
+    
+    if (batch.batch < totalBatches) {
+      console.log(`${colors.cyan}  Next: Run syntax check, test app, then process Batch ${batch.batch + 1}${colors.reset}\n`);
+    } else {
+      console.log(`${colors.green}  🎉 All batches complete!${colors.reset}\n`);
+    }
   }
 }
 

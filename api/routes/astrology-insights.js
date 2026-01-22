@@ -5,6 +5,7 @@ import { authenticateToken, authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
 import { getLocalDateForTimezone, needsRegeneration } from "../shared/timezoneHelper.js";
 import { processingResponse, serverError } from "../utils/responses.js";
+import { successResponse } from '../utils/responses.js';
 
 
 const router = Router();
@@ -92,7 +93,7 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
           retrograde: p.retrograde || false
         })) : [];
         
-        res.json({
+        successResponse(res, {
             weather: todaysWeather.text,
             brief: briefWeather?.text || null,
             birthChart: formattedBirthChart,
@@ -108,7 +109,7 @@ router.post("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (
     const { userId } = req.params;
     try {
         await enqueueMessage({ userId, message: '[SYSTEM] Generate cosmic weather' });
-        res.json({ status: 'Generating today\'s cosmic weather...' });
+        successResponse(res, { status: 'Generating today\'s cosmic weather...' });
     } catch (err) {
         return serverError(res, 'Failed to queue cosmic weather');
     }
@@ -135,7 +136,7 @@ router.get("/lunar-nodes/:userId", authenticateToken, authorizeUser, async (req,
         }
         
         const data = typeof rows[0].content === 'string' ? JSON.parse(rows[0].content) : rows[0].content;
-        res.json({ insight: data.text, nodes: { north: data.north_node_sign, south: data.south_node_sign } });
+        successResponse(res, { insight: data.text, nodes: { north: data.north_node_sign, south: data.south_node_sign } });
     } catch (err) {
         return serverError(res, 'Failed to fetch lunar nodes');
     }
@@ -145,7 +146,7 @@ router.post("/lunar-nodes/:userId", authenticateToken, authorizeUser, async (req
     const { userId } = req.params;
     try {
         await enqueueMessage({ userId, message: '[SYSTEM] Generate lunar nodes insight' });
-        res.json({ status: 'Generating lunar nodes insight...' });
+        successResponse(res, { status: 'Generating lunar nodes insight...' });
     } catch (err) {
         return serverError(res, 'Failed to queue lunar nodes');
     }
@@ -198,7 +199,7 @@ router.get("/void-of-course/:userId", authenticateToken, authorizeUser, async (r
             return processingResponse(res, 'Calculating void of course moon...', 'generating');
         }
         
-        res.json({ 
+        successResponse(res, { 
             is_void: todaysAlert.is_void,
             alert: todaysAlert.text || todaysAlert.message,
             phase: todaysAlert.phase
@@ -212,7 +213,7 @@ router.post("/void-of-course/:userId", authenticateToken, authorizeUser, async (
     const { userId } = req.params;
     try {
         await enqueueMessage({ userId, message: '[SYSTEM] Generate void of course alert' });
-        res.json({ status: 'Checking void of course moon...' });
+        successResponse(res, { status: 'Checking void of course moon...' });
     } catch (err) {
         return serverError(res, 'Failed to queue void of course');
     }
@@ -246,7 +247,7 @@ router.get("/moon-phase/:userId", authenticateToken, authorizeUser, async (req, 
         const moonPhaseData = typeof fullContent === 'string' ? JSON.parse(fullContent) : fullContent;
         const briefData = briefContent ? (typeof briefContent === 'string' ? JSON.parse(briefContent) : briefContent) : null;
         
-        res.json({
+        successResponse(res, {
             commentary: moonPhaseData.text,
             brief: briefData?.text || null,
             generated_at: moonPhaseData.generated_at,
@@ -263,7 +264,7 @@ router.post("/moon-phase/:userId", authenticateToken, authorizeUser, async (req,
     const { phase } = req.body;
     try {
         await enqueueMessage({ userId, message: `[SYSTEM] Generate moon phase commentary for ${phase}` });
-        res.json({ status: `Generating ${phase} moon phase commentary...` });
+        successResponse(res, { status: `Generating ${phase} moon phase commentary...` });
     } catch (err) {
         return serverError(res, 'Failed to queue moon phase');
     }
