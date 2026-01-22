@@ -2,9 +2,11 @@
  * useErrorLogs Hook
  * Encapsulates error log fetching and state management
  * FIX: No blinking - stable function, single useEffect for tab changes
+ * FIX: Use fetchWithTokenRefresh to handle expired tokens
  */
 
 import { useState, useCallback, useEffect } from 'react';
+import { fetchWithTokenRefresh } from '../../../utils/fetchWithTokenRefresh';
 
 const ENDPOINTS = {
   critical: '/admin/errors/errors/critical',
@@ -24,7 +26,7 @@ export function useErrorLogs(token, apiUrl) {
 
     try {
       const endpoint = ENDPOINTS[tab] || ENDPOINTS.critical;
-      const response = await fetch(`${apiUrl}${endpoint}`, {
+      const response = await fetchWithTokenRefresh(`${apiUrl}${endpoint}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -61,7 +63,7 @@ export function useErrorLogs(token, apiUrl) {
 
   const handleMarkResolved = useCallback(async (errorId) => {
     try {
-      const response = await fetch(`${apiUrl}/admin/errors/errors/${errorId}/resolve`, {
+      const response = await fetchWithTokenRefresh(`${apiUrl}/admin/errors/errors/${errorId}/resolve`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,

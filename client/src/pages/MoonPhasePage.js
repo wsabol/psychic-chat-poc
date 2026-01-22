@@ -279,7 +279,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
         <p className="moon-phase-subtitle">{t('moonPhase.subtitle')}</p>
       </div>
 
-      {!loading && !error && isBirthInfoMissing(astroInfo) && (
+      {!loading && !error && !moonPhaseData && isBirthInfoMissing(astroInfo) && (
         <BirthInfoMissingPrompt 
           onNavigateToPersonalInfo={() => onNavigateToPage && onNavigateToPage(2)}
         />

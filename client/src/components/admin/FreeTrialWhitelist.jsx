@@ -1,9 +1,11 @@
 /**
  * Free Trial Whitelist Tab
  * Manage IP addresses that can access unlimited free trials
+ * FIX: Use fetchWithTokenRefresh to handle expired tokens
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { fetchWithTokenRefresh } from '../../utils/fetchWithTokenRefresh';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -21,7 +23,7 @@ export default function FreeTrialWhitelist({ token }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_URL}/admin/whitelist`, {
+      const response = await fetchWithTokenRefresh(`${API_URL}/admin/whitelist`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -44,7 +46,7 @@ export default function FreeTrialWhitelist({ token }) {
 
   const fetchCurrentIp = useCallback(async () => {
     try {
-      const response = await fetch(`${API_URL}/admin/whitelist/current-ip`, {
+      const response = await fetchWithTokenRefresh(`${API_URL}/admin/whitelist/current-ip`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -73,7 +75,7 @@ export default function FreeTrialWhitelist({ token }) {
     setSuccess(null);
 
     try {
-      const response = await fetch(`${API_URL}/admin/whitelist/add`, {
+      const response = await fetchWithTokenRefresh(`${API_URL}/admin/whitelist/add`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -114,7 +116,7 @@ export default function FreeTrialWhitelist({ token }) {
     setSuccess(null);
 
     try {
-      const response = await fetch(`${API_URL}/admin/whitelist/add`, {
+      const response = await fetchWithTokenRefresh(`${API_URL}/admin/whitelist/add`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -153,7 +155,7 @@ export default function FreeTrialWhitelist({ token }) {
     setSuccess(null);
 
     try {
-      const response = await fetch(`${API_URL}/admin/whitelist/${id}`, {
+      const response = await fetchWithTokenRefresh(`${API_URL}/admin/whitelist/${id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,

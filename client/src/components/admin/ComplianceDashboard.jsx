@@ -10,12 +10,15 @@
  * Props:
  *   - token: string - Admin auth token
  *   - onExport: function - Called when user exports data
+ * 
+ * FIX: Use fetchWithTokenRefresh to handle expired tokens
  */
 
 import React, { useState, useEffect } from 'react';
 import './ComplianceDashboard.css';
 import { API_ENDPOINTS, DASHBOARD_TABS, LOAD_ENDPOINTS } from './complianceConstants';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
+import { fetchWithTokenRefresh } from '../../utils/fetchWithTokenRefresh';
 import { OverviewTabContent } from './tabs/OverviewTabContent';
 import { VersionsTabContent } from './tabs/VersionsTabContent';
 import { UsersTabContent } from './tabs/UsersTabContent';
@@ -46,7 +49,7 @@ export function ComplianceDashboard({ token }) {
       const results = {};
 
       for (const { key, url } of LOAD_ENDPOINTS) {
-        const response = await fetch(
+        const response = await fetchWithTokenRefresh(
           `${process.env.REACT_APP_API_URL}${url}`,
           { headers: { 'Authorization': `Bearer ${token}` } }
         );
@@ -66,7 +69,7 @@ export function ComplianceDashboard({ token }) {
 
   const handleExport = async () => {
     try {
-      const response = await fetch(
+      const response = await fetchWithTokenRefresh(
         `${process.env.REACT_APP_API_URL}${API_ENDPOINTS.export}`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );

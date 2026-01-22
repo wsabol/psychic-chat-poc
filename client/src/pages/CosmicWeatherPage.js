@@ -82,7 +82,7 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
         <p className="cosmic-subtitle">{t('cosmicWeather.subtitle')}</p>
       </div>
 
-      {!loading && !error && isBirthInfoMissing(astroInfo) && (
+      {!loading && !error && !cosmicData && isBirthInfoMissing(astroInfo) && (
         <BirthInfoMissingPrompt 
           onNavigateToPersonalInfo={() => onNavigateToPage && onNavigateToPage(2)}
         />

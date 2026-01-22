@@ -1,9 +1,11 @@
 /**
  * Subscription Report Tab
  * Displays subscription status summary and user lists
+ * FIX: Use fetchWithTokenRefresh to handle expired tokens
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { fetchWithTokenRefresh } from '../../utils/fetchWithTokenRefresh';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -17,7 +19,7 @@ export default function SubscriptionReportTab({ token }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_URL}/admin/subscriptions/report`, {
+      const response = await fetchWithTokenRefresh(`${API_URL}/admin/subscriptions/report`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -344,10 +346,3 @@ const styles = {
     fontSize: '14px'
   }
 };
-
-
-
-
-
-
-

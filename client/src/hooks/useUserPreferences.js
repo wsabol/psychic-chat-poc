@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
+import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
 /**
  * Custom hook to fetch user preferences (response type, voice enabled)
+ * FIX: Use fetchWithTokenRefresh to handle expired tokens
  */
 export function useUserPreferences(userId, token) {
   const [userPreference, setUserPreference] = useState('full');
@@ -15,7 +17,7 @@ export function useUserPreferences(userId, token) {
     const fetchPreferences = async () => {
       try {
         const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-        const response = await fetch(`${API_URL}/user-profile/${userId}/preferences`, { headers });
+        const response = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}/preferences`, { headers });
         
         if (response.ok) {
           const data = await response.json();
