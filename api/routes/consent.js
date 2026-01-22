@@ -190,7 +190,7 @@ router.post('/consent/terms-acceptance', async (req, res) => {
       }
     });
 
-    return res.json({
+    return successResponse(res, {
       success: true,
       message: 'T&C acceptance recorded successfully',
       userId,
@@ -322,7 +322,7 @@ router.post('/consents', async (req, res) => {
       }
     });
 
-    return res.json({
+    return successResponse(res, {
       success: true,
       message: 'Consents recorded successfully',
       userId,
@@ -380,7 +380,7 @@ router.get('/consents/:userId', authenticateToken, authorizeUser, async (req, re
 
     if (result.rows.length === 0) {
       // User has not provided consent yet
-      return res.json({
+      return successResponse(res, {
         success: true,
         userId,
         consents: {
@@ -407,7 +407,7 @@ router.get('/consents/:userId', authenticateToken, authorizeUser, async (req, re
       status: 'SUCCESS'
     });
 
-    return res.json({
+    return successResponse(res, {
       success: true,
       userId,
       consents: {
@@ -515,7 +515,7 @@ router.get('/consent-summary/:userId', authenticateToken, authorizeUser, async (
 
     const currentConsent = consentResult.rows[0] || null;
 
-    return res.json({
+    return successResponse(res, {
       success: true,
       userId,
       currentConsents: currentConsent ? {
@@ -601,7 +601,7 @@ router.post('/mark-user-notified/:userId', async (req, res) => {
  * Get current version configuration (public)
  */
 router.get('/version-config', (req, res) => {
-  return res.json({
+  return successResponse(res, {
     success: true,
     versions: {
       terms: {

@@ -64,7 +64,7 @@ router.post('/admin/compliance/flag-users', async (req, res) => {
       }
     });
 
-    return res.json({
+    return successResponse(res, {
       success: true,
       message: `Flagged ${result.flagged} users for ${documentType} update`,
       ...result
@@ -82,7 +82,7 @@ router.get('/admin/compliance/report', async (req, res) => {
   try {
     const report = await getComplianceReport();
 
-    return res.json({
+    return successResponse(res, {
       success: true,
       ...report
     });
@@ -108,7 +108,7 @@ router.get('/admin/compliance/users-requiring-action', async (req, res) => {
     // Apply pagination
     const paginatedUsers = result.users.slice(offset, offset + parseInt(limit));
 
-    return res.json({
+    return successResponse(res, {
       success: true,
       totalUsers: result.count,
       limit: parseInt(limit),
@@ -161,7 +161,7 @@ router.post('/admin/compliance/send-notifications', async (req, res) => {
       }
     });
 
-    return res.json({
+    return successResponse(res, {
       success: true,
       message: 'Notification queue created (implementation pending)',
       details: {
@@ -233,7 +233,7 @@ router.post('/admin/compliance/version-change', async (req, res) => {
       }
     });
 
-    return res.json({
+    return successResponse(res, {
       success: true,
       message: `Version change recorded: ${documentType} ${oldVersion} -> ${newVersion}`,
       nextSteps: [
@@ -265,7 +265,7 @@ router.get('/admin/compliance/version-history', async (req, res) => {
       LIMIT 100
     `);
 
-    return res.json({
+    return successResponse(res, {
       success: true,
       total: result.rows.length,
       history: result.rows.map(row => ({
@@ -340,7 +340,7 @@ router.post('/admin/compliance/revert-version', async (req, res) => {
       }
     });
 
-    return res.json({
+    return successResponse(res, {
       success: true,
       message: `Reverted ${documentType} from v${revokedVersion} to v${revertToVersion}. Flagged ${totalFlagged} users for re-acceptance.`,
       details: {

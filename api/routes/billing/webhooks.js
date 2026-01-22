@@ -243,7 +243,7 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
       default:
     }
 
-    res.json({ received: true });
+    successResponse(res, { received: true });
   } catch (error) {
     logErrorFromCatch(error, 'app', 'stripe-webhook', null, null, 'critical');
     return serverError(res, 'Webhook processing failed');

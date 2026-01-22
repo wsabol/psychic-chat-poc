@@ -44,7 +44,7 @@ router.get('/compliance-dashboard/overview', async (req, res) => {
     const fullyCompliant = parseInt(compliance.fully_compliant);
     const totalWithConsents = parseInt(compliance.total_with_consents);
 
-    return res.json({
+    return successResponse(res, {
       success: true,
       timestamp: new Date().toISOString(),
       currentVersions: {
@@ -202,7 +202,7 @@ router.get('/compliance-dashboard/user-status', async (req, res) => {
     const countParams = status === 'all' ? [null, null] : [termsVersion, privacyVersion];
     const countResult = await db.query(countQuery, countParams);
 
-    return res.json({
+    return successResponse(res, {
       success: true,
       timestamp: new Date().toISOString(),
       filters: { status, limit: parseInt(limit), offset: parseInt(offset) },
@@ -265,7 +265,7 @@ router.get('/compliance-dashboard/notification-metrics', async (req, res) => {
     const notified = parseInt(metrics.notified);
     const acceptedAfterNotif = parseInt(metrics.accepted_after_notification);
 
-    return res.json({
+    return successResponse(res, {
       success: true,
       timestamp: new Date().toISOString(),
       metrics: {
@@ -349,7 +349,7 @@ router.get('/compliance-dashboard/timeline', async (req, res) => {
       }
     });
 
-    return res.json({
+    return successResponse(res, {
       success: true,
       timestamp: new Date().toISOString(),
       period: `Last ${days} days`,

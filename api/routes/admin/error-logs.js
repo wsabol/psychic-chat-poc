@@ -10,7 +10,7 @@
 import express from 'express';
 import { db } from '../../shared/db.js';
 import logger from '../../shared/logger.js';
-import { serverError } from '../../utils/responses.js';
+import { serverError, successResponse } from '../../utils/responses.js';
 
 const router = express.Router();
 
@@ -39,7 +39,7 @@ router.get('/errors/critical', async (req, res) => {
 
     const result = await db.query(query);
     
-    res.json({
+    successResponse(res, {
       success: true,
       data: result.rows,
       count: result.rows.length
@@ -71,7 +71,7 @@ router.get('/errors/summary', async (req, res) => {
 
     const result = await db.query(query);
     
-    res.json({
+    successResponse(res, {
       success: true,
       data: result.rows,
       count: result.rows.length
@@ -123,7 +123,7 @@ router.patch('/errors/:id/resolve', async (req, res) => {
       });
     }
 
-    res.json({
+    successResponse(res, {
       success: true,
       message: `Error ${errorId} marked as ${is_resolved ? 'resolved' : 'unresolved'}`,
       data: result.rows[0]
@@ -150,7 +150,7 @@ router.get('/errors/count/critical', async (req, res) => {
 
     const result = await db.query(query);
     
-    res.json({
+    successResponse(res, {
       success: true,
       count: result.rows[0]?.count || 0
     });
@@ -187,7 +187,7 @@ router.get('/errors/by-service/:service', async (req, res) => {
 
     const result = await db.query(query, [service, Math.min(parseInt(limit), 200)]);
     
-    res.json({
+    successResponse(res, {
       success: true,
       service,
       data: result.rows,

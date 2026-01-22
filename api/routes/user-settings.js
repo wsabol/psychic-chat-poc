@@ -51,7 +51,7 @@ router.get('/:userId', authorizeUser, async (req, res) => {
         };
 
     // Convert camelCase keys for frontend compatibility
-    res.json({
+    successResponse(res, {
       success: true,
       settings: {
         cookiesEnabled: settings.cookies_enabled,
@@ -138,7 +138,7 @@ router.post('/:userId', authorizeUser, async (req, res) => {
 
     
 
-    res.json({
+    successResponse(res, {
       success: true,
       message: 'Settings saved successfully',
       settings: {
