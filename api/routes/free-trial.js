@@ -12,6 +12,7 @@ import {
   getFreeTrialSession
 } from '../shared/freeTrialUtils.js';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
+import { serverError, validationError } from '../utils/responses.js';
 
 const router = express.Router();
 
@@ -27,7 +28,7 @@ router.post('/create-session', async (req, res) => {
     const { tempUserId } = req.body;
     
     if (!tempUserId) {
-      return res.status(400).json({ error: 'tempUserId required' });
+      return validationError(res, 'Missing required information');
     }
 
     // Get client IP from request
@@ -41,17 +42,19 @@ router.post('/create-session', async (req, res) => {
     if (!result.success) {
       if (result.alreadyCompleted) {
         return res.status(429).json({ 
-          error: 'This IP address has already completed the free trial',
+          error: 'Free trial access has been used from this location',
           alreadyCompleted: true 
         });
       }
-      return res.status(500).json({ error: result.error });
+      // Log detailed error but return generic message
+      await logErrorFromCatch(new Error(result.error), 'free-trial', 'Session creation failed');
+      return serverError(res, 'Unable to start free trial session');
     }
 
     return res.json(result);
   } catch (err) {
-    logErrorFromCatch('[FREE-TRIAL] Error creating session', err);
-    return res.status(500).json({ error: 'Failed to create free trial session' });
+    await logErrorFromCatch(err, 'free-trial', 'Error creating session');
+    return serverError(res, 'Unable to start free trial session');
   }
 });
 
@@ -67,24 +70,26 @@ router.post('/update-step/:tempUserId', async (req, res) => {
     const { step } = req.body;
 
     if (!tempUserId || !step) {
-      return res.status(400).json({ error: 'tempUserId and step required' });
+      return validationError(res, 'Missing required information');
     }
 
     const validSteps = ['chat', 'personal_info', 'horoscope', 'completed'];
     if (!validSteps.includes(step)) {
-      return res.status(400).json({ error: 'Invalid step value' });
+      return validationError(res, 'Invalid step value');
     }
 
     const result = await updateFreeTrialStep(tempUserId, step, db);
 
     if (!result.success) {
-      return res.status(500).json({ error: result.error });
+      // Log detailed error but return generic message
+      await logErrorFromCatch(new Error(result.error), 'free-trial', 'Step update failed');
+      return serverError(res, 'Unable to update trial progress');
     }
 
     return res.json(result);
   } catch (err) {
-    logErrorFromCatch('[FREE-TRIAL] Error updating step', err);
-    return res.status(500).json({ error: 'Failed to update free trial step' });
+    await logErrorFromCatch(err, 'free-trial', 'Error updating step');
+    return serverError(res, 'Unable to update trial progress');
   }
 });
 
@@ -97,19 +102,21 @@ router.post('/complete/:tempUserId', async (req, res) => {
     const { tempUserId } = req.params;
 
     if (!tempUserId) {
-      return res.status(400).json({ error: 'tempUserId required' });
+      return validationError(res, 'Missing required information');
     }
 
     const result = await completeFreeTrialSession(tempUserId, db);
 
     if (!result.success) {
-      return res.status(500).json({ error: result.error });
+      // Log detailed error but return generic message
+      await logErrorFromCatch(new Error(result.error), 'free-trial', 'Completion failed');
+      return serverError(res, 'Unable to complete trial session');
     }
 
     return res.json(result);
   } catch (err) {
-    logErrorFromCatch('[FREE-TRIAL] Error completing session', err);
-    return res.status(500).json({ error: 'Failed to complete free trial' });
+    await logErrorFromCatch(err, 'free-trial', 'Error completing session');
+    return serverError(res, 'Unable to complete trial session');
   }
 });
 
@@ -122,7 +129,7 @@ router.get('/session/:tempUserId', async (req, res) => {
     const { tempUserId } = req.params;
 
     if (!tempUserId) {
-      return res.status(400).json({ error: 'tempUserId required' });
+      return validationError(res, 'Missing required information');
     }
 
     const result = await getFreeTrialSession(tempUserId, db);
@@ -131,13 +138,15 @@ router.get('/session/:tempUserId', async (req, res) => {
       if (result.notFound) {
         return res.status(404).json({ error: 'Session not found' });
       }
-      return res.status(500).json({ error: result.error });
+      // Log detailed error but return generic message
+      await logErrorFromCatch(new Error(result.error), 'free-trial', 'Session retrieval failed');
+      return serverError(res, 'Unable to retrieve trial session');
     }
 
     return res.json(result);
   } catch (err) {
-    logErrorFromCatch('[FREE-TRIAL] Error retrieving session', err);
-    return res.status(500).json({ error: 'Failed to retrieve free trial session' });
+    await logErrorFromCatch(err, 'free-trial', 'Error retrieving session');
+    return serverError(res, 'Unable to retrieve trial session');
   }
 });
 

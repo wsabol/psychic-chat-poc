@@ -17,8 +17,29 @@ export async function createFreeTrialSession(tempUserId, ipAddress, db) {
 
   try {
     const ipHash = hashIpAddress(ipAddress);
+    const userIdHash = hashTempUserId(tempUserId);
     
-    // CHECK WHITELIST FIRST - whitelisted IPs get unlimited trials
+    // FIRST: Check if this user already has a session (prevents duplicate key errors)
+    const existingUserSession = await db.query(
+      `SELECT id, current_step, is_completed FROM free_trial_sessions 
+       WHERE user_id_hash = $1 
+       LIMIT 1`,
+      [userIdHash]
+    );
+
+    if (existingUserSession.rows.length > 0) {
+      const session = existingUserSession.rows[0];
+      // Return existing session instead of creating duplicate
+      return {
+        success: true,
+        sessionId: session.id,
+        currentStep: session.current_step,
+        resuming: true,
+        message: session.is_completed ? 'Trial already completed' : `Resuming from step: ${session.current_step}`
+      };
+    }
+    
+    // CHECK WHITELIST - whitelisted IPs get unlimited trials
     const whitelistCheck = await db.query(
       'SELECT id FROM free_trial_whitelist WHERE ip_address_hash = $1',
       [ipHash]
@@ -26,54 +47,40 @@ export async function createFreeTrialSession(tempUserId, ipAddress, db) {
 
     const isWhitelisted = whitelistCheck.rows.length > 0;
     
-    // Check if IP has already completed a trial (deterministic hash allows this!)
+    // Check if IP has already completed a trial
     const completedCheck = await db.query(
       `SELECT id, current_step FROM free_trial_sessions 
-       WHERE ip_address_hash = $1 
+       WHERE ip_address_hash = $1 AND is_completed = true
        ORDER BY started_at DESC
        LIMIT 1`,
       [ipHash]
     );
 
     // If IP found with completed trial, block access UNLESS whitelisted
-    if (completedCheck.rows.length > 0) {
-      const existingSession = completedCheck.rows[0];
-      
-      if (existingSession.current_step === 'completed') {
-        // If whitelisted, allow creating new trial session
-        if (!isWhitelisted) {
-          return { 
-            success: false, 
-            error: 'This IP address has already completed the free trial',
-            alreadyCompleted: true
-          };
-        }
-        // Continue to create new session for whitelisted IP
-      } else {
-        // If incomplete trial exists (and not whitelisted), return it for resumption
-        if (!isWhitelisted) {
-          return {
-            success: true,
-            sessionId: existingSession.id,
-            currentStep: existingSession.current_step,
-            resuming: true,
-            message: `Resuming from step: ${existingSession.current_step}`
-          };
-        }
-        // Whitelisted users can start fresh sessions even with incomplete ones
-      }
+    if (completedCheck.rows.length > 0 && !isWhitelisted) {
+      return { 
+        success: false, 
+        error: 'This IP address has already completed the free trial',
+        alreadyCompleted: true
+      };
+    }
+
+    // Extract email from tempUserId (format: temp_email@domain.com)
+    let emailEncrypted = null;
+    if (tempUserId.startsWith('temp_')) {
+      const email = tempUserId; // tempUserId IS the temp email
+      emailEncrypted = email;
     }
 
     // No existing session - create new one
     const sessionId = crypto.randomUUID();
-    const userIdHash = hashTempUserId(tempUserId);
 
     const result = await db.query(
       `INSERT INTO free_trial_sessions 
-       (id, ip_address_hash, user_id_hash, current_step, is_completed, started_at, last_activity_at)
-       VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+       (id, ip_address_hash, ip_address_encrypted, user_id_hash, email_encrypted, current_step, is_completed, started_at, last_activity_at)
+       VALUES ($1, $2, $3, $4, pgp_sym_encrypt($5, $6), $7, $8, NOW(), NOW())
        RETURNING id, current_step, started_at`,
-      [sessionId, ipHash, userIdHash, 'chat', false]
+      [sessionId, ipHash, ipAddress, userIdHash, emailEncrypted, process.env.ENCRYPTION_KEY, 'chat', false]
     );
 
     return {
@@ -83,8 +90,11 @@ export async function createFreeTrialSession(tempUserId, ipAddress, db) {
       startedAt: result.rows[0].started_at
     };
   } catch (err) {
-    logErrorFromCatch('Error creating free trial session', err);
-    return { success: false, error: err.message };
+    // Don't log duplicate key errors - they're expected due to race conditions
+    if (!err.message?.includes('duplicate key')) {
+      logErrorFromCatch(err, 'free-trial', 'Error creating session');
+    }
+    return { success: false, error: 'Unable to create session' };
   }
 }
 
@@ -128,8 +138,8 @@ export async function updateFreeTrialStep(tempUserId, newStep, db) {
       lastActivityAt: result.rows[0].last_activity_at
     };
   } catch (err) {
-    logErrorFromCatch('Error updating free trial step', err);
-    return { success: false, error: err.message };
+    logErrorFromCatch(err, 'free-trial', 'Error updating step');
+    return { success: false, error: 'Unable to update progress' };
   }
 }
 
@@ -168,8 +178,8 @@ export async function completeFreeTrialSession(tempUserId, db) {
       completedAt: result.rows[0].completed_at
     };
   } catch (err) {
-    logErrorFromCatch('Error completing free trial session', err);
-    return { success: false, error: err.message };
+    logErrorFromCatch(err, 'free-trial', 'Error completing session');
+    return { success: false, error: 'Unable to complete session' };
   }
 }
 
@@ -208,8 +218,8 @@ export async function getFreeTrialSession(tempUserId, db) {
       lastActivityAt: result.rows[0].last_activity_at
     };
   } catch (err) {
-    logErrorFromCatch('Error retrieving free trial session', err);
-    return { success: false, error: err.message };
+    logErrorFromCatch(err, 'free-trial', 'Error retrieving session');
+    return { success: false, error: 'Unable to retrieve session' };
   }
 }
 

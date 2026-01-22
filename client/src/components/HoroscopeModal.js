@@ -155,6 +155,7 @@ function HoroscopeModal({ userId, token, isOpen, onClose }) {
                 return true; // Stop polling
             }
         } catch (err) {
+            // Silently ignore polling errors - they're expected during generation
         }
         return false;
     };
@@ -257,4 +258,3 @@ function HoroscopeModal({ userId, token, isOpen, onClose }) {
 }
 
 export default HoroscopeModal;
-

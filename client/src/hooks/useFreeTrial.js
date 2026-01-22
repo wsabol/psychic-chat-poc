@@ -27,23 +27,30 @@ export function useFreeTrial(isTemporaryAccount, tempUserId) {
           body: JSON.stringify({ tempUserId })
         });
 
-        const data = await response.json();
+        let data;
+        try {
+          data = await response.json();
+        } catch (jsonErr) {
+          // Response wasn't JSON, use generic error
+          throw new Error('Server error occurred');
+        }
 
         if (!response.ok) {
-          if (data.alreadyCompleted) {
+          if (data?.alreadyCompleted) {
             setError('This IP has already completed the free trial');
             setIsCompleted(true);
             return;
           }
-          throw new Error(data.error || 'Failed to create trial session');
+          throw new Error(data?.error || 'Failed to create trial session');
         }
 
         setSessionId(data.sessionId);
         setCurrentStep(data.currentStep || 'chat');
         setError(null);
       } catch (err) {
+        const errorMessage = err?.message || 'Failed to create session';
         logErrorFromCatch('[FREE-TRIAL] Error creating session', err);
-        setError(err.message);
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -64,10 +71,15 @@ export function useFreeTrial(isTemporaryAccount, tempUserId) {
         body: JSON.stringify({ step: newStep })
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonErr) {
+        throw new Error('Server error occurred');
+      }
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to update step');
+        throw new Error(data?.error || 'Failed to update step');
       }
 
       setCurrentStep(data.currentStep);
@@ -79,7 +91,7 @@ export function useFreeTrial(isTemporaryAccount, tempUserId) {
       return { success: true, data };
     } catch (err) {
       logErrorFromCatch('[FREE-TRIAL] Error updating step', err);
-      const errorMsg = err.message;
+      const errorMsg = err?.message || 'Failed to update step';
       setError(errorMsg);
       return { success: false, error: errorMsg };
     } finally {
@@ -98,10 +110,15 @@ export function useFreeTrial(isTemporaryAccount, tempUserId) {
         headers: { 'Content-Type': 'application/json' }
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonErr) {
+        throw new Error('Server error occurred');
+      }
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to complete trial');
+        throw new Error(data?.error || 'Failed to complete trial');
       }
 
       setIsCompleted(true);
@@ -111,7 +128,7 @@ export function useFreeTrial(isTemporaryAccount, tempUserId) {
       return { success: true, data };
     } catch (err) {
       logErrorFromCatch('[FREE-TRIAL] Error completing trial', err);
-      const errorMsg = err.message;
+      const errorMsg = err?.message || 'Failed to complete trial';
       setError(errorMsg);
       return { success: false, error: errorMsg };
     } finally {
@@ -125,13 +142,19 @@ export function useFreeTrial(isTemporaryAccount, tempUserId) {
 
     try {
       const response = await fetch(`${API_URL}/free-trial/session/${tempUserId}`);
-      const data = await response.json();
+      
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonErr) {
+        throw new Error('Server error occurred');
+      }
 
       if (!response.ok) {
         if (response.status === 404) {
           return { success: false, error: 'Session not found', notFound: true };
         }
-        throw new Error(data.error || 'Failed to get session status');
+        throw new Error(data?.error || 'Failed to get session status');
       }
 
       setSessionId(data.sessionId);
@@ -142,7 +165,7 @@ export function useFreeTrial(isTemporaryAccount, tempUserId) {
       return { success: true, data };
     } catch (err) {
       logErrorFromCatch('[FREE-TRIAL] Error getting session status', err);
-      return { success: false, error: err.message };
+      return { success: false, error: err?.message || 'Failed to get session status' };
     }
   }, [tempUserId]);
 

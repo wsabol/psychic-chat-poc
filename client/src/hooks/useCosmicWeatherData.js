@@ -33,7 +33,7 @@ export function useCosmicWeatherData(userId, token) {
       
       // If null, it means still generating (202 response), fall through to polling
     } catch (err) {
-      logErrorFromCatch(err, '[COSMIC-WEATHER-HOOK] Fetch failed, will generate');
+      // Silently proceed to generation - fetch failing is expected when data doesn't exist yet
     }
 
     // If fetch failed, trigger generation

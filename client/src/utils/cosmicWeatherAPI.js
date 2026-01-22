@@ -96,8 +96,12 @@ export async function pollForCosmicWeather(userId, token, maxPolls = 30, pollInt
           reject(new Error(errorData.error || `HTTP ${response.status}`));
           return;
         }
-            } catch (err) {
-        logErrorFromCatch(err, '[COSMIC-WEATHER-API] Polling error');
+      } catch (err) {
+        // Silently ignore polling errors - they're expected during generation
+        // Only log if this is approaching max attempts
+        if (pollCount >= maxPolls - 2) {
+          logErrorFromCatch(err, '[COSMIC-WEATHER-API] Polling error near max attempts');
+        }
       }
 
       if (pollCount >= maxPolls) {

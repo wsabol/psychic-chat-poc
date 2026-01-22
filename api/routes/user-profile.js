@@ -121,6 +121,23 @@ router.post("/:userId", authorizeUser, async (req, res) => {
 
         const userIdHash = hashUserId(userId);
         
+        // CRITICAL: For temp users, also store email in free_trial_sessions for marketing follow-up
+        // This preserves email even if temp user data is later scrubbed from user_personal_info
+        const isTempUser = userId.startsWith('temp_');
+        if (isTempUser && email) {
+            try {
+                await db.query(
+                    `UPDATE free_trial_sessions 
+                     SET email_encrypted = pgp_sym_encrypt($1, $2)
+                     WHERE user_id_hash = $3`,
+                    [email, process.env.ENCRYPTION_KEY, userIdHash]
+                );
+            } catch (err) {
+                // Non-fatal: Log error but continue with personal info save
+                console.error('[USER-PROFILE] Failed to update free trial email:', err.message);
+            }
+        }
+        
                 // Calculate and store sun sign immediately (only needs birth date)
         try {
             const sunSign = calculateSunSignFromDate(parsedBirthDate);

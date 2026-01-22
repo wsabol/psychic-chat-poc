@@ -464,11 +464,13 @@ CREATE INDEX IF NOT EXISTS idx_admin_login_attempts_login_status ON admin_login_
 -- TABLE: free_trial_sessions (Free trial progress tracking & fraud prevention)
 -- IMPORTANT: ip_address_encrypted must be encrypted with ENCRYPTION_KEY
 -- IMPORTANT: user_id_hash is SHA-256 hash of temp user ID (one-way, cannot decrypt)
+-- IMPORTANT: email_encrypted stores temp user's email for marketing follow-up (encrypted with ENCRYPTION_KEY)
 CREATE TABLE IF NOT EXISTS free_trial_sessions (
     id VARCHAR(36) PRIMARY KEY,
     ip_address_hash VARCHAR(64),
     ip_address_encrypted VARCHAR(255) NOT NULL,
     user_id_hash VARCHAR(64) NOT NULL,
+    email_encrypted BYTEA,
     current_step VARCHAR(50),
     is_completed BOOLEAN DEFAULT FALSE,
     started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

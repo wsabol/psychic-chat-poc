@@ -81,22 +81,36 @@ router.get("/opening/:userId", authorizeUser, verify2FA, async (req, res) => {
         const recentMessages = await getRecentMessages(userId)
         
         // Fetch user's personal information for personalized greeting
-        let clientName = userId;
+        // CRITICAL: NEVER use userId for temp users - use friendly fallback names
+        const isTempUser = userId.startsWith('temp_');
+        let clientName = isTempUser ? 'Seeker' : userId; // Default fallback
+        
         try {
             const { rows: personalInfoRows } = await db.query(
                 "SELECT pgp_sym_decrypt(first_name_encrypted, $1) as first_name, pgp_sym_decrypt(familiar_name_encrypted, $1) as familiar_name FROM user_personal_info WHERE user_id = $2",
                 [process.env.ENCRYPTION_KEY, userId]
             );
             if (personalInfoRows.length > 0 && personalInfoRows[0]) {
-                clientName = personalInfoRows[0].familiar_name || personalInfoRows[0].first_name || userId;
+                // Multi-layer fallback: familiar_name > first_name > friendly default (NEVER userId for temp users)
+                clientName = personalInfoRows[0].familiar_name || 
+                            personalInfoRows[0].first_name || 
+                            (isTempUser ? 'Seeker' : userId);
             }
         } catch (err) {
+            // Error fallback: use friendly name for temp users, userId for regular users
+            clientName = isTempUser ? 'Seeker' : userId;
+        }
+        
+        // TRIPLE SAFETY CHECK: If somehow clientName still contains "temp_", replace it
+        if (clientName && clientName.includes('temp_')) {
+            clientName = 'Seeker';
         }
 
-                        let opening = await generatePsychicOpening({
+        let opening = await generatePsychicOpening({
             clientName: clientName,
             recentMessages: recentMessages,
-            oracleLanguage: oracleLanguage
+            oracleLanguage: oracleLanguage,
+            userTimezone: userTimezone
         });
 
         // Store opening as proper content object

@@ -99,8 +99,10 @@ export async function fetchWithTokenRefresh(url, options = {}) {
 
     return response;
   } catch (err) {
-    logErrorFromCatch('[FETCH] Request error:', err);
+    // Only log if it's not a network abort or expected error
+    if (err.name !== 'AbortError' && !err.message?.includes('Failed to fetch')) {
+      logErrorFromCatch('[FETCH] Request error:', err);
+    }
     throw err;
   }
 }
-

@@ -160,6 +160,7 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
                 return true;
             }
         } catch (err) {
+            // Silently ignore polling errors - they're expected during generation
         }
         return false;
     };
@@ -261,4 +262,3 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
 }
 
 export default MoonPhaseModal;
-

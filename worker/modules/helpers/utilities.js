@@ -9,6 +9,12 @@
  * Established users get their first/familiar name
  */
 export function getUserGreeting(userInfo, userId, isTemporaryUser = false) {
+  // CRITICAL SAFETY LAYER 1: Check if userId contains "temp_" - always return "Seeker"
+  if (userId && userId.includes('temp_')) {
+    return "Seeker";
+  }
+  
+  // CRITICAL SAFETY LAYER 2: Check isTemporaryUser flag
   if (isTemporaryUser) {
     return "Seeker";
   }
@@ -20,11 +26,19 @@ export function getUserGreeting(userInfo, userId, isTemporaryUser = false) {
   // Try familiar name first, then first name, fallback to Friend
   const familiarName = userInfo.address_preference?.trim();
   if (familiarName && familiarName.length > 0) {
+    // CRITICAL SAFETY LAYER 3: Never return temp_ UIDs even if they're in the database
+    if (familiarName.includes('temp_')) {
+      return "Seeker";
+    }
     return familiarName;
   }
   
   const firstName = userInfo.first_name?.trim();
   if (firstName && firstName.length > 0) {
+    // CRITICAL SAFETY LAYER 4: Never return temp_ UIDs even if they're in the database
+    if (firstName.includes('temp_')) {
+      return "Seeker";
+    }
     return firstName;
   }
   

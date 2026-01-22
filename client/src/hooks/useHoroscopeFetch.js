@@ -117,7 +117,11 @@ export function useHoroscopeFetch(userId, token, apiUrl, horoscopeRange) {
             return;
           }
         } catch (err) {
-          logErrorFromCatch('[HOROSCOPE-FETCH] Polling error:', err);
+          // Silently catch polling errors - they're expected during generation
+          // Only log if it's the last attempt
+          if (pollCount >= HOROSCOPE_CONFIG.POLL_MAX_ATTEMPTS - 1) {
+            logErrorFromCatch('[HOROSCOPE-FETCH] Final polling attempt failed:', err);
+          }
         }
 
         // Check if max polls reached
@@ -159,4 +163,3 @@ export function useHoroscopeFetch(userId, token, apiUrl, horoscopeRange) {
     stopPolling: cleanup
   };
 }
-
