@@ -7,7 +7,8 @@
 
 import { Router } from 'express';
 import { db } from '../shared/db.js';
-import { validationError, serverError, createdResponse, forbiddenError } from '../utils/responses.js';
+import { validationError, serverError, createdResponse, forbiddenError, successResponse } from '../utils/responses.js';
+import { logAudit } from '../shared/auditLog.js';
 
 const router = Router();
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
@@ -251,10 +252,20 @@ router.delete('/data', async (req, res) => {
     }
 
     const result = await db.query('DELETE FROM app_analytics');
-    res.json({
+    
+    // Audit log the deletion
+    await logAudit(db, {
+      userId: adminEmail,
+      action: 'ANALYTICS_DATA_DELETED',
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      status: 'SUCCESS',
+      details: { action: 'delete_all_analytics', timestamp: new Date().toISOString() }
+    });
+    
+    return successResponse(res, {
       success: true,
-      message: 'All analytics data deleted',
-      rows_deleted: result.rowCount
+      message: 'All analytics data deleted'
     });
   } catch (error) {
     return serverError(res, 'Failed to delete analytics data');
@@ -279,10 +290,19 @@ router.post('/cleanup', async (req, res) => {
        WHERE created_at < NOW() - INTERVAL '90 days'`
     );
 
-    res.json({
+    // Audit log the cleanup
+    await logAudit(db, {
+      userId: adminEmail,
+      action: 'ANALYTICS_DATA_CLEANUP',
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      status: 'SUCCESS',
+      details: { action: 'cleanup_old_analytics', timestamp: new Date().toISOString() }
+    });
+
+    return successResponse(res, {
       success: true,
-      message: 'Old analytics data deleted',
-      rows_deleted: result.rowCount
+      message: 'Old analytics data deleted'
     });
   } catch (error) {
     return serverError(res, 'Failed to cleanup analytics data');

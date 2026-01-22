@@ -12,6 +12,7 @@
 
 import { validateSubscriptionHealth, getCachedSubscriptionStatus } from '../services/stripe/subscriptionValidator.js';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
+import { authError, forbiddenError, ErrorCodes } from '../utils/responses.js';
 
 /**
  * Subscription Guard Middleware
@@ -21,12 +22,9 @@ export async function subscriptionGuard(req, res, next) {
     // Get user_id from JWT token (added by authenticateToken middleware)
     const userId = req.user?.uid;
 
-    if (!userId) {
-      return res.status(401).json({
-        error: 'Unauthorized',
-        message: 'User information not found'
-      });
-    }
+      if (!userId) {
+        return authError(res, 'User information not found', ErrorCodes.UNAUTHORIZED);
+      }
 
     // Get cached subscription status first (faster)
     const cachedStatus = await getCachedSubscriptionStatus(userId);
@@ -54,6 +52,7 @@ export async function subscriptionGuard(req, res, next) {
       return res.status(403).json({
         error: 'Subscription Required',
         message: health.blockedMessage,
+        errorCode: ErrorCodes.FORBIDDEN,
         blockedReason: health.blockedReason,
         subscription: {
           status: health.subscription.status,
@@ -84,6 +83,7 @@ export async function subscriptionGuard(req, res, next) {
     return res.status(503).json({
       error: 'Service Temporarily Unavailable',
       message: 'We are temporarily unable to verify your subscription. Please try again in a few moments.',
+      errorCode: 'SERVICE_UNAVAILABLE_503',
       blockedReason: 'STRIPE_API_ERROR',
       action: {
         type: 'RETRY',

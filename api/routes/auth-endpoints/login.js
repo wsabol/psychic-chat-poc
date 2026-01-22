@@ -8,7 +8,7 @@ import { recordLoginAttempt } from './helpers/accountLockout.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { encrypt } from '../../utils/encryption.js';
 import { getCurrentTermsVersion, getCurrentPrivacyVersion } from '../../shared/versionConfig.js';
-import { validationError, serverError } from '../../utils/responses.js';
+import { validationError, serverError, forbiddenError, rateLimitError, ErrorCodes } from '../../utils/responses.js';
 import { validateSubscriptionHealth } from '../../services/stripe/subscriptionValidator.js';
 import { enqueueMessage } from '../../shared/queue.js';
 
@@ -166,6 +166,7 @@ router.post('/log-login-success', async (req, res) => {
           success: false,
           error: 'Subscription Required',
           message: health.blockedMessage,
+          errorCode: ErrorCodes.FORBIDDEN,
           blockedReason: health.blockedReason,
           subscription: {
             status: health.subscription.status,
@@ -261,9 +262,9 @@ router.post('/check-account-lockout/:userId', async (req, res) => {
         success: false,
         locked: true,
         message: `Account locked due to too many failed login attempts. Try again in ${minutesRemaining} minute${minutesRemaining !== 1 ? 's' : ''}.`,
+        errorCode: ErrorCodes.RATE_LIMIT_EXCEEDED,
         unlockAt: lockout.lock_expires_at,
-        minutesRemaining,
-        errorCode: 'ACCOUNT_LOCKED_429'
+        minutesRemaining
       });
     }
 
