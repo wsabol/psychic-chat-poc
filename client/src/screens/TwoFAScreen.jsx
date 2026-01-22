@@ -154,7 +154,8 @@ export default function TwoFAScreen({
               padding: '0.75rem',
               backgroundColor: '#f5f5f5',
               borderRadius: '4px',
-              userSelect: 'none'
+              userSelect: 'none',
+              color: '#333'
             }}>
               <input
                 type="checkbox"
@@ -164,7 +165,7 @@ export default function TwoFAScreen({
                 style={{ cursor: 'pointer', width: '16px', height: '16px' }}
               />
                             <span>
-                <strong>{t('twoFactor.title')}</strong>
+                <strong style={{ color: '#333' }}>{t('twoFactor.title')}</strong>
                 <br />
                 <span style={{ fontSize: '0.85rem', color: '#666' }}>{t('security.trustedDevices.heading')}</span>
               </span>
