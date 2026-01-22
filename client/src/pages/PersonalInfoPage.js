@@ -39,7 +39,7 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
   // ============================================================
   const isTemporaryAccount = auth?.isTemporaryAccount;
   const tempAccountConfig = useTempAccountConfig(isTemporaryAccount);
-  const { fetchPersonalInfo: apiFetchPersonalInfo, savePersonalInfo: apiSavePersonalInfo, triggerAstrologySync } = usePersonalInfoAPI(userId, token);
+  const { fetchPersonalInfo: apiFetchPersonalInfo, savePersonalInfo: apiSavePersonalInfo, triggerAstrologySync } = usePersonalInfoAPI(userId, token, isTemporaryAccount);
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
   // ============================================================
@@ -342,4 +342,3 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
     </div>
   );
 }
-

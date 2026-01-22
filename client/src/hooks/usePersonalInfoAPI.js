@@ -10,9 +10,10 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
  * Centralizes all API calls related to personal information
  * @param {string} userId - User ID
  * @param {string} token - Auth token
+ * @param {boolean} isTemporaryAccount - Whether this is a temp/free trial account
  * @returns {Object} { fetchPersonalInfo, savePersonalInfo, triggerAstrologySync }
  */
-export function usePersonalInfoAPI(userId, token) {
+export function usePersonalInfoAPI(userId, token, isTemporaryAccount = false) {
   /**
    * Fetch personal information from server
    */
@@ -50,10 +51,31 @@ export function usePersonalInfoAPI(userId, token) {
 
   /**
    * Save personal information to server
+   * Routes to free trial endpoint for temp users (no auth required)
+   * Routes to regular endpoint for authenticated users
    */
   const savePersonalInfo = useCallback(
     async (dataToSend) => {
       try {
+        // Use free trial endpoint for temp users (no authentication required)
+        if (isTemporaryAccount) {
+          const response = await fetch(`${API_URL}/free-trial/save-personal-info/${userId}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(dataToSend)
+          });
+
+          if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error || 'Failed to save personal information');
+          }
+
+          return { success: true };
+        }
+
+        // Use regular endpoint for authenticated users
         const response = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}`, {
           method: 'POST',
           headers: {
@@ -74,7 +96,7 @@ export function usePersonalInfoAPI(userId, token) {
         return { success: false, error: err.message };
       }
     },
-    [userId, token]
+    [userId, token, isTemporaryAccount]
   );
 
   /**
@@ -107,4 +129,3 @@ export function usePersonalInfoAPI(userId, token) {
     triggerAstrologySync
   };
 }
-

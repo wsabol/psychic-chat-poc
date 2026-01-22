@@ -65,22 +65,16 @@ export async function createFreeTrialSession(tempUserId, ipAddress, db) {
       };
     }
 
-    // Extract email from tempUserId (format: temp_email@domain.com)
-    let emailEncrypted = null;
-    if (tempUserId.startsWith('temp_')) {
-      const email = tempUserId; // tempUserId IS the temp email
-      emailEncrypted = email;
-    }
-
     // No existing session - create new one
+    // Note: email will be added later when personal info is saved
     const sessionId = crypto.randomUUID();
 
     const result = await db.query(
       `INSERT INTO free_trial_sessions 
-       (id, ip_address_hash, ip_address_encrypted, user_id_hash, email_encrypted, current_step, is_completed, started_at, last_activity_at)
-       VALUES ($1, $2, $3, $4, pgp_sym_encrypt($5, $6), $7, $8, NOW(), NOW())
+       (id, ip_address_hash, ip_address_encrypted, user_id_hash, current_step, is_completed, started_at, last_activity_at)
+       VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
        RETURNING id, current_step, started_at`,
-      [sessionId, ipHash, ipAddress, userIdHash, emailEncrypted, process.env.ENCRYPTION_KEY, 'chat', false]
+      [sessionId, ipHash, ipAddress, userIdHash, 'chat', false]
     );
 
     return {
