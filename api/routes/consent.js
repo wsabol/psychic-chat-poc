@@ -463,9 +463,7 @@ router.post('/verify-consent/:userId/:consentType', async (req, res) => {
 
     const hasConsent = result.rows.length > 0 ? result.rows[0].has_consent : false;
 
-    return res.json({
-      success: true,
-      userId,
+    return successResponse(res, { success: true, userId,
       consentType,
       hasConsent
     });

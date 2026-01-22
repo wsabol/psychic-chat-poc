@@ -86,6 +86,76 @@ const fixes = [
         description: 'Remove uid, email, and error details from response'
       }
     ]
+  },
+  {
+    file: 'routes/compliance-admin.js',
+    description: 'Standardize manual success responses to use successResponse()',
+    fixes: [
+      {
+        search: /return res\.json\(\{\s*success:\s*true,\s*message:\s*'([^']+)'\s*\}\)/g,
+        replace: (match, msg) => `return successResponse(res, { success: true, message: '${msg}' })`,
+        description: 'Replace manual res.json with successResponse()'
+      },
+      {
+        search: /return res\.json\(\{\s*success:\s*true,\s*data:\s*([^}]+)\s*\}\)/g,
+        replace: (match, data) => `return successResponse(res, { success: true, data: ${data} })`,
+        description: 'Standardize data responses'
+      }
+    ],
+    requiredImport: "import { successResponse } from '../utils/responses.js';",
+    checkImport: /successResponse/
+  },
+  {
+    file: 'routes/consent.js',
+    description: 'Standardize consent endpoint responses',
+    fixes: [
+      {
+        search: /return res\.json\(\{\s*success:\s*true,\s*([^}]+)\}\)/g,
+        replace: (match, content) => `return successResponse(res, { success: true, ${content}})`,
+        description: 'Use successResponse() for consistency'
+      }
+    ],
+    requiredImport: "import { successResponse } from '../utils/responses.js';",
+    checkImport: /successResponse/
+  },
+  {
+    file: 'routes/user-settings.js',
+    description: 'Standardize user settings responses',
+    fixes: [
+      {
+        search: /res\.json\(\{\s*success:\s*true,\s*settings:\s*([^}]+)\}\)/g,
+        replace: (match, settings) => `successResponse(res, { success: true, settings: ${settings}})`,
+        description: 'Use successResponse() utility'
+      }
+    ],
+    requiredImport: "import { successResponse } from '../utils/responses.js';",
+    checkImport: /successResponse/
+  },
+  {
+    file: 'routes/billing/webhooks.js',
+    description: 'Standardize webhook responses',
+    fixes: [
+      {
+        search: /return res\.json\(\{\s*received:\s*true\s*\}\)/g,
+        replace: () => `return successResponse(res, { received: true })`,
+        description: 'Standardize webhook acknowledgment'
+      }
+    ],
+    requiredImport: "import { successResponse } from '../../utils/responses.js';",
+    checkImport: /successResponse/
+  },
+  {
+    file: 'routes/admin/compliance-dashboard.js',
+    description: 'Standardize compliance dashboard responses',
+    fixes: [
+      {
+        search: /return res\.json\(\{\s*success:\s*true,\s*([^}]+)\}\)/g,
+        replace: (match, content) => `return successResponse(res, { success: true, ${content}})`,
+        description: 'Use successResponse() for all responses'
+      }
+    ],
+    requiredImport: "import { successResponse } from '../../utils/responses.js';",
+    checkImport: /successResponse/
   }
 ];
 

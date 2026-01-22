@@ -10,6 +10,7 @@ import { db } from '../../shared/db.js';
 import { getCurrentTermsVersion, getCurrentPrivacyVersion } from '../../shared/versionConfig.js';
 import VERSION_CONFIG from '../../shared/versionConfig.js';
 import { serverError } from '../../utils/responses.js';
+import { successResponse } from '../../utils/responses.js';
 
 const router = Router();
 
@@ -121,9 +122,7 @@ router.get('/compliance-dashboard/acceptance-by-version', async (req, res) => {
       ORDER BY document_type, version DESC
     `);
 
-    return res.json({
-      success: true,
-      timestamp: new Date().toISOString(),
+    return successResponse(res, { success: true, timestamp: new Date().toISOString(),
       breakdown: result.rows.map(row => ({
         documentType: row.document_type,
         version: row.version,

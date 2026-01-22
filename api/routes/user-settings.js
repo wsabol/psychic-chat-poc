@@ -13,6 +13,7 @@ import { hashUserId } from '../shared/hashUtils.js';
 import { authorizeUser } from '../middleware/auth.js';
 import logger from '../shared/logger.js';
 import { validationError, serverError } from '../utils/responses.js';
+import { successResponse } from '../utils/responses.js';
 
 const router = Router();
 

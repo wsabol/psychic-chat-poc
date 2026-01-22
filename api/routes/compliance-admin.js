@@ -16,6 +16,7 @@ import { Router } from 'express';
 import { db } from '../shared/db.js';
 import { logAudit } from '../shared/auditLog.js';
 import { validationError, serverError } from '../utils/responses.js';
+import { successResponse } from '../utils/responses.js';
 import { 
   flagUsersForUpdate,
   getComplianceReport,

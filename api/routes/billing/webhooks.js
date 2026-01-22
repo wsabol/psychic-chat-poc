@@ -24,6 +24,7 @@ import { notifyBillingEvent } from '../../services/stripe/billingNotifications.j
 import Stripe from 'stripe';
 import { serverError } from '../../utils/responses.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
+import { successResponse } from '../../utils/responses.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2024-04-10',
@@ -76,7 +77,7 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
         const userId = await extractUserIdFromSubscription(subscription.id);
 
         if (!userId) {
-          return res.json({ received: true });
+          return successResponse(res, { received: true });
         }
 
         try {
@@ -99,7 +100,7 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
         const userId = await extractUserIdFromSubscription(subscription.id);
 
         if (!userId) {
-          return res.json({ received: true });
+          return successResponse(res, { received: true });
         }
 
         try {
@@ -137,7 +138,7 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
         const userId = await extractUserIdFromSubscription(subscription.id);
 
         if (!userId) {
-          return res.json({ received: true });
+          return successResponse(res, { received: true });
         }
 
         try {
