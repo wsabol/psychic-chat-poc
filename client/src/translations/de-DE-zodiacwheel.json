@@ -8,6 +8,23 @@
     "ic": "IC",
     "yourRising": "Ihr Aszendent",
     "dayNight": "Tag-/Nacht-Horizont",
-    "horizon": "Aszendent-Deszendent-Achse"
+    "horizon": "Aszendent-Deszendent-Achse",
+    "planets": {
+      "Mars": "Mars",
+      "Venus": "Venus",
+      "Mercury": "Merkur",
+      "Moon": "Mond",
+      "Sun": "Sonne",
+      "Jupiter": "Jupiter",
+      "Saturn": "Saturn",
+      "Uranus": "Uranus",
+      "Neptune": "Neptun"
+    },
+    "elements": {
+      "Fire": "Feuer",
+      "Earth": "Erde",
+      "Air": "Luft",
+      "Water": "Wasser"
+    }
   }
 }

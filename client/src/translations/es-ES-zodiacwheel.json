@@ -8,6 +8,23 @@
     "ic": "IC",
     "yourRising": "Tu Ascendente",
     "dayNight": "Horizonte Día/Noche",
-    "horizon": "Eje Ascendente-Descendente"
+    "horizon": "Eje Ascendente-Descendente",
+    "planets": {
+      "Mars": "Marte",
+      "Venus": "Venus",
+      "Mercury": "Mercurio",
+      "Moon": "Luna",
+      "Sun": "Sol",
+      "Jupiter": "Júpiter",
+      "Saturn": "Saturno",
+      "Uranus": "Urano",
+      "Neptune": "Neptuno"
+    },
+    "elements": {
+      "Fire": "Fuego",
+      "Earth": "Tierra",
+      "Air": "Aire",
+      "Water": "Agua"
+    }
   }
 }

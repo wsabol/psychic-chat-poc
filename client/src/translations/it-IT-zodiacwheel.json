@@ -1,13 +1,30 @@
 {
   "zodiacWheel": {
     "title": "Le Tue Case Astrologiche",
-    "subtitle": "I 12 segni zodiacali ruotati alla tua posizione di segno ascendente",
+    "subtitle": "I 12 segni zodiacali ruotati alla posizione del tuo segno ascendente",
     "asc": "ASC",
-    "dsc": "DSC",
+    "dsc": "DESC",
     "mc": "MC",
     "ic": "IC",
     "yourRising": "Il Tuo Ascendente",
     "dayNight": "Orizzonte Giorno/Notte",
-    "horizon": "Asse Ascendente-Discendente"
+    "horizon": "Asse Ascendente-Discendente",
+    "planets": {
+      "Mars": "Marte",
+      "Venus": "Venere",
+      "Mercury": "Mercurio",
+      "Moon": "Luna",
+      "Sun": "Sole",
+      "Jupiter": "Giove",
+      "Saturn": "Saturno",
+      "Uranus": "Urano",
+      "Neptune": "Nettuno"
+    },
+    "elements": {
+      "Fire": "Fuoco",
+      "Earth": "Terra",
+      "Air": "Aria",
+      "Water": "Acqua"
+    }
   }
 }

@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from '../../../context/TranslationContext';
-import wheelData from '../../../data/zodiac/wheelData';
+import { getLocalizedWheelData } from '../../../data/zodiac/wheelData';
 import '../styles/ZodiacWheel.css';
 
 // Zodiac signs in order (starting with Aries at 0°)
@@ -51,11 +51,14 @@ export function ZodiacWheel({ astroData }) {
   // Get the index of the rising sign (0-11)
   const risingSignIndex = ZODIAC_ORDER.indexOf(risingSgn);
 
+  // Get localized wheel data (planets and elements translated)
+  const localizedWheelData = useMemo(() => getLocalizedWheelData(t), [t]);
+
   // Build wheel data with sign info
   const wheelSections = useMemo(() => {
     return ZODIAC_ORDER.map((signKey, index) => {
       const signData = astroData[signKey];
-      const wheelInfo = wheelData[signKey];
+      const wheelInfo = localizedWheelData[signKey];
 
       return {
         key: signKey,
@@ -70,7 +73,7 @@ export function ZodiacWheel({ astroData }) {
         centerDegree: (index * 30 + 15) - 180  // Center of segment for text placement
       };
     });
-  }, [astroData, risingSgn, t]);
+  }, [astroData, risingSgn, t, localizedWheelData]);
 
   // Calculate wheel rotation to position rising sign on eastern horizon (right side)
   // Convert zodiac angles to SVG by subtracting 180°, then apply rotation
