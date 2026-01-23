@@ -62,29 +62,47 @@ export async function recordViolationAndGetAction(userId, violationType, userMes
       };
     }
 
-    // STEP 5: ESTABLISHED ACCOUNT: Enforce based on violation count
-    // Special handling for CRITICAL violations (self-harm, harm to others)
-    const isCriticalViolation = [VIOLATION_TYPES.SELF_HARM, VIOLATION_TYPES.HARM_OTHERS].includes(violationType);
+    // STEP 5: ESTABLISHED ACCOUNT: Enforce based on violation type and count
+    
+    // ZERO TOLERANCE violations - Immediate indefinite suspension on 1st offense
+    const zeroToleranceViolations = [
+      VIOLATION_TYPES.MINOR_CONTENT,
+      VIOLATION_TYPES.HARM_OTHERS,
+      VIOLATION_TYPES.DOXXING_THREATS,
+      VIOLATION_TYPES.HATEFUL_CONTENT,
+      VIOLATION_TYPES.ILLEGAL_ACTIVITY,
+      VIOLATION_TYPES.JAILBREAK_ATTEMPT,
+      VIOLATION_TYPES.SELF_HARM  // Added to zero tolerance per requirements
+    ];
+    
+    if (zeroToleranceViolations.includes(violationType)) {
+      // IMMEDIATE INDEFINITE SUSPENSION - No warnings, no second chances
+      await db.query(
+        `UPDATE user_violations SET is_account_disabled = TRUE WHERE user_id_hash = $1`,
+        [userIdHash]
+      );
 
-    if (violationCount === 1) {
-      // First offense: Warning + Redemption Path
-      const baseResponse = getWarningResponse(violationType, violationCount);
-      const redemptionMessage = getRedemptionMessage(violationType);
-      const fullResponse = baseResponse + redemptionMessage;
-      
       return {
-        action: 'WARNING',
+        action: 'ACCOUNT_DISABLED_PERMANENT',
         violationCount: violationCount,
-        response: fullResponse,
-        redeemableAfter: calculateRedemptionTime(violationType)
+        response: getPermanentBanResponse(violationType)
       };
-    } else if (violationCount === 2) {
-      // Second offense:
-      // - CRITICAL violations (self-harm, harm to others): IMMEDIATE PERMANENT BAN
-      // - Other violations: 7-day suspension
-      
-      if (isCriticalViolation) {
-        // Critical violations: 2nd offense = permanent ban
+    }
+    
+    // SEXUAL CONTENT - Warning on 1st, indefinite suspension on 2nd
+    if (violationType === VIOLATION_TYPES.SEXUAL_CONTENT) {
+      if (violationCount === 1) {
+        // First offense: Warning (no redemption for sexual content)
+        const baseResponse = getWarningResponse(violationType, violationCount);
+        
+        return {
+          action: 'WARNING',
+          violationCount: violationCount,
+          response: baseResponse,
+          redeemableAfter: null  // No redemption for sexual content
+        };
+      } else {
+        // Second+ offense: Indefinite suspension
         await db.query(
           `UPDATE user_violations SET is_account_disabled = TRUE WHERE user_id_hash = $1`,
           [userIdHash]
@@ -95,10 +113,25 @@ export async function recordViolationAndGetAction(userId, violationType, userMes
           violationCount: violationCount,
           response: getPermanentBanResponse(violationType)
         };
-      } else {
-        // Standard violations: 7-day suspension
-        // NOTE: If this violation was previously redeemed and user offended again,
-        // they lose the redemption privilege for this violation type going forward
+      }
+    }
+    
+    // ABUSIVE LANGUAGE - Keep existing progressive enforcement (not in zero tolerance list)
+    if (violationType === VIOLATION_TYPES.ABUSIVE_LANGUAGE) {
+      if (violationCount === 1) {
+        // First offense: Warning + Redemption Path
+        const baseResponse = getWarningResponse(violationType, violationCount);
+        const redemptionMessage = getRedemptionMessage(violationType);
+        const fullResponse = baseResponse + redemptionMessage;
+        
+        return {
+          action: 'WARNING',
+          violationCount: violationCount,
+          response: fullResponse,
+          redeemableAfter: calculateRedemptionTime(violationType)
+        };
+      } else if (violationCount === 2) {
+        // Second offense: 7-day suspension
         const suspensionEnd = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
         await db.query(
@@ -112,21 +145,27 @@ export async function recordViolationAndGetAction(userId, violationType, userMes
           suspensionEnd: suspensionEnd,
           response: getSuspensionResponse(violationType)
         };
-      }
-    } else {
-      // Third+ offense: Permanent ban
-      // Mark as disabled in database
-      await db.query(
-        `UPDATE user_violations SET is_account_disabled = TRUE WHERE user_id_hash = $1`,
-        [userIdHash]
-      );
+      } else {
+        // Third+ offense: Permanent ban
+        await db.query(
+          `UPDATE user_violations SET is_account_disabled = TRUE WHERE user_id_hash = $1`,
+          [userIdHash]
+        );
 
-      return {
-        action: 'ACCOUNT_DISABLED_PERMANENT',
-        violationCount: violationCount,
-        response: getPermanentBanResponse(violationType)
-      };
+        return {
+          action: 'ACCOUNT_DISABLED_PERMANENT',
+          violationCount: violationCount,
+          response: getPermanentBanResponse(violationType)
+        };
+      }
     }
+    
+    // Default fallback (shouldn't reach here)
+    return {
+      action: 'WARNING',
+      violationCount: violationCount,
+      response: getWarningResponse(violationType, violationCount)
+    };
   } catch (err) {
     logErrorFromCatch('[VIOLATION] Error recording violation:', err);
     throw err;

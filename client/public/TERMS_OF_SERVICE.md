@@ -170,15 +170,89 @@ These readings are based on astrological traditions and beliefs and should not b
 
 ---
 
-## 11. Prohibited Content
+## 11. Prohibited Content and Conduct
 
-You agree not to use our Service to:
+### 11.1 Zero Tolerance Violations (Immediate Account Suspension)
 
-- Post or transmit abusive, obscene, profane, or indecent language or images
-- Post or transmit hateful, defamatory, or discriminatory content
-- Discuss or request information about health conditions or medical treatment
-- Harass or threaten other users
+The following violations result in **immediate and indefinite account suspension** on the **first offense**:
+
+**Content Involving Minors:**
+- Any content involving minors in sexual, suggestive, or inappropriate contexts
+- Sexualization or exploitation of children or teenagers
+- This is a violation of law and will be reported to appropriate authorities
+
+**Violence and Physical Harm:**
+- Content promoting, inciting, or instructing violence or physical harm to any person or group
+- Threats of violence, assault, or murder
+- Instructions for creating weapons or explosives
+- Content promoting terrorism or mass violence
+
+**Doxxing, Threats, and Stalking:**
+- Sharing or requesting personal information (addresses, phone numbers, social security numbers) without consent
+- Threatening or intimidating individuals
+- Stalking behavior or attempts to track/locate individuals
+
+**Hateful and Discriminatory Content:**
+- Content based on race, ethnicity, religion, gender, sexual orientation, disability, or other protected characteristics
+- Hate speech, slurs, or promotion of hate groups
+- Content promoting genocide, ethnic cleansing, or discrimination
+- Defamatory or harassing content targeting protected groups
+
+**Illegal Activities:**
+- Instructions or guidance for illegal activities including but not limited to:
+  - Weapons creation or acquisition
+  - Drug manufacturing or trafficking
+  - Hacking, fraud, or identity theft
+  - Counterfeiting or forgery
+  - Any other criminal conduct
+
+**Self-Harm:**
+- Content expressing intent to harm oneself
+- Suicide ideation or planning
+- **Note:** We provide crisis resources, but this content results in immediate suspension as users require professional intervention beyond our scope
+
+**Jailbreak Attempts:**
+- Attempts to evade, bypass, or circumvent safety systems, content filters, or usage restrictions
+- Attempts to manipulate the system into providing prohibited content
+- Instructions to ignore safety guidelines or act outside established parameters
+
+### 11.2 Sexual Content (Warning on 1st Offense, Suspension on 2nd)
+
+Sexual content that is obscene, exploitative, or non-consensual:
+- **First Offense:** Warning issued to account
+- **Second Offense:** Immediate and indefinite account suspension
+
+This includes:
+- Explicit sexual content or pornographic material
+- Non-consensual sexual content
+- Requests for sexual advice or explicit sexual discussions
+
+### 11.3 Abusive Language (Progressive Enforcement)
+
+Severe profanity and abusive language:
+- **First Offense:** Warning with 24-hour redemption period
+- **Second Offense:** 7-day temporary suspension
+- **Third Offense:** Indefinite account suspension
+
+### 11.4 Additional Prohibited Uses
+
+You also agree not to use our Service to:
+
+- Engage in spam, phishing attempts, or fraudulent schemes
+- Infringe on intellectual property rights, including unauthorized use of copyrighted material
+- Upload or transmit viruses, malware, or any code of destructive nature
+- Interfere with or disrupt the normal operation of the Service
+- Collect or track personal information of others without consent
 - Impersonate others or misrepresent your identity
+- Use the Service for any unlawful purpose or in violation of any laws or regulations
+
+### 11.5 Enforcement and Appeals
+
+- Violations are detected through automated systems and may be reviewed by administrators
+- All violation decisions are made to protect user safety and legal compliance
+- Users may contact support to appeal suspensions, though zero-tolerance violations are rarely overturned
+- Repeat violations after reinstatement may result in permanent account termination without further warning
+- We reserve the right to report serious violations (especially those involving minors or violence) to appropriate authorities
 
 ---
 
