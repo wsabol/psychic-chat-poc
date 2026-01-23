@@ -85,7 +85,11 @@
     "failedToCompleteSubscription": "Error al completar la suscripción",
     "expires": "Caduca",
     "choosePlan": "Elija un Plan para Comenzar",
-    "selectPlan": "Seleccionar Plan"
+    "selectPlan": "Seleccionar Plan",
+    "switchPlanOrCancel": "Cambiar Plan o Cancelar",
+    "orCancelSubscription": "O Cancelar Suscripción",
+    "cancelNote": "Tu suscripción permanecerá activa hasta el final del período de facturación actual. No se proporcionan reembolsos.",
+    "cancelSubscriptionButton": "Cancelar Suscripción"
   },
   "plans": {
     "starter": "Plan Inicial",

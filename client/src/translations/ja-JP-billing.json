@@ -21,7 +21,11 @@
     "savedPaymentWillBeCharged": "💳 下保存済みの支払い方法がこの購購に請払われます。",
     "subscriptionIdMissing": "購購 IDが不足しています",
     "failedToFinalizeSubscription": "購購を完了してください",
-    "failedToCompleteSubscription": "購購を完了してください"},
+    "failedToCompleteSubscription": "購購を完了してください",
+    "switchPlanOrCancel": "プランを切り替えるかキャンセル",
+    "orCancelSubscription": "または購読をキャンセル",
+    "cancelNote": "あなたの購読は現在の請求期間の終わりまで有効です。返金はありません。",
+    "cancelSubscriptionButton": "購読をキャンセル"},
   "invoices": {"title": "請求書", "invoiceNumber": "請求書#", "date": "日付", "amount": "金額", "status": "ステータス", "download": "PDFをダウンロード", "downloadPDF": "PDFをダウンロード", "loading": "請求書を読み込み中...", "unableToLoad": "請求書を読み込むことができません。もう一度試してください。", "unableToLoadYour": "あなたの請求書を読み込むことができません。もう一度試してください。", "description": "あなたの請求履歴と請求書", "noInvoices": "まだ表示する請求書がありません。購入をした時にここに請求書が表示されます。", "tryAgain": "もう一度試してください"},
   "paymentHistory": {"title": "支払い", "trackPayments": "すべての取引と支払いを追跡します", "totalPayments": "総支払数", "totalAmount": "総金額", "successful": "成功", "dateRange": "日付範囲", "allTime": "全時間", "last30Days": "過去30日", "thisMonth": "今月", "thisYear": "今年", "filterStatus": "ステータス:", "all": "すべて", "succeeded": "成功", "pending": "保留中", "failed": "失敗", "date": "日付", "amount": "金額", "paymentMethod": "支払方法", "reference": "参考", "description": "説明", "noPayments": "まだ支払いがありません。あなたの取引がここに表示されます。", "noPaymentsFiltered": "選択したフィルターに一致する支払いがありません。", "aboutPayments": "あなたの支払いについて", "aboutPaymentsInfo": "ステータス、支払方法、参考ID、日付およびその他の詳細は領収書で利用可能です", "statusExplained": "成功（完了）、保留中（処理中）または失敗（不成功）", "statusLabel": "ステータス：", "paymentMethodExplained": "支払に使用されたカードまたは銀行口座", "referenceExplained": "サポート照会のトランザクションID", "dateExplained": "支払が処理された日時", "moreDetails": "詳細については、メール領収書または請求部分をご確認ください。", "bank": "銀行", "unknown": "不明"}
 }

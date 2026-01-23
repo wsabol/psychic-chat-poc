@@ -21,7 +21,11 @@
     "savedPaymentWillBeCharged": "💳 您的保存支付方式将对该订阅进行费用。",
     "subscriptionIdMissing": "订阅 ID 丢失",
     "failedToFinalizeSubscription": "未能完成订阅",
-    "failedToCompleteSubscription": "未能完成订阅"},
+    "failedToCompleteSubscription": "未能完成订阅",
+    "switchPlanOrCancel": "切换计划或取消",
+    "orCancelSubscription": "或取消订阅",
+    "cancelNote": "您的订阅将在当前计费周期结束前保持活跃。不提供退款。",
+    "cancelSubscriptionButton": "取消订阅"},
   "invoices": {"title": "发票", "invoiceNumber": "发票#", "date": "日期", "amount": "金额", "status": "状态", "download": "下载PDF", "downloadPDF": "下载PDF", "loading": "正在加载您的发票...", "unableToLoad": "无法加载发票。请重试。", "unableToLoadYour": "无法加载您的发票。请重试。", "description": "您的账单历史和发票", "noInvoices": "暂无发票可显示。当你进行购买时，你的发票将出现在此。", "tryAgain": "重试"},
   "paymentHistory": {"title": "付款", "trackPayments": "跟踪您的所有交易和付款", "totalPayments": "付款总数", "totalAmount": "总金额", "successful": "成功", "dateRange": "日期范围", "allTime": "全部时间", "last30Days": "过去30天", "thisMonth": "本月", "thisYear": "今年", "filterStatus": "状态:", "all": "全部", "succeeded": "成功", "pending": "待处理", "failed": "失败", "date": "日期", "amount": "金额", "paymentMethod": "付款方式", "reference": "参考", "description": "描述", "noPayments": "还没有付款。您的交易将显示在这里。", "noPaymentsFiltered": "没有付款符合选定的筛选条件。", "aboutPayments": "关于您的付款", "aboutPaymentsInfo": "状态、付款方式、参考ID、日期和其他详情可在收据中获取", "statusExplained": "成功（完成）、待处理（处理中）或失败（未成功）", "statusLabel": "状态：", "paymentMethodExplained": "用于付款的卡或银行账户", "referenceExplained": "事务ID，用于支持查询", "dateExplained": "付款处理的时间", "moreDetails": "有关详细信息，请查看您的电子邮件收据或发票部分", "bank": "银行", "unknown": "未知"}
 }

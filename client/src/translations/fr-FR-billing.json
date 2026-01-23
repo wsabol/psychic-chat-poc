@@ -85,7 +85,11 @@
     "failedToCompleteSubscription": "Impossible de finaliser l'abonnement",
     "expires": "Expire",
     "choosePlan": "Choisissez un Plan pour Commencer",
-    "selectPlan": "Sélectionner le Plan"
+    "selectPlan": "Sélectionner le Plan",
+    "switchPlanOrCancel": "Changer de Plan ou Annuler",
+    "orCancelSubscription": "Ou Annuler l'Abonnement",
+    "cancelNote": "Votre abonnement restera actif jusqu'à la fin de la période de facturation actuelle. Aucun remboursement fourni.",
+    "cancelSubscriptionButton": "Annuler l'Abonnement"
   },
   "plans": {
     "starter": "Plan de Démarrage",
