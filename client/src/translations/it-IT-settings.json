@@ -114,7 +114,7 @@
     "title": "Sicurezza e Privacy",
     "password": "Password",
     "changePassword": "Cambia Password",
-    "twoFactor": "Autenticazione a Due Fattori",
+    "twoFactor": "Abilita Autenticazione a Due Fattori. L'Autenticazione a Due Fattori viene bypassata sui dispositivi attendibili.",
     "enable2FA": "Abilita 2FA",
     "disable2FA": "Disabilita 2FA",
     "sessions": "Sessioni Attive",

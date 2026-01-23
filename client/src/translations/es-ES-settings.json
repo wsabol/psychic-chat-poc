@@ -114,7 +114,7 @@
     "title": "Seguridad y Privacidad",
     "password": "Contraseña",
     "changePassword": "Cambiar Contraseña",
-    "twoFactor": "Autenticación de Dos Factores",
+    "twoFactor": "Habilitar Autenticación de Dos Factores. La Autenticación de Dos Factores se omite en dispositivos de confianza.",
     "enable2FA": "Habilitar 2FA",
     "disable2FA": "Deshabilitar 2FA",
     "sessions": "Sesiones Activas",

@@ -114,7 +114,7 @@
     "title": "安全和隐私",
     "password": "密码",
     "changePassword": "更改密码",
-    "twoFactor": "双因素身份验证",
+    "twoFactor": "启用双因素身份验证。在受信任的设备上绕过双因素身份验证。",
     "enable2FA": "启用2FA",
     "disable2FA": "禁用2FA",
     "sessions": "活跃会话",

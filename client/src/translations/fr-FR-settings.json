@@ -114,7 +114,7 @@
     "title": "Sécurité et Confidentialité",
     "password": "Mot de Passe",
     "changePassword": "Changer le Mot de Passe",
-    "twoFactor": "Authentification à Deux Facteurs",
+    "twoFactor": "Activer l'Authentification à Deux Facteurs. L'Authentification à Deux Facteurs est contournée sur les appareils de confiance.",
     "enable2FA": "Activer 2FA",
     "disable2FA": "Désactiver 2FA",
     "sessions": "Sessions Actives",
