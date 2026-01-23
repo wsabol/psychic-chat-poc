@@ -29,6 +29,10 @@ export function ComplianceDashboard({ token }) {
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [sendingNotifications, setSendingNotifications] = useState(false);
+  const [notificationsSent, setNotificationsSent] = useState(false);
+  const [notificationsAlreadySent, setNotificationsAlreadySent] = useState(false);
   const [data, setData] = useState({
     overview: null,
     acceptanceByVersion: null,
@@ -55,6 +59,23 @@ export function ComplianceDashboard({ token }) {
       }
 
       setData(results);
+
+      // Check if notifications were already sent for current version
+      try {
+        const notificationCheckResponse = await fetchWithTokenRefresh(
+          `${process.env.REACT_APP_API_URL}/auth/check-notifications-sent`,
+          { headers: { 'Authorization': `Bearer ${token}` } }
+        );
+
+        if (notificationCheckResponse.ok) {
+          const notificationData = await notificationCheckResponse.json();
+          setNotificationsAlreadySent(notificationData.alreadySent);
+        }
+      } catch (checkErr) {
+        // Non-critical error - just log it
+        console.warn('[ComplianceDashboard] Could not check notification status:', checkErr);
+      }
+
     } catch (err) {
       logErrorFromCatch(err, 'ComplianceDashboard', '[DASHBOARD] Error:');
       setError(err.message);
@@ -88,6 +109,78 @@ export function ComplianceDashboard({ token }) {
     }
   };
 
+  const handleSendPolicyNotifications = async () => {
+    if (!window.confirm('This will send policy change notification emails to all users with outdated consent. Continue?')) {
+      return;
+    }
+
+    try {
+      setSendingNotifications(true);
+      setError('');
+      setSuccessMessage('');
+
+      // Step 1: Flag users for update
+      const flagResponse = await fetchWithTokenRefresh(
+        `${process.env.REACT_APP_API_URL}/auth/flag-users-for-update`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ documentType: 'both' })
+        }
+      );
+
+      if (!flagResponse.ok) {
+        throw new Error('Failed to flag users for update');
+      }
+
+      const flagResult = await flagResponse.json();
+
+      // Step 2: Send notifications
+      const notifyResponse = await fetchWithTokenRefresh(
+        `${process.env.REACT_APP_API_URL}/auth/send-policy-notifications`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (!notifyResponse.ok) {
+        throw new Error('Failed to send policy notifications');
+      }
+
+      const notifyResult = await notifyResponse.json();
+
+      // Show success message
+      setSuccessMessage(
+        `✅ Success! Sent ${notifyResult.results.successful} notifications to users. ` +
+        `Failed: ${notifyResult.results.failed}. Grace period ends: ${new Date(notifyResult.results.gracePeriodEnd).toLocaleDateString()}`
+      );
+
+      // Mark notifications as sent (disable button)
+      setNotificationsSent(true);
+
+      // Auto-dismiss after 3 seconds
+      setTimeout(() => {
+        setSuccessMessage('');
+      }, 3000);
+
+      // Reload dashboard data
+      await loadDashboardData();
+
+    } catch (err) {
+      logErrorFromCatch(err, 'ComplianceDashboard', '[SEND NOTIFICATIONS] Error:');
+      setError('Failed to send notifications: ' + err.message);
+    } finally {
+      setSendingNotifications(false);
+    }
+  };
+
   if (loading) {
     return <div className="compliance-dashboard loading">Loading dashboard...</div>;
   }
@@ -103,10 +196,18 @@ export function ComplianceDashboard({ token }) {
           <button onClick={handleExport} className="btn-export">
             📥 Export
           </button>
+          <button 
+            onClick={handleSendPolicyNotifications} 
+            className="btn-send-notifications"
+            disabled={sendingNotifications || notificationsSent || notificationsAlreadySent}
+          >
+            {sendingNotifications ? '📧 Sending...' : (notificationsSent || notificationsAlreadySent) ? '✅ Notifications Sent' : '📧 Send Policy Notifications'}
+          </button>
         </div>
       </div>
 
       {error && <div className="error-message">{error}</div>}
+      {successMessage && <div className="success-message">{successMessage}</div>}
 
       {/* Tabs */}
       <div className="dashboard-tabs">

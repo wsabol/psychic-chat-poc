@@ -69,7 +69,7 @@ export default function SubscriptionCard({
               className="btn-secondary btn-small"
               onClick={() => onChangeClick(subscription.id)}
             >
-              {expandedSub === subscription.id ? `✕ ${t('subscriptions.close')}` : `📋 ${t('subscriptions.change')}`}
+              {expandedSub === subscription.id ? `✕ ${t('subscriptions.close')}` : `📋 ${t('subscriptions.switchPlanOrCancel')}`}
             </button>
           )}
         </div>
@@ -105,6 +105,23 @@ export default function SubscriptionCard({
                 );
               })
             ))}
+          </div>
+
+          {/* Cancel Subscription Option */}
+          <div className="sub-simple-cancel-section">
+            <div className="sub-simple-cancel-box">
+              <h6>{t('subscriptions.orCancelSubscription')}</h6>
+              <p className="sub-simple-cancel-note">
+                {t('subscriptions.cancelNote')}
+              </p>
+              <button
+                className="btn-small btn-danger"
+                onClick={() => onToggle(subscription.id, isActive)}
+                disabled={billing.loading}
+              >
+                ✕ {t('subscriptions.cancelSubscriptionButton')}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -249,6 +266,50 @@ export default function SubscriptionCard({
 
         .btn-primary:hover:not(:disabled) {
           background-color: #6a52b8;
+        }
+
+        .sub-simple-cancel-section {
+          margin-top: 2rem;
+          padding-top: 1.5rem;
+          border-top: 2px solid #e0e0e0;
+        }
+
+        .sub-simple-cancel-box {
+          background: #fff5f5;
+          border: 1px solid #ffcdd2;
+          border-radius: 6px;
+          padding: 1.5rem;
+          text-align: center;
+        }
+
+        .sub-simple-cancel-box h6 {
+          margin: 0 0 0.75rem 0;
+          font-size: 1rem;
+          color: #c62828;
+          font-weight: 600;
+        }
+
+        .sub-simple-cancel-note {
+          margin: 0 0 1rem 0;
+          font-size: 0.9rem;
+          color: #666;
+          line-height: 1.5;
+        }
+
+        .btn-danger {
+          background-color: #d32f2f;
+          color: white;
+          border: none;
+          padding: 0.75rem 2rem;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+          background-color: #c62828;
+        }
+
+        .btn-danger:disabled {
+          background-color: #e57373;
+          cursor: not-allowed;
         }
 
         @media (max-width: 768px) {

@@ -237,11 +237,13 @@ CREATE TABLE IF NOT EXISTS user_consents (
     requires_consent_update BOOLEAN DEFAULT FALSE,
     last_notified_at TIMESTAMP,
     notification_count INT DEFAULT 0,
+    grace_period_end TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_user_consents_user_id_hash ON user_consents(user_id_hash);
+CREATE INDEX IF NOT EXISTS idx_user_consents_grace_period_end ON user_consents(grace_period_end) WHERE grace_period_end IS NOT NULL;
 
 -- TABLE: user_login_attempts
 CREATE TABLE IF NOT EXISTS user_login_attempts (

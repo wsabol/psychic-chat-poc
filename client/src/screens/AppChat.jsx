@@ -71,8 +71,8 @@ export function AppChat({ state }) {
         });
         const data = await response.json();
         
-        // Show modal only if BOTH terms AND privacy are NOT accepted
-        const needsConsent = !data.terms_accepted || !data.privacy_accepted;
+        // Show modal if user hasn't accepted OR needs to accept new version
+        const needsConsent = !data.hasConsent || data.needsUpdate;
         setShowConsentModal(needsConsent);
       } catch (err) {
         // On network error: check if this is a NEW user (no profile yet)

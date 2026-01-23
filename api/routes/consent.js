@@ -5,10 +5,11 @@ import { logAudit } from '../shared/auditLog.js';
 import { hashUserId } from '../shared/hashUtils.js';
 import { getEncryptionKey } from '../shared/decryptionHelper.js';
 import { checkUserConsent, recordUserConsent } from './auth-endpoints/helpers/consentHelper.js';
-import { checkUserCompliance, getComplianceReport, getUsersRequiringAction, markUserNotified } from '../shared/complianceChecker.js';
+import { checkUserCompliance, getComplianceReport, getUsersRequiringAction, markUserNotified, flagUsersForUpdate } from '../shared/complianceChecker.js';
 import { getCurrentTermsVersion, getCurrentPrivacyVersion } from '../shared/versionConfig.js';
 import VERSION_CONFIG from '../shared/versionConfig.js';
 import { validationError, serverError, successResponse } from '../utils/responses.js';
+import { sendInitialPolicyNotifications } from '../jobs/policyChangeNotificationJob.js';
 
 const router = Router();
 
@@ -618,6 +619,148 @@ router.get('/version-config', (req, res) => {
       }
     }
   });
+});
+
+/**
+ * POST /auth/flag-users-for-update
+ * Flag users who need to update consent after policy changes (admin only)
+ * This should be called after updating .env with new versions
+ */
+router.post('/flag-users-for-update', authenticateToken, async (req, res) => {
+  try {
+    const { documentType = 'both' } = req.body;
+    
+    const result = await flagUsersForUpdate(documentType);
+    
+    await logAudit(db, {
+      userId: req.user?.userId || 'admin',
+      action: 'FLAG_USERS_FOR_UPDATE',
+      resourceType: 'compliance',
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      httpMethod: req.method,
+      endpoint: req.path,
+      status: 'SUCCESS',
+      details: result
+    });
+    
+    return successResponse(res, {
+      success: true,
+      message: `Flagged ${result.flagged} users for consent update`,
+      ...result
+    });
+  } catch (error) {
+    return serverError(res, error.message);
+  }
+});
+
+/**
+ * GET /auth/check-notifications-sent
+ * Check if policy notifications have already been sent for current version
+ * Returns true if users have been notified recently (within 7 days of version update)
+ */
+router.get('/check-notifications-sent', authenticateToken, async (req, res) => {
+  try {
+    const currentTermsVersion = getCurrentTermsVersion();
+    const currentPrivacyVersion = getCurrentPrivacyVersion();
+    
+    // Get the date of the version change from VERSION_CONFIG
+    const versionChangeDate = VERSION_CONFIG.terms.changedAt || VERSION_CONFIG.privacy.changedAt;
+    
+    // Check if any users were notified recently for this version
+    const result = await db.query(`
+      SELECT COUNT(*) as notified_count,
+             MAX(last_notified_at) as last_notification
+      FROM user_consents
+      WHERE (terms_version != $1 OR privacy_version != $2)
+        AND requires_consent_update = true
+        AND last_notified_at IS NOT NULL
+        AND last_notified_at > NOW() - INTERVAL '7 days'
+    `, [currentTermsVersion, currentPrivacyVersion]);
+    
+    const notifiedCount = parseInt(result.rows[0]?.notified_count || 0);
+    const lastNotification = result.rows[0]?.last_notification;
+    
+    // Notifications considered "sent" if:
+    // 1. Users were notified in last 7 days, OR
+    // 2. No users need notification (all up to date)
+    const alreadySent = notifiedCount > 0;
+    
+    return successResponse(res, {
+      alreadySent,
+      notifiedCount,
+      lastNotification,
+      currentVersions: {
+        terms: currentTermsVersion,
+        privacy: currentPrivacyVersion
+      },
+      versionChangeDate
+    });
+  } catch (error) {
+    return serverError(res, error.message);
+  }
+});
+
+/**
+ * POST /auth/send-policy-notifications
+ * Send initial policy change notifications to all affected users (admin only)
+ * This triggers the 30-day grace period
+ * 
+ * WORKFLOW:
+ * 1. Admin updates TERMS_VERSION or PRIVACY_VERSION in .env
+ * 2. Admin calls /auth/flag-users-for-update to mark users with outdated versions
+ * 3. Admin calls this endpoint to send email notifications and start grace period
+ * 4. System automatically sends reminder at 21 days
+ * 5. System automatically logs out non-compliant users after 30 days
+ */
+router.post('/send-policy-notifications', authenticateToken, async (req, res) => {
+  try {
+    // Trigger the notification job
+    const result = await sendInitialPolicyNotifications();
+    
+    await logAudit(db, {
+      userId: req.user?.userId || 'admin',
+      action: 'SEND_POLICY_NOTIFICATIONS',
+      resourceType: 'compliance',
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      httpMethod: req.method,
+      endpoint: req.path,
+      status: 'SUCCESS',
+      details: {
+        total: result.total,
+        successful: result.successful,
+        failed: result.failed,
+        gracePeriodEnd: result.gracePeriodEnd
+      }
+    });
+    
+    return successResponse(res, {
+      success: true,
+      message: `Policy notifications sent successfully`,
+      results: {
+        total: result.total,
+        successful: result.successful,
+        failed: result.failed,
+        gracePeriodEnd: result.gracePeriodEnd,
+        errors: result.errors?.slice(0, 10) // Only return first 10 errors
+      }
+    });
+  } catch (error) {
+    await logAudit(db, {
+      userId: req.user?.userId || 'admin',
+      action: 'SEND_POLICY_NOTIFICATIONS_FAILED',
+      resourceType: 'compliance',
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      httpMethod: req.method,
+      endpoint: req.path,
+      status: 'FAILED',
+      details: { error: error.message }
+    });
+    
+    return serverError(res, error.message);
+  }
 });
 
 export default router;

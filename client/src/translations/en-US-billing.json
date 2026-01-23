@@ -93,7 +93,6 @@
     "features": "Features",
     "noPlanAvailable": "No subscription plans available yet. Check back soon!",
     "expires": "Expires",
-    "close": "Close",
     "switchToADifferentPlan": "Switch to a Different Plan",
     "mo": "Mo",
     "yr": "Yr",
@@ -130,7 +129,12 @@
     "savedPaymentWillBeCharged": "💳 Your saved payment method will be charged for this subscription.",
     "subscriptionIdMissing": "Subscription ID is missing",
     "failedToFinalizeSubscription": "Failed to finalize subscription",
-    "failedToCompleteSubscription": "Failed to complete subscription"
+    "failedToCompleteSubscription": "Failed to complete subscription",
+    "close": "Close",
+    "switchPlanOrCancel": "Switch Plan or Cancel",
+    "orCancelSubscription": "Or Cancel Subscription",
+    "cancelNote": "Your subscription will remain active until the end of the current billing period. Refunds not provided.",
+    "cancelSubscriptionButton": "Cancel Subscription"
   },
   "invoices": {
     "title": "Invoices",

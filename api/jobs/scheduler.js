@@ -8,11 +8,14 @@ import cron from 'node-cron';
 import { runAccountCleanupJob, getCleanupJobStatus } from './accountCleanupJob.js';
 import { runSubscriptionCheckJob, getSubscriptionCheckJobStatus } from './subscriptionCheckJob.js';
 import { runTempAccountCleanupJob, getTempAccountCleanupJobStatus } from './tempAccountCleanupJob.js';
+import { sendReminderNotifications, enforceGracePeriodExpiration, getPolicyNotificationJobStatus } from './policyChangeNotificationJob.js';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 let cleanupJobHandle = null;
 let subscriptionCheckJobHandle = null;
 let tempAccountCleanupJobHandle = null;
+let policyReminderJobHandle = null;
+let gracePeriodEnforcementJobHandle = null;
 
 /**
  * Initialize all scheduled jobs
@@ -67,6 +70,38 @@ export function initializeScheduler() {
       }
     );
 
+    // Schedule policy reminder notification job to run daily at 3:00 AM UTC
+    // Sends reminder emails 21 days after initial notification (9 days before 30-day deadline)
+    policyReminderJobHandle = cron.schedule('0 3 * * *',
+      async () => {
+        try {
+          await sendReminderNotifications();
+        } catch (error) {
+          logErrorFromCatch(error, 'scheduler', 'Policy reminder notification job failed');
+        }
+      },
+      {
+        scheduled: true,
+        timezone: 'UTC'
+      }
+    );
+
+    // Schedule grace period enforcement job to run every 6 hours
+    // Automatically logs out users whose grace period has expired without accepting new terms
+    gracePeriodEnforcementJobHandle = cron.schedule('0 */6 * * *',
+      async () => {
+        try {
+          await enforceGracePeriodExpiration();
+        } catch (error) {
+          logErrorFromCatch(error, 'scheduler', 'Grace period enforcement job failed');
+        }
+      },
+      {
+        scheduled: true,
+        timezone: 'UTC'
+      }
+    );
+
     // Optional: For testing, run immediately (non-blocking)
     if (process.env.CLEANUP_RUN_ON_STARTUP === 'true') {
       
@@ -99,7 +134,9 @@ export function initializeScheduler() {
     return {
       tempAccountCleanup: tempAccountCleanupJobHandle,
       cleanup: cleanupJobHandle,
-      subscriptionCheck: subscriptionCheckJobHandle
+      subscriptionCheck: subscriptionCheckJobHandle,
+      policyReminder: policyReminderJobHandle,
+      gracePeriodEnforcement: gracePeriodEnforcementJobHandle
     };
   } catch (error) {
     console.error('[Scheduler] FATAL ERROR during initialization:');
@@ -127,6 +164,16 @@ export function stopScheduler() {
     if (subscriptionCheckJobHandle) {
       subscriptionCheckJobHandle.stop();
       subscriptionCheckJobHandle.destroy();
+    }
+
+    if (policyReminderJobHandle) {
+      policyReminderJobHandle.stop();
+      policyReminderJobHandle.destroy();
+    }
+
+    if (gracePeriodEnforcementJobHandle) {
+      gracePeriodEnforcementJobHandle.stop();
+      gracePeriodEnforcementJobHandle.destroy();
     }
   } catch (error) {
     console.error('[Scheduler] Error stopping scheduler:', error.message);

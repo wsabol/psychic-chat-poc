@@ -127,7 +127,6 @@ export async function savePersonalInfo(tempUserId, personalInfo) {
         addressPreference
       ]
     );
-    console.log('[FREE-TRIAL-SERVICE] ✓ Successfully saved personal info to database');
   } catch (err) {
     console.error('[FREE-TRIAL-SERVICE] ✗ Database error saving personal info:', {
       error: err.message,

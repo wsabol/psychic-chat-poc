@@ -74,8 +74,10 @@ export async function runSubscriptionCheckJob() {
     lastRunTime = new Date();
     lastRunStats = { ...stats };
 
-    // Log job completion
-    await logJobCompletion(stats, startTime);
+    // Only log if there were errors
+    if (stats.errors > 0) {
+      await logJobCompletion(stats, startTime);
+    }
 
     return {
       status: 'completed',

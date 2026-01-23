@@ -13,8 +13,18 @@ export async function checkUserConsent(userId) {
   try {
     const userIdHash = hashUserId(userId);
     
+    // Get current versions from .env
+    const currentTermsVersion = getCurrentTermsVersion();
+    const currentPrivacyVersion = getCurrentPrivacyVersion();
+    
     const result = await db.query(
-      `SELECT terms_accepted, privacy_accepted, terms_accepted_at, privacy_accepted_at
+      `SELECT 
+        terms_accepted, 
+        privacy_accepted, 
+        terms_accepted_at, 
+        privacy_accepted_at,
+        terms_version,
+        privacy_version
        FROM user_consents 
        WHERE user_id_hash = $1`,
       [userIdHash]
@@ -26,23 +36,40 @@ export async function checkUserConsent(userId) {
         terms_accepted: false,
         privacy_accepted: false,
         terms_accepted_at: null,
-        privacy_accepted_at: null
+        privacy_accepted_at: null,
+        needsUpdate: true
       };
     }
     
     const consent = result.rows[0];
+    
+    // Check if user has accepted AND if they have the current versions
+    const hasCurrentTermsVersion = consent.terms_version === currentTermsVersion;
+    const hasCurrentPrivacyVersion = consent.privacy_version === currentPrivacyVersion;
+    const needsUpdate = !hasCurrentTermsVersion || !hasCurrentPrivacyVersion;
+    
     return {
-      hasConsent: consent.terms_accepted && consent.privacy_accepted,
+      hasConsent: consent.terms_accepted && consent.privacy_accepted && !needsUpdate,
       terms_accepted: consent.terms_accepted,
       privacy_accepted: consent.privacy_accepted,
       terms_accepted_at: consent.terms_accepted_at,
-      privacy_accepted_at: consent.privacy_accepted_at
+      privacy_accepted_at: consent.privacy_accepted_at,
+      needsUpdate,
+      currentVersions: {
+        terms: currentTermsVersion,
+        privacy: currentPrivacyVersion
+      },
+      userVersions: {
+        terms: consent.terms_version,
+        privacy: consent.privacy_version
+      }
     };
     } catch (error) {
     return {
       hasConsent: false,
       terms_accepted: false,
       privacy_accepted: false,
+      needsUpdate: true,
       error: error.message
     };
   }
