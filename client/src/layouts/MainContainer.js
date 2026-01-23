@@ -70,16 +70,35 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
     setCurrentPageIndex(prevPageIndex => {
       const newIndex = Math.max(0, Math.min(index, PAGES.length - 1));
       if (newIndex !== prevPageIndex) {
-        // If leaving billing page and not going back to billing, notify App to re-check subscription
-        if (prevPageIndex === 9 && newIndex !== 9 && onNavigateFromBilling) {
-          onNavigateFromBilling();
-        }
         setSwipeDirection(newIndex > prevPageIndex ? 1 : -1);
         window.history.pushState({ pageIndex: newIndex }, '');
       }
       return newIndex;
     });
-  }, [modeRules, onNavigateFromBilling]);
+  }, [modeRules]);
+
+  // Handle navigation away from billing page - separate effect to avoid setState in render
+  useEffect(() => {
+    // If leaving billing page (9) and going to another page, notify App to re-check subscription
+    if (currentPageIndex !== 9 && onNavigateFromBilling) {
+      const prevPageWasBilling = window.history.state?.prevPageWasBilling;
+      if (prevPageWasBilling) {
+        onNavigateFromBilling();
+        // Clear the flag
+        window.history.replaceState({ 
+          ...window.history.state, 
+          prevPageWasBilling: false 
+        }, '');
+      }
+    }
+    // Mark if we're currently on billing page
+    if (currentPageIndex === 9) {
+      window.history.replaceState({ 
+        ...window.history.state, 
+        prevPageWasBilling: true 
+      }, '');
+    }
+  }, [currentPageIndex, onNavigateFromBilling]);
 
   // CRITICAL: Update currentPageIndex when startingPage changes during onboarding
   // This handles navigation when user clicks onboarding modal buttons or auto-routing

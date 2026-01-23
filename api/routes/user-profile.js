@@ -14,7 +14,7 @@ import {
   updateTimezone,
   updateLanguagePreferences,
   updateFullPreferences
-} from "../services/userProfileService.js";
+} from "../services/user/index.js";
 
 const router = Router();
 

@@ -32,29 +32,28 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
             day: '2-digit'
         });
         
-        // Fetch cosmic weather - get last 5 to find today's data
+        // Fetch cosmic weather - use created_at_local_date for accurate timezone matching
         const query = `SELECT 
                 pgp_sym_decrypt(content_full_encrypted, $2)::text as content_full,
-                pgp_sym_decrypt(content_brief_encrypted, $2)::text as content_brief
+                pgp_sym_decrypt(content_brief_encrypted, $2)::text as content_brief,
+                created_at_local_date
             FROM messages 
             WHERE user_id_hash = $1 AND role = 'cosmic_weather' 
             ORDER BY created_at DESC LIMIT 5`;
         const { rows } = await db.query(query, [userIdHash, ENCRYPTION_KEY]);
         
-        // Find today's cosmic weather
+        // Find today's cosmic weather using created_at_local_date
         let todaysWeather = null;
         let briefWeather = null;
         
         for (const row of rows) {
             try {
-                const fullContent = row.content_full;
-                const briefContent = row.content_brief;
-                
-                const data = typeof fullContent === 'string' ? JSON.parse(fullContent) : fullContent;
-                const dataDate = data.generated_at?.split('T')[0];
-                
-                if (dataDate === today) {
-                    todaysWeather = data;
+                // Use created_at_local_date for accurate timezone-aware matching
+                if (row.created_at_local_date === today) {
+                    const fullContent = row.content_full;
+                    const briefContent = row.content_brief;
+                    
+                    todaysWeather = typeof fullContent === 'string' ? JSON.parse(fullContent) : fullContent;
                     briefWeather = briefContent ? (typeof briefContent === 'string' ? JSON.parse(briefContent) : briefContent) : null;
                     break;
                 }
