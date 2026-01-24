@@ -1,0 +1,41 @@
+/* ============================================
+   LOGO WITH COPYRIGHT COMPONENT
+   Displays logo with copyright symbol at bottom right
+   ============================================ */
+
+.logo-with-copyright {
+  position: relative;
+  display: inline-block;
+}
+
+.logo-with-copyright .logo-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.logo-with-copyright .copyright-symbol {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #ffffff;
+  background-color: #000000;
+  border-radius: 50%;
+  width: 17px;
+  height: 17px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  line-height: 1;
+}
+
+/* Ensure copyright symbol is readable on different backgrounds */
+@media (prefers-color-scheme: dark) {
+  .logo-with-copyright .copyright-symbol {
+    color: #ffffff;
+    background-color: #000000;
+  }
+}

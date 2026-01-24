@@ -9,6 +9,7 @@ import BirthInfoMissingPrompt from '../components/BirthInfoMissingPrompt';
 import BirthChartDisplay from '../components/BirthChartDisplay';
 import PlanetsList from '../components/PlanetsList';
 import ToggleBriefButton from '../components/ToggleBriefButton';
+import LogoWithCopyright from '../components/LogoWithCopyright';
 import { isBirthInfoMissing } from '../utils/birthInfoErrorHandler';
 import { formatDateByLanguage } from '../utils/dateLocaleUtils';
 import '../styles/responsive.css';
@@ -80,7 +81,7 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
     <div className="page-safe-area cosmic-weather-page">
       <div className="cosmic-header">
         <h2 className="heading-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <img src="/StarshipPsychics_Logo.png" alt="Starship Psychics" style={{ width: '80px', height: '80px' }} />
+          <LogoWithCopyright size="80px" alt="Starship Psychics" />
           {t('cosmicWeather.title')}
         </h2>
         <p className="cosmic-subtitle">{t('cosmicWeather.subtitle')}</p>

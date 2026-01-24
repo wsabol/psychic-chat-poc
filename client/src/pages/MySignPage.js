@@ -3,6 +3,7 @@ import { SignCards } from './MySignPage/components/SignCards';
 import { SignDetails } from './MySignPage/components/SignDetails';
 import { ZodiacWheel } from './MySignPage/components/ZodiacWheel';
 import BirthInfoMissingPrompt from '../components/BirthInfoMissingPrompt';
+import LogoWithCopyright from '../components/LogoWithCopyright';
 import { useTranslation } from '../context/TranslationContext';
 import { zodiacSymbols } from '../data/zodiac/modules/zodiac-symbols';
 import './MySignPage.css';
@@ -69,10 +70,10 @@ export default function MySignPage({ userId, token, auth, onNavigateToPage }) {
 
   return (
     <div className="page-safe-area sign-page">
-            {/* Header */}
+      {/* Header */}
       <div className="sign-header">
         <h2 className="heading-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <img src="/StarshipPsychics_Logo.png" alt="Starship Psychics" style={{ width: '80px', height: '80px' }} />
+          <LogoWithCopyright size="80px" alt="Starship Psychics" />
           {sunSignEmoji} {t('astrology.birthChart')}
         </h2>
         <p className="sign-subtitle">{t('astrology.description') || 'Your Sun, Moon, and Rising Signs calculated from your birth data'}</p>

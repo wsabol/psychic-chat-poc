@@ -14,6 +14,7 @@ import { getTranslatedAstrologyData } from '../utils/translatedAstroUtils';
 import { isBirthInfoMissing } from '../utils/birthInfoErrorHandler';
 import BirthInfoMissingPrompt from '../components/BirthInfoMissingPrompt';
 import { formatDateByLanguage } from '../utils/dateLocaleUtils';
+import LogoWithCopyright from '../components/LogoWithCopyright';
 import '../styles/responsive.css';
 import './HoroscopePage.css';
 
@@ -152,7 +153,7 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
 
       <div className="horoscope-header">
         <h2 className="heading-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <img src="/StarshipPsychics_Logo.png" alt="Starship Psychics" style={{ width: '80px', height: '80px' }} />
+          <LogoWithCopyright size="80px" alt="Starship Psychics" />
           {t('horoscope.title')}
         </h2>
         <p className="horoscope-subtitle">{t('horoscope.subtitle')}</p>

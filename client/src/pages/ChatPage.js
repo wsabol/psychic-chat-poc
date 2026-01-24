@@ -4,6 +4,7 @@ import { useChat } from '../hooks/useChat';
 import ChatMessageList from '../components/ChatMessageList';
 import ChatInputForm from '../components/ChatInputForm';
 import CircleTimer from '../components/CircleTimer';
+import LogoWithCopyright from '../components/LogoWithCopyright';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
 import '../styles/responsive.css';
 import './ChatPage.css';
@@ -199,7 +200,7 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
       <div className="page-safe-area chat-page-container">
         <div className="chat-header">
           <h2 className="heading-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <img src="/StarshipPsychics_Logo.png" alt="Starship Psychics" style={{ width: '80px', height: '80px' }} />
+            <LogoWithCopyright size="80px" alt="Starship Psychics" />
             {isTemporaryAccount ? t('chat.titleTrial') : t('chat.title')}
           </h2>
           <p className="chat-subtitle">{t('chat.subtitle')}</p>

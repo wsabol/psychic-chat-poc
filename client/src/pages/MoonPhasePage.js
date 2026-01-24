@@ -12,6 +12,7 @@ import { MoonPhaseTextSection } from './MoonPhasePage/components/MoonPhaseTextSe
 import { LunarCycleGrid } from './MoonPhasePage/components/LunarCycleGrid';
 import SunSignInfo from '../components/SunSignInfo';
 import BirthInfoMissingPrompt from '../components/BirthInfoMissingPrompt';
+import LogoWithCopyright from '../components/LogoWithCopyright';
 import { isBirthInfoMissing } from '../utils/birthInfoErrorHandler';
 import '../styles/responsive.css';
 import './MoonPhasePage.css';
@@ -85,7 +86,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
     <div className="page-safe-area moon-phase-page">
       <div className="moon-phase-header">
         <h2 className="heading-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <img src="/StarshipPsychics_Logo.png" alt="Starship Psychics" style={{ width: '80px', height: '80px' }} />
+          <LogoWithCopyright size="80px" alt="Starship Psychics" />
           {t('moonPhase.title')}
         </h2>
         <p className="moon-phase-subtitle">{t('moonPhase.subtitle')}</p>
