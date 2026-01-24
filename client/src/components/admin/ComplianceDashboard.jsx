@@ -187,20 +187,20 @@ export function ComplianceDashboard({ token }) {
   return (
     <div className="compliance-dashboard">
       <div className="dashboard-header">
-        <h1>ðŸ“Š Compliance Dashboard</h1>
+        <h1>📊 Compliance Dashboard</h1>
         <div className="dashboard-actions">
           <button onClick={loadDashboardData} className="btn-refresh">
-            ðŸ”„ Refresh
+            🔄 Refresh
           </button>
           <button onClick={handleExport} className="btn-export">
-            ðŸ“¥ Export
+            📥 Export
           </button>
           <button 
             onClick={handleSendPolicyNotifications} 
             className="btn-send-notifications"
             disabled={sendingNotifications || notificationsSent || notificationsAlreadySent}
           >
-            {sendingNotifications ? 'ðŸ“§ Sending...' : (notificationsSent || notificationsAlreadySent) ? 'âœ… Notifications Sent' : 'ðŸ“§ Send Policy Notifications'}
+            {sendingNotifications ? '📧 Sending...' : (notificationsSent || notificationsAlreadySent) ? '✅ Notifications Sent' : '📧 Send Policy Notifications'}
           </button>
         </div>
       </div>

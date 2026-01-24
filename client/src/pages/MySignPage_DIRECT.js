@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
+import { zodiacSymbols } from '../data/zodiac/modules/zodiac-symbols';
 import '../styles/responsive.css';
 import './MySignPage.css';
 
@@ -83,12 +84,18 @@ export default function MySignPage({ userId, token, auth }) {
   }
 
   const astro = astroData.astrology_data;
+  
+  // Get zodiac emoji from sun sign - lookup from zodiacSymbols, don't use astro.emoji as fallback
+  const sunSignKey = astro.sun_sign?.toLowerCase();
+  const sunSignEmoji = sunSignKey && zodiacSymbols[sunSignKey] 
+    ? zodiacSymbols[sunSignKey].emoji
+    : '✨';
 
   return (
     <div className="page-safe-area sign-page">
       {/* Header */}
       <div className="sign-header">
-        <h2 className="heading-primary">♈ Your Birth Chart</h2>
+        <h2 className="heading-primary">{sunSignEmoji} Birth Chart</h2>
         <p className="sign-subtitle">Your Sun, Moon, and Rising Signs calculated from your birth data</p>
       </div>
 

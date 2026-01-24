@@ -38,18 +38,16 @@ function getCacheKey(url, options = {}) {
 export async function deduplicatedFetch(url, options = {}) {
   const cacheKey = getCacheKey(url, options);
   
-  // If an identical request is already in progress, return that promise
+  // If an identical request is already in progress, wait for it and clone the response
   if (requestCache.has(cacheKey)) {
-    return requestCache.get(cacheKey);
+    const cachedPromise = requestCache.get(cacheKey);
+    const response = await cachedPromise;
+    // Clone the response for this caller so they can read the body independently
+    return response.clone();
   }
   
   // Create new request promise
   const requestPromise = fetchWithTokenRefresh(url, options)
-    .then(response => {
-      // Clone the response so it can be read multiple times
-      // (each caller might want to read the body)
-      return response.clone();
-    })
     .finally(() => {
       // Clean up cache entry after request completes
       requestCache.delete(cacheKey);
@@ -58,7 +56,9 @@ export async function deduplicatedFetch(url, options = {}) {
   // Store the promise in cache
   requestCache.set(cacheKey, requestPromise);
   
-  return requestPromise;
+  const response = await requestPromise;
+  // Clone the response for this caller so they can read the body independently
+  return response.clone();
 }
 
 /**

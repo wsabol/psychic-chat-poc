@@ -4,6 +4,7 @@ import { SignDetails } from './MySignPage/components/SignDetails';
 import { ZodiacWheel } from './MySignPage/components/ZodiacWheel';
 import BirthInfoMissingPrompt from '../components/BirthInfoMissingPrompt';
 import { useTranslation } from '../context/TranslationContext';
+import { zodiacSymbols } from '../data/zodiac/modules/zodiac-symbols';
 import './MySignPage.css';
 import '../styles/responsive.css';
 
@@ -59,12 +60,21 @@ export default function MySignPage({ userId, token, auth, onNavigateToPage }) {
   }
 
   const astro = astroData.astrology_data;
+  
+  // Get zodiac emoji from sun sign
+  const sunSignKey = astro.sun_sign?.toLowerCase();
+  const sunSignEmoji = sunSignKey && zodiacSymbols[sunSignKey] 
+    ? zodiacSymbols[sunSignKey].emoji
+    : '✨';
 
   return (
     <div className="page-safe-area sign-page">
             {/* Header */}
       <div className="sign-header">
-        <h2 className="heading-primary">♈ {t('astrology.birthChart')}</h2>
+        <h2 className="heading-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <img src="/StarshipPsychics_Logo.png" alt="Starship Psychics" style={{ width: '80px', height: '80px' }} />
+          {sunSignEmoji} {t('astrology.birthChart')}
+        </h2>
         <p className="sign-subtitle">{t('astrology.description') || 'Your Sun, Moon, and Rising Signs calculated from your birth data'}</p>
       </div>
 

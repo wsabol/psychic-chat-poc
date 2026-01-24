@@ -106,9 +106,8 @@ function logErrorFromClient({ service, errorMessage, severity, context, stack })
         // Silent fail - don't crash if logging fails
       });
     } else {
-      // Production: use sendBeacon with proper Blob formatting
-      const blob = new Blob([JSON.stringify(errorData)], { type: 'application/json' });
-      navigator.sendBeacon('/api/logs/error', blob);
+      // Production: use sendBeacon (doesn't block on unload)
+      navigator.sendBeacon('/api/logs/error', JSON.stringify(errorData));
     }
   } catch (e) {
     // Silent fail - logging failure should not crash app

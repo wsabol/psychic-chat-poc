@@ -198,7 +198,8 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
       {/* Main chat UI */}
       <div className="page-safe-area chat-page-container">
         <div className="chat-header">
-                    <h2 className="heading-primary">
+          <h2 className="heading-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <img src="/StarshipPsychics_Logo.png" alt="Starship Psychics" style={{ width: '80px', height: '80px' }} />
             {isTemporaryAccount ? t('chat.titleTrial') : t('chat.title')}
           </h2>
           <p className="chat-subtitle">{t('chat.subtitle')}</p>

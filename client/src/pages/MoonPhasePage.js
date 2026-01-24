@@ -276,7 +276,10 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
   return (
     <div className="page-safe-area moon-phase-page">
       <div className="moon-phase-header">
-        <h2 className="heading-primary">🌙 {t('moonPhase.title')}</h2>
+        <h2 className="heading-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <img src="/StarshipPsychics_Logo.png" alt="Starship Psychics" style={{ width: '80px', height: '80px' }} />
+          {t('moonPhase.title')}
+        </h2>
         <p className="moon-phase-subtitle">{t('moonPhase.subtitle')}</p>
       </div>
 

@@ -79,7 +79,10 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
   return (
     <div className="page-safe-area cosmic-weather-page">
       <div className="cosmic-header">
-        <h2 className="heading-primary">🌍 {t('cosmicWeather.title')}</h2>
+        <h2 className="heading-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <img src="/StarshipPsychics_Logo.png" alt="Starship Psychics" style={{ width: '80px', height: '80px' }} />
+          {t('cosmicWeather.title')}
+        </h2>
         <p className="cosmic-subtitle">{t('cosmicWeather.subtitle')}</p>
       </div>
 

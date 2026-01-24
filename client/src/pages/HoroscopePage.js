@@ -151,7 +151,10 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
       <ExitButton isTemporaryAccount={auth?.isTemporaryAccount} onClick={handleClose} />
 
       <div className="horoscope-header">
-        <h2 className="heading-primary">{t('horoscope.title')}</h2>
+        <h2 className="heading-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <img src="/StarshipPsychics_Logo.png" alt="Starship Psychics" style={{ width: '80px', height: '80px' }} />
+          {t('horoscope.title')}
+        </h2>
         <p className="horoscope-subtitle">{t('horoscope.subtitle')}</p>
       </div>
 
@@ -179,7 +182,7 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
       {/* Error State */}
       {horoscopeState.error && horoscopeState.error !== 'BIRTH_INFO_MISSING' && (
         <div className="horoscope-content error">
-          <p className="error-message">âš ï¸ {horoscopeState.error}</p>
+          <p className="error-message">⚠️ {horoscopeState.error}</p>
           <button onClick={loadHoroscope} className="btn-secondary">
             {t('common.tryAgain')}
           </button>
@@ -189,7 +192,7 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
       {/* Loading State */}
       {horoscopeState.loading && (
         <div className="horoscope-content loading">
-          <div className="spinner">ðŸ”®</div>
+          <div className="spinner">🔮</div>
           <p>
             {horoscopeState.generating ? t('horoscope.generatingMessage') : t('horoscope.loading')}
           </p>
@@ -200,9 +203,9 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
       {astro.sun_sign && !isBirthInfoMissing(astroInfo) && (
         <section className="horoscope-birth-chart">
           <div className="birth-chart-cards">
-            <BirthChartCard sign={astro.rising_sign} degree={astro.rising_degree} icon="â†—ï¸" type="rising" />
-            <BirthChartCard sign={astro.moon_sign} degree={astro.moon_degree} icon="ðŸŒ™" type="moon" />
-            <BirthChartCard sign={astro.sun_sign} degree={astro.sun_degree} icon="â˜€ï¸" type="sun" />
+            <BirthChartCard sign={astro.rising_sign} degree={astro.rising_degree} icon="↗️" type="rising" />
+            <BirthChartCard sign={astro.moon_sign} degree={astro.moon_degree} icon="🌙" type="moon" />
+            <BirthChartCard sign={astro.sun_sign} degree={astro.sun_degree} icon="☀️" type="sun" />
           </div>
         </section>
       )}
