@@ -1,6 +1,7 @@
 {
   "zodiacWheel": {
     "title": "あなたの占星術ハウス",
+    "titleSimple": "占星術ハウス",
     "subtitle": "上昇星座の位置に回転された12の星座",
     "asc": "ASC",
     "dsc": "DSC",

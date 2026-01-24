@@ -1,6 +1,7 @@
 {
   "zodiacWheel": {
     "title": "Ihre Astrologischen Häuser",
+    "titleSimple": "Astrologische Häuser",
     "subtitle": "Die 12 Tierkreiszeichen rotiert zu Ihrer aufsteigenden Zeichenposition",
     "asc": "ASZ",
     "dsc": "DSZ",

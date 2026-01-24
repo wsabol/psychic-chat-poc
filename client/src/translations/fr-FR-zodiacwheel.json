@@ -1,6 +1,7 @@
 {
   "zodiacWheel": {
     "title": "Vos Maisons Astrologiques",
+    "titleSimple": "Maisons Astrologiques",
     "subtitle": "Les 12 signes zodiacaux tournés vers votre position de signe ascendant",
     "asc": "ASC",
     "dsc": "DESC",

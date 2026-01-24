@@ -48,6 +48,9 @@ export function ZodiacWheel({ astroData }) {
   const risingDegree = astroData?.rising_degree || 0;
   const risingSgn = astroData?.rising_sign?.toLowerCase() || '';
   
+  // Check if we have valid rising sign data (wheel will rotate)
+  const hasRisingData = !!(astroData?.rising_degree !== undefined && astroData?.rising_sign);
+  
   // Get the index of the rising sign (0-11)
   const risingSignIndex = ZODIAC_ORDER.indexOf(risingSgn);
 
@@ -112,8 +115,10 @@ export function ZodiacWheel({ astroData }) {
 
   return (
     <div className="zodiac-wheel-container">
-      <h3 className="wheel-title">{t('zodiacWheel.title')}</h3>
-      <p className="wheel-subtitle">{t('zodiacWheel.subtitle')}</p>
+      <h3 className="wheel-title">
+        {hasRisingData ? t('zodiacWheel.title') : t('zodiacWheel.titleSimple')}
+      </h3>
+      {hasRisingData && <p className="wheel-subtitle">{t('zodiacWheel.subtitle')}</p>}
 
       <div className="wheel-wrapper">
         <svg
@@ -248,14 +253,16 @@ export function ZodiacWheel({ astroData }) {
             </text>
           </g>
 
-          {/* Horizontal line - NOT ROTATED (stays horizontal with page) */}
-          <line
-            x1={centerX - rings.ring1Outer}
-            y1={centerY}
-            x2={centerX + rings.ring1Outer}
-            y2={centerY}
-            className="horizon-line-horizontal"
-          />
+          {/* Horizontal line - NOT ROTATED (stays horizontal with page) - only show if rising data exists */}
+          {hasRisingData && (
+            <line
+              x1={centerX - rings.ring1Outer}
+              y1={centerY}
+              x2={centerX + rings.ring1Outer}
+              y2={centerY}
+              className="horizon-line-horizontal"
+            />
+          )}
         </svg>
       </div>
     </div>

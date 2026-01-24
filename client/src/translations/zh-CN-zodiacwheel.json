@@ -1,6 +1,7 @@
 {
   "zodiacWheel": {
     "title": "您的占星宫位",
+    "titleSimple": "占星宫位",
     "subtitle": "旋转至您上升星座位置的12星座",
     "asc": "ASC",
     "dsc": "DSC",
