@@ -512,6 +512,33 @@ CREATE INDEX IF NOT EXISTS idx_free_trial_whitelist_user_id_hash ON free_trial_w
 CREATE INDEX IF NOT EXISTS idx_free_trial_whitelist_active ON free_trial_whitelist(is_active);
 CREATE INDEX IF NOT EXISTS idx_free_trial_whitelist_user_hash_active ON free_trial_whitelist(user_id_hash, is_active);
 
+-- TABLE: price_change_notifications (PHASE 4.0: Subscription Price Management)
+-- Tracks when users are notified about subscription price changes
+-- Links to user via user_id (database ID, not hash), stores old/new prices, interval type, and notification timestamp
+CREATE TABLE IF NOT EXISTS price_change_notifications (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    old_price_id VARCHAR(100),
+    new_price_id VARCHAR(100),
+    old_price_amount INTEGER NOT NULL,
+    new_price_amount INTEGER NOT NULL,
+    price_interval VARCHAR(20) NOT NULL,
+    effective_date TIMESTAMP NOT NULL,
+    notified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    email_sent BOOLEAN DEFAULT TRUE,
+    migration_completed BOOLEAN DEFAULT FALSE,
+    migration_completed_at TIMESTAMP NULL,
+    CONSTRAINT fk_price_notification_user_id FOREIGN KEY (user_id) 
+        REFERENCES user_personal_info(id) 
+        ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_price_notifications_user_id ON price_change_notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_price_notifications_interval ON price_change_notifications(price_interval);
+CREATE INDEX IF NOT EXISTS idx_price_notifications_notified_at ON price_change_notifications(notified_at);
+CREATE INDEX IF NOT EXISTS idx_price_notifications_effective_date ON price_change_notifications(effective_date);
+CREATE INDEX IF NOT EXISTS idx_price_notifications_migration ON price_change_notifications(migration_completed);
+
  
  - -   T A B L E :   m e s s a g e _ q u e u e   ( A s y n c   m e s s a g e   p r o c e s s i n g   q u e u e   f o r   c o s m i c   w e a t h e r ,   h o r o s c o p e s ,   m o o n   p h a s e s ,   e t c . ) 
  

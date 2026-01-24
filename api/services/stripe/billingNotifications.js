@@ -1,58 +1,65 @@
 /**
- * Billing Notifications Service
+ * Billing Notifications Service - REFACTORED
  * 
  * Sends multi-channel notifications (Email + SMS + In-App) for subscription events
  * - Payment failures
  * - Subscription cancellations
  * - Payment method issues
+ * - Price change notifications
+ * 
+ * This service now uses the modular email template system and notification orchestrator
  */
 
-import sgMail from '@sendgrid/mail';
-import { sendSMS } from '../../shared/smsService.js';
 import { db } from '../../shared/db.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
-import crypto from 'crypto';
+import { sendMultiChannelNotification } from '../notifications/notificationOrchestrator.js';
+import { getSMSMessage } from '../notifications/smsTemplates.js';
+import { getUserContactInfo } from '../user/userContactService.js';
+import { sendEmail } from '../../shared/email/emailSender.js';
 
-// Initialize SendGrid
-if (process.env.SENDGRID_API_KEY) {
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-}
-
-const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'noreply@starshippsychics.com';
+// Email template imports
+import { generatePaymentFailedEmail } from '../../shared/email/templates/paymentFailedEmail.js';
+import { generateSubscriptionCancelledEmail } from '../../shared/email/templates/subscriptionCancelledEmail.js';
+import { generatePaymentMethodInvalidEmail } from '../../shared/email/templates/paymentMethodInvalidEmail.js';
+import { generateSubscriptionPastDueEmail } from '../../shared/email/templates/subscriptionPastDueEmail.js';
+import { generateSubscriptionIncompleteEmail } from '../../shared/email/templates/subscriptionIncompleteEmail.js';
+import { generateSubscriptionCheckFailedEmail } from '../../shared/email/templates/subscriptionCheckFailedEmail.js';
+import { generateSubscriptionExpiringEmail } from '../../shared/email/templates/subscriptionExpiringEmail.js';
 
 /**
- * Issue types and their messages
+ * Email template generators mapped to issue types
  */
-const notificationTemplates = {
-  PAYMENT_FAILED: {
-    subject: 'Payment Failed - Update Required',
-    template: 'paymentFailed'
-  },
-  SUBSCRIPTION_CANCELLED: {
-    subject: 'Subscription Cancelled',
-    template: 'subscriptionCancelled'
-  },
-  PAYMENT_METHOD_INVALID: {
-    subject: 'Payment Method Needs Attention',
-    template: 'paymentMethodInvalid'
-  },
-  SUBSCRIPTION_PAST_DUE: {
-    subject: 'Payment Overdue - Action Required',
-    template: 'subscriptionPastDue'
-  },
-  SUBSCRIPTION_INCOMPLETE: {
-    subject: 'Complete Your Subscription',
-    template: 'subscriptionIncomplete'
-  }
+const EMAIL_GENERATORS = {
+  PAYMENT_FAILED: generatePaymentFailedEmail,
+  SUBSCRIPTION_CANCELLED: generateSubscriptionCancelledEmail,
+  PAYMENT_METHOD_INVALID: generatePaymentMethodInvalidEmail,
+  SUBSCRIPTION_PAST_DUE: generateSubscriptionPastDueEmail,
+  SUBSCRIPTION_INCOMPLETE: generateSubscriptionIncompleteEmail
+};
+
+/**
+ * In-app notification messages
+ */
+const IN_APP_MESSAGES = {
+  PAYMENT_FAILED: 'Your payment failed. Please update your payment method.',
+  SUBSCRIPTION_CANCELLED: 'Your subscription has been cancelled.',
+  PAYMENT_METHOD_INVALID: 'Your payment method is invalid or expired.',
+  SUBSCRIPTION_PAST_DUE: 'Your subscription payment is overdue.',
+  SUBSCRIPTION_INCOMPLETE: 'Your subscription setup is incomplete.'
 };
 
 /**
  * Send multi-channel notification for billing event
  * Sends: Email (SendGrid) + SMS (Twilio) + In-App (Database)
+ * @param {string} userId - User ID
+ * @param {string} issueType - Type of billing issue
+ * @param {Object} [additionalData={}] - Additional data for templates
+ * @returns {Promise<Object>} Notification result
  */
 export async function notifyBillingEvent(userId, issueType, additionalData = {}) {
   try {
-    if (!notificationTemplates[issueType]) {
+    const emailGenerator = EMAIL_GENERATORS[issueType];
+    if (!emailGenerator) {
       logErrorFromCatch(
         new Error(`Unknown issue type: ${issueType}`),
         'app',
@@ -62,71 +69,36 @@ export async function notifyBillingEvent(userId, issueType, additionalData = {})
       return { success: false, error: 'Unknown issue type' };
     }
 
-    // Get user contact information
-    const userInfo = await getUserContactInfo(userId);
-    if (!userInfo) {
-      logErrorFromCatch(
-        new Error(`User not found: ${userId}`),
-        'app',
-        'billing-notifications',
-        userId
-      );
-      return { success: false, error: 'User not found' };
-    }
-
-    const template = notificationTemplates[issueType];
+    // Set default stripe portal link if not provided
     const stripePortalLink = additionalData.stripePortalLink || 'https://billing.stripe.com/';
+    
+    // Generate email content
+    const emailContent = emailGenerator({
+      stripePortalLink,
+      ...additionalData
+    });
 
-    // Send email
-    try {
-      const emailHtml = buildEmailHTML(template.template, {
-        issueType,
-        stripePortalLink,
-        ...additionalData
-      });
+    // Generate SMS message
+    const smsMessage = getSMSMessage(issueType, { stripePortalLink });
 
-      const msg = {
-        to: userInfo.email,
-        from: fromEmail,
-        subject: template.subject,
-        html: emailHtml
-      };
-
-      if (process.env.SENDGRID_API_KEY) {
-        await sgMail.send(msg);
+    // Send multi-channel notification
+    const result = await sendMultiChannelNotification({
+      userId,
+      email: {
+        subject: emailContent.subject,
+        html: emailContent.html
+      },
+      sms: smsMessage,
+      inApp: {
+        message: IN_APP_MESSAGES[issueType] || 'Subscription issue detected',
+        severity: 'warning',
+        context: {
+          type: issueType
+        }
       }
-    } catch (emailError) {
-      logErrorFromCatch(emailError, 'app', 'billing-email-notification', userId);
-      // Continue with SMS even if email fails
-    }
+    });
 
-    // Send SMS if phone exists
-    if (userInfo.phone_number) {
-      try {
-        const smsMessages = {
-          PAYMENT_FAILED: `Your Starship Psychics payment failed. Please update your payment method: ${stripePortalLink}`,
-          SUBSCRIPTION_CANCELLED: `Your Starship Psychics subscription has been cancelled. Reactivate anytime: ${stripePortalLink}`,
-          PAYMENT_METHOD_INVALID: `Your Starship Psychics payment method has expired. Please update it: ${stripePortalLink}`,
-          SUBSCRIPTION_PAST_DUE: `Your Starship Psychics payment is overdue. Please update your payment method: ${stripePortalLink}`,
-          SUBSCRIPTION_INCOMPLETE: `Your Starship Psychics subscription setup is incomplete. Complete it now: ${stripePortalLink}`
-        };
-
-        await sendSMS(userInfo.phone_number, smsMessages[issueType]);
-      } catch (smsError) {
-        logErrorFromCatch(smsError, 'app', 'billing-sms-notification', userId);
-        // Continue with in-app even if SMS fails
-      }
-    }
-
-    // Store in-app notification
-    try {
-      await storeInAppNotification(userId, issueType);
-    } catch (inAppError) {
-      logErrorFromCatch(inAppError, 'app', 'billing-inapp-notification', userId);
-      // Don't fail the overall operation if in-app notification fails
-    }
-
-    return { success: true };
+    return { success: result.success };
   } catch (error) {
     logErrorFromCatch(error, 'app', 'billing-notifications', userId);
     return { success: false, error: error.message };
@@ -134,169 +106,10 @@ export async function notifyBillingEvent(userId, issueType, additionalData = {})
 }
 
 /**
- * Get user contact info (email and phone)
- * Decrypts encrypted fields
- */
-async function getUserContactInfo(userId) {
-  try {
-    if (!process.env.ENCRYPTION_KEY) {
-      throw new Error('ENCRYPTION_KEY not configured');
-    }
-
-    const query = `SELECT 
-      pgp_sym_decrypt(email_encrypted, $1) as email,
-      pgp_sym_decrypt(phone_number_encrypted, $2) as phone_number
-      FROM user_personal_info
-      WHERE user_id = $3`;
-
-    const result = await db.query(query, [
-      process.env.ENCRYPTION_KEY,
-      process.env.ENCRYPTION_KEY,
-      userId
-    ]);
-
-    if (result.rows.length === 0) {
-      return null;
-    }
-
-    return {
-      email: result.rows[0].email,
-      phone_number: result.rows[0].phone_number
-    };
-  } catch (error) {
-    logErrorFromCatch(error, 'app', 'get-user-contact', userId);
-    return null;
-  }
-}
-
-/**
- * Build email HTML for billing notifications
- */
-function buildEmailHTML(template, data) {
-  const baseStyles = 'font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;';
-  const contentStyles = 'background-color: #fff; border-radius: 8px; padding: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);';
-  const buttonStyles = 'display: inline-block; padding: 12px 40px; background-color: #667eea; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;';
-  const footerStyles = 'color: #999; font-size: 12px; text-align: center; margin-top: 20px;';
-
-  const templates = {
-    paymentFailed: `
-      <div style="${baseStyles}">
-        <div style="${contentStyles}">
-          <h1 style="color: #e74c3c; text-align: center; margin-top: 0;">Payment Failed</h1>
-          <p style="font-size: 16px; color: #333; line-height: 1.6;">Your recent payment for your Starship Psychics subscription failed. Please update your payment method to continue using the app.</p>
-          ${data.amount ? `<p style="font-size: 16px; color: #333; line-height: 1.6;"><strong>Amount:</strong> ${data.currency?.toUpperCase() || 'USD'} ${(data.amount / 100).toFixed(2)}</p>` : ''}
-          <div style="margin: 30px 0; text-align: center;">
-            <a href="${data.stripePortalLink}" style="${buttonStyles}">Update Payment Method</a>
-          </div>
-          <p style="font-size: 14px; color: #666; line-height: 1.6;">If you continue to experience issues, please contact our support team.</p>
-          <div style="${footerStyles}">
-            <p>Starship Psychics - Your Personal Astrology Guide<br><em>Secure & Confidential</em></p>
-          </div>
-        </div>
-      </div>
-    `,
-    subscriptionCancelled: `
-      <div style="${baseStyles}">
-        <div style="${contentStyles}">
-          <h1 style="color: #f39c12; text-align: center; margin-top: 0;">Subscription Cancelled</h1>
-          <p style="font-size: 16px; color: #333; line-height: 1.6;">Your Starship Psychics subscription has been cancelled. You will lose access to premium features at the end of your billing period.</p>
-          <p style="font-size: 16px; color: #333; line-height: 1.6;">You can reactivate your subscription anytime through your account settings or the link below.</p>
-          <div style="margin: 30px 0; text-align: center;">
-            <a href="${data.stripePortalLink}" style="${buttonStyles}">Reactivate Subscription</a>
-          </div>
-          <p style="font-size: 14px; color: #666; line-height: 1.6;">We'd love to have you back! If you have any questions, please reach out to our support team.</p>
-          <div style="${footerStyles}">
-            <p>Starship Psychics - Your Personal Astrology Guide<br><em>Secure & Confidential</em></p>
-          </div>
-        </div>
-      </div>
-    `,
-    paymentMethodInvalid: `
-      <div style="${baseStyles}">
-        <div style="${contentStyles}">
-          <h1 style="color: #e74c3c; text-align: center; margin-top: 0;">Update Payment Method</h1>
-          <p style="font-size: 16px; color: #333; line-height: 1.6;">Your payment method on file has expired or is invalid. Please update it to maintain your Starship Psychics subscription.</p>
-          <div style="margin: 30px 0; text-align: center;">
-            <a href="${data.stripePortalLink}" style="${buttonStyles}">Update Payment Method</a>
-          </div>
-          <p style="font-size: 14px; color: #666; line-height: 1.6;">Without a valid payment method, your subscription may be cancelled. Please update your information as soon as possible.</p>
-          <div style="${footerStyles}">
-            <p>Starship Psychics - Your Personal Astrology Guide<br><em>Secure & Confidential</em></p>
-          </div>
-        </div>
-      </div>
-    `,
-    subscriptionPastDue: `
-      <div style="${baseStyles}">
-        <div style="${contentStyles}">
-          <h1 style="color: #e74c3c; text-align: center; margin-top: 0;">Payment Overdue</h1>
-          <p style="font-size: 16px; color: #333; line-height: 1.6;">Your subscription payment is overdue. Please update your payment method immediately to avoid service interruption.</p>
-          <div style="margin: 30px 0; text-align: center;">
-            <a href="${data.stripePortalLink}" style="${buttonStyles}">Update Payment Now</a>
-          </div>
-          <p style="font-size: 14px; color: #666; line-height: 1.6;">We've made several attempts to charge your payment method. Please take action now to restore your access.</p>
-          <div style="${footerStyles}">
-            <p>Starship Psychics - Your Personal Astrology Guide<br><em>Secure & Confidential</em></p>
-          </div>
-        </div>
-      </div>
-    `,
-    subscriptionIncomplete: `
-      <div style="${baseStyles}">
-        <div style="${contentStyles}">
-          <h1 style="color: #f39c12; text-align: center; margin-top: 0;">Complete Your Subscription</h1>
-          <p style="font-size: 16px; color: #333; line-height: 1.6;">Your subscription setup is incomplete. Please complete the payment to activate your account.</p>
-          <div style="margin: 30px 0; text-align: center;">
-            <a href="${data.stripePortalLink}" style="${buttonStyles}">Complete Setup</a>
-          </div>
-          <p style="font-size: 14px; color: #666; line-height: 1.6;">Your subscription setup needs to be completed to access Starship Psychics premium features.</p>
-          <div style="${footerStyles}">
-            <p>Starship Psychics - Your Personal Astrology Guide<br><em>Secure & Confidential</em></p>
-          </div>
-        </div>
-      </div>
-    `
-  };
-
-  return templates[template] || templates.subscriptionIncomplete;
-}
-
-/**
- * Store in-app notification in database
- */
-async function storeInAppNotification(userId, issueType) {
-  try {
-    const query = `
-      INSERT INTO error_logs (service, error_message, severity, context)
-      VALUES ('billing-notification', $1, $2, $3)
-    `;
-
-    const messages = {
-      PAYMENT_FAILED: 'Your payment failed. Please update your payment method.',
-      SUBSCRIPTION_CANCELLED: 'Your subscription has been cancelled.',
-      PAYMENT_METHOD_INVALID: 'Your payment method is invalid or expired.',
-      SUBSCRIPTION_PAST_DUE: 'Your subscription payment is overdue.',
-      SUBSCRIPTION_INCOMPLETE: 'Your subscription setup is incomplete.'
-    };
-
-    await db.query(query, [
-      messages[issueType] || 'Subscription issue detected',
-      'warning',
-      JSON.stringify({
-        type: issueType,
-        userId: userId
-      })
-    ]);
-
-    return { success: true };
-  } catch (error) {
-    logErrorFromCatch(error, 'app', 'store-inapp-notification', userId);
-    throw error;
-  }
-}
-
-/**
  * Notify user when subscription check fails
+ * @param {string} userId - User ID
+ * @param {string} reason - Reason for failure
+ * @returns {Promise<void>}
  */
 export async function notifySubscriptionCheckFailed(userId, reason) {
   try {
@@ -311,41 +124,29 @@ export async function notifySubscriptionCheckFailed(userId, reason) {
       message = 'No subscription found on your account. Please create one to continue using the app.';
     }
 
-    // Send email notification
-    try {
-      const msg = {
-        to: userInfo.email,
-        from: fromEmail,
-        subject: 'Subscription Verification',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
-            <div style="background-color: #fff; border-radius: 8px; padding: 30px;">
-              <h1 style="color: #3498db; text-align: center;">Subscription Verification</h1>
-              <p style="font-size: 16px; color: #333; line-height: 1.6;">${message}</p>
-              <p style="font-size: 14px; color: #666; line-height: 1.6;">If you continue to experience issues, please log in to your account and check your subscription status.</p>
-              <div style="color: #999; font-size: 12px; text-align: center; margin-top: 20px;">
-                <p>Starship Psychics - Your Personal Astrology Guide</p>
-              </div>
-            </div>
-          </div>
-        `
-      };
+    // Generate email content
+    const emailContent = generateSubscriptionCheckFailedEmail({ reason });
 
-      if (process.env.SENDGRID_API_KEY) {
-        await sgMail.send(msg);
-      }
-    } catch (error) {
-      logErrorFromCatch(error, 'app', 'subscription-check-email', userId);
-    }
+    // Generate SMS message
+    const smsMessage = getSMSMessage('SUBSCRIPTION_CHECK_FAILED', { message });
 
-    // Send SMS
-    if (userInfo.phone_number) {
-      try {
-        await sendSMS(userInfo.phone_number, `Starship Psychics: ${message}`);
-      } catch (error) {
-        logErrorFromCatch(error, 'app', 'subscription-check-sms', userId);
+    // Send multi-channel notification
+    await sendMultiChannelNotification({
+      userId,
+      email: {
+        subject: emailContent.subject,
+        html: emailContent.html
+      },
+      sms: smsMessage,
+      inApp: {
+        message,
+        severity: 'info',
+        context: {
+          type: 'SUBSCRIPTION_CHECK_FAILED',
+          reason
+        }
       }
-    }
+    });
   } catch (error) {
     logErrorFromCatch(error, 'app', 'notify-subscription-check-failed', userId);
   }
@@ -353,56 +154,140 @@ export async function notifySubscriptionCheckFailed(userId, reason) {
 
 /**
  * Notify user that their subscription is about to expire
+ * @param {string} userId - User ID
+ * @param {number} daysRemaining - Days remaining until expiration
+ * @returns {Promise<void>}
  */
 export async function notifySubscriptionExpiring(userId, daysRemaining) {
   try {
     const userInfo = await getUserContactInfo(userId);
     if (!userInfo) return;
 
+    // Generate email content
+    const emailContent = generateSubscriptionExpiringEmail({ daysRemaining });
+
+    // Generate SMS message
+    const smsMessage = getSMSMessage('SUBSCRIPTION_EXPIRING', { daysRemaining });
+
     const message = `Your subscription expires in ${daysRemaining} days. Renew now to avoid service interruption.`;
 
-    // Send email
-    try {
-      const msg = {
-        to: userInfo.email,
-        from: fromEmail,
-        subject: `Your Subscription Expires in ${daysRemaining} Days`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
-            <div style="background-color: #fff; border-radius: 8px; padding: 30px;">
-              <h1 style="color: #f39c12; text-align: center;">Subscription Expiring Soon</h1>
-              <p style="font-size: 16px; color: #333; line-height: 1.6;">${message}</p>
-              <p style="font-size: 14px; color: #666; line-height: 1.6;">Renew your subscription to continue enjoying unlimited access to all premium features.</p>
-              <div style="color: #999; font-size: 12px; text-align: center; margin-top: 20px;">
-                <p>Starship Psychics - Your Personal Astrology Guide</p>
-              </div>
-            </div>
-          </div>
-        `
-      };
-
-      if (process.env.SENDGRID_API_KEY) {
-        await sgMail.send(msg);
+    // Send multi-channel notification
+    await sendMultiChannelNotification({
+      userId,
+      email: {
+        subject: emailContent.subject,
+        html: emailContent.html
+      },
+      sms: smsMessage,
+      inApp: {
+        message,
+        severity: 'warning',
+        context: {
+          type: 'SUBSCRIPTION_EXPIRING',
+          daysRemaining
+        }
       }
-    } catch (error) {
-      logErrorFromCatch(error, 'app', 'subscription-expiring-email', userId);
-    }
-
-    // Send SMS
-    if (userInfo.phone_number) {
-      try {
-        await sendSMS(userInfo.phone_number, `Starship Psychics: ${message}`);
-      } catch (error) {
-        logErrorFromCatch(error, 'app', 'subscription-expiring-sms', userId);
-      }
-    }
+    });
   } catch (error) {
     logErrorFromCatch(error, 'app', 'notify-subscription-expiring', userId);
+  }
+}
+
+/**
+ * Send price change notification to all active subscribers with a specific interval
+ * Uses database ID (not hashed user_id) for foreign key relationship
+ * user_id column contains hashed value for logging/errors
+ * @param {string} interval - 'month' or 'year'
+ * @param {number} oldAmount - Old price in cents
+ * @param {number} newAmount - New price in cents
+ * @param {string} oldPriceId - Old Stripe price ID (optional)
+ * @param {string} newPriceId - New Stripe price ID (optional)
+ * @returns {Promise<Object>} Results with success/failure counts
+ */
+export async function sendPriceChangeNotifications(interval, oldAmount, newAmount, oldPriceId = null, newPriceId = null) {
+  try {
+    if (!process.env.ENCRYPTION_KEY) {
+      throw new Error('ENCRYPTION_KEY not configured!');
+    }
+
+    // Get all active subscribers with this interval
+    // id = database ID (for price_change_notifications FK), user_id = hashed value (for logging)
+    const query = `
+      SELECT 
+        id,
+        user_id,
+        pgp_sym_decrypt(email_encrypted, $1) as email,
+        current_period_end
+      FROM user_personal_info
+      WHERE price_interval = $2
+        AND subscription_status = 'active'
+        AND stripe_subscription_id_encrypted IS NOT NULL
+        AND email_encrypted IS NOT NULL
+      ORDER BY id
+    `;
+
+    const result = await db.query(query, [process.env.ENCRYPTION_KEY, interval]);
+    const subscribers = result.rows;
+
+    const results = {
+      total: subscribers.length,
+      successful: 0,
+      failed: 0,
+      errors: [],
+    };
+
+    // Import the existing price change email template
+    const { generatePriceChangeEmail } = await import('../../shared/email/templates/priceChangeEmail.js');
+
+    for (const subscriber of subscribers) {
+      try {
+        const effectiveDate = new Date(subscriber.current_period_end * 1000);
+        
+        // Generate email using existing template
+        const emailContent = generatePriceChangeEmail({
+          interval,
+          oldAmount,
+          newAmount,
+          effectiveDate
+        });
+
+        // Send email
+        await sendEmail({
+          to: subscriber.email,
+          subject: emailContent.subject,
+          html: emailContent.html
+        });
+
+        // Record notification using database ID (subscriber.id, not hashed user_id)
+        await db.query(
+          `INSERT INTO price_change_notifications 
+           (user_id, old_price_id, new_price_id, old_price_amount, new_price_amount, price_interval, effective_date, email_sent)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, true)`,
+          [subscriber.id, oldPriceId, newPriceId, oldAmount, newAmount, interval, effectiveDate]
+        );
+
+        results.successful++;
+      } catch (error) {
+        results.failed++;
+        results.errors.push({
+          userId: subscriber.user_id, // hashed user_id for logging
+          email: subscriber.email,
+          error: error.message,
+        });
+        logErrorFromCatch(error, 'app', 'send-price-change-email', subscriber.user_id);
+      }
+    }
+
+    return results;
+  } catch (error) {
+    logErrorFromCatch(error, 'app', 'send-price-change-notifications');
+    throw error;
   }
 }
 
 export default {
   notifyBillingEvent,
   notifySubscriptionCheckFailed,
-  notifySubscriptionExpiring
+  notifySubscriptionExpiring,
+  sendPriceChangeNotifications
 };

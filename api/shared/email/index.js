@@ -117,6 +117,15 @@ export async function sendPolicyChangeNotification(userEmail, changeInfo, isRemi
     return result;
 }
 
+// Billing notification emails
+export { generatePaymentFailedEmail } from './templates/paymentFailedEmail.js';
+export { generateSubscriptionCancelledEmail } from './templates/subscriptionCancelledEmail.js';
+export { generatePaymentMethodInvalidEmail } from './templates/paymentMethodInvalidEmail.js';
+export { generateSubscriptionPastDueEmail } from './templates/subscriptionPastDueEmail.js';
+export { generateSubscriptionIncompleteEmail } from './templates/subscriptionIncompleteEmail.js';
+export { generateSubscriptionCheckFailedEmail } from './templates/subscriptionCheckFailedEmail.js';
+export { generateSubscriptionExpiringEmail } from './templates/subscriptionExpiringEmail.js';
+
 // Re-export utilities for advanced use cases
 export { sendEmail } from './emailSender.js';
 export { EMAIL_CONFIG } from './config.js';
