@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Compliance Dashboard Component
  * 
  * Admin dashboard for monitoring:
@@ -73,7 +73,6 @@ export function ComplianceDashboard({ token }) {
         }
       } catch (checkErr) {
         // Non-critical error - just log it
-        console.warn('[ComplianceDashboard] Could not check notification status:', checkErr);
       }
 
     } catch (err) {
@@ -158,7 +157,7 @@ export function ComplianceDashboard({ token }) {
 
       // Show success message
       setSuccessMessage(
-        `✅ Success! Sent ${notifyResult.results.successful} notifications to users. ` +
+        `âœ… Success! Sent ${notifyResult.results.successful} notifications to users. ` +
         `Failed: ${notifyResult.results.failed}. Grace period ends: ${new Date(notifyResult.results.gracePeriodEnd).toLocaleDateString()}`
       );
 
@@ -188,20 +187,20 @@ export function ComplianceDashboard({ token }) {
   return (
     <div className="compliance-dashboard">
       <div className="dashboard-header">
-        <h1>📊 Compliance Dashboard</h1>
+        <h1>ðŸ“Š Compliance Dashboard</h1>
         <div className="dashboard-actions">
           <button onClick={loadDashboardData} className="btn-refresh">
-            🔄 Refresh
+            ðŸ”„ Refresh
           </button>
           <button onClick={handleExport} className="btn-export">
-            📥 Export
+            ðŸ“¥ Export
           </button>
           <button 
             onClick={handleSendPolicyNotifications} 
             className="btn-send-notifications"
             disabled={sendingNotifications || notificationsSent || notificationsAlreadySent}
           >
-            {sendingNotifications ? '📧 Sending...' : (notificationsSent || notificationsAlreadySent) ? '✅ Notifications Sent' : '📧 Send Policy Notifications'}
+            {sendingNotifications ? 'ðŸ“§ Sending...' : (notificationsSent || notificationsAlreadySent) ? 'âœ… Notifications Sent' : 'ðŸ“§ Send Policy Notifications'}
           </button>
         </div>
       </div>

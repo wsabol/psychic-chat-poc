@@ -1,4 +1,4 @@
-import { db } from '../../shared/db.js';
+﻿import { db } from '../../shared/db.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { 
     fetchUserPersonalInfo, 
@@ -28,7 +28,7 @@ export async function generateMoonPhaseCommentary(userId, phase) {
                 const moonData = await getCurrentMoonPhase();
                 actualPhase = moonData.phase || 'fullMoon';
             } catch (err) {
-                console.error('[MOON-PHASE] Failed to get current phase, using fullMoon as fallback');
+                logErrorFromCatch('[MOON-PHASE] Failed to get current phase, using fullMoon as fallback');
                 actualPhase = 'fullMoon';
             }
         }

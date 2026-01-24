@@ -9,6 +9,7 @@
 import { db } from '../shared/db.js';
 import { auth as firebaseAuth } from '../shared/firebase-admin.js';
 import { logWarning } from '../shared/errorLogger.js';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * Delete old temp Firebase accounts (async, non-blocking)
@@ -48,7 +49,6 @@ export function cleanupOrphanedFirebaseAccountsAsync(ageThreshold) {
                   deletedCount++;
                 } catch (err) {
                   if (err.code !== 'auth/user-not-found') {
-                    console.error(`[Cleanup] ✗ Failed to delete temp account ${user.uid}:`, err.message);
                     errorCount++;
                   } else {
                   }
@@ -63,16 +63,16 @@ export function cleanupOrphanedFirebaseAccountsAsync(ageThreshold) {
           pageToken = listUsersResult.pageToken;
           hasMore = !!pageToken;
         } catch (pageErr) {
-          console.error('[Cleanup] ✗ Error during pagination:', pageErr.message);
-          console.error('[Cleanup] Stack trace:', pageErr.stack);
+          logErrorFromCatch('[Cleanup] ✗ Error during pagination:', pageErr.message);
+          logErrorFromCatch('[Cleanup] Stack trace:', pageErr.stack);
           hasMore = false;
           errorCount++;
         }
       }
 
     } catch (err) {
-      console.error('[Cleanup] ✗ Firebase temp account scan failed:', err.message);
-      console.error('[Cleanup] Stack trace:', err.stack);
+      logErrorFromCatch('[Cleanup] ✗ Firebase temp account scan failed:', err.message);
+      logErrorFromCatch('[Cleanup] Stack trace:', err.stack);
     }
   });
 }

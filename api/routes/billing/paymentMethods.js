@@ -1,4 +1,4 @@
-import express from 'express';
+﻿import express from 'express';
 import { authenticateToken } from '../../middleware/auth.js';
 import stripe from '../../services/stripeService.js';
 import redis from '../../shared/redis.js';
@@ -91,8 +91,8 @@ router.get('/payment-methods', authenticateToken, async (req, res) => {
     // Remove from in-flight map after short delay
     setTimeout(() => inflightRequests.delete(requestKey), 100);
             } catch (error) {
-    console.error(`[PAYMENT-METHODS] ERROR:`, error.message || error);
-    console.error(`[PAYMENT-METHODS] Stack:`, error.stack);
+    logErrorFromCatch(`[PAYMENT-METHODS] ERROR:`, error.message || error);
+    logErrorFromCatch(`[PAYMENT-METHODS] Stack:`, error.stack);
     inflightRequests.delete(`payment-methods:${req.user.userId}`);
     // Log error in background (don't await)
     logErrorFromCatch(error, 'billing', 'fetch payment methods', userIdHash, req.ip, 'error').catch(() => {});

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Policy Change Notification Job
  * 
  * Sends email notifications to users when Terms of Service or Privacy Policy are updated
@@ -103,7 +103,7 @@ export async function sendInitialPolicyNotifications() {
         const userEmail = user.email;
         
         if (!userEmail || userEmail.trim() === '') {
-          console.warn(`[Policy Notification Job] Skipping user with no email: ${user.user_id_hash.substring(0, 8)}...`);
+          logErrorFromCatch(`[Policy Notification Job] Skipping user with no email: ${user.user_id_hash.substring(0, 8)}...`);
           results.failed++;
           continue;
         }
@@ -137,7 +137,7 @@ export async function sendInitialPolicyNotifications() {
         } else {
           results.failed++;
           results.errors.push({ user: user.user_id_hash.substring(0, 8), error: emailResult.error });
-          console.error(`[Policy Notification Job] ✗ Failed to send to user ${user.user_id_hash.substring(0, 8)}...: ${emailResult.error}`);
+          logErrorFromCatch(`[Policy Notification Job] ✗ Failed to send to user ${user.user_id_hash.substring(0, 8)}...: ${emailResult.error}`);
         }
 
         // Rate limiting: small delay between emails to avoid overwhelming SendGrid
@@ -146,7 +146,7 @@ export async function sendInitialPolicyNotifications() {
       } catch (error) {
         results.failed++;
         results.errors.push({ user: user.user_id_hash.substring(0, 8), error: error.message });
-        console.error(`[Policy Notification Job] Error processing user ${user.user_id_hash.substring(0, 8)}...:`, error.message);
+        logErrorFromCatch(`[Policy Notification Job] Error processing user ${user.user_id_hash.substring(0, 8)}...:`, error.message);
         logErrorFromCatch(error, 'job', 'policy_notification');
       }
     }
@@ -159,7 +159,7 @@ export async function sendInitialPolicyNotifications() {
     return results;
 
   } catch (error) {
-    console.error('[Policy Notification Job] Fatal error:', error.message);
+    logErrorFromCatch('[Policy Notification Job] Fatal error:', error.message);
     logErrorFromCatch(error, 'job', 'policy_notification_initial');
     throw error;
   }
@@ -239,7 +239,7 @@ export async function sendReminderNotifications() {
         const userEmail = user.email;
         
         if (!userEmail || userEmail.trim() === '') {
-          console.warn(`[Policy Notification Job] Skipping user with no email: ${user.user_id_hash.substring(0, 8)}...`);
+          logErrorFromCatch(`[Policy Notification Job] Skipping user with no email: ${user.user_id_hash.substring(0, 8)}...`);
           results.failed++;
           continue;
         }
@@ -271,7 +271,7 @@ export async function sendReminderNotifications() {
         } else {
           results.failed++;
           results.errors.push({ user: user.user_id_hash.substring(0, 8), error: emailResult.error });
-          console.error(`[Policy Notification Job] ✗ Failed to send reminder to user ${user.user_id_hash.substring(0, 8)}...: ${emailResult.error}`);
+          logErrorFromCatch(`[Policy Notification Job] ✗ Failed to send reminder to user ${user.user_id_hash.substring(0, 8)}...: ${emailResult.error}`);
         }
 
         // Rate limiting
@@ -280,7 +280,7 @@ export async function sendReminderNotifications() {
       } catch (error) {
         results.failed++;
         results.errors.push({ user: user.user_id_hash.substring(0, 8), error: error.message });
-        console.error(`[Policy Notification Job] Error processing reminder for user ${user.user_id_hash.substring(0, 8)}...:`, error.message);
+        logErrorFromCatch(`[Policy Notification Job] Error processing reminder for user ${user.user_id_hash.substring(0, 8)}...:`, error.message);
         logErrorFromCatch(error, 'job', 'policy_notification_reminder');
       }
     }
@@ -288,7 +288,7 @@ export async function sendReminderNotifications() {
     const duration = new Date() - startTime;
     return results;
   } catch (error) {
-    console.error('[Policy Notification Job] Fatal error in reminder job:', error.message);
+    logErrorFromCatch('[Policy Notification Job] Fatal error in reminder job:', error.message);
     logErrorFromCatch(error, 'job', 'policy_notification_reminder');
     throw error;
   }
@@ -343,7 +343,7 @@ export async function enforceGracePeriodExpiration() {
 
       } catch (error) {
         results.errors.push({ user: user.user_id_hash.substring(0, 8), error: error.message });
-        console.error(`[Policy Notification Job] Error invalidating sessions for user ${user.user_id_hash.substring(0, 8)}...:`, error.message);
+        logErrorFromCatch(`[Policy Notification Job] Error invalidating sessions for user ${user.user_id_hash.substring(0, 8)}...:`, error.message);
         logErrorFromCatch(error, 'job', 'grace_period_enforcement');
       }
     }
@@ -351,7 +351,7 @@ export async function enforceGracePeriodExpiration() {
     const duration = new Date() - startTime;
     return results;
   } catch (error) {
-    console.error('[Policy Notification Job] Fatal error in grace period enforcement:', error.message);
+    logErrorFromCatch('[Policy Notification Job] Fatal error in grace period enforcement:', error.message);
     logErrorFromCatch(error, 'job', 'grace_period_enforcement');
     throw error;
   }

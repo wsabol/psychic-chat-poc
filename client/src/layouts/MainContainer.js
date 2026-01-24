@@ -20,6 +20,7 @@ import BillingPage from '../pages/BillingPage';
 import AdminPage from '../pages/AdminPage';
 import { useModeDetection } from './MainContainer/hooks/useModeDetection';
 import { useModeRules } from './MainContainer/hooks/useModeRules';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 import './MainContainer.css';
 
 // Define all pages in order (matches menu order)
@@ -66,7 +67,7 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
     const isAllowed = modeRules.isPageAllowed(index);
     
     if (!isAllowed) {
-      console.error('[MAIN-CONTAINER] Navigation to page', index, 'BLOCKED by mode rules');
+      logErrorFromCatch('[MAIN-CONTAINER] Navigation to page', index, 'BLOCKED by mode rules');
       return;
     }
     setCurrentPageIndex(prevPageIndex => {

@@ -7,6 +7,7 @@ import { LoginScreenWrapper } from './LoginScreenWrapper';
 import { VerificationScreen } from './VerificationScreen';
 import TwoFAScreen from './TwoFAScreen';
 import { useTranslation } from '../context/TranslationContext';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 /**
  * AppShells - Renders early screens before chat
@@ -66,7 +67,7 @@ export function AppShells({ state }) {
               setVerificationFailed(false);
               authState.setHasLoggedOut(false);
             } catch (err) {
-              console.error('[EXIT-BUTTON] Error exiting app:', err);
+              logErrorFromCatch('[EXIT-BUTTON] Error exiting app:', err);
               // Still reset state even if error
               tempFlow.setAppExited(false);
               setVerificationFailed(false);

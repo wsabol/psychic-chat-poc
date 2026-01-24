@@ -1,4 +1,4 @@
-import { db } from '../../shared/db.js';
+﻿import { db } from '../../shared/db.js';
 import { stripe } from './stripeClient.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
 import { hashUserId } from '../../shared/hashUtils.js';
@@ -33,7 +33,7 @@ export async function getOrCreateStripeCustomer(userId, userEmail) {
       return await customerCreationLock.get(userId);
     }
 
-    // ✅ CRITICAL: Create promise and IMMEDIATELY set lock BEFORE any async work
+    // âœ… CRITICAL: Create promise and IMMEDIATELY set lock BEFORE any async work
     const creationPromise = (async () => {
       
       // Try to acquire advisory lock (non-blocking)
@@ -90,13 +90,12 @@ export async function getOrCreateStripeCustomer(userId, userEmail) {
       const storedId = userRecord.id;
       const billingAddress = userRecord;
 
-      // ✅ ALWAYS try to reuse stored customer
+      // âœ… ALWAYS try to reuse stored customer
       if (storedId) {
         try {
           await stripe.customers.retrieve(storedId);
           return storedId;
         } catch (err) {
-          console.warn(`[STRIPE] Customer ${storedId} doesn't exist in Stripe, will create new`);
           // Customer doesn't exist in Stripe, clear it and create new one
           await db.query(`UPDATE user_personal_info SET stripe_customer_id_encrypted = NULL WHERE user_id = $1`, [userId]);
         }
@@ -130,24 +129,24 @@ export async function getOrCreateStripeCustomer(userId, userEmail) {
         
         // Check if the update actually affected a row
         if (updateResult.rowCount === 0) {
-          console.error(`[STRIPE] CRITICAL: User ${userId} does not exist in user_personal_info table`);
+          logErrorFromCatch(`[STRIPE] CRITICAL: User ${userId} does not exist in user_personal_info table`);
           // Delete the customer we just created since we can't store it
           try {
             await stripe.customers.del(customer.id);
           } catch (delErr) {
-            console.error(`[STRIPE] Failed to delete orphaned customer:`, delErr);
+            logErrorFromCatch(`[STRIPE] Failed to delete orphaned customer:`, delErr);
           }
           throw new Error('User record not found in database. Cannot create Stripe customer.');
         }
       } catch (e) {
-        console.error(`[STRIPE] Failed to store customer ID:`, e.message);
+        logErrorFromCatch(`[STRIPE] Failed to store customer ID:`, e.message);
         throw e; // Re-throw to prevent returning a customer ID that wasn't stored
       }
 
       return customer.id;
     })();
 
-    // ✅ Set lock RIGHT AFTER promise creation (synchronously)
+    // âœ… Set lock RIGHT AFTER promise creation (synchronously)
     customerCreationLock.set(userId, creationPromise);
 
     try {
@@ -158,7 +157,7 @@ export async function getOrCreateStripeCustomer(userId, userEmail) {
       customerCreationLock.delete(userId);
     }
   } catch (error) {
-    console.error(`[STRIPE] FATAL:`, error.message);
+    logErrorFromCatch(`[STRIPE] FATAL:`, error.message);
     logErrorFromCatch(error, 'stripe', 'create customer', hashUserId(userId)).catch(() => {});
     throw error;
   } finally {

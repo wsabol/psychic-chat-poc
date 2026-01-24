@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Temporary Account Cleanup Job
  * Scheduled task to delete temp accounts older than 24 hours
  * Prevents Firebase cost buildup from accumulating test/temporary accounts
@@ -58,7 +58,7 @@ export async function runTempAccountCleanupJob() {
         
         dbDeletedCount = uids.length;
       } catch (error) {
-        console.error('[TempCleanup] ✗ Database cleanup error:', error.message);
+        logErrorFromCatch('[TempCleanup] ✗ Database cleanup error:', error.message);
         await logErrorFromCatch(error, 'temp-account-cleanup', 'Database cleanup');
       }
       
@@ -71,7 +71,7 @@ export async function runTempAccountCleanupJob() {
           } catch (err) {
             if (err.code !== 'auth/user-not-found') {
               firebaseErrorCount++;
-              console.error(`[TempCleanup] ✗ Firebase: Failed to delete ${uid}: ${err.message}`);
+              logErrorFromCatch(`[TempCleanup] ✗ Firebase: Failed to delete ${uid}: ${err.message}`);
               await logWarning({
                 service: 'temp-account-cleanup',
                 message: `Failed to delete Firebase user ${uid}: ${err.message}`,
@@ -98,8 +98,8 @@ export async function runTempAccountCleanupJob() {
     };
     
   } catch (error) {
-    console.error('[TempCleanup] ✗ Temp account cleanup job failed:', error.message);
-    console.error('[TempCleanup] Stack trace:', error.stack);
+    logErrorFromCatch('[TempCleanup] ✗ Temp account cleanup job failed:', error.message);
+    logErrorFromCatch('[TempCleanup] Stack trace:', error.stack);
     await logErrorFromCatch(error, 'temp-account-cleanup', 'Run temp account cleanup job');
     return { 
       success: false, 

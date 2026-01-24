@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Job Scheduler - Fixed Version with Debug Logging
  * Initializes and manages scheduled tasks
  * Jobs: Temp account cleanup, account cleanup, subscription checks
@@ -109,7 +109,7 @@ export function initializeScheduler() {
         try {
           const result = await runTempAccountCleanupJob();
         } catch (e) {
-          console.error('[Scheduler] ✗ Temp account cleanup failed:', e.message);
+          logErrorFromCatch('[Scheduler] ✗ Temp account cleanup failed:', e.message);
           logErrorFromCatch(e, 'scheduler', 'Run temp account cleanup job on startup');
         }
       });
@@ -118,7 +118,7 @@ export function initializeScheduler() {
         try {
           const result = await runAccountCleanupJob();
         } catch (e) {
-          console.error('[Scheduler] ✗ Account cleanup failed:', e.message);
+          logErrorFromCatch('[Scheduler] ✗ Account cleanup failed:', e.message);
           logErrorFromCatch(e, 'scheduler', 'Run account cleanup job on startup');
         }
       });
@@ -139,9 +139,9 @@ export function initializeScheduler() {
       gracePeriodEnforcement: gracePeriodEnforcementJobHandle
     };
   } catch (error) {
-    console.error('[Scheduler] FATAL ERROR during initialization:');
-    console.error('Message:', error.message);
-    console.error('Stack:', error.stack);
+    logErrorFromCatch('[Scheduler] FATAL ERROR during initialization:');
+    logErrorFromCatch('Message:', error.message);
+    logErrorFromCatch('Stack:', error.stack);
     throw error;
   }
 }
@@ -176,7 +176,7 @@ export function stopScheduler() {
       gracePeriodEnforcementJobHandle.destroy();
     }
   } catch (error) {
-    console.error('[Scheduler] Error stopping scheduler:', error.message);
+    logErrorFromCatch('[Scheduler] Error stopping scheduler:', error.message);
   }
 }
 

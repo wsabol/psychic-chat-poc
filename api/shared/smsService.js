@@ -1,4 +1,4 @@
-import twilio from 'twilio';
+﻿import twilio from 'twilio';
 import { logErrorFromCatch } from './errorLogger.js';
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -15,7 +15,7 @@ try {
 
   }
 } catch (err) {
-  console.error('❌ Failed to initialize Twilio:', err.message);
+  logErrorFromCatch('❌ Failed to initialize Twilio:', err.message);
 }
 
 /**
@@ -41,9 +41,9 @@ export async function sendSMS(toPhoneNumber, code) {
       messageId: message.sid
     };
   } catch (error) {
-    console.error('❌ SMS send failed:', error.message);
-    console.error('   Error code:', error.code);
-    console.error('   Status:', error.status);
+    logErrorFromCatch('❌ SMS send failed:', error.message);
+    logErrorFromCatch('   Error code:', error.code);
+    logErrorFromCatch('   Status:', error.status);
     logErrorFromCatch(error, 'app', 'SMS Service');
     return {
       success: false,
@@ -75,9 +75,9 @@ export async function sendPasswordResetSMS(toPhoneNumber, code) {
       messageId: message.sid
     };
   } catch (error) {
-    console.error('❌ Password reset SMS send failed:', error.message);
-    console.error('   Error code:', error.code);
-    console.error('   Status:', error.status);
+    logErrorFromCatch('❌ Password reset SMS send failed:', error.message);
+    logErrorFromCatch('   Error code:', error.code);
+    logErrorFromCatch('   Status:', error.status);
     logErrorFromCatch(error, 'app', 'SMS Service');
     return {
       success: false,

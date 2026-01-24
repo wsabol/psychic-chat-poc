@@ -2,11 +2,12 @@ import React, { createContext, useContext, useState, useEffect, useRef } from 'r
 import { auth } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { saveUserTimezone } from '../utils/timezoneUtils';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 // Client-side error logging helper (non-critical, for debugging)
 function logClientError(context, error) {
   if (process.env.NODE_ENV === 'development') {
-    console.error(`[${context}]`, error);
+    logErrorFromCatch(`[${context}]`, error);
   }
 }
 
@@ -129,4 +130,3 @@ export function AuthProvider({ children }) {
 export function useAuth() {
   return useContext(AuthContext);
 }
-

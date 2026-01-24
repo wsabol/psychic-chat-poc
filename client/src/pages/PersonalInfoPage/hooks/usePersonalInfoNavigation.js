@@ -49,7 +49,6 @@ export function usePersonalInfoNavigation({
     const targetPage = getNavigationTarget();
 
     if (!onNavigateToPage) {
-      console.error('[PERSONAL-INFO-NAV] ERROR: No navigation callback provided');
       return;
     }
 
@@ -58,23 +57,16 @@ export function usePersonalInfoNavigation({
       const pollAttempts = isTemporaryAccount ? 60 : TIMING.ASTROLOGY_POLL_MAX_ATTEMPTS;
       const pollInterval = isTemporaryAccount ? 200 : TIMING.ASTROLOGY_POLL_INTERVAL_MS;
 
-      try {
-        await pollForAstrology(userId, token, API_URL, {
-          maxAttempts: pollAttempts,
-          intervalMs: pollInterval,
-          onReady: () => {
-            onNavigateToPage(targetPage);
-          },
-          onTimeout: () => {
-            onNavigateToPage(targetPage);
-          }
-        });
-      } catch (error) {
-        console.error('[PERSONAL-INFO-NAV] ERROR during polling:', error);
-        // Try to navigate anyway
-        console.log('[PERSONAL-INFO-NAV] Attempting navigation despite error...');
-        onNavigateToPage(targetPage);
-      }
+      await pollForAstrology(userId, token, API_URL, {
+        maxAttempts: pollAttempts,
+        intervalMs: pollInterval,
+        onReady: () => {
+          onNavigateToPage(targetPage);
+        },
+        onTimeout: () => {
+          onNavigateToPage(targetPage);
+        }
+      });
     }
 
   };

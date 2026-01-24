@@ -6,6 +6,7 @@
 import { Router } from "express";
 import { authorizeUser } from "../middleware/auth.js";
 import { validationError, forbiddenError, serverError, successResponse } from "../utils/responses.js";
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 import {
   getPersonalInfo,
   savePersonalInfo,
@@ -29,7 +30,7 @@ router.get("/:userId", authorizeUser, async (req, res) => {
     const personalInfo = await getPersonalInfo(userId);
     return successResponse(res, personalInfo);
   } catch (err) {
-    console.error('[USER-PROFILE] Error fetching personal info:', err);
+    logErrorFromCatch('[USER-PROFILE] Error fetching personal info:', err);
     return serverError(res, 'Failed to fetch personal information');
   }
 });
@@ -54,7 +55,7 @@ router.post("/:userId", authorizeUser, async (req, res) => {
 
     return successResponse(res, { success: true, message: result.message });
   } catch (err) {
-    console.error('[USER-PROFILE] Error saving personal info:', err);
+    logErrorFromCatch('[USER-PROFILE] Error saving personal info:', err);
     return serverError(res, 'Failed to save personal information');
   }
 });
@@ -70,7 +71,7 @@ router.delete("/:userId/astrology-cache", authorizeUser, async (req, res) => {
     const result = await clearUserAstrologyCache(userId);
     return successResponse(res, result);
   } catch (err) {
-    console.error('[USER-PROFILE] Error clearing astrology cache:', err);
+    logErrorFromCatch('[USER-PROFILE] Error clearing astrology cache:', err);
     return serverError(res, 'Failed to clear astrology cache');
   }
 });
@@ -86,7 +87,7 @@ router.get("/:userId/preferences", authorizeUser, async (req, res) => {
     const preferences = await getUserPreferences(userId);
     return successResponse(res, preferences);
   } catch (err) {
-    console.error('[USER-PROFILE] Error fetching preferences:', err);
+    logErrorFromCatch('[USER-PROFILE] Error fetching preferences:', err);
     return serverError(res, 'Failed to fetch preferences');
   }
 });
@@ -147,7 +148,7 @@ router.post("/:userId/preferences", authorizeUser, async (req, res) => {
 
     return successResponse(res, result);
   } catch (err) {
-    console.error('[USER-PROFILE] Error saving preferences:', err);
+    logErrorFromCatch('[USER-PROFILE] Error saving preferences:', err);
     return serverError(res, 'Failed to save preferences');
   }
 });

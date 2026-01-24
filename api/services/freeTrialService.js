@@ -7,6 +7,7 @@ import { db } from '../shared/db.js';
 import { hashUserId } from '../shared/hashUtils.js';
 import { calculateSunSignFromDate } from '../shared/zodiacUtils.js';
 import { enqueueMessage } from '../shared/queue.js';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * Extract client IP from request
@@ -128,7 +129,7 @@ export async function savePersonalInfo(tempUserId, personalInfo) {
       ]
     );
   } catch (err) {
-    console.error('[FREE-TRIAL-SERVICE] ✗ Database error saving personal info:', {
+    logErrorFromCatch('[FREE-TRIAL-SERVICE] ✗ Database error saving personal info:', {
       error: err.message,
       code: err.code,
       detail: err.detail,
@@ -169,7 +170,7 @@ export async function updateTrialSessionEmail(userIdHash, email) {
     );
   } catch (err) {
     // Non-fatal: Log error but continue
-    console.error('[FREE-TRIAL-SERVICE] Failed to update trial session email:', err.message);
+    logErrorFromCatch('[FREE-TRIAL-SERVICE] Failed to update trial session email:', err.message);
   }
 }
 
@@ -205,7 +206,7 @@ export async function saveMinimalAstrology(userIdHash, birthDate) {
     );
   } catch (err) {
     // Non-fatal: continue anyway
-    console.error('[FREE-TRIAL-SERVICE] Failed to save minimal astrology:', err.message);
+    logErrorFromCatch('[FREE-TRIAL-SERVICE] Failed to save minimal astrology:', err.message);
   }
 }
 
@@ -224,7 +225,7 @@ export async function clearAstrologyMessages(userIdHash) {
     );
   } catch (err) {
     // Non-fatal
-    console.error('[FREE-TRIAL-SERVICE] Failed to clear astrology messages:', err.message);
+    logErrorFromCatch('[FREE-TRIAL-SERVICE] Failed to clear astrology messages:', err.message);
   }
 }
 
@@ -253,7 +254,7 @@ export async function enqueueFullBirthChartCalculation(tempUserId, personalInfo)
     });
   } catch (err) {
     // Non-fatal
-    console.error('[FREE-TRIAL-SERVICE] Failed to enqueue astrology calculation:', err.message);
+    logErrorFromCatch('[FREE-TRIAL-SERVICE] Failed to enqueue astrology calculation:', err.message);
   }
 }
 

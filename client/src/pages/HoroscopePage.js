@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from '../context/TranslationContext';
 import { useSpeech } from '../hooks/useSpeech';
 import { useHoroscopePreferences } from '../hooks/useHoroscopePreferences';
@@ -49,12 +49,11 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
   useEffect(() => {
     if (auth?.isTemporaryAccount && horoscopeState.data && !horoscopeState.loading) {
       completeFreeTrial().catch(err => {
-        console.warn('[HOROSCOPE] Failed to mark trial complete:', err);
       });
     }
   }, [auth?.isTemporaryAccount, horoscopeState.data, horoscopeState.loading, completeFreeTrial]);
 
-  // ✅ CRITICAL FIX: Load horoscope only on mount and when range changes
+  // âœ… CRITICAL FIX: Load horoscope only on mount and when range changes
   // Do NOT include loadHoroscope in deps - it changes on every render
   useEffect(() => {
     // First mount: load initial horoscope
@@ -180,7 +179,7 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
       {/* Error State */}
       {horoscopeState.error && horoscopeState.error !== 'BIRTH_INFO_MISSING' && (
         <div className="horoscope-content error">
-          <p className="error-message">⚠️ {horoscopeState.error}</p>
+          <p className="error-message">âš ï¸ {horoscopeState.error}</p>
           <button onClick={loadHoroscope} className="btn-secondary">
             {t('common.tryAgain')}
           </button>
@@ -190,7 +189,7 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
       {/* Loading State */}
       {horoscopeState.loading && (
         <div className="horoscope-content loading">
-          <div className="spinner">🔮</div>
+          <div className="spinner">ðŸ”®</div>
           <p>
             {horoscopeState.generating ? t('horoscope.generatingMessage') : t('horoscope.loading')}
           </p>
@@ -201,9 +200,9 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
       {astro.sun_sign && !isBirthInfoMissing(astroInfo) && (
         <section className="horoscope-birth-chart">
           <div className="birth-chart-cards">
-            <BirthChartCard sign={astro.rising_sign} degree={astro.rising_degree} icon="↗️" type="rising" />
-            <BirthChartCard sign={astro.moon_sign} degree={astro.moon_degree} icon="🌙" type="moon" />
-            <BirthChartCard sign={astro.sun_sign} degree={astro.sun_degree} icon="☀️" type="sun" />
+            <BirthChartCard sign={astro.rising_sign} degree={astro.rising_degree} icon="â†—ï¸" type="rising" />
+            <BirthChartCard sign={astro.moon_sign} degree={astro.moon_degree} icon="ðŸŒ™" type="moon" />
+            <BirthChartCard sign={astro.sun_sign} degree={astro.sun_degree} icon="â˜€ï¸" type="sun" />
           </div>
         </section>
       )}

@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import useWhitelistApi from './useWhitelistApi';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * Custom hook for managing whitelist data
@@ -46,7 +47,7 @@ export function useWhitelist(token) {
       const data = await api.fetchCurrentIp();
       setCurrentIp(data);
     } catch (err) {
-      console.error('Error fetching current IP:', err);
+      logErrorFromCatch('Error fetching current IP:', err);
     }
   }, [api]);
 

@@ -1,0 +1,428 @@
+﻿{
+    "FilesWithIssues":  2,
+    "Files":  [
+                  {
+                      "IssueCount":  32,
+                      "Path":  "api/PRODUCTION_AUDIT_SCRIPT.js",
+                      "FullPath":  "C:\\Users\\stuat\\Documents\\psychic-chat-poc\\api\\PRODUCTION_AUDIT_SCRIPT.js",
+                      "Issues":  [
+                                     {
+                                         "Method":  "error",
+                                         "Code":  "console.error(`Error scanning ${filePath}:`, error.message);",
+                                         "Line":  217
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(\u0027\\n========================================\u0027);",
+                                         "Line":  245
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(\u0027ðŸ“‹ PRODUCTION READINESS AUDIT REPORT\u0027);",
+                                         "Line":  246
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(\u0027========================================\\n\u0027);",
+                                         "Line":  247
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`Total Issues Found: ${totalIssues}\\n`);",
+                                         "Line":  251
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`\\nðŸ”´ Missing Response Utility Imports (${issues.missingImports.length}):`);",
+                                         "Line":  255
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`  - ${issue.file}`);",
+                                         "Line":  257
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`    ${issue.message}\\n`);",
+                                         "Line":  258
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`\\nðŸŸ  Manual Response Patterns (${issues.manualResponses.length}):`);",
+                                         "Line":  264
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`  - ${issue.file}:${issue.line}`);",
+                                         "Line":  266
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`    Code: ${issue.code}`);",
+                                         "Line":  267
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`    Suggestion: ${issue.suggestion}\\n`);",
+                                         "Line":  268
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`\\nðŸŸ¡ Missing ErrorCode Fields (${issues.missingErrorCodes.length}):`);",
+                                         "Line":  274
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`  - ${issue.file}:${issue.line}`);",
+                                         "Line":  276
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`    ${issue.message}\\n`);",
+                                         "Line":  277
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`\\nðŸŸ£ Exposed Database Internals (${issues.exposedDbInternals.length}):`);",
+                                         "Line":  283
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`  - ${issue.file}:${issue.line}`);",
+                                         "Line":  285
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`    ${issue.message}`);",
+                                         "Line":  286
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`    Code: ${issue.code}\\n`);",
+                                         "Line":  287
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`\\nðŸ”µ Missing Audit Logging (${issues.missingSensitiveLogging.length}):`);",
+                                         "Line":  293
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`  - ${issue.file}:${issue.line}`);",
+                                         "Line":  295
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`    ${issue.message}`);",
+                                         "Line":  296
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`    Code: ${issue.code}\\n`);",
+                                         "Line":  297
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(\u0027\\n========================================\u0027);",
+                                         "Line":  301
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(\u0027âœ… Audit Complete\u0027);",
+                                         "Line":  302
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(\u0027========================================\\n\u0027);",
+                                         "Line":  303
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(\u0027Usage: node PRODUCTION_AUDIT_SCRIPT.js \u003cfile-or-directory\u003e\u0027);",
+                                         "Line":  315
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(\u0027Example: node PRODUCTION_AUDIT_SCRIPT.js routes/auth-endpoints/login.js\u0027);",
+                                         "Line":  316
+                                     },
+                                     {
+                                         "Method":  "error",
+                                         "Code":  "console.error(`Error: Path not found: ${targetPath}`);",
+                                         "Line":  323
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`Scanning directory: ${targetPath}\\n`);",
+                                         "Line":  330
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`Found ${files.length} JavaScript files\\n`);",
+                                         "Line":  332
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`Scanning file: ${targetPath}\\n`);",
+                                         "Line":  335
+                                     }
+                                 ]
+                  },
+                  {
+                      "IssueCount":  48,
+                      "Path":  "api/SECURITY_AUTO_FIX.js",
+                      "FullPath":  "C:\\Users\\stuat\\Documents\\psychic-chat-poc\\api\\SECURITY_AUTO_FIX.js",
+                      "Issues":  [
+                                     {
+                                         "Method":  "error",
+                                         "Code":  "console.error(\u0027âŒ Error: Batch number required!\u0027);",
+                                         "Line":  27
+                                     },
+                                     {
+                                         "Method":  "error",
+                                         "Code":  "console.error(\u0027Usage: node SECURITY_AUTO_FIX.js --batch \u003cnumber\u003e [--dry-run]\u0027);",
+                                         "Line":  28
+                                     },
+                                     {
+                                         "Method":  "error",
+                                         "Code":  "console.error(\u0027Example: node SECURITY_AUTO_FIX.js --batch 3\u0027);",
+                                         "Line":  29
+                                     },
+                                     {
+                                         "Method":  "error",
+                                         "Code":  "console.error(`âŒ Error loading BATCH_FIX_CONFIG.json: ${error.message}`);",
+                                         "Line":  39
+                                     },
+                                     {
+                                         "Method":  "error",
+                                         "Code":  "console.error(`âŒ Error: Batch ${batchNumber} not found in configuration!`);",
+                                         "Line":  46
+                                     },
+                                     {
+                                         "Method":  "error",
+                                         "Code":  "console.error(`Available batches: ${batchConfig.batches.map(b =\u003e b.batch).join(\u0027, \u0027)}`);",
+                                         "Line":  47
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`\\n${colors.magenta}â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•...",
+                                         "Line":  71
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.magenta}â•‘          SECURITY AUTO-FIX SCRIPT                            â•...",
+                                         "Line":  72
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.magenta}â•‘          JSON Response Standardization                        â...",
+                                         "Line":  73
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.magenta}â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â...",
+                                         "Line":  74
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.cyan}Batch ${batch.batch}: ${batch.name}${colors.reset}`);",
+                                         "Line":  76
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.cyan}Files to process: ${batch.filesCount}${colors.reset}\\n`);",
+                                         "Line":  77
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.yellow}ðŸ” DRY RUN MODE - No files will be modified${colors.reset}\\n`);",
+                                         "Line":  80
+                                     },
+                                     {
+                                         "Method":  "error",
+                                         "Code":  "console.error(`${colors.red}âœ— Error reading ${filePath}: ${error.message}${colors.reset}`);",
+                                         "Line":  109
+                                     },
+                                     {
+                                         "Method":  "error",
+                                         "Code":  "console.error(`${colors.red}âœ— Error writing ${filePath}: ${error.message}${colors.reset}`);",
+                                         "Line":  125
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`\\n${colors.blue}â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”...",
+                                         "Line":  238
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.cyan}ðŸ“„ Processing: ${filePath}${colors.reset}`);",
+                                         "Line":  239
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.blue}â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â...",
+                                         "Line":  240
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.green}  âœ“ Added/updated successResponse import${colors.reset}`);",
+                                         "Line":  258
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.green}  âœ“ Converted ${changeCount} response call${changeCount \u003e 1 ? \u0027s\u0027 :...",
+                                         "Line":  268
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.yellow}  âŠ™ No res.json() calls found to convert${colors.reset}`);",
+                                         "Line":  278
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.red}  âœ— Syntax errors detected:${colors.reset}`);",
+                                         "Line":  285
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.red}    - ${err}${colors.reset}`);",
+                                         "Line":  287
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.green}  âœ“ File updated successfully (${fileChanges} change${fileChanges \u003e...",
+                                         "Line":  297
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.red}  âœ— Failed to write file${colors.reset}`);",
+                                         "Line":  299
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.yellow}  âŠ™ No changes needed${colors.reset}`);",
+                                         "Line":  302
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.cyan}Processing Batch ${batch.batch} files...${colors.reset}\\n`);",
+                                         "Line":  310
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`\\n${colors.magenta}â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•...",
+                                         "Line":  318
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.magenta}â•‘            BATCH ${batch.batch} SUMMARY REPORT                 ...",
+                                         "Line":  319
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.magenta}â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â...",
+                                         "Line":  320
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.blue}Batch Name:${colors.reset}      ${batch.name}`);",
+                                         "Line":  322
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.blue}Files Processed:${colors.reset} ${stats.filesProcessed}`);",
+                                         "Line":  323
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.green}Files Changed:${colors.reset}   ${stats.filesChanged}`);",
+                                         "Line":  324
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.green}Total Changes:${colors.reset}   ${stats.totalChanges}`);",
+                                         "Line":  325
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.red}Syntax Errors:${colors.reset}   ${stats.syntaxErrors.length}\\n`);",
+                                         "Line":  326
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.cyan}Detailed Changes:${colors.reset}`);",
+                                         "Line":  329
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`  ${colors.green}âœ“${colors.reset} ${change.file}`);",
+                                         "Line":  331
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`    ${change.description} (${change.count}x)`);",
+                                         "Line":  332
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(\u0027\u0027);",
+                                         "Line":  334
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.red}Syntax Errors Found:${colors.reset}`);",
+                                         "Line":  338
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`  ${colors.red}âœ—${colors.reset} ${error.file}: ${error.error}`);",
+                                         "Line":  340
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(\u0027\u0027);",
+                                         "Line":  342
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.yellow}âš  DRY RUN - No files were actually modified${colors.reset}`);",
+                                         "Line":  346
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.yellow}  Run without --dry-run to apply changes${colors.reset}\\n`);",
+                                         "Line":  347
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.green}âœ“ Batch ${batch.batch} complete!${colors.reset}`);",
+                                         "Line":  349
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.cyan}  Progress: Batch ${batch.batch} of ${totalBatches} complete${colors.r...",
+                                         "Line":  354
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.cyan}  Next: Run syntax check, test app, then process Batch ${batch.batch +...",
+                                         "Line":  357
+                                     },
+                                     {
+                                         "Method":  "log",
+                                         "Code":  "console.log(`${colors.green}  ðŸŽ‰ All batches complete!${colors.reset}\\n`);",
+                                         "Line":  359
+                                     }
+                                 ]
+                  }
+              ],
+    "TotalStatements":  80,
+    "ByType":  {
+                   "info":  0,
+                   "debug":  0,
+                   "error":  10,
+                   "log":  70,
+                   "warn":  0
+               },
+    "TotalFiles":  558
+}

@@ -1,10 +1,10 @@
-import { parseDateForStorage } from '../../../utils/dateFormatting';
+﻿import { parseDateForStorage } from '../../../utils/dateFormatting';
 import { preparePersonalInfoData, TIMING } from '../../../utils/personalInfoUtils';
 import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * Custom hook for orchestrating the personal info submission workflow
- * Handles: validation → save → astrology sync → progress tracking → navigation
+ * Handles: validation â†’ save â†’ astrology sync â†’ progress tracking â†’ navigation
  * @param {Object} params - Configuration parameters
  * @returns {Object} Submit handler
  */
@@ -133,7 +133,6 @@ export function usePersonalInfoSubmit({
       // Navigate with astrology polling
       await navigateToTarget(true);
     } else {
-      console.log('[PERSONAL-INFO] Not navigating, just showing success');
       // Just show success message temporarily
       setTimeout(() => setSuccess(false), TIMING.SUCCESS_DISPLAY_MS);
     }

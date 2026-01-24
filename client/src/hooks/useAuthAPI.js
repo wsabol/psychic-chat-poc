@@ -3,12 +3,14 @@
  * Handles all API calls for auth, registration, and consent
  */
 
+import { logErrorFromCatch } from '../shared/errorLogger.js';
+
 const API_BASE = 'http://localhost:3000';
 
 // Client-side error logging helper (non-critical, for debugging)
 function logClientError(context, error) {
   if (process.env.NODE_ENV === 'development') {
-    console.error(`[${context}]`, error);
+    logErrorFromCatch(`[${context}]`, error);
   }
 }
 
@@ -142,4 +144,3 @@ export function useAuthAPI() {
 }
 
 export default useAuthAPI;
-

@@ -18,6 +18,7 @@ import {
   shouldEnqueueBirthChart
 } from './validators/personalInfoValidator.js';
 import { saveMinimalAstrology, enqueueFullBirthChart, saveFullAstrology } from './astrologyService.js';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * Get user personal information
@@ -41,7 +42,7 @@ async function updateTrialSessionEmail(userIdHash, email, isTempUser) {
   try {
     await updateTrialEmail(userIdHash, email);
   } catch (err) {
-    console.error('[PERSONAL-INFO-SERVICE] Failed to update free trial email:', err.message);
+    logErrorFromCatch('[PERSONAL-INFO-SERVICE] Failed to update free trial email:', err.message);
   }
 }
 

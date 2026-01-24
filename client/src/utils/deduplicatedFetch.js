@@ -40,7 +40,6 @@ export async function deduplicatedFetch(url, options = {}) {
   
   // If an identical request is already in progress, return that promise
   if (requestCache.has(cacheKey)) {
-    console.log(`[DEDUPE] Reusing in-flight request for: ${url}`);
     return requestCache.get(cacheKey);
   }
   

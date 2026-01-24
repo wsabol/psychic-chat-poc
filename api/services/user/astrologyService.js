@@ -6,6 +6,7 @@
 import { hashUserId } from '../../shared/hashUtils.js';
 import { calculateSunSignFromDate } from '../../shared/zodiacUtils.js';
 import { enqueueMessage } from '../../shared/queue.js';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 import {
   upsertAstrologyData,
   astrologyDataExists,
@@ -38,13 +39,12 @@ export async function saveMinimalAstrology(userIdHash, birthDate) {
     // Verify save
     const exists = await astrologyDataExists(userIdHash);
     if (!exists) {
-      console.warn('[ASTROLOGY-SERVICE] Failed to verify minimal astrology save');
     }
 
     // Clear old astrology messages
     await clearAstrologyCache(userIdHash);
   } catch (err) {
-    console.error('[ASTROLOGY-SERVICE] Failed to save minimal astrology:', err.message);
+    logErrorFromCatch('[ASTROLOGY-SERVICE] Failed to save minimal astrology:', err.message);
   }
 }
 
@@ -67,7 +67,7 @@ export async function saveFullAstrology(userIdHash, zodiacSign, astrologyData) {
 
     return { success: true };
   } catch (err) {
-    console.error('[ASTROLOGY-SERVICE] Failed to save full astrology:', err.message);
+    logErrorFromCatch('[ASTROLOGY-SERVICE] Failed to save full astrology:', err.message);
     return { success: false, error: 'Failed to save astrology data' };
   }
 }
@@ -81,7 +81,7 @@ async function clearAstrologyCache(userIdHash) {
   try {
     await deleteAstrologyCachedMessages(userIdHash);
   } catch (err) {
-    console.error('[ASTROLOGY-SERVICE] Failed to clear astrology cache:', err.message);
+    logErrorFromCatch('[ASTROLOGY-SERVICE] Failed to clear astrology cache:', err.message);
   }
 }
 
@@ -116,6 +116,6 @@ export async function enqueueFullBirthChart(userId) {
       message: '[SYSTEM] Calculate my birth chart with rising sign and moon sign.'
     });
   } catch (err) {
-    console.error('[ASTROLOGY-SERVICE] Failed to enqueue birth chart calculation:', err.message);
+    logErrorFromCatch('[ASTROLOGY-SERVICE] Failed to enqueue birth chart calculation:', err.message);
   }
 }

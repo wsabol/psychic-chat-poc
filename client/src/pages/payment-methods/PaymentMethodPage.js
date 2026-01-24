@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+﻿import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import { useTranslation } from '../../context/TranslationContext';
@@ -14,8 +14,8 @@ const stripePromise = loadStripe(stripePublicKey);
 
 /**
  * PaymentMethodPage - Manage payment methods
- * ✅ FIXED: Only fetch on mount, not on every render
- * ✅ DEBOUNCED: Refresh only on explicit user actions
+ * âœ… FIXED: Only fetch on mount, not on every render
+ * âœ… DEBOUNCED: Refresh only on explicit user actions
  */
 export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
   const { t } = useTranslation();
@@ -38,7 +38,7 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
   const refreshTimeoutRef = useRef(null);
   const hasInitialized = useRef(false);
 
-        // ✅ FIXED: Only fetch once on mount, not on every render
+        // âœ… FIXED: Only fetch once on mount, not on every render
   useEffect(() => {
     if (!hasInitialized.current && billing) {
       hasInitialized.current = true;
@@ -64,7 +64,7 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
     }
   };
 
-  // ✅ Debounced refresh - prevents hammering backend
+  // âœ… Debounced refresh - prevents hammering backend
   const debouncedRefreshPaymentMethods = useCallback(() => {
     if (refreshTimeoutRef.current) {
       clearTimeout(refreshTimeoutRef.current);
@@ -146,14 +146,13 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
           });
         } catch (err) {
           // Non-critical - billing address save failed but payment method was added
-          console.warn('Failed to save billing address:', err);
         }
       }
 
-      // ✅ DEBOUNCED: Refresh in background (500ms) - don't wait
+      // âœ… DEBOUNCED: Refresh in background (500ms) - don't wait
       debouncedRefreshPaymentMethods();
 
-            // ✅ ONBOARDING: Update progress if in onboarding
+            // âœ… ONBOARDING: Update progress if in onboarding
       if (onboarding?.updateOnboardingStep) {
         try {
           await onboarding.updateOnboardingStep('payment_method');
@@ -176,14 +175,14 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
   return (
     <div className="payment-method-page">
             <div className="section-header">
-        <h2>💳 {t('paymentMethods.title')}</h2>
+        <h2>ðŸ’³ {t('paymentMethods.title')}</h2>
         <p>{t('paymentMethods.description')}</p>
       </div>
 
       {cardError && <div className="alert alert-error">{cardError}</div>}
       {billing.error && !cardError && (
         <div className="alert alert-error">
-          ⚠️ {billing.error}
+          âš ï¸ {billing.error}
                     <br/>
           <small style={{marginTop: '0.5rem', display: 'block'}}>
             {t('paymentMethods.ifIssuePersists')}
@@ -191,7 +190,7 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
         </div>
       )}
             {cardSuccess && (
-        <div className="alert alert-success">✓ {t('paymentMethods.addedSuccessfully')}</div>
+        <div className="alert alert-success">âœ“ {t('paymentMethods.addedSuccessfully')}</div>
       )}
 
       {!showAddPaymentForm && (
@@ -200,7 +199,7 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
           onClick={handleAddClick}
           disabled={false}
                 >
-          {loading ? `⏳ ${t('paymentMethods.processing')}` : t('paymentMethods.addNewButton')}
+          {loading ? `â³ ${t('paymentMethods.processing')}` : t('paymentMethods.addNewButton')}
         </button>
       )}
 
@@ -239,7 +238,7 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
         onSetDefault={async (paymentMethodId) => {
           try {
             await billing.setDefaultPaymentMethod(paymentMethodId);
-            // ✅ DEBOUNCED: Refresh in background
+            // âœ… DEBOUNCED: Refresh in background
             debouncedRefreshPaymentMethods();
             setCardSuccess(true);
             setTimeout(() => setCardSuccess(false), 3000);
@@ -255,7 +254,7 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
           }
           try {
             await billing.deletePaymentMethod(paymentMethodId);
-            // ✅ DEBOUNCED: Refresh in background
+            // âœ… DEBOUNCED: Refresh in background
             debouncedRefreshPaymentMethods();
             setCardSuccess(true);
             setTimeout(() => setCardSuccess(false), 3000);

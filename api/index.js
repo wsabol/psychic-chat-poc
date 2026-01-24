@@ -42,6 +42,7 @@ import { initializeScheduler } from "./jobs/scheduler.js";
 import { validateRequestPayload, rateLimit } from "./middleware/inputValidation.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { successResponse } from './utils/responses.js';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 const app = express();
@@ -186,13 +187,11 @@ app.use("/billing", authenticateToken, billingRoutes);
 
 
 // Initialize scheduled jobs - runs daily temp account cleanup at 2:00 AM UTC
-console.log('🔄 Initializing scheduler...');
 try {
   const schedulerResult = initializeScheduler();
-  console.log('✅ Scheduler initialized successfully');
 } catch (error) {
-  console.error('❌ Failed to initialize scheduler:', error.message);
-  console.error(error.stack);
+  logErrorFromCatch('❌ Failed to initialize scheduler:', error.message);
+  logErrorFromCatch(error.stack);
 }
 
 // Phase 5: Safe error handling (LATE in middleware chain - after all routes)
@@ -206,7 +205,6 @@ if (fs.existsSync('./certificates/key.pem') && fs.existsSync('./certificates/cer
     };
         server = https.createServer(options, app);
     server.listen(PORT, () => {
-        console.log(`🔐 Psychic Chat API listening on HTTPS port ${PORT}`);
     });
         server.on('error', (err) => {
         if (err.code === 'EADDRINUSE') {
@@ -216,17 +214,15 @@ if (fs.existsSync('./certificates/key.pem') && fs.existsSync('./certificates/cer
     });
 } else {
     server = app.listen(PORT, () => {
-        console.log(`✅ Psychic Chat API listening on HTTP port ${PORT}`);
     });
     server.on('error', (err) => {
-        console.error('Server error:', err);
+        logErrorFromCatch('Server error:', err);
         if (err.code === 'EADDRINUSE') {
             process.exit(1);
         }
         process.exit(1);
     });
     server.on('close', () => {
-        console.log('Server closed');
     });
 }
 
@@ -234,19 +230,19 @@ if (fs.existsSync('./certificates/key.pem') && fs.existsSync('./certificates/cer
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
-    console.error('\n\n====== UNHANDLED REJECTION ======');
+    logErrorFromCatch('\n\n====== UNHANDLED REJECTION ======');
     if (reason instanceof Error) {
-        console.error('Message:', reason.message);
-        console.error('Stack:', reason.stack);
+        logErrorFromCatch('Message:', reason.message);
+        logErrorFromCatch('Stack:', reason.stack);
     } else {
-        console.error('Reason:', reason);
+        logErrorFromCatch('Reason:', reason);
     }
-    console.error('==================================\n');
+    logErrorFromCatch('==================================\n');
 });
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
-    console.error('Uncaught Exception:', error);
+    logErrorFromCatch('Uncaught Exception:', error);
 });
 
 export default app;

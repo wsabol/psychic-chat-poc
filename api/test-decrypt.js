@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import pkg from 'pg';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 const { Client } = pkg;
 
 async function testDecryption() {
@@ -22,7 +23,7 @@ async function testDecryption() {
     `, [process.env.ENCRYPTION_KEY]);
 
   } catch (err) {
-    console.error('❌ Error:', err.message);
+    logErrorFromCatch('❌ Error:', err.message);
   } finally {
     await client.end();
   }
