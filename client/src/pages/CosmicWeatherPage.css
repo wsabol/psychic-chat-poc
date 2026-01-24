@@ -6,15 +6,25 @@
 }
 
 .cosmic-header {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
   margin-bottom: var(--spacing-md);
 }
 
+.cosmic-header-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
 .cosmic-header h2 {
-  margin-bottom: var(--spacing-xs);
+  margin: 0;
 }
 
 .cosmic-subtitle {
   margin: 0;
+  margin-top: 0.25rem;
   font-size: 0.95rem;
   color: var(--color-text-light);
 }

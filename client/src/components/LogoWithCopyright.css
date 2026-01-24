@@ -20,7 +20,7 @@
   right: -2px;
   font-size: 12px;
   font-weight: bold;
-  color: #ffffff;
+  color: #666;
   background-color: #000000;
   border-radius: 50%;
   width: 17px;
@@ -35,7 +35,7 @@
 /* Ensure copyright symbol is readable on different backgrounds */
 @media (prefers-color-scheme: dark) {
   .logo-with-copyright .copyright-symbol {
-    color: #ffffff;
+    color: #b0b0b0;
     background-color: #000000;
   }
 }

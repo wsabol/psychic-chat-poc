@@ -85,11 +85,11 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
   return (
     <div className="page-safe-area moon-phase-page">
       <div className="moon-phase-header">
-        <h2 className="heading-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <LogoWithCopyright size="80px" alt="Starship Psychics" />
-          {t('moonPhase.title')}
-        </h2>
-        <p className="moon-phase-subtitle">{t('moonPhase.subtitle')}</p>
+        <LogoWithCopyright size="80px" alt="Starship Psychics" />
+        <div className="moon-phase-header-text">
+          <h2 className="heading-primary">{t('moonPhase.title')}</h2>
+          <p className="moon-phase-subtitle">{t('moonPhase.subtitle')}</p>
+        </div>
       </div>
 
       {/* Birth Info Missing Prompt */}

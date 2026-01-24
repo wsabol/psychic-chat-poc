@@ -199,11 +199,11 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
       {/* Main chat UI */}
       <div className="page-safe-area chat-page-container">
         <div className="chat-header">
-          <h2 className="heading-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <LogoWithCopyright size="80px" alt="Starship Psychics" />
-            {isTemporaryAccount ? t('chat.titleTrial') : t('chat.title')}
-          </h2>
-          <p className="chat-subtitle">{t('chat.subtitle')}</p>
+          <LogoWithCopyright size="80px" alt="Starship Psychics" />
+          <div className="chat-header-text">
+            <h2 className="heading-primary">{isTemporaryAccount ? t('chat.titleTrial') : t('chat.title')}</h2>
+            <p className="chat-subtitle">{t('chat.subtitle')}</p>
+          </div>
         </div>
 
         {/* Messages */}

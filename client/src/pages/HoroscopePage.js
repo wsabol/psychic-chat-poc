@@ -152,11 +152,11 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
       <ExitButton isTemporaryAccount={auth?.isTemporaryAccount} onClick={handleClose} />
 
       <div className="horoscope-header">
-        <h2 className="heading-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <LogoWithCopyright size="80px" alt="Starship Psychics" />
-          {t('horoscope.title')}
-        </h2>
-        <p className="horoscope-subtitle">{t('horoscope.subtitle')}</p>
+        <LogoWithCopyright size="80px" alt="Starship Psychics" />
+        <div className="horoscope-header-text">
+          <h2 className="heading-primary">{t('horoscope.title')}</h2>
+          <p className="horoscope-subtitle">{t('horoscope.subtitle')}</p>
+        </div>
       </div>
 
       <div className="horoscope-toggle">

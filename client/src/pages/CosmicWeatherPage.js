@@ -80,11 +80,11 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
   return (
     <div className="page-safe-area cosmic-weather-page">
       <div className="cosmic-header">
-        <h2 className="heading-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <LogoWithCopyright size="80px" alt="Starship Psychics" />
-          {t('cosmicWeather.title')}
-        </h2>
-        <p className="cosmic-subtitle">{t('cosmicWeather.subtitle')}</p>
+        <LogoWithCopyright size="80px" alt="Starship Psychics" />
+        <div className="cosmic-header-text">
+          <h2 className="heading-primary">{t('cosmicWeather.title')}</h2>
+          <p className="cosmic-subtitle">{t('cosmicWeather.subtitle')}</p>
+        </div>
       </div>
 
       {!loading && !error && !cosmicData && isBirthInfoMissing(astroInfo) && (
