@@ -61,23 +61,16 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
   // CRITICAL: Define goToPage FIRST so it can be used in effects and handlers
   // This must come before any effect that calls it
   const goToPage = useCallback((index) => {
-    console.log('[MAIN-CONTAINER] goToPage called with index:', index);
-    console.log('[MAIN-CONTAINER] Current mode:', currentMode);
-    console.log('[MAIN-CONTAINER] Current page index:', currentPageIndex);
     
     // Check if page is allowed in current mode
     const isAllowed = modeRules.isPageAllowed(index);
-    console.log('[MAIN-CONTAINER] Is page', index, 'allowed?', isAllowed);
     
     if (!isAllowed) {
       console.error('[MAIN-CONTAINER] Navigation to page', index, 'BLOCKED by mode rules');
       return;
     }
-
-    console.log('[MAIN-CONTAINER] Navigation allowed, updating page index...');
     setCurrentPageIndex(prevPageIndex => {
       const newIndex = Math.max(0, Math.min(index, PAGES.length - 1));
-      console.log('[MAIN-CONTAINER] Setting page from', prevPageIndex, 'to', newIndex);
       if (newIndex !== prevPageIndex) {
         setSwipeDirection(newIndex > prevPageIndex ? 1 : -1);
         window.history.pushState({ pageIndex: newIndex }, '');
@@ -122,11 +115,9 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
     if (isStillOnboarding && startingPage !== currentPageIndex) {
       // Special case: If personal_info is done and we're on Chat (showing welcome), don't navigate away
       if (personalInfoCompleted && currentPageIndex === 0 && startingPage === 1) {
-        console.log('[MAIN-CONTAINER] Ignoring startingPage change - personal_info complete, staying on Chat for welcome');
         return;
       }
       
-      console.log('[MAIN-CONTAINER] startingPage changed to', startingPage, '- syncing...');
       goToPage(startingPage);
     }
     // IMPORTANT: Dependency array excludes currentPageIndex to avoid fighting with programmatic navigation

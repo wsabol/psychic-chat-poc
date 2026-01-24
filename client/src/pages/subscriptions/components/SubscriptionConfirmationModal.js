@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from '../../../context/TranslationContext';
-import { fetchWithTokenRefresh } from '../../../utils/fetchWithTokenRefresh';
+import { deduplicatedFetch } from '../../../utils/deduplicatedFetch';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -25,6 +25,13 @@ export default function SubscriptionConfirmationModal({
   // Use amountDue from the response or fallback to latest_invoice data
   const amount = subscription.amountDue !== undefined ? subscription.amountDue : (subscription.latest_invoice?.amount_due || 0);
   const currency = (subscription.currency || subscription.latest_invoice?.currency || 'usd').toUpperCase();
+  
+  // Extract tax information if available
+  const invoice = subscription.latest_invoice;
+  const subtotal = invoice?.subtotal;
+  const tax = invoice?.tax;
+  const total = invoice?.total;
+  const hasTaxBreakdown = subtotal !== undefined && tax !== undefined && tax > 0;
 
   const handleConfirmPayment = async (e) => {
     e.preventDefault();
@@ -43,7 +50,7 @@ export default function SubscriptionConfirmationModal({
       
       // STEP 1: Complete the subscription on server
       // This finalizes invoice from DRAFT -> OPEN and triggers payment attempt
-      const finalizeResponse = await fetchWithTokenRefresh(
+      const finalizeResponse = await deduplicatedFetch(
         `${API_URL}/billing/complete-subscription/${subId}`,
         {
           method: 'POST',
@@ -107,10 +114,27 @@ export default function SubscriptionConfirmationModal({
         {error && <div className="alert alert-error">{error}</div>}
 
         <div className="subscription-summary">
-          <div className="summary-row">
-            <span>{t('subscriptions.amountDue')}</span>
-            <strong>{(amount / 100).toFixed(2)} {currency}</strong>
-          </div>
+          {hasTaxBreakdown ? (
+            <>
+              <div className="summary-row">
+                <span>{t('invoices.subtotal') || 'Subtotal'}</span>
+                <strong>{(subtotal / 100).toFixed(2)} {currency}</strong>
+              </div>
+              <div className="summary-row">
+                <span>{t('invoices.tax') || 'Tax'}</span>
+                <strong>{(tax / 100).toFixed(2)} {currency}</strong>
+              </div>
+              <div className="summary-row" style={{ borderTop: '1px solid #e0e0e0', paddingTop: '0.5rem', marginTop: '0.5rem' }}>
+                <span>{t('invoices.total') || 'Total'}</span>
+                <strong>{(total / 100).toFixed(2)} {currency}</strong>
+              </div>
+            </>
+          ) : (
+            <div className="summary-row">
+              <span>{t('subscriptions.amountDue')}</span>
+              <strong>{(amount / 100).toFixed(2)} {currency}</strong>
+            </div>
+          )}
           <div className="summary-row">
             <span>{t('subscriptions.status')}</span>
             <strong className="status-warning">{t('subscriptions.statusIncomplete')}</strong>
@@ -148,4 +172,3 @@ export default function SubscriptionConfirmationModal({
     </div>
   );
 }
-

@@ -128,10 +128,8 @@ export function usePersonalInfoSubmit({
    */
   const handleNavigation = async () => {
     const shouldNav = shouldNavigateAfterSave();
-    console.log('[PERSONAL-INFO] Should navigate?', shouldNav);
     
     if (shouldNav) {
-      console.log('[PERSONAL-INFO] Starting navigation with polling...');
       // Navigate with astrology polling
       await navigateToTarget(true);
     } else {

@@ -27,6 +27,7 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
   const [setupIntent, setSetupIntent] = useState(null);
   const [billingForm, setBillingForm] = useState({
     cardholderName: '',
+    billingCountry: '',
     billingAddress: '',
     billingCity: '',
     billingState: '',
@@ -119,11 +120,35 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
         return;
       }
 
-      // Attach to customer
-      await billing.attachPaymentMethod(paymentMethodId);
+      // Note: confirmCardSetup automatically attaches the payment method to the customer
+      // No need to call attachPaymentMethod separately
 
       // Set as default
       await billing.setDefaultPaymentMethod(paymentMethodId);
+
+      // Save billing address to database (for tax calculation)
+      if (billingForm.billingCountry) {
+        try {
+          const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+          await fetch(`${API_URL}/billing/save-billing-address`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              country: billingForm.billingCountry,
+              state: billingForm.billingState,
+              city: billingForm.billingCity,
+              postalCode: billingForm.billingZip,
+              addressLine1: billingForm.billingAddress,
+            }),
+          });
+        } catch (err) {
+          // Non-critical - billing address save failed but payment method was added
+          console.warn('Failed to save billing address:', err);
+        }
+      }
 
       // ✅ DEBOUNCED: Refresh in background (500ms) - don't wait
       debouncedRefreshPaymentMethods();
@@ -246,5 +271,3 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
     </div>
   );
 }
-
-

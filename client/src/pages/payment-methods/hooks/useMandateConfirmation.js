@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { fetchWithTokenRefresh } from '../../../utils/fetchWithTokenRefresh';
+import { deduplicatedFetch } from '../../../utils/deduplicatedFetch';
 import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 import {
   validatePaymentMethodResponse,
@@ -22,7 +22,7 @@ export function useMandateConfirmation(token) {
       setLoading(true);
       setError(null);
 
-      const response = await fetchWithTokenRefresh(
+      const response = await deduplicatedFetch(
         `${API_URL}/billing/create-from-financial`,
         {
           method: 'POST',
@@ -62,7 +62,7 @@ export function useMandateConfirmation(token) {
       const userAgent = getClientUserAgent();
       const ipAddress = await getClientIpAddress();
 
-      const response = await fetchWithTokenRefresh(
+      const response = await deduplicatedFetch(
         `${API_URL}/billing/confirm-setup-intent`,
         {
           method: 'POST',

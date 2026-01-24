@@ -142,6 +142,73 @@ export default function CardPaymentForm({
 
       <div className="form-row">
         <div className="form-group full-width">
+          <label>{t('paymentMethods.country')} *</label>
+          <select
+            name="billingCountry"
+            value={billingForm.billingCountry || ''}
+            onChange={onBillingFormChange}
+            className="form-input"
+            required
+          >
+            <option value="">{t('paymentMethods.selectCountry')}</option>
+            <option value="US">{t('countries.US')}</option>
+            <option value="CA">{t('countries.CA')}</option>
+            <option value="GB">{t('countries.GB')}</option>
+            <option value="AU">{t('countries.AU')}</option>
+            <option value="DE">{t('countries.DE')}</option>
+            <option value="FR">{t('countries.FR')}</option>
+            <option value="IT">{t('countries.IT')}</option>
+            <option value="ES">{t('countries.ES')}</option>
+            <option value="NL">{t('countries.NL')}</option>
+            <option value="BE">{t('countries.BE')}</option>
+            <option value="CH">{t('countries.CH')}</option>
+            <option value="AT">{t('countries.AT')}</option>
+            <option value="SE">{t('countries.SE')}</option>
+            <option value="NO">{t('countries.NO')}</option>
+            <option value="DK">{t('countries.DK')}</option>
+            <option value="FI">{t('countries.FI')}</option>
+            <option value="IE">{t('countries.IE')}</option>
+            <option value="PT">{t('countries.PT')}</option>
+            <option value="GR">{t('countries.GR')}</option>
+            <option value="PL">{t('countries.PL')}</option>
+            <option value="CZ">{t('countries.CZ')}</option>
+            <option value="HU">{t('countries.HU')}</option>
+            <option value="RO">{t('countries.RO')}</option>
+            <option value="BG">{t('countries.BG')}</option>
+            <option value="HR">{t('countries.HR')}</option>
+            <option value="SI">{t('countries.SI')}</option>
+            <option value="SK">{t('countries.SK')}</option>
+            <option value="LT">{t('countries.LT')}</option>
+            <option value="LV">{t('countries.LV')}</option>
+            <option value="EE">{t('countries.EE')}</option>
+            <option value="JP">{t('countries.JP')}</option>
+            <option value="CN">{t('countries.CN')}</option>
+            <option value="IN">{t('countries.IN')}</option>
+            <option value="BR">{t('countries.BR')}</option>
+            <option value="MX">{t('countries.MX')}</option>
+            <option value="AR">{t('countries.AR')}</option>
+            <option value="CL">{t('countries.CL')}</option>
+            <option value="CO">{t('countries.CO')}</option>
+            <option value="PE">{t('countries.PE')}</option>
+            <option value="ZA">{t('countries.ZA')}</option>
+            <option value="KR">{t('countries.KR')}</option>
+            <option value="SG">{t('countries.SG')}</option>
+            <option value="MY">{t('countries.MY')}</option>
+            <option value="TH">{t('countries.TH')}</option>
+            <option value="ID">{t('countries.ID')}</option>
+            <option value="PH">{t('countries.PH')}</option>
+            <option value="VN">{t('countries.VN')}</option>
+            <option value="NZ">{t('countries.NZ')}</option>
+            <option value="IL">{t('countries.IL')}</option>
+            <option value="TR">{t('countries.TR')}</option>
+            <option value="AE">{t('countries.AE')}</option>
+            <option value="SA">{t('countries.SA')}</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="form-row">
+        <div className="form-group full-width">
           <label>{t('paymentMethods.streetAddress')}</label>
           <input
             type="text"

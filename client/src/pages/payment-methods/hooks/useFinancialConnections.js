@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { fetchWithTokenRefresh } from '../../../utils/fetchWithTokenRefresh';
+import { deduplicatedFetch } from '../../../utils/deduplicatedFetch';
 import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 import {
   validateFinancialConnectionsResponse,
@@ -21,7 +21,7 @@ export function useFinancialConnections(token) {
       setLoading(true);
       setError(null);
 
-      const response = await fetchWithTokenRefresh(
+      const response = await deduplicatedFetch(
         `${API_URL}/billing/financial-connections-session`,
         {
           method: 'POST',
@@ -90,7 +90,7 @@ export function useFinancialConnections(token) {
       setLoading(true);
       setError(null);
 
-      const response = await fetchWithTokenRefresh(
+      const response = await deduplicatedFetch(
         `${API_URL}/billing/financial-accounts`,
         {
           method: 'POST',

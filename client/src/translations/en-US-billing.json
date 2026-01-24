@@ -41,6 +41,8 @@
     "cardholderName": "Cardholder Name",
     "cardDetails": "Card Details",
     "billingAddress": "Billing Address",
+    "country": "Country",
+    "selectCountry": "Select Country",
     "streetAddress": "Street Address",
     "city": "City",
     "state": "State",

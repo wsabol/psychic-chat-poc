@@ -119,11 +119,25 @@ export default function InvoicesPage({ userId, token, auth }) {
                   {t('invoices.invoiceNumber')} {invoice.number}
                 </h3>
                 <p style={{ margin: '0.25rem 0', fontSize: '14px', color: '#666' }}>
-                  <strong>{t('invoices.date')}:</strong> {new Date(invoice.created).toLocaleDateString()}
+                  <strong>{t('invoices.date')}:</strong> {new Date(invoice.created * 1000).toLocaleDateString()}
                 </p>
-                <p style={{ margin: '0.25rem 0', fontSize: '14px', color: '#666' }}>
-                  <strong>{t('invoices.amount')}:</strong> ${(invoice.amount_due / 100).toFixed(2)}
-                </p>
+                {invoice.subtotal !== undefined && invoice.tax !== undefined && invoice.tax > 0 ? (
+                  <>
+                    <p style={{ margin: '0.25rem 0', fontSize: '14px', color: '#666' }}>
+                      <strong>{t('invoices.subtotal') || 'Subtotal'}:</strong> ${(invoice.subtotal / 100).toFixed(2)}
+                    </p>
+                    <p style={{ margin: '0.25rem 0', fontSize: '14px', color: '#666' }}>
+                      <strong>{t('invoices.tax') || 'Tax'}:</strong> ${(invoice.tax / 100).toFixed(2)}
+                    </p>
+                    <p style={{ margin: '0.25rem 0', fontSize: '14px', color: '#666' }}>
+                      <strong>{t('invoices.total') || 'Total'}:</strong> ${(invoice.total / 100).toFixed(2)}
+                    </p>
+                  </>
+                ) : (
+                  <p style={{ margin: '0.25rem 0', fontSize: '14px', color: '#666' }}>
+                    <strong>{t('invoices.amount')}:</strong> ${(invoice.amount_due / 100).toFixed(2)}
+                  </p>
+                )}
                 <p style={{ margin: '0.25rem 0', fontSize: '14px', color: '#666' }}>
                   <strong>{t('invoices.status')}:</strong> {invoice.status}
                 </p>

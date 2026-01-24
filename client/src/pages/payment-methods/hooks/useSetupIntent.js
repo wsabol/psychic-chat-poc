@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { fetchWithTokenRefresh } from '../../../utils/fetchWithTokenRefresh';
+import { deduplicatedFetch } from '../../../utils/deduplicatedFetch';
 import { validateSetupIntentResponse } from '../utils/bankAccountUtils';
 import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
@@ -17,7 +17,7 @@ export function useSetupIntent(token) {
       setLoading(true);
       setError(null);
 
-      const response = await fetchWithTokenRefresh(
+      const response = await deduplicatedFetch(
         `${API_URL}/billing/setup-intent`,
         {
           method: 'POST',

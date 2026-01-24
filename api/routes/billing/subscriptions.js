@@ -59,6 +59,13 @@ router.post('/create-subscription', authenticateToken, async (req, res) => {
       amountDue: subscription.latest_invoice?.amount_due || 0,
       currency: subscription.latest_invoice?.currency || 'usd',
       invoiceId: subscription.latest_invoice?.id,
+      latest_invoice: {
+        subtotal: subscription.latest_invoice?.subtotal,
+        tax: subscription.latest_invoice?.tax,
+        total: subscription.latest_invoice?.total,
+        amount_due: subscription.latest_invoice?.amount_due,
+        currency: subscription.latest_invoice?.currency,
+      },
     });
   } catch (error) {
     return billingError(res, 'Failed to create subscription');
@@ -120,6 +127,13 @@ router.post('/complete-subscription/:subscriptionId', authenticateToken, async (
           status: subscription.status,
           clientSecret: subscription.latest_invoice?.payment_intent?.client_secret,
           amountDue: subscription.latest_invoice?.amount_due || 0,
+          latest_invoice: {
+            subtotal: subscription.latest_invoice?.subtotal,
+            tax: subscription.latest_invoice?.tax,
+            total: subscription.latest_invoice?.total,
+            amount_due: subscription.latest_invoice?.amount_due,
+            currency: subscription.latest_invoice?.currency,
+          },
         },
       });
     }
@@ -148,6 +162,13 @@ router.post('/complete-subscription/:subscriptionId', authenticateToken, async (
           status: updatedSub.status,
           clientSecret: updatedSub.latest_invoice?.payment_intent?.client_secret || null,
           amountDue: updatedSub.latest_invoice?.amount_due || 0,
+          latest_invoice: {
+            subtotal: updatedSub.latest_invoice?.subtotal,
+            tax: updatedSub.latest_invoice?.tax,
+            total: updatedSub.latest_invoice?.total,
+            amount_due: updatedSub.latest_invoice?.amount_due,
+            currency: updatedSub.latest_invoice?.currency,
+          },
         },
       });
     } else { 
@@ -162,8 +183,15 @@ router.post('/complete-subscription/:subscriptionId', authenticateToken, async (
           status: updatedSub.status,
           clientSecret: updatedSub.latest_invoice?.payment_intent?.client_secret || null,
           amountDue: updatedSub.latest_invoice?.amount_due || 0,
+          latest_invoice: {
+            subtotal: updatedSub.latest_invoice?.subtotal,
+            tax: updatedSub.latest_invoice?.tax,
+            total: updatedSub.latest_invoice?.total,
+            amount_due: updatedSub.latest_invoice?.amount_due,
+            currency: updatedSub.latest_invoice?.currency,
+          },
         },
-        });
+      });
     }
   } catch (error) {
     return billingError(res, 'Failed to complete subscription');

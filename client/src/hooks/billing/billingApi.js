@@ -1,4 +1,4 @@
-import { fetchWithTokenRefresh } from '../../utils/fetchWithTokenRefresh';
+import { deduplicatedFetch } from '../../utils/deduplicatedFetch';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
@@ -25,7 +25,7 @@ export async function billingFetch(endpoint, options = {}) {
   };
 
   try {
-    const response = await fetchWithTokenRefresh(`${API_URL}${endpoint}`, {
+    const response = await deduplicatedFetch(`${API_URL}${endpoint}`, {
       method,
       headers,
       ...(body && { body: JSON.stringify(body) }),

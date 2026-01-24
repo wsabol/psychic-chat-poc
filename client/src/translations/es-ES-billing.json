@@ -131,6 +131,8 @@
     "cardholderName": "Nombre del Titular de la Tarjeta",
     "cardDetails": "Detalles de la Tarjeta",
     "billingAddress": "Dirección de Facturación",
+    "country": "País",
+    "selectCountry": "Seleccionar País",
     "streetAddress": "Dirección de la Calle",
     "city": "Ciudad",
     "state": "Estado",

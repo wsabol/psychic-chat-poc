@@ -59,6 +59,11 @@ CREATE TABLE IF NOT EXISTS user_personal_info (
     stripe_subscription_id_encrypted BYTEA,
     last_status_check_at TIMESTAMP,
     subscription_cancelled_at TIMESTAMP,
+    billing_country_encrypted BYTEA,
+    billing_state_encrypted BYTEA,
+    billing_city_encrypted BYTEA,
+    billing_postal_code_encrypted BYTEA,
+    billing_address_line1_encrypted BYTEA,
     reengagement_email_6m_sent_at TIMESTAMP DEFAULT NULL,
     reengagement_email_1y_sent_at TIMESTAMP DEFAULT NULL,
     reengagement_email_unsub BOOLEAN DEFAULT FALSE

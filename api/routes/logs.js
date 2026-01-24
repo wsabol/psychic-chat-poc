@@ -25,9 +25,13 @@ router.post('/error', async (req, res) => {
       return validationError(res, 'Missing required fields: service, errorMessage');
     }
 
-    // Validate severity
+    // Validate and truncate fields to fit database constraints
     const validSeverities = ['error', 'warning', 'critical'];
     const finalSeverity = validSeverities.includes(severity) ? severity : 'error';
+    
+    // Truncate fields to fit VARCHAR constraints (assuming VARCHAR(50) for service, VARCHAR(255) for others)
+    const truncatedService = String(service).substring(0, 50);
+    const truncatedContext = context ? String(context).substring(0, 500) : null;
 
     // Simple query without complex encryption in template
     let query = `
@@ -42,7 +46,7 @@ router.post('/error', async (req, res) => {
       RETURNING id
     `;
     
-    let params = [service, errorMessage, finalSeverity, context || null];
+    let params = [truncatedService, errorMessage, finalSeverity, truncatedContext];
 
     // Add encrypted stack trace if present
     if (stack && process.env.ENCRYPTION_KEY) {
