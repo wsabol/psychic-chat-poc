@@ -9,6 +9,7 @@ import { runAccountCleanupJob, getCleanupJobStatus } from './accountCleanupJob.j
 import { runSubscriptionCheckJob, getSubscriptionCheckJobStatus } from './subscriptionCheckJob.js';
 import { runTempAccountCleanupJob, getTempAccountCleanupJobStatus } from './tempAccountCleanupJob.js';
 import { sendReminderNotifications, enforceGracePeriodExpiration, getPolicyNotificationJobStatus } from './policyChangeNotificationJob.js';
+import { processPendingMigrations } from './priceChangeMigrationJob.js';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 let cleanupJobHandle = null;
@@ -16,6 +17,7 @@ let subscriptionCheckJobHandle = null;
 let tempAccountCleanupJobHandle = null;
 let policyReminderJobHandle = null;
 let gracePeriodEnforcementJobHandle = null;
+let priceChangeMigrationJobHandle = null;
 
 /**
  * Initialize all scheduled jobs
@@ -102,6 +104,22 @@ export function initializeScheduler() {
       }
     );
 
+    // Schedule price change migration job to run daily at 4:00 AM UTC
+    // Automatically migrates subscriptions after 30-day notice period expires
+    priceChangeMigrationJobHandle = cron.schedule('0 4 * * *',
+      async () => {
+        try {
+          await processPendingMigrations();
+        } catch (error) {
+          logErrorFromCatch(error, 'scheduler', 'Price change migration job failed');
+        }
+      },
+      {
+        scheduled: true,
+        timezone: 'UTC'
+      }
+    );
+
     // Optional: For testing, run immediately (non-blocking)
     if (process.env.CLEANUP_RUN_ON_STARTUP === 'true') {
       
@@ -136,7 +154,8 @@ export function initializeScheduler() {
       cleanup: cleanupJobHandle,
       subscriptionCheck: subscriptionCheckJobHandle,
       policyReminder: policyReminderJobHandle,
-      gracePeriodEnforcement: gracePeriodEnforcementJobHandle
+      gracePeriodEnforcement: gracePeriodEnforcementJobHandle,
+      priceChangeMigration: priceChangeMigrationJobHandle
     };
   } catch (error) {
     logErrorFromCatch('[Scheduler] FATAL ERROR during initialization:');
@@ -174,6 +193,11 @@ export function stopScheduler() {
     if (gracePeriodEnforcementJobHandle) {
       gracePeriodEnforcementJobHandle.stop();
       gracePeriodEnforcementJobHandle.destroy();
+    }
+
+    if (priceChangeMigrationJobHandle) {
+      priceChangeMigrationJobHandle.stop();
+      priceChangeMigrationJobHandle.destroy();
     }
   } catch (error) {
     logErrorFromCatch('[Scheduler] Error stopping scheduler:', error.message);

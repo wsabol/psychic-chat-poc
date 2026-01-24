@@ -125,6 +125,7 @@ export { generateSubscriptionPastDueEmail } from './templates/subscriptionPastDu
 export { generateSubscriptionIncompleteEmail } from './templates/subscriptionIncompleteEmail.js';
 export { generateSubscriptionCheckFailedEmail } from './templates/subscriptionCheckFailedEmail.js';
 export { generateSubscriptionExpiringEmail } from './templates/subscriptionExpiringEmail.js';
+export { generatePriceChangeEmail } from './templates/priceChangeEmail.js';
 
 // Re-export utilities for advanced use cases
 export { sendEmail } from './emailSender.js';

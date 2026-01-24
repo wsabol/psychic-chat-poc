@@ -42,15 +42,12 @@ export function generatePriceChangeEmail(data) {
         `, EMAIL_CONFIG.colors.primary)}
         ${createSection(
             'What This Means For You',
-            `Your subscription will automatically renew at the new price of <strong>$${newPrice}/${intervalUnit}</strong> on ${effectiveDateFormatted}. 
-            This change allows us to continue providing you with quality service, new features, and ongoing improvements to your experience.`
+            `Suscriptioin prices remain unchanged until ${effectiveDateFormatted}. After which, subscriptions renewals will reflect the new price of <strong>$${newPrice}/${intervalUnit}</strong>. This change allows us to continue providing you with quality service, new features, and ongoing improvements to your experience.`
         )}
         ${createButton('View Billing Details', billingLink)}
         ${createWarningBox(
             '📅 Important Timeline',
-            `<strong>Your next billing date is ${effectiveDateFormatted}</strong>. 
-            On this date, you'll be charged the new amount of $${newPrice}. 
-            Until then, you'll continue to enjoy your current subscription at the current price.`
+            `<strong>The new subscription price becomes effective ${effectiveDateFormatted}</strong>. Until then, you'll continue to enjoy your current or renewed subscription at the current price. Renewals and new purchases after ${effectiveDateFormatted} will automatically reflect the new price of <strong>$${newPrice}/${intervalUnit}</strong>.`
         )}
         ${createSection(
             'Your Options',

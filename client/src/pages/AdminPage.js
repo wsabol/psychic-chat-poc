@@ -11,6 +11,7 @@ import ErrorLogsReport from '../components/admin/ErrorLogsReport';
 import ErrorLoggerTestHarness from '../components/admin/ErrorLoggerTestHarness';
 import SubscriptionReportTab from '../components/admin/SubscriptionReportTab';
 import FreeTrialWhitelist from '../components/admin/FreeTrialWhitelist';
+import PriceManagementTab from '../components/admin/PriceManagementTab';
 import { useAdminCheck } from './hooks/useAdminCheck';
 import { useAnalyticsReport } from './hooks/useAnalyticsReport';
 import { styles } from './admin-styles';
@@ -82,6 +83,11 @@ export default function AdminPage({ token, userId }) {
             isActive={activeTab === 'whitelist'}
             onClick={() => setActiveTab('whitelist')}
           />
+          <TabButton
+            label="💰 Price Management"
+            isActive={activeTab === 'pricing'}
+            onClick={() => setActiveTab('pricing')}
+          />
         </div>
 
         {/* Subscription Report Tab */}
@@ -119,6 +125,9 @@ export default function AdminPage({ token, userId }) {
 
         {/* Free Trial Whitelist Tab */}
         {activeTab === 'whitelist' && <FreeTrialWhitelist token={token} />}
+
+        {/* Price Management Tab */}
+        {activeTab === 'pricing' && <PriceManagementTab token={token} />}
       </div>
     </div>
   );

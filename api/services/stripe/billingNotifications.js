@@ -194,9 +194,57 @@ export async function notifySubscriptionExpiring(userId, daysRemaining) {
 }
 
 /**
+ * Send price change notifications to all subscribers for both monthly and annual plans
+ * Single batch operation for complete price migration
+ * @param {Object} monthlyChange - { oldPriceId, newPriceId, oldAmount, newAmount }
+ * @param {Object} annualChange - { oldPriceId, newPriceId, oldAmount, newAmount }
+ * @returns {Promise<Object>} Combined results for both intervals
+ */
+export async function schedulePriceChange(monthlyChange, annualChange) {
+  const results = {
+    monthly: { total: 0, successful: 0, failed: 0, errors: [] },
+    annual: { total: 0, successful: 0, failed: 0, errors: [] }
+  };
+
+  try {
+    // Send notifications for monthly subscribers
+    if (monthlyChange && monthlyChange.newPriceId) {
+      results.monthly = await sendPriceChangeNotifications(
+        'month',
+        monthlyChange.oldAmount,
+        monthlyChange.newAmount,
+        monthlyChange.oldPriceId,
+        monthlyChange.newPriceId
+      );
+    }
+
+    // Send notifications for annual subscribers
+    if (annualChange && annualChange.newPriceId) {
+      results.annual = await sendPriceChangeNotifications(
+        'year',
+        annualChange.oldAmount,
+        annualChange.newAmount,
+        annualChange.oldPriceId,
+        annualChange.newPriceId
+      );
+    }
+
+    return {
+      success: true,
+      monthly: results.monthly,
+      annual: results.annual,
+      totalSent: results.monthly.successful + results.annual.successful,
+      totalFailed: results.monthly.failed + results.annual.failed
+    };
+  } catch (error) {
+    logErrorFromCatch(error, 'app', 'schedule-price-change');
+    throw error;
+  }
+}
+
+/**
  * Send price change notification to all active subscribers with a specific interval
- * Uses database ID (not hashed user_id) for foreign key relationship
- * user_id column contains hashed value for logging/errors
+ * Uses hashed user_id for privacy - no plain IDs stored
  * @param {string} interval - 'month' or 'year'
  * @param {number} oldAmount - Old price in cents
  * @param {number} newAmount - New price in cents
@@ -206,15 +254,18 @@ export async function notifySubscriptionExpiring(userId, daysRemaining) {
  */
 export async function sendPriceChangeNotifications(interval, oldAmount, newAmount, oldPriceId = null, newPriceId = null) {
   try {
+    console.log(`[Price Change Notifications] Starting notification process for ${interval} interval`);
+    console.log(`[Price Change Notifications] Old: ${oldAmount} cents, New: ${newAmount} cents`);
+    console.log(`[Price Change Notifications] Old Price ID: ${oldPriceId}, New Price ID: ${newPriceId}`);
+    
     if (!process.env.ENCRYPTION_KEY) {
       throw new Error('ENCRYPTION_KEY not configured!');
     }
 
     // Get all active subscribers with this interval
-    // id = database ID (for price_change_notifications FK), user_id = hashed value (for logging)
+    // user_id = hashed value (SHA-256) for FK relationship and logging
     const query = `
       SELECT 
-        id,
         user_id,
         pgp_sym_decrypt(email_encrypted, $1) as email,
         current_period_end
@@ -223,11 +274,13 @@ export async function sendPriceChangeNotifications(interval, oldAmount, newAmoun
         AND subscription_status = 'active'
         AND stripe_subscription_id_encrypted IS NOT NULL
         AND email_encrypted IS NOT NULL
-      ORDER BY id
+      ORDER BY user_id
     `;
 
     const result = await db.query(query, [process.env.ENCRYPTION_KEY, interval]);
     const subscribers = result.rows;
+
+    console.log(`[Price Change Notifications] Found ${subscribers.length} subscribers for ${interval} interval`);
 
     const results = {
       total: subscribers.length,
@@ -236,12 +289,23 @@ export async function sendPriceChangeNotifications(interval, oldAmount, newAmoun
       errors: [],
     };
 
+    if (subscribers.length === 0) {
+      console.log(`[Price Change Notifications] No subscribers found for ${interval} - skipping`);
+      return results;
+    }
+
     // Import the existing price change email template
     const { generatePriceChangeEmail } = await import('../../shared/email/templates/priceChangeEmail.js');
 
     for (const subscriber of subscribers) {
       try {
-        const effectiveDate = new Date(subscriber.current_period_end * 1000);
+        console.log(`[Price Change Notifications] Processing subscriber: ${subscriber.email}`);
+        
+        // Set effective date to 30 days from now
+        const effectiveDate = new Date();
+        effectiveDate.setDate(effectiveDate.getDate() + 30);
+        
+        console.log(`[Price Change Notifications] Effective date: ${effectiveDate.toISOString()}`);
         
         // Generate email using existing template
         const emailContent = generatePriceChangeEmail({
@@ -251,6 +315,8 @@ export async function sendPriceChangeNotifications(interval, oldAmount, newAmoun
           effectiveDate
         });
 
+        console.log(`[Price Change Notifications] Sending email to: ${subscriber.email}`);
+        
         // Send email
         await sendEmail({
           to: subscriber.email,
@@ -258,16 +324,23 @@ export async function sendPriceChangeNotifications(interval, oldAmount, newAmoun
           html: emailContent.html
         });
 
-        // Record notification using database ID (subscriber.id, not hashed user_id)
+        console.log(`[Price Change Notifications] Email sent successfully to: ${subscriber.email}`);
+
+        // Record notification using hashed user_id
+        console.log(`[Price Change Notifications] Recording notification in database for user_id: ${subscriber.user_id}`);
+        
         await db.query(
           `INSERT INTO price_change_notifications 
-           (user_id, old_price_id, new_price_id, old_price_amount, new_price_amount, price_interval, effective_date, email_sent)
+           (user_id_hash, old_price_id, new_price_id, old_price_amount, new_price_amount, price_interval, effective_date, email_sent)
            VALUES ($1, $2, $3, $4, $5, $6, $7, true)`,
-          [subscriber.id, oldPriceId, newPriceId, oldAmount, newAmount, interval, effectiveDate]
+          [subscriber.user_id, oldPriceId, newPriceId, oldAmount, newAmount, interval, effectiveDate]
         );
+
+        console.log(`[Price Change Notifications] Database record created successfully`);
 
         results.successful++;
       } catch (error) {
+        console.error(`[Price Change Notifications] Error processing subscriber ${subscriber.email}:`, error);
         results.failed++;
         results.errors.push({
           userId: subscriber.user_id, // hashed user_id for logging
@@ -278,8 +351,10 @@ export async function sendPriceChangeNotifications(interval, oldAmount, newAmoun
       }
     }
 
+    console.log(`[Price Change Notifications] Complete: ${results.successful} successful, ${results.failed} failed`);
     return results;
   } catch (error) {
+    console.error('[Price Change Notifications] Fatal error:', error);
     logErrorFromCatch(error, 'app', 'send-price-change-notifications');
     throw error;
   }
@@ -289,5 +364,6 @@ export default {
   notifyBillingEvent,
   notifySubscriptionCheckFailed,
   notifySubscriptionExpiring,
-  sendPriceChangeNotifications
+  sendPriceChangeNotifications,
+  schedulePriceChange
 };

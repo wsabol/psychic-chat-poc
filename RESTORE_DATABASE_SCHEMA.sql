@@ -514,10 +514,11 @@ CREATE INDEX IF NOT EXISTS idx_free_trial_whitelist_user_hash_active ON free_tri
 
 -- TABLE: price_change_notifications (PHASE 4.0: Subscription Price Management)
 -- Tracks when users are notified about subscription price changes
--- Links to user via user_id (database ID, not hash), stores old/new prices, interval type, and notification timestamp
+-- SECURITY: Uses user_id_hash (SHA-256) instead of database ID for privacy
+-- Links to user_personal_info(user_id) which stores hashed user IDs
 CREATE TABLE IF NOT EXISTS price_change_notifications (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL,
+    user_id_hash VARCHAR(64) NOT NULL,
     old_price_id VARCHAR(100),
     new_price_id VARCHAR(100),
     old_price_amount INTEGER NOT NULL,
@@ -528,12 +529,12 @@ CREATE TABLE IF NOT EXISTS price_change_notifications (
     email_sent BOOLEAN DEFAULT TRUE,
     migration_completed BOOLEAN DEFAULT FALSE,
     migration_completed_at TIMESTAMP NULL,
-    CONSTRAINT fk_price_notification_user_id FOREIGN KEY (user_id) 
-        REFERENCES user_personal_info(id) 
+    CONSTRAINT fk_user_id_hash FOREIGN KEY (user_id_hash) 
+        REFERENCES user_personal_info(user_id) 
         ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_price_notifications_user_id ON price_change_notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_price_notifications_user_id_hash ON price_change_notifications(user_id_hash);
 CREATE INDEX IF NOT EXISTS idx_price_notifications_interval ON price_change_notifications(price_interval);
 CREATE INDEX IF NOT EXISTS idx_price_notifications_notified_at ON price_change_notifications(notified_at);
 CREATE INDEX IF NOT EXISTS idx_price_notifications_effective_date ON price_change_notifications(effective_date);

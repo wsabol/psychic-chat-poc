@@ -7,36 +7,62 @@ import { db } from '../../shared/db.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
- * Create a new price in Stripe
- * @param {string} productId - Stripe product ID
+ * Create a new price in Stripe with automatic tax collection
+ * Creates a new product with proper name and description for each price
  * @param {number} amount - Price in cents
  * @param {string} interval - 'month' or 'year'
- * @param {Object} metadata - Additional metadata
- * @returns {Promise<Object>} Created Stripe price object
+ * @returns {Promise<Object>} Created Stripe price object with productId
  */
-export async function createNewPrice(productId, amount, interval, metadata = {}) {
+export async function createNewPrice(amount, interval) {
   try {
     if (!stripe) {
       throw new Error('Stripe is not configured.');
     }
 
+    // Determine name and description based on interval
+    const name = interval === 'month' ? 'Monthly subscription' : 'Annual subscription';
+    const description = interval === 'month' 
+      ? 'Full access with renewal each month'
+      : 'Full access with payments once per year';
+
+    // Create a new product for this price
+    const product = await stripe.products.create({
+      name: name,
+      description: description,
+      metadata: {
+        type: 'subscription',
+        interval: interval,
+        created_by: 'admin_price_management',
+        created_at: new Date().toISOString(),
+      }
+    });
+
+    console.log(`[Price Management] Created product: ${product.id} - ${name}`);
+
+    // Create price for the product
     const price = await stripe.prices.create({
-      product: productId,
+      product: product.id,
       unit_amount: amount,
       currency: 'usd',
       recurring: {
         interval: interval,
         interval_count: 1,
       },
+      tax_behavior: 'exclusive',  // Tax calculated separately from price
       metadata: {
-        ...metadata,
         created_by: 'admin_price_management',
         created_at: new Date().toISOString(),
       },
     });
 
-    return price;
+    console.log(`[Price Management] Created price: ${price.id} - ${amount} cents`);
+
+    return {
+      ...price,
+      productId: product.id
+    };
   } catch (error) {
+    console.error('[Price Management] Error creating price:', error);
     logErrorFromCatch(error, 'app', 'stripe-price-management');
     throw error;
   }
@@ -142,12 +168,12 @@ export async function bulkMigrateSubscriptions(oldPriceId, newPriceId, interval,
           [newAmount, subscriber.id]
         );
 
-        // Record successful migration in price_change_notifications
+        // Record successful migration in price_change_notifications using hashed user_id
         await db.query(
           `UPDATE price_change_notifications 
            SET migration_completed = true, migration_completed_at = CURRENT_TIMESTAMP
-           WHERE user_id = $1 AND price_interval = $2 AND migration_completed = false`,
-          [subscriber.id, interval]
+           WHERE user_id_hash = $1 AND price_interval = $2 AND migration_completed = false`,
+          [subscriber.user_id, interval]
         );
 
         results.successful++;
@@ -170,25 +196,64 @@ export async function bulkMigrateSubscriptions(oldPriceId, newPriceId, interval,
 }
 
 /**
- * Get list of all active Stripe prices with product details
- * @returns {Promise<Array>} Array of Stripe price objects with product info
+ * Get list of all active Stripe prices with product details AND subscriber counts
+ * @returns {Promise<Array>} Array of Stripe price objects with product info and subscriber counts
  */
 export async function getAllActivePrices() {
   try {
     if (!stripe) {
-      throw new Error('Stripe is not configured.');
+      throw new Error('Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable.');
     }
 
+    // Get all active prices from Stripe
     const prices = await stripe.prices.list({
       active: true,
       expand: ['data.product'],
       limit: 100,
     });
 
-    return prices.data;
+    // Get subscriber counts from database for each price
+    const pricesWithCounts = await Promise.all(
+      prices.data.map(async (price) => {
+        try {
+          // Count active subscribers on this specific price
+          const countQuery = `
+            SELECT COUNT(*) as count
+            FROM user_personal_info
+            WHERE subscription_status = 'active'
+              AND price_interval = $1
+              AND stripe_subscription_id_encrypted IS NOT NULL
+          `;
+          
+          const interval = price.recurring?.interval || 'month';
+          const result = await db.query(countQuery, [interval]);
+          const subscriberCount = parseInt(result.rows[0].count, 10) || 0;
+
+          return {
+            ...price,
+            subscriberCount,
+            productName: price.product?.name || 'Unknown Product',
+            amountFormatted: `$${(price.unit_amount / 100).toFixed(2)}`,
+            intervalFormatted: price.recurring?.interval || 'N/A'
+          };
+        } catch (err) {
+          logErrorFromCatch(err, 'app', 'get-price-subscriber-count');
+          return {
+            ...price,
+            subscriberCount: 0,
+            productName: price.product?.name || 'Unknown Product',
+            amountFormatted: `$${(price.unit_amount / 100).toFixed(2)}`,
+            intervalFormatted: price.recurring?.interval || 'N/A'
+          };
+        }
+      })
+    );
+
+    return pricesWithCounts;
   } catch (error) {
+    console.error('Error fetching Stripe prices:', error);
     logErrorFromCatch(error, 'app', 'get-active-prices');
-    throw error;
+    throw new Error(`Failed to fetch prices: ${error.message}`);
   }
 }
 
