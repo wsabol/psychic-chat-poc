@@ -1,5 +1,6 @@
 /**
  * Moon Phase Utilities
+ * Handles moon phase calculations, emojis, and translation key mapping
  */
 
 export const moonPhaseEmojis = {
@@ -14,14 +15,20 @@ export const moonPhaseEmojis = {
 };
 
 export const moonPhaseOrder = [
-  'newMoon', 'waxingCrescent', 'firstQuarter', 'waxingGibbous',
-  'fullMoon', 'waningGibbous', 'lastQuarter', 'waningCrescent'
+  'newMoon',
+  'waxingCrescent',
+  'firstQuarter',
+  'waxingGibbous',
+  'fullMoon',
+  'waningGibbous',
+  'lastQuarter',
+  'waningCrescent'
 ];
 
 /**
  * Map phase names to translation keys
  */
-export function getPhaseTranslationKey(phase) {
+export const getPhaseTranslationKey = (phase) => {
   const keyMap = {
     'newMoon': 'new',
     'fullMoon': 'full',
@@ -33,12 +40,12 @@ export function getPhaseTranslationKey(phase) {
     'waningCrescent': 'waningCrescent',
   };
   return keyMap[phase] || phase;
-}
+};
 
 /**
- * Calculate current moon phase
+ * Calculate current moon phase based on date
  */
-export function calculateMoonPhase() {
+export const calculateMoonPhase = () => {
   const now = new Date();
   const knownNewMoonDate = new Date(2025, 0, 29).getTime();
   const currentDate = now.getTime();
@@ -48,4 +55,4 @@ export function calculateMoonPhase() {
   const phaseIndex = Math.floor((daysIntoPhase / 29.53059) * 8) % 8;
   
   return moonPhaseOrder[phaseIndex];
-}
+};
