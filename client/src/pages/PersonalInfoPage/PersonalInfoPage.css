@@ -1,0 +1,463 @@
+/* ============================================
+   PERSONAL INFO PAGE STYLES
+   ============================================ */
+
+.personal-info-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  padding-bottom: var(--spacing-xl);
+}
+
+.info-header {
+  margin-bottom: var(--spacing-lg);
+}
+
+.info-header h2 {
+  margin-bottom: var(--spacing-xs);
+}
+
+.info-subtitle {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--color-text-light);
+}
+
+/* ============================================
+   FORM LAYOUT - Responsive Grid
+   ============================================ */
+
+.info-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.form-section {
+  padding: var(--spacing-lg);
+  background: white;
+  border-radius: 8px;
+  border-left: 4px solid #9370db;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.form-section h3 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-lg);
+  color: var(--color-text);
+}
+
+/* Grid for form fields - 2 cols on desktop, 1 col on mobile */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-lg);
+}
+
+@media (min-width: 768px) {
+  .form-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ============================================
+   FORM ELEMENTS
+   ============================================ */
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.form-group-error {
+  /* Error state - highlights entire field group */
+}
+
+.form-label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--color-text);
+  display: flex;
+  gap: 0.25rem;
+}
+
+.required {
+  color: #f44336;
+  font-weight: bold;
+}
+
+.optional {
+  color: var(--color-text-light);
+  font-size: 0.85rem;
+  font-weight: normal;
+}
+
+.form-input {
+  padding: var(--spacing-md) var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  min-height: var(--touch-target);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #9370db;
+  box-shadow: 0 0 0 3px rgba(147, 112, 219, 0.1);
+}
+
+/* ✅ ERROR STATE - Red border and background */
+.form-input-error {
+  border-color: #f44336 !important;
+  border-width: 2px;
+  background-color: #ffebee;
+  box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1) !important;
+}
+
+.form-input-error:focus {
+  border-color: #d32f2f !important;
+  box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.2) !important;
+}
+
+/* ✅ ERROR MESSAGE - Display under field */
+.field-error-message {
+  color: #f44336;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-top: -0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  animation: slideInDown 0.2s ease;
+}
+
+.field-error-message::before {
+  content: '⚠️';
+  font-size: 0.75rem;
+}
+
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 1.5em;
+  padding-right: 2.5rem;
+}
+
+.form-input-small {
+  font-size: 0.85rem;
+}
+
+.form-hint {
+  margin: var(--spacing-xs) 0 0 0;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: 0.85rem;
+  color: #555;
+  font-style: italic;
+  background-color: #f5f5f5;
+  border-left: 3px solid #9370db;
+  border-radius: 2px;
+  line-height: 1.4;
+}
+
+/* ============================================
+   ALERTS
+   ============================================ */
+
+.form-error-alert {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: #ffebee;
+  color: #c62828;
+  border-left: 4px solid #f44336;
+  border-radius: 4px;
+  margin-bottom: var(--spacing-lg);
+  animation: slideInDown 0.3s ease;
+}
+
+.form-success-alert {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: #e8f5e9;
+  color: #2e7d32;
+  border-left: 4px solid #4caf50;
+  border-radius: 4px;
+  margin-bottom: var(--spacing-lg);
+  animation: slideInDown 0.3s ease;
+}
+
+/* ============================================
+   LOCATION WARNING ALERT
+   ============================================ */
+
+.location-warning-alert {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: #fff8e1;
+  color: #e65100;
+  border-left: 4px solid #ff9800;
+  border-radius: 4px;
+  margin-bottom: var(--spacing-lg);
+  animation: slideInDown 0.3s ease;
+}
+
+.location-warning-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+}
+
+.location-warning-icon {
+  font-size: 1.25rem;
+}
+
+.location-warning-message {
+  margin: 0.5rem 0 1rem 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.location-warning-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.btn-primary-small,
+.btn-secondary-small {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary-small {
+  background: #ff9800;
+  color: white;
+}
+
+.btn-primary-small:hover {
+  background: #f57c00;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
+}
+
+.btn-secondary-small {
+  background: white;
+  color: #e65100;
+  border: 1px solid #ff9800;
+}
+
+.btn-secondary-small:hover {
+  background: #fff3e0;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(255, 152, 0, 0.2);
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   FLOATING SAVE BUTTON - Bubble Style
+   ============================================ */
+
+.floating-save-button {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7c63d8 0%, #9370db 100%);
+  color: white;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(124, 99, 216, 0.4);
+  font-weight: bold;
+  font-size: 0.75rem;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  z-index: 100;
+  touch-action: manipulation;
+}
+
+.floating-save-button:hover:not(:disabled) {
+  transform: scale(1.1);
+  box-shadow: 0 6px 28px rgba(124, 99, 216, 0.6);
+}
+
+.floating-save-button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.floating-save-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.bubble-icon {
+  font-size: 1.5rem;
+}
+
+.bubble-text {
+  font-size: 0.7rem;
+  line-height: 1;
+  max-width: 60px;
+  text-align: center;
+}
+
+/* ============================================
+   FLOATING FEEDBACK BUBBLE
+   ============================================ */
+
+.floating-feedback-bubble {
+  position: fixed;
+  bottom: 100px;
+  right: 2rem;
+  padding: 1rem 1.5rem;
+  background: white;
+  color: #2e7d32;
+  border-radius: 50px;
+  box-shadow: 0 4px 20px rgba(46, 125, 50, 0.3);
+  font-weight: 600;
+  font-size: 0.9rem;
+  animation: slideInUp 0.3s ease;
+  z-index: 99;
+}
+
+.floating-feedback-bubble.floating-success {
+  background: #e8f5e9;
+  border: 2px solid #4caf50;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   MOBILE ADJUSTMENTS
+   ============================================ */
+
+@media (max-width: 767px) {
+  .personal-info-page {
+    padding-bottom: 120px; /* Space for floating button */
+  }
+
+  .form-section {
+    padding: var(--spacing-md);
+  }
+
+  .form-input {
+    font-size: 16px; /* Prevents iOS zoom */
+  }
+
+  .form-grid {
+    gap: var(--spacing-md);
+  }
+
+  .form-label {
+    font-size: 0.9rem;
+  }
+
+  .floating-save-button {
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 70px;
+    height: 70px;
+  }
+
+  .bubble-icon {
+    font-size: 1.25rem;
+  }
+
+  .bubble-text {
+    font-size: 0.65rem;
+  }
+
+  .floating-feedback-bubble {
+    bottom: 85px;
+    right: 1.5rem;
+  }
+}
+
+/* ============================================
+   TABLET ADJUSTMENTS
+   ============================================ */
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .personal-info-page {
+    padding-bottom: var(--spacing-xl);
+  }
+
+  .floating-save-button {
+    width: 75px;
+    height: 75px;
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+.form-input:focus,
+.form-select:focus {
+  outline: 2px solid #9370db;
+  outline-offset: 2px;
+}
+
+.floating-save-button:focus {
+  outline: 3px solid #9370db;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .form-error-alert,
+  .form-success-alert,
+  .field-error-message,
+  .floating-feedback-bubble,
+  .floating-save-button {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* ============================================
+   HIGH CONTRAST MODE
+   ============================================ */
+
+@media (prefers-contrast: more) {
+  .form-input-error {
+    border-width: 3px;
+  }
+
+  .floating-save-button {
+    border: 3px solid white;
+  }
+}
