@@ -72,11 +72,11 @@ export default function MySignPage({ userId, token, auth, onNavigateToPage }) {
     <div className="page-safe-area sign-page">
       {/* Header */}
       <div className="sign-header">
-        <h2 className="heading-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <LogoWithCopyright size="80px" alt="Starship Psychics" />
-          {sunSignEmoji} {t('astrology.birthChart')}
-        </h2>
-        <p className="sign-subtitle">{t('astrology.description') || 'Your Sun, Moon, and Rising Signs calculated from your birth data'}</p>
+        <LogoWithCopyright size="80px" alt="Starship Psychics" />
+        <div className="sign-header-text">
+          <h2 className="heading-primary">{sunSignEmoji} {t('astrology.birthChart')}</h2>
+          <p className="sign-subtitle">{t('astrology.description') || 'Your Sun, Moon, and Rising Signs calculated from your birth data'}</p>
+        </div>
       </div>
 
       {/* The Three Signs */}
