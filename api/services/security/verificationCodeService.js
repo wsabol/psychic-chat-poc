@@ -1,4 +1,4 @@
-import { db } from '../../shared/db.js';
+    import { db } from '../../shared/db.js';
 import { generate6DigitCode } from '../../shared/authUtils.js';
 import { insertVerificationCode, getVerificationCode } from '../../shared/encryptedQueries.js';
 import { send2FACodeEmail } from '../../shared/emailService.js';

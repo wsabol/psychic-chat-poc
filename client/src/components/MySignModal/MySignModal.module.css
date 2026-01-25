@@ -1,0 +1,244 @@
+/* Modal Overlay */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+/* Modal Container */
+.modalContainer {
+  background-color: white;
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 700px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Modal Header */
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.modalTitle {
+  margin: 0;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  color: #666;
+  transition: color 0.2s;
+}
+
+.closeButton:hover {
+  color: #333;
+}
+
+/* Content Container */
+.content {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+}
+
+/* Info Banner */
+.infoBanner {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: #f0f4ff;
+  border-radius: 8px;
+  border-left: 4px solid #4a90e2;
+}
+
+.infoBanner p {
+  margin: 0 0 0.5rem 0;
+  font-size: 13px;
+  color: #333;
+}
+
+/* Birth Chart Section */
+.birthChartSection {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 2px solid #ffc107;
+}
+
+.birthChartTitle {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+/* Sign Cards */
+.signCard {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border-left: 3px solid;
+}
+
+.signCard p {
+  margin: 0;
+}
+
+.signDescription {
+  margin: 0.25rem 0 0 0;
+  font-size: 12px;
+  color: #666;
+}
+
+.sunSignCard {
+  background-color: #fff9e6;
+  border-left-color: #ffc107;
+}
+
+.risingSignCard {
+  background-color: #f0f7ff;
+  border-left-color: #2196f3;
+}
+
+.moonSignCard {
+  background-color: #f3e5f5;
+  border-left-color: #9c27b0;
+}
+
+/* Zodiac Sign Info (Traditional) */
+.zodiacSignSection {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.zodiacTitle {
+  margin-top: 0;
+  color: #1a1a1a;
+}
+
+.zodiacSymbol {
+  font-size: 12px;
+  color: #666;
+  margin-left: 0.5rem;
+}
+
+/* Detail Sections */
+.detailSection {
+  margin-bottom: 1.5rem;
+}
+
+.detailSection h4 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  color: #333;
+}
+
+.detailSection p {
+  margin: 0.5rem 0;
+}
+
+.detailSection ul {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.detailSection li {
+  margin-bottom: 0.25rem;
+}
+
+.italicText {
+  font-style: italic;
+  color: #555;
+}
+
+/* Lucky Elements Section */
+.luckySection {
+  padding: 1rem;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+}
+
+.luckySection h4 {
+  margin-top: 0;
+}
+
+/* Seasonal Section */
+.seasonalSection {
+  padding: 1rem;
+  background-color: #fafafa;
+  border-radius: 8px;
+}
+
+.seasonalSection h4 {
+  margin-top: 0;
+}
+
+/* Loading & Error States */
+.loadingText {
+  text-align: center;
+  color: #666;
+  padding: 2rem;
+}
+
+.errorText {
+  color: #d32f2f;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background-color: #ffebee;
+  border-radius: 6px;
+  border-left: 3px solid #d32f2f;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .modalContainer {
+    padding: 1.5rem;
+    width: 95%;
+    max-height: 95vh;
+  }
+
+  .modalTitle {
+    font-size: 1.25rem;
+  }
+
+  .content {
+    font-size: 13px;
+  }
+
+  .signCard {
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .modalContainer {
+    padding: 1rem;
+    border-radius: 8px;
+  }
+
+  .modalHeader {
+    margin-bottom: 1rem;
+  }
+
+  .modalTitle {
+    font-size: 1.1rem;
+  }
+
+  .closeButton {
+    font-size: 20px;
+  }
+}
