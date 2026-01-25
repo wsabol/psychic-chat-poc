@@ -13,7 +13,7 @@ export default function PaymentMethodsList({
     <>
       {paymentMethods?.cards && paymentMethods.cards.length > 0 && (
         <div className="payment-methods-list">
-          <h3>💳 {t('paymentMethods.savedCards')}</h3>
+          <h3>{'\uD83D\uDCB3'} {t('paymentMethods.savedCards')}</h3>
           <div className="methods-grid">
             {paymentMethods.cards.map((card) => {
               const isDefault = card.id === defaultPaymentMethodId;
@@ -46,7 +46,7 @@ export default function PaymentMethodsList({
 
       {paymentMethods?.bankAccounts && paymentMethods.bankAccounts.length > 0 && (
         <div className="payment-methods-list">
-          <h3>💰 {t('paymentMethods.savedBankAccounts')}</h3>
+          <h3>{'\uD83D\uDCB0'} {t('paymentMethods.savedBankAccounts')}</h3>
           <div className="methods-grid">
             {paymentMethods.bankAccounts.map((bank) => {
               // Get verification status
@@ -88,7 +88,7 @@ export default function PaymentMethodsList({
                         onClick={() => onVerify(bank)}
                         title={t('paymentMethods.enterMicrodeposit')}
                       >
-                        🔐 {t('paymentMethods.verify')}
+                        {'\uD83D\uDD10'} {t('paymentMethods.verify')}
                       </button>
                     )}
                     {!isDefault && (

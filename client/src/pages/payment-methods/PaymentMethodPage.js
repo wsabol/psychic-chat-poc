@@ -174,8 +174,8 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
 
   return (
     <div className="payment-method-page">
-            <div className="section-header">
-        <h2>ðŸ’³ {t('paymentMethods.title')}</h2>
+      <div className="section-header">
+        <h2>{'\uD83D\uDCB3'} {t('paymentMethods.title')}</h2>
         <p>{t('paymentMethods.description')}</p>
       </div>
 

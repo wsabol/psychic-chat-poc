@@ -11,7 +11,7 @@ export default function PaymentMethodsEmpty({ paymentMethods }) {
 
   return (
     <div className="empty-state">
-      <p>💳 No payment methods yet. Add one to get started!</p>
+      <p>{'\uD83D\uDCB3'} No payment methods yet. Add one to get started!</p>
     </div>
   );
 }

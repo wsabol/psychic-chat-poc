@@ -21,19 +21,19 @@ export default function BillingPage({ userId, token, auth, onboarding, defaultTa
     }
   }, [defaultTab]);
 
-    const tabs = [
-    { id: 'payment-methods', label: t('paymentMethods.title'), icon: '💳' },
-    { id: 'subscriptions', label: t('subscriptions.title'), icon: '📋' },
-    { id: 'invoices', label: t('invoices.title'), icon: '📄' },
-    { id: 'payments', label: t('paymentHistory.title'), icon: '💰' },
+  const tabs = [
+    { id: 'payment-methods', label: t('paymentMethods.title'), icon: '\uD83D\uDCB3' },
+    { id: 'subscriptions', label: t('subscriptions.title'), icon: '\uD83D\uDCCB' },
+    { id: 'invoices', label: t('invoices.title'), icon: '\uD83D\uDCC4' },
+    { id: 'payments', label: t('paymentHistory.title'), icon: '\uD83D\uDCB0' },
   ];
 
   return (
     <div className="page-safe-area billing-page">
       <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-                {/* Header */}
-                <div style={{ marginBottom: '2rem' }}>
-          <h2 className="heading-primary">💳 {t('billing.title')}</h2>
+        {/* Header */}
+        <div style={{ marginBottom: '2rem' }}>
+          <h2 className="heading-primary">{'\uD83D\uDCB3'} {t('billing.title')}</h2>
           <p style={{ color: '#666', marginBottom: 0 }}>
             {t('billing.title')}
           </p>
@@ -55,10 +55,10 @@ export default function BillingPage({ userId, token, auth, onboarding, defaultTa
 
         {/* Tab Content */}
         <div className="billing-content">
-                    {activeTab === 'payment-methods' && (
+          {activeTab === 'payment-methods' && (
             <PaymentMethodPage userId={userId} token={token} auth={auth} onboarding={onboarding} />
           )}
-                    {activeTab === 'subscriptions' && (
+          {activeTab === 'subscriptions' && (
             <SubscriptionsPage userId={userId} token={token} auth={auth} onboarding={onboarding} />
           )}
           {activeTab === 'invoices' && (
