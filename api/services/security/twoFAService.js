@@ -1,5 +1,6 @@
 import { db } from '../../shared/db.js';
 import { hashUserId } from '../../shared/hashUtils.js';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * Get user's 2FA settings (from user_2fa_settings table)
@@ -20,7 +21,7 @@ export async function get2FASettings(userId) {
 
     return result.rows[0];
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    logErrorFromCatch(err, 'app', 'security');
     throw err;
   }
 }
@@ -50,7 +51,7 @@ export async function update2FASettings(userId, { enabled, method }) {
     }
     return result.rows[0];
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    logErrorFromCatch(err, 'app', 'security');
     throw err;
   }
 }
@@ -79,7 +80,7 @@ export async function updateSessionPreference(userId, persistentSession) {
     }
     return result.rows[0];
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    logErrorFromCatch(err, 'app', 'security');
     throw err;
   }
 }

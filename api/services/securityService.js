@@ -25,6 +25,27 @@ export { getEmailData, saveRecoveryEmail, verifyEmailCode, removeRecoveryEmail }
 // 2FA & Session Settings
 export { get2FASettings, update2FASettings, updateSessionPreference } from './security/twoFAService.js';
 
+// Verification Code Management (NEW)
+export { 
+  generateAndSendVerificationCode, 
+  verifyCode, 
+  invalidateCode,
+  wasCodeRecentlySent,
+  cleanupExpiredCodes,
+  getCodeAttemptCount
+} from './security/verificationCodeService.js';
+
+// Device Trust Management (NEW)
+export {
+  checkDeviceTrust,
+  trustDevice,
+  revokeDeviceTrust,
+  getTrustedDevices,
+  isDeviceTrusted,
+  updateDeviceActivity,
+  cleanupExpiredDeviceTrust
+} from './security/deviceTrustService.js';
+
 // Verification Methods (Combined View)
 export { getVerificationMethods } from './security/verificationService.js';
 

@@ -430,6 +430,7 @@ router.get('/check-current-device-trust/:userId', authenticateToken, async (req,
 /**
  * POST /auth/trust-current-device/:userId
  * Trust the current device for 30 days
+ * For ADMINS: Also adds IP to admin_trusted_ips table
  */
 router.post('/trust-current-device/:userId', authenticateToken, async (req, res) => {
   try {
@@ -445,7 +446,39 @@ router.post('/trust-current-device/:userId', authenticateToken, async (req, res)
     const deviceName = extractDeviceName(userAgent);
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 
-    // Update existing security_sessions row (UPSERT pattern)
+    // Check if user is admin
+    const userResult = await db.query(
+      `SELECT pgp_sym_decrypt(email_encrypted, $1) as email FROM user_personal_info WHERE user_id = $2`,
+      [ENCRYPTION_KEY, userId]
+    );
+    
+    const userEmail = userResult.rows[0]?.email;
+    const isAdminUser = userEmail ? await isAdmin(userEmail) : false;
+
+    // For ADMINS: Add IP to admin_trusted_ips table (this is what admin 2FA checks)
+    if (isAdminUser) {
+      const { browserInfo } = req.body;
+      const deviceInfo = parseDeviceInfo(req);
+      await recordTrustedIP(userId, ipAddress, deviceInfo.deviceName || deviceName, browserInfo);
+      
+      await logAudit(db, {
+        userId,
+        action: 'ADMIN_IP_TRUSTED_FROM_SETTINGS',
+        resourceType: 'security',
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        httpMethod: req.method,
+        endpoint: req.path,
+        status: 'SUCCESS'
+      });
+
+      return successResponse(res, { 
+        success: true, 
+        message: 'Device trusted. You won\'t need 2FA from this IP for future logins.' 
+      });
+    }
+
+    // For REGULAR USERS: Update security_sessions table (UPSERT pattern)
     const updateResult = await db.query(
       `UPDATE security_sessions 
        SET device_name_encrypted = pgp_sym_encrypt($2, $3),
