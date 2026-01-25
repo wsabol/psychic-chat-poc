@@ -61,10 +61,9 @@ async function archiveOldPrice(priceId) {
     await stripe.prices.update(priceId, {
       active: false
     });
-    console.log(`[Price Migration Job] ✓ Archived old price: ${priceId}`);
     return true;
   } catch (error) {
-    console.error(`[Price Migration Job] ✗ Failed to archive price ${priceId}:`, error.message);
+    logErrorFromCatch(error, 'price-migration-job', `archive-price-${priceId}`);
     throw error;
   }
 }
@@ -82,8 +81,6 @@ export async function processPendingMigrations() {
     if (!stripe) {
       throw new Error('Stripe not configured');
     }
-
-    console.log('[Price Migration Job] Starting migration check...');
 
     // Find all notifications ready for migration
     const query = `
@@ -109,8 +106,6 @@ export async function processPendingMigrations() {
     const result = await db.query(query, [process.env.ENCRYPTION_KEY]);
     const pendingMigrations = result.rows;
 
-    console.log(`[Price Migration Job] Found ${pendingMigrations.length} subscriptions to migrate`);
-
     let successCount = 0;
     let failureCount = 0;
     
@@ -119,7 +114,6 @@ export async function processPendingMigrations() {
 
     for (const migration of pendingMigrations) {
       try {
-        console.log(`[Price Migration Job] Migrating subscription ${migration.subscription_id} to price ${migration.new_price_id}`);
 
         // Migrate the subscription
         await migrateSubscription(migration.subscription_id, migration.new_price_id);
@@ -151,16 +145,13 @@ export async function processPendingMigrations() {
           }
           oldPricesMigrated.set(migration.old_price_id, oldPricesMigrated.get(migration.old_price_id) + 1);
         }
-        
-        console.log(`[Price Migration Job] ✓ Successfully migrated notification ID ${migration.id}`);
       } catch (error) {
         failureCount++;
-        console.error(`[Price Migration Job] ✗ Failed to migrate notification ID ${migration.id}:`, error.message);
         
         logErrorFromCatch(
           error,
-          'app',
           'price-migration-job',
+          `migrate-notification-${migration.id}`,
           migration.user_id
         );
 
@@ -171,15 +162,12 @@ export async function processPendingMigrations() {
            SET migration_completed = false
            WHERE id = $1`,
           [migration.id]
-        ).catch(err => console.error('Failed to update error status:', err));
+        ).catch(err => logErrorFromCatch(err, 'price-migration-job', 'update-error-status'));
       }
     }
 
-    console.log(`[Price Migration Job] Complete: ${successCount} successful, ${failureCount} failed`);
-
     // Auto-archive old prices that have been fully migrated
     if (oldPricesMigrated.size > 0) {
-      console.log(`[Price Migration Job] Checking ${oldPricesMigrated.size} old prices for archiving...`);
       
       for (const [oldPriceId, migratedCount] of oldPricesMigrated) {
         try {
@@ -195,13 +183,10 @@ export async function processPendingMigrations() {
           const remainingCount = parseInt(remainingResult.rows[0].count, 10);
           
           if (remainingCount === 0) {
-            console.log(`[Price Migration Job] All subscribers migrated from ${oldPriceId} (${migratedCount} total). Archiving...`);
             await archiveOldPrice(oldPriceId);
-          } else {
-            console.log(`[Price Migration Job] ${oldPriceId} still has ${remainingCount} pending migrations. Keeping active.`);
-          }
+          } 
         } catch (error) {
-          console.error(`[Price Migration Job] Error archiving price ${oldPriceId}:`, error.message);
+          logErrorFromCatch(error, 'price-migration-job', `archive-check-${oldPriceId}`);
           // Don't fail the job if archiving fails - it's not critical
         }
       }
@@ -214,8 +199,7 @@ export async function processPendingMigrations() {
       pricesArchived: oldPricesMigrated.size
     };
   } catch (error) {
-    console.error('[Price Migration Job] Job failed:', error);
-    logErrorFromCatch(error, 'app', 'price-migration-job');
+    logErrorFromCatch(error, 'price-migration-job', 'process-pending-migrations');
     throw error;
   }
 }

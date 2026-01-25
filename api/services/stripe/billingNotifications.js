@@ -254,9 +254,6 @@ export async function schedulePriceChange(monthlyChange, annualChange) {
  */
 export async function sendPriceChangeNotifications(interval, oldAmount, newAmount, oldPriceId = null, newPriceId = null) {
   try {
-    console.log(`[Price Change Notifications] Starting notification process for ${interval} interval`);
-    console.log(`[Price Change Notifications] Old: ${oldAmount} cents, New: ${newAmount} cents`);
-    console.log(`[Price Change Notifications] Old Price ID: ${oldPriceId}, New Price ID: ${newPriceId}`);
     
     if (!process.env.ENCRYPTION_KEY) {
       throw new Error('ENCRYPTION_KEY not configured!');
@@ -279,9 +276,6 @@ export async function sendPriceChangeNotifications(interval, oldAmount, newAmoun
 
     const result = await db.query(query, [process.env.ENCRYPTION_KEY, interval]);
     const subscribers = result.rows;
-
-    console.log(`[Price Change Notifications] Found ${subscribers.length} subscribers for ${interval} interval`);
-
     const results = {
       total: subscribers.length,
       successful: 0,
@@ -290,7 +284,6 @@ export async function sendPriceChangeNotifications(interval, oldAmount, newAmoun
     };
 
     if (subscribers.length === 0) {
-      console.log(`[Price Change Notifications] No subscribers found for ${interval} - skipping`);
       return results;
     }
 
@@ -299,13 +292,10 @@ export async function sendPriceChangeNotifications(interval, oldAmount, newAmoun
 
     for (const subscriber of subscribers) {
       try {
-        console.log(`[Price Change Notifications] Processing subscriber: ${subscriber.email}`);
         
         // Set effective date to 30 days from now
         const effectiveDate = new Date();
         effectiveDate.setDate(effectiveDate.getDate() + 30);
-        
-        console.log(`[Price Change Notifications] Effective date: ${effectiveDate.toISOString()}`);
         
         // Generate email using existing template
         const emailContent = generatePriceChangeEmail({
@@ -314,8 +304,6 @@ export async function sendPriceChangeNotifications(interval, oldAmount, newAmoun
           newAmount,
           effectiveDate
         });
-
-        console.log(`[Price Change Notifications] Sending email to: ${subscriber.email}`);
         
         // Send email
         await sendEmail({
@@ -324,10 +312,7 @@ export async function sendPriceChangeNotifications(interval, oldAmount, newAmoun
           html: emailContent.html
         });
 
-        console.log(`[Price Change Notifications] Email sent successfully to: ${subscriber.email}`);
-
         // Record notification using hashed user_id
-        console.log(`[Price Change Notifications] Recording notification in database for user_id: ${subscriber.user_id}`);
         
         await db.query(
           `INSERT INTO price_change_notifications 
@@ -336,26 +321,21 @@ export async function sendPriceChangeNotifications(interval, oldAmount, newAmoun
           [subscriber.user_id, oldPriceId, newPriceId, oldAmount, newAmount, interval, effectiveDate]
         );
 
-        console.log(`[Price Change Notifications] Database record created successfully`);
-
         results.successful++;
       } catch (error) {
-        console.error(`[Price Change Notifications] Error processing subscriber ${subscriber.email}:`, error);
         results.failed++;
         results.errors.push({
           userId: subscriber.user_id, // hashed user_id for logging
           email: subscriber.email,
           error: error.message,
         });
-        logErrorFromCatch(error, 'app', 'send-price-change-email', subscriber.user_id);
+        logErrorFromCatch(error, 'billing-notifications', 'send-price-change-email', subscriber.user_id);
       }
     }
 
-    console.log(`[Price Change Notifications] Complete: ${results.successful} successful, ${results.failed} failed`);
     return results;
   } catch (error) {
-    console.error('[Price Change Notifications] Fatal error:', error);
-    logErrorFromCatch(error, 'app', 'send-price-change-notifications');
+    logErrorFromCatch(error, 'billing-notifications', 'send-price-change-notifications');
     throw error;
   }
 }

@@ -7,6 +7,7 @@ import { Router } from 'express';
 import { authenticateToken } from '../../middleware/auth.js';
 import { requireAdmin } from '../../middleware/adminAuth.js';
 import { successResponse, validationError, serverError } from '../../utils/responses.js';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 import {
   createNewPrice,
   getAllActivePrices,
@@ -100,50 +101,27 @@ router.get('/subscribers/:interval', authenticateToken, requireAdmin, async (req
  */
 router.post('/schedule-price-change', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    console.log('[Schedule Price Change] Request received');
-    console.log('[Schedule Price Change] Body:', JSON.stringify(req.body, null, 2));
     
     const { monthly, annual } = req.body;
 
     // At least one price change must be specified
     if (!monthly && !annual) {
-      console.log('[Schedule Price Change] Error: No price changes specified');
-      return validationError(res, 'At least one price change (monthly or annual) required');
     }
 
     // Process monthly price change
     let monthlyData = null;
     if (monthly) {
-      console.log('[Schedule Price Change] Processing monthly price change...');
-      
-      // Validate
-      if (!monthly.oldPriceId) {
-        console.log('[Schedule Price Change] Error: Monthly old price ID missing');
-        return validationError(res, 'Monthly old price ID required');
-      }
-      if (!monthly.newAmount || monthly.newAmount <= 0) {
-        console.log('[Schedule Price Change] Error: Invalid monthly new amount');
-        return validationError(res, 'Valid monthly new amount required (in cents)');
-      }
-
-      console.log(`[Schedule Price Change] Fetching prices to find old price: ${monthly.oldPriceId}`);
       
       // Get old price details from Stripe to get old amount
       const prices = await getAllActivePrices();
       const oldPrice = prices.find(p => p.id === monthly.oldPriceId);
       
       if (!oldPrice) {
-        console.log('[Schedule Price Change] Error: Old monthly price not found in Stripe');
         return validationError(res, 'Old monthly price not found');
       }
 
-      console.log(`[Schedule Price Change] Old monthly price found: ${oldPrice.unit_amount} cents`);
-      console.log(`[Schedule Price Change] Creating new monthly price: ${monthly.newAmount} cents`);
-
       // Create new price in Stripe with tax collection
       const newPrice = await createNewPrice(monthly.newAmount, 'month');
-      
-      console.log(`[Schedule Price Change] New monthly price created: ${newPrice.id}`);
 
       monthlyData = {
         oldPriceId: monthly.oldPriceId,
@@ -156,36 +134,17 @@ router.post('/schedule-price-change', authenticateToken, requireAdmin, async (re
     // Process annual price change
     let annualData = null;
     if (annual) {
-      console.log('[Schedule Price Change] Processing annual price change...');
-      
-      // Validate
-      if (!annual.oldPriceId) {
-        console.log('[Schedule Price Change] Error: Annual old price ID missing');
-        return validationError(res, 'Annual old price ID required');
-      }
-      if (!annual.newAmount || annual.newAmount <= 0) {
-        console.log('[Schedule Price Change] Error: Invalid annual new amount');
-        return validationError(res, 'Valid annual new amount required (in cents)');
-      }
-
-      console.log(`[Schedule Price Change] Fetching prices to find old price: ${annual.oldPriceId}`);
 
       // Get old price details from Stripe
       const prices = await getAllActivePrices();
       const oldPrice = prices.find(p => p.id === annual.oldPriceId);
       
       if (!oldPrice) {
-        console.log('[Schedule Price Change] Error: Old annual price not found in Stripe');
         return validationError(res, 'Old annual price not found');
       }
 
-      console.log(`[Schedule Price Change] Old annual price found: ${oldPrice.unit_amount} cents`);
-      console.log(`[Schedule Price Change] Creating new annual price: ${annual.newAmount} cents`);
-
       // Create new price in Stripe with tax collection
       const newPrice = await createNewPrice(annual.newAmount, 'year');
-      
-      console.log(`[Schedule Price Change] New annual price created: ${newPrice.id}`);
 
       annualData = {
         oldPriceId: annual.oldPriceId,
@@ -195,15 +154,8 @@ router.post('/schedule-price-change', authenticateToken, requireAdmin, async (re
       };
     }
 
-    console.log('[Schedule Price Change] Scheduling notifications and migrations...');
-    console.log('[Schedule Price Change] Monthly data:', monthlyData);
-    console.log('[Schedule Price Change] Annual data:', annualData);
-
     // Schedule notifications and migrations
     const result = await schedulePriceChange(monthlyData, annualData);
-
-    console.log('[Schedule Price Change] Result:', result);
-    console.log('[Schedule Price Change] Success! Sending response...');
 
     return successResponse(res, {
       success: true,
@@ -216,8 +168,7 @@ router.post('/schedule-price-change', authenticateToken, requireAdmin, async (re
       totalFailed: result.totalFailed
     });
   } catch (error) {
-    console.error('[Schedule Price Change] Fatal error:', error);
-    console.error('[Schedule Price Change] Error stack:', error.stack);
+    logErrorFromCatch(error, 'price-management-routes', 'schedule-price-change');
     return serverError(res, error.message);
   }
 });
