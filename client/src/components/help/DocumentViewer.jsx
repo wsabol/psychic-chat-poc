@@ -32,15 +32,24 @@ export function DocumentViewer({ title, docType, onBack }) {
     <div className="help-document-viewer">
       <div className="help-viewer-header">
         <h2>{title}</h2>
-        <button
-          onClick={onBack}
-          className="help-back-button"
-          title={t('help.controls.back')}
-        >
-          ← {t('help.controls.back')}
-        </button>
+        <div className="help-viewer-controls">
+          <button
+            onClick={onBack}
+            className="help-back-button"
+            title={t('help.controls.back')}
+          >
+            ← {t('help.controls.back')}
+          </button>
+          <button
+            onClick={onBack}
+            className="help-close-button"
+            title={t('help.controls.close')}
+          >
+            ✕
+          </button>
+        </div>
       </div>
-      <div className="help-viewer-content">
+      <div className="help-viewer-content" tabIndex={0}>
         {loading ? (
           <p>Loading...</p>
         ) : (

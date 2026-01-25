@@ -54,7 +54,7 @@ export const FAQ_DATA = [
       {
         id: 'premium-chat',
         question: 'What\'s the difference between free and premium chat?',
-        answer: 'Free users have limited daily chat messages. Premium subscribers enjoy unlimited chat access with the psychic, enabling more in-depth conversations and ongoing guidance whenever you need it.'
+        answer: 'Free users have limited single opportunity to try a chat and read a custom horoscope. Premium subscribers enjoy unlimited chat access with the psychic, enabling more in-depth conversations and ongoing guidance whenever you need it.'
       }
     ]
   },
@@ -109,6 +109,33 @@ export const FAQ_DATA = [
         id: 'accurate-chart',
         question: 'How accurate is my birth chart?',
         answer: 'The accuracy depends on how precise your birth information is:\n• Accurate birth time (within minutes) = very accurate chart\n• Approximate birth time = reasonably accurate, but some details may vary\n• Birth date only = sun sign and some placements accurate, but rising sign and houses won\'t be correct\n\nIf possible, get your birth certificate to verify your exact birth time.'
+      },
+      {
+        id: 'zodiac-wheel',
+        question: 'What is the Zodiac Wheel and how does it work?',
+        answer: 'The Zodiac Wheel is a visual representation of your birth chart showing all 12 zodiac signs arranged in concentric rings. The wheel includes:\n• Sign names and symbols\n• Ruling planets\n• Elements (Fire, Earth, Air, Water)\n• House numbers (I-XII)\n\nThe wheel rotates to position your Rising Sign at the eastern horizon (on the left side). This reflects how you would see the sky at the moment of your birth - looking UP at the celestial sphere rather than DOWN at a map. This is why East appears on the left and West on the right in astronomical charts, creating a mirror image of typical map directions. The horizontal line represents the horizon, with daytime signs above and nighttime signs below.'
+      }
+    ]
+  },
+  {
+    id: 'onboarding',
+    category: 'Getting Started - Onboarding',
+    icon: '🎯',
+    questions: [
+      {
+        id: 'what-is-onboarding',
+        question: 'What is the onboarding process?',
+        answer: 'When you first join, we guide you through setting up your account:\n1. Create your account and verify email\n2. Complete your Personal Info (birth date, time, location)\n3. Set up a payment method\n4. Choose a subscription plan\n\nThis ensures you get the full experience from day one.'
+      },
+      {
+        id: 'help-during-onboarding',
+        question: 'Can I get help during onboarding?',
+        answer: 'Yes! The Help button (?) is available throughout the onboarding process. Click it anytime to get assistance with any step. You can also skip onboarding and complete it later from your settings.'
+      },
+      {
+        id: 'skip-onboarding',
+        question: 'Can I skip the onboarding process?',
+        answer: 'Yes, you can skip onboarding steps, but you\'ll need to complete your Personal Info and subscribe to access all features. You can always return to complete these steps later from the main menu.'
       }
     ]
   },
@@ -162,7 +189,29 @@ export const FAQ_DATA = [
       {
         id: 'use-cosmic-weather',
         question: 'How do I use Cosmic Weather information?',
-        answer: 'Use Cosmic Weather to:\n• Plan important activities when the energy is favorable\n• Understand current planetary influences\n• Know when Mercury Retrograde or other major events are happening\n• Time new projects, meetings, or personal goals\n• Gain insight into general daily energy'
+        answer: 'Use Cosmic Weather to:\n• Understand current planetary influences\n• Know when Mercury Retrograde or other major events are happening\n• Time new projects, meetings, or personal goals\n• Gain insight into general daily energy'
+      }
+    ]
+  },
+  {
+    id: 'preferences',
+    category: 'Preferences & Customization',
+    icon: '⚙️',
+    questions: [
+      {
+        id: 'change-language',
+        question: 'How do I change the app language?',
+        answer: 'To change your language:\n1. Go to Preferences page\n2. Select your preferred language\n3. Available languages include:\n   • English\n   • Spanish (including regional dialects)\n   • French (including regional dialects)\n   • German, Italian, Portuguese, Japanese, Chinese\n\nThe app will automatically translate all content to your selected language.'
+      },
+      {
+        id: 'oracle-response-type',
+        question: 'What are Full and Brief response types?',
+        answer: 'You can customize how the psychic oracle responds:\n• Full Responses: Detailed, in-depth answers with context and explanations\n• Brief Responses: Concise, direct answers for quick guidance\n\nGo to Preferences to set your preferred response type.'
+      },
+      {
+        id: 'voice-settings',
+        question: 'Can I enable voice responses?',
+        answer: 'Yes! The app supports voice responses:\n1. Go to Preferences → Voice Settings\n2. Enable voice responses\n3. Choose from 4 different voice options\n4. Adjust voice settings to your preference\n\nThe psychic\'s responses will be read aloud in your chosen voice.'
       }
     ]
   },
@@ -179,7 +228,7 @@ export const FAQ_DATA = [
       {
         id: 'enable-2fa',
         question: 'What is 2FA and how do I enable it?',
-        answer: 'Two-Factor Authentication (2FA) adds an extra security layer to your account:\n1. Go to Security page → Verification & 2FA\n2. Enable 2FA\n3. Choose authentication method (Email)\n4. Verify your identity\n\nWith 2FA enabled, you\'ll need to enter a verification code when logging in from a new device.'
+        answer: 'Two-Factor Authentication (2FA) adds an extra security layer to your account:\n1. Go to Security page → Verification & 2FA\n2. Enable 2FA\n3. Choose authentication method (Email)\n4. Verify your identity\n\nWith 2FA enabled, you\'ll need to enter a verification code when logging in from a new or untrusted device.'
       },
       {
         id: 'trust-device',
@@ -231,7 +280,7 @@ export const FAQ_DATA = [
       {
         id: 'cancel-subscription',
         question: 'How do I cancel my subscription?',
-        answer: 'To cancel your subscription:\n1. Go to Billing & Subscriptions → Subscriptions\n2. Find your active subscription\n3. Click "Cancel Subscription"\n4. Select reason for cancellation (optional)\n5. Confirm cancellation\n\nYou\'ll lose access to premium features but keep your account and data.'
+        answer: 'To cancel your subscription:\n1. Go to Billing & Subscriptions → Subscriptions\n2. Find your active subscription card\n3. Toggle the subscription switch to OFF\n4. Confirm in the dialog that appears\n\nYour subscription will continue until the end of your current billing period, then stop. You can reactivate your subscription at any time by toggling it back ON. You\'ll keep your account and data.'
       },
       {
         id: 'view-invoices',
@@ -263,7 +312,12 @@ export const FAQ_DATA = [
       {
         id: 'data-export',
         question: 'Can I export my data?',
-        answer: 'Yes, you can request your data:\n1. Go to Security page\n2. Look for "Download My Data" or "Data Export"\n3. Request your data export\n4. You\'ll receive a file with all your information\n\nContact support if you need help with data export.'
+        answer: 'Yes, you can download your data:\n1. Go to Settings page\n2. Find "Download My Data" section\n3. Click the "Download" button\n4. Your data will be downloaded as a JSON file\n\nThe file contains all your personal information, chat history, and account data.'
+      },
+      {
+        id: 'read-terms-privacy',
+        question: 'How do I read the Terms of Service and Privacy Policy?',
+        answer: 'You can access these documents anytime through the Help button:\n1. Click the ? (Help) button on any screen\n2. In the Help window header, you\'ll see icon buttons:\n   • 📋 (Terms) - Click to open Terms of Service\n   • 🔒 (Privacy) - Click to open Privacy Policy\n3. The documents open in a large, scrollable window\n4. Use your mouse wheel, or scrollbar to read\n5. Click the X button to close when finished\n\nYou can read these documents at any time to understand your rights and our policies.'
       }
     ]
   },
@@ -318,6 +372,39 @@ export const FAQ_DATA = [
         id: 'feedback',
         question: 'How can I provide feedback?',
         answer: 'We\'d love to hear from you:\n1. Email: feedback@psychicchat.com\n2. Subject: "Feedback: [Topic]"\n3. Share what you love and what could improve\n4. Be specific with examples\n\nYour feedback helps us create a better app!'
+      }
+    ]
+  },
+  {
+    id: 'admin-features',
+    category: '⚡ Admin Dashboard (Admin Only)',
+    icon: '⚡',
+    adminOnly: true,
+    questions: [
+      {
+        id: 'admin-access',
+        question: 'Who can access the Admin Dashboard?',
+        answer: 'Only authorized admin users can access the Admin Dashboard. Admin access is restricted to: starshiptechnology1@gmail.com and wsabol39@gmail.com.'
+      },
+      {
+        id: 'admin-tabs',
+        question: 'What features are available in the Admin Dashboard?',
+        answer: 'The Admin Dashboard includes:\n• 💳 Subscriptions - View and manage all user subscriptions\n• 🚨 Error Logs - Monitor system errors and issues\n• 📊 Analytics - View user activity and engagement metrics\n• 🚨 Violation Reports - Review content violations\n• ✅ Compliance - Monitor GDPR and legal compliance\n• 🔓 Whitelist - Manage free trial access\n• 💰 Price Management - Configure Stripe pricing'
+      },
+      {
+        id: 'price-management',
+        question: 'What is Price Management?',
+        answer: 'Price Management allows admins to:\n• Create and configure new Stripe prices\n• Update existing subscription pricing\n• Migrate users between price plans\n• Monitor billing configurations\n• Manage product offerings\n\nThis ensures pricing stays current and competitive.'
+      },
+      {
+        id: 'user-compliance',
+        question: 'How do I monitor user compliance?',
+        answer: 'Use the Compliance tab to:\n• View user consent records\n• Monitor GDPR compliance\n• Review data processing agreements\n• Track policy acceptances\n• Generate compliance reports\n\nAll user interactions are logged for audit purposes.'
+      },
+      {
+        id: 'error-monitoring',
+        question: 'How do I monitor system errors?',
+        answer: 'The Error Logs tab shows:\n• Real-time error notifications\n• Error severity levels\n• Stack traces and context\n• User impact information\n• Error frequency and patterns\n\nYou can also test the error logging system using the test harness.'
       }
     ]
   }
