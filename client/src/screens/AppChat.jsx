@@ -71,8 +71,11 @@ export function AppChat({ state }) {
         });
         const data = await response.json();
         
-        // Show modal if user hasn't accepted OR needs to accept new version
-        const needsConsent = !data.hasConsent || data.needsUpdate;
+        // Show modal ONLY if user hasn't accepted both terms and privacy
+        // Note: data.hasConsent already checks if terms_accepted AND privacy_accepted are true
+        // Users who accepted before refactoring will have hasConsent=true even with outdated versions
+        // The needsUpdate flag is informational but shouldn't block access
+        const needsConsent = !data.hasConsent;
         setShowConsentModal(needsConsent);
       } catch (err) {
         // On network error: check if this is a NEW user (no profile yet)
