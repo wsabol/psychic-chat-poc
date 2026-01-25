@@ -12,6 +12,7 @@ import ErrorLoggerTestHarness from '../components/admin/ErrorLoggerTestHarness';
 import SubscriptionReportTab from '../components/admin/SubscriptionReportTab';
 import FreeTrialWhitelist from '../components/admin/FreeTrialWhitelist';
 import PriceManagementTab from '../components/admin/PriceManagementTab';
+import SecurityMetrics from '../components/admin/SecurityMetrics';
 import { useAdminCheck } from './hooks/useAdminCheck';
 import { useAnalyticsReport } from './hooks/useAnalyticsReport';
 import { styles } from './admin-styles';
@@ -88,6 +89,11 @@ export default function AdminPage({ token, userId }) {
             isActive={activeTab === 'pricing'}
             onClick={() => setActiveTab('pricing')}
           />
+          <TabButton
+            label="🛡️ Security"
+            isActive={activeTab === 'security'}
+            onClick={() => setActiveTab('security')}
+          />
         </div>
 
         {/* Subscription Report Tab */}
@@ -128,6 +134,9 @@ export default function AdminPage({ token, userId }) {
 
         {/* Price Management Tab */}
         {activeTab === 'pricing' && <PriceManagementTab token={token} />}
+
+        {/* Security Metrics Tab */}
+        {activeTab === 'security' && <SecurityMetrics token={token} />}
       </div>
     </div>
   );

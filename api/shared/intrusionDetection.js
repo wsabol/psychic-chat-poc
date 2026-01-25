@@ -68,10 +68,10 @@ async function checkBruteForce(ipAddress) {
     const result = await db.query(
       `SELECT COUNT(*) as failed_count
        FROM login_attempts
-       WHERE ip_address = $1
-         AND attempt_type = 'failed_password'
-         AND created_at > NOW() - INTERVAL '1 minute' * $2`,
-      [ipAddress, THRESHOLDS.FAILED_LOGINS_WINDOW]
+       WHERE pgp_sym_decrypt(ip_address_encrypted, $1) = $2
+         AND attempt_type = 'failed'
+         AND created_at > NOW() - INTERVAL '1 minute' * $3`,
+      [process.env.ENCRYPTION_KEY, ipAddress, THRESHOLDS.FAILED_LOGINS_WINDOW]
     );
 
     const failedCount = parseInt(result.rows[0].failed_count);
@@ -340,40 +340,42 @@ export async function getSecurityMetrics() {
     // Failed logins in last 24 hours
     const failedLogins = await db.query(
       `SELECT COUNT(*) as count FROM login_attempts
-       WHERE attempt_type = 'failed_password'
+       WHERE attempt_type = 'failed'
        AND created_at > NOW() - INTERVAL '24 hours'`
     );
 
-    // Suspicious IPs
+    // Suspicious IPs - decrypt to group by IP
     const suspiciousIPs = await db.query(
-      `SELECT ip_address, COUNT(*) as failed_count
+      `SELECT pgp_sym_decrypt(ip_address_encrypted, $1) as ip_address, 
+              COUNT(*) as failed_count
        FROM login_attempts
-       WHERE attempt_type = 'failed_password'
+       WHERE attempt_type = 'failed'
        AND created_at > NOW() - INTERVAL '1 hour'
-       GROUP BY ip_address
-       HAVING COUNT(*) >= $1
+       GROUP BY ip_address_encrypted
+       HAVING COUNT(*) >= $2
        ORDER BY failed_count DESC
        LIMIT 10`,
-      [THRESHOLDS.FAILED_LOGINS]
+      [process.env.ENCRYPTION_KEY, THRESHOLDS.FAILED_LOGINS]
     );
 
-    // Blocked accounts
+    // Blocked accounts - check user_account_lockouts table
     const blockedAccounts = await db.query(
-      `SELECT COUNT(DISTINCT user_id) as count
-       FROM user_account_lockout
-       WHERE locked_until > NOW()`
+      `SELECT COUNT(DISTINCT user_id_hash) as count
+       FROM user_account_lockouts
+       WHERE lock_expires_at > NOW()`
     ).catch(() => ({ rows: [{ count: 0 }] }));
 
-    // Account enumeration attempts
+    // Account enumeration attempts - decrypt email to count distinct
     const enumerationAttempts = await db.query(
-      `SELECT ip_address, COUNT(DISTINCT email_attempted) as unique_accounts
+      `SELECT pgp_sym_decrypt(ip_address_encrypted, $1) as ip_address,
+              COUNT(DISTINCT email_attempted_encrypted) as unique_accounts
        FROM login_attempts
        WHERE created_at > NOW() - INTERVAL '1 hour'
-       GROUP BY ip_address
-       HAVING COUNT(DISTINCT email_attempted) >= $1
+       GROUP BY ip_address_encrypted
+       HAVING COUNT(DISTINCT email_attempted_encrypted) >= $2
        ORDER BY unique_accounts DESC
        LIMIT 5`,
-      [THRESHOLDS.ACCOUNT_ENUMERATION]
+      [process.env.ENCRYPTION_KEY, THRESHOLDS.ACCOUNT_ENUMERATION]
     );
 
     return {
