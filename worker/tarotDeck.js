@@ -12,11 +12,11 @@
  * with tarotUtils.js and oracleProcessor.js
  */
 
-import { majorArcana } from './tarot/majorArcana.js';
-import { cups } from './tarot/cups.js';
-import { pentacles } from './tarot/pentacles.js';
-import { swords } from './tarot/swords.js';
-import { wands } from './tarot/wands.js';
+import { majorArcana } from '../shared/tarot/majorArcana.js';
+import { cups } from '../shared/tarot/cups.js';
+import { pentacles } from '../shared/tarot/pentacles.js';
+import { swords } from '../shared/tarot/swords.js';
+import { wands } from '../shared/tarot/wands.js';
 
 /**
  * Complete tarot deck - all 78 cards
