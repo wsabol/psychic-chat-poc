@@ -356,17 +356,17 @@ export const FAQ_DATA = [
       {
         id: 'contact-support',
         question: 'How do I contact support?',
-        answer: 'If you need help:\n1. Use the Help Chat (? button) in the app for quick answers\n2. Check this FAQ document\n3. Email support at: support@psychicchat.com\n4. Visit our website for more resources\n\nOur support team usually responds within 24 hours.'
+        answer: 'If you need help:\n1. Use the Help Chat (? button) in the app for quick answers\n2. Check this FAQ document\n3. Email support at: support@starshippsychics.com\n4. Visit our website for more resources\n\nOur support team usually responds within 24 hours.'
       },
       {
         id: 'bug-report',
         question: 'How do I report a bug?',
-        answer: 'If you find a bug:\n1. Note exactly what happened\n2. Include steps to reproduce the issue\n3. Share your device type and app version\n4. Email support@psychicchat.com with details\n5. Include any error messages you see\n\nBug reports help us improve the app for everyone!'
+        answer: 'If you find a bug:\n1. Note exactly what happened\n2. Include steps to reproduce the issue\n3. Share your device type and app version\n4. Email support@starshippsychics.com with details\n5. Include any error messages you see\n\nBug reports help us improve the app for everyone!'
       },
       {
         id: 'feature-request',
         question: 'Can I suggest a new feature?',
-        answer: 'Absolutely! We love feature requests:\n1. Email support@psychicchat.com\n2. Subject: "Feature Request: [Your idea]"\n3. Describe the feature and why it would help\n4. Let us know your use case\n\nGreat suggestions might be added in future updates!'
+        answer: 'Absolutely! We love feature requests:\n1. Email support@starshippsychics.com\n2. Subject: "Feature Request: [Your idea]"\n3. Describe the feature and why it would help\n4. Let us know your use case\n\nGreat suggestions might be added in future updates!'
       },
       {
         id: 'feedback',
