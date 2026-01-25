@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { getLanguageNameForOracle } from "./languageMapper.js";
+import { guardName } from "./nameGuard.js";
 
 // Lazy-load OpenAI client to ensure .env is loaded first
 let client = null;
@@ -19,16 +20,11 @@ export async function generatePsychicOpening({
     oracleLanguage = 'en-US',
     userTimezone = 'UTC'
 }) {
-    // CRITICAL SAFETY: Never allow temp user IDs to reach the oracle
-    // If clientName contains "temp_", replace with friendly fallback
-    if (clientName && clientName.includes('temp_')) {
-        clientName = 'Seeker';
-    }
-    
-    // Additional safety: If clientName is empty, null, or undefined, use "Seeker"
-    if (!clientName || clientName.trim() === '') {
-        clientName = 'Seeker';
-    }
+    // TRIPLE REDUNDANCY LAYER: Apply comprehensive name protection
+    // CRITICAL SAFETY: Never allow temp user IDs or technical identifiers to reach the oracle
+    // This is Layer 2 of our triple redundancy system (Layer 1 is in chat.js)
+    const isTempUser = clientName && typeof clientName === 'string' && clientName.toLowerCase().includes('temp_');
+    clientName = guardName(clientName, isTempUser);
     
     // Get current time in user's timezone for time-aware greetings
     const now = new Date();

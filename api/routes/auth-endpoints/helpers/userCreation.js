@@ -18,6 +18,13 @@ export async function createUserDatabaseRecords(userId, email, firstName = '', l
     );
 
     if (existsCheck.rows.length === 0) {
+      // CRITICAL BUSINESS PROTECTION: For temp users, ALWAYS set first_name to "Seeker"
+      // This is Layer 4 of our quadruple redundancy system to prevent temp user IDs
+      // from ever being shown to customers in oracle greetings
+      const isTempUser = userId.startsWith('temp_');
+      const actualFirstName = isTempUser ? 'Seeker' : (firstName || '');
+      const actualLastName = isTempUser ? '' : (lastName || '');
+      
       // Create personal info for new user - mark as in onboarding
       await db.query(
         `INSERT INTO user_personal_info (
@@ -32,8 +39,8 @@ export async function createUserDatabaseRecords(userId, email, firstName = '', l
         [
           userId, 
           email, process.env.ENCRYPTION_KEY, 
-          firstName, process.env.ENCRYPTION_KEY, 
-          lastName, process.env.ENCRYPTION_KEY,
+          actualFirstName, process.env.ENCRYPTION_KEY, 
+          actualLastName, process.env.ENCRYPTION_KEY,
           'create_account', // New users start at step 1
           false  // Not yet completed onboarding
         ]

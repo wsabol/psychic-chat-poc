@@ -11,6 +11,7 @@ import { hashUserId } from "../shared/hashUtils.js";
 import { validationError, serverError, noContentResponse, successResponse } from "../utils/responses.js";
 import { getLocalDateForTimezone } from "../shared/timezoneHelper.js";
 import { logErrorFromCatch } from "../shared/errorLogger.js";
+import { guardName } from "../shared/nameGuard.js";
 
 const router = Router();
 
@@ -80,10 +81,10 @@ router.get("/opening/:userId", authorizeUser, verify2FA, async (req, res) => {
         // Only generate opening if no messages exist yet OR if last message was from user
         const recentMessages = await getRecentMessages(userId)
         
-        // Fetch user's personal information for personalized greeting
-        // CRITICAL: NEVER use userId for temp users - use friendly fallback names
+        // TRIPLE REDUNDANCY SYSTEM: Fetch and sanitize user's name for oracle greeting
+        // CRITICAL BUSINESS RULE: Never allow temp user IDs to reach the oracle
         const isTempUser = userId.startsWith('temp_');
-        let clientName = isTempUser ? 'Seeker' : userId; // Default fallback
+        let rawClientName = null;
         
         try {
             const { rows: personalInfoRows } = await db.query(
@@ -91,20 +92,18 @@ router.get("/opening/:userId", authorizeUser, verify2FA, async (req, res) => {
                 [process.env.ENCRYPTION_KEY, userId]
             );
             if (personalInfoRows.length > 0 && personalInfoRows[0]) {
-                // Multi-layer fallback: familiar_name > first_name > friendly default (NEVER userId for temp users)
-                clientName = personalInfoRows[0].familiar_name || 
-                            personalInfoRows[0].first_name || 
-                            (isTempUser ? 'Seeker' : userId);
+                // Prefer familiar_name over first_name
+                rawClientName = personalInfoRows[0].familiar_name || 
+                               personalInfoRows[0].first_name;
             }
         } catch (err) {
-            // Error fallback: use friendly name for temp users, userId for regular users
-            clientName = isTempUser ? 'Seeker' : userId;
+            // On error, rawClientName remains null - will be handled by guardName
+            rawClientName = null;
         }
         
-        // TRIPLE SAFETY CHECK: If somehow clientName still contains "temp_", replace it
-        if (clientName && clientName.includes('temp_')) {
-            clientName = 'Seeker';
-        }
+        // Apply TRIPLE REDUNDANCY protection via guardName utility
+        // This ensures NO temp_ or technical IDs ever reach the oracle
+        const clientName = guardName(rawClientName, isTempUser);
 
         let opening = await generatePsychicOpening({
             clientName: clientName,
@@ -116,8 +115,12 @@ router.get("/opening/:userId", authorizeUser, verify2FA, async (req, res) => {
         // Store opening as proper content object
         let openingContent = { text: opening };
 
+        // LAYER 3: Final safety check on fallback message
+        // If AI generation fails, ensure fallback also uses protected name
         if (opening === '') {
-            opening = `Hi ${clientName}, thank you for being here today. Before we begin, is there an area of your life you're hoping to get clarity on?`;
+            // Apply guardName one more time as final protection layer
+            const safeFallbackName = guardName(clientName, isTempUser);
+            opening = `Hi ${safeFallbackName}, thank you for being here today. Before we begin, is there an area of your life you're hoping to get clarity on?`;
             openingContent.text = opening;
         }
 
