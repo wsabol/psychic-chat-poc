@@ -1,28 +1,29 @@
+/**
+ * Security Routes
+ * Handles user security settings: devices, 2FA, phone/email verification
+ */
+
 import express from 'express';
 import { authenticateToken } from '../middleware/auth.js';
+import { verifyUserOwnership } from '../middleware/verifyUserOwnership.js';
 import { db } from '../shared/db.js';
 import * as securityService from '../services/securityService.js';
-import { validationError, forbiddenError, serverError } from '../utils/responses.js';
+import { validationError, serverError, successResponse } from '../utils/responses.js';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
-import { successResponse } from '../utils/responses.js';
 
 const router = express.Router();
 
-// Middleware: Verify token on all routes
+// Apply authentication to all routes
 router.use(authenticateToken);
 
 /**
  * POST /api/security/track-device/:userId
  * Track a new device login
  */
-router.post('/track-device/:userId', async (req, res) => {
+router.post('/track-device/:userId', verifyUserOwnership(), async (req, res) => {
   try {
     const { userId } = req.params;
     const { deviceName, ipAddress } = req.body;
-    
-    if (req.user.uid !== userId) {
-      return forbiddenError(res, 'Unauthorized');
-    }
 
     if (!deviceName || !ipAddress) {
       return validationError(res, 'deviceName and ipAddress required');
@@ -50,9 +51,9 @@ router.post('/track-device/:userId', async (req, res) => {
     );
 
     successResponse(res, { success: true, device: result.rows[0] });
-    } catch (err) {
+  } catch (err) {
     logErrorFromCatch(err, 'app', 'security');
-    return serverError(res, err.message);
+    return serverError(res, 'Failed to track device');
   }
 });
 
@@ -60,19 +61,14 @@ router.post('/track-device/:userId', async (req, res) => {
  * GET /api/security/devices/:userId
  * Get all devices user is logged in from
  */
-router.get('/devices/:userId', async (req, res) => {
+router.get('/devices/:userId', verifyUserOwnership(), async (req, res) => {
   try {
     const { userId } = req.params;
-    
-    if (req.user.uid !== userId) {
-      return forbiddenError(res, 'Unauthorized');
-    }
-
     const result = await securityService.getDevices(userId);
-    res.json(result);
+    successResponse(res, result);
   } catch (err) {
     logErrorFromCatch(err, 'app', 'security');
-    return serverError(res, err.message);
+    return serverError(res, 'Failed to get devices');
   }
 });
 
@@ -80,19 +76,14 @@ router.get('/devices/:userId', async (req, res) => {
  * DELETE /api/security/devices/:userId/:deviceId
  * Log out a specific device
  */
-router.delete('/devices/:userId/:deviceId', async (req, res) => {
+router.delete('/devices/:userId/:deviceId', verifyUserOwnership(), async (req, res) => {
   try {
     const { userId, deviceId } = req.params;
-    
-    if (req.user.uid !== userId) {
-      return forbiddenError(res, 'Unauthorized');
-    }
-
     const result = await securityService.logoutDevice(userId, deviceId);
-    res.json(result);
+    successResponse(res, result);
   } catch (err) {
     logErrorFromCatch(err, 'app', 'security');
-    return serverError(res, err.message);
+    return serverError(res, 'Failed to logout device');
   }
 });
 
@@ -100,19 +91,14 @@ router.delete('/devices/:userId/:deviceId', async (req, res) => {
  * GET /api/security/phone/:userId
  * Get phone data
  */
-router.get('/phone/:userId', async (req, res) => {
+router.get('/phone/:userId', verifyUserOwnership(), async (req, res) => {
   try {
     const { userId } = req.params;
-    
-    if (req.user.uid !== userId) {
-      return forbiddenError(res, 'Unauthorized');
-    }
-
     const data = await securityService.getPhoneData(userId);
-    res.json(data);
+    successResponse(res, data);
   } catch (err) {
     logErrorFromCatch(err, 'app', 'security');
-    return serverError(res, err.message);
+    return serverError(res, 'Failed to get phone data');
   }
 });
 
@@ -120,24 +106,20 @@ router.get('/phone/:userId', async (req, res) => {
  * POST /api/security/phone/:userId
  * Save phone number and send verification code
  */
-router.post('/phone/:userId', async (req, res) => {
+router.post('/phone/:userId', verifyUserOwnership(), async (req, res) => {
   try {
     const { userId } = req.params;
     const { phoneNumber, recoveryPhone } = req.body;
-    
-    if (req.user.uid !== userId) {
-      return forbiddenError(res, 'Unauthorized');
-    }
 
     if (!phoneNumber || typeof phoneNumber !== 'string') {
       return validationError(res, 'Phone number is required');
     }
 
     const result = await securityService.savePhoneNumber(userId, phoneNumber, recoveryPhone);
-    res.json(result);
+    successResponse(res, result);
   } catch (err) {
     logErrorFromCatch(err, 'app', 'security');
-    return serverError(res, err.message);
+    return serverError(res, 'Failed to save phone number');
   }
 });
 
@@ -145,22 +127,18 @@ router.post('/phone/:userId', async (req, res) => {
  * POST /api/security/phone/:userId/verify
  * Verify phone code
  */
-router.post('/phone/:userId/verify', async (req, res) => {
+router.post('/phone/:userId/verify', verifyUserOwnership(), async (req, res) => {
   try {
     const { userId } = req.params;
     const { code } = req.body;
-    
-    if (req.user.uid !== userId) {
-      return forbiddenError(res, 'Unauthorized');
-    }
 
     if (!code || typeof code !== 'string') {
       return validationError(res, 'Verification code is required');
     }
 
     const result = await securityService.verifyPhoneCode(userId, code);
-    res.json(result);
-    } catch (err) {
+    successResponse(res, result);
+  } catch (err) {
     logErrorFromCatch(err, 'app', 'security');
     return validationError(res, err.message);
   }
@@ -170,19 +148,14 @@ router.post('/phone/:userId/verify', async (req, res) => {
  * GET /api/security/email/:userId
  * Get email data
  */
-router.get('/email/:userId', async (req, res) => {
+router.get('/email/:userId', verifyUserOwnership(), async (req, res) => {
   try {
     const { userId } = req.params;
-    
-    if (req.user.uid !== userId) {
-      return forbiddenError(res, 'Unauthorized');
-    }
-
     const data = await securityService.getEmailData(userId);
-    res.json(data);
+    successResponse(res, data);
   } catch (err) {
     logErrorFromCatch(err, 'app', 'security');
-    return serverError(res, err.message);
+    return serverError(res, 'Failed to get email data');
   }
 });
 
@@ -190,24 +163,20 @@ router.get('/email/:userId', async (req, res) => {
  * POST /api/security/email/:userId
  * Save recovery email and send verification code
  */
-router.post('/email/:userId', async (req, res) => {
+router.post('/email/:userId', verifyUserOwnership(), async (req, res) => {
   try {
     const { userId } = req.params;
     const { recoveryEmail } = req.body;
-    
-    if (req.user.uid !== userId) {
-      return forbiddenError(res, 'Unauthorized');
-    }
 
     if (!recoveryEmail || typeof recoveryEmail !== 'string') {
       return validationError(res, 'Recovery email is required');
     }
 
     const result = await securityService.saveRecoveryEmail(userId, recoveryEmail);
-    res.json(result);
+    successResponse(res, result);
   } catch (err) {
     logErrorFromCatch(err, 'app', 'security');
-    return serverError(res, err.message);
+    return serverError(res, 'Failed to save recovery email');
   }
 });
 
@@ -215,21 +184,17 @@ router.post('/email/:userId', async (req, res) => {
  * POST /api/security/email/:userId/verify
  * Verify email code
  */
-router.post('/email/:userId/verify', async (req, res) => {
+router.post('/email/:userId/verify', verifyUserOwnership(), async (req, res) => {
   try {
     const { userId } = req.params;
     const { code } = req.body;
-    
-    if (req.user.uid !== userId) {
-      return forbiddenError(res, 'Unauthorized');
-    }
 
     if (!code || typeof code !== 'string') {
       return validationError(res, 'Verification code is required');
     }
 
     const result = await securityService.verifyEmailCode(userId, code);
-    res.json(result);
+    successResponse(res, result);
   } catch (err) {
     logErrorFromCatch(err, 'app', 'security');
     return validationError(res, err.message);
@@ -240,19 +205,14 @@ router.post('/email/:userId/verify', async (req, res) => {
  * DELETE /api/security/email/:userId
  * Remove recovery email
  */
-router.delete('/email/:userId', async (req, res) => {
+router.delete('/email/:userId', verifyUserOwnership(), async (req, res) => {
   try {
     const { userId } = req.params;
-    
-    if (req.user.uid !== userId) {
-      return forbiddenError(res, 'Unauthorized');
-    }
-
     const result = await securityService.removeRecoveryEmail(userId);
-    res.json(result);
+    successResponse(res, result);
   } catch (err) {
     logErrorFromCatch(err, 'app', 'security');
-    return serverError(res, err.message);
+    return serverError(res, 'Failed to remove recovery email');
   }
 });
 
@@ -260,19 +220,14 @@ router.delete('/email/:userId', async (req, res) => {
  * POST /api/security/password-changed/:userId
  * Record password change and log out other sessions
  */
-router.post('/password-changed/:userId', async (req, res) => {
+router.post('/password-changed/:userId', verifyUserOwnership(), async (req, res) => {
   try {
     const { userId } = req.params;
-    
-    if (req.user.uid !== userId) {
-      return forbiddenError(res, 'Unauthorized');
-    }
-
     const result = await securityService.recordPasswordChange(userId);
-    res.json(result);
-    } catch (err) {
+    successResponse(res, result);
+  } catch (err) {
     logErrorFromCatch(err, 'app', 'security');
-    return serverError(res, err.message);
+    return serverError(res, 'Failed to record password change');
   }
 });
 
@@ -280,19 +235,14 @@ router.post('/password-changed/:userId', async (req, res) => {
  * GET /api/security/2fa-settings/:userId
  * Get 2FA and session settings
  */
-router.get('/2fa-settings/:userId', async (req, res) => {
+router.get('/2fa-settings/:userId', verifyUserOwnership(), async (req, res) => {
   try {
     const { userId } = req.params;
-    
-    if (req.user.uid !== userId) {
-      return forbiddenError(res, 'Unauthorized');
-    }
-
     const settings = await securityService.get2FASettings(userId);
     successResponse(res, { success: true, settings });
   } catch (err) {
     logErrorFromCatch(err, 'app', 'security');
-    return serverError(res, err.message);
+    return serverError(res, 'Failed to get 2FA settings');
   }
 });
 
@@ -300,14 +250,10 @@ router.get('/2fa-settings/:userId', async (req, res) => {
  * POST /api/security/2fa-settings/:userId
  * Update 2FA settings (enabled, method)
  */
-router.post('/2fa-settings/:userId', async (req, res) => {
+router.post('/2fa-settings/:userId', verifyUserOwnership(), async (req, res) => {
   try {
     const { userId } = req.params;
     const { enabled, method } = req.body;
-    
-    if (req.user.uid !== userId) {
-      return forbiddenError(res, 'Unauthorized');
-    }
 
     if (typeof enabled !== 'boolean') {
       return validationError(res, 'enabled must be boolean');
@@ -326,7 +272,7 @@ router.post('/2fa-settings/:userId', async (req, res) => {
     });
   } catch (err) {
     logErrorFromCatch(err, 'app', 'security');
-    return serverError(res, err.message);
+    return serverError(res, 'Failed to update 2FA settings');
   }
 });
 
@@ -334,14 +280,10 @@ router.post('/2fa-settings/:userId', async (req, res) => {
  * POST /api/security/session-preference/:userId
  * Update "Stay Logged In" preference
  */
-router.post('/session-preference/:userId', async (req, res) => {
+router.post('/session-preference/:userId', verifyUserOwnership(), async (req, res) => {
   try {
     const { userId } = req.params;
     const { persistentSession } = req.body;
-    
-    if (req.user.uid !== userId) {
-      return forbiddenError(res, 'Unauthorized');
-    }
 
     if (typeof persistentSession !== 'boolean') {
       return validationError(res, 'persistentSession must be boolean');
@@ -358,7 +300,7 @@ router.post('/session-preference/:userId', async (req, res) => {
     });
   } catch (err) {
     logErrorFromCatch(err, 'app', 'security');
-    return serverError(res, err.message);
+    return serverError(res, 'Failed to update session preference');
   }
 });
 
@@ -366,13 +308,9 @@ router.post('/session-preference/:userId', async (req, res) => {
  * GET /api/security/verification-methods/:userId
  * Get combined verification methods (phone + email from both tables)
  */
-router.get('/verification-methods/:userId', async (req, res) => {
+router.get('/verification-methods/:userId', verifyUserOwnership(), async (req, res) => {
   try {
     const { userId } = req.params;
-    
-    if (req.user.uid !== userId) {
-      return forbiddenError(res, 'Unauthorized');
-    }
 
     // Get user email from database
     const userResult = await db.query(
@@ -385,7 +323,7 @@ router.get('/verification-methods/:userId', async (req, res) => {
     successResponse(res, { success: true, methods });
   } catch (err) {
     logErrorFromCatch(err, 'app', 'security');
-    return serverError(res, err.message);
+    return serverError(res, 'Failed to get verification methods');
   }
 });
 
