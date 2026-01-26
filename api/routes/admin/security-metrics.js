@@ -4,7 +4,7 @@
  */
 
 import { Router } from 'express';
-import { getSecurityMetrics, getIPSecurityScore } from '../../shared/intrusionDetection.js';
+import { getSecurityMetrics, getIPSecurityScore } from '../../services/security/intrusionDetection/index.js';
 import { serverError, successResponse } from '../../utils/responses.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
