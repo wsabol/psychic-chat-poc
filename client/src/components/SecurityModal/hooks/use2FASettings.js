@@ -21,7 +21,8 @@ export const use2FASettings = (userId, token, apiUrl) => {
 
   const loadTwoFASettings = useCallback(async () => {
     try {
-      const response = await fetch(`${apiUrl}/auth/2fa-settings/${userId}`, {
+      // FIXED: Correct API endpoint is /security/2fa-settings, not /auth/2fa-settings
+      const response = await fetch(`${apiUrl}/security/2fa-settings/${userId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -29,9 +30,11 @@ export const use2FASettings = (userId, token, apiUrl) => {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('[2FA-SETTINGS] Loaded settings:', data.settings);
         setTwoFASettings(data.settings);
         setEnabled(data.settings.enabled);
         setMethod(data.settings.method || 'sms');
+        // FIXED: Use phone_number from settings (fetched from security table)
         setPhoneNumber(data.settings.phone_number || '');
         setBackupPhoneNumber(data.settings.backup_phone_number || '');
       } else {
@@ -52,14 +55,15 @@ export const use2FASettings = (userId, token, apiUrl) => {
     setError('');
     setSuccess('');
 
-    if (enabled && !phoneNumber.trim()) {
-      setError('Phone number is required when 2FA is enabled');
+    if (enabled && method === 'sms' && !phoneNumber.trim()) {
+      setError('Phone number is required when 2FA SMS is enabled');
       return false;
     }
 
     setSaving(true);
     try {
-      const response = await fetch(`${apiUrl}/auth/2fa-settings/${userId}`, {
+      // FIXED: Use /security/2fa-settings, not /auth/2fa-settings
+      const response = await fetch(`${apiUrl}/security/2fa-settings/${userId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -76,9 +80,12 @@ export const use2FASettings = (userId, token, apiUrl) => {
       const data = await response.json();
 
       if (response.ok) {
+        console.log('[2FA-SETTINGS] Settings saved:', data.settings);
         setTwoFASettings(data.settings);
         setSuccess('2FA settings updated successfully');
         setEditMode(false);
+        // Reload to get fresh phone number from backend
+        await loadTwoFASettings();
         setTimeout(() => setSuccess(''), 3000);
         return true;
       } else {
@@ -91,7 +98,7 @@ export const use2FASettings = (userId, token, apiUrl) => {
     } finally {
       setSaving(false);
     }
-  }, [enabled, method, phoneNumber, backupPhoneNumber, userId, token, apiUrl]);
+  }, [enabled, method, phoneNumber, backupPhoneNumber, userId, token, apiUrl, loadTwoFASettings]);
 
   const cancelEdit = useCallback(() => {
     setEditMode(false);

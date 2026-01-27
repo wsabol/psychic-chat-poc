@@ -10,20 +10,52 @@
  * - GET /admin/compliance/users-requiring-action - List users needing updates
  * - POST /admin/compliance/send-notifications - Send notification emails (placeholder)
  * - POST /admin/compliance/version-change - Log a version change
+ * - GET /admin/compliance/version-history - Get history of version changes
+ * - POST /admin/compliance/revert-version - Revert to earlier version (critical operation)
  */
 
 import { Router } from 'express';
-import { db } from '../shared/db.js';
-import { logAudit } from '../shared/auditLog.js';
-import { validationError, serverError } from '../utils/responses.js';
-import { successResponse } from '../utils/responses.js';
-import { 
-  flagUsersForUpdate,
-  getComplianceReport,
-  getUsersRequiringAction
-} from '../shared/complianceChecker.js';
+import { requireAdmin } from '../middleware/adminAuth.js';
+import { authenticateToken } from '../middleware/auth.js';
+import { serverError, successResponse } from '../utils/responses.js';
+import { NOTIFICATION_DEFAULTS } from '../constants/compliance.js';
+import {
+  validateFlagUsersRequest,
+  validatePaginationParams,
+  validateNotificationsRequest,
+  validateVersionChangeRequest,
+  validateRevertVersionRequest
+} from '../validators/compliance/complianceAdminValidators.js';
+import {
+  flagUsersForReacceptance,
+  getAdoptionReport,
+  getUsersRequiringActionPaginated,
+  queueNotifications,
+  recordVersionChange,
+  getVersionHistory,
+  revertVersion
+} from '../services/compliance/complianceAdminService.js';
 
 const router = Router();
+
+// Apply authentication and admin middleware to ALL routes
+router.use(authenticateToken);
+router.use(requireAdmin);
+
+/**
+ * Helper function to build audit context from request
+ * @param {Object} req - Express request
+ * @returns {Object} Audit context
+ */
+function buildAuditContext(req) {
+  return {
+    userId: req.user?.uid,
+    ipAddress: req.ip,
+    userAgent: req.get('user-agent'),
+    httpMethod: req.method,
+    endpoint: req.path
+  };
+}
 
 /**
  * POST /admin/compliance/flag-users
@@ -35,44 +67,29 @@ const router = Router();
  *   reason: 'Major policy change' (for audit)
  * }
  */
-router.post('/admin/compliance/flag-users', async (req, res) => {
-  try {
-    const { documentType = 'both', reason = 'Policy update' } = req.body;
+router.post(
+  '/admin/compliance/flag-users',
+  validateFlagUsersRequest,
+  async (req, res) => {
+    try {
+      const { documentType = 'both', reason = 'Policy update' } = req.body;
 
-    // Validate input
-    if (!['terms', 'privacy', 'both'].includes(documentType)) {
-      return validationError(res, 'Invalid documentType. Must be: terms, privacy, or both');
-    }
-
-    // Flag users
-    const result = await flagUsersForUpdate(documentType);
-
-    // Log admin action
-    await logAudit(db, {
-      userId: req.user?.uid || 'admin',
-      action: 'ADMIN_COMPLIANCE_FLAGGED_USERS',
-      resourceType: 'compliance',
-      ipAddress: req.ip,
-      userAgent: req.get('user-agent'),
-      httpMethod: req.method,
-      endpoint: req.path,
-      status: 'SUCCESS',
-      details: {
+      const result = await flagUsersForReacceptance({
         documentType,
-        flaggedCount: result.flagged,
-        reason
-      }
-    });
+        reason,
+        auditContext: buildAuditContext(req)
+      });
 
-    return successResponse(res, {
-      success: true,
-      message: `Flagged ${result.flagged} users for ${documentType} update`,
-      ...result
-    });
+      return successResponse(res, {
+        success: true,
+        message: `Flagged ${result.flagged} users for ${documentType} update`,
+        ...result
+      });
     } catch (error) {
-    return serverError(res, error.message);
+      return serverError(res, error.message);
+    }
   }
-});
+);
 
 /**
  * GET /admin/compliance/report
@@ -80,13 +97,13 @@ router.post('/admin/compliance/flag-users', async (req, res) => {
  */
 router.get('/admin/compliance/report', async (req, res) => {
   try {
-    const report = await getComplianceReport();
+    const report = await getAdoptionReport();
 
     return successResponse(res, {
       success: true,
       ...report
     });
-    } catch (error) {
+  } catch (error) {
     return serverError(res, error.message);
   }
 });
@@ -96,30 +113,25 @@ router.get('/admin/compliance/report', async (req, res) => {
  * Get list of users who need to re-accept terms
  * 
  * Query params:
- * - limit: number (default 100)
+ * - limit: number (default 100, max 1000)
  * - offset: number (default 0)
  */
-router.get('/admin/compliance/users-requiring-action', async (req, res) => {
-  try {
-    const { limit = 100, offset = 0 } = req.query;
+router.get(
+  '/admin/compliance/users-requiring-action',
+  validatePaginationParams,
+  async (req, res) => {
+    try {
+      const result = await getUsersRequiringActionPaginated(req.pagination);
 
-    const result = await getUsersRequiringAction();
-
-    // Apply pagination
-    const paginatedUsers = result.users.slice(offset, offset + parseInt(limit));
-
-    return successResponse(res, {
-      success: true,
-      totalUsers: result.count,
-      limit: parseInt(limit),
-      offset: parseInt(offset),
-      returnedCount: paginatedUsers.length,
-      users: paginatedUsers
-    });
+      return successResponse(res, {
+        success: true,
+        ...result
+      });
     } catch (error) {
-    return serverError(res, error.message);
+      return serverError(res, error.message);
+    }
   }
-});
+);
 
 /**
  * POST /admin/compliance/send-notifications
@@ -136,46 +148,36 @@ router.get('/admin/compliance/users-requiring-action', async (req, res) => {
  *   templateId: 'sendgrid_template_id'  // optional
  * }
  */
-router.post('/admin/compliance/send-notifications', async (req, res) => {
-  try {
-    const { 
-      userIds = null,
-      documentType = 'both',
-      subject = 'Important: Our Terms and Policies Have Been Updated',
-      templateId = null
-    } = req.body;
+router.post(
+  '/admin/compliance/send-notifications',
+  validateNotificationsRequest,
+  async (req, res) => {
+    try {
+      const { 
+        userIds = null,
+        documentType = 'both',
+        subject = NOTIFICATION_DEFAULTS.SUBJECT,
+        templateId = null
+      } = req.body;
 
-        // Placeholder for email integration
-
-    // Log action
-    await logAudit(db, {
-      userId: req.user?.uid || 'admin',
-      action: 'ADMIN_COMPLIANCE_SEND_NOTIFICATIONS',
-      resourceType: 'compliance',
-      ipAddress: req.ip,
-      status: 'QUEUED',
-      details: {
-        documentType,
-        userCount: userIds?.length || 'all',
-        subject
-      }
-    });
-
-    return successResponse(res, {
-      success: true,
-      message: 'Notification queue created (implementation pending)',
-      details: {
-        userCount: userIds?.length || 'all',
+      const result = await queueNotifications({
+        userIds,
         documentType,
         subject,
-        status: 'QUEUED',
-        nextSteps: 'Integrate with Sendgrid or email service'
-      }
-    });
+        templateId,
+        auditContext: buildAuditContext(req)
+      });
+
+      return successResponse(res, {
+        success: true,
+        message: 'Notification queue created (implementation pending)',
+        details: result
+      });
     } catch (error) {
-    return serverError(res, error.message);
+      return serverError(res, error.message);
+    }
   }
-});
+);
 
 /**
  * POST /admin/compliance/version-change
@@ -196,57 +198,40 @@ router.post('/admin/compliance/send-notifications', async (req, res) => {
  *   }
  * }
  */
-router.post('/admin/compliance/version-change', async (req, res) => {
-  try {
-    const {
-      documentType,
-      oldVersion,
-      newVersion,
-      changeType,
-      description,
-      changeSummary
-    } = req.body;
-
-    // Validate
-    if (!['terms', 'privacy'].includes(documentType)) {
-      return validationError(res, 'Invalid documentType');
-    }
-
-    if (!['MAJOR', 'MINOR', 'PATCH'].includes(changeType)) {
-      return validationError(res, 'Invalid changeType');
-    }
-
-    // Insert into audit log as a record of this change
-    await logAudit(db, {
-      userId: req.user?.uid || 'admin',
-      action: 'COMPLIANCE_VERSION_CHANGE_RECORDED',
-      resourceType: 'compliance',
-      ipAddress: req.ip,
-      status: 'SUCCESS',
-      details: {
+router.post(
+  '/admin/compliance/version-change',
+  validateVersionChangeRequest,
+  async (req, res) => {
+    try {
+      const {
         documentType,
         oldVersion,
         newVersion,
         changeType,
         description,
         changeSummary
-      }
-    });
+      } = req.body;
 
-    return successResponse(res, {
-      success: true,
-      message: `Version change recorded: ${documentType} ${oldVersion} -> ${newVersion}`,
-      nextSteps: [
-        'Update VERSION_CONFIG in api/shared/versionConfig.js',
-        'Run "npm run compliance:flag" to flag users',
-        'Run "npm run compliance:notify" to send notifications',
-        'Monitor adoption with GET /admin/compliance/report'
-      ]
-    });
+      const result = await recordVersionChange({
+        documentType,
+        oldVersion,
+        newVersion,
+        changeType,
+        description,
+        changeSummary,
+        auditContext: buildAuditContext(req)
+      });
+
+      return successResponse(res, {
+        success: true,
+        message: `Version change recorded: ${documentType} ${oldVersion} -> ${newVersion}`,
+        ...result
+      });
     } catch (error) {
-    return serverError(res, error.message);
+      return serverError(res, error.message);
+    }
   }
-});
+);
 
 /**
  * GET /admin/compliance/version-history
@@ -254,26 +239,13 @@ router.post('/admin/compliance/version-change', async (req, res) => {
  */
 router.get('/admin/compliance/version-history', async (req, res) => {
   try {
-    const result = await db.query(`
-      SELECT 
-        created_at,
-        action,
-        details
-      FROM audit_log
-      WHERE action = 'COMPLIANCE_VERSION_CHANGE_RECORDED'
-      ORDER BY created_at DESC
-      LIMIT 100
-    `);
+    const result = await getVersionHistory();
 
     return successResponse(res, {
       success: true,
-      total: result.rows.length,
-      history: result.rows.map(row => ({
-        timestamp: row.created_at,
-        change: row.details
-      }))
+      ...result
     });
-    } catch (error) {
+  } catch (error) {
     return serverError(res, error.message);
   }
 });
@@ -294,82 +266,35 @@ router.get('/admin/compliance/version-history', async (req, res) => {
  *   reason: 'Legal concerns with indemnification clause'
  * }
  */
-router.post('/admin/compliance/revert-version', async (req, res) => {
-  try {
-    const { 
-      documentType,
-      revokedVersion,
-      revertToVersion,
-      reason
-    } = req.body;
+router.post(
+  '/admin/compliance/revert-version',
+  validateRevertVersionRequest,
+  async (req, res) => {
+    try {
+      const { 
+        documentType,
+        revokedVersion,
+        revertToVersion,
+        reason
+      } = req.body;
 
-    if (!['terms', 'privacy', 'both'].includes(documentType)) {
-      return validationError(res, 'Invalid documentType');
-    }
-
-    if (!revokedVersion || !revertToVersion || !reason) {
-      return validationError(res, 'revokedVersion, revertToVersion, and reason are required');
-    }
-
-    // Flag ALL users for re-acceptance
-    // CRITICAL: This includes users who already accepted the reverted version
-    // because users who only accepted revoked version v3 never consented to v2
-    const flagResult = await db.query(`
-      UPDATE user_consents
-      SET requires_consent_update = true,
-          updated_at = NOW()
-      WHERE user_id_hash IS NOT NULL
-    `);
-
-    const totalFlagged = flagResult.rowCount;
-
-    // Log the reversion action
-    await logAudit(db, {
-      userId: req.user?.uid || 'admin',
-      action: 'COMPLIANCE_VERSION_REVERTED',
-      resourceType: 'compliance',
-      ipAddress: req.ip,
-      status: 'SUCCESS',
-      details: {
+      const result = await revertVersion({
         documentType,
         revokedVersion,
         revertToVersion,
         reason,
-        totalUsersFlagged: totalFlagged,
-        timestamp: new Date().toISOString()
-      }
-    });
+        auditContext: buildAuditContext(req)
+      });
 
-    return successResponse(res, {
-      success: true,
-      message: `Reverted ${documentType} from v${revokedVersion} to v${revertToVersion}. Flagged ${totalFlagged} users for re-acceptance.`,
-      details: {
-        documentType,
-        revokedVersion,
-        revertToVersion,
-        reason,
-        totalUsersFlagged,
-        nextSteps: [
-          `Update versionConfig.js to ${revertToVersion}-reverted`,
-          'Update .env with new version',
-          'Rebuild Docker containers',
-          `Send urgent notification to all ${totalFlagged} users`,
-          'Monitor re-acceptance on dashboard'
-        ]
-      }
-    });
+      return successResponse(res, {
+        success: true,
+        message: `Reverted ${documentType} from v${revokedVersion} to v${revertToVersion}. Flagged ${result.totalUsersFlagged} users for re-acceptance.`,
+        details: result
+      });
     } catch (error) {
-    await logAudit(db, {
-      userId: req.user?.uid || 'admin',
-      action: 'COMPLIANCE_VERSION_REVERT_FAILED',
-      resourceType: 'compliance',
-      ipAddress: req.ip,
-      status: 'FAILED',
-      details: { error: error.message }
-    });
-
-    return serverError(res, error.message);
+      return serverError(res, error.message);
+    }
   }
-});
+);
 
 export default router;

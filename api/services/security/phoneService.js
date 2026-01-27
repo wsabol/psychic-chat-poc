@@ -6,14 +6,22 @@ import { formatPhoneNumber } from '../../shared/authUtils.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
- * Get phone data
+ * Get phone data - DECRYPT WITH PGCRYPTO
  */
 export async function getPhoneData(userId) {
   try {
     const userIdHash = hashUserId(userId);
+    const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+    
     const result = await db.query(
-      'SELECT phone_number_encrypted, recovery_phone_encrypted, phone_verified, recovery_phone_verified FROM security WHERE user_id_hash = $1',
-      [userIdHash]
+      `SELECT 
+        pgp_sym_decrypt(phone_number_encrypted::bytea, $1::text) as phone_number,
+        pgp_sym_decrypt(recovery_phone_encrypted::bytea, $1::text) as recovery_phone,
+        phone_verified, 
+        recovery_phone_verified 
+       FROM security 
+       WHERE user_id_hash = $2`,
+      [ENCRYPTION_KEY, userIdHash]
     );
 
     if (result.rows.length === 0) {
@@ -22,8 +30,8 @@ export async function getPhoneData(userId) {
 
     const row = result.rows[0];
     return {
-      phoneNumber: decryptPhone(row.phone_number_encrypted),
-      recoveryPhone: decryptPhone(row.recovery_phone_encrypted),
+      phoneNumber: row.phone_number,
+      recoveryPhone: row.recovery_phone,
       phoneVerified: row.phone_verified,
       recoveryPhoneVerified: row.recovery_phone_verified
     };
@@ -36,10 +44,12 @@ export async function getPhoneData(userId) {
 /**
  * Save phone number and send SMS verification code via Twilio Verify API
  * Uses Twilio Verify service - code generation and expiration handled by Twilio
+ * USES PGCRYPTO - Same encryption as user_personal_info table
  */
 export async function savePhoneNumber(userId, phoneNumber, recoveryPhone) {
   try {
     const userIdHash = hashUserId(userId);
+    const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
     
     // Format phone numbers to E.164 format for Twilio
     const formattedPhone = formatPhoneNumber(phoneNumber);
@@ -48,28 +58,25 @@ export async function savePhoneNumber(userId, phoneNumber, recoveryPhone) {
     if (!formattedPhone) {
       throw new Error('Invalid phone number format. Use: +1 (555) 000-0000 or +18005550000');
     }
-    
-    const encryptedPhone = encryptPhone(formattedPhone);
-    const encryptedRecovery = formattedRecovery ? encryptPhone(formattedRecovery) : null;
 
-    // Try UPDATE first using user_id_hash
+    // Try UPDATE first using user_id_hash - ENCRYPT IN DATABASE LIKE PERSONAL INFO
     const updateResult = await db.query(
       `UPDATE security SET 
-         phone_number_encrypted = $1,
-         recovery_phone_encrypted = $2,
+         phone_number_encrypted = pgp_sym_encrypt($1, $2),
+         recovery_phone_encrypted = $3,
          phone_verified = FALSE,
          recovery_phone_verified = FALSE,
          updated_at = CURRENT_TIMESTAMP
-       WHERE user_id_hash = $3`,
-      [encryptedPhone, encryptedRecovery || null, userIdHash]
+       WHERE user_id_hash = $4`,
+      [formattedPhone, ENCRYPTION_KEY, formattedRecovery ? `pgp_sym_encrypt('${formattedRecovery}', '${ENCRYPTION_KEY}')` : null, userIdHash]
     );
 
     // If no rows updated, INSERT
     if (updateResult.rowCount === 0) {
       await db.query(
         `INSERT INTO security (user_id_hash, phone_number_encrypted, recovery_phone_encrypted, phone_verified, recovery_phone_verified, created_at, updated_at)
-         VALUES ($1, $2, $3, FALSE, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-        [userIdHash, encryptedPhone, encryptedRecovery || null]
+         VALUES ($1, pgp_sym_encrypt($2, $3), $4, FALSE, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+        [userIdHash, formattedPhone, ENCRYPTION_KEY, formattedRecovery ? `pgp_sym_encrypt('${formattedRecovery}', '${ENCRYPTION_KEY}')` : null]
       );
     }
 
@@ -92,27 +99,31 @@ export async function savePhoneNumber(userId, phoneNumber, recoveryPhone) {
 /**
  * Verify phone code using Twilio Verify API
  * Validates the code with Twilio, then marks phone as verified in database
+ * DECRYPT WITH PGCRYPTO
  */
 export async function verifyPhoneCode(userId, code) {
   try {
     const userIdHash = hashUserId(userId);
+    const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
     
     // Validate code format (must be 6 digits)
     if (!code || typeof code !== 'string' || !/^\d{6}$/.test(code)) {
       return { success: false, error: 'Invalid verification code format' };
     }
 
-    // Get the phone number from database
+    // Get the phone number from database - DECRYPT WITH PGCRYPTO
     const phoneResult = await db.query(
-      'SELECT phone_number_encrypted FROM security WHERE user_id_hash = $1',
-      [userIdHash]
+      `SELECT pgp_sym_decrypt(phone_number_encrypted::bytea, $1::text) as phone_number
+       FROM security 
+       WHERE user_id_hash = $2`,
+      [ENCRYPTION_KEY, userIdHash]
     );
 
     if (phoneResult.rowCount === 0) {
       return { success: false, error: 'No phone number on file' };
     }
 
-    const phoneNumber = decryptPhone(phoneResult.rows[0].phone_number_encrypted);
+    const phoneNumber = phoneResult.rows[0].phone_number;
     
     if (!phoneNumber) {
       return { success: false, error: 'No phone number on file' };

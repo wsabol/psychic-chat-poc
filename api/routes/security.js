@@ -248,12 +248,12 @@ router.get('/2fa-settings/:userId', verifyUserOwnership(), async (req, res) => {
 
 /**
  * POST /api/security/2fa-settings/:userId
- * Update 2FA settings (enabled, method)
+ * Update 2FA settings (enabled, method, and optionally phone number)
  */
 router.post('/2fa-settings/:userId', verifyUserOwnership(), async (req, res) => {
   try {
     const { userId } = req.params;
-    const { enabled, method } = req.body;
+    const { enabled, method, phoneNumber, backupPhoneNumber } = req.body;
 
     if (typeof enabled !== 'boolean') {
       return validationError(res, 'enabled must be boolean');
@@ -263,11 +263,30 @@ router.post('/2fa-settings/:userId', verifyUserOwnership(), async (req, res) => 
       return validationError(res, 'method must be sms or email');
     }
 
+    // Validate phone number if SMS method is enabled
+    if (enabled && method === 'sms' && !phoneNumber) {
+      return validationError(res, 'Phone number is required when 2FA SMS is enabled');
+    }
+
+    // Update 2FA settings in user_2fa_settings table
     const settings = await securityService.update2FASettings(userId, { enabled, method });
+
+    // If phone number provided, save it to security table
+    if (phoneNumber) {
+      try {
+        await securityService.savePhoneNumber(userId, phoneNumber, backupPhoneNumber);
+      } catch (phoneErr) {
+        logErrorFromCatch(phoneErr, 'app', 'security');
+        return serverError(res, 'Failed to save phone number: ' + phoneErr.message);
+      }
+    }
+
+    // Fetch updated settings including phone number
+    const updatedSettings = await securityService.get2FASettings(userId);
 
     successResponse(res, { 
       success: true, 
-      settings,
+      settings: updatedSettings,
       message: enabled ? '2FA enabled' : '2FA disabled'
     });
   } catch (err) {

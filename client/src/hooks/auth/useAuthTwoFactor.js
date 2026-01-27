@@ -13,14 +13,17 @@ export function useAuthTwoFactor() {
   const [twoFactorMethod, setTwoFactorMethod] = useState('email');
   const [error, setError] = useState(null);
 
-  const verify2FA = useCallback(async (code, token, userId, complete2FA, authToken, authUserId, trustDevice = false) => {
+  const verify2FA = useCallback(async (code, token, userId, complete2FA, authToken, authUserId, trustDevice = false, method = 'email') => {
     try {
       if (!userId || !token) {
         setError('2FA session expired. Please log in again.');
         return false;
       }
 
-      const response = await fetch('http://localhost:3000/auth/verify-2fa', {
+      console.log(`[2FA] Verifying code with method: ${method}`);
+      
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+      const response = await fetch(`${API_URL}/auth/verify-2fa`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -30,49 +33,53 @@ export function useAuthTwoFactor() {
           userId: userId,
           code: code,
           trustDevice: trustDevice,
-          method: twoFactorMethod  // CRITICAL: Pass method so backend knows SMS vs Email
+          method: method  // CRITICAL: Pass method parameter so backend knows SMS vs Email
         })
       });
 
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        setError(data.error || '2FA verification failed');
+        setError(data.error || 'Invalid or expired 2FA code');
         return false;
       }
 
-      // 2FA verified - NOW authenticate
+      // 2FA verified successfully
+      console.log('[2FA] ✅ Verification successful');
 
       // Mark 2FA as verified in this session so page refreshes don't require it again
       sessionStorage.setItem(`2fa_verified_${userId}`, 'true');
 
+      // Clear 2FA modal state
       setTempToken(null);
       setTempUserId(null);
       setShowTwoFactor(false);
+      setError(null);
 
-      // CRITICAL FIX: Call complete2FA to immediately authenticate and trigger billing check
-      // This is the proper way to complete 2FA - don't rely on onAuthStateChanged listener
-      // because it doesn't fire automatically when auth state hasn't changed
+      // CRITICAL FIX: Call complete2FA to immediately authenticate and trigger navigation to chat
+      // This updates isAuthenticated state and triggers billing check, which navigates to chat
       if (complete2FA && authToken && authUserId) {
+        console.log('[2FA] Calling complete2FA to authenticate user');
         complete2FA(authUserId, authToken);
       } else {
+        console.warn('[2FA] complete2FA not available, forcing auth reload');
         // Fallback: Force auth state to re-run listener if complete2FA not available
         if (auth.currentUser) {
           try {
             await auth.currentUser.reload();
           } catch (reloadErr) {
+            console.error('[2FA] Failed to reload auth:', reloadErr);
           }
         }
       }
 
-      setError(null);
       return true;
     } catch (err) {
       logErrorFromCatch('[2FA] Verification error:', err);
-      setError('Failed to verify 2FA code');
+      setError('Failed to verify 2FA code. Please try again.');
       return false;
     }
-  }, [twoFactorMethod]);
+  }, []);
 
   const reset2FAState = useCallback(() => {
     setShowTwoFactor(false);

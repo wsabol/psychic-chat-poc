@@ -437,10 +437,6 @@ export async function sendInitialPolicyNotifications() {
     
     // Log summary
     const duration = new Date() - startTime;
-    console.log(
-      `[Policy Notification Job] Initial notifications completed: ` +
-      `${results.successful}/${results.total} sent in ${duration}ms`
-    );
     
     return results;
     
@@ -488,10 +484,6 @@ export async function sendReminderNotifications() {
     
     // Log summary
     const duration = new Date() - startTime;
-    console.log(
-      `[Policy Notification Job] Reminder notifications completed: ` +
-      `${results.successful}/${results.total} sent in ${duration}ms`
-    );
     
     return results;
     
@@ -544,10 +536,6 @@ export async function enforceGracePeriodExpiration() {
     
     // Log summary
     const duration = new Date() - startTime;
-    console.log(
-      `[Policy Notification Job] Grace period enforcement completed: ` +
-      `${results.sessionsInvalidated} sessions invalidated for ${results.total} users in ${duration}ms`
-    );
     
     return results;
     

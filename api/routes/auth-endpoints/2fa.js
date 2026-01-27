@@ -24,6 +24,8 @@ router.post('/verify-2fa', async (req, res) => {
     const { userId, code, trustDevice: shouldTrustDevice, method } = req.body;
     if (!userId || !code) return validationError(res, 'userId and code are required');
     
+    logger.info(`[2FA-VERIFY] Verifying ${method} code for user ${userId}`);
+    
     let codeIsValid = false;
     
     if (method === 'sms') {
@@ -41,32 +43,67 @@ router.post('/verify-2fa', async (req, res) => {
       );
 
       if (phoneResult.rows.length === 0 || !phoneResult.rows[0].phone_number_encrypted) {
+        logger.error(`[2FA-VERIFY] No phone number found for user ${userId}`);
         return validationError(res, 'No phone number on file for SMS verification');
       }
 
       const phoneNumber = decryptPhone(phoneResult.rows[0].phone_number_encrypted);
       
       if (!phoneNumber) {
+        logger.error(`[2FA-VERIFY] Unable to decrypt phone number for user ${userId}`);
         return validationError(res, 'Unable to decrypt phone number');
       }
       
+      // CRITICAL: Use Twilio Verify API verificationChecks endpoint
+      // This follows Twilio's official procedure for SMS verification
+      logger.info(`[2FA-VERIFY] Calling Twilio verificationChecks for phone ${phoneNumber}`);
       const verifyResult = await verifySMSCode(phoneNumber, code);
       
+      logger.info(`[2FA-VERIFY] Twilio response:`, { 
+        success: verifyResult.success, 
+        valid: verifyResult.valid,
+        status: verifyResult.status 
+      });
+      
       if (!verifyResult.success || !verifyResult.valid) {
+        await logAudit(db, {
+          userId,
+          action: 'USER_2FA_FAILED',
+          resourceType: 'authentication',
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+          httpMethod: req.method,
+          endpoint: req.path,
+          status: 'FAILED',
+          details: { method: 'sms', reason: 'invalid_code' }
+        });
         return validationError(res, 'Invalid or expired 2FA code');
       }
       
       codeIsValid = true;
+      logger.info(`[2FA-VERIFY] ✅ SMS code verified successfully for user ${userId}`);
     } else {
       // Email: Verify from database
       const codeResult = await getVerificationCode(db, userId, code);
       if (codeResult.rows.length === 0) {
+        await logAudit(db, {
+          userId,
+          action: 'USER_2FA_FAILED',
+          resourceType: 'authentication',
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+          httpMethod: req.method,
+          endpoint: req.path,
+          status: 'FAILED',
+          details: { method: 'email', reason: 'invalid_code' }
+        });
         return validationError(res, 'Invalid or expired 2FA code');
       }
       
       // Mark code as used
       await db.query('UPDATE verification_codes SET verified_at = NOW() WHERE id = $1', [codeResult.rows[0].id]);
       codeIsValid = true;
+      logger.info(`[2FA-VERIFY] ✅ Email code verified successfully for user ${userId}`);
     }
     
     if (!codeIsValid) {
@@ -422,7 +459,7 @@ router.post('/check-2fa/:userId', async (req, res) => {
       
       recipientContact = phoneNumber;
       
-      // Send via Twilio Verify API (no manual code generation needed)
+      // Send via Twilio Verify API (Twilio handles rate limiting internally)
       sendResult = await sendSMS(phoneNumber);
       
       logger.info(`2FA SMS send result for ${userId}:`, { 

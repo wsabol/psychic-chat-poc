@@ -3,23 +3,46 @@ import { hashUserId } from '../../shared/hashUtils.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
- * Get user's 2FA settings (from user_2fa_settings table)
+ * Get user's 2FA settings (from user_2fa_settings table + phone from security table)
  * Used by: TwoFactorAuthTab, SessionPrivacyTab
+ * USES PGCRYPTO - Same as phoneService and personal info
  */
 export async function get2FASettings(userId) {
   try {
     const userIdHash = hashUserId(userId);
-    const result = await db.query(
+    const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+    
+    // Get 2FA settings from user_2fa_settings table
+    const settingsResult = await db.query(
       `SELECT enabled, method, persistent_session 
        FROM user_2fa_settings WHERE user_id_hash = $1`,
       [userIdHash]
     );
 
-    if (result.rows.length === 0) {
-      return { enabled: true, method: 'email', persistent_session: false };
+    const settings = settingsResult.rows.length === 0 
+      ? { enabled: true, method: 'email', persistent_session: false }
+      : settingsResult.rows[0];
+
+    // Get phone number from security table - DECRYPT WITH PGCRYPTO
+    const phoneResult = await db.query(
+      `SELECT 
+        pgp_sym_decrypt(phone_number_encrypted::bytea, $1::text) as phone_number,
+        phone_verified
+       FROM security 
+       WHERE user_id_hash = $2`,
+      [ENCRYPTION_KEY, userIdHash]
+    );
+
+    // Add phone data to settings
+    if (phoneResult.rows.length > 0) {
+      settings.phone_number = phoneResult.rows[0].phone_number;
+      settings.phone_verified = phoneResult.rows[0].phone_verified || false;
+    } else {
+      settings.phone_number = null;
+      settings.phone_verified = false;
     }
 
-    return result.rows[0];
+    return settings;
   } catch (err) {
     logErrorFromCatch(err, 'app', 'security');
     throw err;

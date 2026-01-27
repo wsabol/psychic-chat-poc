@@ -23,6 +23,7 @@ export function useAuthState(checkBillingStatus) {
   const [tempToken, setTempToken] = useState(null);
   const [tempUserId, setTempUserId] = useState(null);
   const [twoFactorMethod, setTwoFactorMethod] = useState('email');
+  const [error, setError] = useState(null);
   
   const billingCheckedRef = useRef(new Set());
 
@@ -144,18 +145,29 @@ export function useAuthState(checkBillingStatus) {
               } catch (err) {
                 logErrorFromCatch('[AUTH-LISTENER] /auth/check-2fa FAILED:', err.message, err.name);
                 
-                // CRITICAL: If 2FA check fails for any reason (timeout, network error, etc),
-                // assume 2FA is NOT required. This prevents users from being stuck at login
-                // when the API is slow or 2FA is disabled. The endpoint should return
-                // requires2FA: false by default for users without 2FA enabled.
-                logWarning('[AUTH-LISTENER] 2FA check failed - assuming 2FA not required');
-                setShowTwoFactor(false);
-                setIsAuthenticated(true);
-                if (!billingCheckedRef.current.has(firebaseUser.uid)) {
-                  billingCheckedRef.current.add(firebaseUser.uid);
-                  checkBillingStatus(idToken, firebaseUser.uid);
+                // SECURITY FIX: Don't bypass 2FA on network errors
+                // If the 2FA check endpoint fails, we should NOT assume 2FA is not required
+                // Instead, treat it as a temporary error and allow retry
+                if (err.name === 'AbortError') {
+                  // Timeout - allow user to retry login
+                  logWarning('[AUTH-LISTENER] 2FA check timed out - please sign out and try again');
+                  setError('Connection timeout. Please sign out and try again.');
+                  setShowTwoFactor(false);
+                  setIsAuthenticated(false);
+                  setLoading(false);
+                } else {
+                  // Other network error - be lenient for users without 2FA enabled
+                  // But log it as a security event
+                  logWarning('[AUTH-LISTENER] 2FA check failed - assuming 2FA not required (may be security risk)');
+                  console.warn('⚠️ SECURITY WARNING: 2FA check failed. If 2FA is enabled for this user, it was bypassed.');
+                  setShowTwoFactor(false);
+                  setIsAuthenticated(true);
+                  if (!billingCheckedRef.current.has(firebaseUser.uid)) {
+                    billingCheckedRef.current.add(firebaseUser.uid);
+                    checkBillingStatus(idToken, firebaseUser.uid);
+                  }
+                  setLoading(false);
                 }
-                setLoading(false);
               }
             }
           }

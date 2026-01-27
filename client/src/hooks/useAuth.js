@@ -22,8 +22,8 @@ export function useAuth() {
 
   // Enhance verify2FA with additional dependencies
   const verify2FA = async (code, trustDevice = false) => {
-    // CRITICAL: Sync the method from stateHook to twoFAHook before calling verify
-    twoFAHook.setTwoFactorMethod(stateHook.twoFactorMethod);
+    // CRITICAL: Pass the method parameter so backend knows SMS vs Email
+    console.log(`[useAuth] verify2FA called with method: ${stateHook.twoFactorMethod}`);
     
     return await twoFAHook.verify2FA(
       code,
@@ -32,7 +32,8 @@ export function useAuth() {
       stateHook.complete2FA,
       stateHook.token,
       stateHook.authUserId,
-      trustDevice  // ✅ NEW: Pass trustDevice flag through
+      trustDevice,  // ✅ NEW: Pass trustDevice flag through
+      stateHook.twoFactorMethod  // ✅ CRITICAL: Pass method parameter
     );
   };
 
