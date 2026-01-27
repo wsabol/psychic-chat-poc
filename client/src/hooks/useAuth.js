@@ -22,6 +22,9 @@ export function useAuth() {
 
   // Enhance verify2FA with additional dependencies
   const verify2FA = async (code, trustDevice = false) => {
+    // CRITICAL: Sync the method from stateHook to twoFAHook before calling verify
+    twoFAHook.setTwoFactorMethod(stateHook.twoFactorMethod);
+    
     return await twoFAHook.verify2FA(
       code,
       stateHook.tempToken,  // ✅ FIXED: Should use stateHook.tempToken

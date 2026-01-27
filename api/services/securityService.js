@@ -28,7 +28,8 @@ export { get2FASettings, update2FASettings, updateSessionPreference } from './se
 // Verification Code Management (NEW)
 export { 
   generateAndSendVerificationCode, 
-  verifyCode, 
+  verifyCode,
+  verifySMSVerificationCode,
   invalidateCode,
   wasCodeRecentlySent,
   cleanupExpiredCodes,

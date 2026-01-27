@@ -17,18 +17,61 @@ const router = Router();
 /**
  * POST /auth/verify-2fa
  * Verify 2FA code and optionally trust device
+ * Supports both email (database) and SMS (Twilio Verify API) verification
  */
 router.post('/verify-2fa', async (req, res) => {
     try {
-    const { userId, code, trustDevice: shouldTrustDevice } = req.body;
+    const { userId, code, trustDevice: shouldTrustDevice, method } = req.body;
     if (!userId || !code) return validationError(res, 'userId and code are required');
     
-    // Verify code exists and is valid
-    const codeResult = await getVerificationCode(db, userId, code);
-    if (codeResult.rows.length === 0) return validationError(res, 'Invalid or expired 2FA code');
+    let codeIsValid = false;
     
-    // Mark code as used
-    await db.query('UPDATE verification_codes SET verified_at = NOW() WHERE id = $1', [codeResult.rows[0].id]);
+    if (method === 'sms') {
+      // SMS: Verify using Twilio Verify API
+      const { verifySMSCode } = await import('../../shared/smsService.js');
+      const { decryptPhone } = await import('../../services/security/helpers/securityHelpers.js');
+      const userIdHash = hashUserId(userId);
+      
+      // Get phone number using proper decryption helper
+      const phoneResult = await db.query(
+        `SELECT phone_number_encrypted 
+         FROM security 
+         WHERE user_id_hash = $1`,
+        [userIdHash]
+      );
+
+      if (phoneResult.rows.length === 0 || !phoneResult.rows[0].phone_number_encrypted) {
+        return validationError(res, 'No phone number on file for SMS verification');
+      }
+
+      const phoneNumber = decryptPhone(phoneResult.rows[0].phone_number_encrypted);
+      
+      if (!phoneNumber) {
+        return validationError(res, 'Unable to decrypt phone number');
+      }
+      
+      const verifyResult = await verifySMSCode(phoneNumber, code);
+      
+      if (!verifyResult.success || !verifyResult.valid) {
+        return validationError(res, 'Invalid or expired 2FA code');
+      }
+      
+      codeIsValid = true;
+    } else {
+      // Email: Verify from database
+      const codeResult = await getVerificationCode(db, userId, code);
+      if (codeResult.rows.length === 0) {
+        return validationError(res, 'Invalid or expired 2FA code');
+      }
+      
+      // Mark code as used
+      await db.query('UPDATE verification_codes SET verified_at = NOW() WHERE id = $1', [codeResult.rows[0].id]);
+      codeIsValid = true;
+    }
+    
+    if (!codeIsValid) {
+      return validationError(res, 'Invalid or expired 2FA code');
+    }
     
     // If user wants to trust this device, mark it as trusted
     if (shouldTrustDevice) {
@@ -319,35 +362,109 @@ router.post('/check-2fa/:userId', async (req, res) => {
       });
     }
 
-        // Generate and send 2FA code
-    const { generate6DigitCode } = await import('../../shared/authUtils.js');
-    const { send2FACodeEmail } = await import('../../shared/emailService.js');
+    // Generate and send 2FA code based on user's preferred method
+    const method = twoFASettings.method || 'email'; // Default to email if not set
     
-    const code = generate6DigitCode();
-
     // Get user's email
-    const userEmailResult = await db.query(
+    const userInfoResult = await db.query(
       `SELECT pgp_sym_decrypt(email_encrypted, $1) as email FROM user_personal_info WHERE user_id = $2`,
       [ENCRYPTION_KEY, userId]
     );
 
-    if (userEmailResult.rows.length === 0) {
+    if (userInfoResult.rows.length === 0) {
       return serverError(res, 'User account not found');
     }
 
-    const email = userEmailResult.rows[0].email;
+    const email = userInfoResult.rows[0].email;
+    let sendResult;
+    let recipientContact;
 
-    // Insert verification code with encryption
-    try {
-      const insertResult = await insertVerificationCode(db, userId, email, null, code, 'email');
-    } catch (insertErr) {
-      return serverError(res, 'Failed to save 2FA code');
-    }
+    if (method === 'sms') {
+      // SMS: Use Twilio Verify API
+      const { sendSMS } = await import('../../shared/smsService.js');
+      const { decryptPhone } = await import('../../services/security/helpers/securityHelpers.js');
+      
+      // Get phone number from security table (using proper decryption helper)
+      let phoneNumber;
+      try {
+        const phoneResult = await db.query(
+          `SELECT phone_number_encrypted 
+           FROM security 
+           WHERE user_id_hash = $1`,
+          [userIdHash]
+        );
 
-    // Send 2FA code via email
-    const sendResult = await send2FACodeEmail(email, code);
-    if (!sendResult.success) {
-      return serverError(res, 'Failed to send 2FA code');
+        if (phoneResult.rows.length === 0 || !phoneResult.rows[0].phone_number_encrypted) {
+          logger.error(`2FA SMS: No phone number found for user ${userId}`);
+          return res.status(400).json({
+            success: false,
+            error: '2FA is set to SMS but no phone number is configured. Please add a phone number in Security Settings or switch to Email verification.',
+            errorCode: 'NO_PHONE_NUMBER',
+            suggestion: 'Go to Security Settings > Phone Number to add your phone, or change 2FA method to Email'
+          });
+        }
+
+        // Decrypt using the same helper that encrypted it
+        phoneNumber = decryptPhone(phoneResult.rows[0].phone_number_encrypted);
+        
+        if (!phoneNumber) {
+          throw new Error('Decryption returned null');
+        }
+      } catch (decryptError) {
+        logger.error(`2FA SMS: Phone decryption error for user ${userId}:`, decryptError.message);
+        return res.status(400).json({
+          success: false,
+          error: '2FA is set to SMS but your phone number could not be retrieved. Please re-add your phone number in Security Settings or switch to Email verification.',
+          errorCode: 'PHONE_DECRYPT_ERROR',
+          suggestion: 'Go to Security Settings > Phone Number to re-add your phone, or change 2FA method to Email'
+        });
+      }
+      
+      recipientContact = phoneNumber;
+      
+      // Send via Twilio Verify API (no manual code generation needed)
+      sendResult = await sendSMS(phoneNumber);
+      
+      logger.info(`2FA SMS send result for ${userId}:`, { 
+        success: sendResult?.success, 
+        mockMode: sendResult?.mockMode,
+        error: sendResult?.error 
+      });
+      
+      if (!sendResult || !sendResult.success) {
+        logger.error(`2FA SMS failed for user ${userId}: ${sendResult?.error || 'Unknown error'}`);
+        
+        // CRITICAL: If Twilio Verify is not configured, block login
+        if (sendResult?.mockMode) {
+          return res.status(503).json({
+            success: false,
+            error: 'SMS verification service is not configured. Please contact support or use email verification.',
+            errorCode: 'SMS_SERVICE_UNAVAILABLE'
+          });
+        }
+        
+        return serverError(res, `Failed to send 2FA code via SMS: ${sendResult?.error || 'Unknown error'}`);
+      }
+    } else {
+      // Email: Use manual code generation and email
+      const { generate6DigitCode } = await import('../../shared/authUtils.js');
+      const { send2FACodeEmail } = await import('../../shared/emailService.js');
+      
+      const code = generate6DigitCode();
+      recipientContact = email;
+
+      // Insert verification code with encryption
+      try {
+        await insertVerificationCode(db, userId, email, null, code, 'email');
+      } catch (insertErr) {
+        return serverError(res, 'Failed to save 2FA code');
+      }
+
+      // Send 2FA code via email
+      sendResult = await send2FACodeEmail(email, code);
+      if (!sendResult || !sendResult.success) {
+        return serverError(res, 'Failed to send 2FA code via email');
+      }
     }
 
     // Generate temporary JWT token
@@ -368,7 +485,7 @@ router.post('/check-2fa/:userId', async (req, res) => {
       httpMethod: req.method,
       endpoint: req.path,
       status: 'SUCCESS',
-      details: { method: 'email', email }
+      details: { method, contact: recipientContact }
     });
 
     return successResponse(res, {
@@ -376,11 +493,15 @@ router.post('/check-2fa/:userId', async (req, res) => {
       userId,
       tempToken,
       requires2FA: true,
-      method: 'email',
-      message: '2FA code sent to your email'
+      method,
+      message: method === 'sms' 
+        ? '2FA code sent via SMS' 
+        : '2FA code sent to your email'
     });
   } catch (error) {
-    return serverError(res, 'Failed to process 2FA request');
+    logger.error('Error in check-2fa endpoint:', error);
+    logger.error('Error stack:', error.stack);
+    return serverError(res, `Failed to process 2FA request: ${error.message}`);
   }
 });
 

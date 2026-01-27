@@ -1,14 +1,17 @@
-    import { db } from '../../shared/db.js';
+import { db } from '../../shared/db.js';
 import { generate6DigitCode } from '../../shared/authUtils.js';
 import { insertVerificationCode, getVerificationCode } from '../../shared/encryptedQueries.js';
 import { send2FACodeEmail } from '../../shared/emailService.js';
-import { sendSMS } from '../../shared/smsService.js';
+import { sendSMS, verifySMSCode } from '../../shared/smsService.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
 import { SECURITY_CONFIG } from '../../config/security.js';
 
 /**
  * Verification Code Service
  * Handles generation, sending, and verification of codes for 2FA and other security flows
+ * 
+ * NOTE: SMS verification uses Twilio Verify API (code managed by Twilio)
+ *       Email verification uses manual code generation (stored in database)
  */
 
 /**
@@ -17,34 +20,43 @@ import { SECURITY_CONFIG } from '../../config/security.js';
  * @param {string} emailOrPhone - Email address or phone number
  * @param {string} method - 'email' or 'sms'
  * @param {string} codeType - Type of code (login, password_reset, etc.)
- * @returns {Promise<Object>} Result with success status and code (for testing)
+ * @returns {Promise<Object>} Result with success status
  */
 export async function generateAndSendVerificationCode(userId, emailOrPhone, method = 'email', codeType = 'login') {
   try {
-    const code = generate6DigitCode();
-    
-    // Insert verification code into database
-    const insertResult = await insertVerificationCode(db, userId, emailOrPhone, null, code, method);
-    
-    if (!insertResult) {
-      return { success: false, error: 'Failed to save verification code' };
-    }
-
-    // Send code via specified method
     let sendResult;
+    
     if (method === SECURITY_CONFIG.VERIFICATION_METHODS.EMAIL) {
+      // Email: Generate code and store in database
+      const code = generate6DigitCode();
+      
+      const insertResult = await insertVerificationCode(db, userId, emailOrPhone, null, code, method);
+      
+      if (!insertResult) {
+        return { success: false, error: 'Failed to save verification code' };
+      }
+
       sendResult = await send2FACodeEmail(emailOrPhone, code);
+      
+      if (!sendResult || !sendResult.success) {
+        return { success: false, error: 'Failed to send verification code' };
+      }
+      
+      return { success: true, code }; // Return code for testing
+      
     } else if (method === SECURITY_CONFIG.VERIFICATION_METHODS.SMS) {
-      sendResult = await sendSMS(emailOrPhone, code);
+      // SMS: Use Twilio Verify API (code managed by Twilio, not stored in DB)
+      sendResult = await sendSMS(emailOrPhone);
+      
+      if (!sendResult || !sendResult.success) {
+        return { success: false, error: sendResult.error || 'Failed to send verification code' };
+      }
+      
+      return { success: true, message: sendResult.message };
+      
     } else {
       return { success: false, error: 'Invalid verification method' };
     }
-
-    if (!sendResult || !sendResult.success) {
-      return { success: false, error: 'Failed to send verification code' };
-    }
-
-    return { success: true, code }; // Return code for testing purposes
   } catch (error) {
     logErrorFromCatch(error, 'app', 'verificationCodeService.generateAndSendVerificationCode');
     return { success: false, error: error.message };
@@ -52,7 +64,8 @@ export async function generateAndSendVerificationCode(userId, emailOrPhone, meth
 }
 
 /**
- * Verify a code submitted by the user
+ * Verify a code submitted by the user (Email-based verification)
+ * For SMS verification, use verifySMSVerificationCode() instead
  * @param {string} userId - User ID
  * @param {string} code - Code to verify
  * @param {string} codeType - Type of code (login, password_reset, etc.)
@@ -60,7 +73,7 @@ export async function generateAndSendVerificationCode(userId, emailOrPhone, meth
  */
 export async function verifyCode(userId, code, codeType = 'login') {
   try {
-    // Fetch verification code from database
+    // Fetch verification code from database (for EMAIL verification)
     const codeResult = await getVerificationCode(db, userId, code);
     
     if (!codeResult || codeResult.rows.length === 0) {
@@ -78,6 +91,41 @@ export async function verifyCode(userId, code, codeType = 'login') {
     return { success: true, codeRecord };
   } catch (error) {
     logErrorFromCatch(error, 'app', 'verificationCodeService.verifyCode');
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Verify SMS code using Twilio Verify API
+ * This is used for SMS-based 2FA verification
+ * @param {string} phoneNumber - Phone number in E.164 format
+ * @param {string} code - 6-digit verification code
+ * @returns {Promise<Object>} Result with verification status
+ */
+export async function verifySMSVerificationCode(phoneNumber, code) {
+  try {
+    // Validate code format
+    if (!code || typeof code !== 'string' || !/^\d{6}$/.test(code)) {
+      return { success: false, error: 'Invalid verification code format' };
+    }
+
+    // Verify through Twilio Verify API
+    const verifyResult = await verifySMSCode(phoneNumber, code);
+
+    if (!verifyResult.success || !verifyResult.valid) {
+      return { 
+        success: false, 
+        error: verifyResult.message || 'Invalid or expired verification code' 
+      };
+    }
+
+    return { 
+      success: true, 
+      valid: true,
+      message: 'Code verified successfully' 
+    };
+  } catch (error) {
+    logErrorFromCatch(error, 'app', 'verificationCodeService.verifySMSVerificationCode');
     return { success: false, error: error.message };
   }
 }

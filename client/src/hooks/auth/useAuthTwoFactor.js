@@ -29,7 +29,8 @@ export function useAuthTwoFactor() {
         body: JSON.stringify({
           userId: userId,
           code: code,
-          trustDevice: trustDevice
+          trustDevice: trustDevice,
+          method: twoFactorMethod  // CRITICAL: Pass method so backend knows SMS vs Email
         })
       });
 
@@ -71,7 +72,7 @@ export function useAuthTwoFactor() {
       setError('Failed to verify 2FA code');
       return false;
     }
-  }, []);
+  }, [twoFactorMethod]);
 
   const reset2FAState = useCallback(() => {
     setShowTwoFactor(false);
