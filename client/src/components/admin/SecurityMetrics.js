@@ -3,7 +3,7 @@
  * Intrusion Detection System Monitoring
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -13,7 +13,7 @@ export default function SecurityMetrics({ token }) {
   const [error, setError] = useState(null);
   const [lastRefresh, setLastRefresh] = useState(null);
 
-  const fetchMetrics = async () => {
+  const fetchMetrics = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
@@ -38,21 +38,16 @@ export default function SecurityMetrics({ token }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     fetchMetrics();
-  }, [token]);
+  }, [fetchMetrics]);
 
   const getSeverityColor = (count, threshold) => {
     if (count === 0) return '#4ade80'; // green
     if (count >= threshold) return '#ef4444'; // red
     return '#fbbf24'; // yellow
-  };
-
-  const formatTimestamp = (timestamp) => {
-    if (!timestamp) return 'Never';
-    return new Date(timestamp).toLocaleString();
   };
 
   return (
