@@ -265,7 +265,12 @@ router.post('/2fa-settings/:userId', verifyUserOwnership(), async (req, res) => 
 
     // Validate phone number if SMS method is enabled
     if (enabled && method === 'sms' && !phoneNumber) {
-      return validationError(res, 'Phone number is required when 2FA SMS is enabled');
+      // Check if user already has a verified phone number in database
+      const existingPhone = await securityService.getPhoneData(userId);
+      if (!existingPhone || !existingPhone.phoneNumber || !existingPhone.phoneVerified) {
+        return validationError(res, 'Phone number is required when 2FA SMS is enabled. Please verify your phone number first.');
+      }
+      // Phone already exists and verified - no need to send it again
     }
 
     // Update 2FA settings in user_2fa_settings table

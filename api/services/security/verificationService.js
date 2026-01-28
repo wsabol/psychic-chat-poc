@@ -13,17 +13,30 @@ import { decryptPhone, decryptEmail } from './helpers/securityHelpers.js';
 export async function getVerificationMethods(userId, userEmail) {
   try {
     const userIdHash = hashUserId(userId);
+    const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
     
-    // SECURITY: Fetch encrypted data as-is, decrypt at application level
+    console.log('[VERIFICATION] Getting methods for userId:', userId);
+    console.log('[VERIFICATION] User ID Hash:', userIdHash);
+    
+    // SECURITY: Decrypt using PGCRYPTO (same as phoneService)
     const securityResult = await db.query(
       `SELECT 
-        phone_number_encrypted,
-        recovery_phone_encrypted,
-        recovery_email_encrypted,
-        phone_verified, recovery_phone_verified, recovery_email_verified
-       FROM security WHERE user_id_hash = $1`,
-      [userIdHash]
+        pgp_sym_decrypt(phone_number_encrypted::bytea, $1::text) as phone_number,
+        pgp_sym_decrypt(recovery_phone_encrypted::bytea, $1::text) as recovery_phone,
+        pgp_sym_decrypt(recovery_email_encrypted::bytea, $1::text) as recovery_email,
+        phone_verified, 
+        recovery_phone_verified, 
+        recovery_email_verified
+       FROM security 
+       WHERE user_id_hash = $2`,
+      [ENCRYPTION_KEY, userIdHash]
     );
+    
+    console.log('[VERIFICATION] Query returned', securityResult.rows.length, 'rows');
+    if (securityResult.rows.length > 0) {
+      console.log('[VERIFICATION] Phone number:', securityResult.rows[0].phone_number);
+      console.log('[VERIFICATION] Phone verified:', securityResult.rows[0].phone_verified);
+    }
 
     if (securityResult.rows.length === 0) {
       return {
@@ -40,15 +53,16 @@ export async function getVerificationMethods(userId, userEmail) {
     const sec = securityResult.rows[0];
     return {
       primaryEmail: userEmail,
-      phoneNumber: decryptPhone(sec.phone_number_encrypted),
-      recoveryPhone: decryptPhone(sec.recovery_phone_encrypted),
-      recoveryEmail: decryptEmail(sec.recovery_email_encrypted),
+      phoneNumber: sec.phone_number,
+      recoveryPhone: sec.recovery_phone,
+      recoveryEmail: sec.recovery_email,
       phoneVerified: sec.phone_verified || false,
       recoveryPhoneVerified: sec.recovery_phone_verified || false,
       recoveryEmailVerified: sec.recovery_email_verified || false
     };
   } catch (err) {
-    logErrorFromCatch(error, 'app', 'security');
+    const { logErrorFromCatch } = await import('../../shared/errorLogger.js');
+    logErrorFromCatch(err, 'app', 'security');
     throw err;
   }
 }

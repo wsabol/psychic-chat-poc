@@ -459,17 +459,30 @@ router.post('/check-2fa/:userId', async (req, res) => {
       
       recipientContact = phoneNumber;
       
-      // Send via Twilio Verify API (Twilio handles rate limiting internally)
+      // Send via Twilio Verify API (with retry logic and rate limiting)
       sendResult = await sendSMS(phoneNumber);
       
       logger.info(`2FA SMS send result for ${userId}:`, { 
         success: sendResult?.success, 
         mockMode: sendResult?.mockMode,
-        error: sendResult?.error 
+        error: sendResult?.error,
+        rateLimited: sendResult?.rateLimited,
+        code: sendResult?.code
       });
       
       if (!sendResult || !sendResult.success) {
         logger.error(`2FA SMS failed for user ${userId}: ${sendResult?.error || 'Unknown error'}`);
+        
+        // Handle rate limiting errors with specific response
+        if (sendResult?.code === 'RATE_LIMITED' || sendResult?.rateLimited) {
+          return res.status(429).json({
+            success: false,
+            error: sendResult?.error || 'Too many SMS requests. Please try again in a few minutes.',
+            errorCode: 'SMS_RATE_LIMITED',
+            waitSeconds: sendResult?.waitSeconds,
+            suggestion: 'Please wait before requesting another verification code, or switch to Email verification in your Security Settings.'
+          });
+        }
         
         // CRITICAL: If Twilio Verify is not configured, block login
         if (sendResult?.mockMode) {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 /**
  * useVerificationFlow - Manage form workflow and state transitions
@@ -14,6 +14,15 @@ export function useVerificationFlow(initialMethods) {
   const [phoneNumber, setPhoneNumber] = useState(initialMethods?.phoneNumber || '');
   const [recoveryPhone, setRecoveryPhone] = useState(initialMethods?.recoveryPhone || '');
   const [recoveryEmail, setRecoveryEmail] = useState(initialMethods?.recoveryEmail || '');
+
+  // Update form state when initialMethods changes (e.g., after loading from API)
+  useEffect(() => {
+    if (initialMethods) {
+      setPhoneNumber(initialMethods.phoneNumber || '');
+      setRecoveryPhone(initialMethods.recoveryPhone || '');
+      setRecoveryEmail(initialMethods.recoveryEmail || '');
+    }
+  }, [initialMethods]);
 
   /**
    * Enter edit mode

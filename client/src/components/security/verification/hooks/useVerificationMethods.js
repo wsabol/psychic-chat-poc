@@ -32,6 +32,9 @@ export function useVerificationMethods(userId, token, apiUrl) {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('[CLIENT] API Response:', data);
+        console.log('[CLIENT] Methods received:', data.methods);
+        console.log('[CLIENT] Phone number:', data.methods?.phoneNumber);
         setMethods(data.methods || DEFAULT_METHODS);
         return data.methods || DEFAULT_METHODS;
       } else {

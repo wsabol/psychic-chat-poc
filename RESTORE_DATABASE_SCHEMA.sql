@@ -196,6 +196,50 @@ CREATE TABLE IF NOT EXISTS verification_codes (
 CREATE INDEX IF NOT EXISTS idx_verification_codes_user_id_hash ON verification_codes(user_id_hash);
 CREATE INDEX IF NOT EXISTS idx_verification_codes_code ON verification_codes(code);
 
+-- TABLE: sms_verification_attempts (SMS rate limiting & spam prevention)
+-- Tracks SMS verification attempts to prevent spam and implement rate limiting per phone number
+-- Records are automatically cleaned up after 1 hour
+-- Added: 2026-01-27 (Phase 4.1: SMS Error Handling Enhancement)
+CREATE TABLE IF NOT EXISTS sms_verification_attempts (
+    id SERIAL PRIMARY KEY,
+    phone_number VARCHAR(20) NOT NULL,
+    success BOOLEAN NOT NULL DEFAULT false,
+    error_code VARCHAR(50),
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_sms_attempts_phone_time ON sms_verification_attempts(phone_number, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_sms_attempts_cleanup ON sms_verification_attempts(created_at);
+
+COMMENT ON TABLE sms_verification_attempts IS 'Tracks SMS verification attempts to prevent spam and implement rate limiting per phone number. Records are automatically cleaned up after 1 hour.';
+COMMENT ON COLUMN sms_verification_attempts.phone_number IS 'Phone number in E.164 format (e.g., +15555555555)';
+COMMENT ON COLUMN sms_verification_attempts.success IS 'Whether the SMS API call succeeded';
+COMMENT ON COLUMN sms_verification_attempts.error_code IS 'Error code if failed (e.g., Throttling, RATE_LIMITED_LOCAL)';
+COMMENT ON COLUMN sms_verification_attempts.created_at IS 'Timestamp of the attempt';
+
+-- TABLE: sms_verification_codes (AWS SNS verification codes)
+-- Stores 6-digit SMS verification codes since AWS SNS doesn't have built-in verify service
+-- Codes expire after 10 minutes
+-- Added: 2026-01-27 (Phase 4.2: AWS SNS Migration)
+CREATE TABLE IF NOT EXISTS sms_verification_codes (
+    id SERIAL PRIMARY KEY,
+    phone_number VARCHAR(20) NOT NULL,
+    code VARCHAR(6) NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    verified_at TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_sms_codes_phone_code ON sms_verification_codes(phone_number, code);
+CREATE INDEX IF NOT EXISTS idx_sms_codes_expires ON sms_verification_codes(expires_at);
+CREATE INDEX IF NOT EXISTS idx_sms_codes_unverified ON sms_verification_codes(phone_number, verified_at) WHERE verified_at IS NULL;
+
+COMMENT ON TABLE sms_verification_codes IS 'Stores 6-digit SMS verification codes for AWS SNS. Codes expire after 10 minutes. Used for 2FA and phone verification.';
+COMMENT ON COLUMN sms_verification_codes.phone_number IS 'Phone number in E.164 format (e.g., +15555555555)';
+COMMENT ON COLUMN sms_verification_codes.code IS '6-digit verification code sent via SMS';
+COMMENT ON COLUMN sms_verification_codes.expires_at IS 'When the code expires (10 minutes after creation)';
+COMMENT ON COLUMN sms_verification_codes.verified_at IS 'When the code was successfully verified (NULL if not verified yet)';
+
 -- TABLE: user_violations
 CREATE TABLE IF NOT EXISTS user_violations (
     id SERIAL PRIMARY KEY,
