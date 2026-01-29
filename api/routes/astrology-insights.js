@@ -48,8 +48,17 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
         
         for (const row of rows) {
             try {
+                // Convert created_at_local_date (timestamp) to YYYY-MM-DD string for comparison
+                let rowDate = row.created_at_local_date;
+                if (rowDate instanceof Date) {
+                    rowDate = rowDate.toISOString().split('T')[0];
+                } else if (typeof rowDate === 'string') {
+                    // If it's already a string, extract just the date part
+                    rowDate = rowDate.split('T')[0];
+                }
+                
                 // Use created_at_local_date for accurate timezone-aware matching
-                if (row.created_at_local_date === today) {
+                if (rowDate === today) {
                     const fullContent = row.content_full;
                     const briefContent = row.content_brief;
                     

@@ -13,18 +13,24 @@ export default function BirthChartDisplay({ birthChart }) {
 
   return (
     <div className="birth-chart-simple">
-      <div className="chart-item">
-        <span className="chart-icon">↗️</span>
-        <span className="chart-sign">{t(`mySign.${birthChart.rising_sign.toLowerCase()}`)}</span>
-      </div>
-      <div className="chart-item">
-        <span className="chart-icon">🌙</span>
-        <span className="chart-sign">{t(`mySign.${birthChart.moon_sign.toLowerCase()}`)}</span>
-      </div>
-      <div className="chart-item">
-        <span className="chart-icon">☀️</span>
-        <span className="chart-sign">{t(`mySign.${birthChart.sun_sign.toLowerCase()}`)}</span>
-      </div>
+      {birthChart.rising_sign && (
+        <div className="chart-item">
+          <span className="chart-icon">↗️</span>
+          <span className="chart-sign">{t(`mySign.${birthChart.rising_sign.toLowerCase()}`)}</span>
+        </div>
+      )}
+      {birthChart.moon_sign && (
+        <div className="chart-item">
+          <span className="chart-icon">🌙</span>
+          <span className="chart-sign">{t(`mySign.${birthChart.moon_sign.toLowerCase()}`)}</span>
+        </div>
+      )}
+      {birthChart.sun_sign && (
+        <div className="chart-item">
+          <span className="chart-icon">☀️</span>
+          <span className="chart-sign">{t(`mySign.${birthChart.sun_sign.toLowerCase()}`)}</span>
+        </div>
+      )}
     </div>
   );
 }

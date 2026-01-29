@@ -13,15 +13,22 @@ export default function PlanetsList({ planets }) {
 
   return (
     <div className="planets-list">
-      {planets.map((planet, idx) => (
-        <div key={idx} className={`planet-item ${planet.retrograde ? 'retrograde' : ''}`}>
-          <span className="planet-icon">{planet.icon}</span>
-          <span className="planet-name">{t(`cosmicWeather.${planet.name.toLowerCase()}`)}</span>
-          <span className="planet-sign">{t(`mySign.${planet.sign.toLowerCase()}`)}</span>
-          <span className="planet-degree">{planet.degree}°</span>
-          {planet.retrograde && <span className="retrograde-badge">♻️</span>}
-        </div>
-      ))}
+      {planets.map((planet, idx) => {
+        // Skip planets with missing data
+        if (!planet.name || !planet.sign) {
+          return null;
+        }
+        
+        return (
+          <div key={idx} className={`planet-item ${planet.retrograde ? 'retrograde' : ''}`}>
+            <span className="planet-icon">{planet.icon || '🌟'}</span>
+            <span className="planet-name">{t(`cosmicWeather.${planet.name.toLowerCase()}`)}</span>
+            <span className="planet-sign">{t(`mySign.${planet.sign.toLowerCase()}`)}</span>
+            <span className="planet-degree">{planet.degree ? `${planet.degree}°` : ''}</span>
+            {planet.retrograde && <span className="retrograde-badge">♻️</span>}
+          </div>
+        );
+      })}
     </div>
   );
 }
