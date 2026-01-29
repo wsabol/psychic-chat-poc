@@ -139,49 +139,62 @@ router.post('/log-login-success', async (req, res) => {
     
     // ✅ NEW: Check subscription health before allowing login
     let subscriptionStatus = null;
-    try {
-      const health = await validateSubscriptionHealth(userId);
+    
+    // ✅ ADMIN EXEMPTION: Admins bypass subscription check at login
+    if (isAdminEmail) {
       subscriptionStatus = {
-        healthy: health.healthy,
-        status: health.subscription.status,
-        paymentValid: health.paymentMethod.valid
+        healthy: true,
+        status: 'active',
+        paymentValid: true,
+        exempted: true,
+        reason: 'admin'
       };
+    } else {
+      // Non-admin users: validate subscription
+      try {
+        const health = await validateSubscriptionHealth(userId);
+        subscriptionStatus = {
+          healthy: health.healthy,
+          status: health.subscription.status,
+          paymentValid: health.paymentMethod.valid
+        };
 
-      // If subscription is not healthy, block login
-      if (!health.healthy) {
-        await logAudit(db, {
-          userId,
-          action: 'USER_LOGIN_BLOCKED_NO_SUBSCRIPTION',
-          ipAddress: req.ip,
-          userAgent: req.get('user-agent'),
-          status: 'BLOCKED',
-          details: { 
-            email,
+        // If subscription is not healthy, block login
+        if (!health.healthy) {
+          await logAudit(db, {
+            userId,
+            action: 'USER_LOGIN_BLOCKED_NO_SUBSCRIPTION',
+            ipAddress: req.ip,
+            userAgent: req.get('user-agent'),
+            status: 'BLOCKED',
+            details: { 
+              email,
+              blockedReason: health.blockedReason,
+              subscriptionStatus: health.subscription.status
+            }
+          });
+
+          return res.status(403).json({
+            success: false,
+            error: 'Subscription Required',
+            message: health.blockedMessage,
+            errorCode: ErrorCodes.FORBIDDEN,
             blockedReason: health.blockedReason,
-            subscriptionStatus: health.subscription.status
-          }
-        });
-
-        return res.status(403).json({
-          success: false,
-          error: 'Subscription Required',
-          message: health.blockedMessage,
-          errorCode: ErrorCodes.FORBIDDEN,
-          blockedReason: health.blockedReason,
-          subscription: {
-            status: health.subscription.status,
-            paymentValid: health.paymentMethod.valid
-          },
-          action: {
-            type: 'STRIPE_PORTAL',
-            message: 'Please update your subscription to continue using Starship Psychics',
-            link: '/billing/stripe-portal'
-          }
-        });
+            subscription: {
+              status: health.subscription.status,
+              paymentValid: health.paymentMethod.valid
+            },
+            action: {
+              type: 'STRIPE_PORTAL',
+              message: 'Please update your subscription to continue using Starship Psychics',
+              link: '/billing/stripe-portal'
+            }
+          });
+        }
+      } catch (subError) {
+        await logErrorFromCatch(subError, 'auth', 'subscription-check', userId);
+        // Continue with login on error
       }
-    } catch (subError) {
-      await logErrorFromCatch(subError, 'auth', 'subscription-check', userId);
-      // Continue with login on error
     }
 
     // Log successful login

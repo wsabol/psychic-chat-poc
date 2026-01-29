@@ -14,6 +14,21 @@ import { validateSubscriptionHealth, getCachedSubscriptionStatus } from '../serv
 import { logErrorFromCatch } from '../shared/errorLogger.js';
 import { authError, forbiddenError, serverError, ErrorCodes, successResponse } from '../utils/responses.js';
 
+// Load admin emails from environment variable
+const ADMIN_EMAILS = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim().toLowerCase()) || [];
+
+/**
+ * Check if user is an admin (exempt from subscription requirements)
+ * @param {string} email - User email
+ * @returns {boolean} True if user is admin
+ */
+function isAdminUser(email) {
+  if (!email || typeof email !== 'string') {
+    return false;
+  }
+  return ADMIN_EMAILS.includes(email.toLowerCase());
+}
+
 /**
  * Subscription Guard Middleware
  */
@@ -21,10 +36,21 @@ export async function subscriptionGuard(req, res, next) {
   try {
     // Get user_id from JWT token (added by authenticateToken middleware)
     const userId = req.user?.uid;
+    const userEmail = req.user?.email;
 
       if (!userId) {
         return authError(res, 'User information not found', ErrorCodes.UNAUTHORIZED);
       }
+
+    // ✅ ADMIN EXEMPTION: Admins are exempt from subscription requirements
+    if (userEmail && isAdminUser(userEmail)) {
+      req.subscription = {
+        status: 'active',
+        exempted: true,
+        reason: 'admin'
+      };
+      return next();
+    }
 
     // Get cached subscription status first (faster)
     const cachedStatus = await getCachedSubscriptionStatus(userId);
