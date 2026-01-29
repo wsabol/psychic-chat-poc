@@ -1,0 +1,301 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Psychic Chat Lambda Functions for Scheduled Jobs
+
+Parameters:
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues:
+      - development
+      - staging
+      - production
+    Description: Environment name
+  
+  VpcId:
+    Type: String
+    Description: VPC ID for Lambda functions
+  
+  PrivateSubnetIds:
+    Type: CommaDelimitedList
+    Description: Private subnet IDs for Lambda functions (comma-separated)
+  
+  DatabaseSecretArn:
+    Type: String
+    Description: ARN of the database credentials secret in Secrets Manager
+  
+  FirebaseSecretArn:
+    Type: String
+    Description: ARN of the Firebase service account key secret in Secrets Manager
+  
+  EncryptionKey:
+    Type: String
+    NoEcho: true
+    Description: Encryption key for database fields
+  
+  StripeSecretKey:
+    Type: String
+    NoEcho: true
+    Description: Stripe secret key
+  
+  TermsVersion:
+    Type: String
+    Default: '1.0.0'
+    Description: Current Terms of Service version
+  
+  PrivacyVersion:
+    Type: String
+    Default: '1.0.0'
+    Description: Current Privacy Policy version
+
+Globals:
+  Function:
+    Runtime: nodejs18.x
+    Timeout: 300
+    MemorySize: 512
+    Environment:
+      Variables:
+        ENCRYPTION_KEY: !Ref EncryptionKey
+        STRIPE_SECRET_KEY: !Ref StripeSecretKey
+        TERMS_VERSION: !Ref TermsVersion
+        PRIVACY_VERSION: !Ref PrivacyVersion
+        DB_SECRET_NAME: !Ref DatabaseSecretArn
+        FIREBASE_SECRET_NAME: !Ref FirebaseSecretArn
+        NODE_ENV: !Ref Environment
+    VpcConfig:
+      SecurityGroupIds:
+        - !Ref LambdaSecurityGroup
+      SubnetIds: !Ref PrivateSubnetIds
+
+Resources:
+  # Security Group for Lambda Functions
+  LambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Lambda functions
+      VpcId: !Ref VpcId
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: HTTPS for AWS API calls
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          CidrIp: 10.0.0.0/16
+          Description: PostgreSQL database access
+      Tags:
+        - Key: Name
+          Value: !Sub '${Environment}-lambda-sg'
+
+  # IAM Role for Lambda Functions
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+      Policies:
+        - PolicyName: SecretsManagerAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource:
+                  - !Ref DatabaseSecretArn
+                  - !Ref FirebaseSecretArn
+        - PolicyName: CloudWatchLogs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
+
+  # Lambda Function: Temp Account Cleanup
+  TempAccountCleanupFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${Environment}-temp-account-cleanup'
+      Description: Deletes temporary accounts older than 8 hours
+      CodeUri: ../lambdas/temp-account-cleanup/
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Events:
+        ScheduledEvent:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 */8 * * ? *)
+            Description: Run every 8 hours
+            Enabled: true
+
+  # Lambda Function: Account Cleanup
+  AccountCleanupFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${Environment}-account-cleanup'
+      Description: Handles account deletion lifecycle (re-engagement emails, 7-year deletion)
+      CodeUri: ../lambdas/account-cleanup/
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Events:
+        ScheduledEvent:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 2 * * ? *)
+            Description: Run daily at 2:00 AM UTC
+            Enabled: true
+
+  # Lambda Function: Subscription Check
+  SubscriptionCheckFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${Environment}-subscription-check'
+      Description: Verifies active subscriptions against Stripe
+      CodeUri: ../lambdas/subscription-check/
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Events:
+        ScheduledEvent:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 */4 * * ? *)
+            Description: Run every 4 hours
+            Enabled: true
+
+  # Lambda Function: Policy Reminder
+  PolicyReminderFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${Environment}-policy-reminder'
+      Description: Sends policy change reminder notifications
+      CodeUri: ../lambdas/policy-reminder/
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Events:
+        ScheduledEvent:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 3 * * ? *)
+            Description: Run daily at 3:00 AM UTC
+            Enabled: true
+
+  # Lambda Function: Grace Period Enforcement
+  GracePeriodEnforcementFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${Environment}-grace-period-enforcement'
+      Description: Logs out users whose grace period has expired
+      CodeUri: ../lambdas/grace-period-enforcement/
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Events:
+        ScheduledEvent:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 */6 * * ? *)
+            Description: Run every 6 hours
+            Enabled: true
+
+  # Lambda Function: Price Migration
+  PriceMigrationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${Environment}-price-migration'
+      Description: Migrates subscriptions to new prices after notice period
+      CodeUri: ../lambdas/price-migration/
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Events:
+        ScheduledEvent:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 4 * * ? *)
+            Description: Run daily at 4:00 AM UTC
+            Enabled: true
+
+  # CloudWatch Log Groups
+  TempAccountCleanupLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${Environment}-temp-account-cleanup'
+      RetentionInDays: 30
+
+  AccountCleanupLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${Environment}-account-cleanup'
+      RetentionInDays: 30
+
+  SubscriptionCheckLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${Environment}-subscription-check'
+      RetentionInDays: 30
+
+  PolicyReminderLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${Environment}-policy-reminder'
+      RetentionInDays: 30
+
+  GracePeriodEnforcementLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${Environment}-grace-period-enforcement'
+      RetentionInDays: 30
+
+  PriceMigrationLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${Environment}-price-migration'
+      RetentionInDays: 30
+
+Outputs:
+  TempAccountCleanupFunctionArn:
+    Description: ARN of the Temp Account Cleanup Lambda function
+    Value: !GetAtt TempAccountCleanupFunction.Arn
+    Export:
+      Name: !Sub '${Environment}-TempAccountCleanupFunctionArn'
+
+  AccountCleanupFunctionArn:
+    Description: ARN of the Account Cleanup Lambda function
+    Value: !GetAtt AccountCleanupFunction.Arn
+    Export:
+      Name: !Sub '${Environment}-AccountCleanupFunctionArn'
+
+  SubscriptionCheckFunctionArn:
+    Description: ARN of the Subscription Check Lambda function
+    Value: !GetAtt SubscriptionCheckFunction.Arn
+    Export:
+      Name: !Sub '${Environment}-SubscriptionCheckFunctionArn'
+
+  PolicyReminderFunctionArn:
+    Description: ARN of the Policy Reminder Lambda function
+    Value: !GetAtt PolicyReminderFunction.Arn
+    Export:
+      Name: !Sub '${Environment}-PolicyReminderFunctionArn'
+
+  GracePeriodEnforcementFunctionArn:
+    Description: ARN of the Grace Period Enforcement Lambda function
+    Value: !GetAtt GracePeriodEnforcementFunction.Arn
+    Export:
+      Name: !Sub '${Environment}-GracePeriodEnforcementFunctionArn'
+
+  PriceMigrationFunctionArn:
+    Description: ARN of the Price Migration Lambda function
+    Value: !GetAtt PriceMigrationFunction.Arn
+    Export:
+      Name: !Sub '${Environment}-PriceMigrationFunctionArn'

@@ -35,3 +35,4 @@ logs/
 *.log
 api/.env
 worker/.env
+lambdas/.env
