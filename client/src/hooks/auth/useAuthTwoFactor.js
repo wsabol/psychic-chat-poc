@@ -18,10 +18,7 @@ export function useAuthTwoFactor() {
       if (!userId || !token) {
         setError('2FA session expired. Please log in again.');
         return false;
-      }
-
-      console.log(`[2FA] Verifying code with method: ${method}`);
-      
+      }      
       const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
       const response = await fetch(`${API_URL}/auth/verify-2fa`, {
         method: 'POST',
@@ -45,7 +42,6 @@ export function useAuthTwoFactor() {
       }
 
       // 2FA verified successfully
-      console.log('[2FA] ✅ Verification successful');
 
       // Mark 2FA as verified in this session so page refreshes don't require it again
       sessionStorage.setItem(`2fa_verified_${userId}`, 'true');
@@ -59,16 +55,15 @@ export function useAuthTwoFactor() {
       // CRITICAL FIX: Call complete2FA to immediately authenticate and trigger navigation to chat
       // This updates isAuthenticated state and triggers billing check, which navigates to chat
       if (complete2FA && authToken && authUserId) {
-        console.log('[2FA] Calling complete2FA to authenticate user');
         complete2FA(authUserId, authToken);
       } else {
-        console.warn('[2FA] complete2FA not available, forcing auth reload');
+        logErrorFromCatch('complete2FA not available, forcing auth reload', 'AUTH_STATE', 'useAuthTwoFactor.verify2FA');
         // Fallback: Force auth state to re-run listener if complete2FA not available
         if (auth.currentUser) {
           try {
             await auth.currentUser.reload();
           } catch (reloadErr) {
-            console.error('[2FA] Failed to reload auth:', reloadErr);
+            logErrorFromCatch(reloadErr, 'AUTH_RELOAD', 'useAuthTwoFactor.verify2FA reload');
           }
         }
       }

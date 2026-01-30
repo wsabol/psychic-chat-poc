@@ -2,6 +2,7 @@ import admin from 'firebase-admin';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { logErrorFromCatch } from './errorLogger.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -9,7 +10,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const serviceAccountPath = path.join(__dirname, '../firebase-adminsdk-key.json');
 
 if (!fs.existsSync(serviceAccountPath)) {
-  logErrorFromCatch(error, 'app', 'Error handling');
+  logErrorFromCatch('Firebase service account key not found', 'app', 'firebase-admin initialization');
   process.exit(1);
 }
 

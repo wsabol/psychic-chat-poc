@@ -96,7 +96,7 @@ export async function sendSMS(toPhoneNumber, options = {}) {
   
   try {
     if (!client || !verifyServiceSid) {
-      console.warn('⚠️ Twilio Verify not configured - SMS verification disabled');
+      logErrorFromCatch('Twilio Verify not configured - SMS verification disabled', 'CONFIG', 'smsService.sendSMS');
       return {
         success: false,
         error: 'SMS verification service not configured',
@@ -107,7 +107,7 @@ export async function sendSMS(toPhoneNumber, options = {}) {
     // Check for recent verification attempts (prevent spam)
     const rateCheck = await checkRecentVerification(toPhoneNumber);
     if (!rateCheck.canSend) {
-      console.warn(`⚠️ Rate limit: Recent verification for ${toPhoneNumber}`);
+      logErrorFromCatch(`Rate limit: Recent verification for ${toPhoneNumber}`, 'RATE_LIMITED_LOCAL', 'smsService.sendSMS');
       await recordVerificationAttempt(toPhoneNumber, false, 'RATE_LIMITED_LOCAL');
       return {
         success: false,
@@ -120,7 +120,6 @@ export async function sendSMS(toPhoneNumber, options = {}) {
     // Try sending with exponential backoff on 429 errors
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        console.log(`[SMS-SEND] Attempt ${attempt + 1}/${maxRetries} for ${toPhoneNumber}`);
         
         // Use Twilio Verify API to send verification code
         const verification = await client.verify.v2
@@ -129,7 +128,6 @@ export async function sendSMS(toPhoneNumber, options = {}) {
           .create({ to: toPhoneNumber, channel: 'sms' });
 
         // Log success headers for monitoring (if available from response)
-        console.log(`[SMS-SEND] ✅ Success - Status: ${verification.status}`);
         
         await recordVerificationAttempt(toPhoneNumber, true);
 
@@ -146,9 +144,7 @@ export async function sendSMS(toPhoneNumber, options = {}) {
         const errorStatus = error.status;
         
         // Log error details
-        console.error(`[SMS-SEND] ❌ Error on attempt ${attempt + 1}: ${error.message}`);
-        if (errorCode) console.error(`[SMS-SEND]    Code: ${errorCode}`);
-        if (errorStatus) console.error(`[SMS-SEND]    Status: ${errorStatus}`);
+        logErrorFromCatch(error, errorCode || 'SMS_SEND_ERROR', `smsService.sendSMS attempt ${attempt + 1}`);
         
         // Handle rate limiting errors (429 or 20429)
         if (errorCode === 20429 || errorStatus === 429 || error.message?.includes('Too many requests')) {
@@ -158,20 +154,18 @@ export async function sendSMS(toPhoneNumber, options = {}) {
           let retryAfterSeconds = null;
           if (error.moreInfo || error.details) {
             // Twilio may include retry info in error details
-            console.log(`[SMS-SEND]    Error details:`, error.moreInfo || error.details);
           }
           
           // Use Retry-After if provided, otherwise exponential backoff
           const waitSeconds = retryAfterSeconds || Math.pow(2, attempt);
           
           if (attempt < maxRetries - 1) {
-            console.warn(`[SMS-SEND] ⏳ Rate limited (429). Waiting ${waitSeconds}s before retry ${attempt + 2}...`);
+            logErrorFromCatch(`Rate limited (429). Waiting ${waitSeconds}s before retry ${attempt + 2}`, errorCode, 'smsService.sendSMS retry');
             await new Promise(resolve => setTimeout(resolve, waitSeconds * 1000));
             continue; // Retry
           } else {
             // Max retries reached
-            console.error(`[SMS-SEND] ❌ Max retries reached. Rate limit still active.`);
-            logErrorFromCatch(error, 20429, 'SMS Service - Rate Limit');
+            logErrorFromCatch(error, 20429, 'SMS Service - Rate Limit - Max retries reached');
             return {
               success: false,
               error: 'Too many SMS requests. Please try again in a few minutes.',
@@ -182,8 +176,7 @@ export async function sendSMS(toPhoneNumber, options = {}) {
         }
         
         // Handle other Twilio errors (non-retryable)
-        console.error(`[SMS-SEND] ❌ Non-retryable error:`, error.message);
-        logErrorFromCatch(error, errorCode || 'app', 'SMS Service - Verify API');
+        logErrorFromCatch(error, errorCode || 'SMS_ERROR', 'SMS Service - Verify API - Non-retryable error');
         await recordVerificationAttempt(toPhoneNumber, false, errorCode);
         
         return {
@@ -221,15 +214,13 @@ export async function sendSMS(toPhoneNumber, options = {}) {
 export async function verifySMSCode(toPhoneNumber, code) {
   try {
     if (!client || !verifyServiceSid) {
-      console.warn('⚠️ Twilio Verify not configured - mock verification');
+      logErrorFromCatch('Twilio Verify not configured - using mock verification', 'CONFIG', 'smsService.verifySMSCode');
       return {
         success: true,
         status: 'approved',
         mockMode: true
       };
     }
-
-    console.log(`[SMS-VERIFY] Checking code for ${toPhoneNumber}`);
 
     // Use Twilio Verify API to check verification code
     const verificationCheck = await client.verify.v2
@@ -239,8 +230,6 @@ export async function verifySMSCode(toPhoneNumber, code) {
 
     const isValid = verificationCheck.status === 'approved';
 
-    console.log(`[SMS-VERIFY] Result: ${verificationCheck.status}`);
-
     return {
       success: isValid,
       status: verificationCheck.status,
@@ -249,11 +238,7 @@ export async function verifySMSCode(toPhoneNumber, code) {
       message: isValid ? 'Code verified successfully' : 'Invalid or expired code'
     };
   } catch (error) {
-    console.error(`[SMS-VERIFY] ❌ Error: ${error.message}`);
-    if (error.code) console.error(`[SMS-VERIFY]    Code: ${error.code}`);
-    if (error.status) console.error(`[SMS-VERIFY]    Status: ${error.status}`);
-    
-    logErrorFromCatch(error, error.code || 'app', 'SMS Service - Verify Check');
+    logErrorFromCatch(error, error.code || 'SMS_VERIFY_ERROR', 'smsService.verifySMSCode');
     
     return {
       success: false,

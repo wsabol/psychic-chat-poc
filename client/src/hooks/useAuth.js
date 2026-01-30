@@ -22,9 +22,7 @@ export function useAuth() {
 
   // Enhance verify2FA with additional dependencies
   const verify2FA = async (code, trustDevice = false) => {
-    // CRITICAL: Pass the method parameter so backend knows SMS vs Email
-    console.log(`[useAuth] verify2FA called with method: ${stateHook.twoFactorMethod}`);
-    
+    // CRITICAL: Pass the method parameter so backend knows SMS vs Email  
     return await twoFAHook.verify2FA(
       code,
       stateHook.tempToken,  // ✅ FIXED: Should use stateHook.tempToken

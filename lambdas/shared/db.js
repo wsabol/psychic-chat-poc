@@ -37,9 +37,9 @@ async function loadSecretsFromAWS() {
     );
     
     secrets = JSON.parse(response.SecretString);
-    console.log('[DB] Loaded credentials from AWS Secrets Manager');
     return secrets;
   } catch (error) {
+    // Note: Lambda environment - console.error is appropriate for AWS CloudWatch logs
     console.error('[DB] Failed to load secrets from AWS:', error.message);
     throw new Error(`Failed to load database credentials: ${error.message}`);
   }
@@ -61,7 +61,6 @@ export async function getDbPool() {
     
     if (isLambda && !process.env.USE_LOCAL_DB) {
       // AWS Mode: Load credentials from Secrets Manager
-      console.log('[DB] Running in AWS Lambda - loading credentials from Secrets Manager');
       const creds = await loadSecretsFromAWS();
       
       dbPool = new Pool({
@@ -79,7 +78,6 @@ export async function getDbPool() {
       });
     } else {
       // Local Mode: Use DATABASE_URL from environment
-      console.log('[DB] Running locally - using DATABASE_URL');
       
       if (!process.env.DATABASE_URL) {
         throw new Error('DATABASE_URL environment variable is not set');
@@ -97,11 +95,10 @@ export async function getDbPool() {
     const client = await dbPool.connect();
     await client.query('SELECT NOW()');
     client.release();
-    
-    console.log('[DB] Database connection pool created successfully');
     return dbPool;
     
   } catch (error) {
+    // Note: Lambda environment - console.error is appropriate for AWS CloudWatch logs
     console.error('[DB] Failed to create database pool:', error.message);
     dbPool = null; // Reset on failure
     throw error;
@@ -129,7 +126,6 @@ export async function closePool() {
     await dbPool.end();
     dbPool = null;
     secrets = null;
-    console.log('[DB] Database pool closed');
   }
 }
 

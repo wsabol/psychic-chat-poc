@@ -35,9 +35,9 @@ async function loadFirebaseSecretsFromAWS() {
     
     const secretData = JSON.parse(response.SecretString);
     firebaseSecrets = secretData.serviceAccountKey;
-    console.log('[Firebase] Loaded service account key from AWS Secrets Manager');
     return firebaseSecrets;
   } catch (error) {
+    // Note: Lambda environment - console.error is appropriate for AWS CloudWatch logs
     console.error('[Firebase] Failed to load secrets from AWS:', error.message);
     throw new Error(`Failed to load Firebase credentials: ${error.message}`);
   }
@@ -60,11 +60,9 @@ export async function initializeFirebase() {
     
     if (isLambda && !process.env.USE_LOCAL_FIREBASE) {
       // AWS Mode: Load from Secrets Manager
-      console.log('[Firebase] Running in AWS Lambda - loading from Secrets Manager');
       serviceAccount = await loadFirebaseSecretsFromAWS();
     } else {
       // Local Mode: Use environment variable
-      console.log('[Firebase] Running locally - using FIREBASE_SERVICE_ACCOUNT_KEY');
       
       if (!process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
         throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set');
@@ -77,11 +75,10 @@ export async function initializeFirebase() {
     firebaseApp = admin.initializeApp({
       credential: admin.credential.cert(serviceAccount)
     });
-
-    console.log('[Firebase] Firebase Admin SDK initialized successfully');
     return firebaseApp;
     
   } catch (error) {
+    // Note: Lambda environment - console.error is appropriate for AWS CloudWatch logs
     console.error('[Firebase] Failed to initialize Firebase Admin:', error.message);
     firebaseApp = null;
     throw error;
@@ -106,13 +103,12 @@ export async function deleteFirebaseUser(uid) {
   try {
     const auth = await getAuth();
     await auth.deleteUser(uid);
-    console.log(`[Firebase] Deleted user: ${uid}`);
     return true;
   } catch (error) {
     if (error.code === 'auth/user-not-found') {
-      console.log(`[Firebase] User not found (already deleted): ${uid}`);
       return true; // Consider this a success
     }
+    // Note: Lambda environment - console.error is appropriate for AWS CloudWatch logs
     console.error(`[Firebase] Error deleting user ${uid}:`, error.message);
     throw error;
   }
@@ -133,6 +129,7 @@ export async function listFirebaseUsers(pageToken = null, maxResults = 1000) {
       pageToken: result.pageToken
     };
   } catch (error) {
+    // Note: Lambda environment - console.error is appropriate for AWS CloudWatch logs
     console.error('[Firebase] Error listing users:', error.message);
     throw error;
   }
@@ -163,7 +160,6 @@ export async function cleanupFirebase() {
     await firebaseApp.delete();
     firebaseApp = null;
     firebaseSecrets = null;
-    console.log('[Firebase] Firebase app deleted');
   }
 }
 

@@ -5,6 +5,7 @@
 
 import { db } from '../../shared/db.js';
 import { getEncryptionKey } from '../../shared/decryptionHelper.js';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * Encrypt a single value using PostgreSQL pgp_sym_encrypt
@@ -22,7 +23,7 @@ async function encryptValue(value) {
     );
     return result.rows[0]?.encrypted || null;
   } catch (error) {
-    console.error('Encryption error:', error.message);
+    logErrorFromCatch(error, 'ENCRYPTION_ERROR', 'encryptionService.encryptValue');
     return null;
   }
 }

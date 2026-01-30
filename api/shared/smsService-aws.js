@@ -129,7 +129,7 @@ export async function sendSMS(toPhoneNumber, options = {}) {
   
   try {
     if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
-      console.warn('⚠️ AWS SNS not configured - SMS verification disabled');
+      logErrorFromCatch('AWS SNS not configured - SMS verification disabled', 'CONFIG', 'smsService-aws.sendSMS');
       return {
         success: false,
         error: 'SMS verification service not configured',
@@ -140,7 +140,7 @@ export async function sendSMS(toPhoneNumber, options = {}) {
     // Check for recent verification attempts (prevent spam)
     const rateCheck = await checkRecentVerification(toPhoneNumber);
     if (!rateCheck.canSend) {
-      console.warn(`⚠️ Rate limit: Recent verification for ${toPhoneNumber}`);
+      logErrorFromCatch(`Rate limit: Recent verification for ${toPhoneNumber}`, 'RATE_LIMITED_LOCAL', 'smsService-aws.sendSMS');
       await recordVerificationAttempt(toPhoneNumber, false, 'RATE_LIMITED_LOCAL');
       return {
         success: false,
@@ -162,7 +162,6 @@ export async function sendSMS(toPhoneNumber, options = {}) {
     // Try sending with exponential backoff on throttling errors
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        console.log(`[SMS-SEND-AWS] Attempt ${attempt + 1}/${maxRetries} for ${toPhoneNumber}`);
         
         // Send via AWS SNS
         const command = new PublishCommand({
@@ -177,8 +176,6 @@ export async function sendSMS(toPhoneNumber, options = {}) {
         });
 
         const response = await snsClient.send(command);
-
-        console.log(`[SMS-SEND-AWS] ✅ Success - MessageId: ${response.MessageId}`);
         
         await recordVerificationAttempt(toPhoneNumber, true);
 
@@ -196,8 +193,7 @@ export async function sendSMS(toPhoneNumber, options = {}) {
         const errorCode = error.name || error.code;
         
         // Log error details
-        console.error(`[SMS-SEND-AWS] ❌ Error on attempt ${attempt + 1}: ${error.message}`);
-        if (errorCode) console.error(`[SMS-SEND-AWS]    Code: ${errorCode}`);
+        logErrorFromCatch(error, errorCode || 'SMS_SEND_ERROR', `smsService-aws.sendSMS attempt ${attempt + 1}`);
         
         // Handle throttling errors (similar to Twilio 429)
         if (errorCode === 'Throttling' || errorCode === 'ThrottlingException') {
@@ -207,12 +203,11 @@ export async function sendSMS(toPhoneNumber, options = {}) {
           const waitSeconds = Math.pow(2, attempt);
           
           if (attempt < maxRetries - 1) {
-            console.warn(`[SMS-SEND-AWS] ⏳ Throttled. Waiting ${waitSeconds}s before retry ${attempt + 2}...`);
+            logErrorFromCatch(`Throttled. Waiting ${waitSeconds}s before retry ${attempt + 2}`, errorCode, 'smsService-aws.sendSMS retry');
             await new Promise(resolve => setTimeout(resolve, waitSeconds * 1000));
             continue; // Retry
           } else {
-            console.error(`[SMS-SEND-AWS] ❌ Max retries reached. Throttling still active.`);
-            logErrorFromCatch(error, errorCode, 'SMS Service - AWS SNS Throttling');
+            logErrorFromCatch(error, errorCode, 'SMS Service - AWS SNS Throttling - Max retries reached');
             return {
               success: false,
               error: 'Too many SMS requests. Please try again in a few minutes.',
@@ -223,8 +218,7 @@ export async function sendSMS(toPhoneNumber, options = {}) {
         }
         
         // Handle other AWS SNS errors (non-retryable)
-        console.error(`[SMS-SEND-AWS] ❌ Non-retryable error:`, error.message);
-        logErrorFromCatch(error, errorCode, 'SMS Service - AWS SNS');
+        logErrorFromCatch(error, errorCode, 'SMS Service - AWS SNS - Non-retryable error');
         await recordVerificationAttempt(toPhoneNumber, false, errorCode);
         
         return {
@@ -261,15 +255,13 @@ export async function sendSMS(toPhoneNumber, options = {}) {
 export async function verifySMSCode(toPhoneNumber, code) {
   try {
     if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
-      console.warn('⚠️ AWS SNS not configured - mock verification');
+      logErrorFromCatch('AWS SNS not configured - using mock verification', 'CONFIG', 'smsService-aws.verifySMSCode');
       return {
         success: true,
         status: 'approved',
         mockMode: true
       };
     }
-
-    console.log(`[SMS-VERIFY-AWS] Checking code for ${toPhoneNumber}`);
 
     // Validate code format
     if (!code || typeof code !== 'string' || !/^\d{6}$/.test(code)) {
@@ -294,7 +286,6 @@ export async function verifySMSCode(toPhoneNumber, code) {
     );
 
     if (result.rows.length === 0) {
-      console.log(`[SMS-VERIFY-AWS] ❌ Invalid or expired code`);
       return {
         success: false,
         valid: false,
@@ -310,8 +301,6 @@ export async function verifySMSCode(toPhoneNumber, code) {
       [result.rows[0].id]
     );
 
-    console.log(`[SMS-VERIFY-AWS] ✅ Code verified successfully`);
-
     return {
       success: true,
       status: 'approved',
@@ -321,8 +310,7 @@ export async function verifySMSCode(toPhoneNumber, code) {
     };
 
   } catch (error) {
-    console.error(`[SMS-VERIFY-AWS] ❌ Error: ${error.message}`);
-    logErrorFromCatch(error, error.code || 'app', 'SMS Service - AWS SNS Verify');
+    logErrorFromCatch(error, error.code || 'SMS_VERIFY_ERROR', 'smsService-aws.verifySMSCode');
     
     return {
       success: false,

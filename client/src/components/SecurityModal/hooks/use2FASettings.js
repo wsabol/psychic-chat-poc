@@ -30,7 +30,6 @@ export const use2FASettings = (userId, token, apiUrl) => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('[2FA-SETTINGS] Loaded settings:', data.settings);
         setTwoFASettings(data.settings);
         setEnabled(data.settings.enabled);
         setMethod(data.settings.method || 'sms');
@@ -80,7 +79,6 @@ export const use2FASettings = (userId, token, apiUrl) => {
       const data = await response.json();
 
       if (response.ok) {
-        console.log('[2FA-SETTINGS] Settings saved:', data.settings);
         setTwoFASettings(data.settings);
         setSuccess('2FA settings updated successfully');
         setEditMode(false);

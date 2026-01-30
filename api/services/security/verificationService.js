@@ -15,9 +15,6 @@ export async function getVerificationMethods(userId, userEmail) {
     const userIdHash = hashUserId(userId);
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
     
-    console.log('[VERIFICATION] Getting methods for userId:', userId);
-    console.log('[VERIFICATION] User ID Hash:', userIdHash);
-    
     // SECURITY: Decrypt using PGCRYPTO (same as phoneService)
     const securityResult = await db.query(
       `SELECT 
@@ -31,12 +28,6 @@ export async function getVerificationMethods(userId, userEmail) {
        WHERE user_id_hash = $2`,
       [ENCRYPTION_KEY, userIdHash]
     );
-    
-    console.log('[VERIFICATION] Query returned', securityResult.rows.length, 'rows');
-    if (securityResult.rows.length > 0) {
-      console.log('[VERIFICATION] Phone number:', securityResult.rows[0].phone_number);
-      console.log('[VERIFICATION] Phone verified:', securityResult.rows[0].phone_verified);
-    }
 
     if (securityResult.rows.length === 0) {
       return {

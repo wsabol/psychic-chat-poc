@@ -21,6 +21,7 @@
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { logErrorFromCatch } from './shared/errorLogger.js';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -57,9 +58,6 @@ const mockEvent = {
  * Invoke a Lambda function locally
  */
 async function invokeLambda(functionName) {
-  console.log('\n================================================');
-  console.log(`🚀 Invoking Lambda: ${functionName}`);
-  console.log('================================================\n');
   
   const startTime = Date.now();
   
@@ -67,9 +65,7 @@ async function invokeLambda(functionName) {
     // Validate function exists
     if (!LAMBDA_FUNCTIONS[functionName]) {
       console.error(`❌ Unknown Lambda function: ${functionName}`);
-      console.log('\nAvailable functions:');
       Object.keys(LAMBDA_FUNCTIONS).forEach(name => {
-        console.log(`  - ${name}`);
       });
       process.exit(1);
     }
@@ -82,29 +78,22 @@ async function invokeLambda(functionName) {
       throw new Error(`Lambda function ${functionName} does not export a handler`);
     }
     
-    // Invoke the handler
-    console.log('📦 Event:', JSON.stringify(mockEvent, null, 2));
-    console.log('\n⏳ Executing Lambda function...\n');
-    
+    // Invoke the handler   
     const result = await lambdaModule.handler(mockEvent);
     
     const duration = Date.now() - startTime;
     
-    // Parse and display result
-    console.log('\n================================================');
-    console.log('✅ Lambda Execution Completed');
-    console.log('================================================\n');
-    
-    console.log('📊 Status Code:', result.statusCode);
-    console.log('⏱️  Duration:', duration + 'ms');
-    
     if (result.body) {
       try {
         const body = typeof result.body === 'string' ? JSON.parse(result.body) : result.body;
-        console.log('\n📄 Response Body:');
-        console.log(JSON.stringify(body, null, 2));
+
       } catch (e) {
-        console.log('\n📄 Response Body:', result.body);
+        await logErrorFromCatch(
+          e,
+          'invoke-local',
+          `Failed to parse response body for ${functionName}`,
+          null
+        );
       }
     }
     
@@ -113,16 +102,6 @@ async function invokeLambda(functionName) {
     
   } catch (error) {
     const duration = Date.now() - startTime;
-    
-    console.log('\n================================================');
-    console.log('❌ Lambda Execution Failed');
-    console.log('================================================\n');
-    
-    console.log('⏱️  Duration:', duration + 'ms');
-    console.log('🔥 Error:', error.message);
-    console.log('\n📚 Stack Trace:');
-    console.log(error.stack);
-    
     process.exit(1);
   }
 }
@@ -131,10 +110,7 @@ async function invokeLambda(functionName) {
 const functionName = process.argv[2];
 
 if (!functionName) {
-  console.error('❌ Usage: node invoke-local.js <function-name>');
-  console.log('\nAvailable functions:');
   Object.keys(LAMBDA_FUNCTIONS).forEach(name => {
-    console.log(`  - ${name}`);
   });
   process.exit(1);
 }

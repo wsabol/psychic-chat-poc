@@ -104,11 +104,6 @@ export async function logWarning({ service, message, context, metadata }) {
  */
 export function logInfo(service, message, metadata = null) {
   const timestamp = new Date().toISOString();
-  
-  console.log(`[${timestamp}] [${service}] INFO:`, {
-    message,
-    metadata
-  });
 }
 
 /**
@@ -119,12 +114,6 @@ export function logInfo(service, message, metadata = null) {
  */
 export function logJobSummary(jobName, stats, duration) {
   const timestamp = new Date().toISOString();
-  
-  console.log(`[${timestamp}] [${jobName}] SUMMARY:`, {
-    stats,
-    duration: `${duration}ms`,
-    durationSeconds: (duration / 1000).toFixed(2) + 's'
-  });
 }
 
 /**
