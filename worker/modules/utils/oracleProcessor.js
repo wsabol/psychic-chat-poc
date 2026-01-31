@@ -49,6 +49,18 @@ IMPORTANT: Use the above personal and astrological information to:
 
         // Call Oracle (generates both full and brief responses)
         const oracleResponses = await callOracle(systemPrompt, history, message, true);
+        
+        // DEBUG: Check Oracle response
+        
+        // Check if Oracle refused to provide medical/health advice
+        if (detectOracleHealthRefusal(oracleResponses.full)) {
+            await logHealthViolation(userId, message);
+        }
+        
+        // Check if Oracle refused to encourage self-harm
+        if (detectOracleSelfHarmRefusal(oracleResponses.full)) {
+            await logSelfHarmViolation(userId, message);
+        }
 
         // Extract cards from FULL response only
         const cards = extractCardsFromResponse(oracleResponses.full, tarotDeck);
@@ -93,5 +105,112 @@ IMPORTANT: Use the above personal and astrological information to:
         } catch (err) {
         throw new Error(`[ORACLE-PROCESSOR] Error processing oracle request: ${err.message}`);
     }
+}
+
+/**
+ * Detect if Oracle refused to provide medical/health advice
+ * Checks for common refusal phrases in Oracle's response
+ */
+function detectOracleHealthRefusal(oracleResponse) {
+    const refusalPhrases = [
+        "can't provide medical",
+        "cannot provide medical",
+        "can't offer medical",
+        "cannot offer medical",
+        "consult a healthcare",
+        "consult a doctor",
+        "seek medical",
+        "see a doctor",
+        "medical professional",
+        "healthcare professional",
+        "not a medical",
+        "not qualified to provide medical",
+        "beyond my abilities",
+        "i'm not able to provide medical"
+    ];
+    
+    const lowerResponse = oracleResponse.toLowerCase();
+    return refusalPhrases.some(phrase => lowerResponse.includes(phrase));
+}
+
+/**
+ * Detect if Oracle provided suicide/crisis resources
+ * This means user mentioned suicide/self-harm but we should LOG not BAN (unless clear personal intent)
+ */
+function detectOracleSelfHarmRefusal(oracleResponse) {
+    const lowerResponse = oracleResponse.toLowerCase();
+    
+    // Suicide hotline indicators - Oracle provides these for suicide concerns
+    const suicideHotlineIndicators = [
+        "988",  // Suicide hotline number
+        "national suicide prevention",
+        "crisis helpline",
+        "suicide prevention lifeline"
+    ];
+    
+    // Crisis support indicators - Oracle uses these when concerned about user safety
+    const crisisIndicators = [
+        "in crisis",
+        "feeling overwhelmed",
+        "talk to someone who can help",
+        "trusted adult, counselor",
+        "mental health professional",
+        "seek support from those who care",
+        "you are not alone",
+        "if you are feeling",
+        "reach out for support"
+    ];
+    
+    // Self-harm/coping phrases - Oracle discouraging self-harm
+    const selfHarmContext = [
+        "healthy ways to cope",
+        "healthier coping",
+        "without resorting",
+        "professional who can help"
+    ];
+    
+    // Check for any indicators
+    const hasHotline = suicideHotlineIndicators.some(phrase => lowerResponse.includes(phrase));
+    const hasCrisisSupport = crisisIndicators.some(phrase => lowerResponse.includes(phrase));
+    const hasCopingAdvice = selfHarmContext.some(phrase => lowerResponse.includes(phrase));
+    
+    return hasHotline || hasCrisisSupport || hasCopingAdvice;
+}
+
+/**
+ * Log health violation to database for compliance tracking
+ */
+async function logHealthViolation(userId, userMessage) {
+        const { db } = await import('../../shared/db.js');
+        const { hashUserId } = await import('../../shared/hashUtils.js');
+        
+        const userIdHash = hashUserId(userId);
+        
+        await db.query(
+            `INSERT INTO user_violations (user_id_hash, violation_type, violation_count, violation_message, severity, is_active)
+            VALUES ($1, $2, 1, $3, 'info', true)`,
+            [userIdHash, 'health_medical_advice', userMessage.substring(0, 500)]
+        );
+}
+
+/**
+ * Log self-harm concern to database - TRACKING ONLY
+ * Oracle AI detected suicide/self-harm mention and provided crisis resources
+ * This is logged for monitoring but does NOT result in account ban
+ * (Only keyword detector bans for clear personal intent like "I want to kill myself")
+ */
+async function logSelfHarmViolation(userId, userMessage) {
+        const { db } = await import('../../shared/db.js');
+        const { hashUserId } = await import('../../shared/hashUtils.js');
+        
+        const userIdHash = hashUserId(userId);
+        
+        // Log as WARNING (not critical) - no account action
+        // Oracle provides hotline and support resources in response
+        await db.query(
+            `INSERT INTO user_violations (user_id_hash, violation_type, violation_count, violation_message, severity, is_active)
+            VALUES ($1, $2, 1, $3, 'warning', true)`,
+            [userIdHash, 'self_harm_concern', userMessage.substring(0, 500)]
+        );
 }
 

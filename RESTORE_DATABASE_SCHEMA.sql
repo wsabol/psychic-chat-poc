@@ -420,7 +420,7 @@ CREATE INDEX IF NOT EXISTS idx_app_analytics_event_action ON app_analytics(event
 -- TABLE: error_logs (NEW - Centralized error tracking)
 CREATE TABLE IF NOT EXISTS error_logs (
     id SERIAL PRIMARY KEY,
-    service VARCHAR(50) NOT NULL,
+    service VARCHAR(255) NOT NULL,
     error_message VARCHAR(500) NOT NULL,
     severity VARCHAR(20) DEFAULT 'error',
     user_id_hash VARCHAR(255),

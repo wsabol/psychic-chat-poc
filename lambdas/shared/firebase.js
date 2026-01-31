@@ -10,6 +10,7 @@
 
 import admin from 'firebase-admin';
 import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
+import { logError } from './errorLogger.js';
 
 let firebaseApp = null;
 let firebaseSecrets = null;
@@ -37,8 +38,9 @@ async function loadFirebaseSecretsFromAWS() {
     firebaseSecrets = secretData.serviceAccountKey;
     return firebaseSecrets;
   } catch (error) {
-    // Note: Lambda environment - console.error is appropriate for AWS CloudWatch logs
+    // Log to CloudWatch and database
     console.error('[Firebase] Failed to load secrets from AWS:', error.message);
+    await logError(error, 'lambda-firebase', 'Failed to load Firebase credentials from AWS Secrets Manager').catch(() => {});
     throw new Error(`Failed to load Firebase credentials: ${error.message}`);
   }
 }
@@ -78,8 +80,9 @@ export async function initializeFirebase() {
     return firebaseApp;
     
   } catch (error) {
-    // Note: Lambda environment - console.error is appropriate for AWS CloudWatch logs
+    // Log to CloudWatch and database
     console.error('[Firebase] Failed to initialize Firebase Admin:', error.message);
+    await logError(error, 'lambda-firebase', 'Failed to initialize Firebase Admin SDK').catch(() => {});
     firebaseApp = null;
     throw error;
   }
@@ -108,8 +111,9 @@ export async function deleteFirebaseUser(uid) {
     if (error.code === 'auth/user-not-found') {
       return true; // Consider this a success
     }
-    // Note: Lambda environment - console.error is appropriate for AWS CloudWatch logs
+    // Log to CloudWatch and database for audit trail
     console.error(`[Firebase] Error deleting user ${uid}:`, error.message);
+    await logError(error, 'lambda-firebase', `Failed to delete Firebase user: ${uid}`, uid).catch(() => {});
     throw error;
   }
 }
@@ -129,8 +133,9 @@ export async function listFirebaseUsers(pageToken = null, maxResults = 1000) {
       pageToken: result.pageToken
     };
   } catch (error) {
-    // Note: Lambda environment - console.error is appropriate for AWS CloudWatch logs
+    // Log to CloudWatch and database
     console.error('[Firebase] Error listing users:', error.message);
+    await logError(error, 'lambda-firebase', 'Failed to list Firebase users').catch(() => {});
     throw error;
   }
 }

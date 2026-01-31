@@ -7,7 +7,7 @@
 
 import express from 'express';
 import { db } from '../shared/db.js';
-import logger from '../shared/logger.js';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 import { validationError, serverError, successResponse } from '../utils/responses.js';
 
 const router = express.Router();
@@ -75,7 +75,8 @@ router.post('/error', async (req, res) => {
       errorId: result.rows[0]?.id
     });
   } catch (error) {
-    logger.error('Failed to log client error:', error?.message || String(error));
+    // Log to database instead of file logs for production debugging
+    await logErrorFromCatch(error, 'client-logger', 'Failed to store client error report');
     
     // Don't expose internal errors to client
     return serverError(res, 'Failed to log error');

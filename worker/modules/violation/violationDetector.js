@@ -2,8 +2,11 @@
  * Violation detection service
  * Detects policy violations based on keywords and patterns
  * 
- * FIXED: More conservative approach - only detect clearly intentional violations
+ * MULTILINGUAL: Now detects violations in multiple languages
+ * Keywords loaded from translation files
  */
+
+import { getAllViolationKeywords } from '../../shared/i18n.js';
 
 export const VIOLATION_TYPES = {
   SEXUAL_CONTENT: 'sexual_content',
@@ -14,68 +17,83 @@ export const VIOLATION_TYPES = {
   DOXXING_THREATS: 'doxxing_threats',
   ILLEGAL_ACTIVITY: 'illegal_activity',
   JAILBREAK_ATTEMPT: 'jailbreak_attempt',
-  HATEFUL_CONTENT: 'hateful_content'
+  HATEFUL_CONTENT: 'hateful_content',
+  HEALTH_MEDICAL_ADVICE: 'health_medical_advice'
 };
 
-// Content involving minors - HIGHEST PRIORITY
-const MINOR_CONTENT_KEYWORDS = [
-  'child porn', 'child sexual', 'underage sex', 'minor sex', 'child abuse',
-  'sexualize child', 'sexualize minor', 'loli', 'shota', 'child erotica',
-  'preteen sex', 'teenager sex', 'teen porn', 'school girl sex', 'young child'
-];
+// Load multilingual keywords from translation files
+// These are cached after first load for performance
+let keywordCache = null;
 
-// Self-harm keywords - clear intent required
-const SELF_HARM_KEYWORDS = [
-  'suicide', 'kill myself', 'end my life', 'hurt myself', 'self harm',
-  'self-harm', 'cut myself', 'overdose', 'jump off', 'hang myself'
-];
+function getKeywords() {
+  if (!keywordCache) {
+    keywordCache = {
+      MINOR_CONTENT: getAllViolationKeywords('minor_content'),
+      SELF_HARM: getAllViolationKeywords('self_harm'),
+      SEXUAL_CONTENT: getAllViolationKeywords('sexual_content'),
+      HARM_OTHERS: getAllViolationKeywords('harm_others'),
+      DOXXING_THREATS: getAllViolationKeywords('doxxing_threats'),
+      ILLEGAL_ACTIVITY: getAllViolationKeywords('illegal_activity'),
+      JAILBREAK_ATTEMPT: getAllViolationKeywords('jailbreak_attempt'),
+      HATEFUL_CONTENT: getAllViolationKeywords('hateful_content'),
+      ABUSIVE_LANGUAGE: getAllViolationKeywords('abusive_language')
+    };
+  }
+  return keywordCache;
+}
 
-// Sexual keywords - explicit content only
-const SEXUAL_KEYWORDS = [
-  'porn', 'xxx', 'sexually explicit', 'orgy', 'escort service',
-  'non-consensual sex', 'sexual assault', 'rape porn', 'sex slave'
-];
-
-// Harm to others - clear intent, violence promotion
-const HARM_OTHERS_KEYWORDS = [
-  'kill someone', 'murder', 'assault someone', 'torture', 'rape',
-  'bomb making', 'school shooting', 'mass shooting', 'terrorist attack',
-  'incite violence', 'harm people', 'hurt people', 'attack people'
-];
-
-// Doxxing, threats, stalking
-const DOXXING_THREAT_KEYWORDS = [
-  'dox', 'doxx', 'home address', 'personal info', 'social security',
-  'will kill you', 'going to hurt you', 'find where you live', 'track you down',
-  'stalk', 'stalking', 'follow you home', 'hunt you down'
-];
-
-// Illegal activity instructions
-const ILLEGAL_ACTIVITY_KEYWORDS = [
-  'how to make meth', 'cook meth', 'fentanyl', 'synthesize drugs', 'make drugs',
-  'build a bomb', 'create explosives', 'make weapon', 'illegal weapon',
-  'how to hack', 'credit card fraud', 'identity theft', 'forge document',
-  'counterfeit money', 'trafficking', 'smuggle', 'drug deal'
-];
-
-// Jailbreak attempts
-const JAILBREAK_KEYWORDS = [
-  'ignore previous instructions', 'disregard safety', 'bypass filter',
-  'override system', 'disable safety', 'jailbreak', 'ignore guidelines',
-  'pretend you are', 'roleplay as unrestricted', 'act as if no rules',
-  'forget your training', 'ignore restrictions'
-];
-
-// Hateful/discriminatory content
-const HATEFUL_CONTENT_KEYWORDS = [
-  'nazi', 'white supremacy', 'hate jews', 'hate muslims', 'hate blacks',
-  'racial slur', 'ethnic cleansing', 'genocide', 'holocaust denial',
-  'hate crime', 'kkk', 'white power', 'gas the', 'lynch', 'lynching'
-];
-
-// Only the most egregious profanity - common single words that are clearly profane
-const SEVERE_PROFANITY = [
-  'fuck', 'shit', 'motherfucker', 'cunt'
+// Health/Medical advice requests - TRACK ONLY (non-enforced, just for monitoring)
+// Not multilingual yet, keeping English only for monitoring
+const HEALTH_MEDICAL_KEYWORDS = [
+  // Physical health conditions
+  'health', 'disease', 'sick', 'sickness', 'illness',
+  'symptom', 'symptoms', 'pain', 'ache',
+  'medication', 'medicine', 'drug', 'pharmaceutical',
+  'doctor', 'physician', 'nurse', 'hospital', 'clinic',
+  'cure', 'cured', 'curing', 'therapy', 'therapist',
+  'diagnose', 'diagnosis', 'diagnosed',
+  'treatment', 'treat', 'treating',
+  'virus', 'bacterial', 'bacteria', 'infection',
+  'vaccine', 'vaccination',
+  
+  // Specific conditions
+  'cancer', 'tumor',
+  'diabetes', 'diabetic',
+  'heart', 'cardiac', 'cardiovascular',
+  'stroke', 'seizure',
+  'asthma', 'respiratory',
+  'kidney', 'renal',
+  'liver', 'hepatic',
+  'blood pressure', 'hypertension',
+  'cholesterol',
+  'arthritis',
+  'allergy', 'allergic',
+  'migraine', 'headache',
+  
+  // Mental health conditions
+  'mental health', 'mental illness',
+  'depression', 'depressed',
+  'anxiety', 'anxious', 'panic attack',
+  'bipolar',
+  'schizophrenia',
+  'psychosis',
+  'ptsd',
+  'trauma', 'traumatic',
+  'eating disorder', 'anorexia', 'bulimia',
+  'addiction', 'addicted',
+  
+  // Neurological conditions
+  'alzheimer',
+  'dementia',
+  'parkinson',
+  'epilepsy',
+  'brain',
+  
+  // Medical procedures
+  'surgery', 'surgical',
+  'operation',
+  'injection',
+  'transplant'
 ];
 
 /**
@@ -85,9 +103,10 @@ const SEVERE_PROFANITY = [
  */
 export function detectViolation(userMessage) {
   const messageLower = userMessage.toLowerCase();
+  const keywords = getKeywords();
 
   // PRIORITY 1: Content involving minors (IMMEDIATE BAN - ZERO TOLERANCE)
-  for (const keyword of MINOR_CONTENT_KEYWORDS) {
+  for (const keyword of keywords.MINOR_CONTENT) {
     if (messageLower.includes(keyword)) {
       return {
         type: VIOLATION_TYPES.MINOR_CONTENT,
@@ -98,8 +117,12 @@ export function detectViolation(userMessage) {
   }
 
   // PRIORITY 2: Self-harm (CRITICAL)
-  for (const keyword of SELF_HARM_KEYWORDS) {
-    if (messageLower.includes(keyword)) {
+  // Use regex to handle spacing variations (e.g., "kill myself" and "kill my self")
+  for (const keyword of keywords.SELF_HARM) {
+    // Replace spaces with optional space pattern for flexible matching
+    const flexiblePattern = keyword.replace(/\s+/g, '\\s*');
+    const regex = new RegExp(flexiblePattern, 'i');
+    if (regex.test(messageLower)) {
       return {
         type: VIOLATION_TYPES.SELF_HARM,
         severity: 'CRITICAL',
@@ -109,7 +132,7 @@ export function detectViolation(userMessage) {
   }
 
   // PRIORITY 3: Harm to others / Violence promotion (ZERO TOLERANCE)
-  for (const keyword of HARM_OTHERS_KEYWORDS) {
+  for (const keyword of keywords.HARM_OTHERS) {
     if (messageLower.includes(keyword)) {
       return {
         type: VIOLATION_TYPES.HARM_OTHERS,
@@ -120,7 +143,7 @@ export function detectViolation(userMessage) {
   }
 
   // PRIORITY 4: Doxxing, threats, stalking (ZERO TOLERANCE)
-  for (const keyword of DOXXING_THREAT_KEYWORDS) {
+  for (const keyword of keywords.DOXXING_THREATS) {
     if (messageLower.includes(keyword)) {
       return {
         type: VIOLATION_TYPES.DOXXING_THREATS,
@@ -131,7 +154,7 @@ export function detectViolation(userMessage) {
   }
 
   // PRIORITY 5: Hateful/discriminatory content (ZERO TOLERANCE)
-  for (const keyword of HATEFUL_CONTENT_KEYWORDS) {
+  for (const keyword of keywords.HATEFUL_CONTENT) {
     if (messageLower.includes(keyword)) {
       return {
         type: VIOLATION_TYPES.HATEFUL_CONTENT,
@@ -142,7 +165,7 @@ export function detectViolation(userMessage) {
   }
 
   // PRIORITY 6: Illegal activity instructions (ZERO TOLERANCE)
-  for (const keyword of ILLEGAL_ACTIVITY_KEYWORDS) {
+  for (const keyword of keywords.ILLEGAL_ACTIVITY) {
     if (messageLower.includes(keyword)) {
       return {
         type: VIOLATION_TYPES.ILLEGAL_ACTIVITY,
@@ -153,7 +176,7 @@ export function detectViolation(userMessage) {
   }
 
   // PRIORITY 7: Sexual content (HIGH - Warning on 1st, suspension on 2nd)
-  for (const keyword of SEXUAL_KEYWORDS) {
+  for (const keyword of keywords.SEXUAL_CONTENT) {
     if (messageLower.includes(keyword)) {
       return {
         type: VIOLATION_TYPES.SEXUAL_CONTENT,
@@ -164,7 +187,7 @@ export function detectViolation(userMessage) {
   }
 
   // PRIORITY 8: Jailbreak attempts (CRITICAL)
-  for (const keyword of JAILBREAK_KEYWORDS) {
+  for (const keyword of keywords.JAILBREAK_ATTEMPT) {
     if (messageLower.includes(keyword)) {
       return {
         type: VIOLATION_TYPES.JAILBREAK_ATTEMPT,
@@ -175,11 +198,26 @@ export function detectViolation(userMessage) {
   }
 
   // PRIORITY 9: Severe profanity/abusive language (MEDIUM)
-  for (const keyword of SEVERE_PROFANITY) {
+  for (const keyword of keywords.ABUSIVE_LANGUAGE) {
     if (messageLower.includes(keyword)) {
       return {
         type: VIOLATION_TYPES.ABUSIVE_LANGUAGE,
         severity: 'MEDIUM',
+        keyword: keyword
+      };
+    }
+  }
+
+  // PRIORITY 10: Health/Medical advice requests (LOW - TRACKING ONLY, NOT ENFORCED)
+  // This is logged for compliance monitoring but does not result in account action
+  // The oracle simply refuses to provide the advice
+  for (const keyword of HEALTH_MEDICAL_KEYWORDS) {
+    // Use word boundaries to avoid false positives
+    const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
+    if (regex.test(messageLower)) {
+      return {
+        type: VIOLATION_TYPES.HEALTH_MEDICAL_ADVICE,
+        severity: 'LOW_TRACKING_ONLY',
         keyword: keyword
       };
     }

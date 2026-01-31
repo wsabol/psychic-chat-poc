@@ -70,10 +70,6 @@ async function processUserEnforcement(user, stats) {
     stats.sessionsInvalidated += sessionCount;
     stats.usersProcessed++;
     
-    if (sessionCount > 0) {
-      logger.info(`Invalidated ${sessionCount} session(s) for user ${userHash} (grace period expired)`);
-    }
-    
   } catch (error) {
     logger.errorFromCatch(error, `Process enforcement for ${userHash}`);
     stats.errors++;
@@ -87,11 +83,9 @@ async function processUserEnforcement(user, stats) {
  */
 export const handler = async (event) => {
   const startTime = Date.now();
-  logger.info('Starting grace period enforcement job', { event });
   
   try {
     const versions = getCurrentVersions();
-    logger.info(`Checking for expired grace periods (Terms: ${versions.termsVersion}, Privacy: ${versions.privacyVersion})`);
     
     // Query users with expired grace periods
     const expiredUsersQuery = await queryUsersWithExpiredGracePeriod(
@@ -106,15 +100,12 @@ export const handler = async (event) => {
       errors: 0
     };
     
-    logger.info(`Found ${stats.total} users with expired grace periods`);
-    
     // Invalidate sessions for expired users
     for (const user of expiredUsersQuery.rows) {
       await processUserEnforcement(user, stats);
     }
     
     const duration = Date.now() - startTime;
-    logger.summary(stats, duration);
     
     return {
       statusCode: 200,

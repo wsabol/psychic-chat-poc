@@ -1,14 +1,28 @@
 /**
  * Violation response messages
  * Provides appropriate user-facing messages for different violation types and actions
+ * 
+ * MULTILINGUAL: Now supports translated responses based on user's oracle language
  */
 
 import { VIOLATION_TYPES } from './violationDetector.js';
+import { getTranslator } from '../../shared/i18n.js';
 
 /**
  * Get violation response message
+ * @param {string} violationType - Type of violation
+ * @param {string} language - User's oracle language (e.g., 'es-ES', 'de-DE')
  */
-export function getViolationResponse(violationType) {
+export function getViolationResponse(violationType, language = 'en-US') {
+  const t = getTranslator(language, 'violations-enforce');
+  
+  // Map violation type to translation key
+  const typeKey = `responses.${violationType}`;
+  return t(typeKey);
+}
+
+// Legacy function for backward compatibility
+function getViolationResponseLegacy(violationType) {
   const responses = {
     [VIOLATION_TYPES.MINOR_CONTENT]: `I cannot and will not engage with any content involving minors in any inappropriate context. This is a serious violation of our policies and the law.
 
@@ -69,65 +83,62 @@ Would you like to rephrase your question in a way that allows us to work togethe
 
 /**
  * Get self-harm hotline response
+ * @param {string} language - User's oracle language
  */
-export function getSelfHarmHotlineResponse() {
-  return `
-🔴 **CRISIS SUPPORT - YOU MATTER**
-
-If you're having thoughts of self-harm or suicide:
-
-**National Suicide Prevention Lifeline: 988** (call or text)
-**Crisis Text Line: Text HOME to 741741**
-**International Association for Suicide Prevention: https://www.iasp.info/resources/Crisis_Centres/**
-
-You don't have to face this alone. Real people are available right now to listen and support you. Please reach out. Your life has value, and there is help available.`;
+export function getSelfHarmHotlineResponse(language = 'en-US') {
+  const t = getTranslator(language, 'violations-enforce');
+  return t('crisis.self_harm_hotline');
 }
 
 /**
  * Get temporary account violation response
+ * @param {string} violationType - Type of violation
+ * @param {string} language - User's oracle language
  */
-export function getTempAccountViolationResponse(violationType) {
-  const response = getViolationResponse(violationType);
-
-  return response + `
-
----
-*Your trial session is ending. Please restart the app to begin a new session.*`;
+export function getTempAccountViolationResponse(violationType, language = 'en-US') {
+  const t = getTranslator(language, 'violations-enforce');
+  const response = getViolationResponse(violationType, language);
+  const suffix = t('actions.temp_account_suffix');
+  
+  return response + suffix;
 }
 
 /**
  * Get warning response (first offense for established account)
+ * @param {string} violationType - Type of violation
+ * @param {number} violationCount - Number of violations
+ * @param {string} language - User's oracle language
  */
-export function getWarningResponse(violationType, violationCount) {
-  const baseResponse = getViolationResponse(violationType);
-
-  return baseResponse + `
-
-**Note:** This is your first warning for this type of content. Future violations may result in account restrictions.`;
+export function getWarningResponse(violationType, violationCount, language = 'en-US') {
+  const t = getTranslator(language, 'violations-enforce');
+  const baseResponse = getViolationResponse(violationType, language);
+  const suffix = t('actions.warning_suffix');
+  
+  return baseResponse + suffix;
 }
 
 /**
  * Get suspension response (second offense)
+ * @param {string} violationType - Type of violation
+ * @param {string} language - User's oracle language
  */
-export function getSuspensionResponse(violationType) {
-  const baseResponse = getViolationResponse(violationType);
-
-  return baseResponse + `
-
-**Account Action:** Your account has been suspended for 7 days due to repeated guideline violations. You will be able to access your account again after the suspension period.
-
-If you believe this is in error, please contact support.`;
+export function getSuspensionResponse(violationType, language = 'en-US') {
+  const t = getTranslator(language, 'violations-enforce');
+  const baseResponse = getViolationResponse(violationType, language);
+  const suffix = t('actions.suspension_suffix');
+  
+  return baseResponse + suffix;
 }
 
 /**
  * Get permanent ban response (third offense)
+ * @param {string} violationType - Type of violation
+ * @param {string} language - User's oracle language
  */
-export function getPermanentBanResponse(violationType) {
-  const baseResponse = getViolationResponse(violationType);
-
-  return baseResponse + `
-
-**Account Action:** Your account has been permanently disabled due to repeated violations of our community guidelines. 
-
-If you wish to appeal this decision, please contact our support team.`;
+export function getPermanentBanResponse(violationType, language = 'en-US') {
+  const t = getTranslator(language, 'violations-enforce');
+  const baseResponse = getViolationResponse(violationType, language);
+  const suffix = t('actions.permanent_ban_suffix');
+  
+  return baseResponse + suffix;
 }

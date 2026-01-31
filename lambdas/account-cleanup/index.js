@@ -36,7 +36,6 @@ async function send6MonthReengagementEmails() {
     for (const account of result.rows) {
       try {
         // TODO: Implement email sending via SES or SNS
-        logger.info(`Would send 6M re-engagement email to ${account.user_id}`);
         
         // Log the email sent and update tracking
         await db.query(
@@ -92,7 +91,6 @@ async function send1YearReengagementEmails() {
     for (const account of result.rows) {
       try {
         // TODO: Implement email sending via SES or SNS
-        logger.info(`Would send 1Y re-engagement email to ${account.user_id}`);
         
         // Log the email sent and update tracking
         await db.query(
@@ -168,7 +166,6 @@ async function permanentlyDeleteOldAccounts() {
         );
 
         deletedCount++;
-        logger.info(`Permanently deleted account ${account.user_id}`);
       } catch (e) {
         logger.errorFromCatch(e, 'Permanent account deletion', account.user_id);
       }
@@ -188,7 +185,6 @@ async function permanentlyDeleteOldAccounts() {
  */
 export const handler = async (event) => {
   const startTime = Date.now();
-  logger.info('Starting account cleanup job', { event });
   
   try {
     // Validate environment
@@ -208,7 +204,6 @@ export const handler = async (event) => {
     results.permanent_deletions = await permanentlyDeleteOldAccounts();
 
     const duration = Date.now() - startTime;
-    logger.summary(results, duration);
 
     return {
       statusCode: 200,

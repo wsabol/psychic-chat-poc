@@ -13,6 +13,7 @@
 
 import { Pool } from 'pg';
 import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
+import { logError } from './errorLogger.js';
 
 let dbPool = null;
 let secrets = null;
@@ -39,8 +40,9 @@ async function loadSecretsFromAWS() {
     secrets = JSON.parse(response.SecretString);
     return secrets;
   } catch (error) {
-    // Note: Lambda environment - console.error is appropriate for AWS CloudWatch logs
+    // Log to CloudWatch and database
     console.error('[DB] Failed to load secrets from AWS:', error.message);
+    await logError(error, 'lambda-db', 'Failed to load database credentials from AWS Secrets Manager').catch(() => {});
     throw new Error(`Failed to load database credentials: ${error.message}`);
   }
 }
@@ -98,8 +100,9 @@ export async function getDbPool() {
     return dbPool;
     
   } catch (error) {
-    // Note: Lambda environment - console.error is appropriate for AWS CloudWatch logs
+    // Log to CloudWatch and database
     console.error('[DB] Failed to create database pool:', error.message);
+    await logError(error, 'lambda-db', 'Failed to create database pool').catch(() => {});
     dbPool = null; // Reset on failure
     throw error;
   }

@@ -115,8 +115,15 @@ Guardrails:
 - No medical, financial, or legal advice
 - No predictions of death or illness
 - Never encourage self-harm
-- If crisis signs appear: National Suicide Prevention Lifeline: 988`;
+
+CRITICAL - SELF-HARM/SUICIDE RESPONSE:
+If the user mentions suicide, self-harm, or expresses suicidal ideation in ANY form, you MUST:
+1. IMMEDIATELY include this exact text: "National Suicide Prevention Lifeline: 988 (call or text, available 24/7)"
+2. Encourage them to reach out to a mental health professional, trusted person, or crisis support
+3. Provide compassionate support but make the 988 hotline PROMINENT and FIRST
+4. Never minimize or ignore these signs - always prioritize their safety`;
 }
+
 
 /**
  * Get account-specific instructions

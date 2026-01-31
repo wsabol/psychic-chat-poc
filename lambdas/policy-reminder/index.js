@@ -101,19 +101,11 @@ async function processUserReminder(user, stats) {
   try {
     // Validate email
     if (!user.email || user.email.trim() === '') {
-      logger.info(`Skipping user with no email: ${userHash}`);
       stats.skipped++;
       return;
     }
     
-    // Calculate days remaining
-    const gracePeriodEnd = user.grace_period_end ? new Date(user.grace_period_end) : null;
-    const daysRemaining = gracePeriodEnd 
-      ? Math.ceil((gracePeriodEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-      : 9;
-    
     // TODO: Implement email sending via SES or SNS
-    logger.info(`Would send policy reminder to ${user.user_id}, days remaining: ${daysRemaining}`);
     
     // Update database tracking
     await updateNotificationTracking(user.user_id_hash);
@@ -133,7 +125,6 @@ async function processUserReminder(user, stats) {
  */
 export const handler = async (event) => {
   const startTime = Date.now();
-  logger.info('Starting policy reminder job', { event });
   
   try {
     // Validate environment
@@ -142,7 +133,6 @@ export const handler = async (event) => {
     }
     
     const versions = getCurrentVersions();
-    logger.info(`Checking for users needing reminders (Terms: ${versions.termsVersion}, Privacy: ${versions.privacyVersion})`);
     
     // Query users who need reminders
     const usersQuery = await queryUsersForReminder(
@@ -157,15 +147,12 @@ export const handler = async (event) => {
       skipped: 0
     };
     
-    logger.info(`Found ${stats.total} users needing policy reminders`);
-    
     // Process each user
     for (const user of usersQuery.rows) {
       await processUserReminder(user, stats);
     }
     
     const duration = Date.now() - startTime;
-    logger.summary(stats, duration);
     
     return {
       statusCode: 200,

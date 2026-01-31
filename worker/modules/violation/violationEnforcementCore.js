@@ -2,6 +2,8 @@
  * Core violation enforcement logic
  * Records violations and applies enforcement actions
  * Integrates with violation redemption system
+ * 
+ * MULTILINGUAL: Now supports translated responses based on user's oracle language
  */
 
 import { db } from '../../shared/db.js';
@@ -27,10 +29,31 @@ import { logErrorFromCatch } from '../../../shared/errorLogger.js';
  * - Checks for pending redemptions before recording new violation
  * - If eligible violations have passed cooling-off, resets them
  * - Provides redemption messaging for first offenses
+ * 
+ * @param {string} userId - User ID
+ * @param {string} violationType - Type of violation
+ * @param {string} userMessage - The violating message
+ * @param {boolean} isTemporaryUser - Whether this is a temporary account
+ * @param {string} language - User's oracle language for translated responses
  */
-export async function recordViolationAndGetAction(userId, violationType, userMessage, isTemporaryUser) {
+export async function recordViolationAndGetAction(userId, violationType, userMessage, isTemporaryUser, language = 'en-US') {
   try {
     const userIdHash = hashUserId(userId);
+
+    // SPECIAL CASE: Health/Medical advice - Log for compliance but do NOT enforce
+    // The health guardrail handles the user-facing response
+    if (violationType === VIOLATION_TYPES.HEALTH_MEDICAL_ADVICE) {
+      
+      // Log for compliance monitoring only
+      const result = await db.query(
+        `INSERT INTO user_violations (user_id_hash, violation_type, violation_count, violation_message, severity, is_active)
+        VALUES ($1, $2, 1, $3, 'info', true)`,
+        [userIdHash, violationType, userMessage.substring(0, 500)]
+      );
+
+      // Return null to indicate no enforcement action - health guardrail will handle response
+      return null;
+    }
 
     // STEP 1: Check and apply any pending redemptions
     // This resets violations that have cooled off without new infractions
@@ -46,10 +69,10 @@ export async function recordViolationAndGetAction(userId, violationType, userMes
 
     let violationCount = (violationRows.length > 0 ? violationRows[0].violation_count : 0) + 1;
 
-    // STEP 3: Record the violation with redemption metadata
+    // STEP 3: Record the violation
     await db.query(
-      `INSERT INTO user_violations (user_id_hash, violation_type, violation_count, violation_message, last_violation_timestamp)
-      VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)`,
+      `INSERT INTO user_violations (user_id_hash, violation_type, violation_count, violation_message, is_active)
+      VALUES ($1, $2, $3, $4, true)`,
       [userIdHash, violationType, violationCount, userMessage.substring(0, 500)]
     );
 
@@ -58,7 +81,7 @@ export async function recordViolationAndGetAction(userId, violationType, userMes
       return {
         action: 'TEMP_ACCOUNT_DELETED',
         violationCount: violationCount,
-        response: getTempAccountViolationResponse(violationType)
+        response: getTempAccountViolationResponse(violationType, language)
       };
     }
 
@@ -85,7 +108,7 @@ export async function recordViolationAndGetAction(userId, violationType, userMes
       return {
         action: 'ACCOUNT_DISABLED_PERMANENT',
         violationCount: violationCount,
-        response: getPermanentBanResponse(violationType)
+        response: getPermanentBanResponse(violationType, language)
       };
     }
     
@@ -93,7 +116,7 @@ export async function recordViolationAndGetAction(userId, violationType, userMes
     if (violationType === VIOLATION_TYPES.SEXUAL_CONTENT) {
       if (violationCount === 1) {
         // First offense: Warning (no redemption for sexual content)
-        const baseResponse = getWarningResponse(violationType, violationCount);
+        const baseResponse = getWarningResponse(violationType, violationCount, language);
         
         return {
           action: 'WARNING',
@@ -111,7 +134,7 @@ export async function recordViolationAndGetAction(userId, violationType, userMes
         return {
           action: 'ACCOUNT_DISABLED_PERMANENT',
           violationCount: violationCount,
-          response: getPermanentBanResponse(violationType)
+          response: getPermanentBanResponse(violationType, language)
         };
       }
     }
@@ -120,7 +143,7 @@ export async function recordViolationAndGetAction(userId, violationType, userMes
     if (violationType === VIOLATION_TYPES.ABUSIVE_LANGUAGE) {
       if (violationCount === 1) {
         // First offense: Warning + Redemption Path
-        const baseResponse = getWarningResponse(violationType, violationCount);
+        const baseResponse = getWarningResponse(violationType, violationCount, language);
         const redemptionMessage = getRedemptionMessage(violationType);
         const fullResponse = baseResponse + redemptionMessage;
         
@@ -143,7 +166,7 @@ export async function recordViolationAndGetAction(userId, violationType, userMes
           action: 'SUSPENDED_7_DAYS',
           violationCount: violationCount,
           suspensionEnd: suspensionEnd,
-          response: getSuspensionResponse(violationType)
+          response: getSuspensionResponse(violationType, language)
         };
       } else {
         // Third+ offense: Permanent ban
@@ -155,7 +178,7 @@ export async function recordViolationAndGetAction(userId, violationType, userMes
         return {
           action: 'ACCOUNT_DISABLED_PERMANENT',
           violationCount: violationCount,
-          response: getPermanentBanResponse(violationType)
+          response: getPermanentBanResponse(violationType, language)
         };
       }
     }
@@ -164,7 +187,7 @@ export async function recordViolationAndGetAction(userId, violationType, userMes
     return {
       action: 'WARNING',
       violationCount: violationCount,
-      response: getWarningResponse(violationType, violationCount)
+      response: getWarningResponse(violationType, violationCount, language)
     };
   } catch (err) {
     logErrorFromCatch('[VIOLATION] Error recording violation:', err);

@@ -21,7 +21,6 @@ const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
  */
 export const handler = async (event) => {
   const startTime = Date.now();
-  logger.info('Starting temp account cleanup job', { event });
   
   try {
     // Validate environment
@@ -39,16 +38,6 @@ export const handler = async (event) => {
        LIMIT 1000`,
       [ENCRYPTION_KEY, eightHoursAgo]
     );
-    
-    logger.info(`Found ${oldTempUsers.length} temp accounts to clean up`);
-    
-    if (oldTempUsers.length > 0) {
-      // Log age info for monitoring
-      oldTempUsers.slice(0, 5).forEach(u => {
-        const ageInHours = ((Date.now() - new Date(u.created_at).getTime()) / (1000 * 60 * 60)).toFixed(2);
-        logger.info(`Account ${u.user_id.substring(0, 8)}... age: ${ageInHours}h`);
-      });
-    }
     
     let dbDeletedCount = 0;
     let firebaseDeletedCount = 0;
@@ -74,7 +63,6 @@ export const handler = async (event) => {
         }
         
         dbDeletedCount = uids.length;
-        logger.info(`Deleted ${dbDeletedCount} temp accounts from database`);
       } catch (error) {
         logger.errorFromCatch(error, 'Database cleanup');
         throw error;
@@ -92,22 +80,12 @@ export const handler = async (event) => {
           }
         }
       }
-      
-      logger.info(`Firebase cleanup: ${firebaseDeletedCount} deleted, ${firebaseErrorCount} errors`);
     }
     
     // Calculate duration
     const duration = Date.now() - startTime;
     
-    // Log summary
-    logger.summary({
-      database_deleted: dbDeletedCount,
-      firebase_deleted: firebaseDeletedCount,
-      firebase_errors: firebaseErrorCount,
-      total_deleted: dbDeletedCount
-    }, duration);
-    
-    // Return success response
+    // Return success response with stats (CloudWatch captures all console output)
     return {
       statusCode: 200,
       body: JSON.stringify({

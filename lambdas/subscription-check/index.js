@@ -117,7 +117,6 @@ async function checkUserSubscription(user, stats) {
 
     if (statusChanged) {
       stats.statusChanged++;
-      logger.info(`Status changed for ${user.user_id}: ${user.subscription_status} -> ${stripeSubscription.status}`);
 
       // Update database with new status
       await updateSubscriptionInDB(user.user_id, stripeSubscription);
@@ -129,7 +128,6 @@ async function checkUserSubscription(user, stats) {
 
       if (shouldNotify) {
         // TODO: Implement notification via SES or SNS
-        logger.info(`Would notify user ${user.user_id} of status: ${stripeSubscription.status}`);
         stats.notificationsSent++;
       }
     } else {
@@ -154,7 +152,6 @@ async function checkUserSubscription(user, stats) {
  */
 export const handler = async (event) => {
   const startTime = Date.now();
-  logger.info('Starting subscription check job', { event });
   
   try {
     // Validate environment
@@ -177,8 +174,6 @@ export const handler = async (event) => {
     // Get all users with subscriptions
     const users = await getAllUsersWithSubscriptions();
     stats.totalUsersChecked = users.length;
-    
-    logger.info(`Found ${users.length} users with subscriptions to check`);
 
     if (users.length === 0) {
       const duration = Date.now() - startTime;
@@ -204,7 +199,6 @@ export const handler = async (event) => {
     }
 
     const duration = Date.now() - startTime;
-    logger.summary(stats, duration);
 
     return {
       statusCode: 200,

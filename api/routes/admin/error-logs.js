@@ -9,7 +9,7 @@
 
 import express from 'express';
 import { db } from '../../shared/db.js';
-import logger from '../../shared/logger.js';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 import { serverError, successResponse, validationError, notFoundError } from '../../utils/responses.js';
 
 const router = express.Router();
@@ -45,7 +45,7 @@ router.get('/errors/critical', async (req, res) => {
       count: result.rows.length
     });
   } catch (error) {
-    logger.error('Error fetching critical errors:', error.message);
+    await logErrorFromCatch(error, 'admin-error-logs', 'Failed to fetch critical errors');
     serverError(res, 'Failed to fetch critical errors');
   }
 });
@@ -77,7 +77,7 @@ router.get('/errors/summary', async (req, res) => {
       count: result.rows.length
     });
   } catch (error) {
-    logger.error('Error fetching error summary:', error.message);
+    await logErrorFromCatch(error, 'admin-error-logs', 'Failed to fetch error summary');
     serverError(res, 'Failed to fetch error summary');
   }
 });
@@ -120,7 +120,7 @@ router.patch('/errors/:id/resolve', async (req, res) => {
       data: result.rows[0]
     });
   } catch (error) {
-    logger.error('Error updating error log:', error.message);
+    await logErrorFromCatch(error, 'admin-error-logs', 'Failed to update error log');
     serverError(res, 'Failed to update error log');
   }
 });
@@ -146,7 +146,7 @@ router.get('/errors/count/critical', async (req, res) => {
       count: result.rows[0]?.count || 0
     });
   } catch (error) {
-    logger.error('Error fetching critical error count:', error.message);
+    await logErrorFromCatch(error, 'admin-error-logs', 'Failed to fetch critical error count');
     serverError(res, 'Failed to fetch error count');
   }
 });
@@ -185,7 +185,7 @@ router.get('/errors/by-service/:service', async (req, res) => {
       count: result.rows.length
     });
   } catch (error) {
-    logger.error(`Error fetching errors for service ${req.params.service}:`, error.message);
+    await logErrorFromCatch(error, 'admin-error-logs', `Failed to fetch errors for service ${req.params.service}`);
     serverError(res, 'Failed to fetch errors');
   }
 });

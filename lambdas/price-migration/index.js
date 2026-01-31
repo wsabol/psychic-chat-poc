@@ -73,7 +73,6 @@ async function archiveOldPrice(priceId) {
  */
 export const handler = async (event) => {
   const startTime = Date.now();
-  logger.info('Starting price migration job', { event });
   
   try {
     // Validate environment
@@ -117,15 +116,11 @@ export const handler = async (event) => {
       pricesArchived: 0
     };
     
-    logger.info(`Found ${stats.total} subscriptions ready for price migration`);
-    
     // Track which old prices have been fully migrated
     const oldPricesMigrated = new Map();
 
     for (const migration of pendingMigrations) {
       try {
-        logger.info(`Migrating subscription for user ${migration.user_id}: ${migration.old_price_amount} -> ${migration.new_price_amount}`);
-
         // Migrate the subscription
         await migrateSubscription(migration.subscription_id, migration.new_price_id);
 
@@ -180,7 +175,6 @@ export const handler = async (event) => {
           if (remainingCount === 0) {
             await archiveOldPrice(oldPriceId);
             stats.pricesArchived++;
-            logger.info(`Archived old price ${oldPriceId} (all ${migratedCount} subscriptions migrated)`);
           }
         } catch (error) {
           logger.errorFromCatch(error, `Archive check for ${oldPriceId}`);
@@ -189,7 +183,6 @@ export const handler = async (event) => {
     }
 
     const duration = Date.now() - startTime;
-    logger.summary(stats, duration);
 
     return {
       statusCode: 200,
