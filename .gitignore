@@ -36,3 +36,6 @@ logs/
 api/.env
 worker/.env
 lambdas/.env
+
+# Legal data requests (sensitive - never commit)
+legal-requests/

@@ -13,6 +13,7 @@ import SubscriptionReportTab from '../components/admin/SubscriptionReportTab';
 import FreeTrialWhitelist from '../components/admin/FreeTrialWhitelist';
 import PriceManagementTab from '../components/admin/PriceManagementTab';
 import SecurityMetrics from '../components/admin/SecurityMetrics';
+import LegalDataRequests from '../components/admin/LegalDataRequests';
 import { useAdminCheck } from './hooks/useAdminCheck';
 import { useAnalyticsReport } from './hooks/useAnalyticsReport';
 import { styles } from './admin-styles';
@@ -94,6 +95,11 @@ export default function AdminPage({ token, userId }) {
             isActive={activeTab === 'security'}
             onClick={() => setActiveTab('security')}
           />
+          <TabButton
+            label="⚖️ Legal Requests"
+            isActive={activeTab === 'legal'}
+            onClick={() => setActiveTab('legal')}
+          />
         </div>
 
         {/* Subscription Report Tab */}
@@ -137,6 +143,9 @@ export default function AdminPage({ token, userId }) {
 
         {/* Security Metrics Tab */}
         {activeTab === 'security' && <SecurityMetrics token={token} />}
+
+        {/* Legal Data Requests Tab */}
+        {activeTab === 'legal' && <LegalDataRequests token={token} />}
       </div>
     </div>
   );
