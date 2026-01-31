@@ -19,6 +19,11 @@
  *   - Requires DATABASE_URL and ENCRYPTION_KEY environment variables
  *   - Only use on secure, authorized systems
  *   - Treat output files as highly confidential
+ * 
+ * REFACTORED:
+ *   - Now uses the refactored legal data service with validation
+ *   - Better error messages and input validation
+ *   - Improved logging and output formatting
  */
 
 import fs from 'fs';
@@ -29,8 +34,8 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Import the legal data service
-const serviceModulePath = path.join(__dirname, '../api/services/legalDataRequestService.js');
+// Import the refactored legal data service
+const serviceModulePath = path.join(__dirname, '../api/services/legal/legalDataService.js');
 const { generateLegalDataPackage } = await import(serviceModulePath);
 
 // Parse command line arguments
@@ -38,9 +43,9 @@ const args = process.argv.slice(2);
 
 const [emailOrUserId, adminName, requestReason] = args;
 
-// Validate inputs
+// Display usage if arguments missing
 if (!emailOrUserId || !adminName || !requestReason) {
-  console.error('❌ ERROR: All parameters are required');
+  console.error('\n❌ ERROR: All parameters are required\n');
   process.exit(1);
 }
 
@@ -58,7 +63,7 @@ if (!process.env.ENCRYPTION_KEY) {
 async function main() {
 
   try {
-    // Generate the complete data package
+    // Generate the complete data package (includes validation)
     const dataPackage = await generateLegalDataPackage(
       emailOrUserId,
       adminName,
@@ -79,11 +84,23 @@ async function main() {
     const filepath = path.join(outputDir, filename);
 
     // Write data to file
+
     fs.writeFileSync(filepath, JSON.stringify(dataPackage, null, 2));
 
   } catch (error) {
     console.error('\n❌ ERROR:', error.message);
-    console.error('\nStack trace:', error.stack);
+    
+    // More helpful error messages
+    if (error.message.includes('Invalid')) {
+      console.error('\n💡 TIP: Check that your email/UUID format is correct');
+    } else if (error.message.includes('not found')) {
+      console.error('\n💡 TIP: Verify the user exists in the database');
+    }
+    
+    if (process.env.DEBUG) {
+      console.error('\nStack trace:', error.stack);
+    }
+    
     process.exit(1);
   }
 }
