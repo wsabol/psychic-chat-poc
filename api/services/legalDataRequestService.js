@@ -28,8 +28,6 @@ export async function findUserByEmail(email) {
   const ENCRYPTION_KEY = getEncryptionKey();
   const emailLower = email.toLowerCase().trim();
   
-  console.log('[Legal] Searching for email:', emailLower);
-  
   // Search by decrypted email (email_hash is NULL in database)
   const result = await db.query(
     `SELECT user_id,
@@ -46,12 +44,8 @@ export async function findUserByEmail(email) {
   );
 
   if (result.rows.length === 0) {
-    console.log('[Legal] User not found');
     return null;
   }
-
-  console.log('[Legal] User found:', result.rows[0].user_id, '-', result.rows[0].email);
-  return result.rows[0];
 }
 
 /**
@@ -151,8 +145,6 @@ export async function getUserAuditTrailForLegal(userId, daysBack = 365) {
   const ENCRYPTION_KEY = getEncryptionKey();
   const userIdHash = hashUserId(userId);
 
-  console.log('[Legal] Fetching audit trail for user:', userId);
-
   // Filter to only legally relevant actions
   const legallyRelevantActions = [
     'ACCOUNT_CREATED',
@@ -194,8 +186,6 @@ export async function getUserAuditTrailForLegal(userId, daysBack = 365) {
      ORDER BY created_at ASC`,
     [ENCRYPTION_KEY, userIdHash, daysBack, legallyRelevantActions]
   );
-
-  console.log('[Legal] Found', result.rows.length, 'legally relevant audit events');
 
   return result.rows.map(row => ({
     audit_id: row.id,
@@ -345,14 +335,6 @@ export async function generateLegalDataPackage(emailOrUserId, requestedBy, reque
     const horoscopes = messages.filter(m => m.role === 'horoscope');
     const moonPhases = messages.filter(m => m.role === 'moon_phase');
     const cosmicWeather = messages.filter(m => m.role === 'cosmic_weather');
-
-    console.log('[Legal] Message breakdown:', {
-      user_inputs: userInputs.length,
-      oracle_responses: oracleResponses.length,
-      horoscopes: horoscopes.length,
-      moon_phases: moonPhases.length,
-      cosmic_weather: cosmicWeather.length
-    });
 
     return {
       request_metadata: {
