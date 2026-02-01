@@ -371,41 +371,8 @@ export const FAQ_DATA = [
       {
         id: 'feedback',
         question: 'How can I provide feedback?',
-        answer: 'We\'d love to hear from you:\n1. Email: feedback@psychicchat.com\n2. Subject: "Feedback: [Topic]"\n3. Share what you love and what could improve\n4. Be specific with examples\n\nYour feedback helps us create a better app!'
+        answer: 'We\'d love to hear from you:\n1. Email: info@starshippsychics.com\n2. Subject: "Feedback: [Topic]"\n3. Share what you love and what could improve\n4. Be specific with examples\n\nYour feedback helps us create a better app!'
       }
     ]
   },
-  {
-    id: 'admin-features',
-    category: '⚡ Admin Dashboard (Admin Only)',
-    icon: '⚡',
-    adminOnly: true,
-    questions: [
-      {
-        id: 'admin-access',
-        question: 'Who can access the Admin Dashboard?',
-        answer: 'Only authorized admin users can access the Admin Dashboard. Admin access is restricted to: starshiptechnology1@gmail.com and wsabol39@gmail.com.'
-      },
-      {
-        id: 'admin-tabs',
-        question: 'What features are available in the Admin Dashboard?',
-        answer: 'The Admin Dashboard includes:\n• 💳 Subscriptions - View and manage all user subscriptions\n• 🚨 Error Logs - Monitor system errors and issues\n• 📊 Analytics - View user activity and engagement metrics\n• 🚨 Violation Reports - Review content violations\n• ✅ Compliance - Monitor GDPR and legal compliance\n• 🔓 Whitelist - Manage free trial access\n• 💰 Price Management - Configure Stripe pricing'
-      },
-      {
-        id: 'price-management',
-        question: 'What is Price Management?',
-        answer: 'Price Management allows admins to:\n• Create and configure new Stripe prices\n• Update existing subscription pricing\n• Migrate users between price plans\n• Monitor billing configurations\n• Manage product offerings\n\nThis ensures pricing stays current and competitive.'
-      },
-      {
-        id: 'user-compliance',
-        question: 'How do I monitor user compliance?',
-        answer: 'Use the Compliance tab to:\n• View user consent records\n• Monitor GDPR compliance\n• Review data processing agreements\n• Track policy acceptances\n• Generate compliance reports\n\nAll user interactions are logged for audit purposes.'
-      },
-      {
-        id: 'error-monitoring',
-        question: 'How do I monitor system errors?',
-        answer: 'The Error Logs tab shows:\n• Real-time error notifications\n• Error severity levels\n• Stack traces and context\n• User impact information\n• Error frequency and patterns\n\nYou can also test the error logging system using the test harness.'
-      }
-    ]
-  }
 ];

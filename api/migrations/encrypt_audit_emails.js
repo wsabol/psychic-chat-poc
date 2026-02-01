@@ -24,7 +24,7 @@ const DB_USER = process.env.DB_USER || 'postgres';
 const DB_PASSWORD = process.env.DB_PASSWORD;
 const DB_HOST = process.env.DB_HOST || 'db';  // 'db' for Docker, 'localhost' for local dev
 const DB_PORT = process.env.DB_PORT || 5432;
-const DB_NAME = process.env.DB_NAME || 'chatbot';
+const DB_NAME = process.env.DB_NAME || 'psychic_chat';
 
 if (!ENCRYPTION_KEY) {
   logErrorFromCatch(error, 'app', 'Error handling');

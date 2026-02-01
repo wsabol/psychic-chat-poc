@@ -1,0 +1,149 @@
+<!-- 
+  PSYCHIC CHAT COMING SOON BANNER
+  
+  Instructions:
+  1. Log into your GoDaddy account
+  2. Go to your Website Builder or WordPress admin
+  3. Add this HTML code at the TOP of your homepage
+  4. The banner will appear as a prominent announcement
+  
+  For GoDaddy Website Builder:
+  - Edit your homepage
+  - Add an "HTML" section at the very top
+  - Paste this entire code block
+  
+  For WordPress:
+  - Use a Custom HTML block at the top of your page
+  - Or add it to your header.php file
+-->
+
+<style>
+  .psychic-chat-banner {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    animation: fadeInDown 1s ease-in-out;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .psychic-chat-banner::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+      45deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    animation: shimmer 3s infinite;
+  }
+  
+  .banner-content {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .banner-emoji {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 10px;
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  .banner-title {
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 10px 0;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  
+  .banner-subtitle {
+    font-size: 1.2rem;
+    margin: 10px 0;
+    opacity: 0.95;
+  }
+  
+  .banner-cta {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 12px 30px;
+    background: white;
+    color: #667eea;
+    border-radius: 30px;
+    font-weight: bold;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  }
+  
+  .banner-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+    color: #764ba2;
+  }
+  
+  @keyframes fadeInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+  
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%) translateY(-100%);
+    }
+    100% {
+      transform: translateX(100%) translateY(100%);
+    }
+  }
+  
+  /* Mobile responsive */
+  @media (max-width: 768px) {
+    .banner-title {
+      font-size: 1.5rem;
+    }
+    .banner-subtitle {
+      font-size: 1rem;
+    }
+    .banner-emoji {
+      font-size: 2rem;
+    }
+  }
+</style>
+
+<div class="psychic-chat-banner">
+  <div class="banner-content">
+    <span class="banner-emoji">🔮✨🌟</span>
+    <h2 class="banner-title">Psychic Chat Coming Soon!</h2>
+    <p class="banner-subtitle">
+      Experience personalized cosmic insights with our revolutionary AI-powered oracle. 
+      Connect with ancient wisdom through modern technology.
+    </p>
+    <a href="mailto:info@starshippsychics.com" class="banner-cta">
+      Get Notified When We Launch
+    </a>
+  </div>
+</div>
