@@ -33,8 +33,6 @@ worker/.env
 # Logs (auto-rotated and cleaned up)
 logs/
 *.log
-api/.env
-worker/.env
 lambdas/.env
 
 # Legal data requests (sensitive - never commit)
