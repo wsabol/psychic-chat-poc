@@ -1,26 +1,43 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { fetchMoonPhase, generateMoonPhase } from '../../../utils/moonPhaseAPI';
+import { useSSE } from '../../../hooks/useSSE';
 import { isBirthInfoError } from '../../../utils/birthInfoErrorHandler';
 import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
-const MOON_PHASE_CONFIG = {
-  POLL_INITIAL_DELAY_MS: 2000,
-  POLL_INTERVAL_MS: 1000,
-  POLL_MAX_ATTEMPTS: 60
-};
-
 /**
- * Hook to manage moon phase fetching, generation, and polling
- * Similar pattern to useHoroscopeFetch
+ * Hook to manage moon phase fetching, generation, and SSE notifications
+ * NO POLLING - Uses Server-Sent Events for real-time updates
  */
-export function useMoonPhaseFetch(userId, token, currentPhase) {
+export function useMoonPhaseFetch(userId, token, currentPhase, isAuthenticated) {
   const [moonPhaseData, setMoonPhaseData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [hasAutoPlayed, setHasAutoPlayed] = useState(false);
-  const pollIntervalRef = useRef(null);
+  const waitingForPhaseRef = useRef(null);
+
+  // SSE notification handler - called when moon phase is ready
+  const handleSSEMessage = useCallback(async (data) => {
+    // Check if this notification is for the moon phase we're waiting for
+    if (data.type === 'message_ready' && waitingForPhaseRef.current === currentPhase) {
+      try {
+        const result = await fetchMoonPhase(userId, currentPhase, token);
+        if (result.ok) {
+          setMoonPhaseData(result.data);
+          setLastUpdated(new Date(result.data.generatedAt).toLocaleString());
+          setGenerating(false);
+          setLoading(false);
+          waitingForPhaseRef.current = null;
+        }
+      } catch (err) {
+        logErrorFromCatch('[MOON-PHASE-FETCH] Error fetching after SSE notification:', err);
+      }
+    }
+  }, [userId, currentPhase, token]);
+
+  // Initialize SSE connection for real-time notifications
+  useSSE(userId, token, isAuthenticated, handleSSEMessage);
 
   /**
    * Load moon phase data (cached or trigger generation)
@@ -33,6 +50,7 @@ export function useMoonPhaseFetch(userId, token, currentPhase) {
     setMoonPhaseData(null);
     setGenerating(false);
     setHasAutoPlayed(false);
+    waitingForPhaseRef.current = null;
 
     try {
       // Try to fetch cached moon phase data
@@ -47,6 +65,8 @@ export function useMoonPhaseFetch(userId, token, currentPhase) {
 
       // No cached data - trigger generation
       setGenerating(true);
+      waitingForPhaseRef.current = currentPhase;
+      
       const generateResponse = await generateMoonPhase(userId, currentPhase, token);
 
       if (!generateResponse.ok) {
@@ -59,80 +79,22 @@ export function useMoonPhaseFetch(userId, token, currentPhase) {
           setError(errorMsg);
         }
         setLoading(false);
+        setGenerating(false);
+        waitingForPhaseRef.current = null;
         return;
       }
 
-      // Start polling for generated result
-      await pollForMoonPhase();
+      // SSE will notify when response is ready - no polling needed!
+      // Data will be loaded via handleSSEMessage callback
+      
     } catch (err) {
       logErrorFromCatch('[MOON-PHASE-FETCH] Error loading moon phase:', err);
       setError('Unable to load moon phase data. Please try again.');
       setLoading(false);
+      setGenerating(false);
+      waitingForPhaseRef.current = null;
     }
   }, [userId, token, currentPhase]);
-
-  /**
-   * Poll for moon phase generation completion
-   */
-  const pollForMoonPhase = useCallback(async () => {
-    let pollCount = 0;
-
-    // Clear any existing interval
-    if (pollIntervalRef.current) {
-      clearInterval(pollIntervalRef.current);
-    }
-
-    // Initial delay before first poll
-    await new Promise(resolve => setTimeout(resolve, MOON_PHASE_CONFIG.POLL_INITIAL_DELAY_MS));
-
-    pollIntervalRef.current = setInterval(async () => {
-      pollCount++;
-
-      try {
-        const pollResult = await fetchMoonPhase(userId, currentPhase, token);
-
-        if (pollResult.ok) {
-          setMoonPhaseData(pollResult.data);
-          setLastUpdated(new Date(pollResult.data.generatedAt).toLocaleString());
-          setGenerating(false);
-          setLoading(false);
-          clearInterval(pollIntervalRef.current);
-          return;
-        }
-      } catch (err) {
-        // Silently catch polling errors during generation
-        if (pollCount >= MOON_PHASE_CONFIG.POLL_MAX_ATTEMPTS - 1) {
-          logErrorFromCatch('[MOON-PHASE-FETCH] Final polling attempt failed:', err);
-        }
-      }
-
-      // Check if max polls reached
-      if (pollCount >= MOON_PHASE_CONFIG.POLL_MAX_ATTEMPTS) {
-        setError(
-          `Moon phase commentary generation is taking longer than expected (${
-            MOON_PHASE_CONFIG.POLL_MAX_ATTEMPTS * (MOON_PHASE_CONFIG.POLL_INTERVAL_MS / 1000)
-          }+ seconds). Please try again.`
-        );
-        setGenerating(false);
-        setLoading(false);
-        clearInterval(pollIntervalRef.current);
-      }
-    }, MOON_PHASE_CONFIG.POLL_INTERVAL_MS);
-  }, [userId, token, currentPhase]);
-
-  /**
-   * Cleanup polling on unmount
-   */
-  const cleanup = useCallback(() => {
-    if (pollIntervalRef.current) {
-      clearInterval(pollIntervalRef.current);
-    }
-  }, []);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return cleanup;
-  }, [cleanup]);
 
   return {
     moonPhaseState: {
@@ -145,6 +107,6 @@ export function useMoonPhaseFetch(userId, token, currentPhase) {
     hasAutoPlayed,
     setHasAutoPlayed,
     loadMoonPhase,
-    stopPolling: cleanup
+    stopPolling: () => {} // No-op since we use SSE instead of polling
   };
 }

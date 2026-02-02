@@ -35,7 +35,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
   // Hooks
   const { speak, stop, pause, resume, isPlaying, isPaused, isLoading: isSpeechLoading, error: speechError, isSupported, volume, setVolume } = useSpeech();
   const { showingBrief, setShowingBrief, voiceEnabled } = useMoonPhasePreferences(userId, token, API_URL);
-  const { moonPhaseState, hasAutoPlayed, setHasAutoPlayed, loadMoonPhase, stopPolling } = useMoonPhaseFetch(userId, token, currentPhase);
+  const { moonPhaseState, hasAutoPlayed, setHasAutoPlayed, loadMoonPhase, stopPolling } = useMoonPhaseFetch(userId, token, currentPhase, auth?.isAuthenticated || !!token);
   const { astroInfo, fetchAstroInfo } = useAstroInfo(userId, token);
   const sunSignData = useSunSignData(astroInfo, language);
 
