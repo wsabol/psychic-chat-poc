@@ -4,7 +4,7 @@
  */
 
 import { isAccountDisabled, isAccountSuspended } from '../violationEnforcement.js';
-import { logErrorFromCatch } from '../../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * Check if account is locked (disabled or suspended)

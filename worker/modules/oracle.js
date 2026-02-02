@@ -7,7 +7,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import { getOpenAIClient } from '../../shared/openaiClient.js';
+import { getOpenAIClient } from '../shared/openaiClient.js';
 import { getBriefSummaryPrompt, getOracleSystemPrompt } from './helpers/systemPrompts.js';
 
 // Re-export all functions from helpers for backwards compatibility

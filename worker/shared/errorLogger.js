@@ -20,7 +20,12 @@ async function getDb() {
         try {
           // This will only work if running in api/ context
           // eslint-disable-next-line import/no-unresolved
-          const module = await import(/* webpackIgnore: true */ './db.js');
+          let module;
+          try {
+            module = await import(/* webpackIgnore: true */ '../api/shared/db.js');
+          } catch (e) {
+            module = await import(/* webpackIgnore: true */ './db.js');
+          }
           return module.db || null;
         } catch (e) {
           return null;

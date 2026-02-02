@@ -5,7 +5,7 @@
 
 import { db } from '../../shared/db.js';
 import { hashUserId } from '../../shared/hashUtils.js';
-import { logErrorFromCatch } from '../../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * Check if account is currently suspended

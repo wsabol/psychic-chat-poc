@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import { createClient } from "redis";
-import { logErrorFromCatch } from '../../shared/errorLogger.js';
+import { logErrorFromCatch } from './errorLogger.js';
 
 let client = null;
 

@@ -19,7 +19,7 @@ import {
   getRedemptionMessage
 } from './violationRedemption.js';
 import { VIOLATION_TYPES } from './violationDetector.js';
-import { logErrorFromCatch } from '../../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * Record violation and get enforcement action

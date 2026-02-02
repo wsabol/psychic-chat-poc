@@ -7,7 +7,6 @@
 
 import { detectViolation, recordViolationAndGetAction, getSelfHarmHotlineResponse } from '../violationEnforcement.js';
 import { storeMessage } from '../messages.js';
-import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 import { fetchUserOracleLanguagePreference } from '../helpers/userDataQueries.js';
 
 /**

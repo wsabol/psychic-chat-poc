@@ -1,5 +1,5 @@
 import { db } from '../../shared/db.js';
-import { logErrorFromCatch } from '../../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * Get user's timezone from user_preferences

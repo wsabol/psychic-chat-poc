@@ -1,8 +1,3 @@
-import dotenv from "dotenv";
-dotenv.config({
-  silent: process.env.NODE_ENV === 'production'
-});
-
 import express from "express";
 import fs from "fs";
 import https from "https";
@@ -46,7 +41,7 @@ import { initializeScheduler } from "./jobs/scheduler.js";
 import { validateRequestPayload, rateLimit } from "./middleware/inputValidation.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { successResponse } from './utils/responses.js';
-import { logErrorFromCatch } from '../shared/errorLogger.js';
+import { logErrorFromCatch } from './shared/errorLogger.js';
 import redis from './shared/redis.js';
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;

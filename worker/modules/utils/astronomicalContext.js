@@ -1,5 +1,5 @@
 import { getCurrentPlanets, getCurrentMoonPhase } from '../astrology.js';
-import { logErrorFromCatch } from '../../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * Unified Astronomical Context Module

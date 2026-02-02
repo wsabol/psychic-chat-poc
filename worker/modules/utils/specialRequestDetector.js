@@ -5,9 +5,8 @@
 
 import { db } from '../../shared/db.js';
 import { hashUserId } from '../../shared/hashUtils.js';
-import { getUserGreeting } from '../oracle.js';
 import { storeMessage } from '../messages.js';
-import { logErrorFromCatch } from '../../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * Detect if user is asking for horoscope in chat

@@ -8,7 +8,7 @@ import { isCosmicWeatherRequest, generateCosmicWeather } from "./modules/handler
 import { isVoidOfCourseRequest, generateVoidOfCourseMoonAlert } from "./modules/handlers/void-of-course-handler.js";
 import { handleChatMessage } from "./modules/handlers/chat-handler.js";
 import { db } from "./shared/db.js";
-import { logErrorFromCatch } from '../shared/errorLogger.js';
+import { logErrorFromCatch } from './shared/errorLogger.js';
 
 const API_URL = process.env.API_URL || 'http://localhost:3000';
 
