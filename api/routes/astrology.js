@@ -68,30 +68,19 @@ router.post('/sync-calculate/:userId', authorizeUser, async (req, res) => {
     try {
         const { userId } = req.params;
         
-        // Fetch user's personal information (decrypted)
-                let personalInfoRows = [];
-        let retries = 0;
-        
-        // RETRY LOOP: Wait for personal info to persist in database
-        while (!personalInfoRows.length && retries < 5) {
-            const result = await db.query(
-                `SELECT pgp_sym_decrypt(birth_date_encrypted, $1) as birth_date,
-                        pgp_sym_decrypt(birth_time_encrypted, $1) as birth_time,
-                        pgp_sym_decrypt(birth_country_encrypted, $1) as birth_country,
-                        pgp_sym_decrypt(birth_province_encrypted, $1) as birth_province,
-                        pgp_sym_decrypt(birth_city_encrypted, $1) as birth_city
-                 FROM user_personal_info WHERE user_id = $2`,
-                [process.env.ENCRYPTION_KEY, userId]
-            );
-            personalInfoRows = result.rows;
-            if (!personalInfoRows.length && retries < 4) {
-                await new Promise(r => setTimeout(r, 500));
-                retries++;
-            }
-        }
+        // Fetch user's personal information (decrypted) - NO POLLING
+        const { rows: personalInfoRows } = await db.query(
+            `SELECT pgp_sym_decrypt(birth_date_encrypted, $1) as birth_date,
+                    pgp_sym_decrypt(birth_time_encrypted, $1) as birth_time,
+                    pgp_sym_decrypt(birth_country_encrypted, $1) as birth_country,
+                    pgp_sym_decrypt(birth_province_encrypted, $1) as birth_province,
+                    pgp_sym_decrypt(birth_city_encrypted, $1) as birth_city
+             FROM user_personal_info WHERE user_id = $2`,
+            [process.env.ENCRYPTION_KEY, userId]
+        );
         
         if (!personalInfoRows.length) {
-            return notFoundError(res, 'Personal information not found');
+            return notFoundError(res, 'Personal information not found. Please save your birth information first.');
         }
         
         const info = personalInfoRows[0];
