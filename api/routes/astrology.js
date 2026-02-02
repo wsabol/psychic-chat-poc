@@ -4,49 +4,8 @@ import { db } from '../shared/db.js';
 import { hashUserId } from '../shared/hashUtils.js';
 import { enqueueMessage } from '../shared/queue.js';
 import { authorizeUser } from '../middleware/auth.js';
-import { spawn } from 'child_process';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { calculateBirthChart as calculateBirthChartSync } from '../services/lambda-astrology.js';
 import { validationError, notFoundError, serverError, successResponse } from '../utils/responses.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-export async function calculateBirthChartSync(birthData) {
-    return new Promise((resolve, reject) => {
-        const workerDir = path.join(__dirname, '../..', 'worker');
-        const python = spawn('python3', ['./astrology.py'], { cwd: workerDir });
-        let outputData = '';
-        let errorData = '';
-        
-        python.stdout.on('data', (data) => {
-            outputData += data.toString();
-        });
-        
-                python.stderr.on('data', (data) => {
-            errorData += data.toString();
-        });
-        
-        python.on('close', (code) => {
-            if (code !== 0) {
-                reject(new Error(`Python script failed: ${errorData}`));
-                return;
-            }
-            try {
-                const result = JSON.parse(outputData);
-                resolve(result);
-            } catch (e) {
-                reject(new Error(`Invalid JSON from astrology script: ${e.message}`));
-            }
-                });
-        
-        python.on('error', (err) => {
-            reject(err);
-        });
-        
-        python.stdin.write(JSON.stringify(birthData));
-        python.stdin.end();
-    });
-}
 
 router.post('/validate-location', authorizeUser, async (req, res) => {
     try {
