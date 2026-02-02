@@ -2,7 +2,6 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import { getCurrentMoonPhase, getCurrentPlanets, calculateBirthChart } from "./modules/astrology.js";
-import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 async function testLambdaIntegration() {
     console.log('🔍 Testing Lambda Astrology Integration...\n');
