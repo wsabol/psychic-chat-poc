@@ -8,7 +8,6 @@ import { extractCardsFromResponse, formatCardsForStorage } from '../cards.js';
 import { buildPersonalInfoContext, buildAstrologyContext, getOracleSystemPrompt, callOracle } from '../oracle.js';
 import { formatMessageContent, storeMessage, getMessageHistory } from '../messages.js';
 import { translateContentObject } from '../translator.js';
-import { notifyResponseReady } from '../../shared/notifications.js';
 
 /**
  * Process oracle request: call API, extract cards, translate, and store
@@ -79,8 +78,7 @@ IMPORTANT: Use the above personal and astrological information to:
             briefContentLang = await translateContentObject(briefContent, userLanguage);
         }
 
-                        // Store message with both English and translated versions (if applicable)
-        const storedAt = new Date().toISOString();
+        // Store message with both English and translated versions (if applicable)
         try {
             await storeMessage(
                 userId,
@@ -95,16 +93,9 @@ IMPORTANT: Use the above personal and astrological information to:
             throw new Error(`Failed to store oracle message: ${storageErr.message}`);
         }
 
-        // Notify that response is ready so frontend can fetch it immediately
-        try {
-            await notifyResponseReady(userId, 'assistant', storedAt);
-        } catch (notifyErr) {
-            // Log but don't fail - notification is secondary
-        }
-
         } catch (err) {
-        throw new Error(`[ORACLE-PROCESSOR] Error processing oracle request: ${err.message}`);
-    }
+            throw new Error(`[ORACLE-PROCESSOR] Error processing oracle request: ${err.message}`);
+        }
 }
 
 /**
