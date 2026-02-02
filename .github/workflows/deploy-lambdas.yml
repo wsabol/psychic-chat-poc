@@ -1,0 +1,233 @@
+name: Deploy Lambda Functions
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+    paths:
+      - 'lambdas/**'
+      - 'infrastructure/template.yaml'
+      - '.github/workflows/deploy-lambdas.yml'
+  
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options:
+          - production
+          - staging
+          - development
+      dry_run:
+        description: 'Perform a dry run (validate only)'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  AWS_REGION: us-east-1
+  NODE_VERSION: '18'
+
+jobs:
+  validate:
+    name: Validate Template
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup AWS SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+      
+      - name: Validate SAM template
+        run: |
+          cd infrastructure
+          sam validate --template-file template.yaml --lint
+      
+      - name: Check Lambda dependencies
+        run: |
+          cd lambdas
+          npm ci --production
+          npm audit --production --audit-level=high
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.ref == 'refs/heads/staging' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+    environment: staging
+    
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'lambdas/package-lock.json'
+      
+      - name: Install Lambda dependencies
+        run: |
+          cd lambdas
+          npm ci --production
+      
+      - name: Setup AWS SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN_STAGING }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Build Lambda functions
+        run: |
+          cd infrastructure
+          sam build --template-file template.yaml
+      
+      - name: Deploy to AWS (Staging)
+        if: github.event.inputs.dry_run != 'true'
+        run: |
+          cd infrastructure
+          sam deploy \
+            --config-file samconfig-staging.toml \
+            --config-env default \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            --parameter-overrides \
+              VpcId=${{ secrets.VPC_ID_STAGING }} \
+              PrivateSubnetIds=${{ secrets.PRIVATE_SUBNET_IDS_STAGING }} \
+              DatabaseSecretArn=${{ secrets.DB_SECRET_ARN_STAGING }} \
+              FirebaseSecretArn=${{ secrets.FIREBASE_SECRET_ARN_STAGING }}
+      
+      - name: Dry run - Show what would be deployed
+        if: github.event.inputs.dry_run == 'true'
+        run: |
+          cd infrastructure
+          sam deploy \
+            --config-file samconfig-staging.toml \
+            --config-env default \
+            --no-execute-changeset
+      
+      - name: Verify deployment
+        if: github.event.inputs.dry_run != 'true'
+        run: |
+          aws cloudformation describe-stacks \
+            --stack-name psychic-chat-lambdas-staging \
+            --query 'Stacks[0].StackStatus' \
+            --output text
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+    environment: production
+    
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'lambdas/package-lock.json'
+      
+      - name: Install Lambda dependencies
+        run: |
+          cd lambdas
+          npm ci --production
+      
+      - name: Setup AWS SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN_PRODUCTION }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Build Lambda functions
+        run: |
+          cd infrastructure
+          sam build --template-file template.yaml
+      
+      - name: Deploy to AWS (Production)
+        if: github.event.inputs.dry_run != 'true'
+        run: |
+          cd infrastructure
+          sam deploy \
+            --config-file samconfig-production.toml \
+            --config-env default \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            --parameter-overrides \
+              VpcId=${{ secrets.VPC_ID_PRODUCTION }} \
+              PrivateSubnetIds=${{ secrets.PRIVATE_SUBNET_IDS_PRODUCTION }} \
+              DatabaseSecretArn=${{ secrets.DB_SECRET_ARN_PRODUCTION }} \
+              FirebaseSecretArn=${{ secrets.FIREBASE_SECRET_ARN_PRODUCTION }}
+      
+      - name: Dry run - Show what would be deployed
+        if: github.event.inputs.dry_run == 'true'
+        run: |
+          cd infrastructure
+          sam deploy \
+            --config-file samconfig-production.toml \
+            --config-env default \
+            --no-execute-changeset
+      
+      - name: Verify deployment
+        if: github.event.inputs.dry_run != 'true'
+        run: |
+          aws cloudformation describe-stacks \
+            --stack-name psychic-chat-lambdas-production \
+            --query 'Stacks[0].StackStatus' \
+            --output text
+      
+      - name: Run smoke tests
+        if: github.event.inputs.dry_run != 'true'
+        run: |
+          # Verify all Lambda functions are active
+          for fn in temp-account-cleanup account-cleanup subscription-check policy-reminder grace-period-enforcement price-migration; do
+            aws lambda get-function \
+              --function-name production-$fn \
+              --query 'Configuration.State' \
+              --output text
+          done
+
+  notify:
+    name: Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, deploy-production]
+    if: always()
+    
+    steps:
+      - name: Deployment Summary
+        run: |
+          echo "## Lambda Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${{ github.event.inputs.environment || 'auto' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY

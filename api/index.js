@@ -40,12 +40,14 @@ import { subscriptionGuard } from "./middleware/subscriptionGuard.js";
 import cors from "cors";
 import cleanupStatusRoutes from "./routes/cleanup-status.js";
 import responseStatusRoutes from "./routes/response-status.js";
+import eventsRoutes, { notifyUser } from "./routes/events.js";
 import freeTrialRoutes from "./routes/free-trial.js";
 import { initializeScheduler } from "./jobs/scheduler.js";
 import { validateRequestPayload, rateLimit } from "./middleware/inputValidation.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { successResponse } from './utils/responses.js';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
+import redis from './shared/redis.js';
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 const app = express();
@@ -186,6 +188,9 @@ app.use("/security", authenticateToken, validateUserHash, securityRoutes);
 // Response status routes (authentication + user hash validation required)
 app.use("/response-status", authenticateToken, validateUserHash, responseStatusRoutes);
 
+// Server-Sent Events route (authentication handled in route via query param)
+app.use("/events", eventsRoutes);
+
 // User settings routes (authentication + user hash validation required)
 app.use("/user-settings", authenticateToken, validateUserHash, userSettingsRoutes);
 
@@ -205,6 +210,33 @@ try {
   logErrorFromCatch('❌ Failed to initialize scheduler:', error.message);
   logErrorFromCatch(error.stack);
 }
+
+// Initialize Redis pub/sub subscriber for SSE notifications
+async function initializeRedisPubSub() {
+  try {
+    // Create a separate Redis client for pub/sub
+    const subscriber = redis.duplicate();
+    await subscriber.connect();
+    
+    // Subscribe to all response-ready channels
+    await subscriber.pSubscribe('response-ready:*', (message, channel) => {
+      try {
+        const userId = channel.split(':')[1];
+        const data = JSON.parse(message);
+        notifyUser(userId, data);
+      } catch (err) {
+        logErrorFromCatch(err, '[REDIS-PUBSUB] Error processing notification');
+      }
+    });
+    
+    console.log('✅ Redis pub/sub subscriber initialized for SSE notifications');
+  } catch (error) {
+    logErrorFromCatch(error, '[REDIS-PUBSUB] Failed to initialize subscriber');
+    // Don't exit - app can still work with polling fallback
+  }
+}
+
+initializeRedisPubSub();
 
 // Phase 5: Safe error handling (LATE in middleware chain - after all routes)
 app.use(errorHandler);

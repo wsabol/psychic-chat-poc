@@ -1,0 +1,25 @@
+version = 0.1
+
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "psychic-chat-lambdas-production"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-XXXXX"
+s3_prefix = "psychic-chat-lambdas"
+region = "us-east-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+image_repositories = []
+
+# Template parameters - UPDATE THESE VALUES
+parameter_overrides = [
+    "Environment=production",
+    "VpcId=vpc-XXXXX",
+    "PrivateSubnetIds=subnet-XXXXX,subnet-YYYYY",
+    "DatabaseSecretArn=arn:aws:secretsmanager:us-east-1:ACCOUNT:secret:psychic-chat/database-XXXXX",
+    "FirebaseSecretArn=arn:aws:secretsmanager:us-east-1:ACCOUNT:secret:psychic-chat/firebase-XXXXX",
+    "EncryptionKey={{resolve:secretsmanager:psychic-chat/encryption:SecretString:key}}",
+    "StripeSecretKey={{resolve:secretsmanager:psychic-chat/stripe:SecretString:secret_key}}",
+    "TermsVersion=2.0",
+    "PrivacyVersion=1.1"
+]

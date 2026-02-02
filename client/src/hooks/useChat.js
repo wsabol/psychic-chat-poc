@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { fetchWithTokenRefresh } from "../utils/fetchWithTokenRefresh.js";
+import { useSSE } from "./useSSE.js";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
@@ -9,9 +10,6 @@ export function useChat(userId, token, isAuthenticated, authUserId) {
     const [loaded, setLoaded] = useState(false);
     const [error, setError] = useState(null);
     const previousUserIdRef = useRef(null);
-    const [fastPollingActive, setFastPollingActive] = useState(false);
-    const fastPollingIntervalRef = useRef(null);
-    const fastPollingTimeoutRef = useRef(null);
     
     const loadMessages = useCallback(async () => {
         try {
@@ -31,19 +29,6 @@ export function useChat(userId, token, isAuthenticated, authUserId) {
         }
     }, [userId, token]);
     
-    const checkResponseStatus = useCallback(async () => {
-        try {
-            if (!token || !userId) return false;
-            const headers = { "Authorization": `Bearer ${token}` };
-            const url = `${API_URL}/response-status/${userId}`;
-            const res = await fetchWithTokenRefresh(url, { headers });
-            if (!res.ok) return false;
-            const data = await res.json();
-            return data.ready === true;
-        } catch (err) {
-            return false;
-        }
-    }, [userId, token]);
     
     const requestOpening = useCallback(async () => {
         try {
@@ -58,28 +43,14 @@ export function useChat(userId, token, isAuthenticated, authUserId) {
         }
     }, [userId, token]);
     
-    const startFastPolling = useCallback(() => {
-        // Start aggressive polling every 500ms to detect response
-        setFastPollingActive(true);
-        
-        // Timeout after 30 seconds if no response
-        fastPollingTimeoutRef.current = setTimeout(() => {
-            setFastPollingActive(false);
-            if (fastPollingIntervalRef.current) clearInterval(fastPollingIntervalRef.current);
-        }, 30000);
-        
-        // Poll every 500ms
-        fastPollingIntervalRef.current = setInterval(async () => {
-            const isReady = await checkResponseStatus();
-            if (isReady) {
-                // Response is ready - load messages and stop polling
-                await loadMessages();
-                setFastPollingActive(false);
-                clearInterval(fastPollingIntervalRef.current);
-                clearTimeout(fastPollingTimeoutRef.current);
-            }
-        }, 500);
-    }, [checkResponseStatus, loadMessages]);
+    // SSE notification handler
+    const handleSSEMessage = useCallback(async (data) => {
+        // New message ready - load messages
+        await loadMessages();
+    }, [loadMessages]);
+    
+    // Initialize SSE connection for real-time notifications
+    useSSE(userId, token, isAuthenticated, handleSSEMessage);
     
     const sendMessage = useCallback(async () => {
         if (!message.trim()) return;
@@ -93,13 +64,12 @@ export function useChat(userId, token, isAuthenticated, authUserId) {
             });
             if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
             
-            // Start fast polling for response instead of waiting
-            startFastPolling();
+            // SSE will notify when response is ready - no polling needed
         } catch (err) {
             setError(err.message);
         }
         setMessage("");
-    }, [message, userId, token, startFastPolling]);
+    }, [message, userId, token]);
 
     // Load messages and request opening when user changes
     useEffect(() => {
@@ -118,21 +88,13 @@ export function useChat(userId, token, isAuthenticated, authUserId) {
         }
     }, [authUserId, isAuthenticated, token, loadMessages, requestOpening]);
 
-    // Poll for new messages every 2 seconds (normal polling)
-    // But only if fast polling is not active
+    // Fallback polling every 10 seconds (in case SSE fails)
+    // Much less aggressive than before
     useEffect(() => {
-        if (!isAuthenticated || !authUserId || !token || fastPollingActive) return;
-        const interval = setInterval(loadMessages, 2000);
+        if (!isAuthenticated || !authUserId || !token) return;
+        const interval = setInterval(loadMessages, 10000); // 10 seconds
         return () => clearInterval(interval);
-    }, [loadMessages, isAuthenticated, authUserId, token, fastPollingActive]);
-    
-    // Cleanup fast polling on unmount
-    useEffect(() => {
-        return () => {
-            if (fastPollingIntervalRef.current) clearInterval(fastPollingIntervalRef.current);
-            if (fastPollingTimeoutRef.current) clearTimeout(fastPollingTimeoutRef.current);
-        };
-    }, []);
+    }, [loadMessages, isAuthenticated, authUserId, token]);
 
     return {
         chat,
