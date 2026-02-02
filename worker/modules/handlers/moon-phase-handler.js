@@ -130,6 +130,24 @@ Do NOT include tarot cards - this is purely lunar + astrological insight enriche
             todayLocalDate
         );
         
+        // Publish SSE notification via Redis
+        try {
+            const { redis } = await import('../../shared/queue.js');
+            const redisClient = await redis();
+            await redisClient.publish(
+                `response-ready:${userId}`,
+                JSON.stringify({
+                    type: 'message_ready',
+                    role: 'moon_phase',
+                    phase: actualPhase,
+                    timestamp: new Date().toISOString()
+                })
+            );
+        } catch (redisErr) {
+            logErrorFromCatch(redisErr, '[MOON-PHASE-HANDLER] Failed to publish SSE notification');
+            // Don't throw - moon phase was saved successfully
+        }
+        
         } catch (err) {
         logErrorFromCatch(err, '[MOON-PHASE-HANDLER] Error generating commentary');
         throw err;
