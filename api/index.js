@@ -228,8 +228,6 @@ async function initializeRedisPubSub() {
         logErrorFromCatch(err, '[REDIS-PUBSUB] Error processing notification');
       }
     });
-    
-    console.log('✅ Redis pub/sub subscriber initialized for SSE notifications');
   } catch (error) {
     logErrorFromCatch(error, '[REDIS-PUBSUB] Failed to initialize subscriber');
     // Don't exit - app can still work with polling fallback

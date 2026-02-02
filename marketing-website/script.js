@@ -139,7 +139,6 @@ const notifyButtons = document.querySelectorAll('.banner-cta, .btn-primary');
 notifyButtons.forEach(button => {
     button.addEventListener('click', (e) => {
         // You can add analytics tracking here
-        console.log('User clicked on notification signup');
     });
 });
 
@@ -197,6 +196,3 @@ document.querySelectorAll('a[href^="http"]').forEach(link => {
     link.setAttribute('rel', 'noopener noreferrer');
 });
 
-// Console message for developers
-console.log('%c✨ Starship Psychics ✨', 'font-size: 24px; font-weight: bold; color: #667eea;');
-console.log('%cBuilt with cosmic energy and modern technology', 'font-size: 14px; color: #718096;');

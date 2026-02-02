@@ -34,12 +34,10 @@ export function useSSE(userId, token, isAuthenticated, onMessage) {
             // Note: EventSource doesn't support custom headers in standard browsers
             // We pass token as query parameter (secure over HTTPS)
             const url = `${API_URL}/events/${userId}?token=${encodeURIComponent(token)}`;
-            console.log('[SSE] Attempting to connect to:', url.replace(/token=[^&]+/, 'token=***'));
             
             const eventSource = new EventSource(url);
             
             eventSource.onopen = () => {
-                console.log('[SSE] Connected to notification stream');
                 reconnectAttemptsRef.current = 0; // Reset on successful connection
             };
             
@@ -47,10 +45,7 @@ export function useSSE(userId, token, isAuthenticated, onMessage) {
                 try {
                     const data = JSON.parse(event.data);
                     
-                    if (data.type === 'connected') {
-                        console.log('[SSE] Connection confirmed:', data.timestamp);
-                    } else if (data.type === 'message_ready') {
-                        console.log('[SSE] Message ready notification received');
+                    if (data.type === 'message_ready') {
                         if (onMessage) {
                             onMessage(data);
                         }
@@ -61,23 +56,18 @@ export function useSSE(userId, token, isAuthenticated, onMessage) {
             };
             
             eventSource.onerror = (error) => {
-                console.error('[SSE] Connection error:', error);
-                console.error('[SSE] EventSource readyState:', eventSource.readyState);
-                console.error('[SSE] EventSource URL:', eventSource.url);
                 eventSource.close();
                 
                 // Attempt to reconnect with exponential backoff
                 if (reconnectAttemptsRef.current < maxReconnectAttempts) {
                     const delay = baseReconnectDelay * Math.pow(2, reconnectAttemptsRef.current);
-                    console.log(`[SSE] Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current + 1}/${maxReconnectAttempts})`);
                     
                     reconnectTimeoutRef.current = setTimeout(() => {
                         reconnectAttemptsRef.current++;
                         connect();
                     }, delay);
-                } else {
-                    console.error('[SSE] Max reconnect attempts reached. Falling back to polling.');
                 }
+                // Silently fall back to polling after max attempts
             };
             
             eventSourceRef.current = eventSource;
