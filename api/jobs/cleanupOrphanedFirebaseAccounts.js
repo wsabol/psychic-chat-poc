@@ -6,10 +6,8 @@
  * Handles pagination to get ALL Firebase users
  */
 
-import { db } from '../shared/db.js';
 import { auth as firebaseAuth } from '../shared/firebase-admin.js';
-import { logWarning } from '../shared/errorLogger.js';
-import { logErrorFromCatch } from '../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 /**
  * Delete old temp Firebase accounts (async, non-blocking)

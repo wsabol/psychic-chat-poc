@@ -1,12 +1,11 @@
 import { getCurrentMoonPhase } from '../astrology.js';
 import { fetchUserAstrology, getOracleSystemPrompt, callOracle, getUserGreeting, fetchUserPersonalInfo } from '../oracle.js';
 import { storeMessage } from '../messages.js';
-import { logErrorFromCatch } from '../../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 export async function generateVoidOfCourseMoonAlert(userId) {
     try {
         const userInfo = await fetchUserPersonalInfo(userId);
-        const astrologyInfo = await fetchUserAstrology(userId);
         
         const moonPhaseData = await getCurrentMoonPhase();
         

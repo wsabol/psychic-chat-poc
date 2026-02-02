@@ -6,7 +6,7 @@
 import { Router } from "express";
 import { authorizeUser } from "../middleware/auth.js";
 import { validationError, forbiddenError, serverError, successResponse } from "../utils/responses.js";
-import { logErrorFromCatch } from '../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 import {
   getPersonalInfo,
   savePersonalInfo,

@@ -1,25 +1,11 @@
 {
   "type": "module",
-  "devDependencies": {
-    "@types/express": "^5.0.5",
-    "@types/redis": "^4.0.11",
-    "nodemon": "^3.1.10",
-    "ts-node": "^10.9.2"
-  },
-  "dependencies": {
-    "@ai-sdk/xai": "^2.0.29",
-    "ai": "^5.0.82",
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
-    "express": "^5.1.0",
-    "framer-motion": "^12.23.25",
-    "grok-sdk": "^0.0.1-security",
-    "helmet": "^8.1.0",
-    "openai": "^5.23.2",
-    "pg": "^8.16.3",
-    "react-swipeable": "^7.0.2",
-    "redis": "^5.9.0",
-    "winston": "^3.19.0",
-    "winston-daily-rotate-file": "^5.0.0"
+  "scripts": {
+    "start:backend": "docker compose up -d && cd api && npm run start && cd ../worker && npm run start && cd ../client && npm run start",
+    "stop:backend": "docker compose down",
+    "start:api": "cd api && npm run start",
+    "start:worker": "cd worker && npm run start",
+    "start:client": "cd client && npm run start",
+    "start": "npm run start:backend && npm run start:api && npm run start:worker && npm run start:client"
   }
 }

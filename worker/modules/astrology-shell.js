@@ -1,6 +1,6 @@
 import { spawn } from 'child_process';
 import path from 'path';
-import { logErrorFromCatch } from '../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 export async function calculateBirthChart(birthData) {
     return new Promise((resolve, reject) => {

@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { logErrorFromCatch } from '../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 // Get the directory of this file
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

@@ -1,7 +1,7 @@
 import { db } from '../../shared/db.js';
 import { calculateBirthChart } from '../astrology.js';
 import { hashUserId } from '../../shared/hashUtils.js';
-import { logErrorFromCatch } from '../../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * Handle system astrology calculation requests

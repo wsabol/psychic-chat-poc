@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { logErrorFromCatch } from "../../shared/errorLogger.js";
+import { logErrorFromCatch } from "../shared/errorLogger.js";
 import { auth } from "../shared/firebase-admin.js";
 
 const router = Router();

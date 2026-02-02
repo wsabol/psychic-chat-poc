@@ -1,6 +1,6 @@
 import { db } from '../shared/db.js';
 import { hashUserId } from '../shared/hashUtils.js';
-import { logErrorFromCatch } from '../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 /**
  * Get message history for a user

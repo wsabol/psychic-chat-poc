@@ -18,7 +18,7 @@ import {
   shouldEnqueueBirthChart
 } from './validators/personalInfoValidator.js';
 import { saveMinimalAstrology, enqueueFullBirthChart, saveFullAstrology } from './astrologyService.js';
-import { logErrorFromCatch } from '../../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * Get user personal information

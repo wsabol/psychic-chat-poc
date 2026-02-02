@@ -7,7 +7,7 @@ import { db } from '../shared/db.js';
 import { hashUserId } from '../shared/hashUtils.js';
 import { calculateSunSignFromDate } from '../shared/zodiacUtils.js';
 import { enqueueMessage } from '../shared/queue.js';
-import { logErrorFromCatch } from '../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 /**
  * Extract client IP from request

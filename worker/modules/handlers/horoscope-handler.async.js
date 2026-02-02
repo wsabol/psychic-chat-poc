@@ -9,11 +9,11 @@ import {
     callOracle,
     getUserGreeting
 } from '../oracle.js';
-import { storeMessage, formatMessageContent, updateMessageTranslation } from '../messages.js';
+import { storeMessage, updateMessageTranslation } from '../messages.js';
 import { translateContentObject } from '../simpleTranslator.js';
 import { getTodayInUserTimezone, fetchUserTimezonePreference, getCurrentTimeInUserTimezone } from '../utils/timezoneUtils.js';
 import { cleanMarkdownCodeFences } from '../utils/cleanMarkdown.js';
-import { logErrorFromCatch } from '../../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * Background async translation function

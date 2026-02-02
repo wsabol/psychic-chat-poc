@@ -12,7 +12,7 @@ import {
 import { storeMessage } from '../messages.js';
 import { getUserTimezone, getLocalDateForTimezone, needsRegeneration } from '../utils/timezoneHelper.js';
 import { getAstronomicalContext, formatPlanetsForPrompt } from '../utils/astronomicalContext.js';
-import { logErrorFromCatch } from '../../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * Generate personalized moon phase commentary based on user's birth chart

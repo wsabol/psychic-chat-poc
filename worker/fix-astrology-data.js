@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * Fix astrology data by recalculating and merging birth chart data
  * This script recalculates the birth chart and merges it with enrichment data
@@ -8,9 +7,7 @@ import { db } from './shared/db.js';
 import { spawn } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { logErrorFromCatch } from '../shared/errorLogger.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import { logErrorFromCatch } from './shared/errorLogger.js';
 
 /**
  * Calculate birth chart using Python script

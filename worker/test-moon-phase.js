@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import { getCurrentMoonPhase } from "./modules/astrology.js";
-import { logErrorFromCatch } from '../shared/errorLogger.js';
+import { logErrorFromCatch } from './shared/errorLogger.js';
 
 async function testMoonPhase() {
     
