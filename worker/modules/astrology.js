@@ -19,8 +19,18 @@ const getPythonPath = () => {
 
 const PYTHON_PATH = getPythonPath();
 const ASTROLOGY_SCRIPT = path.join(__dirname, '..', 'astrology.py');
+const ASTROLOGY_ENDPOINT = 'https://iay72sryvsjf7tgofqk4pibr240yccoy.lambda-url.us-east-1.on.aws/'
 
 export async function calculateBirthChart(birthData) {
+    /*
+    TODO switch to:
+    return fetch(ASTROLOGY_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(birthData)
+    })
+     */
+
     return new Promise((resolve, reject) => {
         const python = spawn(PYTHON_PATH, [ASTROLOGY_SCRIPT]);
         let outputData = '';
