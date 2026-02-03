@@ -41,10 +41,17 @@ export async function generateHoroscope(userId, range = 'daily') {
         
         if (existingHoroscopes.length > 0) {
             const createdAtLocalDate = existingHoroscopes[0].created_at_local_date;
-            const needsRegen = needsRegeneration(createdAtLocalDate, todayLocalDate);
+            // Convert to YYYY-MM-DD string if it's a Date object
+            const createdDateStr = createdAtLocalDate instanceof Date 
+                ? createdAtLocalDate.toISOString().split('T')[0]
+                : String(createdAtLocalDate).split('T')[0];
+            
+            const needsRegen = needsRegeneration(createdDateStr, todayLocalDate);
             if (!needsRegen) {
+                console.log(`[HOROSCOPE] Skipping generation - ${range} horoscope exists for ${todayLocalDate} (created: ${createdDateStr})`);
                 return;
-            } 
+            }
+            console.log(`[HOROSCOPE] Regenerating ${range} - old date: ${createdDateStr}, new date: ${todayLocalDate}`);
         }
         
         // Fetch user context

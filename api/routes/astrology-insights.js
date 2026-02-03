@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { hashUserId } from "../shared/hashUtils.js";
-import { enqueueMessage } from "../shared/queue.js";
+import { enqueueMessage, getClient } from "../shared/queue.js";
 import { authenticateToken, authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
 import { getLocalDateForTimezone, needsRegeneration } from "../shared/timezoneHelper.js";
@@ -9,6 +9,35 @@ import { successResponse } from '../utils/responses.js';
 
 
 const router = Router();
+
+/**
+ * Check if generation is already in progress for cosmic weather
+ * Prevents infinite loop of duplicate queue jobs
+ */
+async function isCosmicWeatherGenerating(userId) {
+    try {
+        const redis = await getClient();
+        const key = `cosmic-weather:generating:${userId}`;
+        const exists = await redis.get(key);
+        return !!exists;
+    } catch (err) {
+        return false; // If Redis fails, allow queuing
+    }
+}
+
+/**
+ * Mark cosmic weather generation as in progress for 3 minutes (180 seconds)
+ * CRITICAL: Must be longer than actual generation time (~100 seconds) to prevent duplicate queue jobs
+ */
+async function markCosmicWeatherGenerating(userId) {
+    try {
+        const redis = await getClient();
+        const key = `cosmic-weather:generating:${userId}`;
+        await redis.setEx(key, 180, 'true'); // Expires in 3 minutes (covers ~100 second generation time)
+    } catch (err) {
+        // Ignore Redis errors
+    }
+}
 
 // Cosmic Weather Endpoint - GET
 router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (req, res) => {
@@ -73,6 +102,15 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
         }
         
         if (!todaysWeather) {
+            // Only queue if not already generating (prevents infinite loop)
+            const alreadyGenerating = await isCosmicWeatherGenerating(userId);
+            if (!alreadyGenerating) {
+                await markCosmicWeatherGenerating(userId);
+                enqueueMessage({
+                    userId,
+                    message: '[SYSTEM] Generate cosmic weather'
+                }).catch(() => {});
+            }
             return processingResponse(res, 'Generating today\'s cosmic weather...', 'generating');
         }
         
@@ -116,7 +154,12 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
 router.post("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (req, res) => {
     const { userId } = req.params;
     try {
-        await enqueueMessage({ userId, message: '[SYSTEM] Generate cosmic weather' });
+        // Only queue if not already generating
+        const alreadyGenerating = await isCosmicWeatherGenerating(userId);
+        if (!alreadyGenerating) {
+            await markCosmicWeatherGenerating(userId);
+            await enqueueMessage({ userId, message: '[SYSTEM] Generate cosmic weather' });
+        }
         successResponse(res, { status: 'Generating today\'s cosmic weather...' });
     } catch (err) {
         return serverError(res, 'Failed to queue cosmic weather');

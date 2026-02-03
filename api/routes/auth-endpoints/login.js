@@ -209,7 +209,7 @@ router.post('/log-login-success', async (req, res) => {
     
     // 🔮 MYSTICAL UX: Queue background generation for horoscope, moon phase, cosmic weather
     // This creates the magical experience where data appears ready when user navigates to it
-    // Jobs are protected by duplicate prevention, won't create infinite loops
+    // Redis locks (180s TTL) prevent duplicate jobs even with multiple polls
     queueMysticalDataGeneration(userId);
 
     return successResponse(res, { 

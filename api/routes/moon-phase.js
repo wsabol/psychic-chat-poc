@@ -25,13 +25,14 @@ async function isGenerationInProgress(userId, phase) {
 }
 
 /**
- * Mark generation as in progress for 60 seconds
+ * Mark generation as in progress for 3 minutes (180 seconds)
+ * CRITICAL: Must be longer than actual generation time (~100 seconds) to prevent duplicate queue jobs
  */
 async function markGenerationInProgress(userId, phase) {
     try {
         const redis = await getClient();
         const key = `moon-phase:generating:${userId}:${phase}`;
-        await redis.setEx(key, 60, 'true'); // Expires in 60 seconds
+        await redis.setEx(key, 180, 'true'); // Expires in 3 minutes (covers ~100 second generation time)
     } catch (err) {
         // Ignore Redis errors
     }

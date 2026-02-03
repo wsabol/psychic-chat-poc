@@ -14,6 +14,7 @@ import SunSignInfo from '../components/SunSignInfo';
 import BirthInfoMissingPrompt from '../components/BirthInfoMissingPrompt';
 import LogoWithCopyright from '../components/LogoWithCopyright';
 import { isBirthInfoMissing } from '../utils/birthInfoErrorHandler';
+import { formatTimestampToLocal } from '../utils/timestampFormatter';
 import '../styles/responsive.css';
 import './MoonPhasePage.css';
 
@@ -157,9 +158,9 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
           <SunSignInfo sunSignData={sunSignData} />
 
           {/* Last Updated Timestamp */}
-          {moonPhaseState.lastUpdated && (
+          {moonPhaseState.data?.generatedAt && (
             <div className="moon-phase-timestamp">
-              <p className="text-muted">Generated: {moonPhaseState.lastUpdated}</p>
+              <p className="text-muted">Generated: {formatTimestampToLocal(moonPhaseState.data.generatedAt, language)}</p>
             </div>
           )}
 

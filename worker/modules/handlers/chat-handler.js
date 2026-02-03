@@ -1,4 +1,3 @@
-import { fetchUserPersonalInfo, fetchUserAstrology, fetchUserLanguagePreference, fetchUserOracleLanguagePreference, isTemporaryUser } from '../oracle.js';
 import { storeMessage } from '../messages.js';
 import { checkAccountStatus } from '../utils/accountStatusCheck.js';
 import { handleViolation } from '../utils/violationHandler.js';
@@ -6,6 +5,7 @@ import { detectAndHandleSpecialRequest } from '../utils/specialRequestDetector.j
 import { ensureUserAstrology } from '../utils/astrologySetup.js';
 import { processOracleRequest } from '../utils/oracleProcessor.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
+import { fetchAllUserData } from '../helpers/userDataQueries-optimized.js';
 
 /**
  * Handle regular chat messages from users
@@ -13,12 +13,19 @@ import { logErrorFromCatch } from '../../shared/errorLogger.js';
  */
 export async function handleChatMessage(userId, message) {
     try {
-                // STEP 1: Fetch user context and preferences
-        const userInfo = await fetchUserPersonalInfo(userId);
-        let astrologyInfo = await fetchUserAstrology(userId);
-        const userLanguage = await fetchUserLanguagePreference(userId);
-        const oracleLanguage = await fetchUserOracleLanguagePreference(userId);
-        const tempUser = await isTemporaryUser(userId);
+        // STEP 1: Fetch ALL user data in a single optimized query (PERFORMANCE OPTIMIZATION)
+        const userData = await fetchAllUserData(userId);
+        
+        if (!userData) {
+            await storeMessage(userId, 'assistant', { text: 'Unable to load your profile. Please try again.' });
+            return;
+        }
+        
+        const userInfo = userData.personalInfo;
+        let astrologyInfo = userData.astrologyInfo;
+        const userLanguage = userData.language;
+        const oracleLanguage = userData.oracleLanguage;
+        const tempUser = userData.isTemp;
 
         // STEP 2: Check account status (disabled/suspended)
         const accountError = await checkAccountStatus(userId, tempUser);

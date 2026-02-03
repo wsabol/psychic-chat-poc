@@ -48,10 +48,16 @@ export async function generateMoonPhaseCommentary(userId, phase) {
         
         if (existingMoonPhase.length > 0) {
             const createdAtLocalDate = existingMoonPhase[0].created_at_local_date;
-            if (!needsRegeneration(createdAtLocalDate, todayLocalDate)) {
+            // Convert to YYYY-MM-DD string if it's a Date object
+            const createdDateStr = createdAtLocalDate instanceof Date 
+                ? createdAtLocalDate.toISOString().split('T')[0]
+                : String(createdAtLocalDate).split('T')[0];
+            
+            if (!needsRegeneration(createdDateStr, todayLocalDate)) {
+                console.log(`[MOON-PHASE] Skipping generation - ${actualPhase} commentary exists for ${todayLocalDate} (created: ${createdDateStr})`);
                 return;
             }
-        } else {
+            console.log(`[MOON-PHASE] Regenerating ${actualPhase} - old date: ${createdDateStr}, new date: ${todayLocalDate}`);
         }
         
         // Fetch user context

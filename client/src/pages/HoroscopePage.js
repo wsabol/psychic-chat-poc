@@ -14,6 +14,7 @@ import { getTranslatedAstrologyData } from '../utils/translatedAstroUtils';
 import { isBirthInfoMissing } from '../utils/birthInfoErrorHandler';
 import BirthInfoMissingPrompt from '../components/BirthInfoMissingPrompt';
 import { formatDateByLanguage } from '../utils/dateLocaleUtils';
+import { formatTimestampToLocal } from '../utils/timestampFormatter';
 import LogoWithCopyright from '../components/LogoWithCopyright';
 import '../styles/responsive.css';
 import './HoroscopePage.css';
@@ -37,7 +38,7 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
   // Hooks
   const { speak, stop, pause, resume, isPlaying, isPaused, isLoading: isSpeechLoading, error: speechError, isSupported, volume, setVolume } = useSpeech();
   const { showingBrief, setShowingBrief, voiceEnabled } = useHoroscopePreferences(userId, token, API_URL);
-  const { horoscopeState, complianceStatus, setComplianceStatus, loadHoroscope, stopPolling } = useHoroscopeFetch(userId, token, API_URL, horoscopeRange);
+  const { horoscopeState, complianceStatus, setComplianceStatus, loadHoroscope, stopPolling } = useHoroscopeFetch(userId, token, API_URL, horoscopeRange, auth?.isAuthenticated || !!token);
   const { astroInfo, fetchAstroInfo } = useAstroInfo(userId, token);
   const { completeTrial: completeFreeTrial } = useFreeTrial(auth?.isTemporaryAccount, userId);
 
@@ -218,7 +219,11 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
             <p className="horoscope-range">
               {t('horoscope.reading', { range: t(`horoscope.${horoscopeState.data.range}`) })}
             </p>
-            <p className="horoscope-date">{formatDateByLanguage(new Date(), language)}</p>
+            <p className="horoscope-date">
+              {horoscopeState.data.generatedAt 
+                ? formatTimestampToLocal(horoscopeState.data.generatedAt, language)
+                : formatDateByLanguage(new Date(), language)}
+            </p>
           </div>
 
           <HoroscopeTextSection

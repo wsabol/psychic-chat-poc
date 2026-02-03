@@ -65,32 +65,42 @@ IMPORTANT: Use the above personal and astrological information to:
         const cards = extractCardsFromResponse(oracleResponses.full, tarotDeck);
         const formattedCards = formatCardsForStorage(cards);
 
-        // Format both full and brief in English
+        // Format content - Oracle already responded in user's preferred language
         const fullContent = formatMessageContent(oracleResponses.full, formattedCards);
         const briefContent = formatMessageContent(oracleResponses.brief, formattedCards);
 
-        // Translate if user prefers non-English language
-        let fullContentLang = null;
-        let briefContentLang = null;
-
-        if (userLanguage && userLanguage !== 'en-US') {
-            fullContentLang = await translateContentObject(fullContent, userLanguage);
-            briefContentLang = await translateContentObject(briefContent, userLanguage);
-        }
-
-        // Store message with both English and translated versions (if applicable)
+        // OPTIMIZATION: No translation needed - oracle already responds in oracleLanguage
+        // Store message directly (oracle response is already in correct language)
         try {
             await storeMessage(
                 userId,
                 'assistant',
                 fullContent,
                 briefContent,
-                userLanguage !== 'en-US' ? userLanguage : null,
-                fullContentLang,
-                briefContentLang
+                null,  // No separate language tracking needed
+                null,  // No translation needed
+                null   // No translation needed
             );
         } catch (storageErr) {
             throw new Error(`Failed to store oracle message: ${storageErr.message}`);
+        }
+
+        // CRITICAL: Publish SSE notification via Redis so client knows response is ready
+        try {
+            const { redis } = await import('../../shared/queue.js');
+            const redisClient = await redis();
+            await redisClient.publish(
+                `response-ready:${userId}`,
+                JSON.stringify({
+                    type: 'message_ready',
+                    role: 'assistant',
+                    timestamp: new Date().toISOString()
+                })
+            );
+        } catch (redisErr) {
+            // Log error but don't throw - message was saved successfully
+            const { logErrorFromCatch } = await import('../../shared/errorLogger.js');
+            logErrorFromCatch(redisErr, '[ORACLE-PROCESSOR] Failed to publish SSE notification');
         }
 
         } catch (err) {

@@ -31,7 +31,7 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
   const [hasAutoPlayed, setHasAutoPlayed] = useState(false);
 
   // Data fetching hooks
-  const { cosmicData, loading, generating, error, load: loadCosmicWeather, cleanup } = useCosmicWeatherData(userId, token);
+  const { cosmicData, loading, generating, error, load: loadCosmicWeather, cleanup } = useCosmicWeatherData(userId, token, auth?.isAuthenticated || !!token);
   const { astroInfo, fetchAstroInfo } = useAstroInfo(userId, token);
   const { userPreference, voiceEnabled, showingBrief, setShowingBrief } = useUserPreferences(userId, token);
   const { speak, stop, pause, resume, isPlaying, isPaused, isLoading: isSpeechLoading, error: speechError, isSupported, volume, setVolume } = useSpeech();

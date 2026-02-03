@@ -27,13 +27,14 @@ async function isGenerationInProgress(userId, range) {
 }
 
 /**
- * Mark generation as in progress for 60 seconds
+ * Mark generation as in progress for 3 minutes (180 seconds)
+ * CRITICAL: Must be longer than actual generation time (~100 seconds) to prevent duplicate queue jobs
  */
 async function markGenerationInProgress(userId, range) {
     try {
         const redis = await getClient();
         const key = `horoscope:generating:${userId}:${range}`;
-        await redis.setEx(key, 60, 'true'); // Expires in 60 seconds
+        await redis.setEx(key, 180, 'true'); // Expires in 3 minutes (covers ~100 second generation time)
     } catch (err) {
         // Ignore Redis errors
     }
