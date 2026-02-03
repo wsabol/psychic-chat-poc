@@ -9,7 +9,6 @@ import { logErrorFromCatch } from '../../shared/errorLogger.js';
  */
 export async function handleAstrologyCalculation(userId) {
     try {
-        console.log('[ASTROLOGY-HANDLER] Starting calculation for user:', userId);
         
         // Fetch user's personal information
         const { rows: personalInfoRows } = await db.query(`
@@ -17,8 +16,7 @@ export async function handleAstrologyCalculation(userId) {
             FROM user_personal_info WHERE user_id = $2
         `, [process.env.ENCRYPTION_KEY, userId]);
         
-        if (personalInfoRows.length === 0) {
-            console.log('[ASTROLOGY-HANDLER] No personal info found for user:', userId);
+        if (personalInfoRows.length === 0) {=
             return;
         }
         
@@ -26,13 +24,6 @@ export async function handleAstrologyCalculation(userId) {
         
         // Check if we have complete birth data (timezone is optional)
         if (!info.birth_date || !info.birth_time || !info.birth_country || !info.birth_province || !info.birth_city) {
-            console.log('[ASTROLOGY-HANDLER] Missing required fields for user:', userId, {
-                has_birth_date: !!info.birth_date,
-                has_birth_time: !!info.birth_time,
-                has_birth_country: !!info.birth_country,
-                has_birth_province: !!info.birth_province,
-                has_birth_city: !!info.birth_city
-            });
             return;
         }
         
@@ -50,9 +41,7 @@ export async function handleAstrologyCalculation(userId) {
         }
         
         // Calculate birth chart
-        console.log('[ASTROLOGY-HANDLER] Calculating birth chart with data:', chartData);
         const calculatedChart = await calculateBirthChart(chartData);
-        console.log('[ASTROLOGY-HANDLER] Lambda response:', JSON.stringify(calculatedChart, null, 2));
         
         // Verify calculation was successful
         if (!calculatedChart.success || !calculatedChart.rising_sign || !calculatedChart.moon_sign) {
@@ -85,7 +74,6 @@ export async function handleAstrologyCalculation(userId) {
         
         // Store in database with verification
         const userIdHash = hashUserId(userId);
-        console.log('[ASTROLOGY-HANDLER] Saving astrology data to database for user:', userId);
         await db.query(
             `INSERT INTO user_astrology (user_id_hash, zodiac_sign, astrology_data)
             VALUES ($1, $2, $3)
@@ -106,8 +94,6 @@ export async function handleAstrologyCalculation(userId) {
             logErrorFromCatch('[ASTROLOGY-HANDLER] Failed to verify birth chart save for user:', userId);
             return;
         }
-        
-        console.log('[ASTROLOGY-HANDLER] Successfully saved and verified astrology data for user:', userId);
         
     } catch (err) {
         logErrorFromCatch(err, '[ASTROLOGY-HANDLER] Error calculating birth chart');
