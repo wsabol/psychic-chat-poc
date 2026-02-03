@@ -1,54 +1,4 @@
 ﻿services:
-  api:
-    build:
-      context: ./api
-      dockerfile: Dockerfile-dev
-    volumes:
-      - ./api:/app
-      - /app/node_modules
-    ports:
-      - "3000:3000"
-    env_file:
-      - .env
-    environment:
-      - NODE_OPTIONS=--max-old-space-size=512
-    depends_on:
-      redis:
-        condition: service_started
-      db:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          memory: 1.5G
-        reservations:
-          memory: 1G
-
-  worker:
-    build:
-      context: ./worker
-      dockerfile: Dockerfile-dev
-    volumes:
-      - ./worker:/app
-      - /app/node_modules
-    env_file:
-      - .env
-    environment:
-      - REDIS_URL=redis://redis:6379
-      - DATABASE_URL=postgres://postgres:postgres@db:5432/psychic_chat
-      - API_URL=http://api:3000
-      - NODE_OPTIONS=--max-old-space-size=512
-      - ASTROLOGY_LAMBDA_URL=${ASTROLOGY_LAMBDA_URL}
-    depends_on:
-      db:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          memory: 1.5G
-        reservations:
-          memory: 1G
-
   redis:
     image: redis:7
     ports:
@@ -63,61 +13,9 @@
     ports:
       - "5432:5432"
     volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/RESTORE_DATABASE_SCHEMA.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
-
-  client:
-    build:
-      context: ./client
-      dockerfile: Dockerfile-dev
-      args:
-        - REACT_APP_API_URL=http://localhost:3000
-        - REACT_APP_STRIPE_PUBLIC_KEY=
-        - REACT_APP_DEV_EMAIL=
-        - REACT_APP_FIREBASE_API_KEY=
-        - REACT_APP_FIREBASE_AUTH_DOMAIN=
-        - REACT_APP_FIREBASE_PROJECT_ID=
-        - REACT_APP_FIREBASE_STORAGE_BUCKET=
-        - REACT_APP_FIREBASE_MESSAGING_SENDER_ID=
-        - REACT_APP_FIREBASE_APP_ID=
-        - REACT_APP_FIREBASE_MEASUREMENT_ID=
-    command: npm start
-    volumes:
-      - ./client:/app
-      - /app/node_modules
-      - ./client/public:/app/public:ro
-    ports:
-      - "3001:3000"
-    env_file:
-      - .env
-    environment:
-      - NODE_ENV=development
-      - WATCHPACK_POLLING=true
-      - CHOKIDAR_USEPOLLING=true
-      - CHOKIDAR_INTERVAL=2000
-      - CHOKIDAR_IGNORED=/app/node_modules
-      - WATCHMAN_DISABLE=true
-      - SKIP_PREFLIGHT_CHECK=true
-      - GENERATE_SOURCEMAP=false
-      - FAST_REFRESH=true
-      - NODE_OPTIONS=--max-old-space-size=8192 --max-semi-space-size=1024
-      - WDS_SOCKET_PORT=3001
-      - WDS_SOCKET_HOST=0.0.0.0
-      - WDS_SOCKET_PROTOCOL=ws
-      - REACT_APP_API_URL=http://localhost:3000
-      - REACT_APP_STRIPE_PUBLIC_KEY=
-      - REACT_APP_DEV_EMAIL=
-    deploy:
-      resources:
-        limits:
-          memory: 4G
-        reservations:
-          memory: 2G
-
-volumes:
-  postgres_data:
