@@ -1,5 +1,5 @@
 # Start SSH Tunnel to AWS RDS via Bastion Host
-# 
+#
 # Your RDS instance is in a PRIVATE SUBNET and is NOT publicly accessible.
 # This SSH tunnel is REQUIRED to connect to the database from your local machine.
 #

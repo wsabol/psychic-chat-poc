@@ -31,7 +31,6 @@ import legalDataRequestsRoutes from "./routes/admin/legal-data-requests.js";
 import logsRoutes from "./routes/logs.js";
 import { authenticateToken } from "./middleware/auth.js";
 import { validateUserHash } from "./middleware/userHashValidation.js";
-import { subscriptionGuard } from "./middleware/subscriptionGuard.js";
 import cors from "cors";
 import cleanupStatusRoutes from "./routes/cleanup-status.js";
 import responseStatusRoutes from "./routes/response-status.js";
@@ -262,8 +261,6 @@ if (fs.existsSync('./certificates/key.pem') && fs.existsSync('./certificates/cer
     server.on('close', () => {
     });
 }
-
-
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
