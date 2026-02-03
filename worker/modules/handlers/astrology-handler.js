@@ -16,7 +16,7 @@ export async function handleAstrologyCalculation(userId) {
             FROM user_personal_info WHERE user_id = $2
         `, [process.env.ENCRYPTION_KEY, userId]);
         
-        if (personalInfoRows.length === 0) {=
+        if (personalInfoRows.length === 0) {
             return;
         }
         
