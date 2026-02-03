@@ -5,7 +5,6 @@
     "stop:backend": "docker compose down",
     "start:api": "cd api && npm run start",
     "start:worker": "cd worker && npm run start",
-    "start:client": "cd client && npm run start",
-    "start": "npm run start:backend && npm run start:api && npm run start:worker && npm run start:client"
+    "start:client": "cd client && npm run start"
   }
 }

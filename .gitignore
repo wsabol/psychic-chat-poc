@@ -37,3 +37,7 @@ lambdas/.env
 
 # Legal data requests (sensitive - never commit)
 legal-requests/
+
+# AWS tunnel secrets
+psychic-chat-bastion-key.pem
+start-ssh-tunnel.sh
