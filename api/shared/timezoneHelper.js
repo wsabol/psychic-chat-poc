@@ -65,10 +65,10 @@ export function needsRegeneration(createdAtLocalDate, todayLocalDate) {
     return true;
   }
   
-  const previousDate = new Date(createdAtLocalDate);
-  const todayDate = new Date(todayLocalDate);
-  
-  const needsRegen = previousDate < todayDate;
+  // CRITICAL FIX: Compare date strings directly, not Date objects
+  // Date objects interpret YYYY-MM-DD as UTC midnight, which causes
+  // incorrect comparisons when GMT is ahead of local timezone
+  const needsRegen = createdAtLocalDate !== todayLocalDate;
   
   return needsRegen;
 }

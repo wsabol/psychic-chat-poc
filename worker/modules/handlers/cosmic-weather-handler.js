@@ -113,6 +113,23 @@ Do NOT include tarot cards - this is pure astrological forecasting enriched by t
             todayLocalDate
         );
         
+        // Publish SSE notification via Redis
+        try {
+            const { redis } = await import('../../shared/queue.js');
+            const redisClient = await redis();
+            await redisClient.publish(
+                `response-ready:${userId}`,
+                JSON.stringify({
+                    type: 'message_ready',
+                    role: 'cosmic_weather',
+                    timestamp: new Date().toISOString()
+                })
+            );
+        } catch (redisErr) {
+            logErrorFromCatch(redisErr, '[CW-HANDLER] Failed to publish SSE notification');
+            // Don't throw - cosmic weather was saved successfully
+        }
+        
                         } catch (err) {
         logErrorFromCatch(err, '[CW-HANDLER] Cosmic weather generation failed');
         throw err;

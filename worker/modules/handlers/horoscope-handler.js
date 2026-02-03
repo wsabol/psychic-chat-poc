@@ -124,6 +124,24 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
                 todayLocalDate
             );
             
+            // Publish SSE notification via Redis
+            try {
+                const { redis } = await import('../../shared/queue.js');
+                const redisClient = await redis();
+                await redisClient.publish(
+                    `response-ready:${userId}`,
+                    JSON.stringify({
+                        type: 'message_ready',
+                        role: 'horoscope',
+                        range: range,
+                        timestamp: new Date().toISOString()
+                    })
+                );
+            } catch (redisErr) {
+                logErrorFromCatch(redisErr, '[HOROSCOPE-HANDLER] Failed to publish SSE notification');
+                // Don't throw - horoscope was saved successfully
+            }
+            
         } catch (err) {
             logErrorFromCatch(err, `[HOROSCOPE-HANDLER] Error generating ${range} horoscope`);
         }

@@ -113,6 +113,8 @@ Resources:
                 Resource:
                   - !Ref DatabaseSecretArn
                   - !Ref FirebaseSecretArn
+                  - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:psychic-chat/encryption-*'
+                  - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:psychic-chat/stripe-*'
         - PolicyName: CloudWatchLogs
           PolicyDocument:
             Version: '2012-10-17'
