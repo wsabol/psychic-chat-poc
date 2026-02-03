@@ -1,7 +1,7 @@
 {
   "type": "module",
   "scripts": {
-    "start:backend": "docker compose up -d && cd api && npm run start && cd ../worker && npm run start && cd ../client && npm run start",
+    "start:backend": "docker compose up -d",
     "stop:backend": "docker compose down",
     "start:api": "cd api && npm run start",
     "start:worker": "cd worker && npm run start",

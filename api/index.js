@@ -262,8 +262,6 @@ if (fs.existsSync('./certificates/key.pem') && fs.existsSync('./certificates/cer
     });
 }
 
-
-
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
     logErrorFromCatch('\n\n====== UNHANDLED REJECTION ======');
