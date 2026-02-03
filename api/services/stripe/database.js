@@ -1,4 +1,5 @@
 import { db } from '../../shared/db.js';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 export async function storeSubscriptionData(userId, stripeSubscriptionId, subscriptionData) {
   try {

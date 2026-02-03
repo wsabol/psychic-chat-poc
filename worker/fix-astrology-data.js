@@ -4,68 +4,36 @@
  */
 
 import { db } from './shared/db.js';
-import { spawn } from 'child_process';
+import { calculateBirthChart } from './modules/astrology.js';
 import { logErrorFromCatch } from './shared/errorLogger.js';
-
-/**
- * Calculate birth chart using Python script
- */
-async function calculateBirthChart(birthData) {
-    return new Promise((resolve, reject) => {
-        const python = spawn('python3', ['./astrology.py']);
-        let outputData = '';
-        let errorData = '';
-        
-        python.stdout.on('data', (data) => {
-            outputData += data.toString();
-        });
-        
-        python.stderr.on('data', (data) => {
-            errorData += data.toString();
-            logErrorFromCatch('[PYTHON ERROR]', data.toString());
-        });
-        
-        python.on('close', (code) => {
-            if (code !== 0) {
-                logErrorFromCatch('[ASTROLOGY] Python script failed:', errorData);
-                reject(new Error(`Python script failed: ${errorData}`));
-                return;
-            }
-            try {
-                const result = JSON.parse(outputData);
-                resolve(result);
-            } catch (e) {
-                logErrorFromCatch('[ASTROLOGY] Failed to parse result:', outputData);
-                reject(new Error(`Invalid JSON from astrology script: ${e.message}`));
-            }
-        });
-        
-        python.on('error', (err) => {
-            logErrorFromCatch('[ASTROLOGY] Failed to spawn Python:', err);
-            reject(err);
-        });
-        
-        python.stdin.write(JSON.stringify(birthData));
-        python.stdin.end();
-    });
-}
+import { hashUserId } from './shared/hashUtils.js';
 
 /**
  * Main function to fix astrology data
  */
 async function fixAstrologyData() {
     try {
+        console.log('[FIX-ASTROLOGY] Starting astrology data fix...');
         
-        // Get all users with astrology data but missing birth chart data
+        // Get all users with incomplete astrology data
         const { rows } = await db.query(
-            `SELECT user_id, zodiac_sign, astrology_data FROM user_astrology 
-             WHERE astrology_data ->> 'sun_sign' IS NULL`
+            `SELECT ua.user_id_hash, ua.zodiac_sign, ua.astrology_data, upi.user_id
+             FROM user_astrology ua
+             INNER JOIN user_personal_info upi ON ENCODE(DIGEST(upi.user_id, 'sha256'), 'hex') = ua.user_id_hash
+             WHERE ua.astrology_data ->> 'moon_sign' IS NULL 
+             OR ua.astrology_data ->> 'rising_sign' IS NULL
+             OR ua.astrology_data ->> 'sun_degree' = '0'`
         );
+        
+        console.log(`[FIX-ASTROLOGY] Found ${rows.length} users with incomplete astrology data`);
         
         for (const row of rows) {
             const userId = row.user_id;
+            const userIdHash = row.user_id_hash;
             
             try {
+                console.log(`[FIX-ASTROLOGY] Processing user: ${userId}`);
+                
                 // Fetch user's personal information (encrypted)
                 const { rows: personalInfoRows } = await db.query(
                     `SELECT 
@@ -79,6 +47,11 @@ async function fixAstrologyData() {
                      WHERE user_id = $2`,
                     [process.env.ENCRYPTION_KEY, userId]
                 );
+                
+                if (personalInfoRows.length === 0) {
+                    console.log(`[FIX-ASTROLOGY] No personal info found for ${userId}`);
+                    continue;
+                }
                 
                 const info = personalInfoRows[0];
                 

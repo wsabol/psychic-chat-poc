@@ -110,7 +110,12 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
         }
         
         if (rows.length > 0 && rows[0].created_at_local_date) {
-            const isStale = needsRegeneration(rows[0].created_at_local_date, todayLocalDate);
+            // Convert created_at_local_date to YYYY-MM-DD string for comparison
+            const createdDate = rows[0].created_at_local_date instanceof Date 
+                ? rows[0].created_at_local_date.toISOString().split('T')[0]
+                : String(rows[0].created_at_local_date).split('T')[0];
+            
+            const isStale = needsRegeneration(createdDate, todayLocalDate);
             
             if (isStale) {
                 // Only queue if not already generating (prevents infinite loop)

@@ -8,8 +8,16 @@ const customerCreationLock = new Map();
 
 export async function getOrCreateStripeCustomer(userId, userEmail) {
   // CRITICAL: Use PostgreSQL advisory lock to prevent concurrent creation across instances
-  const lockId = Buffer.from(userId).reduce((acc, byte) => acc + byte, 0) % 2147483647;
+  // Use a hash-based lock ID to minimize collisions and ensure consistency
+  const lockId = Math.abs(
+    userId.split('').reduce((acc, char, idx) => {
+      return ((acc << 5) - acc + char.charCodeAt(0) + idx) | 0;
+    }, 0)
+  ) % 2147483647;
+  
   let hasLock = false;
+  let lockAttemptTime = null;
+  let isOwnerOfInMemoryLock = false;
   
   try {
     if (!stripe) throw new Error('Stripe is not configured');
@@ -28,29 +36,38 @@ export async function getOrCreateStripeCustomer(userId, userEmail) {
       return existingCustomerId;
     }
 
-    // If another request is creating a customer for this user, wait for it
-    if (customerCreationLock.has(userId)) {
-      return await customerCreationLock.get(userId);
+    // CRITICAL: Check in-memory lock and create promise atomically
+    // This prevents race condition between has() and set()
+    let existingPromise = customerCreationLock.get(userId);
+    if (existingPromise) {
+      // Another request in THIS process is already creating customer, wait for it
+      return await existingPromise;
     }
 
-    // âœ… CRITICAL: Create promise and IMMEDIATELY set lock BEFORE any async work
-    const creationPromise = (async () => {
-      
-      // Try to acquire advisory lock (non-blocking)
-      const lockResult = await db.query('SELECT pg_try_advisory_lock($1) as acquired', [lockId]);
-      hasLock = lockResult.rows[0]?.acquired;
-      
-      if (!hasLock) {
-        // Another process/instance is creating customer, poll until it's created
+    // ✅ CRITICAL: Create promise and IMMEDIATELY set lock BEFORE any async work starts
+    let resolveCreation, rejectCreation;
+    const creationPromise = new Promise((resolve, reject) => {
+      resolveCreation = resolve;
+      rejectCreation = reject;
+    });
+    
+    // Set lock immediately before ANY async operations
+    customerCreationLock.set(userId, creationPromise);
+    isOwnerOfInMemoryLock = true;
+
+    // Now do the actual async work
+    (async () => {
+      try {
+        // Try to acquire advisory lock (non-blocking)
+        lockAttemptTime = Date.now();
+        const lockResult = await db.query('SELECT pg_try_advisory_lock($1) as acquired', [lockId]);
+        hasLock = lockResult.rows[0]?.acquired;
         
-        // Poll up to 10 times (total ~30 seconds max)
-        const maxRetries = 10;
-        for (let i = 0; i < maxRetries; i++) {
-          // Wait with exponential backoff: 1s, 2s, 3s, 4s, 5s, etc.
-          const waitTime = Math.min((i + 1) * 1000, 5000);
-          await new Promise(resolve => setTimeout(resolve, waitTime));
+        if (!hasLock) {
+          // Another process/instance is creating customer right now
+          // FAIL FAST: Check once if customer was just created, then fail with retry signal
+          await new Promise(resolve => setTimeout(resolve, 100)); // Brief 100ms wait
           
-          // Check if customer was created by the other process
           const retryResult = await db.query(
             `SELECT pgp_sym_decrypt(stripe_customer_id_encrypted, $1) as id
              FROM user_personal_info WHERE user_id = $2`,
@@ -59,13 +76,17 @@ export async function getOrCreateStripeCustomer(userId, userEmail) {
           
           const existingId = retryResult.rows[0]?.id;
           if (existingId) {
-            return existingId;
+            // Customer was just created by other process
+            resolveCreation(existingId);
+            return;
           }
+          
+          // Customer still doesn't exist - fail fast with retry signal
+          const error = new Error('Another process is creating this customer. Please retry in a moment.');
+          error.code = 'CUSTOMER_CREATION_IN_PROGRESS';
+          error.statusCode = 503; // Service Unavailable - retry later
+          throw error;
         }
-        
-        // After all retries, customer still doesn't exist - this is an error
-        throw new Error('Timeout waiting for customer creation by other process');
-      }
       
       // CRITICAL: Verify user exists in database FIRST
       let userRecord = null;
@@ -94,7 +115,8 @@ export async function getOrCreateStripeCustomer(userId, userEmail) {
       if (storedId) {
         try {
           await stripe.customers.retrieve(storedId);
-          return storedId;
+          resolveCreation(storedId);
+          return;
         } catch (err) {
           // Customer doesn't exist in Stripe, clear it and create new one
           await db.query(`UPDATE user_personal_info SET stripe_customer_id_encrypted = NULL WHERE user_id = $1`, [userId]);
@@ -129,41 +151,47 @@ export async function getOrCreateStripeCustomer(userId, userEmail) {
         
         // Check if the update actually affected a row
         if (updateResult.rowCount === 0) {
-          logErrorFromCatch(`[STRIPE] CRITICAL: User ${userId} does not exist in user_personal_info table`);
+          const noUserError = new Error(`User ${userId} does not exist in user_personal_info table`);
+          logErrorFromCatch(noUserError, 'stripe', 'User record not found after customer creation', hashUserId(userId), null, 'critical');
           // Delete the customer we just created since we can't store it
           try {
             await stripe.customers.del(customer.id);
           } catch (delErr) {
-            logErrorFromCatch(`[STRIPE] Failed to delete orphaned customer:`, delErr);
+            logErrorFromCatch(delErr, 'stripe', 'Failed to delete orphaned customer', hashUserId(userId));
           }
           throw new Error('User record not found in database. Cannot create Stripe customer.');
         }
       } catch (e) {
-        logErrorFromCatch(`[STRIPE] Failed to store customer ID:`, e.message);
+        logErrorFromCatch(e, 'stripe', 'Failed to store customer ID', hashUserId(userId));
         throw e; // Re-throw to prevent returning a customer ID that wasn't stored
       }
 
-      return customer.id;
+        resolveCreation(customer.id);
+      } catch (error) {
+        rejectCreation(error);
+      } finally {
+        // Release PostgreSQL advisory lock
+        if (hasLock) {
+          try {
+            await db.query('SELECT pg_advisory_unlock($1)', [lockId]);
+          } catch (unlockErr) {
+            logErrorFromCatch(unlockErr, 'stripe', `Failed to release advisory lock ${lockId}`, hashUserId(userId));
+          }
+        }
+      }
     })();
 
-    // âœ… Set lock RIGHT AFTER promise creation (synchronously)
-    customerCreationLock.set(userId, creationPromise);
-
-    try {
-      const result = await creationPromise;
-      return result;
-    } finally {
-      // Clean up in-memory lock
-      customerCreationLock.delete(userId);
-    }
+    // Wait for the creation to complete
+    return await creationPromise;
   } catch (error) {
-    logErrorFromCatch(`[STRIPE] FATAL:`, error.message);
-    logErrorFromCatch(error, 'stripe', 'create customer', hashUserId(userId)).catch(() => {});
+    const errorContext = `hasLock:${hasLock}, lockId:${lockId}, duration:${lockAttemptTime ? Date.now() - lockAttemptTime : 0}ms`;
+    
+    logErrorFromCatch(error, 'stripe', `Customer creation failed - ${errorContext}`, hashUserId(userId));
     throw error;
   } finally {
-    // Release PostgreSQL advisory lock
-    if (hasLock) {
-      await db.query('SELECT pg_advisory_unlock($1)', [lockId]);
+    // Clean up in-memory lock only if we own it
+    if (isOwnerOfInMemoryLock) {
+      customerCreationLock.delete(userId);
     }
   }
 }
@@ -176,7 +204,7 @@ export async function setDefaultPaymentMethod(customerId, paymentMethodId) {
     });
     return customer;
   } catch (error) {
-    logErrorFromCatch(error, 'stripe', 'set default payment').catch(() => {});
+    logErrorFromCatch(error, 'stripe', 'set default payment');
     throw error;
   }
 }

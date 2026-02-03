@@ -68,7 +68,8 @@ router.post('/create-subscription', authenticateToken, async (req, res) => {
       },
     });
   } catch (error) {
-    return billingError(res, 'Failed to create subscription');
+    logErrorFromCatch(error, 'billing', 'create subscription', hashUserId(req.user?.userId)).catch(() => {});
+    return billingError(res, error.message || 'Failed to create subscription');
   }
 });
 
@@ -89,7 +90,8 @@ router.get('/subscriptions', authenticateToken, async (req, res) => {
     const subscriptions = await getSubscriptions(customerId);
     return successResponse(res, subscriptions);
   } catch (error) {
-    return billingError(res, 'Failed to fetch subscriptions');
+    logErrorFromCatch(error, 'billing', 'fetch subscriptions', hashUserId(req.user?.userId)).catch(() => {});
+    return billingError(res, error.message || 'Failed to fetch subscriptions');
   }
 });
 
@@ -194,7 +196,8 @@ router.post('/complete-subscription/:subscriptionId', authenticateToken, async (
       });
     }
   } catch (error) {
-    return billingError(res, 'Failed to complete subscription');
+    logErrorFromCatch(error, 'billing', 'complete subscription', hashUserId(req.user?.userId)).catch(() => {});
+    return billingError(res, error.message || 'Failed to complete subscription');
   }
 });
 
@@ -213,7 +216,8 @@ router.post('/cancel-subscription/:subscriptionId', authenticateToken, async (re
       cancelAtPeriodEnd: subscription.cancel_at_period_end,
     });
   } catch (error) {
-    return billingError(res, 'Failed to cancel subscription');
+    logErrorFromCatch(error, 'billing', 'cancel subscription', hashUserId(req.user?.userId)).catch(() => {});
+    return billingError(res, error.message || 'Failed to cancel subscription');
   }
 });
 
@@ -225,7 +229,8 @@ router.get('/available-prices', async (req, res) => {
     const prices = await getAvailablePrices();
     return successResponse(res, prices);
   } catch (error) {
-    return billingError(res, 'Failed to fetch pricing');
+    logErrorFromCatch(error, 'billing', 'fetch pricing').catch(() => {});
+    return billingError(res, error.message || 'Failed to fetch pricing');
   }
 });
 

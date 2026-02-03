@@ -13,8 +13,7 @@ export async function createSetupIntent(customerId) {
     });
     return intent;
     } catch (error) {
-    // Log error in background (don't await)
-    logErrorFromCatch(error, 'stripe', 'create setup intent').catch(() => {});
+    logErrorFromCatch(error, 'stripe', 'create setup intent');
     throw error;
   }
 }
@@ -34,8 +33,7 @@ export async function listPaymentMethods(customerId) {
 
         return cards;
   } catch (error) {
-    // Log error in background (don't await)
-    logErrorFromCatch(error, 'stripe', 'list payment methods').catch(() => {});
+    logErrorFromCatch(error, 'stripe', 'list payment methods');
     throw error;
   }
 }
@@ -49,8 +47,7 @@ export async function deletePaymentMethod(paymentMethodId) {
     await stripe.paymentMethods.detach(paymentMethodId);
         return { success: true };
   } catch (error) {
-    // Log error in background (don't await)
-    logErrorFromCatch(error, 'stripe', 'delete payment method').catch(() => {});
+    logErrorFromCatch(error, 'stripe', 'delete payment method');
     throw error;
   }
 }

@@ -1,4 +1,5 @@
 import { stripe } from './stripeClient.js';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 export function verifyWebhookSignature(body, signature) {
   try {
