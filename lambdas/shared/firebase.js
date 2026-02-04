@@ -11,6 +11,12 @@
 import admin from 'firebase-admin';
 import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
 import { logError } from './errorLogger.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 let firebaseApp = null;
 let firebaseSecrets = null;
@@ -62,15 +68,34 @@ export async function initializeFirebase() {
     
     if (isLambda && !process.env.USE_LOCAL_FIREBASE) {
       // AWS Mode: Load from Secrets Manager
+      console.log('[Firebase] Loading credentials from AWS Secrets Manager...');
       serviceAccount = await loadFirebaseSecretsFromAWS();
     } else {
-      // Local Mode: Use environment variable
+      // Local Mode: Try to load from JSON file first, then fall back to environment variable
+      const serviceAccountPath = path.join(__dirname, '../firebase-adminsdk-key.json');
       
-      if (!process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-        throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set');
+      if (fs.existsSync(serviceAccountPath)) {
+        console.log('[Firebase] Loading credentials from firebase-adminsdk-key.json file...');
+        try {
+          const fileContent = fs.readFileSync(serviceAccountPath, 'utf8');
+          serviceAccount = JSON.parse(fileContent);
+          console.log('[Firebase] Successfully loaded service account from JSON file');
+        } catch (fileError) {
+          console.error('[Firebase] Failed to load/parse JSON file:', fileError.message);
+          throw new Error(`Failed to load firebase-adminsdk-key.json: ${fileError.message}`);
+        }
+      } else if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+        console.log('[Firebase] Loading credentials from FIREBASE_SERVICE_ACCOUNT_KEY environment variable...');
+        try {
+          serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+          console.log('[Firebase] Successfully parsed service account JSON from env var');
+        } catch (parseError) {
+          console.error('[Firebase] Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY:', parseError.message);
+          throw new Error(`Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY: ${parseError.message}`);
+        }
+      } else {
+        throw new Error('Firebase credentials not found. Expected either firebase-adminsdk-key.json file or FIREBASE_SERVICE_ACCOUNT_KEY environment variable.');
       }
-      
-      serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
     }
 
     // Initialize Firebase Admin

@@ -26,6 +26,7 @@ yarn-error.log*
 
 api/firebase-adminsdk-key.json
 worker/firebase-adminsdk-key.json
+lambdas/firebase-adminsdk-key.json
 client/.env.local
 api/.env
 worker/.env

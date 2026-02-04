@@ -156,8 +156,8 @@ Resources:
         ScheduledEvent:
           Type: Schedule
           Properties:
-            Schedule: cron(0 2 * * ? *)
-            Description: Run daily at 2:00 AM UTC
+            Schedule: cron(0 2 1 * ? *)
+            Description: Run monthly on the 1st at 2:00 AM UTC
             Enabled: true
 
   # Lambda Function: Subscription Check
@@ -173,8 +173,8 @@ Resources:
         ScheduledEvent:
           Type: Schedule
           Properties:
-            Schedule: cron(0 */4 * * ? *)
-            Description: Run every 4 hours
+            Schedule: cron(15 2 * * ? *)
+            Description: Run daily at 2:15 AM UTC
             Enabled: true
 
   # Lambda Function: Policy Reminder
@@ -207,8 +207,8 @@ Resources:
         ScheduledEvent:
           Type: Schedule
           Properties:
-            Schedule: cron(0 */6 * * ? *)
-            Description: Run every 6 hours
+            Schedule: cron(30 2 * * ? *)
+            Description: Run daily at 2:30 AM UTC
             Enabled: true
 
   # Lambda Function: Price Migration

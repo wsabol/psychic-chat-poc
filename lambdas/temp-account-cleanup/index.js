@@ -8,7 +8,7 @@
  */
 
 import { db } from '../shared/db.js';
-import { auth } from '../shared/firebase.js';
+import { auth, initializeFirebase } from '../shared/firebase.js';
 import { createLogger } from '../shared/errorLogger.js';
 
 const logger = createLogger('temp-account-cleanup');
@@ -27,6 +27,11 @@ export const handler = async (event) => {
     if (!ENCRYPTION_KEY) {
       throw new Error('ENCRYPTION_KEY not configured');
     }
+    
+    // Initialize Firebase (will reuse if already initialized)
+    console.log('[TempAccountCleanup] Initializing Firebase...');
+    await initializeFirebase();
+    console.log('[TempAccountCleanup] Firebase initialized successfully');
     
     const eightHoursAgo = new Date(Date.now() - 8 * 60 * 60 * 1000);
     
@@ -47,9 +52,12 @@ export const handler = async (event) => {
     if (uids.length > 0) {
       // Delete from database (fast operation)
       try {
-        await db.query(`DELETE FROM user_personal_info WHERE user_id = ANY($1)`, [uids]);
-        await db.query(`DELETE FROM user_astrology WHERE user_id = ANY($1)`, [uids]);
+        console.log(`[TempAccountCleanup] Deleting ${uids.length} temp accounts from database...`);
+        
+        // Delete from all related tables
+        await db.query(`DELETE FROM free_trial_sessions WHERE user_id = ANY($1)`, [uids]);
         await db.query(`DELETE FROM messages WHERE user_id = ANY($1)`, [uids]);
+        await db.query(`DELETE FROM user_astrology WHERE user_id = ANY($1)`, [uids]);
         await db.query(`DELETE FROM user_2fa_settings WHERE user_id = ANY($1)`, [uids]);
         await db.query(`DELETE FROM user_2fa_codes WHERE user_id = ANY($1)`, [uids]);
         
@@ -62,28 +70,46 @@ export const handler = async (event) => {
           }
         }
         
+        // Delete from user_personal_info last (parent table)
+        await db.query(`DELETE FROM user_personal_info WHERE user_id = ANY($1)`, [uids]);
+        
         dbDeletedCount = uids.length;
+        console.log(`[TempAccountCleanup] Successfully deleted ${dbDeletedCount} accounts from database`);
       } catch (error) {
         logger.errorFromCatch(error, 'Database cleanup');
         throw error;
       }
       
       // Delete from Firebase (slower, more error-prone)
+      console.log(`[TempAccountCleanup] Deleting ${uids.length} users from Firebase...`);
       for (const uid of uids) {
         try { 
-          await auth.deleteUser(uid);
-          firebaseDeletedCount++;
+          const deleted = await auth.deleteUser(uid);
+          if (deleted) {
+            firebaseDeletedCount++;
+          }
         } catch (err) {
           if (err.code !== 'auth/user-not-found') {
             firebaseErrorCount++;
             logger.error(err, `Firebase deletion failed for ${uid}`);
+            console.error(`[TempAccountCleanup] Failed to delete Firebase user ${uid}:`, err.message);
+          } else {
+            // User not found in Firebase, count as success since DB was cleaned
+            firebaseDeletedCount++;
           }
         }
       }
+      console.log(`[TempAccountCleanup] Firebase deletion complete: ${firebaseDeletedCount} deleted, ${firebaseErrorCount} errors`);
     }
     
     // Calculate duration
     const duration = Date.now() - startTime;
+    
+    // Log summary
+    console.log(`[TempAccountCleanup] Cleanup completed in ${duration}ms`);
+    console.log(`[TempAccountCleanup] Database deleted: ${dbDeletedCount}`);
+    console.log(`[TempAccountCleanup] Firebase deleted: ${firebaseDeletedCount}`);
+    console.log(`[TempAccountCleanup] Firebase errors: ${firebaseErrorCount}`);
     
     // Return success response with stats (CloudWatch captures all console output)
     return {
@@ -101,6 +127,8 @@ export const handler = async (event) => {
     
   } catch (error) {
     const duration = Date.now() - startTime;
+    console.error(`[TempAccountCleanup] Lambda execution failed after ${duration}ms:`, error.message);
+    console.error('[TempAccountCleanup] Stack trace:', error.stack);
     logger.errorFromCatch(error, 'Lambda execution failed');
     
     // Return error response (Lambda will retry on failure)
@@ -109,6 +137,7 @@ export const handler = async (event) => {
       body: JSON.stringify({
         success: false,
         error: error.message,
+        stack: error.stack,
         duration_ms: duration
       })
     };
