@@ -112,10 +112,24 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
 
   // Handle astrology prompt Yes - navigate to Personal Info page
   const handleAstrologyYes = () => {
+    console.log('[CHAT-PAGE] User selected to enter personal info');
     setShowAstrologyPrompt(false);
-    if (onNavigateToPage) {
-      onNavigateToPage(1); // Personal Info is page index 1
+    
+    if (!onNavigateToPage) {
+      console.error('[CHAT-PAGE] onNavigateToPage function is not available!');
+      return;
     }
+    
+    // Small delay to ensure modal closes before navigation
+    setTimeout(() => {
+      console.log('[CHAT-PAGE] Navigating to PersonalInfoPage (index 1)');
+      try {
+        onNavigateToPage(1); // Personal Info is page index 1
+      } catch (err) {
+        console.error('[CHAT-PAGE] Navigation error:', err);
+        logErrorFromCatch('[CHAT-PAGE] Failed to navigate to PersonalInfoPage', err);
+      }
+    }, 100);
   };
 
   // Handle astrology prompt No - log out and go to login

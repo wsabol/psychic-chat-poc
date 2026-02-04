@@ -54,10 +54,8 @@ export async function generateMoonPhaseCommentary(userId, phase) {
                 : String(createdAtLocalDate).split('T')[0];
             
             if (!needsRegeneration(createdDateStr, todayLocalDate)) {
-                console.log(`[MOON-PHASE] Skipping generation - ${actualPhase} commentary exists for ${todayLocalDate} (created: ${createdDateStr})`);
                 return;
             }
-            console.log(`[MOON-PHASE] Regenerating ${actualPhase} - old date: ${createdDateStr}, new date: ${todayLocalDate}`);
         }
         
         // Fetch user context

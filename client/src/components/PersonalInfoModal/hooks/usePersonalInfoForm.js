@@ -116,13 +116,19 @@ export function usePersonalInfoForm(userId, token, isOpen, isTemporaryAccount) {
         astrologyData: astrologyData
       };
 
-      // Send to API
-      const response = await fetch(`${API_URL}/user-profile/${userId}`, {
+      // Send to API - use free trial endpoint for temp users (no auth required)
+      const endpoint = isTemporaryAccount 
+        ? `${API_URL}/free-trial/save-personal-info/${userId}`
+        : `${API_URL}/user-profile/${userId}`;
+      
+      const headers = { 'Content-Type': 'application/json' };
+      if (!isTemporaryAccount && token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const response = await fetch(endpoint, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          ...(token && { 'Authorization': `Bearer ${token}` })
-        },
+        headers: headers,
         body: JSON.stringify(dataToSend)
       });
 

@@ -17,6 +17,7 @@ export async function handleChatMessage(userId, message) {
         const userData = await fetchAllUserData(userId);
         
         if (!userData) {
+            logErrorFromCatch(new Error(`User data not found for userId: ${userId}`), '[CHAT-HANDLER]', 'fetchAllUserData returned null');
             await storeMessage(userId, 'assistant', { text: 'Unable to load your profile. Please try again.' });
             return;
         }

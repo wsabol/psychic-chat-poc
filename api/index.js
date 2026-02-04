@@ -1,3 +1,6 @@
+// CRITICAL: Load .env FIRST before any other imports
+import './env-loader.js';
+
 import express from "express";
 import fs from "fs";
 import https from "https";

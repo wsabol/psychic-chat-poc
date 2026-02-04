@@ -72,10 +72,46 @@ export async function createFreeTrialSession(tempUserId, ipAddress, db) {
     const result = await db.query(
       `INSERT INTO free_trial_sessions 
        (id, ip_address_hash, ip_address_encrypted, user_id_hash, current_step, is_completed, started_at, last_activity_at)
-       VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+       VALUES ($1, $2, pgp_sym_encrypt($3, $7), $4, $5, $6, NOW(), NOW())
        RETURNING id, current_step, started_at`,
-      [sessionId, ipHash, ipAddress, userIdHash, 'chat', false]
+      [sessionId, ipHash, ipAddress, userIdHash, 'chat', false, process.env.ENCRYPTION_KEY]
     );
+
+    // Create minimal user_personal_info entry so chat can work before full profile is completed
+    // This prevents "profile not available" errors during initial chat interaction
+    // Include all encrypted fields that the chat handler expects, even if NULL
+    try {
+      const API_ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+      
+      // DEBUG: Log key info (first/last 4 chars only)
+      if (!API_ENCRYPTION_KEY) {
+        logErrorFromCatch(new Error('ENCRYPTION_KEY is undefined!'), 'free-trial', 'CRITICAL: API ENCRYPTION_KEY not set');
+      } else {
+        const keyPreview = `${API_ENCRYPTION_KEY.substring(0, 4)}...${API_ENCRYPTION_KEY.substring(API_ENCRYPTION_KEY.length - 4)}`;
+        console.log(`[DEBUG] API ENCRYPTION_KEY: ${keyPreview} (length: ${API_ENCRYPTION_KEY.length})`);
+      }
+      
+      const insertResult = await db.query(
+        `INSERT INTO user_personal_info 
+         (user_id, email_encrypted, first_name_encrypted, last_name_encrypted, 
+          birth_date_encrypted, birth_time_encrypted, birth_country_encrypted,
+          birth_province_encrypted, birth_city_encrypted, birth_timezone_encrypted,
+          sex_encrypted, familiar_name_encrypted, created_at, updated_at)
+         VALUES ($1, pgp_sym_encrypt($2, $5), pgp_sym_encrypt($3, $5), pgp_sym_encrypt($4, $5),
+                 NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NOW(), NOW())
+         ON CONFLICT (user_id) DO UPDATE SET updated_at = NOW()
+         RETURNING user_id`,
+        [tempUserId, `${tempUserId}@psychic.local`, 'Seeker', 'Soul', API_ENCRYPTION_KEY]
+      );
+      
+      if (insertResult.rows.length === 0) {
+        logErrorFromCatch(new Error('No rows returned from user_personal_info insert'), 'free-trial', `Failed to create/update user_personal_info for ${tempUserId}`);
+      }
+    } catch (err) {
+      // CRITICAL: Log detailed error since chat won't work without this
+      logErrorFromCatch(err, 'free-trial', `CRITICAL: Failed to create user_personal_info for ${tempUserId}`);
+      throw err; // Re-throw to surface the issue
+    }
 
     return {
       success: true,

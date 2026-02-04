@@ -48,10 +48,8 @@ export async function generateHoroscope(userId, range = 'daily') {
             
             const needsRegen = needsRegeneration(createdDateStr, todayLocalDate);
             if (!needsRegen) {
-                console.log(`[HOROSCOPE] Skipping generation - ${range} horoscope exists for ${todayLocalDate} (created: ${createdDateStr})`);
                 return;
             }
-            console.log(`[HOROSCOPE] Regenerating ${range} - old date: ${createdDateStr}, new date: ${todayLocalDate}`);
         }
         
         // Fetch user context

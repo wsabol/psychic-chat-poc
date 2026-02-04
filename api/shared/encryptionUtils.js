@@ -3,10 +3,16 @@ import crypto from 'crypto';
 // IMPORTANT: Get encryption key from environment variable
 // In production, this should be a strong, randomly-generated key
 // Store it in .env file or secret manager (NOT in code)
-export const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'your_encryption_key_here';
-
-if (ENCRYPTION_KEY === 'your_encryption_key_here') {
+export function getEncryptionKey() {
+  const key = process.env.ENCRYPTION_KEY;
+  if (!key || key === 'your_encryption_key_here') {
+    throw new Error('ENCRYPTION_KEY not properly configured');
+  }
+  return key;
 }
+
+// Backwards compatibility - but use getEncryptionKey() instead
+export const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'your_encryption_key_here';
 
 /**
  * Helper to decrypt data from database using PostgreSQL pgp_sym_decrypt

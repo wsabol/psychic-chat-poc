@@ -30,10 +30,8 @@ export async function generateCosmicWeather(userId) {
                 : String(createdAtLocalDate).split('T')[0];
             
             if (!needsRegeneration(createdDateStr, todayLocalDate)) {
-                console.log(`[COSMIC-WEATHER] Skipping generation - cosmic weather exists for ${todayLocalDate} (created: ${createdDateStr})`);
                 return;
             }
-            console.log(`[COSMIC-WEATHER] Regenerating - old date: ${createdDateStr}, new date: ${todayLocalDate}`);
         }
         
         const userInfo = await fetchUserPersonalInfo(userId);

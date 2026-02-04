@@ -8,6 +8,14 @@ import { hashUserId } from '../../shared/hashUtils.js';
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
 
+// DEBUG: Log the encryption key being used (first/last 4 chars only for security)
+if (ENCRYPTION_KEY === 'default_key') {
+  console.error('[CRITICAL] Worker is using DEFAULT_KEY! ENCRYPTION_KEY environment variable is not set!');
+} else {
+  const keyPreview = `${ENCRYPTION_KEY.substring(0, 4)}...${ENCRYPTION_KEY.substring(ENCRYPTION_KEY.length - 4)}`;
+  console.log(`[DEBUG] Worker ENCRYPTION_KEY loaded: ${keyPreview} (length: ${ENCRYPTION_KEY.length})`);
+}
+
 /**
  * Fetch ALL user data in a single optimized query with JOINs
  * Returns: { personalInfo, astrologyInfo, language, oracleLanguage, isTemp }
@@ -17,6 +25,9 @@ const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
 export async function fetchAllUserData(userId) {
   try {
     const userIdHash = hashUserId(userId);
+    
+    // DEBUG: Log the query parameters
+    console.log(`[DEBUG] fetchAllUserData - userId: ${userId}, userIdHash: ${userIdHash}`);
     
     const { rows } = await db.query(`
       SELECT 
@@ -48,8 +59,11 @@ export async function fetchAllUserData(userId) {
     `, [ENCRYPTION_KEY, userId]);
     
     if (rows.length === 0) {
+      console.log(`[DEBUG] fetchAllUserData - NO ROWS FOUND for userId: ${userId}`);
       return null;
     }
+    
+    console.log(`[DEBUG] fetchAllUserData - FOUND ${rows.length} row(s) for userId: ${userId}`);
     
     const row = rows[0];
     
@@ -91,6 +105,9 @@ export async function fetchAllUserData(userId) {
     };
     
   } catch (err) {
+    console.error(`[ERROR] fetchAllUserData failed for userId: ${userId}`, err);
+    console.error(`[ERROR] Error message: ${err.message}`);
+    console.error(`[ERROR] Error stack: ${err.stack}`);
     return null;
   }
 }

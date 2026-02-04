@@ -49,7 +49,7 @@ export function useFreeTrial(isTemporaryAccount, tempUserId) {
         setError(null);
       } catch (err) {
         const errorMessage = err?.message || 'Failed to create session';
-        logErrorFromCatch('[FREE-TRIAL] Error creating session', err);
+        logErrorFromCatch(err, 'free-trial', 'Error creating session');
         setError(errorMessage);
       } finally {
         setLoading(false);
@@ -90,7 +90,7 @@ export function useFreeTrial(isTemporaryAccount, tempUserId) {
 
       return { success: true, data };
     } catch (err) {
-      logErrorFromCatch('[FREE-TRIAL] Error updating step', err);
+      logErrorFromCatch(err, 'free-trial', 'Error updating step');
       const errorMsg = err?.message || 'Failed to update step';
       setError(errorMsg);
       return { success: false, error: errorMsg };
@@ -127,7 +127,7 @@ export function useFreeTrial(isTemporaryAccount, tempUserId) {
 
       return { success: true, data };
     } catch (err) {
-      logErrorFromCatch('[FREE-TRIAL] Error completing trial', err);
+      logErrorFromCatch(err, 'free-trial', 'Error completing trial');
       const errorMsg = err?.message || 'Failed to complete trial';
       setError(errorMsg);
       return { success: false, error: errorMsg };
@@ -164,7 +164,7 @@ export function useFreeTrial(isTemporaryAccount, tempUserId) {
 
       return { success: true, data };
     } catch (err) {
-      logErrorFromCatch('[FREE-TRIAL] Error getting session status', err);
+      logErrorFromCatch(err, 'free-trial', 'Error getting session status');
       return { success: false, error: err?.message || 'Failed to get session status' };
     }
   }, [tempUserId]);
