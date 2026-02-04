@@ -112,7 +112,6 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
 
   // Handle astrology prompt Yes - navigate to Personal Info page
   const handleAstrologyYes = () => {
-    console.log('[CHAT-PAGE] User selected to enter personal info');
     setShowAstrologyPrompt(false);
     
     if (!onNavigateToPage) {
@@ -122,7 +121,6 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
     
     // Small delay to ensure modal closes before navigation
     setTimeout(() => {
-      console.log('[CHAT-PAGE] Navigating to PersonalInfoPage (index 1)');
       try {
         onNavigateToPage(1); // Personal Info is page index 1
       } catch (err) {

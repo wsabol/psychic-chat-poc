@@ -88,7 +88,6 @@ export async function createFreeTrialSession(tempUserId, ipAddress, db) {
         logErrorFromCatch(new Error('ENCRYPTION_KEY is undefined!'), 'free-trial', 'CRITICAL: API ENCRYPTION_KEY not set');
       } else {
         const keyPreview = `${API_ENCRYPTION_KEY.substring(0, 4)}...${API_ENCRYPTION_KEY.substring(API_ENCRYPTION_KEY.length - 4)}`;
-        console.log(`[DEBUG] API ENCRYPTION_KEY: ${keyPreview} (length: ${API_ENCRYPTION_KEY.length})`);
       }
       
       const insertResult = await db.query(

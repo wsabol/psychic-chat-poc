@@ -11,9 +11,6 @@ dotenv.config({
   silent: process.env.NODE_ENV === 'production'
 });
 
-console.log('[WORKER] Loaded .env from:', join(__dirname, '.env'));
-console.log('[WORKER] ENCRYPTION_KEY present:', !!process.env.ENCRYPTION_KEY);
-
 import { workerLoop } from "./processor.js";
 
 workerLoop();

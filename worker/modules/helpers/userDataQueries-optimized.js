@@ -13,7 +13,6 @@ if (ENCRYPTION_KEY === 'default_key') {
   console.error('[CRITICAL] Worker is using DEFAULT_KEY! ENCRYPTION_KEY environment variable is not set!');
 } else {
   const keyPreview = `${ENCRYPTION_KEY.substring(0, 4)}...${ENCRYPTION_KEY.substring(ENCRYPTION_KEY.length - 4)}`;
-  console.log(`[DEBUG] Worker ENCRYPTION_KEY loaded: ${keyPreview} (length: ${ENCRYPTION_KEY.length})`);
 }
 
 /**
@@ -27,7 +26,6 @@ export async function fetchAllUserData(userId) {
     const userIdHash = hashUserId(userId);
     
     // DEBUG: Log the query parameters
-    console.log(`[DEBUG] fetchAllUserData - userId: ${userId}, userIdHash: ${userIdHash}`);
     
     const { rows } = await db.query(`
       SELECT 
@@ -59,11 +57,8 @@ export async function fetchAllUserData(userId) {
     `, [ENCRYPTION_KEY, userId]);
     
     if (rows.length === 0) {
-      console.log(`[DEBUG] fetchAllUserData - NO ROWS FOUND for userId: ${userId}`);
       return null;
     }
-    
-    console.log(`[DEBUG] fetchAllUserData - FOUND ${rows.length} row(s) for userId: ${userId}`);
     
     const row = rows[0];
     

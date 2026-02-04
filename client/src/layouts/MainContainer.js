@@ -62,12 +62,9 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
   // CRITICAL: Define goToPage FIRST so it can be used in effects and handlers
   // This must come before any effect that calls it
   const goToPage = useCallback((index) => {
-    console.log(`[MAIN-CONTAINER] goToPage called - Target: ${index}, Current: ${currentPageIndex}, Mode: ${currentMode}`);
     
     // Check if page is allowed in current mode
     const isAllowed = modeRules.isPageAllowed(index);
-    
-    console.log(`[MAIN-CONTAINER] Navigation to page ${index} - Allowed: ${isAllowed}`);
     
     if (!isAllowed) {
       console.error(`[MAIN-CONTAINER] Navigation to page ${index} BLOCKED by mode rules (${currentMode})`);
@@ -116,25 +113,18 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
     const personalInfoCompleted = onboarding?.onboardingStatus?.completedSteps?.personal_info === true;
     const isFreeTrial = currentMode === 'free_trial';
     
-    console.log(`[MAIN-CONTAINER] startingPage effect - startingPage: ${startingPage}, currentPageIndex: ${currentPageIndex}, isOnboarding: ${isStillOnboarding}, mode: ${currentMode}, isFreeTrial: ${isFreeTrial}`);
-    
     // SKIP this effect entirely for free trial users - they control their own navigation
     if (isFreeTrial) {
-      console.log(`[MAIN-CONTAINER] Skipping startingPage effect - FREE_TRIAL mode`);
       return;
     }
     
     // If user is onboarding AND startingPage changes, navigate to that page
     // UNLESS personal_info is complete and we're on Chat (0) - don't force back to PersonalInfo
     if (isStillOnboarding && startingPage !== currentPageIndex) {
-      console.log(`[MAIN-CONTAINER] startingPage effect triggering navigation from ${currentPageIndex} to ${startingPage}`);
       // Special case: If personal_info is done and we're on Chat (showing welcome), don't navigate away
       if (personalInfoCompleted && currentPageIndex === 0 && startingPage === 1) {
-        console.log(`[MAIN-CONTAINER] Skipping navigation - personal_info complete and on Chat`);
         return;
       }
-      
-      console.log(`[MAIN-CONTAINER] Forcing navigation to startingPage: ${startingPage}`);
       goToPage(startingPage);
     }
     // IMPORTANT: Dependency array excludes currentPageIndex to avoid fighting with programmatic navigation
