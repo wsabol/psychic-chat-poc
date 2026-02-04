@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
 import { useTranslation } from '../context/TranslationContext';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { LoginForm } from './LoginForm';
 import { RegisterForm } from './RegisterForm';
+import { SocialProviders } from './SocialProviders';
 import { useRegistrationFlow } from '../hooks/useRegistrationFlow';
 
 /**
@@ -31,7 +32,6 @@ export function Login() {
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   
   const { registerWithEmail } = useRegistrationFlow();
-  const googleProvider = new GoogleAuthProvider();
 
   // ===== BROWSER BACK BUTTON SUPPORT =====
   useEffect(() => {
@@ -124,27 +124,6 @@ export function Login() {
     }
   };
 
-  // ===== GOOGLE LOGIN =====
-  const handleGoogleLogin = async () => {
-    // On register mode, check terms/privacy acceptance
-    if (mode === 'register') {
-      if (!termsAccepted || !privacyAccepted) {
-        setError(t('login.acceptTermsAndPrivacy'));
-        return;
-      }
-    }
-
-    setLoading(true);
-    setError('');
-
-    try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // ===== MODE SWITCH HANDLERS =====
   const handleSwitchToRegister = () => {
@@ -292,36 +271,16 @@ export function Login() {
           </div>
         )}
 
-        {/* DIVIDER AND GOOGLE LOGIN - Only on login and register, not forgot password */}
+        {/* SOCIAL PROVIDERS - Only on login and register, not forgot password */}
         {mode !== 'forgot' && (
-          <>
-            <div style={{ margin: '1rem 0', textAlign: 'center' }}>
-              <p style={{ marginBottom: '0.5rem' }}>{t('login.or')}</p>
-            </div>
-
-            {/* GOOGLE LOGIN */}
-            {/* On register mode: disabled until terms and privacy are accepted */}
-            {/* On login mode: always enabled */}
-            <button
-              onClick={handleGoogleLogin}
-              disabled={loading || (mode === 'register' && (!termsAccepted || !privacyAccepted))}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                borderRadius: '5px',
-                border: '1px solid #ddd',
-                backgroundColor: mode === 'register' && (!termsAccepted || !privacyAccepted) ? '#ccc' : '#fff',
-                color: mode === 'register' && (!termsAccepted || !privacyAccepted) ? '#999' : '#333',
-                fontSize: '1rem',
-                cursor: loading || (mode === 'register' && (!termsAccepted || !privacyAccepted)) ? 'not-allowed' : 'pointer',
-                fontWeight: 'bold',
-                opacity: mode === 'register' && (!termsAccepted || !privacyAccepted) ? 0.6 : 1
-              }}
-              title={mode === 'register' && (!termsAccepted || !privacyAccepted) ? t('login.acceptTermsAndPrivacy') : ''}
-            >
-              {t('login.googleSignIn')}
-            </button>
-          </>
+          <SocialProviders
+            mode={mode}
+            termsAccepted={termsAccepted}
+            privacyAccepted={privacyAccepted}
+            loading={loading}
+            setLoading={setLoading}
+            setError={setError}
+          />
         )}
       </div>
     </div>
