@@ -9,8 +9,11 @@ import PaymentMethodsEmpty from './components/PaymentMethodsEmpty';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
 import '../PaymentMethodPage.css';
 
-const stripePublicKey = process.env.REACT_APP_STRIPE_PUBLIC_KEY || 'pk_test_51RvatUJMQqFkSDqnqnpj19zERg4ECXj9ZpSUloXyNEf6SqusJ0N6PJQXnyrap5POm8ynwuXomOSJh1RUX7AlieyI007B3VSIru';
-const stripePromise = loadStripe(stripePublicKey);
+const stripePublicKey = process.env.REACT_APP_STRIPE_PUBLIC_KEY;
+if (!stripePublicKey) {
+  console.error('REACT_APP_STRIPE_PUBLIC_KEY environment variable is required');
+}
+const stripePromise = stripePublicKey ? loadStripe(stripePublicKey) : null;
 
 /**
  * PaymentMethodPage - Manage payment methods

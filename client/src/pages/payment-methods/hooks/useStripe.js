@@ -18,8 +18,12 @@ export function useStripe() {
       return null;
     }
 
-        try {
-      const stripeKey = process.env.REACT_APP_STRIPE_PUBLIC_KEY || 'pk_test_51RvatUJMQqFkSDqnqnpj19zERg4ECXj9ZpSUloXyNEf6SqusJ0N6PJQXnyrap5POm8ynwuXomOSJh1RUX7AlieyI007B3VSIru';
+    try {
+      const stripeKey = process.env.REACT_APP_STRIPE_PUBLIC_KEY;
+      if (!stripeKey) {
+        logErrorFromCatch('REACT_APP_STRIPE_PUBLIC_KEY environment variable is required');
+        return null;
+      }
       stripeRef.current = window.Stripe(stripeKey);
       return stripeRef.current;
     } catch (err) {
