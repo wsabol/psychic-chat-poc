@@ -1,0 +1,25 @@
+version = 0.1
+
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "psychic-chat-ecs-production"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-4qhnkumsyezv"
+s3_prefix = "psychic-chat-ecs"
+region = "us-east-1"  # Change to your region
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = [
+    "Environment=production",
+    "VpcId=vpc-07b8de20018dab999",
+    "PublicSubnetIds=\"subnet-0755c6ea83eccced7,subnet-0725e8d68e30ba9c2\"",
+    "PrivateSubnetIds=\"subnet-01f00965ec108975c,subnet-0d443a7d048f24989\"",
+    "DatabaseSecretArn=\"arn:aws:secretsmanager:us-east-1:586337033065:secret:psychic-chat/database-SOXfL3\"", 
+    "FirebaseSecretArn=\"arn:aws:secretsmanager:us-east-1:586337033065:secret:psychic-chat/firebase-n0BNty\"", 
+    "EncryptionSecretArn=\"arn:aws:secretsmanager:us-east-1:586337033065:secret:psychic-chat/encryption-4i2tL3\"",
+    "StripeSecretArn=\"arn:aws:secretsmanager:us-east-1:586337033065:secret:psychic-chat/stripe-LvGISE\"",
+    "CertificateArn=\"arn:aws:acm:us-east-1:586337033065:certificate/a0efe242-b6eb-42c9-8a39-844232d6ea58\"",
+    # "DomainName=api.starshippsychics.com",
+]
+confirm_changeset = true
+disable_rollback = false
+image_repositories = []

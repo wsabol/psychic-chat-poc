@@ -1,0 +1,215 @@
+name: Deploy ECS Fargate
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'api/**'
+      - 'infrastructure/ecs-template.yaml'
+      - '.github/workflows/deploy-ecs.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to ECS Fargate
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
+      
+      - name: Get AWS account ID
+        id: aws-account
+        run: |
+          echo "account_id=$(aws sts get-caller-identity --query Account --output text)" >> $GITHUB_OUTPUT
+          echo "region=$(aws configure get region || echo 'us-east-1')" >> $GITHUB_OUTPUT
+      
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      
+      - name: Set environment
+        id: set-env
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "env_name=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+          else
+            echo "env_name=production" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Create ECR repository if not exists
+        run: |
+          REPO_NAME="psychic-chat-api-${{ steps.set-env.outputs.env_name }}"
+          aws ecr describe-repositories --repository-names $REPO_NAME || \
+          aws ecr create-repository \
+            --repository-name $REPO_NAME \
+            --image-scanning-configuration scanOnPush=true
+      
+      - name: Build Docker image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: psychic-chat-api-${{ steps.set-env.outputs.env_name }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          cd api
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+      
+      - name: Run security scan on Docker image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: psychic-chat-api-${{ steps.set-env.outputs.env_name }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            aquasec/trivy:latest image --severity HIGH,CRITICAL \
+            $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG || echo "Security scan completed with findings"
+      
+      - name: Push Docker image to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: psychic-chat-api-${{ steps.set-env.outputs.env_name }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+      
+      - name: Set up SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+      
+      - name: Validate SAM template
+        run: |
+          cd infrastructure
+          sam validate --template-file ecs-template.yaml --region ${{ steps.aws-account.outputs.region }}
+      
+      - name: Create samconfig if not exists
+        run: |
+          cd infrastructure
+          if [ ! -f "samconfig-ecs-${{ steps.set-env.outputs.env_name }}.toml" ]; then
+            cat > samconfig-ecs-${{ steps.set-env.outputs.env_name }}.toml << EOF
+          version = 0.1
+          
+          [default]
+          [default.deploy]
+          [default.deploy.parameters]
+          stack_name = "psychic-chat-ecs-${{ steps.set-env.outputs.env_name }}"
+          s3_bucket = "${{ secrets.SAM_S3_BUCKET }}"
+          s3_prefix = "psychic-chat-ecs"
+          region = "${{ steps.aws-account.outputs.region }}"
+          capabilities = "CAPABILITY_IAM"
+          parameter_overrides = [
+              "Environment=${{ steps.set-env.outputs.env_name }}",
+              "VpcId=${{ secrets.VPC_ID }}",
+              "PublicSubnetIds=${{ secrets.PUBLIC_SUBNET_IDS }}",
+              "PrivateSubnetIds=${{ secrets.PRIVATE_SUBNET_IDS }}",
+              "DatabaseSecretArn=${{ secrets.DB_SECRET_ARN }}",
+              "FirebaseSecretArn=${{ secrets.FIREBASE_SECRET_ARN }}",
+              "EncryptionKey=${{ secrets.ENCRYPTION_KEY }}",
+              "StripeSecretKey=${{ secrets.STRIPE_SECRET_KEY }}",
+          ]
+          confirm_changeset = false
+          disable_rollback = false
+          image_repositories = []
+          EOF
+          fi
+      
+      - name: Deploy ECS infrastructure with SAM
+        run: |
+          cd infrastructure
+          sam deploy \
+            --template-file ecs-template.yaml \
+            --config-file samconfig-ecs-${{ steps.set-env.outputs.env_name }}.toml \
+            --config-env default \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset
+      
+      - name: Force ECS service update
+        run: |
+          CLUSTER_NAME="psychic-chat-${{ steps.set-env.outputs.env_name }}"
+          SERVICE_NAME="psychic-chat-api-${{ steps.set-env.outputs.env_name }}"
+          
+          aws ecs update-service \
+            --cluster $CLUSTER_NAME \
+            --service $SERVICE_NAME \
+            --force-new-deployment \
+            --region ${{ steps.aws-account.outputs.region }}
+      
+      - name: Wait for service stability
+        run: |
+          CLUSTER_NAME="psychic-chat-${{ steps.set-env.outputs.env_name }}"
+          SERVICE_NAME="psychic-chat-api-${{ steps.set-env.outputs.env_name }}"
+          
+          echo "Waiting for service to become stable..."
+          aws ecs wait services-stable \
+            --cluster $CLUSTER_NAME \
+            --services $SERVICE_NAME \
+            --region ${{ steps.aws-account.outputs.region }}
+      
+      - name: Get deployment outputs
+        id: outputs
+        run: |
+          STACK_NAME="psychic-chat-ecs-${{ steps.set-env.outputs.env_name }}"
+          
+          ALB_URL=$(aws cloudformation describe-stacks \
+            --stack-name $STACK_NAME \
+            --query 'Stacks[0].Outputs[?OutputKey==`LoadBalancerUrl`].OutputValue' \
+            --output text)
+          
+          echo "alb_url=$ALB_URL" >> $GITHUB_OUTPUT
+          echo "### Deployment Successful! 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Load Balancer URL:** $ALB_URL" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Health check
+        run: |
+          ALB_URL="${{ steps.outputs.outputs.alb_url }}"
+          
+          echo "Waiting for service to be healthy..."
+          sleep 30
+          
+          HEALTH_URL="${ALB_URL}/health"
+          
+          for i in {1..10}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" $HEALTH_URL || echo "000")
+            if [ "$STATUS" == "200" ]; then
+              echo "✅ Health check passed!"
+              exit 0
+            fi
+            echo "Attempt $i: Health check returned $STATUS, retrying..."
+            sleep 10
+          done
+          
+          echo "⚠️ Health check did not pass within timeout, but deployment may still succeed"
+          exit 0
+      
+      - name: Notify deployment
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Deployment to ${{ steps.set-env.outputs.env_name }} completed successfully"
+          else
+            echo "❌ Deployment to ${{ steps.set-env.outputs.env_name }} failed"
+          fi

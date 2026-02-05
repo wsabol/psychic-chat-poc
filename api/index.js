@@ -124,6 +124,11 @@ app.get('/', (req, res) => {
     successResponse(res, { message: 'Welcome to the Psychic Chat API' });
 });
 
+// Health check endpoint (for ECS Fargate health checks)
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
+});
+
 // Public auth routes (no authentication required)
 app.use("/auth", authRoutes);
 app.use("/auth", consentRoutes);
