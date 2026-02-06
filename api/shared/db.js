@@ -43,6 +43,9 @@ function getPool() {
     if (!pool) {
         pool = new Pool({
             connectionString: process.env.DATABASE_URL,
+            ssl: {
+                rejectUnauthorized: false  // AWS RDS requires SSL but uses self-signed certificates
+            }
         });
 
         // Test the connection on first use

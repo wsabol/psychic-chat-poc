@@ -55,12 +55,28 @@ if (contactForm) {
     contactForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
+        // Disable submit button to prevent double submission
+        const submitButton = contactForm.querySelector('button[type="submit"]');
+        const originalButtonText = submitButton.textContent;
+        submitButton.disabled = true;
+        submitButton.textContent = 'Sending...';
+        
         // Get form data
         const formData = {
-            name: document.getElementById('name').value,
-            email: document.getElementById('email').value,
-            message: document.getElementById('message').value
+            name: document.getElementById('name').value.trim(),
+            email: document.getElementById('email').value.trim(),
+            message: document.getElementById('message').value.trim()
         };
+        
+        // Basic validation
+        if (!formData.name || !formData.email || !formData.message) {
+            formMessage.textContent = 'Please fill in all fields.';
+            formMessage.className = 'form-message error';
+            formMessage.style.display = 'block';
+            submitButton.disabled = false;
+            submitButton.textContent = originalButtonText;
+            return;
+        }
         
         // Show loading message
         formMessage.textContent = 'Sending message...';
@@ -68,34 +84,47 @@ if (contactForm) {
         formMessage.style.display = 'block';
         
         try {
-            // IMPORTANT: You need to configure this to send to your actual email
-            // Options:
-            // 1. Use AWS SES (Simple Email Service)
-            // 2. Use a form service like Formspree, Form submit, etc.
-            // 3. Create an API endpoint that sends emails
+            // Create mailto link with form data
+            const subject = encodeURIComponent('Contact Form Submission from ' + formData.name);
+            const body = encodeURIComponent(
+                `Name: ${formData.name}\n` +
+                `Email: ${formData.email}\n\n` +
+                `Message:\n${formData.message}\n\n` +
+                `---\nSent from starshippsychics.com contact form`
+            );
+            const mailtoLink = `mailto:info@starshippsychics.com?subject=${subject}&body=${body}`;
             
-            // For now, this will just send to mailto
-            const mailtoLink = `mailto:info@starshippsychics.com?subject=Contact Form Submission from ${encodeURIComponent(formData.name)}&body=${encodeURIComponent(`Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`)}`;
-            
-            // Simulating form submission
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Open mailto link
+            window.location.href = mailtoLink;
             
             // Show success message
-            formMessage.textContent = 'Thank you! Your message has been received. We\'ll get back to you within 24 hours.';
+            formMessage.textContent = 'Opening your email client... Please send the pre-filled message or email us directly at info@starshippsychics.com';
             formMessage.className = 'form-message success';
             
-            // Reset form
-            contactForm.reset();
+            // Reset form after a delay
+            setTimeout(() => {
+                contactForm.reset();
+            }, 2000);
             
-            // Hide message after 5 seconds
+            // Hide message after 10 seconds
             setTimeout(() => {
                 formMessage.style.display = 'none';
-            }, 5000);
+            }, 10000);
             
         } catch (error) {
+            console.error('Contact form error:', error);
             // Show error message
-            formMessage.textContent = 'Sorry, there was an error sending your message. Please email us directly at info@starshippsychics.com';
+            formMessage.textContent = error.message || 'Sorry, there was an error sending your message. Please email us directly at info@starshippsychics.com';
             formMessage.className = 'form-message error';
+            
+            // Hide error message after 10 seconds
+            setTimeout(() => {
+                formMessage.style.display = 'none';
+            }, 10000);
+        } finally {
+            // Re-enable submit button
+            submitButton.disabled = false;
+            submitButton.textContent = originalButtonText;
         }
     });
 }

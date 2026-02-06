@@ -11,15 +11,19 @@ const FROM_EMAIL = 'info@starshippsychics.com';
 sgMail.setApiKey(SENDGRID_API_KEY);
 
 export const handler = async (event) => {
+    // CORS headers for all responses
+    const corsHeaders = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Accept',
+        'Access-Control-Max-Age': '86400',
+    };
+
     // Handle CORS preflight
-    if (event.requestContext.http.method === 'OPTIONS') {
+    if (event.requestContext && event.requestContext.http && event.requestContext.http.method === 'OPTIONS') {
         return {
             statusCode: 200,
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'POST, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type',
-            },
+            headers: corsHeaders,
             body: ''
         };
     }
