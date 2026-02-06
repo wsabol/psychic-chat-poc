@@ -2,26 +2,45 @@ import pkg from "pg";
 const { Pool } = pkg;
 import { logCritical } from './errorLogger.js';
 
+// Construct DATABASE_URL from individual env vars if not already set (for ECS deployment)
+// This must happen at module load time, before any other code runs
+if (!process.env.DATABASE_URL && process.env.DB_HOST) {
+    const dbUser = process.env.DB_USER || 'postgres';
+    const dbPassword = process.env.DB_PASSWORD;
+    const dbHost = process.env.DB_HOST;
+    const dbPort = process.env.DB_PORT || '5432';
+    const dbName = process.env.DB_NAME || 'postgres';
+    
+    if (!dbPassword) {
+        console.error('❌ FATAL ERROR: DB_PASSWORD environment variable is not set!');
+        throw new Error('DB_PASSWORD environment variable is required');
+    }
+    
+    process.env.DATABASE_URL = `postgres://${dbUser}:${dbPassword}@${dbHost}:${dbPort}/${dbName}`;
+    console.log('✅ Constructed DATABASE_URL from individual DB environment variables');
+}
+
+// Validate that DATABASE_URL is set
+if (!process.env.DATABASE_URL) {
+    console.error('❌ FATAL ERROR: DATABASE_URL environment variable is not set!');
+    console.error('Please check your .env file and ensure DATABASE_URL is defined.');
+    console.error('Alternatively, set DB_HOST, DB_USER, DB_PASSWORD, DB_PORT, and DB_NAME.');
+    throw new Error('DATABASE_URL environment variable is required');
+}
+
+// Validate that DATABASE_URL contains a password
+const url = process.env.DATABASE_URL;
+if (!url.includes(':') || !url.includes('@')) {
+    console.error('❌ FATAL ERROR: DATABASE_URL is malformed. It should include username and password.');
+    console.error('Expected format: postgres://username:password@host:port/database');
+    throw new Error('DATABASE_URL is malformed');
+}
+
 let pool = null;
 let connectionTested = false;
 
 function getPool() {
     if (!pool) {
-        // Validate that DATABASE_URL is set
-        if (!process.env.DATABASE_URL) {
-            console.error('❌ FATAL ERROR: DATABASE_URL environment variable is not set!');
-            console.error('Please check your .env file and ensure DATABASE_URL is defined.');
-            throw new Error('DATABASE_URL environment variable is required');
-        }
-
-        // Validate that DATABASE_URL contains a password
-        const url = process.env.DATABASE_URL;
-        if (!url.includes(':') || !url.includes('@')) {
-            console.error('❌ FATAL ERROR: DATABASE_URL is malformed. It should include username and password.');
-            console.error('Expected format: postgres://username:password@host:port/database');
-            throw new Error('DATABASE_URL is malformed');
-        }
-
         pool = new Pool({
             connectionString: process.env.DATABASE_URL,
         });

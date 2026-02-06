@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Contact Form Lambda for Starship Psychics
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 256
+    Runtime: nodejs20.x
+    Architectures:
+      - x86_64
+
+Parameters:
+  SendGridApiKey:
+    Type: String
+    Description: SendGrid API Key
+    NoEcho: true
+
+Resources:
+  ContactFormFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: index.handler
+      Environment:
+        Variables:
+          SENDGRID_API_KEY: !Ref SendGridApiKey
+      FunctionUrlConfig:
+        AuthType: NONE
+        Cors:
+          AllowOrigins:
+            - 'https://starshippsychics.com'
+            - 'https://www.starshippsychics.com'
+            - 'http://www.starshippsychics.com.s3-website-us-east-1.amazonaws.com'
+          AllowMethods:
+            - POST
+            - OPTIONS
+          AllowHeaders:
+            - Content-Type
+
+Outputs:
+  ContactFormUrl:
+    Description: "Lambda Function URL for Contact Form"
+    Value: !GetAtt ContactFormFunction.FunctionUrl

@@ -32,6 +32,7 @@ import priceManagementRoutes from "./routes/admin/price-management.js";
 import securityMetricsRoutes from "./routes/admin/security-metrics.js";
 import legalDataRequestsRoutes from "./routes/admin/legal-data-requests.js";
 import logsRoutes from "./routes/logs.js";
+import contactRoutes from "./routes/contact.js";
 import { authenticateToken } from "./middleware/auth.js";
 import { validateUserHash } from "./middleware/userHashValidation.js";
 import cors from "cors";
@@ -48,6 +49,10 @@ import redis from './shared/redis.js';
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 const app = express();
+
+// Trust proxy - required for ALB/Load Balancer X-Forwarded-For headers
+// Set to 1 to trust only the first proxy (the ALB)
+app.set('trust proxy', 1);
 
 // Security: Apply helmet middleware first (sets many secure headers automatically)
 app.use(helmet({
@@ -87,9 +92,26 @@ app.use(helmet({
     }
 }));
 
-// Allow client at 3001. Adjust as needed or use an env var.
+// Allow client at 3001 and marketing website. Adjust as needed or use an env var.
 app.use(cors({
-    origin: process.env.CORS_ORIGIN || "http://localhost:3001",
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        const allowedOrigins = [
+            'http://localhost:3001',          // React app (development)
+            'http://localhost:3000',          // Marketing website (development - if served locally)
+            'https://starshippsychics.com',   // Marketing website (production)
+            'https://www.starshippsychics.com', // Marketing website with www (production)
+            process.env.CORS_ORIGIN           // Additional origin from env var
+        ].filter(Boolean); // Remove any undefined values
+        
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
 }));
 
@@ -144,6 +166,9 @@ app.use("/api/logs", logsRoutes);
 
 // Public free trial routes (no authentication required - temp users don't have tokens yet)
 app.use("/free-trial", freeTrialRoutes);
+
+// Public contact form route (no authentication required - marketing website)
+app.use("/api/contact", contactRoutes);
 
 // Violation reports (admin only)
 app.use("/violations", authenticateToken, violationReportsRoutes);
