@@ -13,6 +13,17 @@ import { validationError, serverError, successResponse } from '../utils/response
 const router = express.Router();
 
 /**
+ * OPTIONS /logs/error
+ * Handle CORS preflight requests
+ */
+router.options('/error', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.sendStatus(200);
+});
+
+/**
  * POST /logs/error
  * Receive and log client-side errors to database
  */

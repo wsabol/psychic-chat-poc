@@ -15,12 +15,14 @@
     "subtitle": "Ask me anything about your journey",
     "placeholder": "Ask the oracle a question...",
     "send": "Send",
+    "sending": "Sending...",
     "thinking": "Oracle is thinking...",
     "sessionExpired": "Your session has expired",
     "reconnecting": "Reconnecting...",
     "toggleMore": "📖 Tell me more",
     "toggleLess": "📋 Show less",
-    "noMessages": "No messages yet. Ask the oracle a question."
+    "noMessages": "No messages yet. Ask the oracle a question.",
+    "privacyNotice": "By submitting this web form you agree to our processing of your personal data as provided in the Privacy Policy"
   },
   "thankyou": {
     "title": "Thank You!",
@@ -38,5 +40,9 @@
     "aboutUs": "About Us",
     "terms": "Terms of Service",
     "privacy": "Privacy Policy"
+  },
+  "personalInfo": {
+    "title": "Personal Information",
+    "privacyNotice": "By submitting this web form you agree to our processing of your personal data as provided in the Privacy Policy"
   }
 }

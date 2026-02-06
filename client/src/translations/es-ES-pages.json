@@ -15,12 +15,14 @@
     "subtitle": "Preguntale al oráculo cualquier cosa sobre tu viaje",
     "placeholder": "Preguntale al oráculo una pregunta...",
     "send": "Enviar",
+    "sending": "Enviando...",
     "thinking": "El oráculo está pensando...",
     "sessionExpired": "Su sesión ha expirado",
     "reconnecting": "Reconectando...",
     "toggleMore": "📖 Cuéntame más",
     "toggleLess": "📋 Mostrar menos",
-    "noMessages": "Sin mensajes aún. Preguntale al oráculo una pregunta."
+    "noMessages": "Sin mensajes aún. Preguntale al oráculo una pregunta.",
+    "privacyNotice": "Al enviar este formulario web, acepta nuestro procesamiento de sus datos personales según lo establecido en la Política de Privacidad"
   },
   "thankyou": {
     "title": "¡Gracias!",
@@ -38,5 +40,9 @@
     "aboutUs": "Acerca de Nosotros",
     "terms": "Términos de Servicio",
     "privacy": "Política de Privacidad"
+  },
+  "personalInfo": {
+    "title": "Información Personal",
+    "privacyNotice": "Al enviar este formulario web, acepta nuestro procesamiento de sus datos personales según lo establecido en la Política de Privacidad"
   }
 }

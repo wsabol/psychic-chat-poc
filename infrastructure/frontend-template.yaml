@@ -20,19 +20,16 @@ Parameters:
     Description: Route53 Hosted Zone ID for starshippsychics.com
 
 Resources:
-  # S3 Bucket for Static Website Hosting
+  # S3 Bucket for Static Content (CloudFront Only Access)
   ClientAppBucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub '${Environment}-psychic-chat-client'
       PublicAccessBlockConfiguration:
-        BlockPublicAcls: false
-        BlockPublicPolicy: false
-        IgnorePublicAcls: false
-        RestrictPublicBuckets: false
-      WebsiteConfiguration:
-        IndexDocument: index.html
-        ErrorDocument: index.html
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
       CorsConfiguration:
         CorsRules:
           - AllowedOrigins:
@@ -49,16 +46,17 @@ Resources:
         - Key: Application
           Value: PsychicChat
 
-  # S3 Bucket Policy - Public Read Access
+  # S3 Bucket Policy - CloudFront OAI Access Only
   ClientAppBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
       Bucket: !Ref ClientAppBucket
       PolicyDocument:
         Statement:
-          - Sid: PublicReadGetObject
+          - Sid: CloudFrontOAIAccess
             Effect: Allow
-            Principal: '*'
+            Principal:
+              AWS: !Sub 'arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${CloudFrontOriginAccessIdentity}'
             Action: s3:GetObject
             Resource: !Sub '${ClientAppBucket.Arn}/*'
 
@@ -98,12 +96,7 @@ Resources:
           - Id: S3Origin
             DomainName: !GetAtt ClientAppBucket.RegionalDomainName
             S3OriginConfig:
-              OriginAccessIdentity: ''
-            # Use website endpoint for SPA routing
-            CustomOriginConfig:
-              HTTPPort: 80
-              HTTPSPort: 443
-              OriginProtocolPolicy: http-only
+              OriginAccessIdentity: !Sub 'origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}'
         DefaultCacheBehavior:
           TargetOriginId: S3Origin
           ViewerProtocolPolicy: redirect-to-https
@@ -161,10 +154,6 @@ Outputs:
     Value: !Ref ClientAppBucket
     Export:
       Name: !Sub '${Environment}-ClientAppBucket'
-
-  BucketWebsiteURL:
-    Description: S3 Website URL
-    Value: !GetAtt ClientAppBucket.WebsiteURL
 
   CloudFrontDistributionId:
     Description: CloudFront Distribution ID

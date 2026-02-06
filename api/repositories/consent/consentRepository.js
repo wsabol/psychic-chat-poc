@@ -116,15 +116,16 @@ export async function upsertDataProcessingConsents(data) {
     `INSERT INTO user_consents (
       user_id_hash,
       consent_astrology, 
-      consent_health_data, 
+      consent_health_wellness, 
       consent_chat_analysis,
       agreed_from_ip_encrypted, 
       user_agent_encrypted,
-      agreed_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, NOW())
+      created_at,
+      updated_at
+    ) VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
     ON CONFLICT (user_id_hash) DO UPDATE SET
       consent_astrology = $2,
-      consent_health_data = $3,
+      consent_health_wellness = $3,
       consent_chat_analysis = $4,
       agreed_from_ip_encrypted = $5,
       user_agent_encrypted = $6,
@@ -154,7 +155,7 @@ export async function getConsentByType(userId, consentType) {
   
   const consentColumnMap = {
     'astrology': 'consent_astrology',
-    'health_data': 'consent_health_data',
+    'health_data': 'consent_health_wellness',
     'chat_analysis': 'consent_chat_analysis'
   };
   

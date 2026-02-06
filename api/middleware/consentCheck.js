@@ -4,6 +4,7 @@
  */
 
 import { db } from '../shared/db.js';
+import { hashUserId } from '../shared/hashUtils.js';
 import { authError, validationError, forbiddenError, serverError } from '../utils/responses.js';
 
 /**
@@ -23,7 +24,7 @@ export function requireConsent(consentType) {
       // Map consent type to column name
       const consentColumnMap = {
         'astrology': 'consent_astrology',
-        'health_data': 'consent_health_data',
+        'health_data': 'consent_health_wellness',
         'chat_analysis': 'consent_chat_analysis'
       };
 
@@ -33,11 +34,12 @@ export function requireConsent(consentType) {
       }
 
       // Check consent in database
+      const userIdHash = hashUserId(userId);
       const result = await db.query(
         `SELECT ${columnName} as has_consent 
          FROM user_consents 
-         WHERE user_id = $1`,
-        [userId]
+         WHERE user_id_hash = $1`,
+        [userIdHash]
       );
 
       const hasConsent = result.rows.length > 0 ? result.rows[0].has_consent : false;
@@ -71,9 +73,10 @@ export async function checkConsentExists(req, res, next) {
       return authError(res, 'User not authenticated');
     }
 
+    const userIdHash = hashUserId(userId);
     const result = await db.query(
-      'SELECT id FROM user_consents WHERE user_id = $1',
-      [userId]
+      'SELECT id FROM user_consents WHERE user_id_hash = $1',
+      [userIdHash]
     );
 
         if (result.rows.length === 0) {
