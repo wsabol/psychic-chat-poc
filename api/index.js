@@ -103,6 +103,7 @@ app.use(cors({
             'http://localhost:3000',          // Marketing website (development - if served locally)
             'https://starshippsychics.com',   // Marketing website (production)
             'https://www.starshippsychics.com', // Marketing website with www (production)
+            'https://app.starshippsychics.com', // React app (production)
             process.env.CORS_ORIGIN           // Additional origin from env var
         ].filter(Boolean); // Remove any undefined values
         

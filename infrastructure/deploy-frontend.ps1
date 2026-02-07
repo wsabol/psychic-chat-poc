@@ -32,16 +32,49 @@ Write-Host "Using Hosted Zone ID for starshippsychics.com..." -ForegroundColor Y
 $hostedZoneId = "Z064791524UJ1R2U2CGTU"
 Write-Host "Hosted Zone ID: $hostedZoneId" -ForegroundColor Green
 
-# Check if build exists
+# Build React app with production environment
 Write-Host ""
-Write-Host "Checking if build exists..." -ForegroundColor Yellow
-$buildPath = Join-Path $PSScriptRoot "..\client\build"
-if (-not (Test-Path $buildPath)) {
-    Write-Host "Build folder not found at: $buildPath" -ForegroundColor Red
-    Write-Host "Please run 'npm run build' from the client directory first" -ForegroundColor Yellow
+Write-Host "Building React app with production environment..." -ForegroundColor Yellow
+$clientPath = Join-Path $PSScriptRoot "..\client"
+$buildPath = Join-Path $clientPath "build"
+
+# Remove old build if exists
+if (Test-Path $buildPath) {
+    Write-Host "Removing old build..." -ForegroundColor Yellow
+    Remove-Item -Recurse -Force $buildPath
+}
+
+try {
+    # Set NODE_ENV to production and build
+    $env:NODE_ENV = "production"
+    Set-Location $clientPath
+    
+    Write-Host "Running npm install..." -ForegroundColor Yellow
+    npm install
+    if ($LASTEXITCODE -ne 0) {
+        throw "npm install failed"
+    }
+    
+    Write-Host "Building React app (this may take a few minutes)..." -ForegroundColor Yellow
+    npm run build
+    if ($LASTEXITCODE -ne 0) {
+        throw "npm build failed"
+    }
+    
+    Set-Location $PSScriptRoot
+    Write-Host "Build completed successfully" -ForegroundColor Green
+    Write-Host "Build uses: REACT_APP_API_URL=https://api.starshippsychics.com" -ForegroundColor Green
+} catch {
+    Set-Location $PSScriptRoot
+    Write-Host "Failed to build React app: $_" -ForegroundColor Red
     exit 1
 }
-Write-Host "Build folder found" -ForegroundColor Green
+
+# Verify build exists
+if (-not (Test-Path $buildPath)) {
+    Write-Host "Build folder not found at: $buildPath" -ForegroundColor Red
+    exit 1
+}
 
 # Deploy CloudFormation Stack
 Write-Host ""
@@ -127,13 +160,13 @@ Write-Host "S3 Bucket: $bucketName" -ForegroundColor Cyan
 Write-Host "CloudFront Distribution: $distributionId" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Important Notes:" -ForegroundColor Yellow
-Write-Host "1. If this is the first deployment, DNS propagation may take up to 48 hours" -ForegroundColor White
-Write-Host "2. CloudFront distribution may take 15-20 minutes to fully deploy" -ForegroundColor White
-Write-Host "3. Check ACM certificate status in AWS Console if HTTPS does not work" -ForegroundColor White
-Write-Host "4. The API is configured to use: https://api.starshippsychics.com" -ForegroundColor White
+Write-Host "1. App was rebuilt with production environment (API: https://api.starshippsychics.com)" -ForegroundColor White
+Write-Host "2. CloudFront cache has been invalidated - changes should appear in ~5 minutes" -ForegroundColor White
+Write-Host "3. If HTTPS doesn't work, check ACM certificate status in AWS Console" -ForegroundColor White
+Write-Host "4. Check browser console at https://$Domain for any API connection issues" -ForegroundColor White
 Write-Host ""
-Write-Host "Test the deployment:" -ForegroundColor Yellow
-Write-Host "  1. Wait a few minutes for CloudFront to deploy" -ForegroundColor White
-Write-Host "  2. Visit: $websiteURL" -ForegroundColor White
-Write-Host "  3. Check browser console for any API connection issues" -ForegroundColor White
+Write-Host "Troubleshooting:" -ForegroundColor Yellow
+Write-Host "  • If you see CORS errors, verify API CORS allows: https://$Domain" -ForegroundColor White
+Write-Host "  • If you see localhost:3000, wait 5 minutes for CloudFront cache to clear" -ForegroundColor White
+Write-Host "  • Hard refresh browser (Ctrl+Shift+R) to bypass browser cache" -ForegroundColor White
 Write-Host ""

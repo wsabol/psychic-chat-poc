@@ -11,7 +11,7 @@ import {
     getUserGreeting
 } from '../oracle.js';
 import { storeMessage } from '../messages.js';
-import { getUserTimezone, getLocalDateForTimezone, needsRegeneration } from '../utils/timezoneHelper.js';
+import { getUserTimezone, getLocalDateForTimezone, getLocalTimestampForTimezone, needsRegeneration } from '../utils/timezoneHelper.js';
 import { getAstronomicalContext, formatPlanetsForPrompt } from '../utils/astronomicalContext.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
@@ -78,7 +78,8 @@ export async function generateHoroscope(userId, range = 'daily') {
         // Oracle response uses oracleLanguage (can be regional variant), page UI uses userLanguage
         const baseSystemPrompt = getOracleSystemPrompt(isTemporary, oracleLanguage);
         const userGreeting = getUserGreeting(userInfo, userId, isTemporary);
-        const generatedAt = new Date().toISOString();
+        // CRITICAL FIX: Use user's local timezone for generated_at timestamp
+        const generatedAt = getLocalTimestampForTimezone(userTimezone);
         
         // Generate the horoscope
         try {
@@ -126,7 +127,8 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
                 range,  // horoscopeRange
                 null,   // moonPhase
                 null,   // contentType
-                todayLocalDate
+                todayLocalDate,
+                generatedAt  // createdAtLocalTimestamp - use local timezone timestamp
             );
             
             // Publish SSE notification via Redis

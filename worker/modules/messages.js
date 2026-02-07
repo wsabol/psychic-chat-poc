@@ -70,6 +70,7 @@ export async function getMessageHistory(userId, limit = 10) {
  * @param {string} moonPhase - For moon phases: phase name (e.g., 'fullMoon', 'newMoon')
  * @param {string} contentType - Optional content type descriptor
  * @param {string} createdAtLocalDate - Creation date in user's local timezone (YYYY-MM-DD)
+ * @param {string} createdAtLocalTimestamp - Creation timestamp in user's local timezone with offset (ISO format)
  */
 export async function storeMessage(
     userId, 
@@ -82,7 +83,8 @@ export async function storeMessage(
         horoscopeRange = null, 
     moonPhase = null, 
     contentType = null,
-    createdAtLocalDate = null
+    createdAtLocalDate = null,
+    createdAtLocalTimestamp = null
 ) {
     try {
         const userIdHash = hashUserId(userId);
@@ -104,14 +106,15 @@ export async function storeMessage(
                 content_brief_lang_encrypted, 
                 language_code, 
                 response_type,
-                                horoscope_range,
+                horoscope_range,
                 moon_phase,
                 content_type,
-                created_at_local_date
+                created_at_local_date,
+                created_at
             ) VALUES(
                 $1, $2, pgp_sym_encrypt($3, $6), pgp_sym_encrypt($4, $6), 
                 pgp_sym_encrypt($5, $6), pgp_sym_encrypt($7, $6), 
-                $8, 'both', $9, $10, $11, $12
+                $8, 'both', $9, $10, $11, $12, $13
             )`;
             params = [
                 userIdHash,
@@ -125,7 +128,8 @@ export async function storeMessage(
                 horoscopeRange,
                 moonPhase,
                 contentType,
-                createdAtLocalDate
+                createdAtLocalDate,
+                createdAtLocalTimestamp || new Date().toISOString()
             ];
         } else {
             // Store only English (baseline) - no language-specific content
@@ -138,10 +142,11 @@ export async function storeMessage(
                 horoscope_range,
                 moon_phase,
                 content_type,
-                created_at_local_date
+                created_at_local_date,
+                created_at
             ) VALUES(
                 $1, $2, pgp_sym_encrypt($3, $4), pgp_sym_encrypt($5, $4), 
-                'both', $6, $7, $8, $9
+                'both', $6, $7, $8, $9, $10
             )`;
             params = [
                 userIdHash,
@@ -150,9 +155,10 @@ export async function storeMessage(
                 process.env.ENCRYPTION_KEY,
                 JSON.stringify(contentBrief || { text: '', cards: [] }),
                 horoscopeRange,
-                                moonPhase,
+                moonPhase,
                 contentType,
-                createdAtLocalDate
+                createdAtLocalDate,
+                createdAtLocalTimestamp || new Date().toISOString()
             ];
         }
         

@@ -10,8 +10,8 @@ import {
     getUserGreeting
 } from '../oracle.js';
 import { storeMessage } from '../messages.js';
-import { getUserTimezone, getLocalDateForTimezone, needsRegeneration } from '../utils/timezoneHelper.js';
 import { getAstronomicalContext, formatPlanetsForPrompt } from '../utils/astronomicalContext.js';
+import { getUserTimezone, getLocalDateForTimezone, getLocalTimestampForTimezone, needsRegeneration } from '../utils/timezoneHelper.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
@@ -104,17 +104,20 @@ Do NOT include tarot cards - this is purely lunar + astrological insight enriche
         
         // Store moon phase commentary (already in user's language)
         // Use actualPhase for storage so it matches what frontend requests
+        // CRITICAL FIX: Use user's local timezone for generated_at timestamp
+        const generatedAt = getLocalTimestampForTimezone(userTimezone);
+        
         const moonPhaseData = {
             text: oracleResponses.full,
             phase: actualPhase,
-            generated_at: new Date().toISOString(),
+            generated_at: generatedAt,
             zodiac_sign: astrologyInfo.zodiac_sign
         };
         
         const moonPhaseDataBrief = { 
             text: oracleResponses.brief, 
             phase: actualPhase, 
-            generated_at: new Date().toISOString(), 
+            generated_at: generatedAt, 
             zodiac_sign: astrologyInfo.zodiac_sign 
         };
         
@@ -131,7 +134,8 @@ Do NOT include tarot cards - this is purely lunar + astrological insight enriche
             null,  // horoscopeRange
             actualPhase, // moonPhase - use actualPhase not "current"
             null,  // contentType
-            todayLocalDate
+            todayLocalDate,
+            generatedAt  // createdAtLocalTimestamp - use local timezone timestamp
         );
         
         // Publish SSE notification via Redis

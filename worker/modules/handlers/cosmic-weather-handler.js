@@ -1,6 +1,6 @@
 import { fetchUserAstrology, fetchUserLanguagePreference, fetchUserOracleLanguagePreference, getOracleSystemPrompt, callOracle, getUserGreeting, fetchUserPersonalInfo } from '../oracle.js';
 import { storeMessage } from '../messages.js';
-import { getUserTimezone, getLocalDateForTimezone, needsRegeneration } from '../utils/timezoneHelper.js';
+import { getUserTimezone, getLocalDateForTimezone, getLocalTimestampForTimezone, needsRegeneration } from '../utils/timezoneHelper.js';
 import { db } from '../../shared/db.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { getAstronomicalContext, formatPlanetsForPrompt } from '../utils/astronomicalContext.js';
@@ -78,6 +78,9 @@ Do NOT include tarot cards - this is pure astrological forecasting enriched by t
                 // Call Oracle - response is already in user's preferred language
         const oracleResponses = await callOracle(systemPrompt, [], prompt, true);
         
+        // CRITICAL FIX: Use user's local timezone for generated_at timestamp
+        const generatedAt = getLocalTimestampForTimezone(userTimezone);
+        
         const cosmicWeatherDataFull = {
             text: oracleResponses.full,
             birth_chart: {
@@ -95,12 +98,12 @@ Do NOT include tarot cards - this is pure astrological forecasting enriched by t
                 mercury_degree: astro.mercury_degree
             },
             planets: planets,
-            generated_at: new Date().toISOString()
+            generated_at: generatedAt
         };
         
         const cosmicWeatherDataBrief = {
             text: oracleResponses.brief,
-            generated_at: new Date().toISOString()
+            generated_at: generatedAt
         };
         
                                 // Store message (no translation needed - response is already in user's language)
@@ -115,7 +118,8 @@ Do NOT include tarot cards - this is pure astrological forecasting enriched by t
             null,
             null,
             null,
-            todayLocalDate
+            todayLocalDate,
+            generatedAt  // createdAtLocalTimestamp - use local timezone timestamp
         );
         
         // Publish SSE notification via Redis
