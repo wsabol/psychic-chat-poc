@@ -80,17 +80,36 @@ export function getLocalTimestampForTimezone(timezone = 'UTC') {
     const minute = get('minute');
     const second = get('second');
     
-    // Calculate timezone offset for this timezone
     const localeDateString = `${year}-${month}-${day}T${hour}:${minute}:${second}`;
     
-    // Create a date string that JS will parse in local system time
-    // Then compare to UTC to get the offset for the target timezone
-    const localDate = new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}`);
-    const utcDate = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
-    const targetDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+    // Calculate timezone offset correctly
+    // Create dates representing the same moment in both UTC and target timezone
+    const utcFormatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'UTC',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+    
+    const utcParts = utcFormatter.formatToParts(now);
+    const getUtc = (type) => utcParts.find(p => p.type === type)?.value;
+    
+    // Parse both as UTC to compare
+    const localTimeAsUtc = Date.UTC(
+      parseInt(year), parseInt(month) - 1, parseInt(day),
+      parseInt(hour), parseInt(minute), parseInt(second)
+    );
+    const utcTime = Date.UTC(
+      parseInt(getUtc('year')), parseInt(getUtc('month')) - 1, parseInt(getUtc('day')),
+      parseInt(getUtc('hour')), parseInt(getUtc('minute')), parseInt(getUtc('second'))
+    );
     
     // Calculate offset in minutes
-    const offsetMs = targetDate.getTime() - utcDate.getTime();
+    const offsetMs = localTimeAsUtc - utcTime;
     const offsetMinutes = Math.round(offsetMs / 60000);
     const offsetHours = Math.floor(Math.abs(offsetMinutes) / 60);
     const offsetMins = Math.abs(offsetMinutes) % 60;
