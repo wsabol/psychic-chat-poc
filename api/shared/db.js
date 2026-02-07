@@ -17,7 +17,6 @@ if (!process.env.DATABASE_URL && process.env.DB_HOST) {
     }
     
     process.env.DATABASE_URL = `postgres://${dbUser}:${dbPassword}@${dbHost}:${dbPort}/${dbName}`;
-    console.log('✅ Constructed DATABASE_URL from individual DB environment variables');
 }
 
 // Validate that DATABASE_URL is set

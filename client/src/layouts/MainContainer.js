@@ -67,7 +67,6 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
     const isAllowed = modeRules.isPageAllowed(index);
     
     if (!isAllowed) {
-      console.error(`[MAIN-CONTAINER] Navigation to page ${index} BLOCKED by mode rules (${currentMode})`);
       logErrorFromCatch('[MAIN-CONTAINER] Navigation to page', index, 'BLOCKED by mode rules');
       return;
     }

@@ -25,7 +25,6 @@ export function formatTimestampToLocal(gmtTimestamp, language = 'en-US', options
     const formatter = new Intl.DateTimeFormat(language, defaultOptions);
     return formatter.format(date);
   } catch (err) {
-    console.error('[TIMESTAMP-FORMATTER] Error formatting timestamp:', err);
     return new Date(gmtTimestamp).toLocaleString();
   }
 }

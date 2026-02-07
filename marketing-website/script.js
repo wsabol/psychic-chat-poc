@@ -112,7 +112,6 @@ if (contactForm) {
             }, 10000);
             
         } catch (error) {
-            console.error('Contact form error:', error);
             // Show error message
             formMessage.textContent = error.message || 'Sorry, there was an error sending your message. Please email us directly at info@starshippsychics.com';
             formMessage.className = 'form-message error';

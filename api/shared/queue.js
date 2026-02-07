@@ -33,6 +33,9 @@ async function getClient() {
 export async function enqueueMessage(job) {
     const redisClient = await getClient();
     await redisClient.rPush("chat-jobs", JSON.stringify(job));
+    
+    // Verify job was added
+    const queueLength = await redisClient.lLen("chat-jobs");
 }
 
 export { getClient };

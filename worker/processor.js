@@ -105,6 +105,7 @@ export async function workerLoop() {
     //     logErrorFromCatch(err, '[WORKER] Failed to generate daily updates');
     // }
     
+    let jobCount = 0;
     while (true) {
         try {
             const job = await getMessageFromQueue();
@@ -112,8 +113,10 @@ export async function workerLoop() {
                 await new Promise((r) => setTimeout(r, 500));
                 continue;
             }
+            
+            jobCount++;
             await routeJob(job);
-                } catch (err) {
+        } catch (err) {
             logErrorFromCatch(err, '[WORKER] Fatal error in job loop');
             await new Promise((r) => setTimeout(r, 1000));
         }

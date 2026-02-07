@@ -10,7 +10,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const serviceAccountPath = path.join(__dirname, '../firebase-adminsdk-key.json');
 
 if (!fs.existsSync(serviceAccountPath)) {
-  console.error('Firebase service account key not found')
   logErrorFromCatch('Firebase service account key not found', 'app', 'firebase-admin initialization');
   process.exit(1);
 }

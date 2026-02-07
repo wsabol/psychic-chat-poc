@@ -11,8 +11,17 @@ async function getClient() {
     if (!connectPromise) {
         connectPromise = (async () => {
             // Use localhost for development, redis service for Docker production
-            const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-            client = createClient({ url: redisUrl });
+            // Force IPv4 to match API configuration (Windows localhost resolution issue)
+            client = createClient({ 
+                url: process.env.REDIS_URL || 'redis://127.0.0.1:6379',
+                socket: { 
+                    host: '127.0.0.1',
+                    port: 6379,
+                    family: 4,  // Force IPv4
+                    connectTimeout: 5000,
+                    reconnectStrategy: (retries) => Math.min(retries * 50, 500)
+                }
+            });
             
             await client.connect();
             return client;
@@ -25,7 +34,12 @@ async function getClient() {
 export async function getMessageFromQueue() {
     const redisClient = await getClient();
     const job = await redisClient.lPop("chat-jobs");
-    return job ? JSON.parse(job) : null;
+    
+    if (job) {
+        return JSON.parse(job);
+    } else {
+        return null;
+    }
 }
 
 export async function redis() {

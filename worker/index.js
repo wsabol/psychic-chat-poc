@@ -13,4 +13,7 @@ dotenv.config({
 
 import { workerLoop } from "./processor.js";
 
-workerLoop();
+workerLoop().catch(err => {
+  console.error('[WORKER] Fatal error:', err);
+  process.exit(1);
+});

@@ -25,7 +25,6 @@ const client = createClient(redisConfig);
 let isConnected = false;
 
 client.on('connect', () => {
-  console.log('✅ Redis connected');
   isConnected = true;
 });
 
@@ -35,12 +34,10 @@ client.on('error', (err) => {
 });
 
 client.on('reconnecting', () => {
-  console.log('🔄 Redis reconnecting...');
   isConnected = false;
 });
 
 client.on('ready', () => {
-  console.log('✅ Redis ready');
   isConnected = true;
 });
 

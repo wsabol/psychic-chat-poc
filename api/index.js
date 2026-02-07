@@ -232,12 +232,16 @@ app.use("/billing", authenticateToken, billingRoutes);
 
 
 // Initialize scheduled jobs - runs daily temp account cleanup at 2:00 AM UTC
-try {
-  const schedulerResult = initializeScheduler();
-} catch (error) {
-  logErrorFromCatch('❌ Failed to initialize scheduler:', error.message);
-  logErrorFromCatch(error.stack);
-}
+// NOTE: In production, scheduled jobs run via AWS Lambda functions (EventBridge)
+// Set ENABLE_LOCAL_SCHEDULER=true in .env to enable local scheduler for development/testing
+if (process.env.ENABLE_LOCAL_SCHEDULER === 'true') {
+  try {
+    const schedulerResult = initializeScheduler();
+  } catch (error) {
+    logErrorFromCatch('❌ Failed to initialize scheduler:', error.message);
+    logErrorFromCatch(error.stack);
+  }
+} 
 
 // Initialize Redis pub/sub subscriber for SSE notifications
 async function initializeRedisPubSub() {

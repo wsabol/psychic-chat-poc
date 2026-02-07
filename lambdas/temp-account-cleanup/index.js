@@ -29,9 +29,7 @@ export const handler = async (event) => {
     }
     
     // Initialize Firebase (will reuse if already initialized)
-    console.log('[TempAccountCleanup] Initializing Firebase...');
     await initializeFirebase();
-    console.log('[TempAccountCleanup] Firebase initialized successfully');
     
     const eightHoursAgo = new Date(Date.now() - 8 * 60 * 60 * 1000);
     
@@ -52,7 +50,6 @@ export const handler = async (event) => {
     if (uids.length > 0) {
       // Delete from database (fast operation)
       try {
-        console.log(`[TempAccountCleanup] Deleting ${uids.length} temp accounts from database...`);
         
         // Delete from all related tables
         await db.query(`DELETE FROM free_trial_sessions WHERE user_id = ANY($1)`, [uids]);
@@ -74,14 +71,12 @@ export const handler = async (event) => {
         await db.query(`DELETE FROM user_personal_info WHERE user_id = ANY($1)`, [uids]);
         
         dbDeletedCount = uids.length;
-        console.log(`[TempAccountCleanup] Successfully deleted ${dbDeletedCount} accounts from database`);
       } catch (error) {
         logger.errorFromCatch(error, 'Database cleanup');
         throw error;
       }
       
       // Delete from Firebase (slower, more error-prone)
-      console.log(`[TempAccountCleanup] Deleting ${uids.length} users from Firebase...`);
       for (const uid of uids) {
         try { 
           const deleted = await auth.deleteUser(uid);
@@ -99,17 +94,10 @@ export const handler = async (event) => {
           }
         }
       }
-      console.log(`[TempAccountCleanup] Firebase deletion complete: ${firebaseDeletedCount} deleted, ${firebaseErrorCount} errors`);
     }
     
     // Calculate duration
     const duration = Date.now() - startTime;
-    
-    // Log summary
-    console.log(`[TempAccountCleanup] Cleanup completed in ${duration}ms`);
-    console.log(`[TempAccountCleanup] Database deleted: ${dbDeletedCount}`);
-    console.log(`[TempAccountCleanup] Firebase deleted: ${firebaseDeletedCount}`);
-    console.log(`[TempAccountCleanup] Firebase errors: ${firebaseErrorCount}`);
     
     // Return success response with stats (CloudWatch captures all console output)
     return {

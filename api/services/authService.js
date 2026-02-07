@@ -2,6 +2,7 @@ import { db } from '../shared/db.js';
 import { hashPassword, comparePassword, generate6DigitCode } from '../shared/authUtils.js';
 import { sendEmailVerification } from '../shared/emailService.js';
 import { v4 as uuidv4 } from 'uuid';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 /**
  * Find user by email (decrypted)

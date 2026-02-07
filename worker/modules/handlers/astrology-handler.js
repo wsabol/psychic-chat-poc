@@ -24,6 +24,7 @@ export async function handleAstrologyCalculation(userId) {
         
         // Check if we have complete birth data (timezone is optional)
         if (!info.birth_date || !info.birth_time || !info.birth_country || !info.birth_province || !info.birth_city) {
+
             return;
         }
         
@@ -45,12 +46,6 @@ export async function handleAstrologyCalculation(userId) {
         
         // Verify calculation was successful
         if (!calculatedChart.success || !calculatedChart.rising_sign || !calculatedChart.moon_sign) {
-            console.error('[ASTROLOGY-HANDLER] Calculation failed or missing data:', {
-                success: calculatedChart.success,
-                has_rising_sign: !!calculatedChart.rising_sign,
-                has_moon_sign: !!calculatedChart.moon_sign,
-                error: calculatedChart.error
-            });
             return;
         }
         
@@ -90,7 +85,6 @@ export async function handleAstrologyCalculation(userId) {
         );
 
         if (verifyRows.length === 0) {
-            console.error('[ASTROLOGY-HANDLER] Failed to verify birth chart save for user:', userId);
             logErrorFromCatch('[ASTROLOGY-HANDLER] Failed to verify birth chart save for user:', userId);
             return;
         }

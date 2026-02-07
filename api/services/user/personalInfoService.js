@@ -109,15 +109,24 @@ export async function savePersonalInfo(userId, data) {
   // Update trial session email for temp users
   await updateTrialSessionEmail(userIdHash, email, isTempUser);
 
-  // Save minimal astrology (sun sign)
-  await saveMinimalAstrology(userIdHash, parsedBirthDate);
+  // Determine if we have complete birth data for full calculation
+  const hasCompleteBirthData = shouldEnqueueBirthChart(sanitizedFields, parsedBirthDate);
+
+  // DEBUG: Log the decision
+
+  // Only save minimal astrology if we DON'T have complete birth data
+  // This prevents race condition where null values overwrite before worker completes
+  if (!hasCompleteBirthData) {
+    await saveMinimalAstrology(userIdHash, parsedBirthDate);
+  }
 
   // Enqueue full birth chart calculation if data is available
-  if (shouldEnqueueBirthChart(sanitizedFields, parsedBirthDate)) {
+  if (hasCompleteBirthData) {
     await enqueueFullBirthChart(userId);
   }
 
   // Save full astrology data if provided
+  
   if (zodiacSign && astrologyData) {
     const astrologyResult = await saveFullAstrology(userIdHash, zodiacSign, astrologyData);
     if (!astrologyResult.success) {

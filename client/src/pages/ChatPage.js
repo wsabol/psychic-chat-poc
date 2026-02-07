@@ -115,7 +115,6 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
     setShowAstrologyPrompt(false);
     
     if (!onNavigateToPage) {
-      console.error('[CHAT-PAGE] onNavigateToPage function is not available!');
       return;
     }
     
@@ -124,7 +123,6 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
       try {
         onNavigateToPage(1); // Personal Info is page index 1
       } catch (err) {
-        console.error('[CHAT-PAGE] Navigation error:', err);
         logErrorFromCatch('[CHAT-PAGE] Failed to navigate to PersonalInfoPage', err);
       }
     }, 100);

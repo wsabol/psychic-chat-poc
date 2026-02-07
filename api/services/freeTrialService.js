@@ -315,14 +315,23 @@ export async function processPersonalInfoSave(tempUserId, personalInfo, zodiacSi
   // Update trial session with email
   await updateTrialSessionEmail(userIdHash, personalInfo.email);
 
-  // Calculate and store sun sign immediately
-  await saveMinimalAstrology(userIdHash, personalInfo.birthDate);
+  // Determine if we have complete birth data for full calculation
+  const { birthTime, birthCountry, birthProvince, birthCity, birthDate } = personalInfo;
+  const hasCompleteBirthData = !!(birthTime && birthCountry && birthProvince && birthCity && birthDate);
+
+  // Only save minimal astrology if we DON'T have complete birth data
+  // This prevents race condition where null values overwrite before worker completes
+  if (!hasCompleteBirthData) {
+    await saveMinimalAstrology(userIdHash, personalInfo.birthDate);
+  }
 
   // Clear old astrology messages
   await clearAstrologyMessages(userIdHash);
 
   // Enqueue full birth chart calculation if complete data provided
-  await enqueueFullBirthChartCalculation(tempUserId, personalInfo);
+  if (hasCompleteBirthData) {
+    await enqueueFullBirthChartCalculation(tempUserId, personalInfo);
+  }
 
   // Save full astrology data if provided
   await saveFullAstrologyData(userIdHash, zodiacSign, astrologyData);
