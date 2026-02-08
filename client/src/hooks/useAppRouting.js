@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { useDeviceTracking } from './useDeviceTracking';
 
 /**
  * Determines which screen/route to display based on auth state, payment method, and subscription
@@ -18,9 +17,10 @@ import { useDeviceTracking } from './useDeviceTracking';
  * Special flags:
  * - skipPaymentCheck: User clicked "Add Payment Method", bypass check and go to chat/billing
  * - skipSubscriptionCheck: User clicked "Subscribe", bypass check and go to chat/subscriptions
+ * 
+ * @param {Object} sessionCheckData - Database session check data (replaces localStorage)
  */
-export function useAppRouting(auth, appExited, showRegisterMode = false, skipPaymentCheck = false, skipSubscriptionCheck = false, isAdmin = false, isOnboarding = false) {
-    const { hasExitedBefore } = useDeviceTracking();
+export function useAppRouting(auth, appExited, showRegisterMode = false, skipPaymentCheck = false, skipSubscriptionCheck = false, isAdmin = false, isOnboarding = false, sessionCheckData = null) {
 
     const currentScreen = useMemo(() => {
         // Loading state
@@ -54,11 +54,20 @@ export function useAppRouting(auth, appExited, showRegisterMode = false, skipPay
             return auth.isDevUserLogout ? 'landing' : 'login';
         }
 
-        // First time user or not authenticated
+        // First time user or not authenticated - Use database session check instead of localStorage
         if (auth.isFirstTime && !auth.isAuthenticated) {
-            if (hasExitedBefore()) {
-                return 'login';
+            // If session check data is available, use it to determine routing
+            if (sessionCheckData) {
+                // If user has completed free trial from this IP, must login
+                if (sessionCheckData.hasCompletedTrial || sessionCheckData.userType === 'free_trial_completed') {
+                    return 'login';
+                }
+                // If new user (no database record), show landing page
+                if (sessionCheckData.userType === 'new') {
+                    return 'landing';
+                }
             }
+            // Fallback to landing if no session data yet
             return 'landing';
         }
 
@@ -95,7 +104,7 @@ export function useAppRouting(auth, appExited, showRegisterMode = false, skipPay
 
         // Authenticated, verified, has payment method (or skipping check), and has active subscription (or skipping check) - show chat
         return 'chat';
-    }, [auth.loading, auth.isAuthenticated, auth.isFirstTime, auth.isTemporaryAccount, auth.isEmailUser, auth.emailVerified, auth.hasLoggedOut, auth.isDevUserLogout, auth.hasValidPaymentMethod, auth.paymentMethodChecking, auth.hasActiveSubscription, auth.subscriptionChecking, auth.showTwoFactor, auth.tempUserId, auth.authUserId, auth.tempToken, appExited, showRegisterMode, skipPaymentCheck, skipSubscriptionCheck, isAdmin, hasExitedBefore]);
+    }, [auth.loading, auth.isAuthenticated, auth.isFirstTime, auth.isTemporaryAccount, auth.isEmailUser, auth.emailVerified, auth.hasLoggedOut, auth.isDevUserLogout, auth.hasValidPaymentMethod, auth.paymentMethodChecking, auth.hasActiveSubscription, auth.subscriptionChecking, auth.showTwoFactor, auth.tempUserId, auth.authUserId, auth.tempToken, appExited, showRegisterMode, skipPaymentCheck, skipSubscriptionCheck, isAdmin, sessionCheckData]);
 
     return {
         currentScreen,

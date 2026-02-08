@@ -7,14 +7,18 @@ import { useAuthHandlers } from './useAuthHandlers';
 import { useAppRouting } from './useAppRouting';
 import { useEmailVerification } from './useEmailVerification';
 import { useOnboarding } from './useOnboarding';
+import { useSessionCheck } from './useSessionCheck';
 import { auth } from '../firebase';
 
 /**
  * Consolidates all app state management into one hook
- * WITH DEBUG LOGGING
+ * WITH DEBUG LOGGING - Now using database-driven session management
  */
 export function useAppState() {
   useTokenRefresh();
+  
+  // Database-driven session check (replaces localStorage)
+  const { sessionCheckData, isChecking: sessionCheckLoading } = useSessionCheck();
   
   // Navigation state
   const [skipPaymentCheck, setSkipPaymentCheck] = useState(true);
@@ -35,7 +39,7 @@ export function useAppState() {
   // CRITICAL: Pass isTemporaryAccount to skip onboarding for free trial users
   const onboarding = useOnboarding(authState.token, authState.isTemporaryAccount);
   
-  const { isLoading, isThankyou, isRegister, isVerification, isLanding, isLogin, isTwoFactor, isPaymentMethodRequired, isSubscriptionRequired, isChat } = useAppRouting(authState, tempFlow.appExited, modals.showRegisterMode, skipPaymentCheck, skipSubscriptionCheck, isAdmin, onboarding?.onboardingStatus?.isOnboarding ?? false);
+  const { isLoading, isThankyou, isRegister, isVerification, isLanding, isLogin, isTwoFactor, isPaymentMethodRequired, isSubscriptionRequired, isChat } = useAppRouting(authState, tempFlow.appExited, modals.showRegisterMode, skipPaymentCheck, skipSubscriptionCheck, isAdmin, onboarding?.onboardingStatus?.isOnboarding ?? false, sessionCheckData);
 
   // Effect: Reset modal when authenticated
   useEffect(() => {

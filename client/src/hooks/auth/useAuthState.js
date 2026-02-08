@@ -55,7 +55,8 @@ export function useAuthState(checkBillingStatus) {
             return;
           } else {
             setIsFirstTime(false);
-            localStorage.setItem('psychic_app_registered', 'true');
+            // REMOVED: localStorage.setItem('psychic_app_registered', 'true');
+            // Now using database-driven session management via /auth/check-returning-user
             
                         // Track device on login (non-blocking) - server will detect IP via req.ip
             fetch(`${API_URL}/security/track-device/${firebaseUser.uid}`, {
@@ -180,10 +181,9 @@ export function useAuthState(checkBillingStatus) {
           setShowTwoFactor(false);
           setTempToken(null);
           setTempUserId(null);
-          const hasRegistered = localStorage.getItem('psychic_app_registered');
-          if (hasRegistered) {
-            setIsFirstTime(false);
-          }
+          // REMOVED: localStorage check for 'psychic_app_registered'
+          // Now using database-driven session management via /auth/check-returning-user
+          // isFirstTime will be determined by sessionCheckData in useAppRouting
           setLoading(false);
         }
       } catch (err) {

@@ -13,6 +13,7 @@ import horoscopeRoutes from "./routes/horoscope.js";
 import moonPhaseRoutes from "./routes/moon-phase.js";
 import astrologyInsightsRoutes from "./routes/astrology-insights.js";
 import authRoutes from "./routes/auth-firebase.js";
+import sessionCheckRoutes from "./routes/auth-endpoints/session-check.js";
 import consentRoutes from "./routes/consent.js";
 import userDataRoutes from "./routes/user-data/index.js";
 import cleanupRoutes from "./routes/cleanup.js";
@@ -154,6 +155,7 @@ app.get('/health', (req, res) => {
 
 // Public auth routes (no authentication required)
 app.use("/auth", authRoutes);
+app.use("/auth", sessionCheckRoutes);
 app.use("/auth", consentRoutes);
 app.use("/cleanup", cleanupRoutes);
 app.use("/cleanup", cleanupStatusRoutes);
