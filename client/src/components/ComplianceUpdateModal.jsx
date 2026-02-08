@@ -13,6 +13,7 @@
 
 import React, { useState } from 'react';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
+import { DocumentViewer } from './help/DocumentViewer.jsx';
 import './ComplianceUpdateModal.css';
 
 export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpdated }) {
@@ -22,6 +23,7 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
     terms: false,
     privacy: false
   });
+  const [viewingDocument, setViewingDocument] = useState(null); // 'terms' or 'privacy' or null
 
   if (!compliance || !compliance.blocksAccess) {
     return null; // Don't render if not needed
@@ -129,13 +131,21 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
               <div className="compliance-text">
                 <p>Our Terms of Service have been significantly updated. Please read the new terms carefully.</p>
                 <div className="action-buttons">
-                  <a 
-                    href="/TERMS_OF_SERVICE.md" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="btn-link"
+                  <button 
+                    onClick={() => setViewingDocument('terms')}
+                    className="btn-view-document"
+                    type="button"
                   >
                     📖 Read Full Terms of Service
+                  </button>
+                  <a 
+                    href="/Terms_of_Service.pdf" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="btn-link-secondary"
+                    title="Open in new tab"
+                  >
+                    🔗 Open in New Tab
                   </a>
                 </div>
               </div>
@@ -175,13 +185,21 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
               <div className="compliance-text">
                 <p>Our Privacy Policy has been significantly updated with new data protection measures.</p>
                 <div className="action-buttons">
+                  <button 
+                    onClick={() => setViewingDocument('privacy')}
+                    className="btn-view-document"
+                    type="button"
+                  >
+                    🔒 Read Full Privacy Policy
+                  </button>
                   <a 
                     href="/privacy.pdf" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="btn-link"
+                    className="btn-link-secondary"
+                    title="Open in new tab"
                   >
-                    🔒 Read Full Privacy Policy
+                    🔗 Open in New Tab
                   </a>
                 </div>
               </div>
@@ -222,6 +240,17 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
           </p>
         </div>
       </div>
+
+      {/* Document Viewer Overlay */}
+      {viewingDocument && (
+        <div className="compliance-document-viewer-overlay">
+          <DocumentViewer
+            title={viewingDocument === 'terms' ? 'Terms of Service' : 'Privacy Policy'}
+            docType={viewingDocument}
+            onBack={() => setViewingDocument(null)}
+          />
+        </div>
+      )}
     </div>
   );
 }

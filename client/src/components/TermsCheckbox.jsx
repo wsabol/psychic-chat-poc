@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from '../context/TranslationContext';
+import { DocumentViewer } from './help/DocumentViewer.jsx';
 
 /**
  * TermsCheckbox Component
@@ -15,7 +16,10 @@ export function TermsCheckbox({
   disabled = false 
 }) {
   const { t } = useTranslation();
+  const [viewingDocument, setViewingDocument] = useState(null); // 'terms' or 'privacy' or null
+
   return (
+    <>
     <div style={{
       backgroundColor: 'rgba(100, 100, 150, 0.3)',
       padding: '1rem',
@@ -40,13 +44,30 @@ export function TermsCheckbox({
         />
         <span>
           {t('terms.acceptPrefix')}{' '}
-          <a 
-            href="/policies?type=terms" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            style={{ color: '#64B5F6', textDecoration: 'underline' }}
+          <button
+            type="button"
+            onClick={() => setViewingDocument('terms')}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#64B5F6',
+              textDecoration: 'underline',
+              cursor: 'pointer',
+              padding: 0,
+              font: 'inherit'
+            }}
           >
             {t('terms.termsLink')}
+          </button>
+          {' '}
+          <a 
+            href="/Terms_of_Service.pdf" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            style={{ color: '#64B5F6', fontSize: '0.8em' }}
+            title="Open in new tab"
+          >
+            🔗
           </a>
           {' '}*
         </span>
@@ -56,7 +77,8 @@ export function TermsCheckbox({
         display: 'flex', 
         alignItems: 'flex-start', 
         gap: '0.5rem', 
-        cursor: 'pointer' 
+        cursor: 'pointer',
+        marginBottom: '0.75rem'
       }}>
         <input
           type="checkbox"
@@ -67,13 +89,30 @@ export function TermsCheckbox({
         />
         <span>
           {t('terms.acceptPrefix')}{' '}
-          <a 
-            href="/policies?type=privacy" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            style={{ color: '#64B5F6', textDecoration: 'underline' }}
+          <button
+            type="button"
+            onClick={() => setViewingDocument('privacy')}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#64B5F6',
+              textDecoration: 'underline',
+              cursor: 'pointer',
+              padding: 0,
+              font: 'inherit'
+            }}
           >
             {t('terms.privacyLink')}
+          </button>
+          {' '}
+          <a 
+            href="/privacy.pdf" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            style={{ color: '#64B5F6', fontSize: '0.8em' }}
+            title="Open in new tab"
+          >
+            🔗
           </a>
           {' '}*
         </span>
@@ -83,6 +122,30 @@ export function TermsCheckbox({
         * {t('terms.required')}
       </p>
     </div>
+
+    {/* Document Viewer Overlay */}
+    {viewingDocument && (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+        zIndex: 10000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '2rem'
+      }}>
+        <DocumentViewer
+          title={viewingDocument === 'terms' ? 'Terms of Service' : 'Privacy Policy'}
+          docType={viewingDocument}
+          onBack={() => setViewingDocument(null)}
+        />
+      </div>
+    )}
+    </>
   );
 }
 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { DocumentViewer } from './help/DocumentViewer.jsx';
 import '../styles/ConsentForm.css';
 
 /**
@@ -25,8 +26,13 @@ export const ConsentForm = ({
     consent_chat_analysis: initialConsents.chat_analysis || false
   });
 
+  // Separate state for required legal acceptances
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [viewingDocument, setViewingDocument] = useState(null); // 'terms' or 'privacy' or null
 
   const handleCheckboxChange = (e) => {
     const { name, checked } = e.target;
@@ -39,6 +45,13 @@ export const ConsentForm = ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate that Terms and Privacy are accepted in registration mode
+    if (mode === 'registration' && (!termsAccepted || !privacyAccepted)) {
+      setError('You must accept both the Terms of Service and Privacy Policy to continue.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -136,23 +149,122 @@ export const ConsentForm = ({
             </label>
           </div>
 
-          {/* Legal Links */}
-          <div className="legal-links">
-            <p>
-              By proceeding, you agree to our{' '}
-              <a href="/terms" target="_blank" rel="noopener noreferrer">
-                Terms of Service
-              </a>
-              {' '}and{' '}
-              <a href="/privacy" target="_blank" rel="noopener noreferrer">
-                Privacy Policy
-              </a>
-            </p>
-            <p className="ip-notice">
-              Your IP address and device information are recorded as proof of consent 
-              for compliance purposes.
-            </p>
-          </div>
+          {/* Required Legal Acceptances */}
+          {mode === 'registration' && (
+            <div className="legal-acceptance-section">
+              <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: '#333' }}>
+                Terms & Privacy Policy
+              </h3>
+
+              {/* Terms of Service Section */}
+              <div className="legal-acceptance-item">
+                <div className="legal-header">
+                  <strong>Terms of Service</strong>
+                  <button
+                    type="button"
+                    onClick={() => setViewingDocument('terms')}
+                    className="view-document-btn"
+                  >
+                    📖 Read Terms
+                  </button>
+                </div>
+                <p className="legal-description">
+                  By using this application, you agree to our Terms of Service and all 
+                  applicable laws and regulations. You agree that you are responsible for 
+                  compliance with any local laws in your jurisdiction.
+                </p>
+                <label className="legal-checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={termsAccepted}
+                    onChange={(e) => {
+                      setTermsAccepted(e.target.checked);
+                      setError(null);
+                    }}
+                    disabled={loading}
+                  />
+                  <span>I accept the Terms of Service</span>
+                </label>
+              </div>
+
+              {/* Privacy Policy Section */}
+              <div className="legal-acceptance-item">
+                <div className="legal-header">
+                  <strong>Privacy Policy</strong>
+                  <button
+                    type="button"
+                    onClick={() => setViewingDocument('privacy')}
+                    className="view-document-btn"
+                  >
+                    🔒 Read Privacy Policy
+                  </button>
+                </div>
+                <p className="legal-description">
+                  We respect your privacy. Our Privacy Policy explains how we collect, use, 
+                  disclose, and safeguard your personal information. Please review our Privacy 
+                  Policy to understand our privacy practices.
+                </p>
+                <label className="legal-checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={privacyAccepted}
+                    onChange={(e) => {
+                      setPrivacyAccepted(e.target.checked);
+                      setError(null);
+                    }}
+                    disabled={loading}
+                  />
+                  <span>I accept the Privacy Policy</span>
+                </label>
+              </div>
+
+              <p className="ip-notice">
+                Your IP address and device information are recorded as proof of consent 
+                for compliance purposes.
+              </p>
+            </div>
+          )}
+
+          {/* Settings mode - just show links */}
+          {mode === 'settings' && (
+            <div className="legal-links">
+              <p style={{ marginBottom: '1rem' }}>
+                Review our legal documents:
+              </p>
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setViewingDocument('terms')}
+                  className="btn btn-link"
+                  style={{ 
+                    padding: '0.5rem 1rem',
+                    backgroundColor: 'rgba(100, 150, 255, 0.2)',
+                    border: '1px solid rgba(100, 150, 255, 0.4)',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    color: '#64B5F6'
+                  }}
+                >
+                  📖 View Terms of Service
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewingDocument('privacy')}
+                  className="btn btn-link"
+                  style={{ 
+                    padding: '0.5rem 1rem',
+                    backgroundColor: 'rgba(100, 150, 255, 0.2)',
+                    border: '1px solid rgba(100, 150, 255, 0.4)',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    color: '#64B5F6'
+                  }}
+                >
+                  🔒 View Privacy Policy
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Error Message */}
           {error && (
@@ -175,10 +287,14 @@ export const ConsentForm = ({
             )}
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || (mode === 'registration' && (!termsAccepted || !privacyAccepted))}
               className="btn btn-primary"
             >
-              {loading ? 'Saving...' : mode === 'registration' ? 'Continue' : 'Save Preferences'}
+              {loading 
+                ? 'Saving...' 
+                : mode === 'registration' 
+                  ? 'Accept & Continue' 
+                  : 'Save Preferences'}
             </button>
           </div>
 
@@ -191,6 +307,29 @@ export const ConsentForm = ({
           )}
         </form>
       </div>
+
+      {/* Document Viewer Overlay */}
+      {viewingDocument && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.9)',
+          zIndex: 10000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '2rem'
+        }}>
+          <DocumentViewer
+            title={viewingDocument === 'terms' ? 'Terms of Service' : 'Privacy Policy'}
+            docType={viewingDocument}
+            onBack={() => setViewingDocument(null)}
+          />
+        </div>
+      )}
     </div>
   );
 };
