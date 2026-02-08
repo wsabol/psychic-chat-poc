@@ -102,7 +102,8 @@ function logErrorFromClient({ service, errorMessage, severity, context, stack })
   try {
     if (process.env.NODE_ENV === 'development') {
       // Dev: use fetch for better error visibility
-      fetch('http://localhost:3000/api/logs/error', {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+      fetch(`${API_URL}/api/logs/error`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(errorData),

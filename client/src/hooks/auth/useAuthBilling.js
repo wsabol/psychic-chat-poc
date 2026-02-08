@@ -21,7 +21,8 @@ export function useAuthBilling() {
       const timeoutId = setTimeout(() => controller.abort(), 8000);
       
       try {
-        const response = await fetch('http://localhost:3000/billing/payment-methods', {
+        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+        const response = await fetch(`${API_URL}/billing/payment-methods`, {
           headers: { 'Authorization': `Bearer ${idToken}` },
           signal: controller.signal
         });
@@ -67,7 +68,8 @@ export function useAuthBilling() {
       const timeoutId = setTimeout(() => controller.abort(), 8000);
       
       try {
-        const response = await fetch('http://localhost:3000/billing/subscriptions', {
+        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+        const response = await fetch(`${API_URL}/billing/subscriptions`, {
           headers: { 'Authorization': `Bearer ${idToken}` },
           signal: controller.signal
         });

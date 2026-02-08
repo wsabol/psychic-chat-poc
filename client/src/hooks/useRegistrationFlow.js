@@ -42,7 +42,8 @@ export function useRegistrationFlow() {
         const tempUid = currentUser.uid;
 
         try {
-          const migrationResponse = await fetch('http://localhost:3000/auth/register-and-migrate', {
+          const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+          const migrationResponse = await fetch(`${API_URL}/auth/register-and-migrate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

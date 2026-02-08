@@ -48,7 +48,8 @@ export function useAuthSession() {
         // Call backend to delete from database and Firebase
         if (userToken) {
           try {
-            const deleteUrl = 'http://localhost:3000/cleanup/delete-temp-account/' + uid;
+            const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+            const deleteUrl = `${API_URL}/cleanup/delete-temp-account/${uid}`;
             const response = await fetch(deleteUrl, {
               method: 'DELETE',
               headers: { 'Authorization': `Bearer ${userToken}` }

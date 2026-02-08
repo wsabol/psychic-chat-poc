@@ -68,7 +68,8 @@ export function useAppState() {
           if (!newUserId) return;
           const tempAccountUid = localStorage.getItem('temp_account_uid');
           if (tempAccountUid && tempAccountUid !== newUserId) {
-            await fetch(`http://localhost:3000/cleanup/delete-temp-account/${tempAccountUid}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
+            const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+            await fetch(`${API_URL}/cleanup/delete-temp-account/${tempAccountUid}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
             localStorage.removeItem('temp_account_uid');
             localStorage.removeItem('temp_account_email');
           }

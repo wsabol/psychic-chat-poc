@@ -1,3 +1,4 @@
+
 /* ===================================
    Starship Psychics Website Styles
    =================================== */
@@ -574,6 +575,92 @@ a {
     margin-left: 10px;
 }
 
+/* ===== Home Contact Form Section ===== */
+.home-contact-section {
+    padding: 80px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.home-contact-section .section-title {
+    color: white;
+    font-size: 2.8rem;
+}
+
+.home-contact-section .section-subtitle {
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 1.3rem;
+}
+
+.home-contact-wrapper {
+    max-width: 800px;
+    margin: 3rem auto 0;
+}
+
+.home-contact-form {
+    background: white;
+    padding: 3rem;
+    border-radius: 20px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.home-contact-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.home-contact-form label {
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: 1rem;
+}
+
+.home-contact-form input,
+.home-contact-form textarea {
+    padding: 14px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: var(--transition);
+    background: #f8f9fa;
+}
+
+.home-contact-form input:focus,
+.home-contact-form textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    background: white;
+}
+
+.home-contact-form input::placeholder,
+.home-contact-form textarea::placeholder {
+    color: #a0aec0;
+}
+
+.btn-large {
+    width: 100%;
+    padding: 18px 40px;
+    font-size: 1.2rem;
+    margin-top: 1rem;
+}
+
+.form-privacy-note {
+    text-align: center;
+    margin-top: 1.5rem;
+    color: var(--text-light);
+    font-size: 0.95rem;
+}
+
 /* ===== Contact Section ===== */
 .contact-section {
     padding: 100px 20px;
@@ -665,21 +752,37 @@ a {
 }
 
 .form-message {
-    margin-top: 1rem;
-    padding: 1rem;
-    border-radius: 8px;
+    margin-top: 1.5rem;
+    padding: 1.25rem;
+    border-radius: 12px;
     text-align: center;
-    font-weight: 500;
+    font-weight: 600;
+    font-size: 1.05rem;
+    animation: slideDown 0.4s ease-out;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .form-message.success {
-    background: #d1fae5;
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
     color: #065f46;
+    border: 2px solid #10b981;
 }
 
 .form-message.error {
-    background: #fee2e2;
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
     color: #991b1b;
+    border: 2px solid #ef4444;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* ===== Footer ===== */
@@ -849,5 +952,21 @@ a {
 
     .hero-buttons {
         flex-direction: column;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .home-contact-form {
+        padding: 2rem 1.5rem;
+    }
+
+    .home-contact-section .section-title {
+        font-size: 2rem;
+    }
+
+    .home-contact-section .section-subtitle {
+        font-size: 1.1rem;
     }
 }

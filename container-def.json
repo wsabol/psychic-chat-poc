@@ -1,0 +1,79 @@
+[
+    {
+        "name": "api",
+        "image": "586337033065.dkr.ecr.us-east-1.amazonaws.com/psychic-chat-api-production:latest",
+        "cpu": 0,
+        "portMappings": [
+            {
+                "containerPort": 3000,
+                "hostPort": 3000,
+                "protocol": "tcp"
+            }
+        ],
+        "essential": true,
+        "environment": [
+            {
+                "name": "DB_NAME",
+                "value": "psychic_chat"
+            },
+            {
+                "name": "NODE_ENV",
+                "value": "production"
+            },
+            {
+                "name": "PORT",
+                "value": "3000"
+            },
+            {
+                "name": "CORS_ORIGIN",
+                "value": "*"
+            }
+        ],
+        "secrets": [
+            {
+                "name": "ENCRYPTION_KEY",
+                "valueFrom": "arn:aws:secretsmanager:us-east-1:586337033065:secret:psychic-chat/encryption-4i2tL3:key::"
+            },
+            {
+                "name": "STRIPE_SECRET_KEY",
+                "valueFrom": "arn:aws:secretsmanager:us-east-1:586337033065:secret:psychic-chat/stripe-LvGISE:secret_key::"
+            },
+            {
+                "name": "DB_HOST",
+                "valueFrom": "arn:aws:secretsmanager:us-east-1:586337033065:secret:psychic-chat/database-SOXfL3:host::"
+            },
+            {
+                "name": "DB_PORT",
+                "valueFrom": "arn:aws:secretsmanager:us-east-1:586337033065:secret:psychic-chat/database-SOXfL3:port::"
+            },
+            {
+                "name": "DB_USER",
+                "valueFrom": "arn:aws:secretsmanager:us-east-1:586337033065:secret:psychic-chat/database-SOXfL3:username::"
+            },
+            {
+                "name": "DB_PASSWORD",
+                "valueFrom": "arn:aws:secretsmanager:us-east-1:586337033065:secret:psychic-chat/database-SOXfL3:password::"
+            },
+            {
+                "name": "FIREBASE_PROJECT_ID",
+                "valueFrom": "arn:aws:secretsmanager:us-east-1:586337033065:secret:psychic-chat/firebase-n0BNty:project_id::"
+            },
+            {
+                "name": "FIREBASE_PRIVATE_KEY",
+                "valueFrom": "arn:aws:secretsmanager:us-east-1:586337033065:secret:psychic-chat/firebase-n0BNty:private_key::"
+            },
+            {
+                "name": "FIREBASE_CLIENT_EMAIL",
+                "valueFrom": "arn:aws:secretsmanager:us-east-1:586337033065:secret:psychic-chat/firebase-n0BNty:client_email::"
+            }
+        ],
+        "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+                "awslogs-group": "/ecs/psychic-chat-api-production",
+                "awslogs-region": "us-east-1",
+                "awslogs-stream-prefix": "api"
+            }
+        }
+    }
+]

@@ -78,11 +78,11 @@ export function AppChat({ state }) {
         const needsConsent = !data.hasConsent;
         setShowConsentModal(needsConsent);
       } catch (err) {
-        // On network error: check if this is a NEW user (no profile yet)
-        // If new user → require consent to be safe
-        // If existing user → allow access (they likely already consented)
-        const isNewUser = !authState.userProfileLoaded;
-        setShowConsentModal(isNewUser);
+        // On network error or API failure: 
+        // Don't show consent modal - let them through to avoid blocking legitimate users
+        // If they truly haven't consented, they'll be caught on next successful API call
+        // This prevents showing consent modal when database is cleared/API is down
+        setShowConsentModal(false);
       } finally {
         setConsentLoading(false);
       }

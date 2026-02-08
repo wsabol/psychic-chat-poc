@@ -176,7 +176,7 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
                 <p>Our Privacy Policy has been significantly updated with new data protection measures.</p>
                 <div className="action-buttons">
                   <a 
-                    href="/privacy.md" 
+                    href="/privacy.pdf" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="btn-link"

@@ -1,0 +1,17 @@
+{
+  "Comment": "Update api.starshippsychics.com to point to correct load balancer",
+  "Changes": [
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "api.starshippsychics.com",
+        "Type": "A",
+        "AliasTarget": {
+          "HostedZoneId": "Z35SXDOTRQ7X7K",
+          "DNSName": "psychic-chat-api-production-1828530618.us-east-1.elb.amazonaws.com",
+          "EvaluateTargetHealth": true
+        }
+      }
+    }
+  ]
+}

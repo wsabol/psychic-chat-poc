@@ -19,6 +19,7 @@ parameter_overrides = [
     "StripeSecretArn=\"arn:aws:secretsmanager:us-east-1:586337033065:secret:psychic-chat/stripe-LvGISE\"",
     "CertificateArn=\"arn:aws:acm:us-east-1:586337033065:certificate/a0efe242-b6eb-42c9-8a39-844232d6ea58\"",
     # "DomainName=api.starshippsychics.com",
+    "RedisUrl=redis://psychic-chat-redis-0rflqd.serverless.use1.cache.amazonaws.com:6379",
 ]
 confirm_changeset = true
 disable_rollback = false

@@ -47,83 +47,113 @@ window.addEventListener('scroll', () => {
     }
 });
 
-// Contact Form Handler
-const contactForm = document.getElementById('contactForm');
-const formMessage = document.getElementById('formMessage');
+// ===================================
+// Contact Form Handling with AJAX
+// ===================================
+// Handle both forms to prevent redirect and show success message on page
 
-if (contactForm) {
-    contactForm.addEventListener('submit', async (e) => {
+// Home Contact Form
+const homeContactForm = document.getElementById('homeContactForm');
+if (homeContactForm) {
+    homeContactForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        // Disable submit button to prevent double submission
-        const submitButton = contactForm.querySelector('button[type="submit"]');
-        const originalButtonText = submitButton.textContent;
-        submitButton.disabled = true;
-        submitButton.textContent = 'Sending...';
+        const submitBtn = document.getElementById('homeSubmitBtn');
+        const messageDiv = document.getElementById('homeFormMessage');
+        const formData = new FormData(this);
         
-        // Get form data
-        const formData = {
-            name: document.getElementById('name').value.trim(),
-            email: document.getElementById('email').value.trim(),
-            message: document.getElementById('message').value.trim()
-        };
-        
-        // Basic validation
-        if (!formData.name || !formData.email || !formData.message) {
-            formMessage.textContent = 'Please fill in all fields.';
-            formMessage.className = 'form-message error';
-            formMessage.style.display = 'block';
-            submitButton.disabled = false;
-            submitButton.textContent = originalButtonText;
-            return;
-        }
-        
-        // Show loading message
-        formMessage.textContent = 'Sending message...';
-        formMessage.className = 'form-message';
-        formMessage.style.display = 'block';
+        // Disable button and show loading state
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Sending...';
+        messageDiv.style.display = 'none';
         
         try {
-            // Create mailto link with form data
-            const subject = encodeURIComponent('Contact Form Submission from ' + formData.name);
-            const body = encodeURIComponent(
-                `Name: ${formData.name}\n` +
-                `Email: ${formData.email}\n\n` +
-                `Message:\n${formData.message}\n\n` +
-                `---\nSent from starshippsychics.com contact form`
-            );
-            const mailtoLink = `mailto:info@starshippsychics.com?subject=${subject}&body=${body}`;
+            const response = await fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
             
-            // Open mailto link
-            window.location.href = mailtoLink;
-            
-            // Show success message
-            formMessage.textContent = 'Opening your email client... Please send the pre-filled message or email us directly at info@starshippsychics.com';
-            formMessage.className = 'form-message success';
-            
-            // Reset form after a delay
-            setTimeout(() => {
-                contactForm.reset();
-            }, 2000);
-            
-            // Hide message after 10 seconds
-            setTimeout(() => {
-                formMessage.style.display = 'none';
-            }, 10000);
-            
+            if (response.ok) {
+                // Show success message
+                messageDiv.className = 'form-message success';
+                messageDiv.textContent = '✨ Thank you! Your message has been sent successfully. We\'ll get back to you soon!';
+                messageDiv.style.display = 'block';
+                
+                // Reset form
+                this.reset();
+                
+                // Track conversion for Google Ads
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'conversion', {'send_to': 'AW-17907083191/Gk-pCPytn_MbELfP4dpC'});
+                }
+            } else {
+                throw new Error('Form submission failed');
+            }
         } catch (error) {
             // Show error message
-            formMessage.textContent = error.message || 'Sorry, there was an error sending your message. Please email us directly at info@starshippsychics.com';
-            formMessage.className = 'form-message error';
-            
-            // Hide error message after 10 seconds
-            setTimeout(() => {
-                formMessage.style.display = 'none';
-            }, 10000);
+            messageDiv.className = 'form-message error';
+            messageDiv.textContent = '❌ Oops! Something went wrong. Please try again or email us directly at info@starshippsychics.com';
+            messageDiv.style.display = 'block';
         } finally {
-            // Re-enable submit button
-            submitButton.disabled = false;
-            submitButton.textContent = originalButtonText;
+            // Re-enable button
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Send Message ✨';
+        }
+    });
+}
+
+// Contact Form (bottom of page)
+const contactForm = document.getElementById('contactForm');
+if (contactForm) {
+    contactForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const submitBtn = document.getElementById('contactSubmitBtn');
+        const messageDiv = document.getElementById('contactFormMessage');
+        const formData = new FormData(this);
+        
+        // Disable button and show loading state
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Sending...';
+        messageDiv.style.display = 'none';
+        
+        try {
+            const response = await fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                // Show success message
+                messageDiv.className = 'form-message success';
+                messageDiv.textContent = '✨ Thank you! Your message has been sent successfully. We\'ll get back to you soon!';
+                messageDiv.style.display = 'block';
+                
+                // Reset form
+                this.reset();
+                
+                // Track conversion for Google Ads
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'conversion', {'send_to': 'AW-17907083191/Gk-pCPytn_MbELfP4dpC'});
+                }
+            } else {
+                throw new Error('Form submission failed');
+            }
+        } catch (error) {
+            // Show error message
+            messageDiv.className = 'form-message error';
+            messageDiv.textContent = '❌ Oops! Something went wrong. Please try again or email us directly at info@starshippsychics.com';
+            messageDiv.style.display = 'block';
+        } finally {
+            // Re-enable button
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Send Message';
         }
     });
 }

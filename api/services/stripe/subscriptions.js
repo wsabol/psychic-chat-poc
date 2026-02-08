@@ -10,6 +10,7 @@ export async function createSubscription(customerId, priceId) {
     const subscription = await stripe.subscriptions.create({
       customer: customerId,
       items: [{ price: priceId }],
+      automatic_tax: { enabled: true },
       payment_behavior: 'default_incomplete',
       collection_method: 'charge_automatically',
       expand: ['latest_invoice.payment_intent'],
