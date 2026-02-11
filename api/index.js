@@ -7,6 +7,7 @@ import https from "https";
 import helmet from "helmet";
 import logger from "./shared/logger.js";
 import chatRoutes from "./routes/chat.js";
+import chatDirectRoutes from "./routes/chat-direct.js";
 import userProfileRoutes from "./routes/user-profile.js";
 import astrologyRoutes from "./routes/astrology.js";
 import horoscopeRoutes from "./routes/horoscope.js";
@@ -209,6 +210,7 @@ app.use("/user/delete-account", authenticateToken, userDataRoutes);
 // Protected routes (authentication + user hash validation required)
 // validateUserHash ensures hashed user IDs in URLs match the authenticated user
 app.use("/chat", authenticateToken, validateUserHash, chatRoutes);
+app.use("/chat-direct", authenticateToken, chatDirectRoutes);
 app.use("/user-profile", authenticateToken, validateUserHash, userProfileRoutes);
 app.use("/user", authenticateToken, validateUserHash, userDataRoutes);
 app.use("/user-astrology", authenticateToken, validateUserHash, astrologyRoutes);
