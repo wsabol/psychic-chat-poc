@@ -102,7 +102,39 @@ export async function clearUserAstrologyCache(userId) {
 }
 
 /**
+ * Call astrology Lambda directly to calculate birth chart
+ * @param {string} userId - User ID
+ * @returns {Promise<boolean>} Success status
+ */
+async function calculateBirthChartDirect(userId) {
+  try {
+    const { LambdaClient, InvokeCommand } = await import('@aws-sdk/client-lambda');
+    
+    const client = new LambdaClient({ region: process.env.AWS_REGION || 'us-east-1' });
+    
+    const payload = {
+      userId,
+      requestType: 'birth_chart'
+    };
+    
+    const command = new InvokeCommand({
+      FunctionName: 'psychic-chat-astrology-production',
+      InvocationType: 'Event', // Async invocation
+      Payload: JSON.stringify(payload)
+    });
+    
+    await client.send(command);
+    console.log(`[ASTROLOGY-SERVICE] Direct Lambda invocation successful for user: ${userId.substring(0, 8)}`);
+    return true;
+  } catch (err) {
+    logErrorFromCatch('[ASTROLOGY-SERVICE] Direct Lambda invocation failed:', err.message);
+    return false;
+  }
+}
+
+/**
  * Enqueue full birth chart calculation if complete data available
+ * Fallback to direct Lambda call if Redis is unavailable
  * @param {string} userId - User ID
  * @returns {Promise<void>}
  */
@@ -111,11 +143,16 @@ export async function enqueueFullBirthChart(userId) {
     // Delay to ensure write propagation
     await new Promise(resolve => setTimeout(resolve, 1000));
 
+    // Try Redis queue first
     await enqueueMessage({
       userId,
       message: '[SYSTEM] Calculate my birth chart with rising sign and moon sign.'
     });
+    
+    console.log(`[ASTROLOGY-SERVICE] Birth chart queued via Redis for user: ${userId.substring(0, 8)}`);
   } catch (err) {
-    logErrorFromCatch('[ASTROLOGY-SERVICE] Failed to enqueue birth chart calculation:', err.message);
+    // Redis failed - call Lambda directly as fallback
+    console.warn(`[ASTROLOGY-SERVICE] Redis unavailable, using direct Lambda fallback`);
+    await calculateBirthChartDirect(userId);
   }
 }

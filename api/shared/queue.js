@@ -2,8 +2,14 @@ import { createClient } from "redis";
 import { logErrorFromCatch } from './errorLogger.js';
 
 let client = null;
+let redisAvailable = true; // Track if Redis is available
 
 async function getClient() {
+    // If Redis previously failed, don't try again
+    if (!redisAvailable) {
+        throw new Error('Redis is unavailable');
+    }
+    
     if (!client) {
         const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
         
@@ -13,8 +19,8 @@ async function getClient() {
                 // Production: Use REDIS_URL from environment (ElastiCache)
                 url: redisUrl,
                 socket: {
-                    connectTimeout: 10000,
-                    reconnectStrategy: (retries) => Math.min(retries * 100, 3000)
+                    connectTimeout: 10000,  // 10 second timeout for ElastiCache
+                    reconnectStrategy: (retries) => Math.min(retries * 100, 3000)  // Retry with backoff
                 }
             }
             : {
@@ -24,7 +30,7 @@ async function getClient() {
                     host: '127.0.0.1',
                     port: 6379,
                     family: 4,
-                    connectTimeout: 5000,
+                    connectTimeout: 2000,
                     reconnectStrategy: (retries) => Math.min(retries * 50, 500)
                 }
             };
@@ -33,18 +39,23 @@ async function getClient() {
         
         client.on('error', (err) => {
             logErrorFromCatch('Redis Client Error', err);
+            client = null;
+            redisAvailable = false; // Mark as unavailable
         });
         
         client.on('connect', () => {
             console.log('[REDIS] API connected successfully');
+            redisAvailable = true;
         });
         
         try {
             await client.connect();
             console.log(`[REDIS] API connected to ${process.env.REDIS_URL ? 'ElastiCache' : 'localhost'}`);
+            redisAvailable = true;
         } catch (err) {
             logErrorFromCatch('[QUEUE] Failed to connect to Redis:', err.message);
             client = null;
+            redisAvailable = false; // Mark as unavailable
             throw err;
         }
     }
@@ -52,36 +63,36 @@ async function getClient() {
 }
 
 export async function enqueueMessage(job) {
+    // If Redis is unavailable, throw error so fallback mechanisms work
+    if (!redisAvailable) {
+        throw new Error('Redis unavailable');
+    }
+    
     console.log('[QUEUE] Attempting to enqueue message for user:', job.userId?.substring(0, 8));
     
     try {
-        // ✅ TIMEOUT: Increased to 15 seconds for production ElastiCache
+        // Longer timeout for production ElastiCache - 5 seconds
+        const timeoutMs = process.env.REDIS_URL ? 5000 : 2000;
         const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Redis timeout')), 15000)
+            setTimeout(() => reject(new Error('Redis timeout')), timeoutMs)
         );
         
         const redisClient = await Promise.race([
             getClient(),
             timeoutPromise
         ]);
-        console.log('[QUEUE] Redis client obtained, pushing to queue...');
         
         await Promise.race([
             redisClient.rPush("chat-jobs", JSON.stringify(job)),
             timeoutPromise
         ]);
         
-        // Verify job was added (with timeout)
-        const queueLength = await Promise.race([
-            redisClient.lLen("chat-jobs"),
-            timeoutPromise
-        ]).catch(() => 0); // If verification fails, just log 0
-        
-        console.log(`[QUEUE] ✅ Message enqueued successfully! Queue length: ${queueLength}`);
+        console.log(`[QUEUE] ✅ Message enqueued successfully!`);
     } catch (err) {
-        console.error('[QUEUE] ❌ Failed to enqueue message:', err.message);
-        // Don't throw - allow operation to complete even if queue fails
-        // The message just won't be queued, but personal info is still saved
+        console.error('[QUEUE] ❌ Redis unavailable, skipping queue');
+        redisAvailable = false; // Mark as unavailable to skip future attempts
+        // Throw so fallback mechanisms can handle it
+        throw err;
     }
 }
 
