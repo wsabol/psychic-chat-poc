@@ -29,6 +29,14 @@ export function SocialProviders({
         setError(t('login.acceptTermsAndPrivacy'));
         return;
       }
+      
+      // Store consent acceptance in sessionStorage for AuthContext to retrieve
+      // This ensures consents are saved to database after Firebase creates the account
+      sessionStorage.setItem('pendingConsent', JSON.stringify({
+        termsAccepted,
+        privacyAccepted,
+        timestamp: Date.now()
+      }));
     }
 
     setLoading(true);

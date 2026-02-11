@@ -46,8 +46,61 @@ export function AuthProvider({ children }) {
             privacy_accepted: false
           };
           
-                    try {
+          // Check for pending consent from social provider registration
+          const pendingConsentStr = sessionStorage.getItem('pendingConsent');
+          let pendingConsent = null;
+          if (pendingConsentStr) {
+            try {
+              pendingConsent = JSON.parse(pendingConsentStr);
+              // Only use if less than 5 minutes old
+              if (Date.now() - pendingConsent.timestamp < 5 * 60 * 1000) {
+                // Clear it immediately to prevent re-use
+                sessionStorage.removeItem('pendingConsent');
+              } else {
+                pendingConsent = null;
+              }
+            } catch (e) {
+              pendingConsent = null;
+            }
+          }
+          
+          try {
             const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+            
+            // First, ensure user exists in database (for social provider users)
+            try {
+              await fetch(`${API_URL}/auth/register-firebase-user`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  userId: firebaseUser.uid,
+                  email: firebaseUser.email
+                })
+              });
+            } catch (dbErr) {
+              // User might already exist, continue
+            }
+            
+            // If we have pending consent, save it now
+            if (pendingConsent && pendingConsent.termsAccepted && pendingConsent.privacyAccepted) {
+              try {
+                await fetch(`${API_URL}/auth/record-consent/${firebaseUser.uid}`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                  },
+                  body: JSON.stringify({
+                    terms_accepted: pendingConsent.termsAccepted,
+                    privacy_accepted: pendingConsent.privacyAccepted
+                  })
+                });
+              } catch (consentSaveErr) {
+                logClientError('AUTH-SAVE-CONSENT', consentSaveErr);
+              }
+            }
+            
+            // Check consent status
             const consentUrl = `${API_URL}/auth/check-consent/${firebaseUser.uid}`;
             
             const consentResponse = await fetch(consentUrl, {

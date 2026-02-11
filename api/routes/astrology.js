@@ -130,7 +130,7 @@ router.post('/sync-calculate/:userId', authorizeUser, async (req, res) => {
             [userIdHash, calculatedChart.sun_sign, JSON.stringify(astrologyData)]
         );
         
-                // CRITICAL: Verify data is safely saved before returning success
+        // CRITICAL: Verify data is safely saved before returning success
         const { rows: verifyRows } = await db.query(
             `SELECT astrology_data FROM user_astrology WHERE user_id_hash = $1`,
             [userIdHash]
@@ -139,6 +139,40 @@ router.post('/sync-calculate/:userId', authorizeUser, async (req, res) => {
         if (verifyRows.length === 0) {
             return serverError(res, 'Failed to confirm astrology data was saved');
         }
+        
+        // PRE-GENERATE mystical insights in background for instant user experience
+        // These run async and don't block the response
+        setImmediate(async () => {
+            try {
+                // Clear old astrology messages first to prevent duplicates
+                await db.query(
+                    `DELETE FROM messages 
+                     WHERE user_id_hash = $1 
+                     AND role IN ('horoscope', 'moon_phase', 'cosmic_weather')
+                     AND created_at_local_date < CURRENT_DATE`,
+                    [userIdHash]
+                );
+                
+                // Small delay to ensure all DB operations are committed
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                const { generateHoroscope } = await import('../services/chat/modules/handlers/horoscope-handler.js');
+                const { generateMoonPhaseCommentary } = await import('../services/chat/modules/handlers/moon-phase-handler.js');
+                const { generateCosmicWeather } = await import('../services/chat/modules/handlers/cosmic-weather-handler.js');
+                
+                // Generate all three insights simultaneously
+                await Promise.allSettled([
+                    generateHoroscope(userId, 'daily'),
+                    generateMoonPhaseCommentary(userId, 'current'),
+                    generateCosmicWeather(userId)
+                ]);
+                
+                console.log(`[ASTROLOGY-SYNC] Pre-generated insights for user: ${userId.substring(0, 8)}...`);
+            } catch (err) {
+                // Non-fatal - insights can be generated on-demand later
+                console.error('[ASTROLOGY-SYNC] Failed to pre-generate insights:', err.message);
+            }
+        });
         
         successResponse(res, {
             success: true,

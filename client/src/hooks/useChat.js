@@ -62,8 +62,25 @@ export function useChat(userId, token, isAuthenticated, authUserId, isTemporaryA
                 res = await fetchWithTokenRefresh(url, { headers });
             }
             
-            if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-            await res.json();
+            if (!res.ok) {
+                // 204 No Content means opening already exists, just load messages
+                if (res.status === 204) {
+                    return;
+                }
+                throw new Error(`HTTP error! Status: ${res.status}`);
+            }
+            
+            const openingData = await res.json();
+            
+            // Add the opening message to chat immediately
+            if (openingData && openingData.content) {
+                const openingMessage = {
+                    id: Date.now(),
+                    role: openingData.role || 'assistant',
+                    content: openingData.content
+                };
+                setChat(prevChat => [openingMessage, ...prevChat]);
+            }
         } catch (err) {
             // Opening request failed, continue silently
         }

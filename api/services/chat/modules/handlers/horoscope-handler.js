@@ -40,8 +40,16 @@ export async function generateHoroscope(userId, range = 'daily') {
         );
         
         if (existingHoroscopes.length > 0) {
+            // Check if user is temporary/trial account FIRST
+            const isTemporary = await isTemporaryUser(userId);
+            
+            // FREE TRIAL: Never regenerate - horoscope persists for entire trial
+            if (isTemporary) {
+                return;
+            }
+            
+            // REGULAR USERS: Check if regeneration needed based on date
             const createdAtLocalDate = existingHoroscopes[0].created_at_local_date;
-            // Convert to YYYY-MM-DD string if it's a Date object
             const createdDateStr = createdAtLocalDate instanceof Date 
                 ? createdAtLocalDate.toISOString().split('T')[0]
                 : String(createdAtLocalDate).split('T')[0];
