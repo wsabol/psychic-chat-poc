@@ -209,11 +209,14 @@ app.use("/user/delete-account", authenticateToken, userDataRoutes);
 
 // Protected routes (authentication + user hash validation required)
 // validateUserHash ensures hashed user IDs in URLs match the authenticated user
+console.log('[ROUTES] Registering protected routes with user hash validation');
 app.use("/chat", authenticateToken, validateUserHash, chatRoutes);
 app.use("/chat-direct", authenticateToken, chatDirectRoutes);
 app.use("/user-profile", authenticateToken, validateUserHash, userProfileRoutes);
 app.use("/user", authenticateToken, validateUserHash, userDataRoutes);
-app.use("/user-astrology", authenticateToken, validateUserHash, astrologyRoutes);
+// Note: astrology routes apply validateUserHash at router level for proper param parsing
+app.use("/user-astrology", authenticateToken, astrologyRoutes);
+console.log('[ROUTES] /user-astrology route registered');
 app.use("/horoscope", authenticateToken, validateUserHash, horoscopeRoutes);
 app.use("/moon-phase", authenticateToken, validateUserHash, moonPhaseRoutes);
 app.use("/astrology-insights", authenticateToken, validateUserHash, astrologyInsightsRoutes);

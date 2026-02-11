@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { getZodiacSignFromDate } from '../utils/astroUtils';
+import ReactMarkdown from 'react-markdown';
 import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
+import { hashUserIdForUrl } from '../utils/userHashUtils';
 import { loadZodiacSignsForLanguage } from '../data/zodiac/index.js';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
 
@@ -39,7 +40,8 @@ function AstrologyModal({ userId, token, isOpen, onClose, birthDate, birthTime, 
             
             // Fetch calculated astrology data from database
             try {
-                const astroResponse = await fetchWithTokenRefresh(`${API_URL}/user-astrology/${userId}`, { headers });
+                const hashedUserId = await hashUserIdForUrl(userId);
+                const astroResponse = await fetchWithTokenRefresh(`${API_URL}/user-astrology/${hashedUserId}`, { headers });
                 if (astroResponse.ok) {
                     const dbAstroData = await astroResponse.json();
                     

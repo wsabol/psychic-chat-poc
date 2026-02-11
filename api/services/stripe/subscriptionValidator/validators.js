@@ -4,7 +4,7 @@
  */
 
 import { stripe } from '../stripeClient.js';
-import { logErrorFromCatch } from '../../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../../../../shared/errorLogger.js';
 import {
   getSubscriptionIdFromDB,
   getCustomerIdFromDB,

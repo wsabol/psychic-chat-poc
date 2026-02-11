@@ -1,4 +1,5 @@
 import { fetchWithTokenRefresh } from './fetchWithTokenRefresh';
+import { hashUserIdForUrl } from './userHashUtils';
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
@@ -59,7 +60,8 @@ export async function fetchUserPreferences(userId, token) {
  */
 export async function fetchAstrologyData(userId, token) {
   const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-  const response = await fetch(`${API_URL}/user-astrology/${userId}`, { headers });
+  const hashedUserId = await hashUserIdForUrl(userId);
+  const response = await fetch(`${API_URL}/user-astrology/${hashedUserId}`, { headers });
   
   if (!response.ok) {
     return null;

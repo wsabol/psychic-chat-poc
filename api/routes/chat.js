@@ -19,22 +19,38 @@ router.post("/", verify2FA, async (req, res) => {
     const { message } = req.body;
     const userId = req.userId;
 
-    try {
-                // Store user message with proper encryption
-        const userContent = { text: message };
-        const userIdHash = hashUserId(userId);
-        const { rows: tzRows } = await db.query(
-            `SELECT timezone FROM user_preferences WHERE user_id_hash = $1`,
-            [userIdHash]
-        );
-        const userTimezone = tzRows.length > 0 && tzRows[0].timezone ? tzRows[0].timezone : 'UTC';
-        await insertMessage(userId, 'user', userContent, null, userTimezone);
-        
-        // Enqueue for worker processing
-        await enqueueMessage({ userId, message });
+    if (!message || typeof message !== 'string' || message.trim().length === 0) {
+        return res.status(400).json({
+            success: false,
+            error: 'Message is required'
+        });
+    }
 
-        successResponse(res, { status: "queued" });
-        } catch (err) {
+    try {
+        console.log(`[CHAT] Processing message for user: ${userId.substring(0, 8)}...`);
+        
+        // Import synchronous processor
+        const { processChatMessageSync } = await import('../services/chat/processor.js');
+        
+        // Process message synchronously
+        const response = await processChatMessageSync(userId, message);
+        
+        if (!response.success) {
+            return res.status(500).json(response);
+        }
+        
+        return res.json({
+            success: true,
+            id: response.id,
+            role: response.role,
+            content: response.contentFull,
+            contentBrief: response.contentBrief,
+            responseType: response.responseType,
+            createdAt: response.createdAt
+        });
+        
+    } catch (err) {
+        console.error('[CHAT] Error processing message:', err);
         logErrorFromCatch(err, 'app', 'chat');
         return serverError(res, 'Failed to process message');
     }

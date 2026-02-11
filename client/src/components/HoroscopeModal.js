@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { getAstrologyData } from '../utils/astroUtils';
 import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
+import { hashUserIdForUrl } from '../utils/userHashUtils';
 
 function HoroscopeModal({ userId, token, isOpen, onClose }) {
     const [horoscopeData, setHoroscopeData] = useState(null);
@@ -104,8 +105,9 @@ function HoroscopeModal({ userId, token, isOpen, onClose }) {
 
     const fetchZodiacInfo = async (headers) => {
         try {
+            const hashedUserId = await hashUserIdForUrl(userId);
             const astroResponse = await fetchWithTokenRefresh(
-                `${API_URL}/user-astrology/${userId}`,
+                `${API_URL}/user-astrology/${hashedUserId}`,
                 { headers }
             );
             

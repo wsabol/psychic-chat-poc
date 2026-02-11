@@ -1,5 +1,5 @@
-import { db } from '../../../shared/db.js';
-import { hashUserId } from '../../../shared/hashUtils.js';
+import { db } from '../../../../shared/db.js';
+import { hashUserId } from '../../../../shared/hashUtils.js';
 import { 
     fetchUserPersonalInfo, 
     fetchUserAstrology,
@@ -13,7 +13,7 @@ import {
 import { storeMessage } from '../messages.js';
 import { getUserTimezone, getLocalDateForTimezone, getLocalTimestampForTimezone, needsRegeneration } from '../utils/timezoneHelper.js';
 import { getAstronomicalContext, formatPlanetsForPrompt } from '../utils/astronomicalContext.js';
-import { logErrorFromCatch } from '../../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../../../../shared/errorLogger.js';
 
 /**
  * Generate horoscopes for the user based on local timezone date
@@ -133,8 +133,8 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
             
             // Publish SSE notification via Redis
             try {
-                const { redis } = await import('../../shared/queue.js');
-                const redisClient = await redis();
+                const { getClient } = await import('../../../../shared/queue.js');
+                const redisClient = await getClient();
                 await redisClient.publish(
                     `response-ready:${userId}`,
                     JSON.stringify({

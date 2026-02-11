@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { logErrorFromCatch } from '../../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../../../../shared/errorLogger.js';
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 

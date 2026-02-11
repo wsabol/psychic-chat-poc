@@ -1,10 +1,10 @@
 import { fetchUserAstrology, fetchUserLanguagePreference, fetchUserOracleLanguagePreference, getOracleSystemPrompt, callOracle, getUserGreeting, fetchUserPersonalInfo } from '../oracle.js';
 import { storeMessage } from '../messages.js';
 import { getUserTimezone, getLocalDateForTimezone, getLocalTimestampForTimezone, needsRegeneration } from '../utils/timezoneHelper.js';
-import { db } from '../../../shared/db.js';
-import { hashUserId } from '../../../shared/hashUtils.js';
+import { db } from '../../../../shared/db.js';
+import { hashUserId } from '../../../../shared/hashUtils.js';
 import { getAstronomicalContext, formatPlanetsForPrompt } from '../utils/astronomicalContext.js';
-import { logErrorFromCatch } from '../../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../../../../shared/errorLogger.js';
 
 
 
@@ -124,8 +124,8 @@ Do NOT include tarot cards - this is pure astrological forecasting enriched by t
         
         // Publish SSE notification via Redis
         try {
-            const { redis } = await import('../../shared/queue.js');
-            const redisClient = await redis();
+            const { getClient } = await import('../../../../shared/queue.js');
+            const redisClient = await getClient();
             await redisClient.publish(
                 `response-ready:${userId}`,
                 JSON.stringify({

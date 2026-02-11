@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
+import { hashUserIdForUrl } from '../utils/userHashUtils';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
@@ -13,8 +14,9 @@ export function useAstroInfo(userId, token) {
   const fetch = useCallback(async () => {
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const hashedUserId = await hashUserIdForUrl(userId);
       const response = await fetchWithTokenRefresh(
-        `${API_URL}/user-astrology/${userId}`,
+        `${API_URL}/user-astrology/${hashedUserId}`,
         { headers }
       );
 

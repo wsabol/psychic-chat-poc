@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
+import { hashUserIdForUrl } from '../utils/userHashUtils';
 import { formatDateForDisplay } from '../utils/dateFormatting';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
 
@@ -104,8 +105,9 @@ export function usePersonalInfoAPI(userId, token, isTemporaryAccount = false) {
    */
   const triggerAstrologySync = useCallback(async () => {
     try {
+      const hashedUserId = await hashUserIdForUrl(userId);
       const response = await fetchWithTokenRefresh(
-        `${API_URL}/user-astrology/sync-calculate/${userId}`,
+        `${API_URL}/user-astrology/sync-calculate/${hashedUserId}`,
         {
           method: 'POST',
           headers: { 'Authorization': token ? `Bearer ${token}` : '' }

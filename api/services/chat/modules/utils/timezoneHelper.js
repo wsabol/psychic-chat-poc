@@ -1,4 +1,4 @@
-import { db } from '../../../shared/db.js';
+import { db } from '../../../../shared/db.js';
 import { logErrorFromCatch } from '../../../../shared/errorLogger.js';
 
 /**

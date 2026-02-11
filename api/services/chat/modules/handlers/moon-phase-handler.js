@@ -1,5 +1,5 @@
-import { db } from '../../../shared/db.js';
-import { hashUserId } from '../../../shared/hashUtils.js';
+import { db } from '../../../../shared/db.js';
+import { hashUserId } from '../../../../shared/hashUtils.js';
 import { 
     fetchUserPersonalInfo, 
     fetchUserAstrology,
@@ -12,7 +12,7 @@ import {
 import { storeMessage } from '../messages.js';
 import { getAstronomicalContext, formatPlanetsForPrompt } from '../utils/astronomicalContext.js';
 import { getUserTimezone, getLocalDateForTimezone, getLocalTimestampForTimezone, needsRegeneration } from '../utils/timezoneHelper.js';
-import { logErrorFromCatch } from '../../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../../../../shared/errorLogger.js';
 
 /**
  * Generate personalized moon phase commentary based on user's birth chart
@@ -140,8 +140,8 @@ Do NOT include tarot cards - this is purely lunar + astrological insight enriche
         
         // Publish SSE notification via Redis
         try {
-            const { redis } = await import('../../shared/queue.js');
-            const redisClient = await redis();
+            const { getClient } = await import('../../../../shared/queue.js');
+            const redisClient = await getClient();
             await redisClient.publish(
                 `response-ready:${userId}`,
                 JSON.stringify({
@@ -172,12 +172,12 @@ function buildMoonPhasePrompt(userInfo, astrologyInfo, phase, userGreeting, astr
     
     if (astro.sun_sign) {
         prompt += `COMPLETE BIRTH CHART:\n`;
-        prompt += `- Sun Sign: ${astro.sun_sign} (${astro.sun_degree}°) - Core Identity, Will Power, Life Purpose\n`;
-        prompt += `- Moon Sign: ${astro.moon_sign} (${astro.moon_degree}°) - Inner Emotional World, Inner Needs, Instinctive Reactions\n`;
-        prompt += `- Rising Sign/Ascendant: ${astro.rising_sign} (${astro.rising_degree}°) - How they appear to others, Personal Magnetism, First Impression\n`;
-        if (astro.venus_sign) prompt += `- Venus Sign: ${astro.venus_sign} (${astro.venus_degree}°) - Love, Attraction, Values\n`;
-        if (astro.mars_sign) prompt += `- Mars Sign: ${astro.mars_sign} (${astro.mars_degree}°) - Action, Drive, Assertion\n`;
-        if (astro.mercury_sign) prompt += `- Mercury Sign: ${astro.mercury_sign} (${astro.mercury_degree}°) - Communication, Thinking Style\n`;
+        prompt += `- Sun Sign: ${astro.sun_sign} (${astro.sun_degree}Â°) - Core Identity, Will Power, Life Purpose\n`;
+        prompt += `- Moon Sign: ${astro.moon_sign} (${astro.moon_degree}Â°) - Inner Emotional World, Inner Needs, Instinctive Reactions\n`;
+        prompt += `- Rising Sign/Ascendant: ${astro.rising_sign} (${astro.rising_degree}Â°) - How they appear to others, Personal Magnetism, First Impression\n`;
+        if (astro.venus_sign) prompt += `- Venus Sign: ${astro.venus_sign} (${astro.venus_degree}Â°) - Love, Attraction, Values\n`;
+        if (astro.mars_sign) prompt += `- Mars Sign: ${astro.mars_sign} (${astro.mars_degree}Â°) - Action, Drive, Assertion\n`;
+        if (astro.mercury_sign) prompt += `- Mercury Sign: ${astro.mercury_sign} (${astro.mercury_degree}Â°) - Communication, Thinking Style\n`;
         prompt += `- Birth Location: ${userInfo.birth_city}, ${userInfo.birth_province}\n\n`;
     }
     
@@ -186,7 +186,7 @@ function buildMoonPhasePrompt(userInfo, astrologyInfo, phase, userGreeting, astr
         prompt += `CURRENT ASTRONOMICAL POSITIONS (calculated, not fictional):\n`;
         prompt += `Moon Phase: ${astronomicalContext.currentMoonPhase}\n`;
         if (astronomicalContext.moonPosition) {
-            prompt += `Current Moon Position: ${astronomicalContext.moonPosition.degree}° ${astronomicalContext.moonPosition.sign}\n`;
+            prompt += `Current Moon Position: ${astronomicalContext.moonPosition.degree}Â° ${astronomicalContext.moonPosition.sign}\n`;
         }
         prompt += `\nCurrent Planetary Transits:\n`;
         prompt += formatPlanetsForPrompt(astronomicalContext.currentPlanets) + '\n\n';

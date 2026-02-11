@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { fetchWithTokenRefresh } from '../../../utils/fetchWithTokenRefresh';
+import { hashUserIdForUrl } from '../../../utils/userHashUtils';
 import { isBirthInfoError } from '../../../utils/birthInfoErrorHandler';
 import { useTranslation } from '../../../context/TranslationContext';
 import { logErrorFromCatch } from '../../../shared/errorLogger.js';
@@ -54,8 +55,9 @@ export function useAstrologyData(userId, token) {
     setError(null);
     try {
       const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
+      const hashedUserId = await hashUserIdForUrl(userId);
       
-      const response = await fetchWithTokenRefresh(`${API_URL}/user-astrology/${userId}`, { 
+      const response = await fetchWithTokenRefresh(`${API_URL}/user-astrology/${hashedUserId}`, { 
         headers: {
           'Authorization': token ? `Bearer ${token}` : ''
         }

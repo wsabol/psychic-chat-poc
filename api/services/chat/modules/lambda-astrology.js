@@ -1,4 +1,4 @@
-import { logErrorFromCatch } from '../../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../../../../shared/errorLogger.js';
 
 // Lambda URL from environment variable
 const ASTROLOGY_LAMBDA_URL = process.env.ASTROLOGY_LAMBDA_URL || 'https://iay72sryvsjf7tgofqk4pibr240yccoy.lambda-url.us-east-1.on.aws/';

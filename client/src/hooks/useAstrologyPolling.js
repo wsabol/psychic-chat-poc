@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-
+import { hashUserIdForUrl } from '../utils/userHashUtils';
 import { logErrorFromCatch, logWarning } from '../shared/errorLogger.js';
 
 /**
@@ -36,10 +36,12 @@ export function useAstrologyPolling() {
         let attempts = 0;
         const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
 
+        // Hash userId for URL (required by validateUserHash middleware)
+        const hashedUserId = await hashUserIdForUrl(userId);
 
         while (attempts < maxAttempts) {
           try {
-            const response = await fetch(`${apiUrl}/user-astrology/${userId}`, { headers });
+            const response = await fetch(`${apiUrl}/user-astrology/${hashedUserId}`, { headers });
 
             if (response.ok) {
               const data = await response.json();

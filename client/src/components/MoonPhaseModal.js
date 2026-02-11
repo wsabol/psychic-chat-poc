@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { getAstrologyData } from '../utils/astroUtils';
 import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
+import { hashUserIdForUrl } from '../utils/userHashUtils';
 
 function MoonPhaseModal({ userId, token, isOpen, onClose }) {
     const [moonPhaseData, setMoonPhaseData] = useState(null);
@@ -51,9 +52,10 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
         try {
             const currentMoonPhase = getCurrentMoonPhase();
             const astroHeaders = token ? { 'Authorization': `Bearer ${token}` } : {};
+            const hashedUserId = await hashUserIdForUrl(userId);
             
             // Fetch user's astrology data
-            const astroResponse = await fetchWithTokenRefresh(`${API_URL}/user-astrology/${userId}`, { headers: astroHeaders });
+            const astroResponse = await fetchWithTokenRefresh(`${API_URL}/user-astrology/${hashedUserId}`, { headers: astroHeaders });
             
             if (!astroResponse.ok) {
                 setError('Could not fetch your astrology data. Please ensure your birth information is complete.');

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getZodiacSignFromDate } from '../../../utils/astroUtils';
 import { fetchWithTokenRefresh } from '../../../utils/fetchWithTokenRefresh';
+import { hashUserIdForUrl } from '../../../utils/userHashUtils';
 import { loadZodiacSignsForLanguage } from '../../../data/zodiac/index.js';
 import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
@@ -63,8 +64,9 @@ export function useMySignModal(userId, token, isOpen) {
   const fetchCalculatedData = async () => {
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const hashedUserId = await hashUserIdForUrl(userId);
       const response = await fetchWithTokenRefresh(
-        `${API_URL}/user-astrology/${userId}`,
+        `${API_URL}/user-astrology/${hashedUserId}`,
         { headers }
       );
 

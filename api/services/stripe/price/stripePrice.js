@@ -3,7 +3,7 @@
  * Pure Stripe API operations for price management
  */
 import { stripe } from '../stripeClient.js';
-import { logErrorFromCatch } from '../../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../../../../shared/errorLogger.js';
 import { 
   PRODUCT_CONFIGS, 
   PRICE_DEFAULTS, 

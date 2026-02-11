@@ -6,7 +6,6 @@
 import { db } from '../shared/db.js';
 import { hashUserId } from '../shared/hashUtils.js';
 import { calculateSunSignFromDate } from '../shared/zodiacUtils.js';
-import { enqueueMessage } from '../shared/queue.js';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 /**
@@ -239,15 +238,15 @@ export async function clearAstrologyMessages(userIdHash) {
 }
 
 /**
- * Enqueue full birth chart calculation if complete data is available
+ * Calculate full birth chart directly using Lambda
  * @param {string} tempUserId - Temporary user ID
  * @param {Object} personalInfo - Personal information
  * @returns {Promise<void>}
  */
 export async function enqueueFullBirthChartCalculation(tempUserId, personalInfo) {
-  const { birthTime, birthCountry, birthProvince, birthCity, birthDate } = personalInfo;
+  const { birthTime, birthCountry, birthProvince, birthCity, birthDate, birthTimezone } = personalInfo;
 
-  // Only enqueue if we have complete location data
+  // Only calculate if we have complete location data
   if (!birthTime || !birthCountry || !birthProvince || !birthCity || !birthDate) {
     return;
   }
@@ -257,13 +256,41 @@ export async function enqueueFullBirthChartCalculation(tempUserId, personalInfo)
     const delayMs = 1000;
     await new Promise(resolve => setTimeout(resolve, delayMs));
 
-    await enqueueMessage({
-      userId: tempUserId,
-      message: '[SYSTEM] Calculate my birth chart with rising sign and moon sign.'
+    // Import Lambda calculation function
+    const { calculateBirthChart } = await import('./lambda-astrology.js');
+    
+    // Call Lambda to calculate birth chart
+    const result = await calculateBirthChart({
+      birth_date: birthDate,
+      birth_time: birthTime,
+      birth_country: birthCountry,
+      birth_province: birthProvince,
+      birth_city: birthCity,
+      birth_timezone: birthTimezone
     });
+    
+    if (result.success) {
+      // Save full astrology data
+      const userIdHash = hashUserId(tempUserId);
+      const zodiacSign = result.sun_sign || calculateSunSignFromDate(birthDate);
+      
+      await db.query(
+        `INSERT INTO user_astrology (user_id_hash, zodiac_sign, astrology_data)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (user_id_hash) DO UPDATE SET
+           zodiac_sign = EXCLUDED.zodiac_sign,
+           astrology_data = EXCLUDED.astrology_data,
+           updated_at = CURRENT_TIMESTAMP`,
+        [userIdHash, zodiacSign, JSON.stringify(result)]
+      );
+      
+      console.log(`[FREE-TRIAL-SERVICE] Birth chart calculated and saved for user: ${tempUserId.substring(0, 8)}`);
+    } else {
+      console.error(`[FREE-TRIAL-SERVICE] Birth chart calculation failed:`, result.error);
+    }
   } catch (err) {
     // Non-fatal
-    logErrorFromCatch('[FREE-TRIAL-SERVICE] Failed to enqueue astrology calculation:', err.message);
+    logErrorFromCatch('[FREE-TRIAL-SERVICE] Failed to calculate birth chart:', err.message);
   }
 }
 

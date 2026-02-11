@@ -140,19 +140,21 @@ router.post("/:userId", authenticateToken, authorizeUser, async (req, res) => {
             return validationError(res, 'Moon phase name required in request body');
         }
         
-        await enqueueMessage({
-            userId,
-            message: `[SYSTEM] Generate moon phase commentary for ${phase}`
-        });
+        // Import synchronous processor
+        const { processMoonPhaseSync } = await import('../services/chat/processor.js');
+        
+        // Generate moon phase commentary synchronously
+        const result = await processMoonPhaseSync(userId, phase);
         
         successResponse(res, { 
-            status: 'Moon phase commentary generation queued',
-            message: 'Your personalized moon phase insight is being generated. Please wait a moment.',
-            phase: phase
+            commentary: result.commentary,
+            brief: result.brief,
+            generated_at: result.generated_at,
+            phase: result.phase
         });
         
-        } catch (err) {
-        return serverError(res, 'Failed to queue moon phase commentary generation');
+    } catch (err) {
+        return serverError(res, 'Failed to generate moon phase commentary');
     }
 });
 

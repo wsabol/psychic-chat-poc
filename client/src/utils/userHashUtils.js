@@ -4,9 +4,7 @@
  */
 
 /**
- * Hash a user ID using the same algorithm as the server
- * Note: This uses HMAC-SHA256 with a client-side constant
- * For maximum security, this should be derived from user's auth token
+ * Hash a user ID using HMAC-SHA256 matching server implementation
  * @param {string} userId - The user ID to hash
  * @returns {string} URL-safe hash
  */
@@ -14,20 +12,30 @@ export async function hashUserIdForUrl(userId) {
   if (!userId) return null;
 
   try {
-    // Use Web Crypto API (available in modern browsers)
+    // Use the same secret as the server (must match USER_HASH_SECRET env var)
+    // For development, using default secret. In production, this should match the server's secret.
+    const secret = process.env.REACT_APP_USER_HASH_SECRET || 'default-secret-change-in-production';
+    
     const encoder = new TextEncoder();
-    const data = encoder.encode(userId);
     
-    // For client-side, we use a static salt (different from server's dynamic secret)
-    // Server will use its USER_HASH_SECRET for actual validation
-    // This is just to obscure user IDs in URLs from casual inspection
-    const salt = 'client-side-hash-salt-v1';
-    const saltedData = encoder.encode(salt + userId);
+    // Import the secret as a CryptoKey for HMAC
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
     
-    const hashBuffer = await crypto.subtle.digest('SHA-256', saltedData);
+    // Sign the userId with HMAC-SHA256
+    const signature = await crypto.subtle.sign(
+      'HMAC',
+      key,
+      encoder.encode(userId)
+    );
     
     // Convert to base64url format (matching server implementation)
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashArray = Array.from(new Uint8Array(signature));
     const hashBase64 = btoa(String.fromCharCode.apply(null, hashArray))
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
@@ -36,9 +44,8 @@ export async function hashUserIdForUrl(userId) {
     
     return hashBase64;
   } catch (err) {
-    logErrorFromCatch('[USER-HASH] Client-side hashing failed:', err);
+    console.error('[USER-HASH] Client-side hashing failed:', err);
     // Fallback: return original userId if hashing fails
-    // (server will re-hash with its secret anyway)
     return userId;
   }
 }

@@ -55,21 +55,28 @@ router.post('/send', async (req, res) => {
       return validationError(res, 'Free trial already completed');
     }
 
-    // Get user's timezone (default to UTC for temp users)
-    const { rows: tzRows } = await db.query(
-      `SELECT timezone FROM user_preferences WHERE user_id_hash = $1`,
-      [userIdHash]
-    );
-    const userTimezone = tzRows.length > 0 && tzRows[0].timezone ? tzRows[0].timezone : 'UTC';
-
-    // Store user message
-    const userContent = { text: message };
-    await insertMessage(tempUserId, 'user', userContent, null, userTimezone);
-
-    // Enqueue for worker processing
-    await enqueueMessage({ userId: tempUserId, message });
-
-    return successResponse(res, { status: 'queued' });
+    console.log(`[FREE-TRIAL-CHAT] Processing message for temp user: ${tempUserId.substring(0, 8)}...`);
+    
+    // Import synchronous processor
+    const { processChatMessageSync } = await import('../services/chat/processor.js');
+    
+    // Process message synchronously
+    const response = await processChatMessageSync(tempUserId, message);
+    
+    if (!response.success) {
+      return serverError(res, response.error || 'Failed to process message');
+    }
+    
+    return successResponse(res, {
+      success: true,
+      id: response.id,
+      role: response.role,
+      content: response.contentFull,
+      contentBrief: response.contentBrief,
+      responseType: response.responseType,
+      createdAt: response.createdAt
+    });
+    
   } catch (err) {
     await logErrorFromCatch(err, 'free-trial-chat', 'Error sending message');
     return serverError(res, 'Failed to send message');

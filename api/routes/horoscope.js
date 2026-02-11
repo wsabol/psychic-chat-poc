@@ -188,7 +188,7 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
 
 /**
  * POST /horoscope/:userId/:range
- * Generate new horoscopes by enqueueing a worker job
+ * Generate new horoscopes synchronously (no queue)
  */
 router.post("/:userId/:range", authenticateToken, authorizeUser, async (req, res) => {
     const { userId, range } = req.params;
@@ -199,20 +199,21 @@ router.post("/:userId/:range", authenticateToken, authorizeUser, async (req, res
             return validationError(res, 'Invalid range. Must be daily or weekly.');
         }
         
-        // Enqueue horoscope generation job
-        await enqueueMessage({
-            userId,
-            message: `[SYSTEM] Generate horoscope for ${range.toLowerCase()}`
-        });
+        // Import synchronous processor
+        const { processHoroscopeSync } = await import('../services/chat/processor.js');
+        
+        // Generate horoscope synchronously
+        const result = await processHoroscopeSync(userId, range.toLowerCase());
         
         successResponse(res, { 
-            status: 'Horoscope generation queued',
-            message: 'Your horoscope is being generated. Please check back in a few seconds.',
+            horoscope: result.horoscope,
+            brief: result.brief,
+            generated_at: result.generated_at,
             range: range.toLowerCase()
         });
         
-        } catch (err) {
-        return serverError(res, 'Failed to queue horoscope generation');
+    } catch (err) {
+        return serverError(res, 'Failed to generate horoscope');
     }
 });
 

@@ -5,7 +5,6 @@
 
 import { hashUserId } from '../../shared/hashUtils.js';
 import { calculateSunSignFromDate } from '../../shared/zodiacUtils.js';
-import { enqueueMessage } from '../../shared/queue.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
 import {
   upsertAstrologyData,
@@ -108,33 +107,69 @@ export async function clearUserAstrologyCache(userId) {
  */
 async function calculateBirthChartDirect(userId) {
   try {
-    const { LambdaClient, InvokeCommand } = await import('@aws-sdk/client-lambda');
+    // Import Lambda calculation function
+    const { calculateBirthChart } = await import('../lambda-astrology.js');
+    const { db } = await import('../../shared/db.js');
     
-    const client = new LambdaClient({ region: process.env.AWS_REGION || 'us-east-1' });
+    // Fetch user's birth data from database
+    const { rows } = await db.query(
+      `SELECT 
+        pgp_sym_decrypt(birth_date_encrypted, $1) as birth_date,
+        pgp_sym_decrypt(birth_time_encrypted, $1) as birth_time,
+        pgp_sym_decrypt(birth_country_encrypted, $1) as birth_country,
+        pgp_sym_decrypt(birth_province_encrypted, $1) as birth_province,
+        pgp_sym_decrypt(birth_city_encrypted, $1) as birth_city,
+        pgp_sym_decrypt(birth_timezone_encrypted, $1) as birth_timezone
+       FROM user_personal_info 
+       WHERE user_id = $2`,
+      [process.env.ENCRYPTION_KEY, userId]
+    );
     
-    const payload = {
-      userId,
-      requestType: 'birth_chart'
-    };
+    if (rows.length === 0) {
+      console.warn(`[ASTROLOGY-SERVICE] No personal info found for user: ${userId.substring(0, 8)}`);
+      return false;
+    }
     
-    const command = new InvokeCommand({
-      FunctionName: 'psychic-chat-astrology-production',
-      InvocationType: 'Event', // Async invocation
-      Payload: JSON.stringify(payload)
+    const userData = rows[0];
+    
+    // Verify we have complete birth data
+    if (!userData.birth_date || !userData.birth_time || !userData.birth_country || 
+        !userData.birth_province || !userData.birth_city) {
+      console.warn(`[ASTROLOGY-SERVICE] Incomplete birth data for user: ${userId.substring(0, 8)}`);
+      return false;
+    }
+    
+    // Call Lambda to calculate birth chart
+    const result = await calculateBirthChart({
+      birth_date: userData.birth_date,
+      birth_time: userData.birth_time,
+      birth_country: userData.birth_country,
+      birth_province: userData.birth_province,
+      birth_city: userData.birth_city,
+      birth_timezone: userData.birth_timezone
     });
     
-    await client.send(command);
-    console.log(`[ASTROLOGY-SERVICE] Direct Lambda invocation successful for user: ${userId.substring(0, 8)}`);
+    if (!result.success) {
+      console.error(`[ASTROLOGY-SERVICE] Birth chart calculation failed:`, result.error);
+      return false;
+    }
+    
+    // Save results to database
+    const userIdHash = hashUserId(userId);
+    const zodiacSign = result.sun_sign || calculateSunSignFromDate(userData.birth_date);
+    
+    await upsertAstrologyData(userIdHash, zodiacSign, result);
+    
+    console.log(`[ASTROLOGY-SERVICE] Birth chart calculated and saved for user: ${userId.substring(0, 8)}`);
     return true;
   } catch (err) {
-    logErrorFromCatch('[ASTROLOGY-SERVICE] Direct Lambda invocation failed:', err.message);
+    logErrorFromCatch('[ASTROLOGY-SERVICE] Direct Lambda calculation failed:', err);
     return false;
   }
 }
 
 /**
- * Enqueue full birth chart calculation if complete data available
- * Fallback to direct Lambda call if Redis is unavailable
+ * Calculate full birth chart directly (skip Redis queue since worker is gone)
  * @param {string} userId - User ID
  * @returns {Promise<void>}
  */
@@ -143,16 +178,10 @@ export async function enqueueFullBirthChart(userId) {
     // Delay to ensure write propagation
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // Try Redis queue first
-    await enqueueMessage({
-      userId,
-      message: '[SYSTEM] Calculate my birth chart with rising sign and moon sign.'
-    });
-    
-    console.log(`[ASTROLOGY-SERVICE] Birth chart queued via Redis for user: ${userId.substring(0, 8)}`);
-  } catch (err) {
-    // Redis failed - call Lambda directly as fallback
-    console.warn(`[ASTROLOGY-SERVICE] Redis unavailable, using direct Lambda fallback`);
+    // Call Lambda directly (worker is gone, so no more queuing)
+    console.log(`[ASTROLOGY-SERVICE] Calculating birth chart directly for user: ${userId.substring(0, 8)}`);
     await calculateBirthChartDirect(userId);
+  } catch (err) {
+    logErrorFromCatch('[ASTROLOGY-SERVICE] Failed to calculate birth chart:', err);
   }
 }

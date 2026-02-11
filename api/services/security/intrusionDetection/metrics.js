@@ -5,7 +5,7 @@
 
 import { THRESHOLDS } from './config.js';
 import * as queries from './queries.js';
-import { logErrorFromCatch } from '../../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../../../../shared/errorLogger.js';
 
 /**
  * Get security dashboard metrics

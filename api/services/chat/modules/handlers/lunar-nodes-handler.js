@@ -1,6 +1,6 @@
 import { fetchUserAstrology, getOracleSystemPrompt, callOracle, getUserGreeting, fetchUserPersonalInfo } from '../oracle.js';
 import { storeMessage } from '../messages.js';
-import { logErrorFromCatch } from '../../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../../../../shared/errorLogger.js';
 
 export async function generateLunarNodesInsight(userId) {
     try {
