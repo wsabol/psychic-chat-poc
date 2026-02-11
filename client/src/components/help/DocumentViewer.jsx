@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../../context/TranslationContext';
+import { getLegalDocumentPath } from '../../utils/legalDocumentUtils';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
 import './DocumentViewer.css';
 
@@ -10,23 +11,23 @@ export function DocumentViewer({ title, docType, onBack }) {
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(true);
   const [fileType, setFileType] = useState('md'); // 'md' or 'pdf'
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   useEffect(() => {
     const fetchDocument = async () => {
       try {
-        // Use PDF files for both terms and privacy
-        const fileName = docType === 'terms' ? 'Terms_of_Service.pdf' : 'privacy.pdf';
-        const extension = fileName.endsWith('.pdf') ? 'pdf' : 'md';
+        // Get language-specific document path
+        const documentPath = getLegalDocumentPath(docType, language);
+        const extension = documentPath.endsWith('.pdf') ? 'pdf' : 'md';
         setFileType(extension);
 
         if (extension === 'pdf') {
           // For PDF, just set the URL
-          setContent(`/${fileName}`);
+          setContent(documentPath);
           setLoading(false);
         } else {
           // For markdown, fetch and parse the content
-          const response = await fetch(`/${fileName}`);
+          const response = await fetch(documentPath);
           const text = await response.text();
           setContent(text);
           setLoading(false);
@@ -38,7 +39,7 @@ export function DocumentViewer({ title, docType, onBack }) {
       }
     };
     fetchDocument();
-  }, [docType]);
+  }, [docType, language]);
 
   return (
     <div className="help-document-viewer">

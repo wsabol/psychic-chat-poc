@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from '../context/TranslationContext';
 import { DocumentViewer } from './help/DocumentViewer.jsx';
+import { getLegalDocumentPath } from '../utils/legalDocumentUtils';
 
 /**
  * TermsCheckbox Component
@@ -15,8 +16,12 @@ export function TermsCheckbox({
   onPrivacyChange, 
   disabled = false 
 }) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [viewingDocument, setViewingDocument] = useState(null); // 'terms' or 'privacy' or null
+  
+  // Get language-specific document paths
+  const termsPath = getLegalDocumentPath('terms', language);
+  const privacyPath = getLegalDocumentPath('privacy', language);
 
   return (
     <>
@@ -61,7 +66,7 @@ export function TermsCheckbox({
           </button>
           {' '}
           <a 
-            href="/Terms_of_Service.pdf" 
+            href={termsPath} 
             target="_blank" 
             rel="noopener noreferrer" 
             style={{ color: '#64B5F6', fontSize: '0.8em' }}
@@ -106,7 +111,7 @@ export function TermsCheckbox({
           </button>
           {' '}
           <a 
-            href="/privacy.pdf" 
+            href={privacyPath} 
             target="_blank" 
             rel="noopener noreferrer" 
             style={{ color: '#64B5F6', fontSize: '0.8em' }}

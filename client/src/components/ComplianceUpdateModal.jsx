@@ -14,9 +14,12 @@
 import React, { useState } from 'react';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
 import { DocumentViewer } from './help/DocumentViewer.jsx';
+import { useTranslation } from '../context/TranslationContext';
+import { getLegalDocumentPath } from '../utils/legalDocumentUtils';
 import './ComplianceUpdateModal.css';
 
 export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpdated }) {
+  const { language } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [accepted, setAccepted] = useState({
@@ -24,6 +27,10 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
     privacy: false
   });
   const [viewingDocument, setViewingDocument] = useState(null); // 'terms' or 'privacy' or null
+  
+  // Get language-specific document paths
+  const termsPath = getLegalDocumentPath('terms', language);
+  const privacyPath = getLegalDocumentPath('privacy', language);
 
   if (!compliance || !compliance.blocksAccess) {
     return null; // Don't render if not needed
@@ -139,7 +146,7 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
                     📖 Read Full Terms of Service
                   </button>
                   <a 
-                    href="/Terms_of_Service.pdf" 
+                    href={termsPath} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="btn-link-secondary"
@@ -193,7 +200,7 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
                     🔒 Read Full Privacy Policy
                   </button>
                   <a 
-                    href="/privacy.pdf" 
+                    href={privacyPath} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="btn-link-secondary"
