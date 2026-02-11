@@ -284,8 +284,6 @@ export async function enqueueFullBirthChartCalculation(tempUserId, personalInfo)
         [userIdHash, zodiacSign, JSON.stringify(result)]
       );
       
-      console.log(`[FREE-TRIAL-SERVICE] Birth chart calculated and saved for user: ${tempUserId.substring(0, 8)}`);
-      
       // NOTE: Free trial users get insights on-demand only (generated once when requested)
       // They do NOT get daily regeneration - the same insights persist for their entire trial
       

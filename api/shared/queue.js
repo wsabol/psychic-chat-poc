@@ -44,13 +44,11 @@ async function getClient() {
         });
         
         client.on('connect', () => {
-            console.log('[REDIS] API connected successfully');
             redisAvailable = true;
         });
         
         try {
             await client.connect();
-            console.log(`[REDIS] API connected to ${process.env.REDIS_URL ? 'ElastiCache' : 'localhost'}`);
             redisAvailable = true;
         } catch (err) {
             logErrorFromCatch('[QUEUE] Failed to connect to Redis:', err.message);
@@ -68,8 +66,6 @@ export async function enqueueMessage(job) {
         throw new Error('Redis unavailable');
     }
     
-    console.log('[QUEUE] Attempting to enqueue message for user:', job.userId?.substring(0, 8));
-    
     try {
         // Longer timeout for production ElastiCache - 5 seconds
         const timeoutMs = process.env.REDIS_URL ? 5000 : 2000;
@@ -86,8 +82,6 @@ export async function enqueueMessage(job) {
             redisClient.rPush("chat-jobs", JSON.stringify(job)),
             timeoutPromise
         ]);
-        
-        console.log(`[QUEUE] ✅ Message enqueued successfully!`);
     } catch (err) {
         console.error('[QUEUE] ❌ Redis unavailable, skipping queue');
         redisAvailable = false; // Mark as unavailable to skip future attempts

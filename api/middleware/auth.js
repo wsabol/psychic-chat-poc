@@ -37,14 +37,7 @@ export async function authenticateToken(req, res, next) {
 export function authorizeUser(req, res, next) {
   const requestedUserId = req.params.userId;
   
-  console.log('[AUTHORIZE-USER] Checking authorization:', {
-    requestedUserId: requestedUserId?.substring(0, 12) + '...',
-    jwtUserId: req.userId?.substring(0, 12) + '...',
-    match: req.userId === requestedUserId
-  });
-  
   if (req.userId !== requestedUserId) {
-    console.log('[AUTHORIZE-USER] Authorization failed - IDs do not match');
     return forbiddenError(res, 'You can only access your own data');
   }
   

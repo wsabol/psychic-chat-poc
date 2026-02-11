@@ -43,7 +43,6 @@ async function getClient() {
     });
     
     client.on('connect', () => {
-      console.log('[REDIS-PUBSUB] Connected successfully');
       isConnected = true;
     });
     
@@ -57,7 +56,6 @@ async function getClient() {
     
     try {
       await client.connect();
-      console.log(`[REDIS-PUBSUB] Connected to ${process.env.REDIS_URL ? 'ElastiCache' : 'localhost'}`);
     } catch (err) {
       logErrorFromCatch('[REDIS-PUBSUB] Failed to connect to Redis:', err.message);
       console.warn('⚠️  Redis is not available. SSE notifications will use polling fallback.');

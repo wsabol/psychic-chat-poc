@@ -113,7 +113,6 @@ export async function processChatMessageSync(userId, message) {
  */
 export async function processHoroscopeSync(userId, range = 'daily') {
     try {
-        console.log(`[HOROSCOPE-PROCESSOR] Generating ${range} horoscope for user: ${userId.substring(0, 8)}...`);
         
         // Generate horoscope (stores in DB automatically)
         await generateHoroscope(userId, range);
@@ -178,7 +177,6 @@ export async function processHoroscopeSync(userId, range = 'daily') {
  */
 export async function processMoonPhaseSync(userId, phase) {
     try {
-        console.log(`[MOON-PHASE-PROCESSOR] Generating commentary for ${phase} for user: ${userId.substring(0, 8)}...`);
         
         // Generate moon phase commentary (stores in DB automatically)
         await generateMoonPhaseCommentary(userId, phase);
@@ -243,7 +241,6 @@ export async function processMoonPhaseSync(userId, phase) {
  */
 export async function processCosmicWeatherSync(userId) {
     try {
-        console.log(`[COSMIC-WEATHER-PROCESSOR] Generating cosmic weather for user: ${userId.substring(0, 8)}...`);
         
         // Generate cosmic weather (stores in DB automatically)
         await generateCosmicWeather(userId);
@@ -307,7 +304,6 @@ export async function processCosmicWeatherSync(userId) {
  */
 export async function processLunarNodesSync(userId) {
     try {
-        console.log(`[LUNAR-NODES-PROCESSOR] Generating lunar nodes insight for user: ${userId.substring(0, 8)}...`);
         
         // Generate lunar nodes insight (stores in DB automatically)
         await generateLunarNodesInsight(userId);
@@ -367,7 +363,6 @@ export async function processLunarNodesSync(userId) {
  */
 export async function processVoidOfCourseSync(userId) {
     try {
-        console.log(`[VOID-OF-COURSE-PROCESSOR] Generating void of course alert for user: ${userId.substring(0, 8)}...`);
         
         // Generate void of course alert (stores in DB automatically)
         await generateVoidOfCourseMoonAlert(userId);

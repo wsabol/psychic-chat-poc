@@ -26,7 +26,6 @@ export async function fetchAllUserData(userId) {
     const userIdHash = hashUserId(userId);
     
     // DEBUG: Log the query parameters
-    console.log(`[FETCH-USER-DATA] Fetching data for userId: ${userId}, hash: ${userIdHash.substring(0, 8)}...`);
     
     const { rows } = await db.query(`
       SELECT 
@@ -72,7 +71,6 @@ export async function fetchAllUserData(userId) {
       `, [userIdHash]);
       
       if (ftsRows.length > 0) {
-        console.log(`[FETCH-USER-DATA] Found free trial session, creating minimal data for temp user: ${userId}`);
         
         // Return minimal temp user data structure so oracle can respond
         return {
@@ -99,7 +97,6 @@ export async function fetchAllUserData(userId) {
     }
     
     const row = rows[0];
-    console.log(`[FETCH-USER-DATA] Successfully fetched data for userId: ${userId}`);
     
     // Parse astrology_data if it's a string
     let astrologyData = row.astrology_data;
@@ -122,8 +119,6 @@ export async function fetchAllUserData(userId) {
     
     // User is temp if ANY indicator is true
     const isTemp = hasFreeTrialSession || emailIndicator || firebaseAnonPattern;
-    
-    console.log(`[FETCH-USER-DATA] User ${userId} isTemp: ${isTemp} (freeTrialSession: ${hasFreeTrialSession}, email: ${emailIndicator}, pattern: ${firebaseAnonPattern})`);
     
     return {
       personalInfo: {

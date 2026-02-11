@@ -29,7 +29,6 @@ router.post("/", verify2FA, async (req, res) => {
     }
 
     try {
-        console.log(`[CHAT-DIRECT] Processing message for user: ${userId.substring(0, 8)}...`);
         
         const response = await processChatMessageSync(userId, message);
         

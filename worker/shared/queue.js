@@ -41,11 +41,9 @@ async function getClient() {
             });
             
             client.on('connect', () => {
-                console.log('[REDIS] Connected successfully');
             });
             
             await client.connect();
-            console.log(`[REDIS] Worker connected to ${process.env.REDIS_URL ? 'ElastiCache' : 'localhost'}`);
             return client;
         })();
     }
@@ -59,9 +57,6 @@ export async function getMessageFromQueue() {
         
         // Check queue length before popping
         const queueLength = await redisClient.lLen("chat-jobs");
-        if (queueLength > 0) {
-            console.log(`[QUEUE] Queue has ${queueLength} job(s), attempting to dequeue...`);
-        }
         
         // Add timeout to prevent indefinite hanging
         const timeout = new Promise((_, reject) => 
@@ -72,7 +67,6 @@ export async function getMessageFromQueue() {
         const job = await Promise.race([jobPromise, timeout]);
         
         if (job) {
-            console.log('[QUEUE] ✅ Successfully dequeued job');
             return JSON.parse(job);
         } else {
             return null;
@@ -94,11 +88,9 @@ export async function redis() {
 export async function closeRedisConnection() {
     if (client) {
         try {
-            console.log('[REDIS] Closing connection...');
             await client.quit();
             client = null;
             connectPromise = null;
-            console.log('[REDIS] Connection closed successfully');
         } catch (err) {
             console.error('[REDIS] Error closing connection:', err.message);
             // Force disconnect if quit fails

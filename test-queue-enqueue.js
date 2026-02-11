@@ -26,7 +26,6 @@ async function testEnqueue() {
         
         // Check current queue length
         const beforeLength = await client.lLen("chat-jobs");
-        console.log(`📊 Current queue length: ${beforeLength}`);
         
         // Enqueue a test message
         const testJob = {

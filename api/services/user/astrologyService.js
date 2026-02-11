@@ -159,8 +159,6 @@ async function calculateBirthChartDirect(userId) {
     const zodiacSign = result.sun_sign || calculateSunSignFromDate(userData.birth_date);
     
     await upsertAstrologyData(userIdHash, zodiacSign, result);
-    
-    console.log(`[ASTROLOGY-SERVICE] Birth chart calculated and saved for user: ${userId.substring(0, 8)}`);
     return true;
   } catch (err) {
     logErrorFromCatch('[ASTROLOGY-SERVICE] Direct Lambda calculation failed:', err);
@@ -179,7 +177,6 @@ export async function enqueueFullBirthChart(userId) {
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     // Call Lambda directly (worker is gone, so no more queuing)
-    console.log(`[ASTROLOGY-SERVICE] Calculating birth chart directly for user: ${userId.substring(0, 8)}`);
     await calculateBirthChartDirect(userId);
   } catch (err) {
     logErrorFromCatch('[ASTROLOGY-SERVICE] Failed to calculate birth chart:', err);

@@ -18,16 +18,13 @@ let isShuttingDown = false;
 
 async function gracefulShutdown(signal) {
   if (isShuttingDown) {
-    console.log(`[WORKER] Already shutting down, ignoring ${signal}`);
     return;
   }
   
   isShuttingDown = true;
-  console.log(`[WORKER] Received ${signal}, starting graceful shutdown...`);
   
   try {
     await shutdownWorker();
-    console.log('[WORKER] Graceful shutdown completed');
     process.exit(0);
   } catch (err) {
     console.error('[WORKER] Error during shutdown:', err);
@@ -51,7 +48,6 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Start the worker
-console.log('[WORKER] Starting up...');
 workerLoop().catch(err => {
   console.error('[WORKER] Fatal error:', err);
   process.exit(1);

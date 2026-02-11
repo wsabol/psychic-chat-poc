@@ -130,8 +130,6 @@ export function useChat(userId, token, isAuthenticated, authUserId, isTemporaryA
             // Get the assistant's response directly
             const responseData = await res.json();
             
-            console.log('[useChat] Received response:', responseData);
-            
             if (!responseData.success) {
                 throw new Error(responseData.error || 'Failed to process message');
             }

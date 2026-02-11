@@ -27,7 +27,6 @@ router.post("/", verify2FA, async (req, res) => {
     }
 
     try {
-        console.log(`[CHAT] Processing message for user: ${userId.substring(0, 8)}...`);
         
         // Import synchronous processor
         const { processChatMessageSync } = await import('../services/chat/processor.js');

@@ -10,7 +10,6 @@ if (!process.env.DATABASE_URL && process.env.DB_HOST) {
     const dbName = process.env.DB_NAME || 'postgres';
     
     process.env.DATABASE_URL = `postgres://${dbUser}:${dbPassword}@${dbHost}:${dbPort}/${dbName}`;
-    console.log(`[WORKER DB] Constructed DATABASE_URL from components: postgres://${dbUser}:***@${dbHost}:${dbPort}/${dbName}`);
 }
 
 // Validate that DATABASE_URL is set
@@ -29,9 +28,7 @@ export const db = new Pool({
 
 export async function closeDbConnection() {
     try {
-        console.log('[WORKER DB] Closing database connection pool...');
         await db.end();
-        console.log('[WORKER DB] Database connection pool closed successfully');
     } catch (err) {
         console.error('[WORKER DB] Error closing database connection:', err.message);
     }

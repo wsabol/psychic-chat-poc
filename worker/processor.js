@@ -100,31 +100,23 @@ async function generateDailyMysticalUpdates() {
  * Shutdown worker gracefully
  */
 export async function shutdownWorker() {
-    console.log('[WORKER] Initiating shutdown...');
     shouldStop = true;
     
     // Wait for current job to finish (with timeout)
     if (currentJob) {
-        console.log('[WORKER] Waiting for current job to complete...');
         const timeout = new Promise(resolve => setTimeout(resolve, 10000));
         await Promise.race([currentJob, timeout]);
     }
     
     // Close connections
-    console.log('[WORKER] Closing database connection...');
     await closeDbConnection();
-    
-    console.log('[WORKER] Closing Redis connection...');
     await closeRedisConnection();
-    
-    console.log('[WORKER] Shutdown complete');
 }
 
 /**
  * Main worker loop
  */
 export async function workerLoop() {
-    console.log('[WORKER] Starting job processing loop...');
     
     // DISABLED: No need to generate for all users on startup
     // On-demand generation (when users log in) is sufficient and more efficient
@@ -142,36 +134,27 @@ export async function workerLoop() {
         try {
             // Log health status every 5 minutes
             if (Date.now() - lastHealthLog > 300000) {
-                console.log(`[WORKER] Health check: Running normally (${jobCount} jobs processed)`);
                 lastHealthLog = Date.now();
             }
             
             const job = await getMessageFromQueue();
             if (!job) {
                 emptyPolls++;
-                if (emptyPolls % 120 === 0) { // Log every 60 seconds (120 * 500ms)
-                    console.log(`[WORKER] Waiting for jobs... (${jobCount} processed so far)`);
-                }
                 await new Promise((r) => setTimeout(r, 500));
                 continue;
             }
             
             emptyPolls = 0;
             jobCount++;
-            console.log(`[WORKER] Processing job #${jobCount} for user: ${job.userId?.substring(0, 8)}...`);
             
             // Track current job for graceful shutdown
             currentJob = routeJob(job);
             await currentJob;
             currentJob = null;
-            
-            console.log(`[WORKER] Job #${jobCount} completed successfully`);
         } catch (err) {
             currentJob = null;
             logErrorFromCatch(err, '[WORKER] Error in job loop');
             await new Promise((r) => setTimeout(r, 1000));
         }
     }
-    
-    console.log('[WORKER] Worker loop stopped');
 }

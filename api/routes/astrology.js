@@ -166,8 +166,6 @@ router.post('/sync-calculate/:userId', authorizeUser, async (req, res) => {
                     generateMoonPhaseCommentary(userId, 'current'),
                     generateCosmicWeather(userId)
                 ]);
-                
-                console.log(`[ASTROLOGY-SYNC] Pre-generated insights for user: ${userId.substring(0, 8)}...`);
             } catch (err) {
                 // Non-fatal - insights can be generated on-demand later
                 console.error('[ASTROLOGY-SYNC] Failed to pre-generate insights:', err.message);
@@ -201,25 +199,16 @@ router.post('/calculate/:userId', authorizeUser, async (req, res) => {
 
 router.get("/:userId", validateUserHash, async (req, res) => {
     const { userId } = req.params;
-    console.log('[ASTROLOGY-GET] Request received:', {
-        userId: userId?.substring(0, 16) + '...',
-        hasAuth: !!req.user,
-        jwtUserId: req.user?.userId?.substring(0, 16) + '...'
-    });
     
     try {
         const userIdHash = hashUserId(userId);
-        console.log('[ASTROLOGY-GET] Querying database with hash:', userIdHash?.substring(0, 16) + '...');
         
         const { rows } = await db.query(
             "SELECT zodiac_sign, astrology_data FROM user_astrology WHERE user_id_hash = $1",
             [userIdHash]
         );
         
-        console.log('[ASTROLOGY-GET] Query result:', { rowCount: rows.length });
-        
         if (rows.length === 0) {
-            console.log('[ASTROLOGY-GET] No astrology data found for user');
             return notFoundError(res, 'No astrology data found');
         }
         

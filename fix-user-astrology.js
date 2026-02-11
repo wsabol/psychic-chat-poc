@@ -21,8 +21,6 @@ async function triggerAstrologyCalculation() {
             requestType: 'birth_chart'
         };
         
-        console.log(`Triggering astrology calculation for user: ${userId.substring(0, 8)}...`);
-        
         const command = new InvokeCommand({
             FunctionName: 'psychic-chat-astrology-production',
             InvocationType: 'Event', // Async
@@ -30,10 +28,6 @@ async function triggerAstrologyCalculation() {
         });
         
         await client.send(command);
-        
-        console.log('✅ Lambda invoked successfully!');
-        console.log('The astrology calculation should complete within 10-30 seconds.');
-        console.log('Check the database or refresh the app to see the results.');
         
     } catch (err) {
         console.error('❌ Failed to invoke Lambda:', err.message);

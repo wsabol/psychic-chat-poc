@@ -54,8 +54,6 @@ router.post('/send', async (req, res) => {
     if (sessionCheck.rows[0].is_completed) {
       return validationError(res, 'Free trial already completed');
     }
-
-    console.log(`[FREE-TRIAL-CHAT] Processing message for temp user: ${tempUserId.substring(0, 8)}...`);
     
     // Import synchronous processor
     const { processChatMessageSync } = await import('../services/chat/processor.js');
