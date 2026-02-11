@@ -47,7 +47,7 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
   }, [userId, token]);
   
   // Chat hook
-  const { chat, message, setMessage, sendMessage } = 
+  const { chat, message, setMessage, sendMessage, loading } = 
     useChat(userId, token, !!token, userId, isTemporaryAccount);
   
   // Onboarding flow state
@@ -229,7 +229,7 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
           setInputMessage={setMessage}
           onSend={handleSendMessage}
           disabled={inputDisabled}
-          loading={false}
+          loading={loading}
           isTemporaryAccount={isTemporaryAccount}
         />
 

@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { fetchWithTokenRefresh } from "../utils/fetchWithTokenRefresh.js";
-import { useSSE } from "./useSSE.js";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
@@ -8,6 +7,7 @@ export function useChat(userId, token, isAuthenticated, authUserId, isTemporaryA
     const [chat, setChat] = useState([]);
     const [message, setMessage] = useState("");
     const [loaded, setLoaded] = useState(false);
+    const [loading, setLoading] = useState(false); // NEW: Loading state for message sending
     const [error, setError] = useState(null);
     const previousUserIdRef = useRef(null);
     
@@ -69,51 +69,78 @@ export function useChat(userId, token, isAuthenticated, authUserId, isTemporaryA
         }
     }, [userId, token, isTemporaryAccount]);
     
-    // SSE notification handler
-    const handleSSEMessage = useCallback(async (data) => {
-        // New message ready - load messages
-        await loadMessages();
-    }, [loadMessages]);
-    
-    // Initialize SSE connection for real-time notifications
-    useSSE(userId, token, isAuthenticated, handleSSEMessage);
-    
     const sendMessage = useCallback(async () => {
-        if (!message.trim()) return;
-        setChat(prevChat => [...prevChat, { id: Date.now(), role: "user", content: message }]);
+        if (!message.trim() || loading) return;
+        
+        // Add user message to chat immediately
+        const userMessage = { id: Date.now(), role: "user", content: message };
+        setChat(prevChat => [...prevChat, userMessage]);
+        setMessage("");
+        setLoading(true);
+        
         try {
             let url, headers, body, res;
             
             // Use different endpoints for temp users vs authenticated users
             if (isTemporaryAccount) {
-                // Temp users: no authentication, different endpoint
+                // Temp users: synchronous endpoint
                 url = `${API_URL}/free-trial-chat/send`;
                 headers = { "Content-Type": "application/json" };
-                body = JSON.stringify({ tempUserId: userId, message });
+                body = JSON.stringify({ tempUserId: userId, message: message.trim() });
                 res = await fetch(url, {
                     method: "POST",
                     headers,
                     body
                 });
             } else {
-                // Authenticated users: use token
-                headers = { "Content-Type": "application/json", "Authorization": `Bearer ${token}` };
-                body = JSON.stringify({ userId, message });
-                res = await fetchWithTokenRefresh(`${API_URL}/chat`, {
+                // Authenticated users: synchronous direct endpoint
+                headers = { 
+                    "Content-Type": "application/json", 
+                    "Authorization": `Bearer ${token}` 
+                };
+                body = JSON.stringify({ message: message.trim() });
+                res = await fetchWithTokenRefresh(`${API_URL}/chat-direct`, {
                     method: "POST",
                     headers,
                     body
                 });
             }
             
-            if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+            if (!res.ok) {
+                throw new Error(`HTTP error! Status: ${res.status}`);
+            }
             
-            // SSE will notify when response is ready - no polling needed
+            // Get the assistant's response directly
+            const responseData = await res.json();
+            
+            console.log('[useChat] Received response:', responseData);
+            
+            if (!responseData.success) {
+                throw new Error(responseData.error || 'Failed to process message');
+            }
+            
+            // Add assistant message to chat
+            // Note: content might be an object or string
+            const assistantMessage = {
+                id: responseData.id || Date.now() + 1,
+                role: responseData.role || "assistant",
+                content: responseData.content,
+                brief_content: responseData.contentBrief,
+                cards: responseData.cards || null
+            };
+            
+            setChat(prevChat => [...prevChat, assistantMessage]);
+            setError(null);
+            
         } catch (err) {
+            console.error('Send message error:', err);
             setError(err.message);
+            // Optionally: Remove the user message on error
+            // setChat(prevChat => prevChat.filter(msg => msg.id !== userMessage.id));
+        } finally {
+            setLoading(false);
         }
-        setMessage("");
-    }, [message, userId, token, isTemporaryAccount]);
+    }, [message, userId, token, isTemporaryAccount, loading]);
 
     // Load messages and request opening when user changes
     useEffect(() => {
@@ -148,26 +175,13 @@ export function useChat(userId, token, isAuthenticated, authUserId, isTemporaryA
         }
     }, [authUserId, isAuthenticated, token, isTemporaryAccount, userId, loadMessages, requestOpening]);
 
-    // Fallback polling every 10 seconds (in case SSE fails)
-    // Works for both authenticated users AND temporary free trial users
-    useEffect(() => {
-        // For authenticated users: need token
-        // For temp users: no token needed
-        if (isTemporaryAccount && userId) {
-            const interval = setInterval(loadMessages, 10000); // 10 seconds
-            return () => clearInterval(interval);
-        } else if (isAuthenticated && authUserId && token) {
-            const interval = setInterval(loadMessages, 10000); // 10 seconds
-            return () => clearInterval(interval);
-        }
-    }, [loadMessages, isAuthenticated, authUserId, token, isTemporaryAccount, userId]);
-
     return {
         chat,
         setChat,
         message,
         setMessage,
         loaded,
+        loading, // NEW: Expose loading state
         error,
         sendMessage,
         loadMessages,

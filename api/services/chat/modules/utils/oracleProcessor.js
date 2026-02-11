@@ -87,7 +87,7 @@ IMPORTANT: Use the above personal and astrological information to:
 
         // CRITICAL: Publish SSE notification via Redis so client knows response is ready
         try {
-            const { redis } = await import('../../../shared/queue.js');
+            const { redis } = await import('../../../../shared/queue.js');
             const redisClient = await redis();
             await redisClient.publish(
                 `response-ready:${userId}`,
@@ -99,7 +99,7 @@ IMPORTANT: Use the above personal and astrological information to:
             );
         } catch (redisErr) {
             // Log error but don't throw - message was saved successfully
-            const { logErrorFromCatch } = await import('../../../shared/errorLogger.js');
+            const { logErrorFromCatch } = await import('../../../../shared/errorLogger.js');
             logErrorFromCatch(redisErr, '[ORACLE-PROCESSOR] Failed to publish SSE notification');
         }
 
@@ -182,8 +182,8 @@ function detectOracleSelfHarmRefusal(oracleResponse) {
  * Log health violation to database for compliance tracking
  */
 async function logHealthViolation(userId, userMessage) {
-        const { db } = await import('../../../shared/db.js');
-        const { hashUserId } = await import('../../../shared/hashUtils.js');
+        const { db } = await import('../../../../shared/db.js');
+        const { hashUserId } = await import('../../../../shared/hashUtils.js');
         
         const userIdHash = hashUserId(userId);
         
@@ -201,8 +201,8 @@ async function logHealthViolation(userId, userMessage) {
  * (Only keyword detector bans for clear personal intent like "I want to kill myself")
  */
 async function logSelfHarmViolation(userId, userMessage) {
-        const { db } = await import('../../../shared/db.js');
-        const { hashUserId } = await import('../../../shared/hashUtils.js');
+        const { db } = await import('../../../../shared/db.js');
+        const { hashUserId } = await import('../../../../shared/hashUtils.js');
         
         const userIdHash = hashUserId(userId);
         
