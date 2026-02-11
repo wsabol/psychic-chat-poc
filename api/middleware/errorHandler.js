@@ -50,6 +50,25 @@ export function errorHandler(err, req, res, next) {
   // Add error ID for support reference
   response.errorId = generateErrorId();
 
+  // CRITICAL FIX: Ensure CORS headers are present even in error responses
+  // This prevents "No 'Access-Control-Allow-Origin' header" errors
+  if (!res.headersSent) {
+    const origin = req.headers.origin;
+    const allowedOrigins = [
+      'http://localhost:3001',
+      'http://localhost:3000',
+      'https://starshippsychics.com',
+      'https://www.starshippsychics.com',
+      'https://app.starshippsychics.com',
+      process.env.CORS_ORIGIN
+    ].filter(Boolean);
+
+    if (origin && allowedOrigins.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
+  }
+
   res.status(statusCode).json(response);
 }
 

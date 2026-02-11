@@ -26,10 +26,11 @@ export async function fetchAllUserData(userId) {
     const userIdHash = hashUserId(userId);
     
     // DEBUG: Log the query parameters
+    console.log(`[FETCH-USER-DATA] Fetching data for userId: ${userId}, hash: ${userIdHash.substring(0, 8)}...`);
     
     const { rows } = await db.query(`
       SELECT 
-        -- Personal Info
+        -- Personal Info (with NULL handling for temp users)
         pgp_sym_decrypt(upi.first_name_encrypted, $1) as first_name,
         pgp_sym_decrypt(upi.last_name_encrypted, $1) as last_name,
         pgp_sym_decrypt(upi.birth_date_encrypted, $1) as birth_date,
@@ -48,19 +49,57 @@ export async function fetchAllUserData(userId) {
         
         -- Preferences
         COALESCE(up.language, 'en-US') as language,
-        COALESCE(up.oracle_language, 'en-US') as oracle_language
+        COALESCE(up.oracle_language, 'en-US') as oracle_language,
+        
+        -- Free Trial Session Check
+        fts.id as free_trial_session_id
         
       FROM user_personal_info upi
       LEFT JOIN user_astrology ua ON ENCODE(DIGEST(upi.user_id, 'sha256'), 'hex') = ua.user_id_hash
       LEFT JOIN user_preferences up ON ENCODE(DIGEST(upi.user_id, 'sha256'), 'hex') = up.user_id_hash
+      LEFT JOIN free_trial_sessions fts ON ENCODE(DIGEST(upi.user_id, 'sha256'), 'hex') = fts.user_id_hash
       WHERE upi.user_id = $2
     `, [ENCRYPTION_KEY, userId]);
     
     if (rows.length === 0) {
+      console.error(`[FETCH-USER-DATA] No user_personal_info found for userId: ${userId}`);
+      
+      // FALLBACK: Check if this is a free trial user without user_personal_info yet
+      const { rows: ftsRows } = await db.query(`
+        SELECT id, user_id_hash 
+        FROM free_trial_sessions 
+        WHERE user_id_hash = $1
+      `, [userIdHash]);
+      
+      if (ftsRows.length > 0) {
+        console.log(`[FETCH-USER-DATA] Found free trial session, creating minimal data for temp user: ${userId}`);
+        
+        // Return minimal temp user data structure so oracle can respond
+        return {
+          personalInfo: {
+            first_name: 'Seeker',
+            last_name: null,
+            birth_date: null,
+            birth_time: null,
+            birth_country: null,
+            birth_province: null,
+            birth_city: null,
+            birth_timezone: null,
+            sex: null,
+            address_preference: 'Seeker'
+          },
+          astrologyInfo: null,
+          language: 'en-US',
+          oracleLanguage: 'en-US',
+          isTemp: true
+        };
+      }
+      
       return null;
     }
     
     const row = rows[0];
+    console.log(`[FETCH-USER-DATA] Successfully fetched data for userId: ${userId}`);
     
     // Parse astrology_data if it's a string
     let astrologyData = row.astrology_data;
@@ -72,14 +111,23 @@ export async function fetchAllUserData(userId) {
       }
     }
     
-    // Check if temporary user (defense-in-depth: both prefix AND domain)
-    const isTemp = row.email ? 
-      (row.email.startsWith('temp_') && row.email.endsWith('@psychic.local')) : 
-      false;
+    // Check if temporary user using MULTIPLE indicators for reliability:
+    // 1. Has a free_trial_sessions record (most reliable)
+    // 2. Email ends with @psychic.local (if decryption worked)
+    // 3. Firebase anonymous UID pattern (alphanumeric 20+ chars, no special chars except user_id itself)
+    
+    const hasFreeTrialSession = !!row.free_trial_session_id;
+    const emailIndicator = row.email ? row.email.endsWith('@psychic.local') : false;
+    const firebaseAnonPattern = /^[a-zA-Z0-9]{20,}$/.test(userId);
+    
+    // User is temp if ANY indicator is true
+    const isTemp = hasFreeTrialSession || emailIndicator || firebaseAnonPattern;
+    
+    console.log(`[FETCH-USER-DATA] User ${userId} isTemp: ${isTemp} (freeTrialSession: ${hasFreeTrialSession}, email: ${emailIndicator}, pattern: ${firebaseAnonPattern})`);
     
     return {
       personalInfo: {
-        first_name: row.first_name,
+        first_name: row.first_name || 'Seeker',  // Fallback for NULL
         last_name: row.last_name,
         birth_date: row.birth_date,
         birth_time: row.birth_time,
@@ -88,7 +136,7 @@ export async function fetchAllUserData(userId) {
         birth_city: row.birth_city,
         birth_timezone: row.birth_timezone,
         sex: row.sex,
-        address_preference: row.address_preference
+        address_preference: row.address_preference || row.first_name || 'Seeker'
       },
       astrologyInfo: row.zodiac_sign ? {
         zodiac_sign: row.zodiac_sign,
@@ -103,6 +151,12 @@ export async function fetchAllUserData(userId) {
     console.error(`[ERROR] fetchAllUserData failed for userId: ${userId}`, err);
     console.error(`[ERROR] Error message: ${err.message}`);
     console.error(`[ERROR] Error stack: ${err.stack}`);
+    
+    // CRITICAL: If decryption fails, check if ENCRYPTION_KEY mismatch
+    if (err.message && err.message.includes('decrypt')) {
+      console.error(`[CRITICAL] Decryption error - possible ENCRYPTION_KEY mismatch between API and Worker!`);
+    }
+    
     return null;
   }
 }

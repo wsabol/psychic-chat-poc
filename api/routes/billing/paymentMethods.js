@@ -2,6 +2,7 @@
 import { authenticateToken } from '../../middleware/auth.js';
 import stripe from '../../services/stripeService.js';
 import redis from '../../shared/redis.js';
+const { getClient: getRedisClient, isRedisConnected } = redis;
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import {
@@ -36,11 +37,29 @@ router.get('/payment-methods', authenticateToken, async (req, res) => {
       return res.json(result);
     }
 
-    // ✅ CACHE: Check Redis cache first (10 second TTL)
+    // ✅ CACHE: Check Redis cache first (10 second TTL) - only if Redis is available
+    // ✅ TIMEOUT: Fail fast if Redis takes too long (don't block response)
     const cacheKey = `billing:payment-methods:${userId}`;
-    const cachedResult = await redis.get(cacheKey);
-    if (cachedResult) {
-      return res.json(JSON.parse(cachedResult));
+    if (isRedisConnected()) {
+      try {
+        const redisTimeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Redis timeout')), 2000)
+        );
+        const redisClient = await Promise.race([
+          getRedisClient(),
+          redisTimeoutPromise
+        ]);
+        const cachedResult = await Promise.race([
+          redisClient.get(cacheKey),
+          redisTimeoutPromise
+        ]);
+        if (cachedResult) {
+          return res.json(JSON.parse(cachedResult));
+        }
+      } catch (err) {
+        // Redis not available or timed out - continue without cache
+        console.warn('[PAYMENT-METHODS] Redis cache unavailable:', err.message);
+      }
     }
 
         // Create a promise for this request so others can wait for it
@@ -65,15 +84,48 @@ router.get('/payment-methods', authenticateToken, async (req, res) => {
           defaultPaymentMethodId,
         };
 
-        // ✅ CACHE: Store in Redis for 10 seconds
-        await redis.setEx(cacheKey, 10, JSON.stringify(result));
+        // ✅ CACHE: Store in Redis for 10 seconds (if available)
+        // ✅ TIMEOUT: Fail fast if Redis takes too long
+        if (isRedisConnected()) {
+          try {
+            const redisTimeoutPromise = new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Redis timeout')), 2000)
+            );
+            const redisClient = await Promise.race([
+              getRedisClient(),
+              redisTimeoutPromise
+            ]);
+            await Promise.race([
+              redisClient.setEx(cacheKey, 10, JSON.stringify(result)),
+              redisTimeoutPromise
+            ]);
+          } catch (err) {
+            // Ignore cache write errors
+          }
+        }
         
         return result;
       } catch (stripeError) {
         // If customer doesn't exist in Stripe anymore, return empty (user needs to add payment method again)
         if (stripeError.code === 'resource_missing' || stripeError.message?.includes('No such customer')) {
           const result = { cards: [], defaultPaymentMethodId: null };
-          await redis.setEx(cacheKey, 10, JSON.stringify(result));
+          if (isRedisConnected()) {
+            try {
+              const redisTimeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Redis timeout')), 2000)
+              );
+              const redisClient = await Promise.race([
+                getRedisClient(),
+                redisTimeoutPromise
+              ]);
+              await Promise.race([
+                redisClient.setEx(cacheKey, 10, JSON.stringify(result)),
+                redisTimeoutPromise
+              ]);
+            } catch (err) {
+              // Ignore cache write errors
+            }
+          }
           return result;
         }
         // Re-throw other errors
@@ -128,8 +180,25 @@ router.post('/payment-methods/attach', authenticateToken, async (req, res) => {
     });
 
     // ✅ CLEAR CACHE: Invalidate payment methods cache so next fetch gets fresh data
+    // ✅ TIMEOUT: Fail fast if Redis takes too long
     const cacheKey = `billing:payment-methods:${userId}`;
-    await redis.del(cacheKey);
+    if (isRedisConnected()) {
+      try {
+        const redisTimeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Redis timeout')), 2000)
+        );
+        const redisClient = await Promise.race([
+          getRedisClient(),
+          redisTimeoutPromise
+        ]);
+        await Promise.race([
+          redisClient.del(cacheKey),
+          redisTimeoutPromise
+        ]);
+      } catch (err) {
+        // Ignore cache clear errors
+      }
+    }
 
     successResponse(res, { 
       success: true, 
@@ -167,8 +236,25 @@ router.delete('/payment-methods/:id', authenticateToken, async (req, res) => {
     const result = await deletePaymentMethod(id);
 
     // ✅ CLEAR CACHE: Invalidate payment methods cache
+    // ✅ TIMEOUT: Fail fast if Redis takes too long
     const cacheKey = `billing:payment-methods:${userId}`;
-    await redis.del(cacheKey);
+    if (isRedisConnected()) {
+      try {
+        const redisTimeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Redis timeout')), 2000)
+        );
+        const redisClient = await Promise.race([
+          getRedisClient(),
+          redisTimeoutPromise
+        ]);
+        await Promise.race([
+          redisClient.del(cacheKey),
+          redisTimeoutPromise
+        ]);
+      } catch (err) {
+        // Ignore cache clear errors
+      }
+    }
 
     return successResponse(res, { success: true, message: 'Payment method deleted' });
         } catch (error) {
@@ -201,8 +287,25 @@ router.post('/payment-methods/set-default', authenticateToken, async (req, res) 
     const customer = await setDefaultPaymentMethod(customerId, paymentMethodId);
 
     // ✅ CLEAR CACHE: Invalidate payment methods cache so next fetch is fresh
+    // ✅ TIMEOUT: Fail fast if Redis takes too long
     const cacheKey = `billing:payment-methods:${userId}`;
-    await redis.del(cacheKey);
+    if (isRedisConnected()) {
+      try {
+        const redisTimeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Redis timeout')), 2000)
+        );
+        const redisClient = await Promise.race([
+          getRedisClient(),
+          redisTimeoutPromise
+        ]);
+        await Promise.race([
+          redisClient.del(cacheKey),
+          redisTimeoutPromise
+        ]);
+      } catch (err) {
+        // Ignore cache clear errors
+      }
+    }
 
     return successResponse(res, { success: true, defaultPaymentMethod: customer.invoice_settings?.default_payment_method });
         } catch (error) {
@@ -250,8 +353,25 @@ router.post('/payment-methods/attach-unattached', authenticateToken, async (req,
     }
 
     // ✅ CLEAR CACHE: Invalidate payment methods cache
+    // ✅ TIMEOUT: Fail fast if Redis takes too long
     const cacheKey = `billing:payment-methods:${userId}`;
-    await redis.del(cacheKey);
+    if (isRedisConnected()) {
+      try {
+        const redisTimeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Redis timeout')), 2000)
+        );
+        const redisClient = await Promise.race([
+          getRedisClient(),
+          redisTimeoutPromise
+        ]);
+        await Promise.race([
+          redisClient.del(cacheKey),
+          redisTimeoutPromise
+        ]);
+      } catch (err) {
+        // Ignore cache clear errors
+      }
+    }
 
     return successResponse(res, { success: true, attachedCount: attached.length, attachedIds: attached, errors: errors.length > 0 ? errors : undefined });
         } catch (error) {

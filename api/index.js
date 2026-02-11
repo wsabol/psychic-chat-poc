@@ -41,12 +41,14 @@ import cleanupStatusRoutes from "./routes/cleanup-status.js";
 import responseStatusRoutes from "./routes/response-status.js";
 import eventsRoutes, { notifyUser } from "./routes/events.js";
 import freeTrialRoutes from "./routes/free-trial.js";
+import freeTrialChatRoutes from "./routes/free-trial-chat.js";
 import { initializeScheduler } from "./jobs/scheduler.js";
 import { validateRequestPayload, rateLimit } from "./middleware/inputValidation.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { successResponse } from './utils/responses.js';
 import { logErrorFromCatch } from './shared/errorLogger.js';
 import redis from './shared/redis.js';
+const { getClient: getRedisPubSubClient } = redis;
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 const app = express();
@@ -169,6 +171,7 @@ app.use("/api/logs", logsRoutes);
 
 // Public free trial routes (no authentication required - temp users don't have tokens yet)
 app.use("/free-trial", freeTrialRoutes);
+app.use("/free-trial-chat", freeTrialChatRoutes);
 
 // Public contact form route (no authentication required - marketing website)
 app.use("/api/contact", contactRoutes);
@@ -248,9 +251,14 @@ if (process.env.ENABLE_LOCAL_SCHEDULER === 'true') {
 // Initialize Redis pub/sub subscriber for SSE notifications
 async function initializeRedisPubSub() {
   try {
+    // Get the Redis client (lazy connection)
+    const client = await getRedisPubSubClient();
+    
     // Create a separate Redis client for pub/sub
-    const subscriber = redis.duplicate();
+    const subscriber = client.duplicate();
     await subscriber.connect();
+    
+    console.log('[REDIS-PUBSUB] Subscriber initialized successfully');
     
     // Subscribe to all response-ready channels
     await subscriber.pSubscribe('response-ready:*', (message, channel) => {
@@ -264,11 +272,15 @@ async function initializeRedisPubSub() {
     });
   } catch (error) {
     logErrorFromCatch(error, '[REDIS-PUBSUB] Failed to initialize subscriber');
+    console.warn('⚠️  Redis pub/sub not available. SSE will use polling fallback.');
     // Don't exit - app can still work with polling fallback
   }
 }
 
-initializeRedisPubSub();
+// Initialize pub/sub but don't block app startup if it fails
+initializeRedisPubSub().catch(err => {
+  logErrorFromCatch('[REDIS-PUBSUB] Initialization failed:', err.message);
+});
 
 // Phase 5: Safe error handling (LATE in middleware chain - after all routes)
 app.use(errorHandler);

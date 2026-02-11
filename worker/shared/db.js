@@ -1,6 +1,3 @@
-import dotenv from 'dotenv';
-dotenv.config();
-
 import pkg from "pg";
 const { Pool } = pkg;
 
@@ -29,3 +26,13 @@ export const db = new Pool({
         rejectUnauthorized: false  // AWS RDS requires SSL but uses self-signed certificates
     }
 });
+
+export async function closeDbConnection() {
+    try {
+        console.log('[WORKER DB] Closing database connection pool...');
+        await db.end();
+        console.log('[WORKER DB] Database connection pool closed successfully');
+    } catch (err) {
+        console.error('[WORKER DB] Error closing database connection:', err.message);
+    }
+}

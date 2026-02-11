@@ -96,12 +96,12 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
       {/* Birth Info Missing Prompt */}
       {!moonPhaseState.loading && !moonPhaseState.error && !moonPhaseState.data && isBirthInfoMissing(astroInfo) && (
         <BirthInfoMissingPrompt 
-          onNavigateToPersonalInfo={() => onNavigateToPage && onNavigateToPage(2)}
+          onNavigateToPersonalInfo={() => onNavigateToPage && onNavigateToPage(1)}
         />
       )}
       {moonPhaseState.error === 'BIRTH_INFO_MISSING' && (
         <BirthInfoMissingPrompt 
-          onNavigateToPersonalInfo={() => onNavigateToPage && onNavigateToPage(2)}
+          onNavigateToPersonalInfo={() => onNavigateToPage && onNavigateToPage(1)}
         />
       )}
 

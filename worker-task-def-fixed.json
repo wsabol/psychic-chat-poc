@@ -21,6 +21,10 @@
                 {
                     "name": "REDIS_URL",
                     "value": "redis://psychic-chat-redis-0rflqd.serverless.use1.cache.amazonaws.com:6379"
+                },
+                {
+                    "name": "ASTROLOGY_LAMBDA_URL",
+                    "value": "https://iay72sryvsjf7tgofqk4pibr240yccoy.lambda-url.us-east-1.on.aws/"
                 }
             ],
             "environmentFiles": [],
@@ -100,4 +104,3 @@
     "cpu": "256",
     "memory": "512"
 }
-

@@ -116,19 +116,40 @@ Write-Host ""
 Write-Host "Checking certificate status..." -ForegroundColor Yellow
 Write-Host "Note: If this is the first deployment, DNS validation may take a few minutes" -ForegroundColor Yellow
 
-# Upload files to S3
+# Upload files to S3 with proper content types
 Write-Host ""
-Write-Host "Uploading files to S3..." -ForegroundColor Yellow
+Write-Host "Uploading files to S3 with proper content types..." -ForegroundColor Yellow
 try {
-    aws s3 sync $buildPath s3://$bucketName/ --delete --cache-control "public, max-age=31536000, immutable" --exclude "*.html" --exclude "*.json"
+    # Sync HTML files with proper content type and no cache
+    aws s3 sync $buildPath s3://$bucketName/ --delete --exclude "*" --include "*.html" --content-type "text/html" --cache-control "no-cache, no-store, must-revalidate"
     
-    # Upload HTML files with different cache settings
-    aws s3 sync $buildPath s3://$bucketName/ --cache-control "public, max-age=0, must-revalidate" --exclude "*" --include "*.html" --include "*.json"
+    # Sync JSON files with proper content type
+    aws s3 sync $buildPath s3://$bucketName/ --delete --exclude "*" --include "*.json" --content-type "application/json" --cache-control "no-cache, no-store, must-revalidate"
+    
+    # Sync CSS files with proper content type and cache
+    aws s3 sync $buildPath s3://$bucketName/ --delete --exclude "*" --include "*.css" --content-type "text/css" --cache-control "public, max-age=31536000, immutable"
+    
+    # Sync JS files with proper content type and cache
+    aws s3 sync $buildPath s3://$bucketName/ --delete --exclude "*" --include "*.js" --content-type "application/javascript" --cache-control "public, max-age=31536000, immutable"
+    
+    # Sync image files (PNG, JPG, JPEG, GIF, SVG, ICO)
+    aws s3 sync $buildPath s3://$bucketName/ --delete --exclude "*" --include "*.png" --content-type "image/png" --cache-control "public, max-age=31536000, immutable"
+    aws s3 sync $buildPath s3://$bucketName/ --delete --exclude "*" --include "*.jpg" --content-type "image/jpeg" --cache-control "public, max-age=31536000, immutable"
+    aws s3 sync $buildPath s3://$bucketName/ --delete --exclude "*" --include "*.jpeg" --content-type "image/jpeg" --cache-control "public, max-age=31536000, immutable"
+    aws s3 sync $buildPath s3://$bucketName/ --delete --exclude "*" --include "*.gif" --content-type "image/gif" --cache-control "public, max-age=31536000, immutable"
+    aws s3 sync $buildPath s3://$bucketName/ --delete --exclude "*" --include "*.svg" --content-type "image/svg+xml" --cache-control "public, max-age=31536000, immutable"
+    aws s3 sync $buildPath s3://$bucketName/ --delete --exclude "*" --include "*.ico" --content-type "image/x-icon" --cache-control "public, max-age=31536000, immutable"
+    
+    # Sync PDF files
+    aws s3 sync $buildPath s3://$bucketName/ --delete --exclude "*" --include "*.pdf" --content-type "application/pdf" --cache-control "public, max-age=86400"
+    
+    # Sync any remaining files (fonts, etc.)
+    aws s3 sync $buildPath s3://$bucketName/ --delete --exclude "*.html" --exclude "*.json" --exclude "*.css" --exclude "*.js" --exclude "*.png" --exclude "*.jpg" --exclude "*.jpeg" --exclude "*.gif" --exclude "*.svg" --exclude "*.ico" --exclude "*.pdf"
     
     if ($LASTEXITCODE -ne 0) {
         throw "S3 sync failed"
     }
-    Write-Host "Files uploaded to S3" -ForegroundColor Green
+    Write-Host "Files uploaded to S3 with proper MIME types" -ForegroundColor Green
 } catch {
     Write-Host "Failed to upload files: $_" -ForegroundColor Red
     exit 1

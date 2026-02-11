@@ -1,14 +1,17 @@
 {
     "containerDefinitions": [
         {
-            "name": "worker",
-            "image": "586337033065.dkr.ecr.us-east-1.amazonaws.com/psychic-chat-worker-production:latest",
+            "name": "api",
+            "image": "586337033065.dkr.ecr.us-east-1.amazonaws.com/psychic-chat-api-production:latest",
             "cpu": 0,
-            "links": [],
-            "portMappings": [],
+            "portMappings": [
+                {
+                    "containerPort": 3000,
+                    "hostPort": 3000,
+                    "protocol": "tcp"
+                }
+            ],
             "essential": true,
-            "entryPoint": [],
-            "command": [],
             "environment": [
                 {
                     "name": "DB_NAME",
@@ -19,11 +22,18 @@
                     "value": "production"
                 },
                 {
+                    "name": "PORT",
+                    "value": "3000"
+                },
+                {
+                    "name": "CORS_ORIGIN",
+                    "value": "*"
+                },
+                {
                     "name": "REDIS_URL",
                     "value": "redis://psychic-chat-redis-0rflqd.serverless.use1.cache.amazonaws.com:6379"
                 }
             ],
-            "environmentFiles": [],
             "mountPoints": [],
             "volumesFrom": [],
             "secrets": [
@@ -34,10 +44,6 @@
                 {
                     "name": "STRIPE_SECRET_KEY",
                     "valueFrom": "arn:aws:secretsmanager:us-east-1:586337033065:secret:psychic-chat/stripe-LvGISE:secret_key::"
-                },
-                {
-                    "name": "OPENAI_API_KEY",
-                    "valueFrom": "arn:aws:secretsmanager:us-east-1:586337033065:secret:psychic-chat/openai-Wf89a0:api_key::"
                 },
                 {
                     "name": "DB_HOST",
@@ -66,29 +72,32 @@
                 {
                     "name": "FIREBASE_CLIENT_EMAIL",
                     "valueFrom": "arn:aws:secretsmanager:us-east-1:586337033065:secret:psychic-chat/firebase-n0BNty:client_email::"
+                },
+                {
+                    "name": "OPENAI_API_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:us-east-1:586337033065:secret:psychic-chat/openai-Wf89a0:api_key::"
+                },
+                {
+                    "name": "SENDGRID_API_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:us-east-1:586337033065:secret:psychic-chat/sendgrid-api:key::"
+                },
+                {
+                    "name": "SENDGRID_FROM_EMAIL",
+                    "valueFrom": "arn:aws:secretsmanager:us-east-1:586337033065:secret:psychic-chat/sendgrid-api:from_email::"
                 }
             ],
-            "dnsServers": [],
-            "dnsSearchDomains": [],
-            "extraHosts": [],
-            "dockerSecurityOptions": [],
-            "dockerLabels": {},
-            "ulimits": [],
             "logConfiguration": {
                 "logDriver": "awslogs",
                 "options": {
-                    "awslogs-group": "/ecs/psychic-chat-worker-production",
+                    "awslogs-group": "/ecs/psychic-chat-api-production",
                     "awslogs-region": "us-east-1",
-                    "awslogs-stream-prefix": "worker"
-                },
-                "secretOptions": []
+                    "awslogs-stream-prefix": "api"
+                }
             },
-            "stopTimeout": 120,
-            "systemControls": [],
-            "credentialSpecs": []
+            "systemControls": []
         }
     ],
-    "family": "psychic-chat-worker-production",
+    "family": "psychic-chat-api-production",
     "taskRoleArn": "arn:aws:iam::586337033065:role/psychic-chat-ecs-production-v2-EcsTaskRole-pgu6a9ANIiBw",
     "executionRoleArn": "arn:aws:iam::586337033065:role/psychic-chat-ecs-production-v2-EcsTaskExecutionRole-7ib3xm0mIvu1",
     "networkMode": "awsvpc",
@@ -97,7 +106,6 @@
     "requiresCompatibilities": [
         "FARGATE"
     ],
-    "cpu": "256",
-    "memory": "512"
+    "cpu": "512",
+    "memory": "1024"
 }
-

@@ -29,7 +29,8 @@ api/firebase-adminsdk-key.json
 worker/firebase-adminsdk-key.json
 lambdas/firebase-adminsdk-key.json
 client/.env.local
-client/.env/production
+client/.env.production
+client/.env.production.local
 api/.env
 worker/.env
 db-secret.json

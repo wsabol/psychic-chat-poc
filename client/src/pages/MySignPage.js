@@ -31,7 +31,7 @@ export default function MySignPage({ userId, token, auth, onNavigateToPage }) {
     return (
       <div className="page-safe-area sign-page">
         <BirthInfoMissingPrompt 
-          onNavigateToPersonalInfo={() => onNavigateToPage && onNavigateToPage(2)}
+          onNavigateToPersonalInfo={() => onNavigateToPage && onNavigateToPage(1)}
         />
       </div>
     );

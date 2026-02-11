@@ -61,6 +61,24 @@ export function useAppState() {
     }
   }, [authState.isAuthenticated, authState.token, authState.authUserId, authState.authEmail]);
 
+  // Effect: Handle orphaned Firebase users (authenticated in Firebase but no database record)
+  // This happens when database is cleared but Firebase session persists
+  // CRITICAL: Disabled - this was causing login loops after 2FA
+  // The session-check endpoint now properly handles users mid-onboarding
+  // useEffect(() => {
+  //   if (authState.isAuthenticated && 
+  //       !authState.isTemporaryAccount && 
+  //       !authState.loading &&
+  //       sessionCheckData && 
+  //       sessionCheckData.userType === 'new' &&
+  //       !sessionCheckLoading) {
+  //     // User is authenticated in Firebase but database has no record
+  //     // Sign them out automatically so they can register fresh
+  //     console.log('[AUTH] Orphaned Firebase user detected - signing out automatically');
+  //     authState.handleLogout();
+  //   }
+  // }, [authState.isAuthenticated, authState.isTemporaryAccount, authState.loading, authState.handleLogout, sessionCheckData, sessionCheckLoading]);
+
   // Effect: Start email verification polling and cleanup old temp account on verification
   useEffect(() => {
     if (isVerification && auth.currentUser) {

@@ -4,7 +4,7 @@ import { useSSE } from "./useSSE.js";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
-export function useChat(userId, token, isAuthenticated, authUserId) {
+export function useChat(userId, token, isAuthenticated, authUserId, isTemporaryAccount = false) {
     const [chat, setChat] = useState([]);
     const [message, setMessage] = useState("");
     const [loaded, setLoaded] = useState(false);
@@ -13,10 +13,23 @@ export function useChat(userId, token, isAuthenticated, authUserId) {
     
     const loadMessages = useCallback(async () => {
         try {
-            if (!token || !userId) return [];
-            const headers = { "Authorization": `Bearer ${token}` };
-            const url = `${API_URL}/chat/history/${userId}`;
-            const res = await fetchWithTokenRefresh(url, { headers });
+            if (!userId) return [];
+            
+            let url, headers, res;
+            
+            // Use different endpoints for temp users vs authenticated users
+            if (isTemporaryAccount) {
+                // Temp users: no authentication, different endpoint
+                url = `${API_URL}/free-trial-chat/history/${userId}`;
+                res = await fetch(url);
+            } else {
+                // Authenticated users: use token
+                if (!token) return [];
+                headers = { "Authorization": `Bearer ${token}` };
+                url = `${API_URL}/chat/history/${userId}`;
+                res = await fetchWithTokenRefresh(url, { headers });
+            }
+            
             if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
             const data = await res.json();
             setChat(Array.isArray(data) ? data : []);
@@ -27,21 +40,34 @@ export function useChat(userId, token, isAuthenticated, authUserId) {
             setError(err.message);
             return [];
         }
-    }, [userId, token]);
+    }, [userId, token, isTemporaryAccount]);
     
     
     const requestOpening = useCallback(async () => {
         try {
-            if (!token || !userId) return;
-            const headers = { "Authorization": `Bearer ${token}` };
-            const url = `${API_URL}/chat/opening/${userId}`;
-            const res = await fetchWithTokenRefresh(url, { headers });
+            if (!userId) return;
+            
+            let url, headers, res;
+            
+            // Use different endpoints for temp users vs authenticated users
+            if (isTemporaryAccount) {
+                // Temp users: no authentication, different endpoint
+                url = `${API_URL}/free-trial-chat/opening/${userId}`;
+                res = await fetch(url);
+            } else {
+                // Authenticated users: use token
+                if (!token) return;
+                headers = { "Authorization": `Bearer ${token}` };
+                url = `${API_URL}/chat/opening/${userId}`;
+                res = await fetchWithTokenRefresh(url, { headers });
+            }
+            
             if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
             await res.json();
         } catch (err) {
             // Opening request failed, continue silently
         }
-    }, [userId, token]);
+    }, [userId, token, isTemporaryAccount]);
     
     // SSE notification handler
     const handleSSEMessage = useCallback(async (data) => {
@@ -56,12 +82,30 @@ export function useChat(userId, token, isAuthenticated, authUserId) {
         if (!message.trim()) return;
         setChat(prevChat => [...prevChat, { id: Date.now(), role: "user", content: message }]);
         try {
-            const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${token}` };
-            const res = await fetchWithTokenRefresh(`${API_URL}/chat`, {
-                method: "POST",
-                headers,
-                body: JSON.stringify({ userId, message }),
-            });
+            let url, headers, body, res;
+            
+            // Use different endpoints for temp users vs authenticated users
+            if (isTemporaryAccount) {
+                // Temp users: no authentication, different endpoint
+                url = `${API_URL}/free-trial-chat/send`;
+                headers = { "Content-Type": "application/json" };
+                body = JSON.stringify({ tempUserId: userId, message });
+                res = await fetch(url, {
+                    method: "POST",
+                    headers,
+                    body
+                });
+            } else {
+                // Authenticated users: use token
+                headers = { "Content-Type": "application/json", "Authorization": `Bearer ${token}` };
+                body = JSON.stringify({ userId, message });
+                res = await fetchWithTokenRefresh(`${API_URL}/chat`, {
+                    method: "POST",
+                    headers,
+                    body
+                });
+            }
+            
             if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
             
             // SSE will notify when response is ready - no polling needed
@@ -69,11 +113,12 @@ export function useChat(userId, token, isAuthenticated, authUserId) {
             setError(err.message);
         }
         setMessage("");
-    }, [message, userId, token]);
+    }, [message, userId, token, isTemporaryAccount]);
 
     // Load messages and request opening when user changes
     useEffect(() => {
-        if (isAuthenticated && authUserId && token) {
+        // Handle authenticated users
+        if (!isTemporaryAccount && isAuthenticated && authUserId && token) {
             if (previousUserIdRef.current !== authUserId) {
                 previousUserIdRef.current = authUserId;
                 
@@ -86,15 +131,36 @@ export function useChat(userId, token, isAuthenticated, authUserId) {
                 }, 500);
             }
         }
-    }, [authUserId, isAuthenticated, token, loadMessages, requestOpening]);
+        
+        // Handle temporary/free trial users (no token required)
+        if (isTemporaryAccount && userId) {
+            if (previousUserIdRef.current !== userId) {
+                previousUserIdRef.current = userId;
+                
+                setChat([]);
+                setLoaded(false);
+                
+                setTimeout(() => {
+                    loadMessages();
+                    requestOpening();
+                }, 500);
+            }
+        }
+    }, [authUserId, isAuthenticated, token, isTemporaryAccount, userId, loadMessages, requestOpening]);
 
     // Fallback polling every 10 seconds (in case SSE fails)
-    // Much less aggressive than before
+    // Works for both authenticated users AND temporary free trial users
     useEffect(() => {
-        if (!isAuthenticated || !authUserId || !token) return;
-        const interval = setInterval(loadMessages, 10000); // 10 seconds
-        return () => clearInterval(interval);
-    }, [loadMessages, isAuthenticated, authUserId, token]);
+        // For authenticated users: need token
+        // For temp users: no token needed
+        if (isTemporaryAccount && userId) {
+            const interval = setInterval(loadMessages, 10000); // 10 seconds
+            return () => clearInterval(interval);
+        } else if (isAuthenticated && authUserId && token) {
+            const interval = setInterval(loadMessages, 10000); // 10 seconds
+            return () => clearInterval(interval);
+        }
+    }, [loadMessages, isAuthenticated, authUserId, token, isTemporaryAccount, userId]);
 
     return {
         chat,

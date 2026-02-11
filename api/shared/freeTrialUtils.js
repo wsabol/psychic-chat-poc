@@ -106,9 +106,19 @@ export async function createFreeTrialSession(tempUserId, ipAddress, db) {
       if (insertResult.rows.length === 0) {
         logErrorFromCatch(new Error('No rows returned from user_personal_info insert'), 'free-trial', `Failed to create/update user_personal_info for ${tempUserId}`);
       }
+
+      // CRITICAL: Also create user_preferences record so oracle greeting and chat work properly
+      // Without this, queries for timezone/language fail and oracle greeting can't be generated
+      await db.query(
+        `INSERT INTO user_preferences 
+         (user_id_hash, language, oracle_language, timezone, response_type, created_at, updated_at)
+         VALUES ($1, 'en-US', 'en-US', 'UTC', 'full', NOW(), NOW())
+         ON CONFLICT (user_id_hash) DO UPDATE SET updated_at = NOW()`,
+        [userIdHash]
+      );
     } catch (err) {
       // CRITICAL: Log detailed error since chat won't work without this
-      logErrorFromCatch(err, 'free-trial', `CRITICAL: Failed to create user_personal_info for ${tempUserId}`);
+      logErrorFromCatch(err, 'free-trial', `CRITICAL: Failed to create user_personal_info/preferences for ${tempUserId}`);
       throw err; // Re-throw to surface the issue
     }
 

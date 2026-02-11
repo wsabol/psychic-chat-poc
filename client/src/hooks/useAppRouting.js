@@ -71,6 +71,15 @@ export function useAppRouting(auth, appExited, showRegisterMode = false, skipPay
             return 'landing';
         }
 
+        // ✅ ORPHANED FIREBASE USER CHECK - DISABLED
+        // This check was causing login loops because sessionCheckData might return 'new'
+        // before security_sessions table is updated after login
+        // The API session-check endpoint now properly handles users mid-onboarding
+        // if (auth.isAuthenticated && !auth.isTemporaryAccount && sessionCheckData && sessionCheckData.userType === 'new') {
+        //     // Firebase user exists but no database record - treat as first time user
+        //     return 'landing';
+        // }
+
         // Not authenticated
         if (!auth.isAuthenticated) {
             return 'login';

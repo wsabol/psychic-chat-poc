@@ -16,7 +16,10 @@ if (!process.env.DATABASE_URL && process.env.DB_HOST) {
         throw new Error('DB_PASSWORD environment variable is required');
     }
     
-    process.env.DATABASE_URL = `postgres://${dbUser}:${dbPassword}@${dbHost}:${dbPort}/${dbName}`;
+    // URL-encode password to handle special characters like $, #, @, etc.
+    const encodedPassword = encodeURIComponent(dbPassword);
+    
+    process.env.DATABASE_URL = `postgres://${dbUser}:${encodedPassword}@${dbHost}:${dbPort}/${dbName}`;
 }
 
 // Validate that DATABASE_URL is set

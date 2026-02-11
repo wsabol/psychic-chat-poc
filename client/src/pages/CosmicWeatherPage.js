@@ -89,13 +89,13 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
 
       {!loading && !error && !cosmicData && isBirthInfoMissing(astroInfo) && (
         <BirthInfoMissingPrompt 
-          onNavigateToPersonalInfo={() => onNavigateToPage && onNavigateToPage(2)}
+          onNavigateToPersonalInfo={() => onNavigateToPage && onNavigateToPage(1)}
         />
       )}
 
       {error && error === 'BIRTH_INFO_MISSING' && (
         <BirthInfoMissingPrompt 
-          onNavigateToPersonalInfo={() => onNavigateToPage && onNavigateToPage(2)}
+          onNavigateToPersonalInfo={() => onNavigateToPage && onNavigateToPage(1)}
         />
       )}
 

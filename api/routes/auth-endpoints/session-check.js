@@ -79,11 +79,13 @@ router.post('/check-returning-user', async (req, res) => {
     if (securitySessionCheck.rows.length > 0) {
       const secSession = securitySessionCheck.rows[0];
       
-      // Look up user's onboarding status
+      // CRITICAL FIX: Look up user by user_id_hash (which is the hashed Firebase UID)
+      // The user_personal_info table stores user_id (unhashed Firebase UID) as primary key
+      // But we need to match against the hash stored in security_sessions
       const userCheck = await db.query(
-        `SELECT onboarding_step, onboarding_completed, subscription_status
-         FROM user_personal_info
-         WHERE user_id = $1`,
+        `SELECT upi.user_id, upi.onboarding_step, upi.onboarding_completed, upi.subscription_status
+         FROM user_personal_info upi
+         WHERE ENCODE(DIGEST(upi.user_id, 'sha256'), 'hex') = $1`,
         [secSession.user_id_hash]
       );
 
@@ -91,10 +93,24 @@ router.post('/check-returning-user', async (req, res) => {
         const userInfo = userCheck.rows[0];
         userType = 'registered';
         sessionData = {
+          userId: userInfo.user_id,
           userIdHash: secSession.user_id_hash,
           onboardingStep: userInfo.onboarding_step,
           onboardingCompleted: userInfo.onboarding_completed,
           subscriptionStatus: userInfo.subscription_status,
+          lastActive: secSession.last_active,
+          isTrusted: secSession.is_trusted
+        };
+      } else {
+        // CRITICAL FIX: User has security_session but no user_personal_info
+        // This happens after 2FA verification but before onboarding is complete
+        // Treat as registered user who needs to complete onboarding
+        userType = 'registered';
+        sessionData = {
+          userIdHash: secSession.user_id_hash,
+          onboardingStep: 'create_account', // Start of onboarding
+          onboardingCompleted: false,
+          subscriptionStatus: null,
           lastActive: secSession.last_active,
           isTrusted: secSession.is_trusted
         };

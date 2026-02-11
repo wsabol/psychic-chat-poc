@@ -175,10 +175,10 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
 
       {/* Birth Info Missing */}
       {!horoscopeState.loading && !horoscopeState.error && isBirthInfoMissing(astroInfo) && (
-        <BirthInfoMissingPrompt onNavigateToPersonalInfo={() => onNavigateToPage?.(2)} />
+        <BirthInfoMissingPrompt onNavigateToPersonalInfo={() => onNavigateToPage?.(1)} />
       )}
       {horoscopeState.error === 'BIRTH_INFO_MISSING' && (
-        <BirthInfoMissingPrompt onNavigateToPersonalInfo={() => onNavigateToPage?.(2)} />
+        <BirthInfoMissingPrompt onNavigateToPersonalInfo={() => onNavigateToPage?.(1)} />
       )}
       
       {/* Error State */}

@@ -100,9 +100,11 @@ function logErrorFromClient({ service, errorMessage, severity, context, stack })
   };
 
   try {
+    // ✅ FIXED: Always use full API URL (not relative path)
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+    
     if (process.env.NODE_ENV === 'development') {
       // Dev: use fetch for better error visibility
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
       fetch(`${API_URL}/api/logs/error`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -112,8 +114,16 @@ function logErrorFromClient({ service, errorMessage, severity, context, stack })
         // Silent fail - don't crash if logging fails
       });
     } else {
-      // Production: use sendBeacon (doesn't block on unload)
-      navigator.sendBeacon('/api/logs/error', JSON.stringify(errorData));
+      // Production: use fetch with keepalive instead of sendBeacon
+      // sendBeacon has CORS issues when sending to different domain
+      fetch(`${API_URL}/api/logs/error`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(errorData),
+        keepalive: true
+      }).catch(err => {
+        // Silent fail - don't crash if logging fails
+      });
     }
   } catch (e) {
     // Silent fail - logging failure should not crash app
