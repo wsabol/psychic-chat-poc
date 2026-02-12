@@ -35,6 +35,7 @@ export async function fetchCosmicWeather(userId, token) {
 
 /**
  * Trigger cosmic weather generation
+ * SYNCHRONOUS: Returns data immediately from POST response
  */
 export async function generateCosmicWeather(userId, token) {
   const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
@@ -51,6 +52,14 @@ export async function generateCosmicWeather(userId, token) {
     const errorData = await response.json();
     throw new Error(errorData.error || 'Could not generate cosmic weather');
   }
+
+  const data = await response.json();
+  return {
+    text: data.weather || data.text || '',
+    brief: data.brief || data.weather_brief || '',
+    birthChart: data.birthChart,
+    planets: data.currentPlanets || []
+  };
 }
 
 /**

@@ -34,7 +34,7 @@ export {
 
 /**
  * Call Oracle API (OpenAI GPT) to generate response
- * Generates both full reading and brief summary in a single flow
+ * OPTIMIZED: Generates both full and brief responses in a SINGLE API call
  * @param {string} systemPrompt - System prompt with oracle instructions
  * @param {array} messageHistory - Previous messages in conversation
  * @param {string} userMessage - Current user message
@@ -43,36 +43,85 @@ export {
  */
 export async function callOracle(systemPrompt, messageHistory, userMessage, generateBrief = true) {
   try {
+    console.log('[ORACLE] Starting OpenAI call...');
     // Reverse history: input is ASC (oldest first), reverse to DESC for context relevance
     const reversedHistory = messageHistory.slice().reverse();
     const openaiClient = getOpenAIClient();
     
-    const fullCompletion = await openaiClient.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: systemPrompt },
-        ...reversedHistory,
-        { role: "user", content: userMessage },
-      ]
+    // Add timeout wrapper (120 seconds max)
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('OpenAI API timeout after 120 seconds')), 120000);
     });
     
-    const fullResponse = fullCompletion.choices[0]?.message?.content || "";
-    if (!generateBrief) return { full: fullResponse, brief: null };
+    if (!generateBrief) {
+      // Simple single response for cases that don't need brief version
+      console.log('[ORACLE] Calling OpenAI for single response...');
+      const completion = await Promise.race([
+        openaiClient.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...reversedHistory,
+            { role: "user", content: userMessage },
+          ]
+        }),
+        timeoutPromise
+      ]);
+      
+      const response = completion.choices[0]?.message?.content || "";
+      console.log(`[ORACLE] Single response received (${response.length} chars)`);
+      return { full: response, brief: null };
+    }
     
-    // Generate brief summary from full response
-    const briefCompletion = await openaiClient.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: getBriefSummaryPrompt() },
-        { role: "user", content: "Brief synopsis (20% length): " + fullResponse },
-      ]
-    });
+    // OPTIMIZED: Single call that generates BOTH full and brief versions at once
+    console.log('[ORACLE] Calling OpenAI for BOTH full and brief in single call...');
+    const enhancedPrompt = `${systemPrompt}
+
+CRITICAL OUTPUT FORMATTING:
+Your response must contain EXACTLY TWO SECTIONS separated by the marker "===BRIEF VERSION===":
+
+1. FULL VERSION: Your complete, rich, detailed response (3-4 paragraphs)
+2. BRIEF VERSION: A concise 20% length summary of the full version (1 paragraph)
+
+Format your response EXACTLY like this:
+[Your full detailed response here - multiple paragraphs with all the rich detail requested]
+
+===BRIEF VERSION===
+[Your concise summary here - one paragraph, 20% the length of the full version]
+
+IMPORTANT: The brief version MUST be a faithful summary of the full version above it. Do not omit this structure.`;
     
-    return { 
-      full: fullResponse, 
-      brief: briefCompletion.choices[0]?.message?.content || "" 
-    };
+    const completion = await Promise.race([
+      openaiClient.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: enhancedPrompt },
+          ...reversedHistory,
+          { role: "user", content: userMessage },
+        ]
+      }),
+      timeoutPromise
+    ]);
+    
+    const fullResponseText = completion.choices[0]?.message?.content || "";
+    console.log(`[ORACLE] Combined response received (${fullResponseText.length} chars)`);
+    
+    // Parse the response to extract full and brief sections
+    const sections = fullResponseText.split('===BRIEF VERSION===');
+    
+    if (sections.length === 2) {
+      const fullResponse = sections[0].trim();
+      const briefResponse = sections[1].trim();
+      console.log(`[ORACLE] Successfully parsed - Full: ${fullResponse.length} chars, Brief: ${briefResponse.length} chars`);
+      return { full: fullResponse, brief: briefResponse };
+    } else {
+      // Fallback if parsing fails - use full response for both
+      console.warn('[ORACLE] Failed to parse brief section, using full response for both');
+      return { full: fullResponseText, brief: fullResponseText };
+    }
   } catch (err) {
+    console.error('[ORACLE] Error:', err.message);
+    console.error('[ORACLE] Stack:', err.stack);
     throw err;
   }
 }

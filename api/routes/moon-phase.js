@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { hashUserId } from "../shared/hashUtils.js";
-import { enqueueMessage, getClient } from "../shared/queue.js";
 import { authenticateToken, authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
 import { getLocalDateForTimezone } from "../shared/timezoneHelper.js";
@@ -8,35 +7,6 @@ import { validationError, serverError, notFoundError } from "../utils/responses.
 import { successResponse } from '../utils/responses.js';
 
 const router = Router();
-
-/**
- * Check if generation is already in progress for this user/phase
- * Prevents infinite loop of duplicate queue jobs
- */
-async function isGenerationInProgress(userId, phase) {
-    try {
-        const redis = await getClient();
-        const key = `moon-phase:generating:${userId}:${phase}`;
-        const exists = await redis.get(key);
-        return !!exists;
-    } catch (err) {
-        return false; // If Redis fails, allow queuing
-    }
-}
-
-/**
- * Mark generation as in progress for 3 minutes (180 seconds)
- * CRITICAL: Must be longer than actual generation time (~100 seconds) to prevent duplicate queue jobs
- */
-async function markGenerationInProgress(userId, phase) {
-    try {
-        const redis = await getClient();
-        const key = `moon-phase:generating:${userId}:${phase}`;
-        await redis.setEx(key, 180, 'true'); // Expires in 3 minutes (covers ~100 second generation time)
-    } catch (err) {
-        // Ignore Redis errors
-    }
-}
 
 router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
     const { userId } = req.params;
@@ -80,17 +50,8 @@ router.get("/:userId", authenticateToken, authorizeUser, async (req, res) => {
         );
         
         if (rows.length === 0) {
-            // Only queue if not already generating (prevents infinite loop)
-            const alreadyGenerating = await isGenerationInProgress(userId, phase);
-            if (!alreadyGenerating) {
-                await markGenerationInProgress(userId, phase);
-                enqueueMessage({
-                    userId,
-                    message: `[SYSTEM] Generate moon phase commentary for ${phase}`
-                }).catch(() => {});
-            }
-            
-            return notFoundError(res, 'No moon phase commentary found. Generating now...');
+            // NO REDIS - Return 404 to trigger frontend POST request for synchronous generation
+            return notFoundError(res, 'No moon phase commentary found. Please request generation.');
         }
         
         // Process the moon phase row
@@ -154,7 +115,9 @@ router.post("/:userId", authenticateToken, authorizeUser, async (req, res) => {
         });
         
     } catch (err) {
-        return serverError(res, 'Failed to generate moon phase commentary');
+        console.error('[MOON-PHASE-ROUTE] Error generating moon phase:', err);
+        console.error('[MOON-PHASE-ROUTE] Error stack:', err.stack);
+        return serverError(res, `Failed to generate moon phase commentary: ${err.message}`);
     }
 });
 

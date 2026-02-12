@@ -31,14 +31,30 @@ export async function fetchHoroscope(userId, range, token) {
 }
 
 /**
- * Request horoscope generation
+ * Request horoscope generation (synchronous - returns data immediately)
  */
 export async function generateHoroscope(userId, range, token) {
   const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-  return await fetchWithTokenRefresh(
+  const response = await fetchWithTokenRefresh(
     `${API_URL}/horoscope/${userId}/${range}`,
     { method: 'POST', headers }
   );
+  
+  if (!response.ok) {
+    return { ok: false, status: response.status, data: await response.json() };
+  }
+
+  const data = await response.json();
+  return {
+    ok: true,
+    status: response.status,
+    data: {
+      text: data.horoscope,
+      brief: data.brief,
+      generatedAt: data.generated_at,
+      range
+    }
+  };
 }
 
 /**

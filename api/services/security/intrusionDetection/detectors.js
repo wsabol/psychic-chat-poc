@@ -5,7 +5,7 @@
 
 import { THRESHOLDS, SEVERITY } from './config.js';
 import * as queries from './queries.js';
-import { logErrorFromCatch } from '../../../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * Detect brute force attacks

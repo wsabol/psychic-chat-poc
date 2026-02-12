@@ -32,10 +32,11 @@ export async function fetchMoonPhase(userId, phase, token) {
 
 /**
  * Generate moon phase commentary
+ * SYNCHRONOUS: Returns data immediately from POST response
  */
 export async function generateMoonPhase(userId, phase, token) {
   const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-  return await fetchWithTokenRefresh(
+  const response = await fetchWithTokenRefresh(
     `${API_URL}/moon-phase/${userId}`,
     { 
       method: 'POST',
@@ -43,6 +44,22 @@ export async function generateMoonPhase(userId, phase, token) {
       body: JSON.stringify({ phase })
     }
   );
+  
+  if (!response.ok) {
+    return { ok: false, status: response.status, data: await response.json() };
+  }
+
+  const data = await response.json();
+  return {
+    ok: true,
+    status: response.status,
+    data: {
+      text: data.commentary,
+      brief: data.brief,
+      generatedAt: data.generated_at,
+      phase: data.phase
+    }
+  };
 }
 
 // Re-export shared API functions

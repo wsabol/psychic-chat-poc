@@ -85,25 +85,10 @@ IMPORTANT: Use the above personal and astrological information to:
             throw new Error(`Failed to store oracle message: ${storageErr.message}`);
         }
 
-        // CRITICAL: Publish SSE notification via Redis so client knows response is ready
-        try {
-            const { redis } = await import('../../../../shared/queue.js');
-            const redisClient = await redis();
-            await redisClient.publish(
-                `response-ready:${userId}`,
-                JSON.stringify({
-                    type: 'message_ready',
-                    role: 'assistant',
-                    timestamp: new Date().toISOString()
-                })
-            );
-        } catch (redisErr) {
-            // Log error but don't throw - message was saved successfully
-            const { logErrorFromCatch } = await import('../../../../shared/errorLogger.js');
-            logErrorFromCatch(redisErr, '[ORACLE-PROCESSOR] Failed to publish SSE notification');
-        }
-
-        } catch (err) {
+        // SSE notifications removed - fully synchronous processing
+        // Chat responses are returned immediately to the client
+        
+    } catch (err) {
             throw new Error(`[ORACLE-PROCESSOR] Error processing oracle request: ${err.message}`);
         }
 }

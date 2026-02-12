@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { hashUserId } from "../shared/hashUtils.js";
-import { enqueueMessage, getClient } from "../shared/queue.js";
 import { authenticateToken, authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
 import { getUserTimezone, getLocalDateForTimezone, needsRegeneration } from "../shared/timezoneHelper.js";
@@ -10,35 +9,6 @@ import { successResponse } from '../utils/responses.js';
 
 
 const router = Router();
-
-/**
- * Check if generation is already in progress for this user/range
- * Prevents infinite loop of duplicate queue jobs
- */
-async function isGenerationInProgress(userId, range) {
-    try {
-        const redis = await getClient();
-        const key = `horoscope:generating:${userId}:${range}`;
-        const exists = await redis.get(key);
-        return !!exists;
-    } catch (err) {
-        return false; // If Redis fails, allow queuing
-    }
-}
-
-/**
- * Mark generation as in progress for 3 minutes (180 seconds)
- * CRITICAL: Must be longer than actual generation time (~100 seconds) to prevent duplicate queue jobs
- */
-async function markGenerationInProgress(userId, range) {
-    try {
-        const redis = await getClient();
-        const key = `horoscope:generating:${userId}:${range}`;
-        await redis.setEx(key, 180, 'true'); // Expires in 3 minutes (covers ~100 second generation time)
-    } catch (err) {
-        // Ignore Redis errors
-    }
-}
 
 /**
  * GET /horoscope/:userId/:range
@@ -71,6 +41,7 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
         
         // Fetch horoscopes - return most recent for this range
         // NOTE: Only content_full_encrypted and content_brief_encrypted exist in database
+        console.log(`[HOROSCOPE-ROUTE-GET] Querying for user ${userIdHash}, range ${range.toLowerCase()}`);
         const { rows } = await db.query(
             `SELECT 
                 pgp_sym_decrypt(content_full_encrypted, $2)::text as content_full,
@@ -86,6 +57,7 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
                 LIMIT 1`,
             [userIdHash, process.env.ENCRYPTION_KEY, range.toLowerCase()]
         );
+        console.log(`[HOROSCOPE-ROUTE-GET] Query returned ${rows.length} rows`);
         
 
         
@@ -119,33 +91,14 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
             const isStale = needsRegeneration(createdDate, todayLocalDate);
             
             if (isStale) {
-                // Only queue if not already generating (prevents infinite loop)
-                const alreadyGenerating = await isGenerationInProgress(userId, range.toLowerCase());
-                if (!alreadyGenerating) {
-                    await markGenerationInProgress(userId, range.toLowerCase());
-                    enqueueMessage({
-                        userId,
-                        message: `[SYSTEM] Generate horoscope for ${range.toLowerCase()}`
-                    }).catch(() => {});
-                }
-                
-                // Return 404 to trigger frontend regeneration request
-                return notFoundError(res, `${range} horoscope is stale. Generating fresh one...`);
+                // NO REDIS - Return 404 to trigger frontend POST request for synchronous generation
+                return notFoundError(res, `${range} horoscope is stale. Please request regeneration.`);
             }
         }
         
         if (rows.length === 0) {
-            // Only queue if not already generating (prevents infinite loop)
-            const alreadyGenerating = await isGenerationInProgress(userId, range.toLowerCase());
-            if (!alreadyGenerating) {
-                await markGenerationInProgress(userId, range.toLowerCase());
-                enqueueMessage({
-                    userId,
-                    message: `[SYSTEM] Generate horoscope for ${range.toLowerCase()}`
-                }).catch(() => {});
-            }
-            
-            return notFoundError(res, `No ${range} horoscope found. Generating now...`);
+            // NO REDIS - Return 404 to trigger frontend POST request for synchronous generation
+            return notFoundError(res, `No ${range} horoscope found. Please request generation.`);
         }
         
         // Get content from the row

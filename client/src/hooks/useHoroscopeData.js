@@ -43,13 +43,12 @@ export function useHoroscopeData(userId, token, horoscopeRange, astroInfo) {
         return;
       }
 
-      // If not found, generate new horoscope
+      // If not found, generate new horoscope (synchronous - returns data immediately)
       setGenerating(true);
       const generateResponse = await generateHoroscope(userId, horoscopeRange, token);
 
       if (!generateResponse.ok) {
-        const errorData = await generateResponse.json();
-        const errorMsg = errorData.error || 'Could not generate horoscope';
+        const errorMsg = generateResponse.data?.error || 'Could not generate horoscope';
         
         if (isBirthInfoError(errorMsg)) {
           setError('BIRTH_INFO_MISSING');
@@ -57,31 +56,14 @@ export function useHoroscopeData(userId, token, horoscopeRange, astroInfo) {
           setError(errorMsg);
         }
         setLoading(false);
+        setGenerating(false);
         return;
       }
 
-      // Start polling for generation result
-      // Wait 2 seconds before polling - gives worker time to commit data
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      try {
-        const data = await startPolling(
-          async () => {
-            const pollResult = await fetchHoroscope(userId, horoscopeRange, token);
-            return pollResult.ok ? pollResult.data : null;
-          },
-          60,  // maxPolls
-          1000 // interval
-        );
-
-        setHoroscopeData(data);
-        setGenerating(false);
-        setLoading(false);
-      } catch (pollError) {
-        setError(pollError.message);
-        setGenerating(false);
-        setLoading(false);
-      }
+      // POST returns data immediately - no polling needed!
+      setHoroscopeData(generateResponse.data);
+      setGenerating(false);
+      setLoading(false);
     } catch (err) {
       logErrorFromCatch('[HOROSCOPE] Error loading horoscope:', err);
       setError('Unable to load your horoscope. Please try again.');

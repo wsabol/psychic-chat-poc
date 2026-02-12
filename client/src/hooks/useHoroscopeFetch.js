@@ -89,7 +89,6 @@ export function useHoroscopeFetch(userId, token, apiUrl, horoscopeRange, isAuthe
 
         // No cached horoscope - trigger generation
         setGenerating(true);
-        waitingForRangeRef.current = horoscopeRange;
         
         const generateResponse = await fetchWithTokenRefresh(
           `${apiUrl}/horoscope/${userId}/${horoscopeRange}`,
@@ -107,12 +106,14 @@ export function useHoroscopeFetch(userId, token, apiUrl, horoscopeRange, isAuthe
           }
           setLoading(false);
           setGenerating(false);
-          waitingForRangeRef.current = null;
           return;
         }
 
-        // SSE will notify when response is ready - no polling needed!
-        // Data will be loaded via handleSSEMessage callback
+        // POST returns data immediately (synchronous) - use it directly!
+        const data = await generateResponse.json();
+        setHoroscopeData(buildHoroscopeData(data, horoscopeRange));
+        setGenerating(false);
+        setLoading(false);
       } catch (err) {
         logErrorFromCatch('[HOROSCOPE-FETCH] Error loading horoscope:', err);
         setError('Unable to load your horoscope. Please try again.');

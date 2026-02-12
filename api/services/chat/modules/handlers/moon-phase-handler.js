@@ -19,6 +19,7 @@ import { logErrorFromCatch } from '../../../../shared/errorLogger.js';
  * Responses are generated directly in user's preferred language (NO TRANSLATION!)
  */
 export async function generateMoonPhaseCommentary(userId, phase) {
+    console.log(`[MOON-PHASE-HANDLER] Starting generation for user ${userId}, phase: ${phase}`);
     try {
         // If phase is "current", get the actual current moon phase
         let actualPhase = phase;
@@ -27,6 +28,7 @@ export async function generateMoonPhaseCommentary(userId, phase) {
                 const { getCurrentMoonPhase } = await import('../astrology.js');
                 const moonData = await getCurrentMoonPhase();
                 actualPhase = moonData.phase || 'fullMoon';
+                console.log(`[MOON-PHASE-HANDLER] Current phase resolved to: ${actualPhase}`);
             } catch (err) {
                 logErrorFromCatch('[MOON-PHASE] Failed to get current phase, using fullMoon as fallback');
                 actualPhase = 'fullMoon';
@@ -34,6 +36,7 @@ export async function generateMoonPhaseCommentary(userId, phase) {
         }
         
         const userIdHash = hashUserId(userId);
+        console.log(`[MOON-PHASE-HANDLER] UserIdHash: ${userIdHash}`);
         
         // Get user timezone and today's local date
         const userTimezone = await getUserTimezone(userIdHash);
@@ -59,18 +62,19 @@ export async function generateMoonPhaseCommentary(userId, phase) {
         }
         
         // Fetch user context
+        console.log(`[MOON-PHASE-HANDLER] Fetching user context...`);
         const userInfo = await fetchUserPersonalInfo(userId);
         const astrologyInfo = await fetchUserAstrology(userId);
         const userLanguage = await fetchUserLanguagePreference(userId);
         const oracleLanguage = await fetchUserOracleLanguagePreference(userId);
+        console.log(`[MOON-PHASE-HANDLER] User context fetched - hasPersonalInfo: ${!!userInfo}, hasAstrology: ${!!astrologyInfo?.astrology_data}`);
         
         if (!userInfo) {
-            throw new Error('User personal info not found');
+            throw new Error('Please complete your personal information before generating moon phase insights');
         }
         
-                if (!astrologyInfo?.astrology_data) {
-            // Skip users without astrology data (not an error - they just haven't completed birth info yet)
-            return;
+        if (!astrologyInfo?.astrology_data) {
+            throw new Error('Please complete your birth chart information before generating moon phase insights');
         }
         
         // Get current astronomical context (planets, moon phase, etc.)
@@ -100,7 +104,9 @@ Do NOT include tarot cards - this is purely lunar + astrological insight enriche
 `;
         
         // Call Oracle - response is already in user's preferred language
+        console.log(`[MOON-PHASE-HANDLER] Calling Oracle API for user ${userId}...`);
         const oracleResponses = await callOracle(systemPrompt, [], moonPhasePrompt, true);
+        console.log(`[MOON-PHASE-HANDLER] Oracle responded successfully`);
         
         // Store moon phase commentary (already in user's language)
         // Use actualPhase for storage so it matches what frontend requests
@@ -138,26 +144,13 @@ Do NOT include tarot cards - this is purely lunar + astrological insight enriche
             generatedAt  // createdAtLocalTimestamp - use local timezone timestamp
         );
         
-        // Publish SSE notification via Redis
-        try {
-            const { getClient } = await import('../../../../shared/queue.js');
-            const redisClient = await getClient();
-            await redisClient.publish(
-                `response-ready:${userId}`,
-                JSON.stringify({
-                    type: 'message_ready',
-                    role: 'moon_phase',
-                    phase: actualPhase,
-                    timestamp: new Date().toISOString()
-                })
-            );
-        } catch (redisErr) {
-            logErrorFromCatch(redisErr, '[MOON-PHASE-HANDLER] Failed to publish SSE notification');
-            // Don't throw - moon phase was saved successfully
-        }
+        // SSE notifications removed - synchronous processing like chat
+        // No Redis required for immediate response
         
-        } catch (err) {
-        logErrorFromCatch(err, '[MOON-PHASE-HANDLER] Error generating commentary');
+    } catch (err) {
+        console.error('[MOON-PHASE-HANDLER] ERROR generating commentary:', err.message);
+        console.error('[MOON-PHASE-HANDLER] ERROR stack:', err.stack);
+        await logErrorFromCatch(err, 'moon-phase-handler', `Error generating moon phase commentary for user ${userId}`);
         throw err;
     }
 }

@@ -67,11 +67,10 @@ export function useMoonPhaseFetch(userId, token, currentPhase, isAuthenticated) 
       setGenerating(true);
       waitingForPhaseRef.current = currentPhase;
       
-      const generateResponse = await generateMoonPhase(userId, currentPhase, token);
+      const generateResult = await generateMoonPhase(userId, currentPhase, token);
 
-      if (!generateResponse.ok) {
-        const errorData = await generateResponse.json();
-        const errorMsg = errorData.error || 'Could not generate moon phase commentary';
+      if (!generateResult.ok) {
+        const errorMsg = generateResult.data?.error || 'Could not generate moon phase commentary';
         
         if (isBirthInfoError(errorMsg)) {
           setError('BIRTH_INFO_MISSING');
@@ -84,8 +83,12 @@ export function useMoonPhaseFetch(userId, token, currentPhase, isAuthenticated) 
         return;
       }
 
-      // SSE will notify when response is ready - no polling needed!
-      // Data will be loaded via handleSSEMessage callback
+      // SYNCHRONOUS: Use data from POST response immediately (no SSE wait)
+      setMoonPhaseData(generateResult.data);
+      setLastUpdated(new Date(generateResult.data.generatedAt).toLocaleString());
+      setGenerating(false);
+      setLoading(false);
+      waitingForPhaseRef.current = null;
       
     } catch (err) {
       logErrorFromCatch('[MOON-PHASE-FETCH] Error loading moon phase:', err);

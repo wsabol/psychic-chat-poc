@@ -86,7 +86,7 @@ Write-Host ""
 
 Pop-Location
 
-Write-Host "✓ CLIENT DEPLOYMENT COMPLETED SUCCESSFULLY!" -ForegroundColor Green
+Write-Host "CLIENT DEPLOYMENT COMPLETED SUCCESSFULLY!" -ForegroundColor Green
 Write-Host ""
 Write-Host "The client is now live at: https://app.starshippsychics.com" -ForegroundColor Cyan
 Write-Host "CloudFront cache invalidation may take 2-3 minutes to propagate" -ForegroundColor Gray

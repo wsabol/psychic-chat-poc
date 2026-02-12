@@ -2,7 +2,7 @@
  * Price Migration Service
  * Orchestrates bulk subscription price migrations
  */
-import { logErrorFromCatch } from '../../../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 import { updateSubscriptionPrice } from './stripePrice.js';
 import { 
   getSubscribersByInterval,

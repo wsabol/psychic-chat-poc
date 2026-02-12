@@ -3,7 +3,6 @@
   "scripts": {
     "start:backend": "docker compose up -d",
     "stop:backend": "docker compose down",
-    "start:api": "cd api && npm run start",
     "start:worker": "cd worker && npm run start",
     "start:client": "cd client && npm run start"
   }

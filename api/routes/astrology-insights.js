@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { hashUserId } from "../shared/hashUtils.js";
-import { enqueueMessage, getClient } from "../shared/queue.js";
 import { authenticateToken, authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
 import { getLocalDateForTimezone, needsRegeneration } from "../shared/timezoneHelper.js";
@@ -9,35 +8,6 @@ import { successResponse } from '../utils/responses.js';
 
 
 const router = Router();
-
-/**
- * Check if generation is already in progress for cosmic weather
- * Prevents infinite loop of duplicate queue jobs
- */
-async function isCosmicWeatherGenerating(userId) {
-    try {
-        const redis = await getClient();
-        const key = `cosmic-weather:generating:${userId}`;
-        const exists = await redis.get(key);
-        return !!exists;
-    } catch (err) {
-        return false; // If Redis fails, allow queuing
-    }
-}
-
-/**
- * Mark cosmic weather generation as in progress for 3 minutes (180 seconds)
- * CRITICAL: Must be longer than actual generation time (~100 seconds) to prevent duplicate queue jobs
- */
-async function markCosmicWeatherGenerating(userId) {
-    try {
-        const redis = await getClient();
-        const key = `cosmic-weather:generating:${userId}`;
-        await redis.setEx(key, 180, 'true'); // Expires in 3 minutes (covers ~100 second generation time)
-    } catch (err) {
-        // Ignore Redis errors
-    }
-}
 
 // Cosmic Weather Endpoint - GET
 router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (req, res) => {
@@ -102,16 +72,7 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
         }
         
         if (!todaysWeather) {
-            // Check if already generating to prevent duplicates
-            const alreadyGenerating = await isCosmicWeatherGenerating(userId);
-            if (alreadyGenerating) {
-                return processingResponse(res, 'Generating today\'s cosmic weather...', 'generating');
-            }
-            
-            // Mark as generating and trigger synchronous generation
-            await markCosmicWeatherGenerating(userId);
-            
-            // Import synchronous processor
+            // NO REDIS - Generate synchronously on demand
             const { processCosmicWeatherSync } = await import('../services/chat/processor.js');
             
             try {
@@ -173,13 +134,7 @@ router.post("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (
     const userIdHash = hashUserId(userId);
     
     try {
-        // Check if already generating (duplicate prevention)
-        const alreadyGenerating = await isCosmicWeatherGenerating(userId);
-        if (alreadyGenerating) {
-            return processingResponse(res, 'Cosmic weather generation already in progress...', 'generating');
-        }
-        
-        // Check if today's cosmic weather already exists
+        // NO REDIS - Check if today's cosmic weather already exists
         const { rows: prefRows } = await db.query(
             `SELECT timezone FROM user_preferences WHERE user_id_hash = $1`,
             [userIdHash]
@@ -253,13 +208,9 @@ router.post("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (
             }
         }
         
-        // Mark as generating to prevent duplicates
-        await markCosmicWeatherGenerating(userId);
-        
-        // Import synchronous processor
+        // NO REDIS - Generate cosmic weather synchronously
         const { processCosmicWeatherSync } = await import('../services/chat/processor.js');
         
-        // Generate cosmic weather synchronously
         const result = await processCosmicWeatherSync(userId);
         
         successResponse(res, { 
@@ -269,7 +220,9 @@ router.post("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (
             currentPlanets: result.currentPlanets
         });
     } catch (err) {
-        return serverError(res, 'Failed to generate cosmic weather');
+        console.error('[COSMIC-WEATHER-ROUTE] Error generating cosmic weather:', err);
+        console.error('[COSMIC-WEATHER-ROUTE] Error stack:', err.stack);
+        return serverError(res, `Failed to generate cosmic weather: ${err.message}`);
     }
 });
 

@@ -8,7 +8,7 @@
  * - priceMigrationService: Migration orchestration
  * - priceFormatter: Data formatting
  */
-import { logErrorFromCatch } from '../../../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 import { 
   createNewPrice, 
   updateSubscriptionPrice, 

@@ -9,12 +9,15 @@ import { logErrorFromCatch } from '../../../../shared/errorLogger.js';
 
 
 export async function generateCosmicWeather(userId) {
+    console.log(`[COSMIC-WEATHER-HANDLER] Starting generation for user ${userId}`);
     try {
         const userIdHash = hashUserId(userId);
+        console.log(`[COSMIC-WEATHER-HANDLER] UserIdHash: ${userIdHash}`);
         
         // Get user's timezone and today's local date
         const userTimezone = await getUserTimezone(userIdHash);
         const todayLocalDate = getLocalDateForTimezone(userTimezone);
+        console.log(`[COSMIC-WEATHER-HANDLER] Timezone: ${userTimezone}, Local date: ${todayLocalDate}`);
         
                 // Check if cosmic weather already exists for today (in user's timezone)
         const { rows: existingWeather } = await db.query(
@@ -34,14 +37,20 @@ export async function generateCosmicWeather(userId) {
             }
         }
         
+        console.log(`[COSMIC-WEATHER-HANDLER] Fetching user context...`);
         const userInfo = await fetchUserPersonalInfo(userId);
         const astrologyInfo = await fetchUserAstrology(userId);
         const userLanguage = await fetchUserLanguagePreference(userId);
         const oracleLanguage = await fetchUserOracleLanguagePreference(userId);
+        console.log(`[COSMIC-WEATHER-HANDLER] User context fetched - hasPersonalInfo: ${!!userInfo}, hasAstrology: ${!!astrologyInfo?.astrology_data}`);
         
-        // Skip if user hasn't completed astrology setup yet (will be generated once they do)
+        // Throw error if user hasn't completed astrology setup yet
+        if (!userInfo) {
+            throw new Error('Please complete your personal information before generating cosmic weather');
+        }
+        
         if (!astrologyInfo?.astrology_data) {
-            return;
+            throw new Error('Please complete your birth chart information before generating cosmic weather');
         }
         
         // Get current astronomical context (planets, moon phase, etc.)
@@ -122,22 +131,8 @@ Do NOT include tarot cards - this is pure astrological forecasting enriched by t
             generatedAt  // createdAtLocalTimestamp - use local timezone timestamp
         );
         
-        // Publish SSE notification via Redis
-        try {
-            const { getClient } = await import('../../../../shared/queue.js');
-            const redisClient = await getClient();
-            await redisClient.publish(
-                `response-ready:${userId}`,
-                JSON.stringify({
-                    type: 'message_ready',
-                    role: 'cosmic_weather',
-                    timestamp: new Date().toISOString()
-                })
-            );
-        } catch (redisErr) {
-            logErrorFromCatch(redisErr, '[CW-HANDLER] Failed to publish SSE notification');
-            // Don't throw - cosmic weather was saved successfully
-        }
+        // SSE notifications removed - synchronous processing like chat
+        // No Redis required for immediate response
         
                         } catch (err) {
         logErrorFromCatch(err, '[CW-HANDLER] Cosmic weather generation failed');

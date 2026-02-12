@@ -13,7 +13,7 @@
 import * as detectors from './detectors.js';
 import * as metrics from './metrics.js';
 import * as alerts from './alerts.js';
-import { logErrorFromCatch } from '../../../../shared/errorLogger.js';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * Main anomaly detection engine

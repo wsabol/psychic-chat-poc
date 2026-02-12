@@ -6,9 +6,6 @@ param(
     [switch]$SkipApi,
     
     [Parameter(Mandatory=$false)]
-    [switch]$SkipWorker,
-    
-    [Parameter(Mandatory=$false)]
     [switch]$SkipClient
 )
 
@@ -88,94 +85,7 @@ if (-not $SkipApi) {
 }
 
 # ============================================
-# PART 2: DEPLOY WORKER TO ECS
-# ============================================
-if (-not $SkipWorker) {
-    Write-Host "========================================" -ForegroundColor Cyan
-    Write-Host "PART 2: DEPLOYING WORKER" -ForegroundColor Cyan
-    Write-Host "========================================" -ForegroundColor Cyan
-    Write-Host ""
-    
-    Write-Host "[1/5] Building Worker Docker image..." -ForegroundColor Yellow
-    Set-Location worker
-    docker build -t psychic-chat-worker-production .
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "ERROR: Worker Docker build failed!" -ForegroundColor Red
-        exit 1
-    }
-    Write-Host "SUCCESS: Worker Docker image built" -ForegroundColor Green
-    Set-Location ..
-    Write-Host ""
-    
-    Write-Host "[2/5] Checking/Creating Worker ECR repository..." -ForegroundColor Yellow
-    $workerRepo = "psychic-chat-worker-production"
-    $ErrorActionPreference = "SilentlyContinue"
-    $workerRepoCheck = aws ecr describe-repositories --repository-names $workerRepo --region $awsRegion 2>&1
-    $repoExists = $LASTEXITCODE -eq 0
-    $ErrorActionPreference = "Stop"
-    
-    if (-not $repoExists) {
-        Write-Host "Creating Worker ECR repository..." -ForegroundColor Yellow
-        aws ecr create-repository --repository-name $workerRepo --region $awsRegion | Out-Null
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "ERROR: Failed to create Worker ECR repository!" -ForegroundColor Red
-            exit 1
-        }
-        Write-Host "SUCCESS: Worker ECR repository created" -ForegroundColor Green
-    } else {
-        Write-Host "SUCCESS: Worker ECR repository exists" -ForegroundColor Green
-    }
-    Write-Host ""
-    
-    Write-Host "[3/5] Pushing Worker image to ECR..." -ForegroundColor Yellow
-    $workerImage = "$awsAccount.dkr.ecr.$awsRegion.amazonaws.com/psychic-chat-worker-production:latest"
-    docker tag psychic-chat-worker-production:latest $workerImage
-    docker push $workerImage
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "ERROR: Worker Docker push failed!" -ForegroundColor Red
-        exit 1
-    }
-    Write-Host "SUCCESS: Worker image pushed to ECR" -ForegroundColor Green
-    Write-Host ""
-    
-    Write-Host "[4/5] Checking if Worker ECS service exists..." -ForegroundColor Yellow
-    $ErrorActionPreference = "SilentlyContinue"
-    $workerServiceCheck = aws ecs describe-services --cluster psychic-chat-production --services psychic-chat-worker-production --region $awsRegion 2>&1
-    $serviceExists = $LASTEXITCODE -eq 0
-    $ErrorActionPreference = "Stop"
-    
-    if ($serviceExists) {
-        $statusCmd = "aws ecs describe-services --cluster psychic-chat-production " +
-                     "--services psychic-chat-worker-production " +
-                     "--query `"services[0].status`" --output text --region $awsRegion"
-        $serviceStatus = Invoke-Expression $statusCmd
-        if ($serviceStatus -eq "ACTIVE") {
-            Write-Host "[5/5] Updating Worker ECS service..." -ForegroundColor Yellow
-            $updateWorkerCmd = "aws ecs update-service --cluster psychic-chat-production " +
-                              "--service psychic-chat-worker-production --force-new-deployment --region $awsRegion"
-            Invoke-Expression $updateWorkerCmd | Out-Null
-            if ($LASTEXITCODE -ne 0) {
-                Write-Host "WARNING: Worker ECS service update may have failed" -ForegroundColor Yellow
-            } else {
-                Write-Host "SUCCESS: Worker ECS service updated" -ForegroundColor Green
-            }
-        } else {
-            Write-Host "WARNING: Worker service exists but is not ACTIVE. Status: $serviceStatus" -ForegroundColor Yellow
-            Write-Host "You may need to manually deploy the worker service" -ForegroundColor Yellow
-        }
-    } else {
-        Write-Host "WARNING: Worker ECS service does not exist yet" -ForegroundColor Yellow
-        Write-Host "The worker image has been pushed to ECR: $workerImage" -ForegroundColor Yellow
-        Write-Host "You need to add the worker to your ECS CloudFormation template" -ForegroundColor Yellow
-    }
-    Write-Host ""
-} else {
-    Write-Host "Skipping Worker deployment" -ForegroundColor Yellow
-    Write-Host ""
-}
-
-# ============================================
-# PART 3: DEPLOY CLIENT TO S3/CLOUDFRONT
+# PART 2: DEPLOY CLIENT TO S3/CLOUDFRONT
 # ============================================
 if (-not $SkipClient) {
     Write-Host "========================================" -ForegroundColor Cyan
@@ -207,10 +117,6 @@ Write-Host "Deployment Summary:" -ForegroundColor Cyan
 if (-not $SkipApi) {
     Write-Host "  - API deployed to ECS" -ForegroundColor Green
 }
-if (-not $SkipWorker) {
-    Write-Host "  - Worker image built and pushed to ECR" -ForegroundColor Green
-    Write-Host "    (Worker service deployment status checked above)" -ForegroundColor Yellow
-}
 if (-not $SkipClient) {
     Write-Host "  - Client deployed to S3/CloudFront" -ForegroundColor Green
 }
@@ -219,11 +125,6 @@ Write-Host "Next Steps:" -ForegroundColor Cyan
 $logCmd1 = "aws logs tail /ecs/psychic-chat-api-production --follow"
 Write-Host "  1. Monitor API logs:" -ForegroundColor White
 Write-Host "     $logCmd1" -ForegroundColor Gray
-if (-not $SkipWorker) {
-    $logCmd2 = "aws logs tail /ecs/psychic-chat-worker-production --follow"
-    Write-Host "  2. Monitor Worker logs:" -ForegroundColor White
-    Write-Host "     $logCmd2" -ForegroundColor Gray
-}
-Write-Host "  3. Visit: https://app.starshippsychics.com" -ForegroundColor White
-Write-Host "  4. Check ECS services in AWS Console" -ForegroundColor White
+Write-Host "  2. Visit: https://app.starshippsychics.com" -ForegroundColor White
+Write-Host "  3. Check ECS services in AWS Console" -ForegroundColor White
 Write-Host ""

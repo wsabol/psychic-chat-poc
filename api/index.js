@@ -97,27 +97,34 @@ app.use(helmet({
 }));
 
 // Allow client at 3001 and marketing website. Adjust as needed or use an env var.
+const allowedOrigins = [
+    'http://localhost:3001',          // React app (development)
+    'http://localhost:3000',          // Marketing website (development - if served locally)
+    'https://starshippsychics.com',   // Marketing website (production)
+    'https://www.starshippsychics.com', // Marketing website with www (production)
+    'https://app.starshippsychics.com', // React app (production)
+    process.env.CORS_ORIGIN           // Additional origin from env var
+].filter(Boolean); // Remove any undefined values
+
 app.use(cors({
     origin: function (origin, callback) {
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
         
-        const allowedOrigins = [
-            'http://localhost:3001',          // React app (development)
-            'http://localhost:3000',          // Marketing website (development - if served locally)
-            'https://starshippsychics.com',   // Marketing website (production)
-            'https://www.starshippsychics.com', // Marketing website with www (production)
-            'https://app.starshippsychics.com', // React app (production)
-            process.env.CORS_ORIGIN           // Additional origin from env var
-        ].filter(Boolean); // Remove any undefined values
-        
         if (allowedOrigins.indexOf(origin) !== -1) {
             callback(null, true);
         } else {
+            console.warn(`❌ CORS: Blocked origin: ${origin}`);
             callback(new Error('Not allowed by CORS'));
         }
     },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    exposedHeaders: ['Content-Length', 'Content-Type'],
+    maxAge: 86400, // 24 hours - cache preflight requests
+    optionsSuccessStatus: 204,
+    preflightContinue: false
 }));
 
 // IMPORTANT: Parse webhooks as raw body BEFORE express.json()
