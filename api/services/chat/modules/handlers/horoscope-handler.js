@@ -21,12 +21,15 @@ import { logErrorFromCatch } from '../../../../shared/errorLogger.js';
  * Responses are generated directly in user's preferred language (NO TRANSLATION!)
  */
 export async function generateHoroscope(userId, range = 'daily') {
+    console.log(`[HOROSCOPE-HANDLER] Starting generation for user ${userId}, range: ${range}`);
     try {
         const userIdHash = hashUserId(userId);
+        console.log(`[HOROSCOPE-HANDLER] UserIdHash: ${userIdHash}`);
         
         // Get user's timezone and today's local date
         const userTimezone = await getUserTimezone(userIdHash);
         const todayLocalDate = getLocalDateForTimezone(userTimezone);
+        console.log(`[HOROSCOPE-HANDLER] Timezone: ${userTimezone}, Local date: ${todayLocalDate}`);
         
         // Check if THIS SPECIFIC RANGE was already generated for today (in user's timezone)
         const { rows: existingHoroscopes } = await db.query(
@@ -40,11 +43,13 @@ export async function generateHoroscope(userId, range = 'daily') {
         );
         
         if (existingHoroscopes.length > 0) {
+            console.log(`[HOROSCOPE-HANDLER] Found existing horoscope, checking if regeneration needed`);
             // Check if user is temporary/trial account FIRST
             const isTemporary = await isTemporaryUser(userId);
             
             // FREE TRIAL: Never regenerate - horoscope persists for entire trial
             if (isTemporary) {
+                console.log(`[HOROSCOPE-HANDLER] User is temporary, skipping regeneration`);
                 return;
             }
             
@@ -55,25 +60,31 @@ export async function generateHoroscope(userId, range = 'daily') {
                 : String(createdAtLocalDate).split('T')[0];
             
             const needsRegen = needsRegeneration(createdDateStr, todayLocalDate);
+            console.log(`[HOROSCOPE-HANDLER] Regeneration check: created=${createdDateStr}, today=${todayLocalDate}, needsRegen=${needsRegen}`);
             if (!needsRegen) {
+                console.log(`[HOROSCOPE-HANDLER] No regeneration needed, returning existing`);
                 return;
             }
+        } else {
+            console.log(`[HOROSCOPE-HANDLER] No existing horoscope found, will generate new`);
         }
         
         // Fetch user context
+        console.log(`[HOROSCOPE-HANDLER] Fetching user context...`);
         const userInfo = await fetchUserPersonalInfo(userId);
         const astrologyInfo = await fetchUserAstrology(userId);
         const userLanguage = await fetchUserLanguagePreference(userId);
         const oracleLanguage = await fetchUserOracleLanguagePreference(userId);
+        console.log(`[HOROSCOPE-HANDLER] User context fetched - hasPersonalInfo: ${!!userInfo}, hasAstrology: ${!!astrologyInfo?.astrology_data}`);
         
-                // Skip if user hasn't completed personal info yet
+        // Throw error if user hasn't completed personal info yet
         if (!userInfo) {
-            return;
+            throw new Error('Please complete your personal information before generating horoscopes');
         }
         
-        // Skip if user hasn't completed astrology setup yet (will be generated once they do)
+        // Throw error if user hasn't completed astrology setup yet
         if (!astrologyInfo?.astrology_data) {
-            return;
+            throw new Error('Please complete your birth chart information before generating horoscopes');
         }
         
         // Check if user is temporary/trial account
@@ -91,6 +102,7 @@ export async function generateHoroscope(userId, range = 'daily') {
         
         // Generate the horoscope
         try {
+            console.log(`[HOROSCOPE-HANDLER] Building horoscope prompt...`);
             const horoscopePrompt = buildHoroscopePrompt(userInfo, astrologyInfo, range, userGreeting, astronomicalContext);
             
             const systemPrompt = baseSystemPrompt + `
@@ -106,7 +118,9 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
 `;
             
             // Call Oracle - response is already in user's preferred language
+            console.log(`[HOROSCOPE-HANDLER] Calling Oracle API for user ${userId}...`);
             const oracleResponses = await callOracle(systemPrompt, [], horoscopePrompt, true);
+            console.log(`[HOROSCOPE-HANDLER] Oracle responded successfully - full length: ${oracleResponses.full?.length}, brief length: ${oracleResponses.brief?.length}`);
             
             // Store horoscope in database (already in user's language)
             const horoscopeDataFull = {
@@ -123,8 +137,21 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
                 zodiac_sign: astrologyInfo.zodiac_sign 
             };
             
-                                    // Store message (no translation needed - response is already in user's language)
-            await storeMessage(
+            // Store message (no translation needed - response is already in user's language)
+            console.log(`[HOROSCOPE-HANDLER] Storing horoscope in database...`);
+            console.log(`[HOROSCOPE-HANDLER] Data to store:`, {
+                userId,
+                role: 'horoscope',
+                hasFullText: !!horoscopeDataFull?.text,
+                fullTextLength: horoscopeDataFull?.text?.length,
+                hasBriefText: !!horoscopeDataBrief?.text,
+                briefTextLength: horoscopeDataBrief?.text?.length,
+                range,
+                todayLocalDate,
+                generatedAt
+            });
+            
+            const storeResult = await storeMessage(
                 userId, 
                 'horoscope', 
                 horoscopeDataFull,
@@ -138,31 +165,22 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
                 todayLocalDate,
                 generatedAt  // createdAtLocalTimestamp - use local timezone timestamp
             );
+            console.log(`[HOROSCOPE-HANDLER] Horoscope stored successfully! Result:`, storeResult);
             
-            // Publish SSE notification via Redis
-            try {
-                const { getClient } = await import('../../../../shared/queue.js');
-                const redisClient = await getClient();
-                await redisClient.publish(
-                    `response-ready:${userId}`,
-                    JSON.stringify({
-                        type: 'message_ready',
-                        role: 'horoscope',
-                        range: range,
-                        timestamp: new Date().toISOString()
-                    })
-                );
-            } catch (redisErr) {
-                logErrorFromCatch(redisErr, '[HOROSCOPE-HANDLER] Failed to publish SSE notification');
-                // Don't throw - horoscope was saved successfully
-            }
+            // SSE notifications removed - synchronous processing like chat
+            // No Redis required for immediate response
             
         } catch (err) {
-            logErrorFromCatch(err, `[HOROSCOPE-HANDLER] Error generating ${range} horoscope`);
+            console.error(`[HOROSCOPE-HANDLER] ERROR generating ${range} horoscope:`, err.message);
+            console.error(`[HOROSCOPE-HANDLER] ERROR stack:`, err.stack);
+            await logErrorFromCatch(err, 'horoscope-handler', `Error generating ${range} horoscope for user ${userId}`);
+            throw err; // Rethrow so the outer handler can propagate it
         }
         
     } catch (err) {
-        logErrorFromCatch(err, '[HOROSCOPE-HANDLER] Error generating horoscopes');
+        console.error('[HOROSCOPE-HANDLER] ERROR in main handler:', err.message);
+        console.error('[HOROSCOPE-HANDLER] ERROR stack:', err.stack);
+        await logErrorFromCatch(err, 'horoscope-handler', `Error generating horoscopes for user ${userId}`);
         throw err;
     }
 }

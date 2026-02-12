@@ -193,17 +193,39 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
 router.post("/:userId/:range", authenticateToken, authorizeUser, async (req, res) => {
     const { userId, range } = req.params;
     
+    console.log(`[HOROSCOPE-ROUTE] POST request received for user ${userId}, range ${range}`);
+    
     try {
         // Validate range
         if (!['daily', 'weekly'].includes(range.toLowerCase())) {
+            console.error('[HOROSCOPE-ROUTE] Invalid range:', range);
             return validationError(res, 'Invalid range. Must be daily or weekly.');
         }
         
+        console.log('[HOROSCOPE-ROUTE] Importing processor...');
         // Import synchronous processor
         const { processHoroscopeSync } = await import('../services/chat/processor.js');
         
+        console.log('[HOROSCOPE-ROUTE] Calling processHoroscopeSync...');
         // Generate horoscope synchronously
         const result = await processHoroscopeSync(userId, range.toLowerCase());
+        
+        console.log('[HOROSCOPE-ROUTE] Result received:', {
+            hasHoroscope: !!result?.horoscope,
+            hasBrief: !!result?.brief,
+            hasGeneratedAt: !!result?.generated_at
+        });
+        
+        // Validate result
+        if (!result) {
+            console.error('[HOROSCOPE-ROUTE] processHoroscopeSync returned null/undefined');
+            throw new Error('Horoscope generation returned no result');
+        }
+        
+        if (!result.horoscope) {
+            console.error('[HOROSCOPE-ROUTE] Result missing horoscope text:', result);
+            throw new Error('Horoscope generation returned incomplete result');
+        }
         
         successResponse(res, { 
             horoscope: result.horoscope,
@@ -212,8 +234,14 @@ router.post("/:userId/:range", authenticateToken, authorizeUser, async (req, res
             range: range.toLowerCase()
         });
         
+        console.log('[HOROSCOPE-ROUTE] Response sent successfully');
+        
     } catch (err) {
-        return serverError(res, 'Failed to generate horoscope');
+        console.error('[HOROSCOPE-ROUTE] Error generating horoscope:', err);
+        console.error('[HOROSCOPE-ROUTE] Error message:', err.message);
+        console.error('[HOROSCOPE-ROUTE] Error stack:', err.stack);
+        console.error('[HOROSCOPE-ROUTE] Error details:', JSON.stringify(err, null, 2));
+        return serverError(res, `Failed to generate horoscope: ${err.message}`);
     }
 });
 

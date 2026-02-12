@@ -37,21 +37,37 @@ export async function processGeneric(config) {
         notFoundError = 'Generation failed - no data found'
     } = config;
     
+    console.log(`[${errorContext}] Starting processGeneric for user ${userId}, role ${role}`);
+    
     try {
         // STEP 1: Generate content (stores in DB automatically)
-        await generator(userId, ...generatorArgs);
+        console.log(`[${errorContext}] Calling generator function...`);
+        const generatorResult = await generator(userId, ...generatorArgs);
+        console.log(`[${errorContext}] Generator completed, result:`, generatorResult);
         
         // STEP 2: Fetch the generated content
+        console.log(`[${errorContext}] Fetching message from DB with role ${role}, filters:`, filters);
         const message = await fetchMessageByRole(userId, role, filters);
+        console.log(`[${errorContext}] Message fetched:`, message ? 'Found' : 'NOT FOUND');
         
         if (!message) {
+            console.error(`[${errorContext}] No message found in database after generation!`);
             throw new Error(notFoundError);
         }
         
         // STEP 3: Build and return response
-        return buildSuccessResponse(message, responseMapper);
+        console.log(`[${errorContext}] Building response with mapper:`, !!responseMapper);
+        const response = buildSuccessResponse(message, responseMapper);
+        console.log(`[${errorContext}] Response built successfully:`, {
+            success: response.success,
+            hasData: !!response
+        });
+        
+        return response;
         
     } catch (err) {
+        console.error(`[${errorContext}] ERROR in processGeneric:`, err.message);
+        console.error(`[${errorContext}] ERROR stack:`, err.stack);
         logErrorFromCatch(err, `[${errorContext}] Error processing request`);
         throw err;
     }
