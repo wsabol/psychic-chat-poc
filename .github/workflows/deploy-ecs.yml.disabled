@@ -1,13 +1,14 @@
-name: Deploy ECS Fargate
+# This workflow has been DISABLED
+# Reason: Manual deployment via PowerShell scripts is preferred
+# Date: February 11, 2026
+#
+# To re-enable: Rename this file back to deploy-ecs.yml
+# Original workflow automated ECS Fargate deployments on push to main
+
+name: Deploy ECS Fargate (DISABLED)
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'api/**'
-      - 'infrastructure/ecs-template.yaml'
-      - '.github/workflows/deploy-ecs.yml'
+  # Workflow disabled - no triggers active
   workflow_dispatch:
     inputs:
       environment:
