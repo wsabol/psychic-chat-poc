@@ -102,16 +102,32 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
         }
         
         if (!todaysWeather) {
-            // Only queue if not already generating (prevents infinite loop)
+            // Check if already generating to prevent duplicates
             const alreadyGenerating = await isCosmicWeatherGenerating(userId);
-            if (!alreadyGenerating) {
-                await markCosmicWeatherGenerating(userId);
-                enqueueMessage({
-                    userId,
-                    message: '[SYSTEM] Generate cosmic weather'
-                }).catch(() => {});
+            if (alreadyGenerating) {
+                return processingResponse(res, 'Generating today\'s cosmic weather...', 'generating');
             }
-            return processingResponse(res, 'Generating today\'s cosmic weather...', 'generating');
+            
+            // Mark as generating and trigger synchronous generation
+            await markCosmicWeatherGenerating(userId);
+            
+            // Import synchronous processor
+            const { processCosmicWeatherSync } = await import('../services/chat/processor.js');
+            
+            try {
+                // Generate cosmic weather synchronously
+                const result = await processCosmicWeatherSync(userId);
+                
+                return successResponse(res, { 
+                    weather: result.weather,
+                    brief: result.brief,
+                    birthChart: result.birthChart,
+                    currentPlanets: result.currentPlanets
+                });
+            } catch (genErr) {
+                // If generation fails, return error
+                return serverError(res, 'Failed to generate cosmic weather');
+            }
         }
         
         // Ensure birth_chart is properly formatted for frontend
@@ -153,7 +169,93 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
 // Cosmic Weather Endpoint - POST (trigger generation)
 router.post("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (req, res) => {
     const { userId } = req.params;
+    const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+    const userIdHash = hashUserId(userId);
+    
     try {
+        // Check if already generating (duplicate prevention)
+        const alreadyGenerating = await isCosmicWeatherGenerating(userId);
+        if (alreadyGenerating) {
+            return processingResponse(res, 'Cosmic weather generation already in progress...', 'generating');
+        }
+        
+        // Check if today's cosmic weather already exists
+        const { rows: prefRows } = await db.query(
+            `SELECT timezone FROM user_preferences WHERE user_id_hash = $1`,
+            [userIdHash]
+        );
+        const userTz = prefRows.length > 0 && prefRows[0].timezone ? prefRows[0].timezone : 'UTC';
+        
+        const today = new Date().toLocaleDateString('en-CA', {
+            timeZone: userTz,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        });
+        
+        const { rows } = await db.query(
+            `SELECT 
+                pgp_sym_decrypt(content_full_encrypted, $2)::text as content_full,
+                pgp_sym_decrypt(content_brief_encrypted, $2)::text as content_brief,
+                created_at_local_date
+            FROM messages 
+            WHERE user_id_hash = $1 AND role = 'cosmic_weather' 
+            ORDER BY created_at DESC LIMIT 1`,
+            [userIdHash, ENCRYPTION_KEY]
+        );
+        
+        // Check if today's data already exists
+        if (rows.length > 0) {
+            let rowDate = rows[0].created_at_local_date;
+            if (rowDate instanceof Date) {
+                rowDate = rowDate.toISOString().split('T')[0];
+            } else if (typeof rowDate === 'string') {
+                rowDate = rowDate.split('T')[0];
+            }
+            
+            if (rowDate === today) {
+                // Today's cosmic weather already exists, return it
+                const fullContent = rows[0].content_full;
+                const briefContent = rows[0].content_brief;
+                
+                const todaysWeather = typeof fullContent === 'string' ? JSON.parse(fullContent) : fullContent;
+                const briefWeather = briefContent ? (typeof briefContent === 'string' ? JSON.parse(briefContent) : briefContent) : null;
+                
+                const formattedBirthChart = todaysWeather.birth_chart ? {
+                    rising_sign: todaysWeather.birth_chart.rising_sign,
+                    moon_sign: todaysWeather.birth_chart.moon_sign,
+                    sun_sign: todaysWeather.birth_chart.sun_sign,
+                    sun_degree: todaysWeather.birth_chart.sun_degree,
+                    moon_degree: todaysWeather.birth_chart.moon_degree,
+                    rising_degree: todaysWeather.birth_chart.rising_degree,
+                    venus_sign: todaysWeather.birth_chart.venus_sign,
+                    venus_degree: todaysWeather.birth_chart.venus_degree,
+                    mars_sign: todaysWeather.birth_chart.mars_sign,
+                    mars_degree: todaysWeather.birth_chart.mars_degree,
+                    mercury_sign: todaysWeather.birth_chart.mercury_sign,
+                    mercury_degree: todaysWeather.birth_chart.mercury_degree
+                } : null;
+                
+                const formattedPlanets = Array.isArray(todaysWeather.planets) ? todaysWeather.planets.map(p => ({
+                    icon: p.icon,
+                    name: p.name,
+                    sign: p.sign,
+                    degree: p.degree,
+                    retrograde: p.retrograde || false
+                })) : [];
+                
+                return successResponse(res, { 
+                    weather: todaysWeather.text,
+                    brief: briefWeather?.text || null,
+                    birthChart: formattedBirthChart,
+                    currentPlanets: formattedPlanets
+                });
+            }
+        }
+        
+        // Mark as generating to prevent duplicates
+        await markCosmicWeatherGenerating(userId);
+        
         // Import synchronous processor
         const { processCosmicWeatherSync } = await import('../services/chat/processor.js');
         

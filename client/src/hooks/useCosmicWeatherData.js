@@ -48,31 +48,23 @@ export function useCosmicWeatherData(userId, token, isAuthenticated) {
     setGenerating(false);
 
     try {
-      // Try to fetch existing cosmic weather
+      // GET endpoint now returns data synchronously (generates if needed)
       const data = await fetchCosmicWeather(userId, token);
       
-      // If data exists (not generating), use it
       if (data) {
         setCosmicData(data);
         setLoading(false);
         return;
       }
       
-      // If null, it means still generating (202 response), fall through to generation
+      // If null (202 - rare race condition), wait for SSE
+      if (data === null) {
+        setGenerating(true);
+        waitingForDataRef.current = true;
+        return;
+      }
     } catch (err) {
-      // Silently proceed to generation - fetch failing is expected when data doesn't exist yet
-    }
-
-    // If fetch failed, trigger generation
-    try {
-      setGenerating(true);
-      waitingForDataRef.current = true;
-      await generateCosmicWeather(userId, token);
-      
-      // SSE will notify when response is ready - no polling needed!
-      // Data will be loaded via handleSSEMessage callback
-    } catch (err) {
-      logErrorFromCatch(err, '[COSMIC-WEATHER-HOOK] Generation failed');
+      logErrorFromCatch(err, '[COSMIC-WEATHER-HOOK] Error loading cosmic weather');
       
       if (isBirthInfoError(err?.message)) {
         setError('BIRTH_INFO_MISSING');
@@ -80,9 +72,7 @@ export function useCosmicWeatherData(userId, token, isAuthenticated) {
         setError(err?.message || 'Unable to load cosmic weather. Please try again.');
       }
       
-      setGenerating(false);
       setLoading(false);
-      waitingForDataRef.current = false;
     }
   }, [userId, token]);
 
