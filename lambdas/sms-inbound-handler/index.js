@@ -55,7 +55,6 @@ async function addOptOut(phoneNumber) {
        DO UPDATE SET opted_out_at = NOW()`,
       [phoneNumber]
     );
-    console.log(`✅ Opt-out added for ${phoneNumber}`);
     return true;
   } catch (error) {
     console.error('Error adding opt-out:', error);
@@ -75,10 +74,8 @@ async function removeOptOut(phoneNumber) {
     );
     
     if (result.rowCount > 0) {
-      console.log(`✅ Opt-in restored for ${phoneNumber}`);
       return true;
     } else {
-      console.log(`ℹ️ No opt-out found for ${phoneNumber}`);
       return false;
     }
   } catch (error) {
@@ -109,7 +106,6 @@ async function logInboundSMS(smsData, action) {
       ]
     ).catch(err => {
       // If table doesn't exist, log to console only
-      console.log(`Inbound SMS log (table not found): ${action} from ${smsData.originationNumber}`);
     });
   } catch (error) {
     // Non-critical - just log
@@ -121,13 +117,11 @@ async function logInboundSMS(smsData, action) {
  * Main Lambda handler
  */
 export const handler = async (event) => {
-  console.log('📨 Received SNS event:', JSON.stringify(event, null, 2));
 
   try {
     // Process each SNS record
     for (const record of event.Records) {
       if (record.EventSource !== 'aws:sns') {
-        console.log('⚠️ Skipping non-SNS record');
         continue;
       }
 
@@ -143,8 +137,6 @@ export const handler = async (event) => {
       const phoneNumber = smsData.originationNumber;
       const messageBody = (smsData.messageBody || '').trim().toUpperCase();
 
-      console.log(`📱 Processing message from ${phoneNumber}: "${messageBody}"`);
-
       // Handle STOP/UNSUBSCRIBE keywords (REQUIRED by TCPA)
       if (messageBody === 'STOP' || 
           messageBody === 'STOPALL' || 
@@ -155,7 +147,6 @@ export const handler = async (event) => {
         
         await addOptOut(phoneNumber);
         await logInboundSMS(smsData, 'STOP');
-        console.log(`🛑 STOP processed for ${phoneNumber}`);
       }
       
       // Handle START/SUBSCRIBE keywords (opt back in)
@@ -166,13 +157,11 @@ export const handler = async (event) => {
         
         await removeOptOut(phoneNumber);
         await logInboundSMS(smsData, 'START');
-        console.log(`✅ START processed for ${phoneNumber}`);
       }
       
       // Handle HELP keyword (informational)
       else if (messageBody === 'HELP' || messageBody === 'INFO') {
         await logInboundSMS(smsData, 'HELP');
-        console.log(`ℹ️ HELP request from ${phoneNumber}`);
         // Note: AWS will automatically send a HELP response if configured
         // Or you can send a custom response using SNS here
       }
@@ -180,7 +169,6 @@ export const handler = async (event) => {
       // Ignore other messages
       else {
         await logInboundSMS(smsData, 'IGNORED');
-        console.log(`ℹ️ Ignoring message: "${messageBody}"`);
       }
     }
 

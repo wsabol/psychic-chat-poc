@@ -9,15 +9,12 @@ import { logErrorFromCatch } from '../../../../shared/errorLogger.js';
 
 
 export async function generateCosmicWeather(userId) {
-    console.log(`[COSMIC-WEATHER-HANDLER] Starting generation for user ${userId}`);
     try {
         const userIdHash = hashUserId(userId);
-        console.log(`[COSMIC-WEATHER-HANDLER] UserIdHash: ${userIdHash}`);
         
         // Get user's timezone and today's local date
         const userTimezone = await getUserTimezone(userIdHash);
         const todayLocalDate = getLocalDateForTimezone(userTimezone);
-        console.log(`[COSMIC-WEATHER-HANDLER] Timezone: ${userTimezone}, Local date: ${todayLocalDate}`);
         
                 // Check if cosmic weather already exists for today (in user's timezone)
         const { rows: existingWeather } = await db.query(
@@ -36,13 +33,10 @@ export async function generateCosmicWeather(userId) {
                 return;
             }
         }
-        
-        console.log(`[COSMIC-WEATHER-HANDLER] Fetching user context...`);
         const userInfo = await fetchUserPersonalInfo(userId);
         const astrologyInfo = await fetchUserAstrology(userId);
         const userLanguage = await fetchUserLanguagePreference(userId);
         const oracleLanguage = await fetchUserOracleLanguagePreference(userId);
-        console.log(`[COSMIC-WEATHER-HANDLER] User context fetched - hasPersonalInfo: ${!!userInfo}, hasAstrology: ${!!astrologyInfo?.astrology_data}`);
         
         // Throw error if user hasn't completed astrology setup yet
         if (!userInfo) {

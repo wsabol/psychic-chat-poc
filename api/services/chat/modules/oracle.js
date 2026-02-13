@@ -43,7 +43,6 @@ export {
  */
 export async function callOracle(systemPrompt, messageHistory, userMessage, generateBrief = true) {
   try {
-    console.log('[ORACLE] Starting OpenAI call...');
     // Reverse history: input is ASC (oldest first), reverse to DESC for context relevance
     const reversedHistory = messageHistory.slice().reverse();
     const openaiClient = getOpenAIClient();
@@ -55,7 +54,6 @@ export async function callOracle(systemPrompt, messageHistory, userMessage, gene
     
     if (!generateBrief) {
       // Simple single response for cases that don't need brief version
-      console.log('[ORACLE] Calling OpenAI for single response...');
       const completion = await Promise.race([
         openaiClient.chat.completions.create({
           model: "gpt-4o-mini",
@@ -69,12 +67,10 @@ export async function callOracle(systemPrompt, messageHistory, userMessage, gene
       ]);
       
       const response = completion.choices[0]?.message?.content || "";
-      console.log(`[ORACLE] Single response received (${response.length} chars)`);
       return { full: response, brief: null };
     }
     
     // OPTIMIZED: Single call that generates BOTH full and brief versions at once
-    console.log('[ORACLE] Calling OpenAI for BOTH full and brief in single call...');
     const enhancedPrompt = `${systemPrompt}
 
 CRITICAL OUTPUT FORMATTING:
@@ -108,7 +104,6 @@ IMPORTANT:
     ]);
     
     const fullResponseText = completion.choices[0]?.message?.content || "";
-    console.log(`[ORACLE] Combined response received (${fullResponseText.length} chars)`);
     
     // Parse the response to extract full and brief sections
     const sections = fullResponseText.split('===BRIEF VERSION===');
@@ -116,7 +111,6 @@ IMPORTANT:
     if (sections.length === 2) {
       const fullResponse = sections[0].trim();
       const briefResponse = sections[1].trim();
-      console.log(`[ORACLE] Successfully parsed - Full: ${fullResponse.length} chars, Brief: ${briefResponse.length} chars`);
       
       // Validate that brief is actually different and shorter
       if (fullResponse === briefResponse) {

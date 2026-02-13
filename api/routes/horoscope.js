@@ -41,7 +41,6 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
         
         // Fetch horoscopes - return most recent for this range
         // NOTE: Only content_full_encrypted and content_brief_encrypted exist in database
-        console.log(`[HOROSCOPE-ROUTE-GET] Querying for user ${userIdHash}, range ${range.toLowerCase()}`);
         const { rows } = await db.query(
             `SELECT 
                 pgp_sym_decrypt(content_full_encrypted, $2)::text as content_full,
@@ -57,9 +56,6 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
                 LIMIT 1`,
             [userIdHash, process.env.ENCRYPTION_KEY, range.toLowerCase()]
         );
-        console.log(`[HOROSCOPE-ROUTE-GET] Query returned ${rows.length} rows`);
-        
-
         
                 // Check if user is temporary (free trial) - EXEMPT from compliance checks
         const { rows: userRows } = await db.query(
@@ -146,28 +142,16 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
 router.post("/:userId/:range", authenticateToken, authorizeUser, async (req, res) => {
     const { userId, range } = req.params;
     
-    console.log(`[HOROSCOPE-ROUTE] POST request received for user ${userId}, range ${range}`);
-    
     try {
         // Validate range
         if (!['daily', 'weekly'].includes(range.toLowerCase())) {
             console.error('[HOROSCOPE-ROUTE] Invalid range:', range);
             return validationError(res, 'Invalid range. Must be daily or weekly.');
         }
-        
-        console.log('[HOROSCOPE-ROUTE] Importing processor...');
         // Import synchronous processor
         const { processHoroscopeSync } = await import('../services/chat/processor.js');
-        
-        console.log('[HOROSCOPE-ROUTE] Calling processHoroscopeSync...');
         // Generate horoscope synchronously
         const result = await processHoroscopeSync(userId, range.toLowerCase());
-        
-        console.log('[HOROSCOPE-ROUTE] Result received:', {
-            hasHoroscope: !!result?.horoscope,
-            hasBrief: !!result?.brief,
-            hasGeneratedAt: !!result?.generated_at
-        });
         
         // Validate result
         if (!result) {
@@ -186,8 +170,6 @@ router.post("/:userId/:range", authenticateToken, authorizeUser, async (req, res
             generated_at: result.generated_at,
             range: range.toLowerCase()
         });
-        
-        console.log('[HOROSCOPE-ROUTE] Response sent successfully');
         
     } catch (err) {
         console.error('[HOROSCOPE-ROUTE] Error generating horoscope:', err);
