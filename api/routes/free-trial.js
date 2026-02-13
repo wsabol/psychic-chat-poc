@@ -45,7 +45,12 @@ router.post('/create-session', async (req, res) => {
     const result = await createFreeTrialSession(tempUserId, clientIp, db);
 
     if (!result.success) {
+      // Handle different types of trial restrictions
       if (result.alreadyCompleted) {
+        return rateLimitError(res, 3600);
+      }
+      if (result.alreadyStarted) {
+        // Device already has a trial in progress with different user
         return rateLimitError(res, 3600);
       }
       // Log detailed error but return generic message

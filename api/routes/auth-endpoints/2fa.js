@@ -27,8 +27,8 @@ router.post('/verify-2fa', async (req, res) => {
     let codeIsValid = false;
     
     if (method === 'sms') {
-      // SMS: Verify using Twilio Verify API
-      const { verifySMSCode } = await import('../../shared/smsService.js');
+      // SMS: Verify using AWS SNS
+      const { verifySMSCode } = await import('../../shared/smsService-aws.js');
       const { decryptPhone } = await import('../../services/security/helpers/securityHelpers.js');
       const userIdHash = hashUserId(userId);
       
@@ -404,8 +404,8 @@ router.post('/check-2fa/:userId', async (req, res) => {
     let recipientContact;
 
     if (method === 'sms') {
-      // SMS: Use Twilio Verify API
-      const { sendSMS } = await import('../../shared/smsService.js');
+      // SMS: Use AWS SNS
+      const { sendSMS } = await import('../../shared/smsService-aws.js');
       const { decryptPhone } = await import('../../services/security/helpers/securityHelpers.js');
       
       // Get phone number from security table (using proper decryption helper)

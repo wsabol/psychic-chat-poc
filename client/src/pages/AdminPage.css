@@ -1,0 +1,40 @@
+/**
+ * Admin Page Styles - Mobile Responsive Enhancements
+ */
+
+/* Scrollbar styling for horizontal tab bar (WebKit browsers: Chrome, Safari, Edge) */
+.admin-tab-bar::-webkit-scrollbar {
+  height: 8px;
+}
+
+.admin-tab-bar::-webkit-scrollbar-track {
+  background: #e0e0e0;
+  border-radius: 4px;
+}
+
+.admin-tab-bar::-webkit-scrollbar-thumb {
+  background: #7c63d8;
+  border-radius: 4px;
+}
+
+.admin-tab-bar::-webkit-scrollbar-thumb:hover {
+  background: #6b52c7;
+}
+
+/* Add smooth momentum scrolling on mobile */
+.admin-tab-bar {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Optional: Add a subtle shadow to indicate scrollable content */
+.admin-tab-bar {
+  box-shadow: inset -10px 0 8px -8px rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+  .admin-tab-bar {
+    padding-bottom: 4px; /* Extra space for scrollbar */
+  }
+}

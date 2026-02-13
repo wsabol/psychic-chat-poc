@@ -2,7 +2,7 @@ import { db } from '../../shared/db.js';
 import { generate6DigitCode } from '../../shared/authUtils.js';
 import { insertVerificationCode, getVerificationCode } from '../../shared/encryptedQueries.js';
 import { send2FACodeEmail } from '../../shared/emailService.js';
-import { sendSMS, verifySMSCode } from '../../shared/smsService.js';
+import { sendSMS, verifySMSCode } from '../../shared/smsService-aws.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
 import { SECURITY_CONFIG } from '../../config/security.js';
 
