@@ -233,7 +233,7 @@ a {
     background-image: url('iStock-1355328450.jpg');
     background-size: cover;
     background-position: center;
-    background-attachment: fixed;
+    /* Removed background-attachment: fixed for mobile compatibility */
 }
 
 .hero-overlay {

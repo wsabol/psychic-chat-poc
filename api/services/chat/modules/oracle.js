@@ -89,7 +89,11 @@ Format your response EXACTLY like this:
 ===BRIEF VERSION===
 [Your concise summary here - one paragraph, 20% the length of the full version]
 
-IMPORTANT: The brief version MUST be a faithful summary of the full version above it. Do not omit this structure.`;
+IMPORTANT: 
+- The brief version MUST be a faithful summary of the full version above it
+- The brief version should be substantially shorter (approximately 20% of full length)
+- You MUST include the "===BRIEF VERSION===" separator exactly as shown
+- Do NOT omit this structure under any circumstances`;
     
     const completion = await Promise.race([
       openaiClient.chat.completions.create({
@@ -113,11 +117,25 @@ IMPORTANT: The brief version MUST be a faithful summary of the full version abov
       const fullResponse = sections[0].trim();
       const briefResponse = sections[1].trim();
       console.log(`[ORACLE] Successfully parsed - Full: ${fullResponse.length} chars, Brief: ${briefResponse.length} chars`);
+      
+      // Validate that brief is actually different and shorter
+      if (fullResponse === briefResponse) {
+        console.warn('[ORACLE] WARNING: Brief and full responses are identical - regenerating brief');
+        // Generate a quick brief summary using simple truncation as fallback
+        const words = fullResponse.split(/\s+/);
+        const briefWordCount = Math.floor(words.length * 0.2);
+        const quickBrief = words.slice(0, briefWordCount).join(' ') + '...';
+        return { full: fullResponse, brief: quickBrief };
+      }
+      
       return { full: fullResponse, brief: briefResponse };
     } else {
-      // Fallback if parsing fails - use full response for both
-      console.warn('[ORACLE] Failed to parse brief section, using full response for both');
-      return { full: fullResponseText, brief: fullResponseText };
+      // Fallback if parsing fails - generate brief from full
+      console.warn('[ORACLE] Failed to parse brief section, generating brief from full response');
+      const words = fullResponseText.split(/\s+/);
+      const briefWordCount = Math.floor(words.length * 0.2);
+      const briefResponse = words.slice(0, Math.max(briefWordCount, 50)).join(' ') + '...';
+      return { full: fullResponseText, brief: briefResponse };
     }
   } catch (err) {
     console.error('[ORACLE] Error:', err.message);

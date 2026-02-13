@@ -156,8 +156,8 @@ export async function sendSMS(toPhoneNumber, options = {}) {
     // Store code in database
     const codeId = await storeVerificationCode(toPhoneNumber, code);
 
-    // Prepare SMS message
-    const message = `Your verification code is: ${code}\n\nThis code expires in 10 minutes. Do not share this code with anyone.`;
+    // Prepare SMS message (BRANDED - AWS Registration Requirement)
+    const message = `Starship Psychics: Your code is ${code} (expires in 10 min). Never share this code. Reply STOP to opt out.`;
 
     // Try sending with exponential backoff on throttling errors
     for (let attempt = 0; attempt < maxRetries; attempt++) {

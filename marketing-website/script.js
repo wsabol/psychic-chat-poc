@@ -68,6 +68,13 @@ if (homeContactForm) {
         messageDiv.style.display = 'none';
         
         try {
+            // Fallback for older Android browsers without fetch support
+            if (typeof fetch === 'undefined') {
+                // Submit normally if fetch not available
+                this.submit();
+                return;
+            }
+            
             const response = await fetch(this.action, {
                 method: 'POST',
                 body: formData,

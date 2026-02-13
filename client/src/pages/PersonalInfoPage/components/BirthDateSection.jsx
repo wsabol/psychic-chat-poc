@@ -15,7 +15,7 @@ export function BirthDateSection({ formData, fieldErrors, handleChange, t }) {
           onChange={handleChange}
           required
           error={fieldErrors.birthDate}
-          placeholder="dd-mmm-yyyy (e.g., 09-Feb-1956)"
+          placeholder="dd-mmm-yyyy (e.g., 01-Jan-2000)"
           hint={t('personalInfo.birthDateHint')}
         />
         <FormInput

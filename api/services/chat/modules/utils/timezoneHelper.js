@@ -82,35 +82,27 @@ export function getLocalTimestampForTimezone(timezone = 'UTC') {
     
     const localeDateString = `${year}-${month}-${day}T${hour}:${minute}:${second}`;
     
-    // Calculate timezone offset correctly
-    // Create dates representing the same moment in both UTC and target timezone
-    const utcFormatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'UTC',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
-    });
+    // Calculate timezone offset using a more robust method
+    // Create a date in the target timezone and compare with UTC
+    const testDate = new Date(now.getTime());
     
-    const utcParts = utcFormatter.formatToParts(now);
-    const getUtc = (type) => utcParts.find(p => p.type === type)?.value;
+    // Get the UTC timestamp
+    const utcTimestamp = testDate.getTime();
     
-    // Parse both as UTC to compare
-    const localTimeAsUtc = Date.UTC(
-      parseInt(year), parseInt(month) - 1, parseInt(day),
-      parseInt(hour), parseInt(minute), parseInt(second)
-    );
-    const utcTime = Date.UTC(
-      parseInt(getUtc('year')), parseInt(getUtc('month')) - 1, parseInt(getUtc('day')),
-      parseInt(getUtc('hour')), parseInt(getUtc('minute')), parseInt(getUtc('second'))
-    );
+    // Parse the local time components to create a "fake UTC" date
+    const localAsDate = new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}Z`);
+    const localTimestamp = localAsDate.getTime();
     
-    // Calculate offset in minutes
-    const offsetMs = localTimeAsUtc - utcTime;
-    const offsetMinutes = Math.round(offsetMs / 60000);
+    // Calculate the difference (this gives us the offset)
+    let offsetMinutes = Math.round((localTimestamp - utcTimestamp) / 60000);
+    
+    // Validate offset is within PostgreSQL's valid range (-14 to +14 hours = -840 to +840 minutes)
+    if (offsetMinutes < -840 || offsetMinutes > 840) {
+      logErrorFromCatch(`[TIMEZONE] Calculated offset ${offsetMinutes} minutes out of valid range for timezone ${timezone}, using fallback`);
+      // Fallback: just return UTC timestamp
+      return new Date().toISOString();
+    }
+    
     const offsetHours = Math.floor(Math.abs(offsetMinutes) / 60);
     const offsetMins = Math.abs(offsetMinutes) % 60;
     const offsetSign = offsetMinutes >= 0 ? '+' : '-';

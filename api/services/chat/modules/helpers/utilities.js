@@ -5,28 +5,22 @@
 
 /**
  * Get personalized greeting for user
- * Trial/temporary users get default "Seeker"
+ * Trial/temporary users can use their familiar name if saved
  * Established users get their first/familiar name
  */
 export function getUserGreeting(userInfo, userId, isTemporaryUser = false) {
-  // CRITICAL SAFETY LAYER 1: Check if userId contains "temp_" - always return "Seeker"
-  if (userId && userId.includes('temp_')) {
-    return "Seeker";
-  }
-  
-  // CRITICAL SAFETY LAYER 2: Check isTemporaryUser flag
-  if (isTemporaryUser) {
-    return "Seeker";
-  }
-  
   if (!userInfo) {
+    // No user info at all - use appropriate default
+    if (userId && userId.includes('temp_')) {
+      return "Seeker";
+    }
     return "Friend";
   }
   
-  // Try familiar name first, then first name, fallback to Friend
+  // Try familiar name first (address_preference), then first name
   const familiarName = userInfo.address_preference?.trim();
   if (familiarName && familiarName.length > 0) {
-    // CRITICAL SAFETY LAYER 3: Never return temp_ UIDs even if they're in the database
+    // CRITICAL SAFETY: Never return temp_ UIDs even if they're in the database
     if (familiarName.includes('temp_')) {
       return "Seeker";
     }
@@ -35,11 +29,20 @@ export function getUserGreeting(userInfo, userId, isTemporaryUser = false) {
   
   const firstName = userInfo.first_name?.trim();
   if (firstName && firstName.length > 0) {
-    // CRITICAL SAFETY LAYER 4: Never return temp_ UIDs even if they're in the database
+    // CRITICAL SAFETY: Never return temp_ UIDs even if they're in the database  
     if (firstName.includes('temp_')) {
       return "Seeker";
     }
     return firstName;
+  }
+  
+  // No name saved - use appropriate default based on user type
+  if (userId && userId.includes('temp_')) {
+    return "Seeker";
+  }
+  
+  if (isTemporaryUser) {
+    return "Seeker";
   }
   
   return "Friend";

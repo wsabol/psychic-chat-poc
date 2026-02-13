@@ -240,6 +240,24 @@ COMMENT ON COLUMN sms_verification_codes.code IS '6-digit verification code sent
 COMMENT ON COLUMN sms_verification_codes.expires_at IS 'When the code expires (10 minutes after creation)';
 COMMENT ON COLUMN sms_verification_codes.verified_at IS 'When the code was successfully verified (NULL if not verified yet)';
 
+-- TABLE: sms_opt_outs (SMS STOP keyword handling for TCPA compliance)
+-- Tracks phone numbers that have opted out of SMS messages via STOP keyword
+-- Required for TCPA compliance and AWS SMS registration approval
+-- Added: 2026-02-12 (AWS SMS Registration Compliance)
+CREATE TABLE IF NOT EXISTS sms_opt_outs (
+    id SERIAL PRIMARY KEY,
+    phone_number VARCHAR(20) NOT NULL UNIQUE,
+    opted_out_at TIMESTAMP DEFAULT NOW(),
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_sms_opt_outs_phone ON sms_opt_outs(phone_number);
+
+COMMENT ON TABLE sms_opt_outs IS 'Tracks phone numbers that have opted out of SMS messages via STOP keyword. Required for TCPA compliance.';
+COMMENT ON COLUMN sms_opt_outs.phone_number IS 'Phone number in E.164 format (e.g., +15555555555)';
+COMMENT ON COLUMN sms_opt_outs.opted_out_at IS 'When the user sent STOP keyword';
+COMMENT ON COLUMN sms_opt_outs.created_at IS 'Record creation timestamp';
+
 -- TABLE: user_violations
 CREATE TABLE IF NOT EXISTS user_violations (
     id SERIAL PRIMARY KEY,
