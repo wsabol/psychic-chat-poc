@@ -1,0 +1,15 @@
+{
+  "name": "sms-inbound-handler",
+  "version": "1.0.0",
+  "description": "AWS Lambda to handle incoming SMS messages (STOP/START/HELP) for TCPA compliance",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "dependencies": {
+    "pg": "^8.11.3"
+  },
+  "author": "Starship Psychics",
+  "license": "UNLICENSED"
+}

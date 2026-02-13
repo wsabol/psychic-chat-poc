@@ -118,6 +118,25 @@ async function recordVerificationAttempt(phoneNumber, success, errorCode = null)
 }
 
 /**
+ * Check if phone number has opted out of SMS
+ * @param {string} phoneNumber - Phone number in E.164 format
+ * @returns {Promise<boolean>} True if opted out
+ */
+async function checkOptOut(phoneNumber) {
+  try {
+    const result = await db.query(
+      `SELECT id FROM sms_opt_outs WHERE phone_number = $1`,
+      [phoneNumber]
+    );
+    return result.rows.length > 0;
+  } catch (err) {
+    logErrorFromCatch(err, 'app', 'SMS Opt-out Check');
+    // If check fails, allow sending (fail open)
+    return false;
+  }
+}
+
+/**
  * Send SMS verification code via AWS SNS
  * @param {string} toPhoneNumber - Phone number in E.164 format (e.g., +15555555555)
  * @param {Object} options - Optional parameters
@@ -134,6 +153,19 @@ export async function sendSMS(toPhoneNumber, options = {}) {
         success: false,
         error: 'SMS verification service not configured',
         mockMode: true
+      };
+    }
+
+    // ✅ NEW: Check if user has opted out (TCPA compliance)
+    const hasOptedOut = await checkOptOut(toPhoneNumber);
+    if (hasOptedOut) {
+      logErrorFromCatch(`SMS blocked: ${toPhoneNumber} has opted out`, 'USER_OPTED_OUT', 'smsService-aws.sendSMS');
+      await recordVerificationAttempt(toPhoneNumber, false, 'USER_OPTED_OUT');
+      return {
+        success: false,
+        error: 'This phone number has opted out of SMS messages. Please use email verification instead.',
+        code: 'USER_OPTED_OUT',
+        optedOut: true
       };
     }
 
@@ -342,6 +374,18 @@ export async function sendCustomSMS(toPhoneNumber, messageBody) {
       return {
         success: false,
         error: 'SMS messaging service not configured'
+      };
+    }
+
+    // ✅ Check opt-out status before sending custom SMS
+    const hasOptedOut = await checkOptOut(toPhoneNumber);
+    if (hasOptedOut) {
+      logErrorFromCatch(`Custom SMS blocked: ${toPhoneNumber} has opted out`, 'USER_OPTED_OUT', 'smsService-aws.sendCustomSMS');
+      return {
+        success: false,
+        error: 'This phone number has opted out of SMS messages',
+        code: 'USER_OPTED_OUT',
+        optedOut: true
       };
     }
 
