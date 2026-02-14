@@ -1,4 +1,4 @@
-﻿import { db } from '../../shared/db.js';
+import { db } from '../../shared/db.js';
 import { stripe } from './stripeClient.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
 import { hashUserId } from '../../shared/hashUtils.js';
@@ -33,7 +33,25 @@ export async function getOrCreateStripeCustomer(userId, userEmail) {
     
     const existingCustomerId = quickCheck.rows[0]?.id;
     if (existingCustomerId) {
-      return existingCustomerId;
+      // Validate the customer still exists in Stripe before returning
+      try {
+        await stripe.customers.retrieve(existingCustomerId);
+        return existingCustomerId;
+      } catch (err) {
+        // Customer is stale (deleted from Stripe) - clear it and create new one
+        if (err.code === 'resource_missing' || err.message?.includes('No such customer')) {
+          console.log(`[STRIPE] Fast path: Clearing stale customer ID ${existingCustomerId.substring(0, 12)}... for user ${userId.substring(0, 8)}...`);
+          await db.query(
+            `UPDATE user_personal_info SET stripe_customer_id_encrypted = NULL WHERE user_id = $1`,
+            [userId]
+          );
+          // Continue to create new customer below (don't return, fall through)
+        } else {
+          // Unexpected Stripe error - log and throw
+          logErrorFromCatch(err, 'stripe', 'Failed to validate stored customer', hashUserId(userId));
+          throw err;
+        }
+      }
     }
 
     // CRITICAL: Check in-memory lock and create promise atomically
@@ -118,8 +136,16 @@ export async function getOrCreateStripeCustomer(userId, userEmail) {
           resolveCreation(storedId);
           return;
         } catch (err) {
-          // Customer doesn't exist in Stripe, clear it and create new one
-          await db.query(`UPDATE user_personal_info SET stripe_customer_id_encrypted = NULL WHERE user_id = $1`, [userId]);
+          // Customer doesn't exist in Stripe anymore (deleted or invalid)
+          // This is an expected scenario - clear stale ID and create new customer
+          if (err.code === 'resource_missing' || err.message?.includes('No such customer')) {
+            console.log(`[STRIPE] Clearing stale customer ID for user ${userId.substring(0, 8)}...`);
+            await db.query(`UPDATE user_personal_info SET stripe_customer_id_encrypted = NULL WHERE user_id = $1`, [userId]);
+          } else {
+            // Unexpected error - log it
+            logErrorFromCatch(err, 'stripe', 'Failed to retrieve stored customer', hashUserId(userId));
+            throw err;
+          }
         }
       }
 

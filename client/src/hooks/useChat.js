@@ -3,17 +3,24 @@ import { fetchWithTokenRefresh } from "../utils/fetchWithTokenRefresh.js";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
-export function useChat(userId, token, isAuthenticated, authUserId, isTemporaryAccount = false) {
+export function useChat(userId, token, isAuthenticated, authUserId, isTemporaryAccount = false, sessionReady = true) {
     const [chat, setChat] = useState([]);
     const [message, setMessage] = useState("");
     const [loaded, setLoaded] = useState(false);
     const [loading, setLoading] = useState(false); // NEW: Loading state for message sending
     const [error, setError] = useState(null);
     const previousUserIdRef = useRef(null);
+    const loadAttemptsRef = useRef(0);
     
     const loadMessages = useCallback(async () => {
         try {
             if (!userId) return [];
+            
+            // For temp accounts, wait for session to be ready
+            if (isTemporaryAccount && !sessionReady) {
+                console.log('Waiting for session to be created before loading messages');
+                return [];
+            }
             
             let url, headers, res;
             
@@ -30,22 +37,37 @@ export function useChat(userId, token, isAuthenticated, authUserId, isTemporaryA
                 res = await fetchWithTokenRefresh(url, { headers });
             }
             
-            if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+            if (!res.ok) {
+                // For temp accounts with 400 error, session might not exist yet
+                if (isTemporaryAccount && res.status === 400) {
+                    console.log('Session not ready yet, will retry');
+                    return [];
+                }
+                throw new Error(`HTTP error! Status: ${res.status}`);
+            }
             const data = await res.json();
             setChat(Array.isArray(data) ? data : []);
             setLoaded(true);
             setError(null);
+            loadAttemptsRef.current = 0; // Reset counter on success
             return data;
         } catch (err) {
+            console.error('Load messages error:', err);
             setError(err.message);
             return [];
         }
-    }, [userId, token, isTemporaryAccount]);
+    }, [userId, token, isTemporaryAccount, sessionReady]);
     
     
     const requestOpening = useCallback(async () => {
         try {
             if (!userId) return;
+            
+            // For temp accounts, wait for session to be ready
+            if (isTemporaryAccount && !sessionReady) {
+                console.log('Waiting for session to be created before requesting opening');
+                return;
+            }
             
             let url, headers, res;
             
@@ -67,6 +89,11 @@ export function useChat(userId, token, isAuthenticated, authUserId, isTemporaryA
                 if (res.status === 204) {
                     return;
                 }
+                // For temp accounts with 400 error, session might not exist yet
+                if (isTemporaryAccount && res.status === 400) {
+                    console.log('Session not ready for opening yet');
+                    return;
+                }
                 throw new Error(`HTTP error! Status: ${res.status}`);
             }
             
@@ -83,8 +110,9 @@ export function useChat(userId, token, isAuthenticated, authUserId, isTemporaryA
             }
         } catch (err) {
             // Opening request failed, continue silently
+            console.error('Request opening error:', err);
         }
-    }, [userId, token, isTemporaryAccount]);
+    }, [userId, token, isTemporaryAccount, sessionReady]);
     
     const sendMessage = useCallback(async () => {
         if (!message.trim() || loading) return;
@@ -124,7 +152,17 @@ export function useChat(userId, token, isAuthenticated, authUserId, isTemporaryA
             }
             
             if (!res.ok) {
-                throw new Error(`HTTP error! Status: ${res.status}`);
+                const errorData = await res.json().catch(() => ({}));
+                
+                // Handle specific error codes
+                if (errorData.code === 'SESSION_NOT_FOUND') {
+                    throw new Error('Session not ready. Please wait a moment and try again.');
+                }
+                if (errorData.code === 'TRIAL_COMPLETED') {
+                    throw new Error('Your free trial is complete. Please sign up to continue chatting.');
+                }
+                
+                throw new Error(errorData.error || `Failed to send message (${res.status})`);
             }
             
             // Get the assistant's response directly
@@ -175,20 +213,22 @@ export function useChat(userId, token, isAuthenticated, authUserId, isTemporaryA
         }
         
         // Handle temporary/free trial users (no token required)
-        if (isTemporaryAccount && userId) {
+        // Wait for session to be ready before loading
+        if (isTemporaryAccount && userId && sessionReady) {
             if (previousUserIdRef.current !== userId) {
                 previousUserIdRef.current = userId;
                 
                 setChat([]);
                 setLoaded(false);
                 
+                // Give a bit more time for session creation to complete
                 setTimeout(() => {
                     loadMessages();
                     requestOpening();
-                }, 500);
+                }, 800);
             }
         }
-    }, [authUserId, isAuthenticated, token, isTemporaryAccount, userId, loadMessages, requestOpening]);
+    }, [authUserId, isAuthenticated, token, isTemporaryAccount, userId, sessionReady, loadMessages, requestOpening]);
 
     return {
         chat,

@@ -21,8 +21,42 @@ import {
   sanitizePersonalInfo,
   processPersonalInfoSave
 } from '../services/freeTrialService.js';
+import { freeTrialSessionLimiter, freeTrialLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
+
+/**
+ * GET /free-trial/check-session/:tempUserId
+ * Check if a session exists without creating one
+ */
+router.get('/check-session/:tempUserId', freeTrialLimiter, async (req, res) => {
+  try {
+    const { tempUserId } = req.params;
+    
+    if (!tempUserId) {
+      return validationError(res, 'Missing required information');
+    }
+
+    const result = await getFreeTrialSession(tempUserId, db);
+
+    if (!result.success) {
+      if (result.notFound) {
+        return res.json({ exists: false });
+      }
+      return serverError(res, 'Unable to check session');
+    }
+
+    return res.json({
+      exists: true,
+      sessionId: result.sessionId,
+      currentStep: result.currentStep,
+      isCompleted: result.isCompleted
+    });
+  } catch (err) {
+    await logErrorFromCatch(err, 'free-trial', 'Error checking session');
+    return serverError(res, 'Unable to check session');
+  }
+});
 
 /**
  * POST /free-trial/create-session
@@ -32,6 +66,8 @@ const router = express.Router();
  * Headers: x-client-ip (or from request)
  */
 router.post('/create-session', async (req, res) => {
+  // TEMPORARILY DISABLED RATE LIMITER FOR DEBUGGING
+  // TODO: Re-enable freeTrialSessionLimiter after fixing localhost detection
   try {
     const { tempUserId } = req.body;
     
@@ -53,7 +89,14 @@ router.post('/create-session', async (req, res) => {
       return serverError(res, 'Unable to start free trial session');
     }
 
-    return res.json(result);
+    // Return success even if resuming existing session
+    return res.json({
+      success: true,
+      sessionId: result.sessionId,
+      currentStep: result.currentStep,
+      resuming: result.resuming || false,
+      message: result.message
+    });
   } catch (err) {
     await logErrorFromCatch(err, 'free-trial', 'Error creating session');
     return serverError(res, 'Unable to start free trial session');
@@ -66,7 +109,7 @@ router.post('/create-session', async (req, res) => {
  * 
  * Body: { step: 'chat' | 'personal_info' | 'horoscope' | 'completed' }
  */
-router.post('/update-step/:tempUserId', async (req, res) => {
+router.post('/update-step/:tempUserId', freeTrialLimiter, async (req, res) => {
   try {
     const { tempUserId } = req.params;
     const { step } = req.body;
@@ -98,7 +141,7 @@ router.post('/update-step/:tempUserId', async (req, res) => {
  * POST /free-trial/complete/:tempUserId
  * Mark free trial as completed
  */
-router.post('/complete/:tempUserId', async (req, res) => {
+router.post('/complete/:tempUserId', freeTrialLimiter, async (req, res) => {
   try {
     const { tempUserId } = req.params;
 
@@ -125,7 +168,7 @@ router.post('/complete/:tempUserId', async (req, res) => {
  * GET /free-trial/session/:tempUserId
  * Get current free trial session info
  */
-router.get('/session/:tempUserId', async (req, res) => {
+router.get('/session/:tempUserId', freeTrialLimiter, async (req, res) => {
   try {
     const { tempUserId } = req.params;
 
@@ -162,7 +205,7 @@ router.get('/session/:tempUserId', async (req, res) => {
  *   sex, addressPreference, zodiacSign, astrologyData 
  * }
  */
-router.post('/save-personal-info/:tempUserId', async (req, res) => {
+router.post('/save-personal-info/:tempUserId', freeTrialLimiter, async (req, res) => {
   try {
     const { tempUserId } = req.params;
     const { 

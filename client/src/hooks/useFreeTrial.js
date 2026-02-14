@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
@@ -15,12 +15,40 @@ export function useFreeTrial(isTemporaryAccount, tempUserId) {
   const [error, setError] = useState(null);
 
   // Create trial session on component mount (temp account only)
+  // Use a ref to prevent duplicate calls in React StrictMode
+  const sessionCreatedRef = React.useRef(false);
+  const creationInProgressRef = React.useRef(false);
+  
   useEffect(() => {
-    if (!isTemporaryAccount || !tempUserId) return;
+    // Prevent duplicate calls - check both refs before proceeding
+    if (!isTemporaryAccount || !tempUserId || sessionCreatedRef.current || creationInProgressRef.current) return;
 
     const createSession = async () => {
+      // Mark creation as in progress BEFORE the fetch
+      creationInProgressRef.current = true;
+      
       try {
         setLoading(true);
+        
+        // FIRST: Check if session already exists to avoid rate limiting
+        const checkResponse = await fetch(`${API_URL}/free-trial/check-session/${tempUserId}`);
+        if (checkResponse.ok) {
+          const checkData = await checkResponse.json();
+          if (checkData.exists) {
+            console.log('Session already exists, skipping creation');
+            sessionCreatedRef.current = true;
+            setSessionId(checkData.sessionId);
+            setCurrentStep(checkData.currentStep || 'chat');
+            setIsCompleted(checkData.isCompleted || false);
+            if (checkData.isCompleted) {
+              setError('This session has already been completed');
+            }
+            setLoading(false);
+            return;
+          }
+        }
+        
+        // Session doesn't exist, create it
         const response = await fetch(`${API_URL}/free-trial/create-session`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -36,14 +64,32 @@ export function useFreeTrial(isTemporaryAccount, tempUserId) {
         }
 
         if (!response.ok) {
-          if (data?.alreadyCompleted) {
-            setError('This IP has already completed the free trial');
-            setIsCompleted(true);
+          // Handle rate limiting or already completed
+          if (response.status === 429) {
+            // Rate limited - might mean session already exists
+            console.log('Rate limited on session creation, session may already exist');
+            sessionCreatedRef.current = true; // Prevent further attempts
             return;
           }
+          
+          if (data?.alreadyCompleted) {
+            setError('This session has already been completed');
+            setIsCompleted(true);
+            // If session already exists, use the existing data
+            if (data?.sessionId) {
+              setSessionId(data.sessionId);
+              setCurrentStep(data.currentStep || 'chat');
+            }
+            sessionCreatedRef.current = true;
+            return;
+          }
+          
           throw new Error(data?.error || 'Failed to create trial session');
         }
 
+        // Mark session as created to prevent duplicate attempts
+        sessionCreatedRef.current = true;
+        
         setSessionId(data.sessionId);
         setCurrentStep(data.currentStep || 'chat');
         setError(null);
@@ -51,6 +97,8 @@ export function useFreeTrial(isTemporaryAccount, tempUserId) {
         const errorMessage = err?.message || 'Failed to create session';
         logErrorFromCatch(err, 'free-trial', 'Error creating session');
         setError(errorMessage);
+        // Reset in-progress flag on error to allow retry
+        creationInProgressRef.current = false;
       } finally {
         setLoading(false);
       }

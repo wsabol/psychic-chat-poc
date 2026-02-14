@@ -83,6 +83,16 @@ export async function validateSubscriptionStatus(userId) {
       };
     }
 
+    // CRITICAL: Skip Stripe validation for temp/trial users
+    if (userId.startsWith('temp_')) {
+      return {
+        valid: false,
+        status: SUBSCRIPTION_STATUS.NONE,
+        error: 'Free trial user - no subscription required',
+        reason: VALIDATION_REASON.NO_SUBSCRIPTION
+      };
+    }
+
     // Check Stripe configuration
     const stripeCheck = checkStripeConfiguration();
     if (!stripeCheck.configured) {
@@ -171,6 +181,15 @@ export async function validatePaymentMethod(userId) {
       };
     }
 
+    // CRITICAL: Skip Stripe validation for temp/trial users
+    if (userId.startsWith('temp_')) {
+      return {
+        valid: false,
+        error: 'Free trial user - no payment method required',
+        reason: VALIDATION_REASON.NO_PAYMENT_METHOD
+      };
+    }
+
     // Check Stripe configuration
     const stripeCheck = checkStripeConfiguration();
     if (!stripeCheck.configured) {
@@ -193,7 +212,34 @@ export async function validatePaymentMethod(userId) {
     }
 
     const customerId = customerIdResult.data;
-    const customer = await stripe.customers.retrieve(customerId);
+    
+    // Try to retrieve customer with error handling for missing customers
+    let customer;
+    try {
+      customer = await stripe.customers.retrieve(customerId);
+    } catch (err) {
+      // Customer doesn't exist in Stripe (deleted or invalid)
+      if (err.code === 'resource_missing' || err.message?.includes('No such customer')) {
+        // Clear stale customer ID from database
+        const { db } = await import('../../../shared/db.js');
+        try {
+          await db.query(
+            `UPDATE user_personal_info SET stripe_customer_id_encrypted = NULL WHERE user_id = $1`,
+            [userId]
+          );
+        } catch (dbErr) {
+          logErrorFromCatch(dbErr, 'stripe', 'Failed to clear stale customer ID', userId);
+        }
+        
+        return {
+          valid: false,
+          error: 'Customer record not found. Please update your payment information.',
+          reason: VALIDATION_REASON.NO_CUSTOMER
+        };
+      }
+      // Other Stripe errors
+      throw err;
+    }
 
     // Check if default payment method exists
     if (!customer.invoice_settings?.default_payment_method) {

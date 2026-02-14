@@ -41,13 +41,27 @@ router.post('/update-customer-address', authenticateToken, async (req, res) => {
     }
 
     // Update Stripe customer with address
-    const updatedCustomer = await stripe.customers.update(customer_id, {
-      address: {
-        country: country,
-        state: state || undefined,
-        city: city || undefined,
-      },
-    });
+    let updatedCustomer;
+    try {
+      updatedCustomer = await stripe.customers.update(customer_id, {
+        address: {
+          country: country,
+          state: state || undefined,
+          city: city || undefined,
+        },
+      });
+    } catch (stripeErr) {
+      // Handle deleted/missing customer
+      if (stripeErr.code === 'resource_missing' || stripeErr.message?.includes('No such customer')) {
+        // Clear stale customer ID
+        await db.query(
+          `UPDATE user_personal_info SET stripe_customer_id_encrypted = NULL WHERE user_id = $1`,
+          [userId]
+        );
+        return billingError(res, 'Your Stripe customer record was not found. Please contact support to update your payment information.');
+      }
+      throw stripeErr;
+    }
 
     return successResponse(res, {
       success: true,

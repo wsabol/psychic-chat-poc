@@ -14,6 +14,7 @@ import { logErrorFromCatch } from '../shared/errorLogger.js';
 import { getLocalDateForTimezone } from '../shared/timezoneHelper.js';
 import { generatePsychicOpening } from '../shared/opening.js';
 import { guardName } from '../shared/nameGuard.js';
+import { freeTrialLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
 
@@ -23,7 +24,7 @@ const router = express.Router();
  * 
  * Body: { tempUserId, message }
  */
-router.post('/send', async (req, res) => {
+router.post('/send', freeTrialLimiter, async (req, res) => {
   try {
     const { tempUserId, message } = req.body;
 
@@ -48,11 +49,19 @@ router.post('/send', async (req, res) => {
     );
 
     if (sessionCheck.rows.length === 0) {
-      return validationError(res, 'Free trial session not found');
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Free trial session not found. Please refresh the page.',
+        code: 'SESSION_NOT_FOUND'
+      });
     }
 
     if (sessionCheck.rows[0].is_completed) {
-      return validationError(res, 'Free trial already completed');
+      return res.status(403).json({ 
+        success: false, 
+        error: 'Free trial already completed. Please sign up to continue.',
+        code: 'TRIAL_COMPLETED'
+      });
     }
     
     // Import synchronous processor
@@ -85,7 +94,7 @@ router.post('/send', async (req, res) => {
  * GET /free-trial-chat/history/:tempUserId
  * Get chat history for a temp user (no authentication required)
  */
-router.get('/history/:tempUserId', async (req, res) => {
+router.get('/history/:tempUserId', freeTrialLimiter, async (req, res) => {
   try {
     const { tempUserId } = req.params;
 
@@ -159,7 +168,7 @@ router.get('/history/:tempUserId', async (req, res) => {
  * GET /free-trial-chat/opening/:tempUserId
  * Generate opening message for temp user (no authentication required)
  */
-router.get('/opening/:tempUserId', async (req, res) => {
+router.get('/opening/:tempUserId', freeTrialLimiter, async (req, res) => {
   try {
     const { tempUserId } = req.params;
 

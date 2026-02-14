@@ -42,6 +42,16 @@ export async function subscriptionGuard(req, res, next) {
         return authError(res, 'User information not found', ErrorCodes.UNAUTHORIZED);
       }
 
+    // ✅ TEMP USER EXEMPTION: Free trial users don't need subscriptions
+    if (userId.startsWith('temp_') || userEmail?.includes('@psychic.local')) {
+      req.subscription = {
+        status: 'trial',
+        exempted: true,
+        reason: 'free_trial'
+      };
+      return next();
+    }
+
     // ✅ ADMIN EXEMPTION: Admins are exempt from subscription requirements
     if (userEmail && isAdminUser(userEmail)) {
       req.subscription = {

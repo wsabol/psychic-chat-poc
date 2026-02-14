@@ -111,15 +111,23 @@ async function getAllUsersWithSubscriptions() {
         current_period_start,
         current_period_end,
         last_status_check_at,
-        pgp_sym_decrypt(stripe_subscription_id_encrypted, $1) as stripe_subscription_id
+        pgp_sym_decrypt(stripe_subscription_id_encrypted, $1) as stripe_subscription_id,
+        pgp_sym_decrypt(email_encrypted, $1) as email
       FROM user_personal_info
       WHERE stripe_subscription_id_encrypted IS NOT NULL
+        AND user_id NOT LIKE 'temp_%'
+        AND pgp_sym_decrypt(email_encrypted, $1) NOT LIKE '%@psychic.local'
       ORDER BY last_status_check_at ASC NULLS FIRST
       LIMIT 1000
     `;
 
     const result = await db.query(query, [process.env.ENCRYPTION_KEY]);
-    return result.rows;
+    
+    // Additional safety check: filter out any temp users that slipped through
+    return result.rows.filter(user => 
+      !user.user_id.startsWith('temp_') && 
+      !user.email?.includes('@psychic.local')
+    );
   } catch (error) {
     logErrorFromCatch(error, 'job', 'get-users-with-subscriptions');
     return [];

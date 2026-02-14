@@ -282,6 +282,7 @@ export function AppChat({ state }) {
           billingTab={billingTab}
           onNavigateFromBilling={handleNavigateFromBilling}
           onboarding={onboarding}
+          freeTrialState={freeTrialState}
         />
       </ErrorBoundary>
     );

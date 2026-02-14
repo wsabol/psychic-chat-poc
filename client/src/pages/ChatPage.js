@@ -16,10 +16,15 @@ import './ChatPage.css';
  * - Grays out input after sending message
  * - Shows modal with birth info or exit options after timer
  */
-export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogout }) {
+export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogout, freeTrialState }) {
   const { t } = useTranslation();
   const isTemporaryAccount = auth?.isTemporaryAccount;
   const [defaultShowBrief, setDefaultShowBrief] = useState(true);
+  
+  // Determine if free trial session is ready for temp users
+  const sessionReady = isTemporaryAccount 
+    ? (freeTrialState?.sessionId !== null && !freeTrialState?.loading)
+    : true; // Non-temp users are always ready
   
   // Fetch user preferences once on mount
   useEffect(() => {
@@ -46,9 +51,9 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
     fetchPreferences();
   }, [userId, token]);
   
-  // Chat hook
+  // Chat hook - pass sessionReady for temp accounts to prevent race conditions
   const { chat, message, setMessage, sendMessage, loading } = 
-    useChat(userId, token, !!token, userId, isTemporaryAccount);
+    useChat(userId, token, !!token, userId, isTemporaryAccount, sessionReady);
   
   // Onboarding flow state
   const [firstMessageSent, setFirstMessageSent] = useState(false);

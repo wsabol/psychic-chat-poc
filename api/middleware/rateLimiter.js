@@ -42,3 +42,50 @@ export const sensitiveLimiter = rateLimit({
   skip: (req) => process.env.NODE_ENV === 'test',
   keyGenerator: (req) => req.userId
 });
+
+// Free trial session creation limiter (50 attempts per 5 minutes per IP)
+// Very lenient for development - production should use stricter limits with reverse proxy IP detection
+export const freeTrialSessionLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,         // 5 minutes
+  max: 50,                          // 50 session creation attempts max (very high for dev)
+  message: 'Too many session creation attempts. Please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => {
+    // Skip in test mode OR for localhost development
+    if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development') return true;
+    
+    // Check multiple IP sources
+    const ip = req.ip || 
+               req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+               req.connection?.remoteAddress || 
+               req.socket?.remoteAddress || '';
+    
+    // Log for debugging
+    console.log('[RATE LIMITER] Session creation - IP detected:', ip, 'NODE_ENV:', process.env.NODE_ENV);
+    
+    // Check if localhost
+    const isLocalhost = ip.includes('127.0.0.1') || 
+                       ip.includes('::1') || 
+                       ip.includes('localhost') ||
+                       ip === '';
+    
+    if (isLocalhost) {
+      console.log('[RATE LIMITER] Skipping rate limit for localhost');
+    }
+    
+    return isLocalhost;
+  },
+  keyGenerator: (req) => req.ip    // Rate limit by IP address
+});
+
+// Free trial general operations limiter (60 requests per minute per user)
+export const freeTrialLimiter = rateLimit({
+  windowMs: 60 * 1000,             // 1 minute
+  max: 60,                         // 60 requests max (increased from 20)
+  message: 'Too many requests. Please slow down.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => process.env.NODE_ENV === 'test',
+  keyGenerator: (req) => req.body?.tempUserId || req.params?.tempUserId || req.ip
+});

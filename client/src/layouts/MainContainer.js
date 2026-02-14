@@ -38,7 +38,7 @@ const PAGES = [
   { id: 'admin', label: 'Admin', component: AdminPage },
 ];
 
-export default function MainContainer({ auth, token, userId, onLogout, onExit, startingPage = 0, billingTab = 'payment-methods', onNavigateFromBilling, onboarding }) {
+export default function MainContainer({ auth, token, userId, onLogout, onExit, startingPage = 0, billingTab = 'payment-methods', onNavigateFromBilling, onboarding, freeTrialState }) {
   const [currentPageIndex, setCurrentPageIndex] = useState(startingPage);
   const [swipeDirection, setSwipeDirection] = useState(0);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -222,6 +222,7 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
               onExit={onExit}
               onboarding={onboarding}
               billingTab={currentPage.id === 'billing' ? billingTab : undefined}
+              freeTrialState={freeTrialState}
             />
             {/* Footer at bottom of scrollable content */}
             <Footer />
