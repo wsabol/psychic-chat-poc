@@ -10,7 +10,7 @@ import './BillingPage.css';
  * BillingPage - Main billing container with tabs for different sections
  * Displays: Payment Methods, Subscriptions, Invoices, Payments
  */
-export default function BillingPage({ userId, token, auth, onboarding, defaultTab = 'payment-methods' }) {
+export default function BillingPage({ userId, token, auth, onboarding, defaultTab = 'payment-methods', onTabChange }) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState(defaultTab);
 
@@ -20,6 +20,14 @@ export default function BillingPage({ userId, token, auth, onboarding, defaultTa
       setActiveTab(defaultTab);
     }
   }, [defaultTab]);
+
+  // Notify parent when tab changes (for auto-navigation after payment method added)
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    if (onTabChange) {
+      onTabChange(tabId);
+    }
+  };
 
   const tabs = [
     { id: 'payment-methods', label: t('paymentMethods.title'), icon: '\uD83D\uDCB3' },
@@ -44,7 +52,7 @@ export default function BillingPage({ userId, token, auth, onboarding, defaultTa
           {tabs.map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabChange(tab.id)}
               className={`billing-tab ${activeTab === tab.id ? 'active' : ''}`}
             >
               <span className="tab-icon">{tab.icon}</span>
@@ -56,7 +64,18 @@ export default function BillingPage({ userId, token, auth, onboarding, defaultTa
         {/* Tab Content */}
         <div className="billing-content">
           {activeTab === 'payment-methods' && (
-            <PaymentMethodPage userId={userId} token={token} auth={auth} onboarding={onboarding} />
+            <PaymentMethodPage 
+              userId={userId} 
+              token={token} 
+              auth={auth} 
+              onboarding={onboarding}
+              onPaymentMethodAdded={() => {
+                // Auto-navigate to subscriptions tab after adding payment method during onboarding
+                if (onboarding?.onboardingStatus?.isOnboarding) {
+                  handleTabChange('subscriptions');
+                }
+              }}
+            />
           )}
           {activeTab === 'subscriptions' && (
             <SubscriptionsPage userId={userId} token={token} auth={auth} onboarding={onboarding} />

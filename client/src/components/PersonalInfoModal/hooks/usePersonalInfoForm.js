@@ -49,7 +49,7 @@ export function usePersonalInfoForm(userId, token, isOpen, isTemporaryAccount) {
         setFormData({
           firstName: data.first_name || '',
           lastName: data.last_name || '',
-          email: data.email || (isTemporaryAccount ? 'tempuser@example.com' : ''),
+          email: data.email || '',
           birthCountry: data.birth_country || '',
           birthProvince: data.birth_province || '',
           birthCity: data.birth_city || '',
@@ -59,19 +59,10 @@ export function usePersonalInfoForm(userId, token, isOpen, isTemporaryAccount) {
           sex: data.sex || '',
           addressPreference: data.address_preference || ''
         });
-      } else if (isTemporaryAccount) {
-        setFormData(prev => ({
-          ...prev,
-          email: 'tempuser@example.com'
-        }));
       }
+      // Note: Leave email blank for temp accounts so user can enter real email
     } catch (err) {
-      if (isTemporaryAccount) {
-        setFormData(prev => ({
-          ...prev,
-          email: 'tempuser@example.com'
-        }));
-      }
+      // Note: Leave email blank for temp accounts - don't pre-fill with temp email
     }
   };
 

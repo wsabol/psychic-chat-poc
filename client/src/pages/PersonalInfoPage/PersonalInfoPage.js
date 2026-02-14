@@ -101,9 +101,8 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
     const result = await apiFetchPersonalInfo();
     if (result.success) {
       setFormData(result.data);
-    } else if (isTemporaryAccount) {
-      setFormData((prev) => ({ ...prev, email: 'tempuser@example.com' }));
     }
+    // Note: Leave email blank for temp accounts - don't pre-fill with temp email
   };
 
   // ============================================================

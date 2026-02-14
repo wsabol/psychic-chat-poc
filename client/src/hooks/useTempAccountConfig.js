@@ -16,10 +16,10 @@ export function useTempAccountConfig(isTemporaryAccount) {
       showNameFields: !isTemporaryAccount,
       // Gender field required for regular accounts only
       genderRequired: !isTemporaryAccount,
-      // Email is special for temp accounts
-      emailValue: isTemporaryAccount ? 'tempuser@example.com' : '',
-      emailPlaceholder: isTemporaryAccount ? 'Temporary account email' : 'you@example.com',
-      emailReadOnly: isTemporaryAccount
+      // Email - leave blank for temp accounts to capture real email
+      emailValue: '',
+      emailPlaceholder: isTemporaryAccount ? 'Enter your email address' : 'you@example.com',
+      emailReadOnly: false
     };
   }, [isTemporaryAccount]);
 

@@ -20,7 +20,7 @@ const stripePromise = stripePublicKey ? loadStripe(stripePublicKey) : null;
  * ✅ FIXED: Only fetch on mount, not on every render
  * ✅ DEBOUNCED: Refresh only on explicit user actions
  */
-export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
+export default function PaymentMethodPage({ userId, token, auth, onboarding, onPaymentMethodAdded }) {
   const { t } = useTranslation();
   const billing = useBilling(token);
   const [showAddPaymentForm, setShowAddPaymentForm] = useState(false);
@@ -155,7 +155,7 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
       // ✅ DEBOUNCED: Refresh in background (500ms) - don't wait
       debouncedRefreshPaymentMethods();
 
-            // ✅ ONBOARDING: Update progress if in onboarding
+      // ✅ ONBOARDING: Update progress if in onboarding
       if (onboarding?.updateOnboardingStep) {
         try {
           await onboarding.updateOnboardingStep('payment_method');
@@ -167,6 +167,12 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding }) {
       setShowAddPaymentForm(false);
       setCardSuccess(true);
       setTimeout(() => setCardSuccess(false), 3000);
+
+      // ✅ CALLBACK: Notify parent (BillingPage) that payment method was added
+      // This triggers auto-navigation to subscriptions tab during onboarding
+      if (onPaymentMethodAdded) {
+        onPaymentMethodAdded();
+      }
         } catch (err) {
       logErrorFromCatch('[CARD] Error:', err);
       setCardError(err.message || t('paymentMethods.failedToPrepare'));

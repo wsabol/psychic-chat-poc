@@ -233,9 +233,15 @@ export function AppChat({ state }) {
   // Show chat with optional onboarding modal and welcome message
   if (isChat) {
     const shouldShowModal = !authState.isTemporaryAccount && onboarding.onboardingStatus?.isOnboarding === true;
+    
+    // CRITICAL: Hide modal on BillingPage (page 9) to prevent blocking tabs on mobile
+    // The modal serves as a progress indicator, but shouldn't block the actual workflow
+    const isOnBillingPage = startingPage === 9;
+    const showOnboardingModal = shouldShowModal && !isOnBillingPage;
+    
     return (
       <ErrorBoundary>
-        {shouldShowModal && (
+        {showOnboardingModal && (
           <OnboardingModal
             currentStep={onboarding.onboardingStatus.currentStep}
             completedSteps={onboarding.onboardingStatus.completedSteps}

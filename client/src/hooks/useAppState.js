@@ -201,7 +201,7 @@ export function useAppState() {
     setStartingPage(9); // billing page is now index 9 after adding admin
   }, []);
 
-      const handleOnboardingNavigate = useCallback((step) => {
+  const handleOnboardingNavigate = useCallback((step) => {
     // CRITICAL: This handler is called when user clicks a step in the OnboardingModal
     // For temporary accounts (free trial), DO NOT navigate to PersonalInfoPage automatically
     // Temp accounts use ChatPage's 60-second timer flow - they explicitly choose to enter birth info
@@ -217,10 +217,11 @@ export function useAppState() {
         setBillingTab('payment-methods');
         setStartingPage(9); // billing page is now index 9 after adding admin
         break;
-            case 'subscription':
+      case 'subscription':
         setSkipPaymentCheck(true);
         setSkipSubscriptionCheck(true);
-        setStartingPage(1); // PersonalInfoPage (Get Acquainted)
+        setBillingTab('subscriptions');
+        setStartingPage(9); // Navigate to billing page with subscriptions tab
         break;
       case 'personal_info':
         setStartingPage(1);

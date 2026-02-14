@@ -51,10 +51,11 @@ export function PersonalInfoSection({ formData, handleChange, isTemporaryAccount
           onChange={handleChange}
           required
           className={styles.input}
+          placeholder={isTemporaryAccount ? "Enter your email address" : ""}
         />
         {isTemporaryAccount && (
           <p className={styles.helpText}>
-            This temporary email can be changed when you create an account
+            Please enter your real email address so we can contact you about your subscription options
           </p>
         )}
       </div>
