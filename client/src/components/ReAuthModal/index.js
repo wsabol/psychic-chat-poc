@@ -5,6 +5,7 @@ import { usePasswordReset } from './hooks/usePasswordReset';
 import { StatusMessage } from './components/StatusMessage';
 import { EmailDisplay } from './components/EmailDisplay';
 import { GoogleAuthButton } from './components/GoogleAuthButton';
+import { FacebookAuthButton } from './components/FacebookAuthButton';
 import { PasswordAuthForm } from './components/PasswordAuthForm';
 import { PasswordResetView } from './components/PasswordResetView';
 import styles from './ReAuthModal.module.css';
@@ -26,6 +27,7 @@ function ReAuthModal({ isOpen, email, onSuccess, onCancel, onFailure }) {
     error: authError,
     loading: authLoading,
     handleGoogleReAuth,
+    handleFacebookReAuth,
     handlePasswordReAuth,
   } = useReAuth(email, onSuccess, onFailure, t);
 
@@ -70,12 +72,19 @@ function ReAuthModal({ isOpen, email, onSuccess, onCancel, onFailure }) {
           />
         ) : (
           <>
-            {/* Google Sign-in Option */}
-            <GoogleAuthButton
-              loading={loading}
-              onGoogleReAuth={handleGoogleReAuth}
-              t={t}
-            />
+            {/* Social Provider Buttons */}
+            <div className={styles.socialButtonsContainer}>
+              <FacebookAuthButton
+                loading={loading}
+                onFacebookReAuth={handleFacebookReAuth}
+                t={t}
+              />
+              <GoogleAuthButton
+                loading={loading}
+                onGoogleReAuth={handleGoogleReAuth}
+                t={t}
+              />
+            </div>
 
             {/* Divider */}
             <div className={styles.divider}>

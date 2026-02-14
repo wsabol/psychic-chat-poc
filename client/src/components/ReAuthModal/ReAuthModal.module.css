@@ -167,37 +167,44 @@
   cursor: not-allowed;
 }
 
-.googleButton {
-  width: 100%;
-  padding: 0.75rem;
+/* Social Provider Buttons Container */
+.socialButtonsContainer {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
   margin-bottom: 1rem;
+}
+
+/* Social Provider Icon Buttons */
+.socialButton {
+  width: 60px;
+  height: 60px;
+  padding: 0;
   background-color: #fff;
-  color: #333;
-  border: 1px solid #dadce0;
-  border-radius: 4px;
+  border: 2px solid #dadce0;
+  border-radius: 12px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  transition: background-color 0.2s, box-shadow 0.2s, opacity 0.2s;
+  transition: all 0.2s, opacity 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.googleButton:hover:not(:disabled) {
-  background-color: #f8f9fa;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+.socialButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-.googleButton:disabled {
-  opacity: 0.6;
+.socialButton:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
 }
 
-.googleIcon {
-  width: 16px;
-  height: 16px;
+.socialIcon {
+  width: 32px;
+  height: 32px;
 }
 
 .secondaryButton {

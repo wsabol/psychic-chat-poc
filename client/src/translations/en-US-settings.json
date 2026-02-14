@@ -124,6 +124,7 @@
       "title": "Verify Your Identity",
       "subtitle": "For your security, please verify your identity to access security settings.",
       "emailLabel": "Email",
+      "facebookSignIn": "Sign in with Facebook",
       "googleSignIn": "Sign in with Google",
       "googleSigningIn": "Signing in...",
       "orDivider": "or",

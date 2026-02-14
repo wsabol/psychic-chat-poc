@@ -107,10 +107,17 @@
 /* Pattern 5: Full width with safe areas (notch support) */
 .page-safe-area {
   padding: var(--spacing-md);
-  padding-top: 0; /* Allow scrolling to the very top - navigation provides spacing */
+  padding-top: 0; /* Desktop: Allow scrolling to the very top */
   padding-bottom: max(var(--spacing-md), env(safe-area-inset-bottom));
   padding-left: max(var(--spacing-md), env(safe-area-inset-left));
   padding-right: max(var(--spacing-md), env(safe-area-inset-right));
+}
+
+/* Mobile: Add top padding to account for floating hamburger menu */
+@media (max-width: 767px) {
+  .page-safe-area {
+    padding-top: 70px; /* Space for hamburger menu (1rem padding + button height + clearance) */
+  }
 }
 
 /* ============================================

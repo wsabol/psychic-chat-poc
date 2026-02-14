@@ -4,6 +4,7 @@ import {
   reauthenticateWithPopup,
   EmailAuthProvider,
   GoogleAuthProvider,
+  FacebookAuthProvider,
 } from 'firebase/auth';
 import { auth } from '../../../firebase';
 import { logErrorFromCatch } from '../../../shared/errorLogger.js';
@@ -37,6 +38,37 @@ export function useReAuth(email, onSuccess, onFailure, t) {
       onSuccess();
     } catch (err) {
       logErrorFromCatch('[REAUTH] Google re-auth failed:', err);
+      
+      const errorMessage = getFirebaseErrorMessage(err.code, t);
+      setError(errorMessage);
+      
+      // Only call onFailure on actual authentication failures, not user cancellations
+      if (onFailure && !shouldSkipFailureCallback(err.code)) {
+        onFailure();
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFacebookReAuth = async () => {
+    setError(null);
+    setLoading(true);
+
+    try {
+      const user = auth.currentUser;
+
+      if (!user) {
+        throw new Error('No user logged in');
+      }
+
+      const facebookProvider = new FacebookAuthProvider();
+      await reauthenticateWithPopup(user, facebookProvider);
+
+      // Call onSuccess after successful Facebook re-auth
+      onSuccess();
+    } catch (err) {
+      logErrorFromCatch('[REAUTH] Facebook re-auth failed:', err);
       
       const errorMessage = getFirebaseErrorMessage(err.code, t);
       setError(errorMessage);
@@ -88,6 +120,7 @@ export function useReAuth(email, onSuccess, onFailure, t) {
     error,
     loading,
     handleGoogleReAuth,
+    handleFacebookReAuth,
     handlePasswordReAuth,
   };
 }
