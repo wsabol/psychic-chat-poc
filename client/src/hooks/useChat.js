@@ -81,16 +81,18 @@ export function useChat(userId, token, isAuthenticated, authUserId, isTemporaryA
                 res = await fetchWithTokenRefresh(url, { headers });
             }
             
+            // Handle non-OK responses gracefully
             if (!res.ok) {
                 // 204 No Content means opening already exists, just load messages
                 if (res.status === 204) {
                     return;
                 }
-                // For temp accounts with 400 error, session might not exist yet
-                if (isTemporaryAccount && res.status === 400) {
+                // For temp accounts with 400 error, session might not exist yet - fail silently
+                if (isTemporaryAccount && (res.status === 400 || res.status === 404)) {
                     return;
                 }
-                throw new Error(`HTTP error! Status: ${res.status}`);
+                // Other errors - fail silently as opening is optional
+                return;
             }
             
             // Handle empty or invalid JSON responses gracefully
@@ -107,12 +109,12 @@ export function useChat(userId, token, isAuthenticated, authUserId, isTemporaryA
                     setChat(prevChat => [openingMessage, ...prevChat]);
                 }
             } catch (jsonError) {
-                console.warn('Could not parse opening response as JSON:', jsonError.message);
-                // Continue silently - opening is optional
+                // JSON parsing failed - fail silently as opening is optional
+                return;
             }
         } catch (err) {
-            // Opening request failed, continue silently
-            console.error('Request opening error:', err);
+            // Opening request failed - fail silently as opening is optional
+            // (No logging needed - this is expected during initial session setup)
         }
     }, [userId, token, isTemporaryAccount, sessionReady]);
     

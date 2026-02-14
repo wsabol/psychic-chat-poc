@@ -31,23 +31,29 @@ export function useFreeTrial(isTemporaryAccount, tempUserId) {
         setLoading(true);
         
         // FIRST: Check if session already exists to avoid rate limiting
-        const checkResponse = await fetch(`${API_URL}/free-trial/check-session/${tempUserId}`);
-        if (checkResponse.ok) {
-          const checkData = await checkResponse.json();
-          if (checkData.exists) {
-            sessionCreatedRef.current = true;
-            setSessionId(checkData.sessionId);
-            setCurrentStep(checkData.currentStep || 'chat');
-            setIsCompleted(checkData.isCompleted || false);
-            if (checkData.isCompleted) {
-              setError('This session has already been completed');
+        try {
+          const checkResponse = await fetch(`${API_URL}/free-trial/check-session/${tempUserId}`);
+          if (checkResponse.ok) {
+            const checkData = await checkResponse.json();
+            if (checkData.exists) {
+              sessionCreatedRef.current = true;
+              setSessionId(checkData.sessionId);
+              setCurrentStep(checkData.currentStep || 'chat');
+              setIsCompleted(checkData.isCompleted || false);
+              if (checkData.isCompleted) {
+                setError('This session has already been completed');
+              }
+              setLoading(false);
+              creationInProgressRef.current = false;
+              return;
             }
-            setLoading(false);
-            return;
           }
+        } catch (checkErr) {
+          // Check request failed, continue to creation attempt
+          console.warn('Session check failed, attempting creation:', checkErr);
         }
         
-        // Session doesn't exist, create it
+        // Session doesn't exist or check failed, create it
         const response = await fetch(`${API_URL}/free-trial/create-session`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -65,8 +71,11 @@ export function useFreeTrial(isTemporaryAccount, tempUserId) {
         if (!response.ok) {
           // Handle rate limiting or already completed
           if (response.status === 429) {
-            // Rate limited - might mean session already exists
-            sessionCreatedRef.current = true; // Prevent further attempts
+            // Rate limited - session might already exist, mark as created to stop retrying
+            sessionCreatedRef.current = true;
+            setError('Session creation rate limited. Please refresh the page.');
+            creationInProgressRef.current = false;
+            setLoading(false);
             return;
           }
           
@@ -79,6 +88,8 @@ export function useFreeTrial(isTemporaryAccount, tempUserId) {
               setCurrentStep(data.currentStep || 'chat');
             }
             sessionCreatedRef.current = true;
+            creationInProgressRef.current = false;
+            setLoading(false);
             return;
           }
           
@@ -87,6 +98,7 @@ export function useFreeTrial(isTemporaryAccount, tempUserId) {
 
         // Mark session as created to prevent duplicate attempts
         sessionCreatedRef.current = true;
+        creationInProgressRef.current = false;
         
         setSessionId(data.sessionId);
         setCurrentStep(data.currentStep || 'chat');

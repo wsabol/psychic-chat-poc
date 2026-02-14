@@ -23,8 +23,9 @@ const router = express.Router();
  * Send a chat message as a temp user (no authentication required)
  * 
  * Body: { tempUserId, message }
+ * NOTE: No rate limiter for development
  */
-router.post('/send', freeTrialLimiter, async (req, res) => {
+router.post('/send', async (req, res) => {
   try {
     const { tempUserId, message } = req.body;
 
@@ -93,8 +94,9 @@ router.post('/send', freeTrialLimiter, async (req, res) => {
 /**
  * GET /free-trial-chat/history/:tempUserId
  * Get chat history for a temp user (no authentication required)
+ * NOTE: No rate limiter for development
  */
-router.get('/history/:tempUserId', freeTrialLimiter, async (req, res) => {
+router.get('/history/:tempUserId', async (req, res) => {
   try {
     const { tempUserId } = req.params;
 
@@ -167,8 +169,9 @@ router.get('/history/:tempUserId', freeTrialLimiter, async (req, res) => {
 /**
  * GET /free-trial-chat/opening/:tempUserId
  * Generate opening message for temp user (no authentication required)
+ * NOTE: No rate limiter for development
  */
-router.get('/opening/:tempUserId', freeTrialLimiter, async (req, res) => {
+router.get('/opening/:tempUserId', async (req, res) => {
   try {
     const { tempUserId } = req.params;
 

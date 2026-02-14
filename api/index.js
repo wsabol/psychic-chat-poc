@@ -96,9 +96,10 @@ app.use(helmet({
     }
 }));
 
-// Allow client at 3001 and marketing website. Adjust as needed or use an env var.
+// Allow client at 3001/3002 and marketing website. Adjust as needed or use an env var.
 const allowedOrigins = [
     'http://localhost:3001',          // React app (development)
+    'http://localhost:3002',          // React app (development - alternate port)
     'http://localhost:3000',          // Marketing website (development - if served locally)
     'https://starshippsychics.com',   // Marketing website (production)
     'https://www.starshippsychics.com', // Marketing website with www (production)
@@ -135,7 +136,50 @@ app.use(express.json());
 
 // Phase 5: Input validation & rate limiting (EARLY in middleware chain)
 app.use(validateRequestPayload);
-app.use(rateLimit({}, 1000, 60000));  // 1000 requests per minute
+
+// GLOBAL rate limiter - DISABLED for development, enabled in production
+// Create persistent requests object outside middleware to track rate limits properly
+const globalRequests = {};
+const globalRateLimiter = rateLimit(globalRequests, 1000, 60000);
+
+app.use((req, res, next) => {
+  // Get all possible IP sources for debugging
+  const rawIp = req.ip;
+  const socketIp = req.socket?.remoteAddress;
+  const connIp = req.connection?.remoteAddress;
+  const forwardedFor = req.headers['x-forwarded-for'];
+  
+  // Log IP info for debugging (only on first few requests)
+  if (!global.ipLogged) {
+    console.log('[RATE-LIMIT-DEBUG] IP Detection:', {
+      rawIp,
+      socketIp,
+      connIp,
+      forwardedFor,
+      trustProxy: app.get('trust proxy'),
+      nodeEnv: process.env.NODE_ENV
+    });
+    global.ipLogged = true;
+  }
+  
+  // COMPLETELY DISABLE RATE LIMITING FOR DEVELOPMENT
+  // Check for development/test environments or localhost
+  const isDevEnvironment = !process.env.NODE_ENV || 
+                           process.env.NODE_ENV === 'development' || 
+                           process.env.NODE_ENV === 'test';
+  
+  const isLocalhost = rawIp?.includes('127.0.0.1') || 
+                      rawIp?.includes('::1') || 
+                      rawIp?.includes('localhost') ||
+                      forwardedFor?.includes('127.0.0.1');
+  
+  if (isDevEnvironment || isLocalhost) {
+    return next();
+  }
+  
+  // Production rate limiting with persistent requests object
+  return globalRateLimiter(req, res, next);
+});
 
 // Additional custom security headers (beyond helmet)
 app.use((req, res, next) => {

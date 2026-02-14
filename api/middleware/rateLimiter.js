@@ -81,6 +81,23 @@ export const freeTrialLimiter = rateLimit({
   message: 'Too many requests. Please slow down.',
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req) => process.env.NODE_ENV === 'test',
+  skip: (req) => {
+    // Skip in test mode OR for localhost development
+    if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development') return true;
+    
+    // Check multiple IP sources
+    const ip = req.ip || 
+      req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+      req.connection?.remoteAddress || 
+      req.socket?.remoteAddress || '';
+    
+    // Check if localhost
+    const isLocalhost = ip.includes('127.0.0.1') || 
+      ip.includes('::1') || 
+      ip.includes('localhost') ||
+      ip === '';
+    
+    return isLocalhost;
+  },
   keyGenerator: (req) => req.body?.tempUserId || req.params?.tempUserId || req.ip
 });

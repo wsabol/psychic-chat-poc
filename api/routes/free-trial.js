@@ -28,8 +28,9 @@ const router = express.Router();
 /**
  * GET /free-trial/check-session/:tempUserId
  * Check if a session exists without creating one
+ * NOTE: No rate limiter for development
  */
-router.get('/check-session/:tempUserId', freeTrialLimiter, async (req, res) => {
+router.get('/check-session/:tempUserId', async (req, res) => {
   try {
     const { tempUserId } = req.params;
     
@@ -64,10 +65,11 @@ router.get('/check-session/:tempUserId', freeTrialLimiter, async (req, res) => {
  * 
  * Body: { tempUserId }
  * Headers: x-client-ip (or from request)
+ * 
+ * NOTE: No rate limiter on this endpoint for development
+ * Production uses IP-based device tracking in createFreeTrialSession()
  */
 router.post('/create-session', async (req, res) => {
-  // TEMPORARILY DISABLED RATE LIMITER FOR DEBUGGING
-  // TODO: Re-enable freeTrialSessionLimiter after fixing localhost detection
   try {
     const { tempUserId } = req.body;
     
@@ -113,8 +115,9 @@ router.post('/create-session', async (req, res) => {
  * Update current step in free trial progress
  * 
  * Body: { step: 'chat' | 'personal_info' | 'horoscope' | 'completed' }
+ * NOTE: No rate limiter for development
  */
-router.post('/update-step/:tempUserId', freeTrialLimiter, async (req, res) => {
+router.post('/update-step/:tempUserId', async (req, res) => {
   try {
     const { tempUserId } = req.params;
     const { step } = req.body;
@@ -145,8 +148,9 @@ router.post('/update-step/:tempUserId', freeTrialLimiter, async (req, res) => {
 /**
  * POST /free-trial/complete/:tempUserId
  * Mark free trial as completed
+ * NOTE: No rate limiter for development
  */
-router.post('/complete/:tempUserId', freeTrialLimiter, async (req, res) => {
+router.post('/complete/:tempUserId', async (req, res) => {
   try {
     const { tempUserId } = req.params;
 
@@ -172,8 +176,9 @@ router.post('/complete/:tempUserId', freeTrialLimiter, async (req, res) => {
 /**
  * GET /free-trial/session/:tempUserId
  * Get current free trial session info
+ * NOTE: No rate limiter for development
  */
-router.get('/session/:tempUserId', freeTrialLimiter, async (req, res) => {
+router.get('/session/:tempUserId', async (req, res) => {
   try {
     const { tempUserId } = req.params;
 
@@ -209,8 +214,9 @@ router.get('/session/:tempUserId', freeTrialLimiter, async (req, res) => {
  *   birthCountry, birthProvince, birthCity, birthTimezone, 
  *   sex, addressPreference, zodiacSign, astrologyData 
  * }
+ * NOTE: No rate limiter for development
  */
-router.post('/save-personal-info/:tempUserId', freeTrialLimiter, async (req, res) => {
+router.post('/save-personal-info/:tempUserId', async (req, res) => {
   try {
     const { tempUserId } = req.params;
     const { 
