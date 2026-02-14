@@ -126,6 +126,7 @@
       "emailLabel": "Email",
       "facebookSignIn": "Sign in with Facebook",
       "googleSignIn": "Sign in with Google",
+      "appleSignIn": "Sign in with Apple",
       "googleSigningIn": "Signing in...",
       "orDivider": "or",
       "passwordLabel": "Password",

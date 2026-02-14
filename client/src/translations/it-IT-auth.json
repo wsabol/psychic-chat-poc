@@ -17,6 +17,7 @@
     "signInWith": "Accedi con",
     "signUpWith": "Registrati con",
     "googleSignIn": "Accedi con Google",
+    "appleSignIn": "Accedi con Apple",
     "providerComingSoon": "Accesso con {{provider}} prossimamente",
     "popupClosed": "La finestra popup di accesso è stata chiusa",
     "accountExistsWithDifferentCredential": "Esiste già un account con la stessa email ma credenziali di accesso diverse",

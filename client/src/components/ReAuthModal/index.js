@@ -6,6 +6,7 @@ import { StatusMessage } from './components/StatusMessage';
 import { EmailDisplay } from './components/EmailDisplay';
 import { GoogleAuthButton } from './components/GoogleAuthButton';
 import { FacebookAuthButton } from './components/FacebookAuthButton';
+import { AppleAuthButton } from './components/AppleAuthButton';
 import { PasswordAuthForm } from './components/PasswordAuthForm';
 import { PasswordResetView } from './components/PasswordResetView';
 import styles from './ReAuthModal.module.css';
@@ -28,6 +29,7 @@ function ReAuthModal({ isOpen, email, onSuccess, onCancel, onFailure }) {
     loading: authLoading,
     handleGoogleReAuth,
     handleFacebookReAuth,
+    handleAppleReAuth,
     handlePasswordReAuth,
   } = useReAuth(email, onSuccess, onFailure, t);
 
@@ -82,6 +84,11 @@ function ReAuthModal({ isOpen, email, onSuccess, onCancel, onFailure }) {
               <GoogleAuthButton
                 loading={loading}
                 onGoogleReAuth={handleGoogleReAuth}
+                t={t}
+              />
+              <AppleAuthButton
+                loading={loading}
+                onAppleReAuth={handleAppleReAuth}
                 t={t}
               />
             </div>

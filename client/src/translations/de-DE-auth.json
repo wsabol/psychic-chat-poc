@@ -17,6 +17,7 @@
     "signInWith":  "Anmelden mit",
     "signUpWith":  "Registrieren mit",
     "googleSignIn":  "Mit Google anmelden",
+    "appleSignIn":  "Mit Apple anmelden",
     "providerComingSoon":  "Anmeldung mit {{provider}} bald verfügbar",
     "popupClosed":  "Das Anmelde-Popup wurde geschlossen",
     "accountExistsWithDifferentCredential":  "Ein Konto mit derselben E-Mail existiert bereits, aber mit anderen Anmeldedaten",

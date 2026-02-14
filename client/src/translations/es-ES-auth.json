@@ -17,6 +17,7 @@
     "signInWith": "Iniciar sesión con",
     "signUpWith": "Registrarse con",
     "googleSignIn": "Iniciar sesión con Google",
+    "appleSignIn": "Iniciar sesión con Apple",
     "providerComingSoon": "Inicio de sesión con {{provider}} próximamente",
     "popupClosed": "Se cerró la ventana emergente de inicio de sesión",
     "accountExistsWithDifferentCredential": "Ya existe una cuenta con el mismo correo electrónico pero con credenciales de inicio de sesión diferentes",

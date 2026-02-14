@@ -17,6 +17,7 @@
     "signInWith": "Entrar com",
     "signUpWith": "Registrar com",
     "googleSignIn": "Entrar com Google",
+    "appleSignIn": "Entrar com Apple",
     "providerComingSoon": "Login com {{provider}} em breve",
     "popupClosed": "A janela pop-up de login foi fechada",
     "accountExistsWithDifferentCredential": "Já existe uma conta com o mesmo email mas com credenciais de login diferentes",

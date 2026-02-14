@@ -5,6 +5,7 @@ import {
   EmailAuthProvider,
   GoogleAuthProvider,
   FacebookAuthProvider,
+  OAuthProvider,
 } from 'firebase/auth';
 import { auth } from '../../../firebase';
 import { logErrorFromCatch } from '../../../shared/errorLogger.js';
@@ -82,6 +83,37 @@ export function useReAuth(email, onSuccess, onFailure, t) {
     }
   };
 
+  const handleAppleReAuth = async () => {
+    setError(null);
+    setLoading(true);
+
+    try {
+      const user = auth.currentUser;
+
+      if (!user) {
+        throw new Error('No user logged in');
+      }
+
+      const appleProvider = new OAuthProvider('apple.com');
+      await reauthenticateWithPopup(user, appleProvider);
+
+      // Call onSuccess after successful Apple re-auth
+      onSuccess();
+    } catch (err) {
+      logErrorFromCatch('[REAUTH] Apple re-auth failed:', err);
+      
+      const errorMessage = getFirebaseErrorMessage(err.code, t);
+      setError(errorMessage);
+      
+      // Only call onFailure on actual authentication failures, not user cancellations
+      if (onFailure && !shouldSkipFailureCallback(err.code)) {
+        onFailure();
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handlePasswordReAuth = async (e) => {
     e.preventDefault();
     setError(null);
@@ -121,6 +153,7 @@ export function useReAuth(email, onSuccess, onFailure, t) {
     loading,
     handleGoogleReAuth,
     handleFacebookReAuth,
+    handleAppleReAuth,
     handlePasswordReAuth,
   };
 }

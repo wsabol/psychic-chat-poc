@@ -17,6 +17,7 @@
     "signInWith": "Sign in with",
     "signUpWith": "Sign up with",
     "googleSignIn": "Sign in with Google",
+    "appleSignIn": "Sign in with Apple",
     "providerComingSoon": "{{provider}} sign in coming soon",
     "popupClosed": "Sign in popup was closed",
     "accountExistsWithDifferentCredential": "An account already exists with the same email but different sign-in credentials",

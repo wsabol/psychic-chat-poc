@@ -17,6 +17,7 @@
     "signInWith": "でログイン",
     "signUpWith": "で登録",
     "googleSignIn": "Googleでログイン",
+    "appleSignIn": "Appleでログイン",
     "providerComingSoon": "{{provider}}でのログイン近日公開",
     "popupClosed": "ログインポップアップが閉じられました",
     "accountExistsWithDifferentCredential": "同じメールアドレスのアカウントが既に存在しますが、異なるログイン資格情報です",
