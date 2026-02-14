@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from 'react';
+import './AdminPage.css';
 
 import ViolationReportTab from '../components/AdminTabs/ViolationReportTab';
 import { ComplianceDashboard } from '../components/admin/ComplianceDashboard';
@@ -54,7 +55,7 @@ export default function AdminPage({ token, userId }) {
         </div>
 
         {/* Tabs */}
-        <div style={styles.tabBar}>
+        <div className="admin-tab-bar" style={styles.tabBar}>
           <TabButton
             label="💳 Subscriptions"
             isActive={activeTab === 'subscriptions'}

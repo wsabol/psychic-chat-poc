@@ -23,12 +23,6 @@ export function SocialProviders({
   const { t } = useTranslation();
 
   const handleProviderLogin = async (providerType) => {
-    // DISABLED: Facebook login not yet configured
-    if (providerType === 'facebook') {
-      setError('Facebook login is not yet available. Please use Google or email/password.');
-      return;
-    }
-    
     // On register mode, check terms/privacy acceptance
     if (mode === 'register') {
       if (!termsAccepted || !privacyAccepted) {
@@ -132,38 +126,35 @@ export function SocialProviders({
         flexWrap: 'wrap'
       }}>
       {providers.map((provider) => {
-          const isFacebookDisabled = provider.id === 'facebook';
-          const isButtonDisabled = isDisabled || isFacebookDisabled;
-          
           return (
             <button
               key={provider.id}
               onClick={() => handleProviderLogin(provider.id)}
-              disabled={isButtonDisabled}
-              title={isFacebookDisabled ? 'Facebook login not yet available' : `${mode === 'register' ? t('login.signUpWith') : t('login.signInWith')} ${provider.name}`}
+              disabled={isDisabled}
+              title={`${mode === 'register' ? t('login.signUpWith') : t('login.signInWith')} ${provider.name}`}
               style={{
                 width: '60px',
                 height: '60px',
                 borderRadius: '12px',
                 border: '2px solid rgba(255,255,255,0.1)',
-                backgroundColor: isButtonDisabled ? '#666' : provider.bgColor,
+                backgroundColor: isDisabled ? '#666' : provider.bgColor,
                 color: provider.color,
-                cursor: isButtonDisabled ? 'not-allowed' : 'pointer',
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 transition: 'all 0.2s',
-                opacity: isButtonDisabled ? 0.5 : 1,
-                boxShadow: isButtonDisabled ? 'none' : '0 2px 8px rgba(0,0,0,0.2)'
+                opacity: isDisabled ? 0.5 : 1,
+                boxShadow: isDisabled ? 'none' : '0 2px 8px rgba(0,0,0,0.2)'
               }}
               onMouseEnter={(e) => {
-                if (!isButtonDisabled) {
+                if (!isDisabled) {
                   e.currentTarget.style.transform = 'translateY(-2px)';
                   e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
                 }
               }}
               onMouseLeave={(e) => {
-                if (!isButtonDisabled) {
+                if (!isDisabled) {
                   e.currentTarget.style.transform = 'translateY(0)';
                   e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
                 }

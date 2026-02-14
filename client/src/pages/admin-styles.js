@@ -29,6 +29,12 @@ export const styles = {
     gap: '0.5rem',
     marginBottom: '1.5rem',
     borderBottom: '2px solid #e0e0e0',
+    overflowX: 'auto',
+    overflowY: 'hidden',
+    flexWrap: 'nowrap',
+    WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
+    scrollbarWidth: 'thin', // Firefox
+    scrollbarColor: '#7c63d8 #e0e0e0', // Firefox
   },
   messageContainer: {
     padding: '0.75rem',
@@ -185,5 +191,8 @@ export const getTabButtonStyle = (isActive) => {
     fontSize: '14px',
     fontWeight: isActive ? 'bold' : 'normal',
     transition: 'all 0.2s ease',
+    flexShrink: 0, // Prevent tabs from shrinking on mobile
+    whiteSpace: 'nowrap', // Keep text on one line
+    minWidth: 'fit-content', // Ensure full button text is visible
   };
 };

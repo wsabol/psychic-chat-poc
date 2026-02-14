@@ -1,7 +1,7 @@
 import { db } from '../../shared/db.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { encryptPhone, decryptPhone } from './helpers/securityHelpers.js';
-import { sendSMS, verifySMSCode } from '../../shared/smsService.js';
+import { sendSMS, verifySMSCode } from '../../shared/smsService-aws.js';
 import { formatPhoneNumber } from '../../shared/authUtils.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
 

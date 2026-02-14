@@ -4,7 +4,7 @@
  * Centralizes the pattern of sending notifications across all channels
  */
 import { sendEmail } from '../../shared/email/emailSender.js';
-import { sendSMS } from '../../shared/smsService.js';
+import { sendSMS } from '../../shared/smsService-aws.js';
 import { db } from '../../shared/db.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
 import { getUserContactInfo } from '../user/userContactService.js';

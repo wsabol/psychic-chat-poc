@@ -19,7 +19,52 @@ export async function createFreeTrialSession(tempUserId, ipAddress, db) {
     const ipHash = hashIpAddress(ipAddress);
     const userIdHash = hashTempUserId(tempUserId);
     
-    // FIRST: Check if this user already has a session (prevents duplicate key errors)
+    // CHECK WHITELIST FIRST - whitelisted IPs get unlimited trials
+    const whitelistCheck = await db.query(
+      'SELECT id FROM free_trial_whitelist WHERE ip_address_hash = $1',
+      [ipHash]
+    );
+
+    const isWhitelisted = whitelistCheck.rows.length > 0;
+    
+    // Check if this IP has ANY existing trial session (completed or in-progress)
+    const existingIpSession = await db.query(
+      `SELECT id, current_step, is_completed, user_id_hash, started_at
+       FROM free_trial_sessions 
+       WHERE ip_address_hash = $1 
+       ORDER BY started_at DESC
+       LIMIT 1`,
+      [ipHash]
+    );
+
+    // If IP has an existing session and NOT whitelisted, enforce single trial per IP
+    if (existingIpSession.rows.length > 0 && !isWhitelisted) {
+      const session = existingIpSession.rows[0];
+      
+      // Check if this is the SAME user trying to resume (legitimate)
+      if (session.user_id_hash === userIdHash) {
+        // Same user resuming their session - ALLOW
+        return {
+          success: true,
+          sessionId: session.id,
+          currentStep: session.current_step,
+          isCompleted: session.is_completed,
+          resuming: true,
+          message: session.is_completed 
+            ? 'Trial already completed' 
+            : `Resuming from step: ${session.current_step}`
+        };
+      }
+      
+      // DIFFERENT user on same IP - BLOCK (this is the exploit we're fixing)
+      return { 
+        success: false, 
+        error: 'This device has already started a free trial',
+        alreadyStarted: true
+      };
+    }
+    
+    // Also check if this specific user already has a session (edge case for VPN/proxy changes)
     const existingUserSession = await db.query(
       `SELECT id, current_step, is_completed FROM free_trial_sessions 
        WHERE user_id_hash = $1 
@@ -29,39 +74,16 @@ export async function createFreeTrialSession(tempUserId, ipAddress, db) {
 
     if (existingUserSession.rows.length > 0) {
       const session = existingUserSession.rows[0];
-      // Return existing session instead of creating duplicate
+      // User found with existing session (different IP) - allow resume
       return {
         success: true,
         sessionId: session.id,
         currentStep: session.current_step,
+        isCompleted: session.is_completed,
         resuming: true,
-        message: session.is_completed ? 'Trial already completed' : `Resuming from step: ${session.current_step}`
-      };
-    }
-    
-    // CHECK WHITELIST - whitelisted IPs get unlimited trials
-    const whitelistCheck = await db.query(
-      'SELECT id FROM free_trial_whitelist WHERE ip_address_hash = $1',
-      [ipHash]
-    );
-
-    const isWhitelisted = whitelistCheck.rows.length > 0;
-    
-    // Check if IP has already completed a trial
-    const completedCheck = await db.query(
-      `SELECT id, current_step FROM free_trial_sessions 
-       WHERE ip_address_hash = $1 AND is_completed = true
-       ORDER BY started_at DESC
-       LIMIT 1`,
-      [ipHash]
-    );
-
-    // If IP found with completed trial, block access UNLESS whitelisted
-    if (completedCheck.rows.length > 0 && !isWhitelisted) {
-      return { 
-        success: false, 
-        error: 'This IP address has already completed the free trial',
-        alreadyCompleted: true
+        message: session.is_completed 
+          ? 'Trial already completed' 
+          : `Resuming from step: ${session.current_step}`
       };
     }
 
