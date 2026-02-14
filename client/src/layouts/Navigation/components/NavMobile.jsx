@@ -40,19 +40,18 @@ export function NavMobile({
 
   return (
     <>
-      {/* Mobile Header */}
+      {/* Mobile Header - Minimal Hamburger Icon */}
       <header className="nav-mobile-header">
         <button
-          className="hamburger-menu"
+          className={`hamburger-menu ${mobileMenuOpen ? 'open' : ''}`}
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle menu"
+          aria-expanded={mobileMenuOpen}
         >
           <span></span>
           <span></span>
           <span></span>
         </button>
-        <h1 className="app-title">🔮 {t('menu.title')}</h1>
-        <div className="spacer"></div>
       </header>
 
       {/* Mobile Menu Overlay */}

@@ -93,16 +93,22 @@ export function useChat(userId, token, isAuthenticated, authUserId, isTemporaryA
                 throw new Error(`HTTP error! Status: ${res.status}`);
             }
             
-            const openingData = await res.json();
-            
-            // Add the opening message to chat immediately
-            if (openingData && openingData.content) {
-                const openingMessage = {
-                    id: Date.now(),
-                    role: openingData.role || 'assistant',
-                    content: openingData.content
-                };
-                setChat(prevChat => [openingMessage, ...prevChat]);
+            // Handle empty or invalid JSON responses gracefully
+            try {
+                const openingData = await res.json();
+                
+                // Add the opening message to chat immediately
+                if (openingData && openingData.content) {
+                    const openingMessage = {
+                        id: Date.now(),
+                        role: openingData.role || 'assistant',
+                        content: openingData.content
+                    };
+                    setChat(prevChat => [openingMessage, ...prevChat]);
+                }
+            } catch (jsonError) {
+                console.warn('Could not parse opening response as JSON:', jsonError.message);
+                // Continue silently - opening is optional
             }
         } catch (err) {
             // Opening request failed, continue silently

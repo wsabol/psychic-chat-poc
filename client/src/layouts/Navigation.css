@@ -97,23 +97,16 @@
 }
 
 /* ============================================
-   MOBILE HEADER
+   MOBILE HEADER - Minimal Hamburger Only
    ============================================ */
 
 .nav-mobile-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
   position: fixed;
   top: 0;
-  left: 0;
   right: 0;
-  height: 60px;
   z-index: 999;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  pointer-events: none; /* Allow clicks to pass through to content below */
 }
 
 @media (min-width: 768px) {
@@ -123,14 +116,27 @@
 }
 
 .hamburger-menu {
-  background: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: none;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 0.5rem;
+  padding: 0.75rem;
   color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  pointer-events: all; /* Re-enable clicks for the button itself */
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hamburger-menu:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.hamburger-menu:active {
+  transform: scale(0.95);
 }
 
 .hamburger-menu span {
@@ -141,28 +147,22 @@
   transition: all 0.3s ease;
 }
 
-.hamburger-menu:active span:nth-child(1) {
+.hamburger-menu.open span:nth-child(1) {
   transform: rotate(45deg) translate(8px, 8px);
 }
 
-.hamburger-menu:active span:nth-child(2) {
+.hamburger-menu.open span:nth-child(2) {
   opacity: 0;
 }
 
-.hamburger-menu:active span:nth-child(3) {
+.hamburger-menu.open span:nth-child(3) {
   transform: rotate(-45deg) translate(7px, -7px);
 }
 
-.app-title {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: bold;
-  flex: 1;
-  text-align: center;
-}
-
+/* Hidden elements - no longer needed in header */
+.app-title,
 .spacer {
-  width: 44px;
+  display: none;
 }
 
 /* ============================================
@@ -171,7 +171,7 @@
 
 .nav-mobile-overlay {
   position: fixed;
-  top: 60px;
+  top: 0;
   left: 0;
   right: 0;
   bottom: 0;
@@ -191,7 +191,7 @@
 
 .nav-mobile-menu {
   position: fixed;
-  top: 60px;
+  top: 0;
   left: 0;
   bottom: 0;
   width: 280px;

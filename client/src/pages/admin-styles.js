@@ -5,6 +5,7 @@
 export const styles = {
   pageContainer: {
     padding: '0.75rem',
+    paddingTop: '1rem', /* Add top spacing for header visibility */
   },
   contentWrapper: {
     maxWidth: '1200px',
