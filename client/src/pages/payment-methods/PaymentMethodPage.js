@@ -41,7 +41,7 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding, onP
   const refreshTimeoutRef = useRef(null);
   const hasInitialized = useRef(false);
 
-        // ✅ FIXED: Only fetch once on mount, not on every render
+  // ✅ FIXED: Only fetch once on mount, not on every render
   useEffect(() => {
     if (!hasInitialized.current && billing) {
       hasInitialized.current = true;
@@ -55,7 +55,7 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding, onP
     };
   }, [billing]);
 
-    const handleAddClick = async () => {
+  const handleAddClick = async () => {
     try {
       setCardError(null);
       const intent = await billing.createSetupIntent();
@@ -77,7 +77,7 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding, onP
     }, 500);
   }, [billing]);
 
-    const handleCardSubmit = async (cardElement) => {
+  const handleCardSubmit = async (cardElement) => {
     if (!stripeRef.current) {
       setCardError(t('paymentMethods.stripeNotReady'));
       return;
@@ -106,7 +106,7 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding, onP
 
       const paymentMethodId = paymentMethod.id;
 
-            if (!setupIntent?.clientSecret) {
+      if (!setupIntent?.clientSecret) {
         setCardError(t('paymentMethods.setupIntentNotAvailable'));
         setLoading(false);
         return;
@@ -173,7 +173,7 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding, onP
       if (onPaymentMethodAdded) {
         onPaymentMethodAdded();
       }
-        } catch (err) {
+    } catch (err) {
       logErrorFromCatch('[CARD] Error:', err);
       setCardError(err.message || t('paymentMethods.failedToPrepare'));
     } finally {
@@ -192,13 +192,13 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding, onP
       {billing.error && !cardError && (
         <div className="alert alert-error">
           ⚠️ {billing.error}
-                    <br/>
+          <br/>
           <small style={{marginTop: '0.5rem', display: 'block'}}>
             {t('paymentMethods.ifIssuePersists')}
           </small>
         </div>
       )}
-            {cardSuccess && (
+      {cardSuccess && (
         <div className="alert alert-success">✓ {t('paymentMethods.addedSuccessfully')}</div>
       )}
 
@@ -207,13 +207,13 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding, onP
           className="btn-primary"
           onClick={handleAddClick}
           disabled={false}
-                >
+        >
           {loading ? `⏳ ${t('paymentMethods.processing')}` : t('paymentMethods.addNewButton')}
         </button>
       )}
 
       {showAddPaymentForm && setupIntent && (
-                <div className="payment-form-container">
+        <div className="payment-form-container">
           <h3>{t('paymentMethods.addNew')}</h3>
           <p style={{ fontSize: '0.95rem', color: '#666', marginBottom: '1.5rem' }}>
             {t('paymentMethods.description')}
@@ -251,7 +251,7 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding, onP
             debouncedRefreshPaymentMethods();
             setCardSuccess(true);
             setTimeout(() => setCardSuccess(false), 3000);
-                    } catch (err) {
+          } catch (err) {
             setCardError(err.message || t('paymentMethods.failedToSetDefault'));
             // Refresh to show true state
             billing.fetchPaymentMethods();
@@ -267,7 +267,7 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding, onP
             debouncedRefreshPaymentMethods();
             setCardSuccess(true);
             setTimeout(() => setCardSuccess(false), 3000);
-                    } catch (err) {
+          } catch (err) {
             setCardError(err.message || t('paymentMethods.failedToDelete'));
             // Refresh to show true state
             billing.fetchPaymentMethods();

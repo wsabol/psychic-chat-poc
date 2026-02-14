@@ -45,6 +45,7 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
   // Fetch astro info on mount only
   useEffect(() => {
     if (!astroInfo) fetchAstroInfo();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Mark free trial as completed when horoscope loads (for temp accounts)
@@ -55,7 +56,7 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
     }
   }, [auth?.isTemporaryAccount, horoscopeState.data, horoscopeState.loading, completeFreeTrial]);
 
-  // âœ… CRITICAL FIX: Load horoscope only on mount and when range changes
+  // ✅ CRITICAL FIX: Load horoscope only on mount and when range changes
   // Do NOT include loadHoroscope in deps - it changes on every render
   useEffect(() => {
     // First mount: load initial horoscope
@@ -70,6 +71,7 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
       prevRangeRef.current = horoscopeRange;
       loadHoroscope();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [horoscopeRange]); // Only depend on horoscopeRange!
 
   // Cleanup on unmount

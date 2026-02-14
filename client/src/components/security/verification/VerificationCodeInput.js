@@ -14,7 +14,6 @@ export default function VerificationCodeInput({
   onBack
 }) {
   const { t } = useTranslation();
-  const typeLabel = verificationType === 'phone' ? 'Phone' : 'Email';
   const isValidCode = code.length === 6;
   const heading = verificationType === 'phone' ? t('security.verificationCode.verifyHeadingPhone') : t('security.verificationCode.verifyHeadingEmail');
 

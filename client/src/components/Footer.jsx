@@ -1,5 +1,4 @@
 import React from 'react';
-import { useTranslation } from '../context/TranslationContext';
 import './Footer.css';
 
 /**
@@ -7,8 +6,6 @@ import './Footer.css';
  * Displays dynamic year that updates January 1st automatically
  */
 export default function Footer() {
-  const { t } = useTranslation();
-  
   // Dynamic year - automatically updates on January 1st
   const currentYear = new Date().getFullYear();
   

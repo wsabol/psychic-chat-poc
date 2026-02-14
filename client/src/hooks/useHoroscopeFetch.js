@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { fetchWithTokenRefresh } from '../utils/fetchWithTokenRefresh';
 import { isBirthInfoError } from '../utils/birthInfoErrorHandler';
-import { buildHoroscopeData, HOROSCOPE_CONFIG } from '../utils/horoscopeUtils';
+import { buildHoroscopeData } from '../utils/horoscopeUtils';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
 import { useSSE } from './useSSE';
 

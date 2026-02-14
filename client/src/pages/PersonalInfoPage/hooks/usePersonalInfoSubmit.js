@@ -4,7 +4,7 @@ import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * Custom hook for orchestrating the personal info submission workflow
- * Handles: validation â†’ save â†’ astrology sync â†’ progress tracking â†’ navigation
+ * Handles: validation → save → astrology sync → progress tracking → navigation
  * @param {Object} params - Configuration parameters
  * @returns {Object} Submit handler
  */

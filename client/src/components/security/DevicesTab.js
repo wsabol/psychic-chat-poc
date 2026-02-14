@@ -31,7 +31,7 @@ export default function DevicesTab({ userId, token, apiUrl }) {
     } finally {
       setLoading(false);
     }
-  }, [apiUrl, userId, token]);
+  }, [apiUrl, userId, token, t]);
 
   useEffect(() => {
     loadDevices();

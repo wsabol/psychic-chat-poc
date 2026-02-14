@@ -13,10 +13,6 @@ export function TrustCurrentDeviceSection({ userId, token, apiUrl }) {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
-  useEffect(() => {
-    checkCurrentDeviceTrust();
-  }, []);
-
   const checkCurrentDeviceTrust = useCallback(async () => {
     try {
       const response = await fetch(`${apiUrl}/auth/check-current-device-trust/${userId}`, {
@@ -31,6 +27,10 @@ export function TrustCurrentDeviceSection({ userId, token, apiUrl }) {
       logErrorFromCatch('[TRUST-DEVICE] Error checking trust status:', err);
     }
   }, [apiUrl, userId, token]);
+
+  useEffect(() => {
+    checkCurrentDeviceTrust();
+  }, [checkCurrentDeviceTrust]);
 
   const handleTrustDevice = async () => {
     try {

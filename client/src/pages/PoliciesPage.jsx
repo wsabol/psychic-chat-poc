@@ -9,7 +9,7 @@ import './PoliciesPage.css';
  * URL params: ?type=terms or ?type=privacy (default: terms)
  */
 export function PoliciesPage() {
-  const { t, language } = useTranslation();
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const [expandedSections, setExpandedSections] = useState(new Set());
 
@@ -21,7 +21,7 @@ export function PoliciesPage() {
   const policy = useMemo(() => {
     const key = isTerms ? 'policies.termsOfService' : 'policies.privacyPolicy';
     return t(key) || {};
-  }, [isTerms, language, t]);
+  }, [isTerms, t]);
 
   // Toggle section expansion
   const toggleSection = (index) => {

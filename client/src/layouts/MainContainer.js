@@ -78,7 +78,7 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
       }
       return newIndex;
     });
-  }, [modeRules, currentMode, currentPageIndex]);
+  }, [modeRules]);
 
   // Handle navigation away from billing page - separate effect to avoid setState in render
   useEffect(() => {

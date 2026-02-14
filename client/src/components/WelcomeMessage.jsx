@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from '../context/TranslationContext';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
 import './WelcomeMessage.css';
@@ -52,22 +52,8 @@ export function WelcomeMessage({ userId, onClose, onNavigateToChat, onOnboarding
     setFadeIn(true);
   }, []);
 
-  // Auto-close countdown (30 seconds)
-  useEffect(() => {
-    if (autoCloseTimer <= 0) {
-      handleCompleteOnboarding();
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      setAutoCloseTimer(prev => prev - 1);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [autoCloseTimer]);
-
   // Complete onboarding by marking welcome step as done
-  const handleCompleteOnboarding = async () => {
+  const handleCompleteOnboarding = useCallback(async () => {
     if (completing) return;
     setCompleting(true);
 
@@ -91,7 +77,21 @@ export function WelcomeMessage({ userId, onClose, onNavigateToChat, onOnboarding
     } finally {
       setCompleting(false);
     }
-  };
+  }, [completing, onOnboardingComplete, onNavigateToChat, onClose]);
+
+  // Auto-close countdown (30 seconds)
+  useEffect(() => {
+    if (autoCloseTimer <= 0) {
+      handleCompleteOnboarding();
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setAutoCloseTimer(prev => prev - 1);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [autoCloseTimer, handleCompleteOnboarding]);
 
   return (
     <div className={`welcome-message-overlay ${fadeIn ? 'fade-in' : ''}`}>

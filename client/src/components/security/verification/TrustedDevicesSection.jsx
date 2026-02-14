@@ -10,10 +10,6 @@ export function TrustedDevicesSection({ userId, token, apiUrl }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    loadTrustedDevices();
-  }, []);
-
   const loadTrustedDevices = useCallback(async () => {
     try {
       setLoading(true);
@@ -37,6 +33,10 @@ export function TrustedDevicesSection({ userId, token, apiUrl }) {
       setLoading(false);
     }
   }, [userId, token, apiUrl]);
+
+  useEffect(() => {
+    loadTrustedDevices();
+  }, [loadTrustedDevices]);
 
   const handleRevoke = async (deviceId) => {
     try {

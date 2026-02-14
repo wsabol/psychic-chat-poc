@@ -23,7 +23,6 @@ export default function SettingsPage({ userId, token, auth, onboarding }) {
   const [isLoading, setIsLoading] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
-  const [isSaving, setIsSaving] = useState(false);
 
   // Settings state
   const [settings, setSettings] = useState({
@@ -32,28 +31,6 @@ export default function SettingsPage({ userId, token, auth, onboarding }) {
     pushNotificationsEnabled: true,
     analyticsEnabled: true,
   });
-
-  // Get user email from Firebase and load settings from database
-  useEffect(() => {
-    const loadUserData = async () => {
-      try {
-        const authInstance = getAuth();
-        const currentUser = authInstance.currentUser;
-        if (currentUser && currentUser.email) {
-          setUserEmail(currentUser.email);
-        }
-
-        // Load settings from database
-        if (userId && token) {
-          await loadSettingsFromDatabase();
-        }
-      } catch (error) {
-        logErrorFromCatch('Error loading user data:', error);
-      }
-    };
-
-    loadUserData();
-  }, [userId, token]);
 
   // Load settings from database
   const loadSettingsFromDatabase = async () => {
@@ -88,6 +65,29 @@ export default function SettingsPage({ userId, token, auth, onboarding }) {
       });
     }
   };
+
+  // Get user email from Firebase and load settings from database
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const authInstance = getAuth();
+        const currentUser = authInstance.currentUser;
+        if (currentUser && currentUser.email) {
+          setUserEmail(currentUser.email);
+        }
+
+        // Load settings from database
+        if (userId && token) {
+          await loadSettingsFromDatabase();
+        }
+      } catch (error) {
+        logErrorFromCatch('Error loading user data:', error);
+      }
+    };
+
+    loadUserData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, token]);
 
   // Download My Data
   const handleDownloadData = async () => {
@@ -181,7 +181,6 @@ export default function SettingsPage({ userId, token, auth, onboarding }) {
   const saveSettingsToDatabase = async (settingsToSave) => {
     if (!userId || !token) return;
     
-    setIsSaving(true);
     try {
       const response = await fetch(`${API_URL}/user-settings/${userId}`, {
         method: 'POST',
@@ -219,8 +218,6 @@ export default function SettingsPage({ userId, token, auth, onboarding }) {
         type: 'error', 
         text: t('settings.saveError') || 'Failed to save settings'
       });
-    } finally {
-      setIsSaving(false);
     }
   };
 

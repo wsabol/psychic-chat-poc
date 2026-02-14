@@ -51,8 +51,8 @@ export default function InvoicesPage({ userId, token, auth }) {
     // fetchInvoices gets recreated on every render due to t and API_URL dependencies,
     // so including it would cause the effect to run repeatedly.
     // This is safe because the effect only needs to run once on mount.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     fetchInvoices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) {

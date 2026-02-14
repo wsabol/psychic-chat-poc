@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { fetchMoonPhase, generateMoonPhase } from '../../../utils/moonPhaseAPI';
 import { useSSE } from '../../../hooks/useSSE';
 import { isBirthInfoError } from '../../../utils/birthInfoErrorHandler';

@@ -146,7 +146,7 @@ export function useSpeech() {
     } catch (err) {
       logErrorFromCatch('Resume error:', err);
     }
-  }, [clearProgress]);
+  }, []);
 
   const pause = useCallback(() => {
     try {

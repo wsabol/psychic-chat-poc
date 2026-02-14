@@ -23,7 +23,6 @@ export function useAuthState(checkBillingStatus) {
   const [tempToken, setTempToken] = useState(null);
   const [tempUserId, setTempUserId] = useState(null);
   const [twoFactorMethod, setTwoFactorMethod] = useState('email');
-  const [error, setError] = useState(null);
   
   const billingCheckedRef = useRef(new Set());
 
@@ -152,7 +151,6 @@ export function useAuthState(checkBillingStatus) {
                 if (err.name === 'AbortError') {
                   // Timeout - allow user to retry login
                   logWarning('[AUTH-LISTENER] 2FA check timed out - please sign out and try again');
-                  setError('Connection timeout. Please sign out and try again.');
                   setShowTwoFactor(false);
                   setIsAuthenticated(false);
                   setLoading(false);

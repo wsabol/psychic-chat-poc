@@ -50,7 +50,7 @@ export function parseDateForStorage(dateString) {
       'dec': '12', 'december': '12'
     };
     
-    const parts = dateString.trim().split(/[\s\-\/]+/);
+    const parts = dateString.trim().split(/[\s\-/]+/);
     if (parts.length !== 3) return dateString;
     
     const day = parseInt(parts[0].trim(), 10);

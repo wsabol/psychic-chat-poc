@@ -90,7 +90,8 @@ export default function CardPaymentForm({
         cardElementRef.current = null;
       }
     };
-  }, [stripe, cardElementRef]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stripe, cardElementRef, t]);
 
   const handleFormSubmit = (e) => {
     e.preventDefault();

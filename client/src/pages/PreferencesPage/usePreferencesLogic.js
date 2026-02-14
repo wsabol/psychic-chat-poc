@@ -90,6 +90,7 @@ export const useFetchPreferences = (userId, token, API_URL) => {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, token, API_URL]);
 
   return { preferences, setPreferences, personalInfo, loading, error };

@@ -79,28 +79,6 @@ function parseUserAgent(userAgent) {
 }
 
 /**
- * Calculate user age from birthdate
- */
-function calculateAge(birthDateString) {
-  if (!birthDateString) return null;
-  
-  try {
-    const birthDate = new Date(birthDateString);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    
-    return age >= 0 ? age : null;
-  } catch (e) {
-    return null;
-  }
-}
-
-/**
  * Log an analytics event
  */
 export async function trackEvent(eventType, pageName, eventAction = null, sessionDurationMs = null, errorData = null) {

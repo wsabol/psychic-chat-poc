@@ -135,7 +135,7 @@ export function ComplianceDashboard({ token }) {
         throw new Error('Failed to flag users for update');
       }
 
-      const flagResult = await flagResponse.json();
+      await flagResponse.json();
 
       // Step 2: Send notifications
       const notifyResponse = await fetchWithTokenRefresh(
@@ -157,7 +157,7 @@ export function ComplianceDashboard({ token }) {
 
       // Show success message
       setSuccessMessage(
-        `âœ… Success! Sent ${notifyResult.results.successful} notifications to users. ` +
+        `✅ Success! Sent ${notifyResult.results.successful} notifications to users. ` +
         `Failed: ${notifyResult.results.failed}. Grace period ends: ${new Date(notifyResult.results.gracePeriodEnd).toLocaleDateString()}`
       );
 

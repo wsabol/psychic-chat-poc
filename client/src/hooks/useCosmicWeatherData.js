@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { fetchCosmicWeather, generateCosmicWeather } from '../utils/cosmicWeatherAPI';
+import { fetchCosmicWeather } from '../utils/cosmicWeatherAPI';
 import { isBirthInfoError } from '../utils/birthInfoErrorHandler';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
 import { useSSE } from './useSSE';

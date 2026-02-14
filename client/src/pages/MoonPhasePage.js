@@ -43,7 +43,8 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
   // Fetch astro info on mount only
   useEffect(() => {
     if (!astroInfo) fetchAstroInfo();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ✅ CRITICAL FIX: Load moon phase only on mount
   // Do NOT include loadMoonPhase in deps - it changes on every render
@@ -52,6 +53,7 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
       initLoadDoneRef.current = true;
       loadMoonPhase();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPhase]); // Only depend on currentPhase!
 
   // Cleanup on unmount

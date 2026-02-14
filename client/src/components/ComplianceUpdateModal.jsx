@@ -105,14 +105,6 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
     }
   };
 
-  // Only require acceptance of what's actually needed
-  const termsRequired = compliance.termsVersion?.requiresReacceptance || compliance.requiresTermsUpdate;
-  const privacyRequired = compliance.privacyVersion?.requiresReacceptance || compliance.requiresPrivacyUpdate;
-  
-  const allRequiredAccepted = 
-    (!termsRequired || accepted.terms) && 
-    (!privacyRequired || accepted.privacy);
-
   return (
     <div className="compliance-modal-overlay">
       <div className="compliance-modal">

@@ -1,19 +1,3 @@
-// Map sign names to their numbers (1-12)
-const SIGN_NUMBER_MAP = {
-  aries: 1,
-  taurus: 2,
-  gemini: 3,
-  cancer: 4,
-  leo: 5,
-  virgo: 6,
-  libra: 7,
-  scorpio: 8,
-  sagittarius: 9,
-  capricorn: 10,
-  aquarius: 11,
-  pisces: 12
-};
-
 /**
  * Calculate zodiac sign from birth date
  * @param {string} dateString - Birth date in YYYY-MM-DD format

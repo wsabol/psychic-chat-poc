@@ -18,7 +18,7 @@ export function useAppState() {
   useTokenRefresh();
   
   // Database-driven session check (replaces localStorage)
-  const { sessionCheckData, isChecking: sessionCheckLoading } = useSessionCheck();
+  const { sessionCheckData } = useSessionCheck();
   
   // Navigation state
   const [skipPaymentCheck, setSkipPaymentCheck] = useState(true);
