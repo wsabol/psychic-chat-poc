@@ -40,7 +40,6 @@ export async function getOrCreateStripeCustomer(userId, userEmail) {
       } catch (err) {
         // Customer is stale (deleted from Stripe) - clear it and create new one
         if (err.code === 'resource_missing' || err.message?.includes('No such customer')) {
-          console.log(`[STRIPE] Fast path: Clearing stale customer ID ${existingCustomerId.substring(0, 12)}... for user ${userId.substring(0, 8)}...`);
           await db.query(
             `UPDATE user_personal_info SET stripe_customer_id_encrypted = NULL WHERE user_id = $1`,
             [userId]
@@ -139,7 +138,6 @@ export async function getOrCreateStripeCustomer(userId, userEmail) {
           // Customer doesn't exist in Stripe anymore (deleted or invalid)
           // This is an expected scenario - clear stale ID and create new customer
           if (err.code === 'resource_missing' || err.message?.includes('No such customer')) {
-            console.log(`[STRIPE] Clearing stale customer ID for user ${userId.substring(0, 8)}...`);
             await db.query(`UPDATE user_personal_info SET stripe_customer_id_encrypted = NULL WHERE user_id = $1`, [userId]);
           } else {
             // Unexpected error - log it

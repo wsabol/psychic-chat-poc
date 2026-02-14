@@ -35,7 +35,6 @@ export function useFreeTrial(isTemporaryAccount, tempUserId) {
         if (checkResponse.ok) {
           const checkData = await checkResponse.json();
           if (checkData.exists) {
-            console.log('Session already exists, skipping creation');
             sessionCreatedRef.current = true;
             setSessionId(checkData.sessionId);
             setCurrentStep(checkData.currentStep || 'chat');
@@ -67,7 +66,6 @@ export function useFreeTrial(isTemporaryAccount, tempUserId) {
           // Handle rate limiting or already completed
           if (response.status === 429) {
             // Rate limited - might mean session already exists
-            console.log('Rate limited on session creation, session may already exist');
             sessionCreatedRef.current = true; // Prevent further attempts
             return;
           }

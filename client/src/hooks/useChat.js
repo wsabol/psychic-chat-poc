@@ -18,7 +18,6 @@ export function useChat(userId, token, isAuthenticated, authUserId, isTemporaryA
             
             // For temp accounts, wait for session to be ready
             if (isTemporaryAccount && !sessionReady) {
-                console.log('Waiting for session to be created before loading messages');
                 return [];
             }
             
@@ -40,7 +39,6 @@ export function useChat(userId, token, isAuthenticated, authUserId, isTemporaryA
             if (!res.ok) {
                 // For temp accounts with 400 error, session might not exist yet
                 if (isTemporaryAccount && res.status === 400) {
-                    console.log('Session not ready yet, will retry');
                     return [];
                 }
                 throw new Error(`HTTP error! Status: ${res.status}`);
@@ -65,7 +63,6 @@ export function useChat(userId, token, isAuthenticated, authUserId, isTemporaryA
             
             // For temp accounts, wait for session to be ready
             if (isTemporaryAccount && !sessionReady) {
-                console.log('Waiting for session to be created before requesting opening');
                 return;
             }
             
@@ -91,7 +88,6 @@ export function useChat(userId, token, isAuthenticated, authUserId, isTemporaryA
                 }
                 // For temp accounts with 400 error, session might not exist yet
                 if (isTemporaryAccount && res.status === 400) {
-                    console.log('Session not ready for opening yet');
                     return;
                 }
                 throw new Error(`HTTP error! Status: ${res.status}`);

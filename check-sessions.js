@@ -9,7 +9,6 @@ async function checkSessions() {
       ORDER BY started_at DESC 
       LIMIT 5
     `);
-    console.log('Recent sessions:', JSON.stringify(result.rows, null, 2));
     
     // Check if localhost IP has completed session
     const localhostCheck = await db.query(`
@@ -17,7 +16,6 @@ async function checkSessions() {
       FROM free_trial_sessions 
       WHERE is_completed = true
     `);
-    console.log('\nCompleted sessions count:', localhostCheck.rows[0].count);
     
   } catch (err) {
     console.error('Error:', err.message);

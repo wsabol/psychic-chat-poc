@@ -35,6 +35,10 @@
                 {
                     "name": "REDIS_URL",
                     "value": "redis://psychic-chat-redis-0rflqd.serverless.use1.cache.amazonaws.com:6379"
+                },
+                {
+                    "name": "ADMIN_EMAILS",
+                    "value": "starshiptechnology1@gmail.com,wsabol39@gmail.com"
                 }
             ],
             "environmentFiles": [],

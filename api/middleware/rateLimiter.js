@@ -57,22 +57,17 @@ export const freeTrialSessionLimiter = rateLimit({
     
     // Check multiple IP sources
     const ip = req.ip || 
-               req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
-               req.connection?.remoteAddress || 
-               req.socket?.remoteAddress || '';
-    
-    // Log for debugging
-    console.log('[RATE LIMITER] Session creation - IP detected:', ip, 'NODE_ENV:', process.env.NODE_ENV);
+      req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+      req.connection?.remoteAddress || 
+      req.socket?.remoteAddress || '';
+
     
     // Check if localhost
     const isLocalhost = ip.includes('127.0.0.1') || 
-                       ip.includes('::1') || 
-                       ip.includes('localhost') ||
-                       ip === '';
+      ip.includes('::1') || 
+      ip.includes('localhost') ||
+      ip === '';
     
-    if (isLocalhost) {
-      console.log('[RATE LIMITER] Skipping rate limit for localhost');
-    }
     
     return isLocalhost;
   },
