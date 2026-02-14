@@ -27,10 +27,23 @@ export default function OnboardingModal({
 }) {
   const { t } = useTranslation();
   const [fadeIn, setFadeIn] = useState(false);
+  const [hasAutoMinimized, setHasAutoMinimized] = useState(false);
 
   useEffect(() => {
     setFadeIn(true);
   }, []);
+
+  // Auto-minimize after 3 seconds for better mobile UX
+  useEffect(() => {
+    if (isMinimized || hasAutoMinimized) return;
+    
+    const timer = setTimeout(() => {
+      onToggleMinimize(true);
+      setHasAutoMinimized(true);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [isMinimized, hasAutoMinimized, onToggleMinimize]);
 
   const steps = [
     {
