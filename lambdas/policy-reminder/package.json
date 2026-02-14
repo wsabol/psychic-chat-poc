@@ -1,0 +1,11 @@
+{
+  "name": "policy-reminder",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Send policy change reminder notifications",
+  "main": "index.js",
+  "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.525.0",
+    "pg": "^8.11.3"
+  }
+}

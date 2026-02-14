@@ -1,0 +1,12 @@
+{
+  "name": "price-migration",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Migrate subscriptions to new prices",
+  "main": "index.js",
+  "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.525.0",
+    "pg": "^8.11.3",
+    "stripe": "^14.17.0"
+  }
+}

@@ -132,8 +132,8 @@ Resources:
     Properties:
       FunctionName: !Sub '${Environment}-temp-account-cleanup'
       Description: Deletes temporary accounts older than 8 hours
-      CodeUri: ../lambdas/temp-account-cleanup/
-      Handler: index.handler
+      CodeUri: ../lambdas/
+      Handler: temp-account-cleanup/index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Events:
         ScheduledEvent:
@@ -149,8 +149,8 @@ Resources:
     Properties:
       FunctionName: !Sub '${Environment}-account-cleanup'
       Description: Handles account deletion lifecycle (re-engagement emails, 7-year deletion)
-      CodeUri: ../lambdas/account-cleanup/
-      Handler: index.handler
+      CodeUri: ../lambdas/
+      Handler: account-cleanup/index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Events:
         ScheduledEvent:
@@ -166,8 +166,8 @@ Resources:
     Properties:
       FunctionName: !Sub '${Environment}-subscription-check'
       Description: Verifies active subscriptions against Stripe
-      CodeUri: ../lambdas/subscription-check/
-      Handler: index.handler
+      CodeUri: ../lambdas/
+      Handler: subscription-check/index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Events:
         ScheduledEvent:
@@ -183,8 +183,8 @@ Resources:
     Properties:
       FunctionName: !Sub '${Environment}-policy-reminder'
       Description: Sends policy change reminder notifications
-      CodeUri: ../lambdas/policy-reminder/
-      Handler: index.handler
+      CodeUri: ../lambdas/
+      Handler: policy-reminder/index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Events:
         ScheduledEvent:
@@ -200,8 +200,8 @@ Resources:
     Properties:
       FunctionName: !Sub '${Environment}-grace-period-enforcement'
       Description: Logs out users whose grace period has expired
-      CodeUri: ../lambdas/grace-period-enforcement/
-      Handler: index.handler
+      CodeUri: ../lambdas/
+      Handler: grace-period-enforcement/index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Events:
         ScheduledEvent:
@@ -217,8 +217,8 @@ Resources:
     Properties:
       FunctionName: !Sub '${Environment}-price-migration'
       Description: Migrates subscriptions to new prices after notice period
-      CodeUri: ../lambdas/price-migration/
-      Handler: index.handler
+      CodeUri: ../lambdas/
+      Handler: price-migration/index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Events:
         ScheduledEvent:

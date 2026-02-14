@@ -1,0 +1,12 @@
+{
+  "name": "subscription-check",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Verify active subscriptions against Stripe",
+  "main": "index.js",
+  "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.525.0",
+    "pg": "^8.11.3",
+    "stripe": "^14.17.0"
+  }
+}

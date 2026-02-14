@@ -3,7 +3,7 @@ version = 0.1
 [default]
 [default.deploy]
 [default.deploy.parameters]
-# s3_bucket auto-managed by SAM
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-4qhnkumsyezv"
 stack_name = "psychic-chat-lambdas-production"
 s3_prefix = "psychic-chat-lambdas"
 region = "us-east-1"

@@ -21,6 +21,7 @@ DECLARE
         'verification_codes',
         'sms_verification_codes',
         'sms_verification_attempts',
+        'sms_opt_outs',
         'user_2fa_codes',
         'free_trial_sessions',
         'free_trial_whitelist',
