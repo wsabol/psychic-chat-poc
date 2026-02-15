@@ -12,7 +12,10 @@
 const AVAILABLE_LEGAL_LANGUAGES = {
   'en-US': 'en-US',
   'es-ES': 'es',
-  'fr-FR': 'fr'
+  'fr-FR': 'fr',
+  'pt-BR': 'pt-BR',
+  'de-DE': 'de-DE',
+  'it-IT': 'it-IT'
 };
 
 /**
@@ -35,7 +38,10 @@ export function getLegalDocumentPath(docType, language) {
   
   // Construct the file path
   if (normalizedDocType === 'privacy') {
-    return `/privacy-${langSuffix}.pdf`;
+    // TEMPORARY FIX: Handle typo in privacy-pr-BR.pdf (should be privacy-pt-BR.pdf)
+    // TODO: Rename privacy-pr-BR.pdf to privacy-pt-BR.pdf in client/public/
+    const privacyLangSuffix = langSuffix === 'pt-BR' ? 'pr-BR' : langSuffix;
+    return `/privacy-${privacyLangSuffix}.pdf`;
   } else {
     return `/Terms_of_Service-${langSuffix}.pdf`;
   }
