@@ -29,11 +29,8 @@ export default function CardPaymentForm({
 
   useEffect(() => {
     if (!stripe || !elements) {
-      console.log('[CARD-FORM] Waiting for Stripe/Elements:', { stripe: !!stripe, elements: !!elements });
       return;
     }
-
-    console.log('[CARD-FORM] Getting card element from Elements...');
     
     // Get the card element that was already created by Elements provider
     const cardElement = elements.getElement(CardElement);
@@ -43,8 +40,6 @@ export default function CardPaymentForm({
       setElementError(t('paymentMethods.containerNotFound'));
       return;
     }
-
-    console.log('[CARD-FORM] Card element found, setting up...');
     
     // Store reference for parent
     cardElementRef.current = cardElement;
@@ -52,24 +47,18 @@ export default function CardPaymentForm({
     
     // Handle card errors
     const handleChange = (event) => {
-      console.log('[CARD-FORM] Card element change:', event);
       if (event.error) {
         setElementError(event.error.message);
       } else {
         setElementError(null);
       }
-      if (event.complete) {
-        console.log('[CARD-FORM] Card is complete!');
-      }
     };
 
     const handleReady = () => {
-      console.log('[CARD-FORM] ✅ Card element is READY for input!');
       setReady(true);
     };
 
     const handleFocus = () => {
-      console.log('[CARD-FORM] Card element focused');
     };
 
     cardElement.on('change', handleChange);

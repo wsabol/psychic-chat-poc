@@ -68,7 +68,6 @@ router.post('/register-firebase-user', async (req, res) => {
     // Check if already exists
     const exists = await db.query('SELECT user_id FROM user_personal_info WHERE user_id = $1', [userId]);
     if (exists.rows.length > 0) {
-      console.log(`[REGISTER-FIREBASE-USER] User ${userId} already exists, returning success`);
       return successResponse(res, { success: true, alreadyExists: true });
     }
 
@@ -94,7 +93,6 @@ router.post('/register-firebase-user', async (req, res) => {
   } catch (err) {
     // Handle duplicate key errors gracefully (this is expected behavior)
     if (err.message?.includes('duplicate key') || err.code === '23505') {
-      console.log(`[REGISTER-FIREBASE-USER] User ${req.body?.userId} already exists (race condition), returning success`);
       return successResponse(res, { success: true, alreadyExists: true });
     }
     

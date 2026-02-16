@@ -84,7 +84,6 @@ export async function createUserDatabaseRecords(userId, email, firstName = '', l
   } catch (err) {
     // Handle duplicate key errors gracefully - this is expected when user already exists
     if (err.code === '23505') { // PostgreSQL unique violation error code
-      console.log(`[USER-CREATION] User ${userId} already exists, skipping creation`);
       return { success: true, alreadyExists: true };
     }
     throw new Error(`Failed to create user records: ${err.message}`);
