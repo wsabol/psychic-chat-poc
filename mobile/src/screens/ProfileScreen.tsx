@@ -7,16 +7,21 @@ const ProfileScreen = () => {
   const navigation = useNavigation();
   const { user } = useAuth();
 
+  // Check if user has a temporary email
+  const isTempUser = user?.email?.startsWith('temp_');
+  const displayEmail = isTempUser ? '' : user?.email;
+  const emailPlaceholder = isTempUser ? 'Add your email address' : 'User';
+
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>
-              {user?.email?.charAt(0).toUpperCase() || 'U'}
+              {displayEmail?.charAt(0).toUpperCase() || 'U'}
             </Text>
           </View>
-          <Text style={styles.email}>{user?.email || 'User'}</Text>
+          <Text style={styles.email}>{displayEmail || emailPlaceholder}</Text>
         </View>
 
         <View style={styles.section}>
@@ -34,7 +39,9 @@ const ProfileScreen = () => {
           <Text style={styles.sectionTitle}>Account</Text>
           <View style={styles.card}>
             <Text style={styles.cardTitle}>📧 Email</Text>
-            <Text style={styles.cardValue}>{user?.email}</Text>
+            <Text style={isTempUser ? styles.cardPlaceholder : styles.cardValue}>
+              {displayEmail || 'Not set - Add your email'}
+            </Text>
           </View>
           <View style={styles.card}>
             <Text style={styles.cardTitle}>🔔 Notifications</Text>
@@ -120,6 +127,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#9d4edd',
     fontWeight: '500',
+  },
+  cardPlaceholder: {
+    fontSize: 14,
+    color: '#666',
+    fontStyle: 'italic',
   },
 });
 

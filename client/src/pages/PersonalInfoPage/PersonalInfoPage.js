@@ -91,6 +91,28 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
   });
 
   // ============================================================
+  // LIFECYCLE - SCROLL TO TOP ON MOUNT AND WHEN NAVIGATING DURING ONBOARDING
+  // ============================================================
+  useEffect(() => {
+    // Scroll to top when component mounts or when navigating during onboarding
+    // to ensure user sees header, logo, and legal statement
+    // The scrollable container is '.pages-container' in MainContainer, not window
+    const scrollToTop = () => {
+      const pagesContainer = document.querySelector('.pages-container');
+      if (pagesContainer) {
+        pagesContainer.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      // Fallback to window scroll (for standalone pages)
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    
+    // Use a small timeout to ensure DOM is ready after navigation animation
+    const timeoutId = setTimeout(scrollToTop, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, [onboarding?.onboardingStatus?.currentStep]); // Re-run when onboarding step changes (indicates navigation)
+
+  // ============================================================
   // LIFECYCLE - LOAD DATA
   // ============================================================
   useEffect(() => {
@@ -100,9 +122,15 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
   const loadPersonalInfo = async () => {
     const result = await apiFetchPersonalInfo();
     if (result.success) {
-      setFormData(result.data);
+      const data = result.data;
+      
+      // Leave email blank for temp accounts - don't pre-fill with temp email
+      if (isTemporaryAccount && data.email && data.email.startsWith('temp_')) {
+        data.email = '';
+      }
+      
+      setFormData(data);
     }
-    // Note: Leave email blank for temp accounts - don't pre-fill with temp email
   };
 
   // ============================================================
