@@ -32,7 +32,8 @@ Write-Info ""
 try {
     $identity = aws sts get-caller-identity --output json | ConvertFrom-Json
     Write-Success "✓ AWS credentials valid (Account: $($identity.Account))"
-} catch {
+} 
+catch {
     Write-Error "✗ AWS credentials not configured"
     exit 1
 }

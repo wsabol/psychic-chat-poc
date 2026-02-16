@@ -108,17 +108,29 @@ IMPORTANT:
     // Parse the response to extract full and brief sections
     const sections = fullResponseText.split('===BRIEF VERSION===');
     
-    if (sections.length === 2) {
-      const fullResponse = sections[0].trim();
-      const briefResponse = sections[1].trim();
+    if (sections.length >= 2) {
+      // Get the full response (before the first marker)
+      let fullResponse = sections[0].trim();
+      
+      // Get the brief response (after the first marker, before any additional markers)
+      // This handles cases where AI mistakenly includes the marker multiple times
+      let briefResponse = sections[1].trim();
+      
+      // Remove any remaining markers from both responses
+      fullResponse = fullResponse.replace(/===BRIEF VERSION===/g, '').trim();
+      briefResponse = briefResponse.replace(/===BRIEF VERSION===/g, '').trim();
+      
+      // Also remove any emojis or text that might appear at the very end after the brief
+      // (like the 🔊 that appears in the user's example)
+      briefResponse = briefResponse.split('\n')[0].trim(); // Take only first line/paragraph if multiple exist
       
       // Validate that brief is actually different and shorter
-      if (fullResponse === briefResponse) {
-        console.warn('[ORACLE] WARNING: Brief and full responses are identical - regenerating brief');
+      if (fullResponse === briefResponse || briefResponse.length < 50) {
+        console.warn('[ORACLE] WARNING: Brief response is invalid - regenerating brief');
         // Generate a quick brief summary using simple truncation as fallback
         const words = fullResponse.split(/\s+/);
         const briefWordCount = Math.floor(words.length * 0.2);
-        const quickBrief = words.slice(0, briefWordCount).join(' ') + '...';
+        const quickBrief = words.slice(0, Math.max(briefWordCount, 50)).join(' ') + '...';
         return { full: fullResponse, brief: quickBrief };
       }
       
@@ -126,10 +138,11 @@ IMPORTANT:
     } else {
       // Fallback if parsing fails - generate brief from full
       console.warn('[ORACLE] Failed to parse brief section, generating brief from full response');
-      const words = fullResponseText.split(/\s+/);
+      let cleanedResponse = fullResponseText.replace(/===BRIEF VERSION===/g, '').trim();
+      const words = cleanedResponse.split(/\s+/);
       const briefWordCount = Math.floor(words.length * 0.2);
       const briefResponse = words.slice(0, Math.max(briefWordCount, 50)).join(' ') + '...';
-      return { full: fullResponseText, brief: briefResponse };
+      return { full: cleanedResponse, brief: briefResponse };
     }
   } catch (err) {
     console.error('[ORACLE] Error:', err.message);

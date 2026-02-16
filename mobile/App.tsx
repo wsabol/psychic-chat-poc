@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { StatusBar, ActivityIndicator, View } from 'react-native';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { PaymentProvider } from './src/context/PaymentContext';
+import { OnboardingProvider } from './src/context/OnboardingContext';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { initializeFirebaseServices, requestNotificationPermission, messaging } from './src/config/firebase';
 
@@ -42,9 +43,11 @@ function AppContent(): React.JSX.Element {
 function App(): React.JSX.Element {
   return (
     <AuthProvider>
-      <PaymentProvider>
-        <AppContent />
-      </PaymentProvider>
+      <OnboardingProvider>
+        <PaymentProvider>
+          <AppContent />
+        </PaymentProvider>
+      </OnboardingProvider>
     </AuthProvider>
   );
 }
