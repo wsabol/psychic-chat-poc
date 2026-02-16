@@ -28,7 +28,6 @@ class ApplePaymentService {
 
     try {
       await initConnection();
-      console.log('Apple IAP Connection established');
       
       // Set up purchase listeners
       this.setupPurchaseListeners();
@@ -41,7 +40,6 @@ class ApplePaymentService {
   private setupPurchaseListeners(): void {
     this.purchaseUpdateSubscription = purchaseUpdatedListener(
       async (purchase: Purchase) => {
-        console.log('Purchase updated:', purchase);
         
         try {
           // Validate receipt with backend
@@ -49,8 +47,6 @@ class ApplePaymentService {
           
           // Acknowledge the purchase
           await finishTransaction({ purchase, isConsumable: false });
-          
-          console.log('Purchase successful and validated');
         } catch (error) {
           console.error('Error validating purchase:', error);
         }
@@ -122,7 +118,6 @@ class ApplePaymentService {
         this.purchaseErrorSubscription.remove();
       }
       await endConnection();
-      console.log('Apple IAP Connection closed');
     } catch (error) {
       console.error('Error disconnecting Apple IAP:', error);
     }

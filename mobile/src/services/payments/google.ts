@@ -28,7 +28,6 @@ class GooglePaymentService {
 
     try {
       await initConnection();
-      console.log('Google Play Billing Connection established');
       
       // Set up purchase listeners
       this.setupPurchaseListeners();
@@ -41,7 +40,6 @@ class GooglePaymentService {
   private setupPurchaseListeners(): void {
     this.purchaseUpdateSubscription = purchaseUpdatedListener(
       async (purchase: Purchase) => {
-        console.log('Purchase updated:', purchase);
         
         try {
           // Validate purchase with backend
@@ -49,8 +47,6 @@ class GooglePaymentService {
           
           // Finish transaction (includes acknowledgment for Android)
           await finishTransaction({ purchase, isConsumable: false });
-          
-          console.log('Purchase successful and validated');
         } catch (error) {
           console.error('Error validating purchase:', error);
         }
@@ -120,7 +116,6 @@ class GooglePaymentService {
         this.purchaseErrorSubscription.remove();
       }
       await endConnection();
-      console.log('Google Play Billing Connection closed');
     } catch (error) {
       console.error('Error disconnecting Google Play Billing:', error);
     }

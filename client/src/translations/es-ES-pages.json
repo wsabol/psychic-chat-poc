@@ -22,7 +22,8 @@
     "toggleMore": "📖 Cuéntame más",
     "toggleLess": "📋 Mostrar menos",
     "noMessages": "Sin mensajes aún. Preguntale al oráculo una pregunta.",
-    "privacyNotice": "Al enviar este formulario web, acepta nuestro procesamiento de sus datos personales según lo establecido en la Política de Privacidad"
+    "privacyNotice": "Al enviar este formulario web, acepta nuestro procesamiento de sus datos personales según lo establecido en la Política de Privacidad",
+    "continueHint": "¿Listo para continuar?"
   },
   "thankyou": {
     "title": "¡Gracias!",

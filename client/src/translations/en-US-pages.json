@@ -22,7 +22,8 @@
     "toggleMore": "📖 Tell me more",
     "toggleLess": "📋 Show less",
     "noMessages": "No messages yet. Ask the oracle a question.",
-    "privacyNotice": "By submitting this web form you agree to our processing of your personal data as provided in the Privacy Policy"
+    "privacyNotice": "By submitting this web form you agree to our processing of your personal data as provided in the Privacy Policy",
+    "continueHint": "Ready to continue?"
   },
   "thankyou": {
     "title": "Thank You!",

@@ -18,8 +18,6 @@ export const initializeFirebaseServices = async () => {
     
     // Log app open event
     await analytics().logAppOpen();
-    
-    console.log('Firebase services initialized successfully');
   } catch (error) {
     console.error('Error initializing Firebase services:', error);
   }
@@ -34,10 +32,8 @@ export const requestNotificationPermission = async () => {
       authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
     if (enabled) {
-      console.log('Notification authorization status:', authStatus);
       // Get FCM token
       const token = await messaging().getToken();
-      console.log('FCM Token:', token);
       return token;
     }
     return null;

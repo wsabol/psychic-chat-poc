@@ -3,7 +3,6 @@ import { useTranslation } from '../context/TranslationContext';
 import { useChat } from '../hooks/useChat';
 import ChatMessageList from '../components/ChatMessageList';
 import ChatInputForm from '../components/ChatInputForm';
-import CircleTimer from '../components/CircleTimer';
 import LogoWithCopyright from '../components/LogoWithCopyright';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
 import '../styles/responsive.css';
@@ -12,9 +11,9 @@ import './ChatPage.css';
 /**
  * ChatPage - Main chat page for free trial onboarding
  * - Shows oracle greeting for temp accounts
- * - 90 second countdown timer in circular display
- * - Grays out input after sending message
- * - Shows modal with birth info or exit options after timer
+ * - Continue button appears after oracle responds (replaces 90-second timer)
+ * - User can take time to read and consider the oracle's response
+ * - Shows modal with birth info or exit options when Continue is clicked
  */
 export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogout, freeTrialState }) {
   const { t } = useTranslation();
@@ -57,10 +56,8 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
   
   // Onboarding flow state
   const [firstMessageSent, setFirstMessageSent] = useState(false);
-  const [timerActive, setTimerActive] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState(90);
+  const [showContinueButton, setShowContinueButton] = useState(false);
   const [showAstrologyPrompt, setShowAstrologyPrompt] = useState(false);
-  const timerRef = useRef(null);
   
   // Refs for message end and message count tracking
   const messagesEndRef = useRef(null);
@@ -71,30 +68,24 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
     msg.role === 'user' || msg.role === 'assistant'
   );
 
-    // Check for first user message sent and start 90 second timer (temp accounts only)
+  // Check for first user message sent and show Continue button after oracle responds (temp accounts only)
   useEffect(() => {
     if (isTemporaryAccount && !firstMessageSent) {
       const userMessages = displayMessages.filter(msg => msg.role === 'user');
       if (userMessages.length > 0) {
         setFirstMessageSent(true);
-        setTimerActive(true);
-        setTimeRemaining(90);
       }
     }
-  }, [isTemporaryAccount, firstMessageSent, displayMessages]);
-
-  // 90 second timer countdown
-  useEffect(() => {
-    if (timerActive && timeRemaining > 0) {
-      timerRef.current = setTimeout(() => {
-        setTimeRemaining(timeRemaining - 1);
-      }, 1000);
-      return () => clearTimeout(timerRef.current);
-    } else if (timerActive && timeRemaining === 0) {
-      setTimerActive(false);
-      setShowAstrologyPrompt(true);
+    
+    // Show Continue button after oracle has responded to the first message
+    if (isTemporaryAccount && firstMessageSent && !showContinueButton) {
+      const assistantMessages = displayMessages.filter(msg => msg.role === 'assistant');
+      // At least 2 assistant messages means: 1) opening greeting, 2) response to user's first question
+      if (assistantMessages.length >= 2) {
+        setShowContinueButton(true);
+      }
     }
-  }, [timerActive, timeRemaining]);
+  }, [isTemporaryAccount, firstMessageSent, showContinueButton, displayMessages]);
 
   // Auto-scroll to bottom ONLY when NEW messages arrive (not on every render)
   useEffect(() => {
@@ -139,6 +130,12 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
     if (onLogout) {
       onLogout();
     }
+  };
+
+  // Handle Continue button click - proceed to astrology prompt
+  const handleContinue = () => {
+    setShowContinueButton(false);
+    setShowAstrologyPrompt(true);
   };
 
   const inputDisabled = isTemporaryAccount && firstMessageSent && !showAstrologyPrompt;
@@ -238,16 +235,54 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
           isTemporaryAccount={isTemporaryAccount}
         />
 
-        {/* Circular timer display - absolutely positioned overlay, zero layout impact */}
-        {isTemporaryAccount && timerActive && (
+        {/* Continue button - appears after oracle responds to first message */}
+        {isTemporaryAccount && showContinueButton && (
           <div style={{
             position: 'fixed',
             bottom: '100px',
             right: '2rem',
             zIndex: 50,
-            pointerEvents: 'none'
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '0.5rem'
           }}>
-            <CircleTimer timeRemaining={timeRemaining} totalTime={90} />
+            <button
+              onClick={handleContinue}
+              style={{
+                padding: '1rem 2rem',
+                borderRadius: '8px',
+                border: 'none',
+                backgroundColor: '#7c63d8',
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                fontSize: '1.1rem',
+                boxShadow: '0 4px 12px rgba(124, 99, 216, 0.4)',
+                transition: 'all 0.2s ease',
+                minWidth: '150px'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = '#6952c2';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 16px rgba(124, 99, 216, 0.5)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = '#7c63d8';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(124, 99, 216, 0.4)';
+              }}
+            >
+              {t('common.continue') || 'Continue'}
+            </button>
+            <div style={{
+              fontSize: '0.85rem',
+              color: '#999',
+              textAlign: 'center',
+              maxWidth: '200px'
+            }}>
+              {t('chat.continueHint') || 'Ready to continue?'}
+            </div>
           </div>
         )}
       </div>

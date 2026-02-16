@@ -34,6 +34,7 @@ local.properties
 *.keystore
 !debug.keystore
 .kotlin/
+.expo/
 
 # node.js
 #
@@ -48,6 +49,7 @@ yarn-error.log
 .env.development
 .env.production
 .env.test
+.env.staging
 
 # Firebase Configuration Files (keep .example files)
 google-services.json
@@ -70,6 +72,7 @@ GoogleService-Info.plist
 
 # Ruby / CocoaPods
 **/Pods/
+ios/Pods/
 /vendor/bundle/
 
 # Temporary files created by Metro to check the health of the file watcher

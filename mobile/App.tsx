@@ -17,7 +17,6 @@ function AppContent(): React.JSX.Element {
 
     // Set up foreground notification handler
     const unsubscribe = messaging().onMessage(async (remoteMessage: any) => {
-      console.log('Foreground notification received:', remoteMessage);
       // Handle foreground notifications here
     });
 

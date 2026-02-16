@@ -12,7 +12,7 @@ export async function createSetupIntent(customerId) {
       payment_method_types: ['card'],
     });
     return intent;
-    } catch (error) {
+  } catch (error) {
     logErrorFromCatch(error, 'stripe', 'create setup intent');
     throw error;
   }
