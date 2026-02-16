@@ -96,6 +96,53 @@ export const handler = async (event) => {
       }
     }
     
+    // ALSO cleanup orphaned Firebase accounts (accounts not in database)
+    // This handles temp accounts that exist only in Firebase
+    let orphanedDeleted = 0;
+    let orphanedErrors = 0;
+    
+    try {
+      
+      // List all Firebase users with pagination
+      let pageToken;
+      let hasMore = true;
+      let totalScanned = 0;
+
+      while (hasMore) {
+        const listUsersResult = pageToken 
+          ? await auth.listUsers(pageToken, 1000)
+          : await auth.listUsers(null, 1000);
+        totalScanned += listUsersResult.users.length;
+
+        for (const user of listUsersResult.users) {
+          if (user.email && user.email.startsWith('temp_') && user.email.endsWith('@psychic.local')) {
+            const createdTime = new Date(user.metadata.creationTime);
+            
+            // Delete if older than 8 hours (regardless of database presence)
+            if (createdTime < eightHoursAgo) {
+              try {
+                await auth.deleteUser(user.uid);
+                orphanedDeleted++;
+              } catch (err) {
+                if (err.code !== 'auth/user-not-found') {
+                  orphanedErrors++;
+                  console.error(`[TempAccountCleanup] Failed to delete orphaned account ${user.uid}:`, err.message);
+                }
+              }
+            }
+          }
+        }
+
+        // Get next page token
+        pageToken = listUsersResult.pageToken;
+        hasMore = !!pageToken;
+      }
+      
+    } catch (orphanErr) {
+      console.error('[TempAccountCleanup] Firebase orphan scan failed:', orphanErr.message);
+      logger.error(orphanErr, 'Firebase orphan scan failed');
+    }
+    
     // Calculate duration
     const duration = Date.now() - startTime;
     
@@ -106,10 +153,11 @@ export const handler = async (event) => {
         success: true,
         database_deleted: dbDeletedCount,
         firebase_deleted: firebaseDeletedCount,
-        firebase_errors: firebaseErrorCount,
-        total_deleted: dbDeletedCount,
+        firebase_orphaned_deleted: orphanedDeleted,
+        firebase_errors: firebaseErrorCount + orphanedErrors,
+        total_deleted: dbDeletedCount + orphanedDeleted,
         duration_ms: duration,
-        note: 'Temp accounts older than 8 hours cleaned up successfully'
+        note: 'Temp accounts older than 8 hours cleaned up successfully (database + Firebase orphans)'
       })
     };
     

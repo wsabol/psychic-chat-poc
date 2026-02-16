@@ -67,26 +67,44 @@ router.post('/register-firebase-user', async (req, res) => {
 
     // Check if already exists
     const exists = await db.query('SELECT user_id FROM user_personal_info WHERE user_id = $1', [userId]);
-    if (exists.rows.length > 0) return successResponse(res, { success: true });
+    if (exists.rows.length > 0) {
+      console.log(`[REGISTER-FIREBASE-USER] User ${userId} already exists, returning success`);
+      return successResponse(res, { success: true, alreadyExists: true });
+    }
 
-    // Create records
-    await createUserDatabaseRecords(userId, email);
+    // Create records (with built-in duplicate protection)
+    const result = await createUserDatabaseRecords(userId, email);
 
-    // Log
-    await logAudit(db, {
-      userId,
-      action: 'USER_REGISTERED',
-      resourceType: 'authentication',
-      ipAddress: req.ip,
-      userAgent: req.get('user-agent'),
-      httpMethod: req.method,
-      endpoint: req.path,
-      status: 'SUCCESS',
-      details: { email }
-    });
+    // Log only if new user was created
+    if (!result.alreadyExists) {
+      await logAudit(db, {
+        userId,
+        action: 'USER_REGISTERED',
+        resourceType: 'authentication',
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        httpMethod: req.method,
+        endpoint: req.path,
+        status: 'SUCCESS',
+        details: { email }
+      });
+    }
 
     return successResponse(res, { success: true });
   } catch (err) {
+    // Handle duplicate key errors gracefully (this is expected behavior)
+    if (err.message?.includes('duplicate key') || err.code === '23505') {
+      console.log(`[REGISTER-FIREBASE-USER] User ${req.body?.userId} already exists (race condition), returning success`);
+      return successResponse(res, { success: true, alreadyExists: true });
+    }
+    
+    // Log unexpected errors
+    console.error('[REGISTER-FIREBASE-USER] Unexpected error:', {
+      userId: req.body?.userId,
+      error: err.message,
+      code: err.code,
+      stack: err.stack
+    });
     return serverError(res, 'Failed to register user');
   }
 });

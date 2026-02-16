@@ -59,6 +59,8 @@ const app = express();
 app.set('trust proxy', 1);
 
 // Security: Apply helmet middleware first (sets many secure headers automatically)
+const isDev = !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
+
 app.use(helmet({
     // Configure helmet options
     contentSecurityPolicy: {
@@ -80,16 +82,24 @@ app.use(helmet({
                 "https://api.stripe.com",       // Stripe API
                 "https://q.stripe.com",         // Stripe analytics
             ],
-            frameSrc: ["'none'"],  // Prevent embedding in iframes
+            // ✅ CRITICAL FIX: Allow Stripe iframes for payment elements
+            frameSrc: [
+                "'self'",
+                "https://js.stripe.com",        // Stripe Elements iframe
+                "https://hooks.stripe.com",     // Stripe webhooks
+            ],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: []
         }
     },
+    // ✅ CRITICAL FIX: Disable COOP in development to allow Stripe popups/iframes
+    // In production, use 'same-origin-allow-popups' for Stripe 3D Secure
+    crossOriginOpenerPolicy: isDev ? false : { policy: 'same-origin-allow-popups' },
     frameguard: { action: 'DENY' },  // X-Frame-Options: DENY
     noSniff: true,                   // X-Content-Type-Options: nosniff
     xssFilter: true,                 // X-XSS-Protection: 1; mode=block
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-    hsts: {
+    hsts: isDev ? false : {          // Disable HSTS in development
         maxAge: 31536000,            // 1 year
         includeSubDomains: true,
         preload: true
@@ -151,14 +161,6 @@ app.use((req, res, next) => {
   
   // Log IP info for debugging (only on first few requests)
   if (!global.ipLogged) {
-    console.log('[RATE-LIMIT-DEBUG] IP Detection:', {
-      rawIp,
-      socketIp,
-      connIp,
-      forwardedFor,
-      trustProxy: app.get('trust proxy'),
-      nodeEnv: process.env.NODE_ENV
-    });
     global.ipLogged = true;
   }
   

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
 import { useTranslation } from '../../../context/TranslationContext';
-import { useStripe } from '../hooks/useStripe';
 
 /**
  * CardPaymentForm - Uses Stripe Elements for secure card collection
@@ -16,7 +16,7 @@ export default function CardPaymentForm({
 }) {
   const { t } = useTranslation();
   const stripe = useStripe();
-  const elementsRef = useRef(null);
+  const elements = useElements();
   const [elementError, setElementError] = useState(null);
   const [ready, setReady] = useState(false);
 
@@ -28,70 +28,60 @@ export default function CardPaymentForm({
   }, [stripe, stripeRef]);
 
   useEffect(() => {
-    // Only initialize once
-    if (elementsRef.current || !stripe) return;
+    if (!stripe || !elements) {
+      console.log('[CARD-FORM] Waiting for Stripe/Elements:', { stripe: !!stripe, elements: !!elements });
+      return;
+    }
 
-    // Small delay to ensure DOM is ready
-    const timer = setTimeout(() => {
-      try {
-        const cardElementContainer = document.getElementById('card-element');
-        if (!cardElementContainer) {
-          setElementError(t('paymentMethods.containerNotFound'));
-          return;
-        }
+    console.log('[CARD-FORM] Getting card element from Elements...');
+    
+    // Get the card element that was already created by Elements provider
+    const cardElement = elements.getElement(CardElement);
+    
+    if (!cardElement) {
+      console.error('[CARD-FORM] Card element not found!');
+      setElementError(t('paymentMethods.containerNotFound'));
+      return;
+    }
 
-        // Create elements from the same Stripe instance
-        const elements = stripe.elements();
-        elementsRef.current = elements;
-
-        // Create card element
-        const cardElement = elements.create('card', {
-          style: {
-            base: {
-              fontSize: '14px',
-              color: '#424242',
-              fontFamily: 'Arial, sans-serif',
-            },
-            invalid: {
-              color: '#fa755a',
-            },
-          },
-        });
-
-        // Mount card element
-        cardElement.mount('#card-element');
-
-        // Store reference for parent
-        cardElementRef.current = cardElement;
+    console.log('[CARD-FORM] Card element found, setting up...');
+    
+    // Store reference for parent
+    cardElementRef.current = cardElement;
+    setReady(true);
+    
+    // Handle card errors
+    const handleChange = (event) => {
+      console.log('[CARD-FORM] Card element change:', event);
+      if (event.error) {
+        setElementError(event.error.message);
+      } else {
         setElementError(null);
-        setReady(true);
-
-        // Handle card errors
-        cardElement.addEventListener('change', (event) => {
-          if (event.error) {
-            setElementError(event.error.message);
-          } else {
-            setElementError(null);
-          }
-        });
-      } catch (err) {
-        setElementError(t('paymentMethods.failedToInitialize') + ': ' + err.message);
       }
-    }, 100);
-
-    return () => {
-      clearTimeout(timer);
-      if (cardElementRef.current) {
-        try {
-          cardElementRef.current.unmount();
-        } catch (e) {
-          // Ignore unmount errors
-        }
-        cardElementRef.current = null;
+      if (event.complete) {
+        console.log('[CARD-FORM] Card is complete!');
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stripe, cardElementRef, t]);
+
+    const handleReady = () => {
+      console.log('[CARD-FORM] ✅ Card element is READY for input!');
+      setReady(true);
+    };
+
+    const handleFocus = () => {
+      console.log('[CARD-FORM] Card element focused');
+    };
+
+    cardElement.on('change', handleChange);
+    cardElement.on('ready', handleReady);
+    cardElement.on('focus', handleFocus);
+
+    return () => {
+      cardElement.off('change', handleChange);
+      cardElement.off('ready', handleReady);
+      cardElement.off('focus', handleFocus);
+    };
+  }, [stripe, elements, cardElementRef, t]);
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
@@ -101,13 +91,19 @@ export default function CardPaymentForm({
       return;
     }
 
-    if (!ready || !cardElementRef.current) {
+    if (!stripe || !elements) {
+      setElementError(t('paymentMethods.stripeNotReady'));
+      return;
+    }
+
+    const cardElement = elements.getElement(CardElement);
+    if (!cardElement) {
       setElementError(t('paymentMethods.cardElementNotReady'));
       return;
     }
 
     // Call parent handler with the card element
-    onSubmit(cardElementRef.current);
+    onSubmit(cardElement);
   };
 
   return (
@@ -132,7 +128,26 @@ export default function CardPaymentForm({
       <div className="form-row">
         <div className="form-group full-width">
           <label>{t('paymentMethods.cardDetails')} *</label>
-          <div id="card-element" className="stripe-card-element"></div>
+          <div className="stripe-card-element">
+            <CardElement
+              options={{
+                style: {
+                  base: {
+                    fontSize: '14px',
+                    color: '#424242',
+                    fontFamily: 'Arial, sans-serif',
+                    '::placeholder': {
+                      color: '#aab7c4',
+                    },
+                  },
+                  invalid: {
+                    color: '#fa755a',
+                    iconColor: '#fa755a',
+                  },
+                },
+              }}
+            />
+          </div>
           {elementError && <div className="element-error">{elementError}</div>}
           {!ready && <div className="element-loading">{t('paymentMethods.loadingCardForm')}</div>}
           <small>{t('paymentMethods.testCardInfo')}</small>

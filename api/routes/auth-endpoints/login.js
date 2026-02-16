@@ -140,6 +140,13 @@ router.post('/log-login-success', async (req, res) => {
     // ✅ NEW: Check subscription health before allowing login
     let subscriptionStatus = null;
     
+    // ✅ ONBOARDING EXEMPTION: Check if user is still in onboarding
+    const onboardingCheck = await db.query(
+      'SELECT onboarding_completed FROM user_personal_info WHERE user_id = $1',
+      [userId]
+    );
+    const isOnboarding = onboardingCheck.rows.length > 0 && onboardingCheck.rows[0].onboarding_completed !== true;
+    
     // ✅ ADMIN EXEMPTION: Admins bypass subscription check at login
     if (isAdminEmail) {
       subscriptionStatus = {
@@ -149,8 +156,18 @@ router.post('/log-login-success', async (req, res) => {
         exempted: true,
         reason: 'admin'
       };
+    } else if (isOnboarding) {
+      // ✅ ONBOARDING USERS: Allow login without subscription check
+      // They need to login to complete onboarding and add payment
+      subscriptionStatus = {
+        healthy: true,
+        status: 'onboarding',
+        paymentValid: false,
+        exempted: true,
+        reason: 'onboarding'
+      };
     } else {
-      // Non-admin users: validate subscription
+      // Non-admin, non-onboarding users: validate subscription
       try {
         const health = await validateSubscriptionHealth(userId);
         subscriptionStatus = {

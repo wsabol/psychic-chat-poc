@@ -11,7 +11,7 @@ import { recordUserConsent } from './consentHelper.js';
  */
 export async function createUserDatabaseRecords(userId, email, firstName = '', lastName = '') {
   try {
-        // Check if user already exists
+    // Check if user already exists
     const existsCheck = await db.query(
       'SELECT user_id, is_admin FROM user_personal_info WHERE user_id = $1',
       [userId]
@@ -26,6 +26,7 @@ export async function createUserDatabaseRecords(userId, email, firstName = '', l
       const actualLastName = isTempUser ? '' : (lastName || '');
       
       // Create personal info for new user - mark as in onboarding
+      // Use ON CONFLICT DO NOTHING to handle race conditions
       await db.query(
         `INSERT INTO user_personal_info (
           user_id, email_encrypted, first_name_encrypted, last_name_encrypted,
@@ -35,7 +36,8 @@ export async function createUserDatabaseRecords(userId, email, firstName = '', l
           $1, pgp_sym_encrypt($2, $3), pgp_sym_encrypt($4, $5), pgp_sym_encrypt($6, $7),
           $8, $9, NOW(),
           NOW(), NOW()
-        )`,
+        )
+        ON CONFLICT (user_id) DO NOTHING`,
         [
           userId, 
           email, process.env.ENCRYPTION_KEY, 
@@ -57,7 +59,8 @@ export async function createUserDatabaseRecords(userId, email, firstName = '', l
     if (twoFAExists.rows.length === 0) {
       await db.query(
         `INSERT INTO user_2fa_settings (user_id_hash, enabled, method, created_at, updated_at)
-         VALUES ($1, true, 'email', NOW(), NOW())`,
+         VALUES ($1, true, 'email', NOW(), NOW())
+         ON CONFLICT (user_id_hash) DO NOTHING`,
         [userIdHash]
       );
     }
@@ -71,13 +74,19 @@ export async function createUserDatabaseRecords(userId, email, firstName = '', l
     if (astrologyExists.rows.length === 0) {
       await db.query(
         `INSERT INTO user_astrology (user_id_hash, created_at, updated_at)
-         VALUES ($1, NOW(), NOW())`,
+         VALUES ($1, NOW(), NOW())
+         ON CONFLICT (user_id_hash) DO NOTHING`,
         [userIdHash]
       );
     }
 
     return { success: true };
   } catch (err) {
+    // Handle duplicate key errors gracefully - this is expected when user already exists
+    if (err.code === '23505') { // PostgreSQL unique violation error code
+      console.log(`[USER-CREATION] User ${userId} already exists, skipping creation`);
+      return { success: true, alreadyExists: true };
+    }
     throw new Error(`Failed to create user records: ${err.message}`);
   }
 }

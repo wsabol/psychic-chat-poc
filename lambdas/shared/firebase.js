@@ -147,7 +147,10 @@ export async function deleteFirebaseUser(uid) {
 export async function listFirebaseUsers(pageToken = null, maxResults = 1000) {
   try {
     const auth = await getAuth();
-    const result = await auth.listUsers(maxResults, pageToken);
+    // Firebase Admin SDK requires pageToken to be undefined (not null) when not provided
+    const result = pageToken 
+      ? await auth.listUsers(maxResults, pageToken)
+      : await auth.listUsers(maxResults);
     return {
       users: result.users,
       pageToken: result.pageToken
