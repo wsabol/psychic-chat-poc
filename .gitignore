@@ -1,4 +1,3 @@
-
 # dependencies
 node_modules
 /.pnp
@@ -46,7 +45,10 @@ legal-requests/
 # AWS tunnel secrets
 psychic-chat-bastion-key.pem
 start-ssh-tunnel.sh
-t a s k - d e f - n e w . j s o n  
+task-def-new.json
 
 # Database secrets (never commit actual credentials)
 db-secret.json
+
+# Mobile app - separate git repository (ignore to prevent double commits)
+mobile/
