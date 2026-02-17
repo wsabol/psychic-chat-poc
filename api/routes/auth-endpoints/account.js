@@ -21,6 +21,10 @@ router.post('/register', async (req, res) => {
       return validationError(res, 'Email and password are required');
     }
     
+    // Check if admin email
+    const ADMIN_EMAILS = ['starshiptechnology1@gmail.com', 'wsabol39@gmail.com'];
+    const isAdminEmail = ADMIN_EMAILS.includes(email.toLowerCase());
+    
     // Create user in Firebase
     const userRecord = await auth.createUser({
       email,
@@ -28,8 +32,8 @@ router.post('/register', async (req, res) => {
       displayName: `${firstName || ''} ${lastName || ''}`.trim()
     });
     
-    // Create user profile in database
-    await createUserDatabaseRecords(userRecord.uid, email, firstName, lastName);
+    // Create user profile in database with admin flag
+    await createUserDatabaseRecords(userRecord.uid, email, firstName, lastName, isAdminEmail);
 
     // Log registration
     await logAudit(db, {
@@ -71,8 +75,12 @@ router.post('/register-firebase-user', async (req, res) => {
       return successResponse(res, { success: true, alreadyExists: true });
     }
 
-    // Create records (with built-in duplicate protection)
-    const result = await createUserDatabaseRecords(userId, email);
+    // Check if admin email
+    const ADMIN_EMAILS = ['starshiptechnology1@gmail.com', 'wsabol39@gmail.com'];
+    const isAdminEmail = ADMIN_EMAILS.includes(email.toLowerCase());
+
+    // Create records with admin flag (with built-in duplicate protection)
+    const result = await createUserDatabaseRecords(userId, email, '', '', isAdminEmail);
 
     // Log only if new user was created
     if (!result.alreadyExists) {
@@ -127,6 +135,10 @@ router.post('/register-and-migrate', async (req, res) => {
       return validationError(res, 'Email, password, and temp_user_id are required');
     }
 
+    // Check if admin email
+    const ADMIN_EMAILS = ['starshiptechnology1@gmail.com', 'wsabol39@gmail.com'];
+    const isAdminEmail = ADMIN_EMAILS.includes(email.toLowerCase());
+
     // Step 1: Create permanent Firebase user
     const userRecord = await auth.createUser({
       email,
@@ -136,8 +148,8 @@ router.post('/register-and-migrate', async (req, res) => {
     
     const newUserId = userRecord.uid;
 
-    // Step 2: Create database records
-    await createUserDatabaseRecords(newUserId, email, firstName, lastName);
+    // Step 2: Create database records with admin flag
+    await createUserDatabaseRecords(newUserId, email, firstName, lastName, isAdminEmail);
 
     try {
       // Step 3: Migrate onboarding data

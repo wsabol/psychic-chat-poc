@@ -7,9 +7,10 @@ import { recordUserConsent } from './consentHelper.js';
  * Used in registration and login flows
  * 
  * New users start with onboarding_step='create_account' and onboarding_completed=FALSE
+ * Admins start with onboarding_step='welcome' and onboarding_completed=TRUE
  * Established users have onboarding_completed=TRUE (set by migration)
  */
-export async function createUserDatabaseRecords(userId, email, firstName = '', lastName = '') {
+export async function createUserDatabaseRecords(userId, email, firstName = '', lastName = '', isAdmin = false) {
   try {
     // Check if user already exists
     const existsCheck = await db.query(
@@ -25,17 +26,22 @@ export async function createUserDatabaseRecords(userId, email, firstName = '', l
       const actualFirstName = isTempUser ? 'Seeker' : (firstName || '');
       const actualLastName = isTempUser ? '' : (lastName || '');
       
+      // Set onboarding values based on user type
+      // Admins skip onboarding, regular users go through it
+      const onboardingStep = isAdmin ? 'welcome' : 'create_account';
+      const onboardingCompleted = isAdmin ? true : false;
+      
       // Create personal info for new user - mark as in onboarding
       // Use ON CONFLICT DO NOTHING to handle race conditions
       await db.query(
         `INSERT INTO user_personal_info (
           user_id, email_encrypted, first_name_encrypted, last_name_encrypted,
-          onboarding_step, onboarding_completed, onboarding_started_at,
-          created_at, updated_at
+          is_admin, onboarding_step, onboarding_completed, onboarding_started_at,
+          onboarding_completed_at, created_at, updated_at
         ) VALUES (
           $1, pgp_sym_encrypt($2, $3), pgp_sym_encrypt($4, $5), pgp_sym_encrypt($6, $7),
-          $8, $9, NOW(),
-          NOW(), NOW()
+          $8, $9, $10, NOW(),
+          CASE WHEN $10 = true THEN NOW() ELSE NULL END, NOW(), NOW()
         )
         ON CONFLICT (user_id) DO NOTHING`,
         [
@@ -43,8 +49,9 @@ export async function createUserDatabaseRecords(userId, email, firstName = '', l
           email, process.env.ENCRYPTION_KEY, 
           actualFirstName, process.env.ENCRYPTION_KEY, 
           actualLastName, process.env.ENCRYPTION_KEY,
-          'create_account', // New users start at step 1
-          false  // Not yet completed onboarding
+          isAdmin, // Set admin flag
+          onboardingStep, // 'welcome' for admins, 'create_account' for regular users
+          onboardingCompleted  // true for admins, false for regular users
         ]
       );
     }

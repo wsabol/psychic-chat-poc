@@ -60,17 +60,23 @@ router.post('/log-login-success', async (req, res) => {
     const exists = await db.query('SELECT user_id FROM user_personal_info WHERE user_id = $1', [userId]);
     if (exists.rows.length === 0) {
       try {
-        await createUserDatabaseRecords(userId, email);
+        // Pass isAdmin flag to create records with proper onboarding bypass
+        await createUserDatabaseRecords(userId, email, '', '', isAdminEmail);
       } catch (createErr) {
         // User creation failed silently
       }
     }
 
-    // If admin email, ensure is_admin = TRUE in database
+    // If admin email, ensure is_admin = TRUE and skip onboarding
     if (isAdminEmail) {
       try {
         await db.query(
-          'UPDATE user_personal_info SET is_admin = TRUE WHERE user_id = $1',
+          `UPDATE user_personal_info 
+           SET is_admin = TRUE,
+               onboarding_step = 'welcome',
+               onboarding_completed = TRUE,
+               onboarding_completed_at = COALESCE(onboarding_completed_at, NOW())
+           WHERE user_id = $1`,
           [userId]
         );
       } catch (adminErr) {
