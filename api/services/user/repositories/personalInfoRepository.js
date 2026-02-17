@@ -13,17 +13,17 @@ import { db } from '../../../shared/db.js';
 export async function findPersonalInfoByUserId(userId) {
   const { rows } = await db.query(
     `SELECT 
-      pgp_sym_decrypt(first_name_encrypted, $1) as first_name,
-      pgp_sym_decrypt(last_name_encrypted, $1) as last_name,
+      pgp_sym_decrypt(first_name_encrypted, $1) as "firstName",
+      pgp_sym_decrypt(last_name_encrypted, $1) as "lastName",
       pgp_sym_decrypt(email_encrypted, $1) as email,
-      pgp_sym_decrypt(birth_date_encrypted, $1) as birth_date,
-      pgp_sym_decrypt(birth_time_encrypted, $1) as birth_time,
-      pgp_sym_decrypt(birth_country_encrypted, $1) as birth_country,
-      pgp_sym_decrypt(birth_province_encrypted, $1) as birth_province,
-      pgp_sym_decrypt(birth_city_encrypted, $1) as birth_city,
-      pgp_sym_decrypt(birth_timezone_encrypted, $1) as birth_timezone,
+      pgp_sym_decrypt(birth_date_encrypted, $1) as "birthDate",
+      pgp_sym_decrypt(birth_time_encrypted, $1) as "birthTime",
+      pgp_sym_decrypt(birth_country_encrypted, $1) as "birthCountry",
+      pgp_sym_decrypt(birth_province_encrypted, $1) as "birthState",
+      pgp_sym_decrypt(birth_city_encrypted, $1) as "birthCity",
+      pgp_sym_decrypt(birth_timezone_encrypted, $1) as "birthTimezone",
       pgp_sym_decrypt(sex_encrypted, $1) as sex,
-      pgp_sym_decrypt(familiar_name_encrypted, $1) as address_preference
+      pgp_sym_decrypt(familiar_name_encrypted, $1) as "addressPreference"
     FROM user_personal_info 
     WHERE user_id = $2`,
     [process.env.ENCRYPTION_KEY, userId]

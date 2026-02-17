@@ -222,6 +222,21 @@ router.get("/:userId", async (req, res) => {
             result.astrology_data.sun_sign = result.zodiac_sign;
         }
         
+        // Import zodiac data to enrich the response
+        const zodiacDataModule = await import('../client/src/data/zodiac/ZodiacSigns.en-US.js');
+        const zodiacData = zodiacDataModule.zodiacSigns;
+        
+        // Get the sun sign key (lowercase)
+        const sunSignKey = (result.astrology_data.sun_sign || result.zodiac_sign || '').toLowerCase();
+        
+        // Merge API data with full zodiac data
+        if (sunSignKey && zodiacData[sunSignKey]) {
+            result.astrology_data = {
+                ...result.astrology_data,
+                ...zodiacData[sunSignKey]
+            };
+        }
+        
         res.json(result);
     } catch (err) {
         return serverError(res, 'Failed to fetch astrology data');
