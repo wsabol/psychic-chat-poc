@@ -41,7 +41,7 @@ export function useAstrologyPolling() {
 
         while (attempts < maxAttempts) {
           try {
-            const response = await fetch(`${apiUrl}/user-astrology/${hashedUserId}`, { headers });
+            const response = await fetch(`${apiUrl}/astrology/${hashedUserId}`, { headers });
 
             if (response.ok) {
               const data = await response.json();

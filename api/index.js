@@ -264,10 +264,11 @@ app.use("/user/delete-account", authenticateToken, userDataRoutes);
 // validateUserHash ensures hashed user IDs in URLs match the authenticated user
 app.use("/chat", authenticateToken, validateUserHash, chatRoutes);
 app.use("/chat-direct", authenticateToken, chatDirectRoutes);
-app.use("/user-profile", authenticateToken, validateUserHash, userProfileRoutes);
+// user-profile: authenticateToken only (uses userId from token, not URL)
+app.use("/user-profile", authenticateToken, userProfileRoutes);
 app.use("/user", authenticateToken, validateUserHash, userDataRoutes);
-// Note: astrology routes apply validateUserHash at router level for proper param parsing
-app.use("/user-astrology", authenticateToken, astrologyRoutes);
+// Note: astrology routes use token-based auth (no validateUserHash)
+app.use("/astrology", authenticateToken, astrologyRoutes);
 app.use("/horoscope", authenticateToken, validateUserHash, horoscopeRoutes);
 app.use("/moon-phase", authenticateToken, validateUserHash, moonPhaseRoutes);
 app.use("/astrology-insights", authenticateToken, validateUserHash, astrologyInsightsRoutes);

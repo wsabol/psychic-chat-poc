@@ -41,7 +41,7 @@ function AstrologyModal({ userId, token, isOpen, onClose, birthDate, birthTime, 
             // Fetch calculated astrology data from database
             try {
                 const hashedUserId = await hashUserIdForUrl(userId);
-                const astroResponse = await fetchWithTokenRefresh(`${API_URL}/user-astrology/${hashedUserId}`, { headers });
+                const astroResponse = await fetchWithTokenRefresh(`${API_URL}/astrology/${hashedUserId}`, { headers });
                 if (astroResponse.ok) {
                     const dbAstroData = await astroResponse.json();
                     

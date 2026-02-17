@@ -77,7 +77,7 @@ export async function fetchUserPreferences(userId, token) {
 export async function fetchAstrologyData(userId, token) {
   const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
   const hashedUserId = await hashUserIdForUrl(userId);
-  const response = await fetch(`${API_URL}/user-astrology/${hashedUserId}`, { headers });
+  const response = await fetch(`${API_URL}/astrology/${hashedUserId}`, { headers });
   
   if (!response.ok) {
     return null;

@@ -6,7 +6,6 @@
  */
 
 import { Router } from "express";
-import { verify2FA } from "../middleware/auth.js";
 import { processChatMessageSync } from "../services/chat/processor.js";
 import { hashUserId } from "../shared/hashUtils.js";
 import { db } from "../shared/db.js";
@@ -26,9 +25,10 @@ const router = Router();
  * Body: { message: string }
  * Response: { success, role, contentFull, contentBrief, ... }
  */
-router.post("/", verify2FA, async (req, res) => {
+router.post("/", async (req, res) => {
     const { message } = req.body;
-    const userId = req.userId;
+    // req.userId is set by authenticateToken middleware in index.js
+    const userId = req.userId || req.user?.userId;
 
     if (!message || typeof message !== 'string' || message.trim().length === 0) {
         return res.status(400).json({
@@ -70,14 +70,16 @@ router.post("/", verify2FA, async (req, res) => {
  * Returns chat history for the authenticated user (no userId in URL needed)
  * User identification comes from JWT token
  */
-router.get("/history", verify2FA, async (req, res) => {
-    const userId = req.userId;
+router.get("/history", async (req, res) => {
+    // req.userId is set by authenticateToken middleware in index.js
+    const userId = req.userId || req.user?.userId;
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
     
     try {
         const userIdHash = hashUserId(userId);
         
-        // Fetch messages from database
+        // Fetch messages from database - ONLY assistant messages
+        // EXCLUDE user messages and astrological readings (they belong in astrology section)
         const query = `SELECT 
             id, 
             role, 
@@ -87,6 +89,7 @@ router.get("/history", verify2FA, async (req, res) => {
             created_at
         FROM messages 
         WHERE user_id_hash = $1 
+        AND role = 'assistant'
         ORDER BY created_at ASC`;
         
         const { rows } = await db.query(query, [userIdHash, ENCRYPTION_KEY]);
@@ -133,8 +136,9 @@ router.get("/history", verify2FA, async (req, res) => {
  * User identification comes from JWT token
  * Returns 204 No Content if opening already exists for today
  */
-router.get("/opening", verify2FA, async (req, res) => {
-    const userId = req.userId;
+router.get("/opening", async (req, res) => {
+    // req.userId is set by authenticateToken middleware in index.js
+    const userId = req.userId || req.user?.userId;
 
     try {
         // Get user's local timezone date

@@ -107,7 +107,7 @@ function HoroscopeModal({ userId, token, isOpen, onClose }) {
         try {
             const hashedUserId = await hashUserIdForUrl(userId);
             const astroResponse = await fetchWithTokenRefresh(
-                `${API_URL}/user-astrology/${hashedUserId}`,
+                `${API_URL}/astrology/${hashedUserId}`,
                 { headers }
             );
             

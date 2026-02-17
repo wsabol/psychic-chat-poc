@@ -197,8 +197,9 @@ router.post('/calculate/:userId', authorizeUser, async (req, res) => {
     }
 });
 
-router.get("/:userId", validateUserHash, async (req, res) => {
-    const { userId } = req.params;
+router.get("/:userId", async (req, res) => {
+    // Use authenticated userId from token, not from URL params
+    const userId = req.user?.userId || req.userId;
     
     try {
         const userIdHash = hashUserId(userId);
@@ -227,8 +228,9 @@ router.get("/:userId", validateUserHash, async (req, res) => {
     }
 });
 
-router.post("/:userId", validateUserHash, async (req, res) => {
-    const { userId } = req.params;
+router.post("/:userId", async (req, res) => {
+    // Use authenticated userId from token, not from URL params
+    const userId = req.user?.userId || req.userId;
     const { risingSign, moonSign, astrology_data } = req.body;
     
     try {

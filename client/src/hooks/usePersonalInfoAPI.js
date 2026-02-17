@@ -107,7 +107,7 @@ export function usePersonalInfoAPI(userId, token, isTemporaryAccount = false) {
     try {
       const hashedUserId = await hashUserIdForUrl(userId);
       const response = await fetchWithTokenRefresh(
-        `${API_URL}/user-astrology/sync-calculate/${hashedUserId}`,
+        `${API_URL}/astrology/sync-calculate/${hashedUserId}`,
         {
           method: 'POST',
           headers: { 'Authorization': token ? `Bearer ${token}` : '' }

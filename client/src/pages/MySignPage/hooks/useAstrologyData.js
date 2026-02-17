@@ -57,7 +57,7 @@ export function useAstrologyData(userId, token) {
       const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
       const hashedUserId = await hashUserIdForUrl(userId);
       
-      const response = await fetchWithTokenRefresh(`${API_URL}/user-astrology/${hashedUserId}`, { 
+      const response = await fetchWithTokenRefresh(`${API_URL}/astrology/${hashedUserId}`, { 
         headers: {
           'Authorization': token ? `Bearer ${token}` : ''
         }

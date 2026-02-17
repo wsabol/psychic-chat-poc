@@ -23,8 +23,9 @@ const router = Router();
  * GET /:userId
  * Retrieve user personal information
  */
-router.get("/:userId", authorizeUser, async (req, res) => {
-  const { userId } = req.params;
+router.get("/:userId", async (req, res) => {
+  // Use authenticated userId from token, not from URL params
+  const userId = req.user?.userId || req.userId;
   
   try {
     const personalInfo = await getPersonalInfo(userId);
@@ -39,8 +40,9 @@ router.get("/:userId", authorizeUser, async (req, res) => {
  * POST /:userId
  * Save or update user personal information
  */
-router.post("/:userId", authorizeUser, async (req, res) => {
-  const { userId } = req.params;
+router.post("/:userId", async (req, res) => {
+  // Use authenticated userId from token, not from URL params
+  const userId = req.user?.userId || req.userId;
 
   try {
     const result = await savePersonalInfo(userId, req.body);
@@ -64,8 +66,9 @@ router.post("/:userId", authorizeUser, async (req, res) => {
  * DELETE /:userId/astrology-cache
  * Clear cached astrology messages for user
  */
-router.delete("/:userId/astrology-cache", authorizeUser, async (req, res) => {
-  const { userId } = req.params;
+router.delete("/:userId/astrology-cache", async (req, res) => {
+  // Use authenticated userId from token, not from URL params
+  const userId = req.user?.userId || req.userId;
   
   try {
     const result = await clearUserAstrologyCache(userId);
@@ -80,8 +83,9 @@ router.delete("/:userId/astrology-cache", authorizeUser, async (req, res) => {
  * GET /:userId/preferences
  * Retrieve user preferences with defaults
  */
-router.get("/:userId/preferences", authorizeUser, async (req, res) => {
-  const { userId } = req.params;
+router.get("/:userId/preferences", async (req, res) => {
+  // Use authenticated userId from token, not from URL params
+  const userId = req.user?.userId || req.userId;
 
   try {
     const preferences = await getUserPreferences(userId);
@@ -100,8 +104,9 @@ router.get("/:userId/preferences", authorizeUser, async (req, res) => {
  * 2. Language preferences update (temp user flow)
  * 3. Full preferences update (complete profile)
  */
-router.post("/:userId/preferences", authorizeUser, async (req, res) => {
-  const { userId } = req.params;
+router.post("/:userId/preferences", async (req, res) => {
+  // Use authenticated userId from token, not from URL params
+  const userId = req.user?.userId || req.userId;
   const { language, response_type, voice_enabled, voice_selected, timezone, oracle_language } = req.body;
 
   try {

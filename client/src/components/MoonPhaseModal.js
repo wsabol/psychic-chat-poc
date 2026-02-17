@@ -55,7 +55,7 @@ function MoonPhaseModal({ userId, token, isOpen, onClose }) {
             const hashedUserId = await hashUserIdForUrl(userId);
             
             // Fetch user's astrology data
-            const astroResponse = await fetchWithTokenRefresh(`${API_URL}/user-astrology/${hashedUserId}`, { headers: astroHeaders });
+            const astroResponse = await fetchWithTokenRefresh(`${API_URL}/astrology/${hashedUserId}`, { headers: astroHeaders });
             
             if (!astroResponse.ok) {
                 setError('Could not fetch your astrology data. Please ensure your birth information is complete.');

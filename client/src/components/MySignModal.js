@@ -43,7 +43,7 @@ function MySignModal({ userId, token, isOpen, onClose, birthDate, birthTime, bir
                     astroHeaders['Authorization'] = `Bearer ${token}`;
                 }
                 const hashedUserId = await hashUserIdForUrl(userId);
-                const astroResponse = await fetchWithTokenRefresh(`${API_URL}/user-astrology/${hashedUserId}`, { headers: astroHeaders });
+                const astroResponse = await fetchWithTokenRefresh(`${API_URL}/astrology/${hashedUserId}`, { headers: astroHeaders });
                 if (astroResponse.ok) {
                     const dbAstroData = await astroResponse.json();
                     

@@ -1,5 +1,4 @@
 import express from 'express';
-import { authenticateToken } from '../../middleware/auth.js';
 import { db } from '../../shared/db.js';
 import { validationError, serverError, successResponse } from '../../utils/responses.js';
 
@@ -15,9 +14,10 @@ const router = express.Router();
  * - completedSteps: Object showing which steps are complete
  * - subscriptionStatus: Current subscription status
  */
-router.get('/onboarding-status', authenticateToken, async (req, res) => {
+router.get('/onboarding-status', async (req, res) => {
   try {
-    const userId = req.user.userId;
+    // req.user is set by authenticateToken middleware in index.js
+    const userId = req.user?.userId || req.userId;
     
     const result = await db.query(
       `SELECT 
@@ -85,9 +85,10 @@ router.get('/onboarding-status', authenticateToken, async (req, res) => {
  * Onboarding is COMPLETE when personal_info step is saved (all required steps done)
  * security_settings is optional and doesn't affect completion
  */
-router.post('/onboarding-step/:step', authenticateToken, async (req, res) => {
+router.post('/onboarding-step/:step', async (req, res) => {
   try {
-    const userId = req.user.userId;
+    // req.user is set by authenticateToken middleware in index.js
+    const userId = req.user?.userId || req.userId;
     const { step } = req.params;
     
     const validSteps = ['create_account', 'payment_method', 'subscription', 'personal_info', 'welcome', 'security_settings'];

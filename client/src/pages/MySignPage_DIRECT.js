@@ -20,7 +20,7 @@ export default function MySignPage({ userId, token, auth }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetchWithTokenRefresh(`${API_URL}/user-astrology/${userId}`, { 
+      const response = await fetchWithTokenRefresh(`${API_URL}/astrology/${userId}`, { 
         headers: {
           'Authorization': token ? `Bearer ${token}` : ''
         }

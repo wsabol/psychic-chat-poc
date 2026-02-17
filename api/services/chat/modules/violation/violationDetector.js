@@ -165,13 +165,27 @@ export function detectViolation(userMessage) {
   }
 
   // PRIORITY 6: Illegal activity instructions (ZERO TOLERANCE)
+  // Use word boundaries to avoid false positives (e.g., "development" matching "develop")
   for (const keyword of keywords.ILLEGAL_ACTIVITY) {
-    if (messageLower.includes(keyword)) {
-      return {
-        type: VIOLATION_TYPES.ILLEGAL_ACTIVITY,
-        severity: 'CRITICAL_ZERO_TOLERANCE',
-        keyword: keyword
-      };
+    // For multi-word phrases, use simple includes
+    if (keyword.includes(' ')) {
+      if (messageLower.includes(keyword)) {
+        return {
+          type: VIOLATION_TYPES.ILLEGAL_ACTIVITY,
+          severity: 'CRITICAL_ZERO_TOLERANCE',
+          keyword: keyword
+        };
+      }
+    } else {
+      // For single words, use word boundaries to avoid false positives
+      const regex = new RegExp(`\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+      if (regex.test(messageLower)) {
+        return {
+          type: VIOLATION_TYPES.ILLEGAL_ACTIVITY,
+          severity: 'CRITICAL_ZERO_TOLERANCE',
+          keyword: keyword
+        };
+      }
     }
   }
 
@@ -198,8 +212,10 @@ export function detectViolation(userMessage) {
   }
 
   // PRIORITY 9: Severe profanity/abusive language (MEDIUM)
+  // Use word boundaries to match whole words only
   for (const keyword of keywords.ABUSIVE_LANGUAGE) {
-    if (messageLower.includes(keyword)) {
+    const regex = new RegExp(`\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+    if (regex.test(messageLower)) {
       return {
         type: VIOLATION_TYPES.ABUSIVE_LANGUAGE,
         severity: 'MEDIUM',

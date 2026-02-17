@@ -1,5 +1,5 @@
 -- Master SQL file for restoring database schema
--- Last Updated: 2025-01-20
+-- Last Updated: 2026-02-17
 -- This file contains the EXACT schema of the current production database
 -- plus all required tables and columns for subscription billing
 -- 
@@ -8,6 +8,9 @@
 -- 
 -- PHASE 3.0: Free Trial Sessions
 -- Includes: IP-based free trial tracking, fraud prevention, progress tracking
+-- 
+-- PHASE 4.0: Violation Redemption System
+-- Includes: violation tracking with redemption columns, SMS inbound logging
 
 -- IMPORTANT: All user IDs are hashed using SHA-256
 -- IMPORTANT: All sensitive data (PII, tokens, IPs) are encrypted with pgcrypto
@@ -258,6 +261,29 @@ COMMENT ON COLUMN sms_opt_outs.phone_number IS 'Phone number in E.164 format (e.
 COMMENT ON COLUMN sms_opt_outs.opted_out_at IS 'When the user sent STOP keyword';
 COMMENT ON COLUMN sms_opt_outs.created_at IS 'Record creation timestamp';
 
+-- TABLE: sms_inbound_log (SMS inbound message audit trail)
+-- Audit log of all incoming SMS messages for compliance and debugging
+-- Tracks STOP, START, HELP keywords and other incoming messages
+-- Added: 2026-02-12 (Two-way SMS Lambda handler, TCPA compliance)
+CREATE TABLE IF NOT EXISTS sms_inbound_log (
+    id SERIAL PRIMARY KEY,
+    phone_number VARCHAR(20) NOT NULL,
+    message_body TEXT,
+    action_taken VARCHAR(20) NOT NULL,
+    message_id VARCHAR(255),
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_sms_inbound_log_phone ON sms_inbound_log(phone_number);
+CREATE INDEX IF NOT EXISTS idx_sms_inbound_log_created ON sms_inbound_log(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_sms_inbound_log_action ON sms_inbound_log(action_taken);
+
+COMMENT ON TABLE sms_inbound_log IS 'Audit log of all incoming SMS messages for compliance and debugging';
+COMMENT ON COLUMN sms_inbound_log.phone_number IS 'Phone number that sent the message (E.164 format)';
+COMMENT ON COLUMN sms_inbound_log.message_body IS 'Content of the incoming SMS';
+COMMENT ON COLUMN sms_inbound_log.action_taken IS 'Action taken: STOP, START, HELP, or IGNORED';
+COMMENT ON COLUMN sms_inbound_log.message_id IS 'AWS SNS message ID for tracking';
+
 -- TABLE: user_violations
 CREATE TABLE IF NOT EXISTS user_violations (
     id SERIAL PRIMARY KEY,
@@ -268,11 +294,17 @@ CREATE TABLE IF NOT EXISTS user_violations (
     severity VARCHAR(20) DEFAULT 'warning',
     is_active BOOLEAN DEFAULT true,
     is_account_disabled BOOLEAN DEFAULT false,
+    last_violation_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    violation_redeemed_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_user_violations_user_id_hash ON user_violations(user_id_hash);
+CREATE INDEX IF NOT EXISTS idx_user_violations_redemption ON user_violations(user_id_hash, violation_type, last_violation_timestamp);
+
+COMMENT ON COLUMN user_violations.last_violation_timestamp IS 'Timestamp of the most recent violation occurrence for cooling-off period calculation';
+COMMENT ON COLUMN user_violations.violation_redeemed_at IS 'Timestamp when the violation was redeemed after cooling-off period';
 
 -- TABLE: user_account_lockouts
 CREATE TABLE IF NOT EXISTS user_account_lockouts (
