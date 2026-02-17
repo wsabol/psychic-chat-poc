@@ -48,7 +48,9 @@ router.get('/onboarding-status', authenticateToken, async (req, res) => {
     
     // Determine which steps are complete based on onboarding_step progression
     // A step is complete if we've reached or passed it in the step order
-    // Required steps: create_account, payment_method, subscription, personal_info
+    // MOBILE APPS: payment_method step is SKIPPED (uses IAP instead of Stripe)
+    // Required steps for mobile: create_account, subscription, personal_info
+    // Required steps for web: create_account, payment_method, subscription, personal_info
     // security_settings is OPTIONAL - removed from requirements
     const stepOrder = ['create_account', 'payment_method', 'subscription', 'personal_info'];
     const currentStepIndex = onboarding_step ? stepOrder.indexOf(onboarding_step) : -1;
@@ -58,7 +60,6 @@ router.get('/onboarding-status', authenticateToken, async (req, res) => {
       payment_method: currentStepIndex >= stepOrder.indexOf('payment_method'),
       subscription: currentStepIndex >= stepOrder.indexOf('subscription'),
       personal_info: currentStepIndex >= stepOrder.indexOf('personal_info'),
-
     };
     
     // isOnboarding = true if onboarding_completed is NULL or FALSE (not finished)
@@ -90,6 +91,7 @@ router.post('/onboarding-step/:step', authenticateToken, async (req, res) => {
     const { step } = req.params;
     
     const validSteps = ['create_account', 'payment_method', 'subscription', 'personal_info', 'welcome', 'security_settings'];
+    // Note: payment_method is optional for mobile apps (uses IAP instead of Stripe)
     // Note: security_settings is optional and doesn't affect onboarding completion
     if (!validSteps.includes(step)) {
       return validationError(res, 'Invalid onboarding step');
