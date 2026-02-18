@@ -42,15 +42,22 @@ export async function runTempAccountCleanupJob() {
     if (uids.length > 0) {
       // Delete from database FIRST (fast operation)
       try {
+        // Import hashUserId from shared/hashUtils.js
+        const { hashUserId } = await import('../shared/hashUtils.js');
+        const hashedUids = uids.map(uid => hashUserId(uid));
+        
+        // Delete from user_personal_info using user_id (plain)
         const deleteResult1 = await db.query(`DELETE FROM user_personal_info WHERE user_id = ANY($1)`, [uids]);
-        const deleteResult2 = await db.query(`DELETE FROM user_astrology WHERE user_id = ANY($1)`, [uids]);
-        const deleteResult3 = await db.query(`DELETE FROM messages WHERE user_id = ANY($1)`, [uids]);
-        const deleteResult4 = await db.query(`DELETE FROM user_2fa_settings WHERE user_id = ANY($1)`, [uids]);
-        const deleteResult5 = await db.query(`DELETE FROM user_2fa_codes WHERE user_id = ANY($1)`, [uids]);
+        
+        // Delete from other tables using user_id_hash (hashed)
+        const deleteResult2 = await db.query(`DELETE FROM user_astrology WHERE user_id_hash = ANY($1)`, [hashedUids]);
+        const deleteResult3 = await db.query(`DELETE FROM messages WHERE user_id_hash = ANY($1)`, [hashedUids]);
+        const deleteResult4 = await db.query(`DELETE FROM user_2fa_settings WHERE user_id_hash = ANY($1)`, [hashedUids]);
+        const deleteResult5 = await db.query(`DELETE FROM user_2fa_codes WHERE user_id_hash = ANY($1)`, [hashedUids]);
         
         // Check if astrology_readings table exists before deleting
         try {
-          const deleteResult6 = await db.query(`DELETE FROM astrology_readings WHERE user_id = ANY($1)`, [uids]);
+          const deleteResult6 = await db.query(`DELETE FROM astrology_readings WHERE user_id_hash = ANY($1)`, [hashedUids]);
         } catch (astrologyErr) {
           if (astrologyErr.code !== '42P01') { // 42P01 = table does not exist
           }

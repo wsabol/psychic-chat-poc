@@ -127,7 +127,8 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
         successResponse(res, { 
             horoscope: horoscope.text, 
             brief: briefContent?.text || null,
-            generated_at: horoscope.generated_at 
+            generated_at: horoscope.generated_at,
+            zodiac_sign: horoscope.zodiac_sign || null
         });
         
         } catch (err) {
@@ -168,6 +169,7 @@ router.post("/:userId/:range", authenticateToken, authorizeUser, async (req, res
             horoscope: result.horoscope,
             brief: result.brief,
             generated_at: result.generated_at,
+            zodiac_sign: result.zodiac_sign || null,
             range: range.toLowerCase()
         });
         

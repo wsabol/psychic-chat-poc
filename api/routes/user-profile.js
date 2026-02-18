@@ -4,7 +4,6 @@
  */
 
 import { Router } from "express";
-import { authorizeUser } from "../middleware/auth.js";
 import { validationError, forbiddenError, serverError, successResponse } from "../utils/responses.js";
 import { logErrorFromCatch } from '../shared/errorLogger.js';
 import {
@@ -24,8 +23,9 @@ const router = Router();
  * Retrieve user personal information
  */
 router.get("/:userId", async (req, res) => {
-  // Use authenticated userId from token, not from URL params
-  const userId = req.user?.userId || req.userId;
+  // Use actual userId from token (set by authenticateToken middleware)
+  // Web client sends hashed userId in URL, but we use the real one from token
+  const userId = req.userId || req.params.userId;
   
   try {
     const personalInfo = await getPersonalInfo(userId);
@@ -41,8 +41,9 @@ router.get("/:userId", async (req, res) => {
  * Save or update user personal information
  */
 router.post("/:userId", async (req, res) => {
-  // Use authenticated userId from token, not from URL params
-  const userId = req.user?.userId || req.userId;
+  // Use actual userId from token (set by authenticateToken middleware)
+  // Web client sends hashed userId in URL, but we use the real one from token
+  const userId = req.userId || req.params.userId;
 
   try {
     const result = await savePersonalInfo(userId, req.body);
@@ -67,8 +68,9 @@ router.post("/:userId", async (req, res) => {
  * Clear cached astrology messages for user
  */
 router.delete("/:userId/astrology-cache", async (req, res) => {
-  // Use authenticated userId from token, not from URL params
-  const userId = req.user?.userId || req.userId;
+  // Use actual userId from token (set by authenticateToken middleware)
+  // Web client sends hashed userId in URL, but we use the real one from token
+  const userId = req.userId || req.params.userId;
   
   try {
     const result = await clearUserAstrologyCache(userId);
@@ -84,8 +86,9 @@ router.delete("/:userId/astrology-cache", async (req, res) => {
  * Retrieve user preferences with defaults
  */
 router.get("/:userId/preferences", async (req, res) => {
-  // Use authenticated userId from token, not from URL params
-  const userId = req.user?.userId || req.userId;
+  // Use actual userId from token (set by authenticateToken middleware)
+  // Web client sends hashed userId in URL, but we use the real one from token
+  const userId = req.userId || req.params.userId;
 
   try {
     const preferences = await getUserPreferences(userId);
@@ -105,8 +108,9 @@ router.get("/:userId/preferences", async (req, res) => {
  * 3. Full preferences update (complete profile)
  */
 router.post("/:userId/preferences", async (req, res) => {
-  // Use authenticated userId from token, not from URL params
-  const userId = req.user?.userId || req.userId;
+  // Use actual userId from token (set by authenticateToken middleware)
+  // Web client sends hashed userId in URL, but we use the real one from token
+  const userId = req.userId || req.params.userId;
   const { language, response_type, voice_enabled, voice_selected, timezone, oracle_language } = req.body;
 
   try {

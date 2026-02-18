@@ -67,7 +67,8 @@ export function mapHoroscopeResponse(parsed) {
     return {
         horoscope: extractText(contentFull) || contentFull,
         brief: extractText(contentBrief) || contentBrief,
-        generated_at: contentFull?.generated_at || parsed.created_at
+        generated_at: contentFull?.generated_at || parsed.created_at,
+        zodiac_sign: contentFull?.zodiac_sign || null
     };
 }
 

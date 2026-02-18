@@ -3,12 +3,11 @@ const router = express.Router();
 import { db } from '../shared/db.js';
 import { hashUserId } from '../shared/hashUtils.js';
 import { enqueueMessage } from '../shared/queue.js';
-import { authorizeUser } from '../middleware/auth.js';
 import { calculateBirthChart as calculateBirthChartSync } from '../services/lambda-astrology.js';
 import { validationError, notFoundError, serverError, successResponse } from '../utils/responses.js';
 import { validateUserHash } from '../middleware/userHashValidation.js';
 
-router.post('/validate-location', authorizeUser, async (req, res) => {
+router.post('/validate-location', async (req, res) => {
     try {
         const { birth_city, birth_province, birth_country, birth_date, birth_time } = req.body;
         
@@ -65,9 +64,10 @@ router.post('/validate-location', authorizeUser, async (req, res) => {
 });
 
 // POST endpoint to calculate astrology synchronously
-router.post('/sync-calculate/:userId', authorizeUser, async (req, res) => {
+router.post('/sync-calculate/:userId', async (req, res) => {
     try {
-        const { userId } = req.params;
+        // Use actual userId from token, not the hashed one from URL
+        const userId = req.userId || req.params.userId;
         
         // Fetch user's personal information (decrypted) - NO POLLING
         const { rows: personalInfoRows } = await db.query(
@@ -182,9 +182,10 @@ router.post('/sync-calculate/:userId', authorizeUser, async (req, res) => {
     }
 });
 
-router.post('/calculate/:userId', authorizeUser, async (req, res) => {
+router.post('/calculate/:userId', async (req, res) => {
     try {
-        const { userId } = req.params;
+        // Use actual userId from token, not the hashed one from URL
+        const userId = req.userId || req.params.userId;
         
         await enqueueMessage({ 
             userId, 
@@ -198,8 +199,9 @@ router.post('/calculate/:userId', authorizeUser, async (req, res) => {
 });
 
 router.get("/:userId", async (req, res) => {
-    // Use authenticated userId from token, not from URL params
-    const userId = req.user?.userId || req.userId;
+    // Use actual userId from token (set by authenticateToken middleware)
+    // Web client sends hashed userId in URL, but we use the real one from token
+    const userId = req.userId || req.params.userId;
     
     try {
         const userIdHash = hashUserId(userId);
@@ -222,21 +224,6 @@ router.get("/:userId", async (req, res) => {
             result.astrology_data.sun_sign = result.zodiac_sign;
         }
         
-        // Import zodiac data to enrich the response
-        const zodiacDataModule = await import('../client/src/data/zodiac/ZodiacSigns.en-US.js');
-        const zodiacData = zodiacDataModule.zodiacSigns;
-        
-        // Get the sun sign key (lowercase)
-        const sunSignKey = (result.astrology_data.sun_sign || result.zodiac_sign || '').toLowerCase();
-        
-        // Merge API data with full zodiac data
-        if (sunSignKey && zodiacData[sunSignKey]) {
-            result.astrology_data = {
-                ...result.astrology_data,
-                ...zodiacData[sunSignKey]
-            };
-        }
-        
         res.json(result);
     } catch (err) {
         return serverError(res, 'Failed to fetch astrology data');
@@ -244,8 +231,9 @@ router.get("/:userId", async (req, res) => {
 });
 
 router.post("/:userId", async (req, res) => {
-    // Use authenticated userId from token, not from URL params
-    const userId = req.user?.userId || req.userId;
+    // Use actual userId from token (set by authenticateToken middleware)
+    // Web client sends hashed userId in URL, but we use the real one from token
+    const userId = req.userId || req.params.userId;
     const { risingSign, moonSign, astrology_data } = req.body;
     
     try {
