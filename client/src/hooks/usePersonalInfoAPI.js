@@ -29,19 +29,20 @@ export function usePersonalInfoAPI(userId, token, isTemporaryAccount = false) {
       }
 
       const data = await response.json();
+      // API now returns camelCase directly - no transformation needed
       return {
         success: true,
         data: {
-          firstName: data.first_name || '',
-          lastName: data.last_name || '',
+          firstName: data.firstName || '',
+          lastName: data.lastName || '',
           email: data.email || '',
-          birthCountry: data.birth_country || '',
-          birthProvince: data.birth_province || '',
-          birthCity: data.birth_city || '',
-          birthDate: formatDateForDisplay(data.birth_date) || '',
-          birthTime: data.birth_time || '',
+          birthCountry: data.birthCountry || '',
+          birthProvince: data.birthProvince || '',
+          birthCity: data.birthCity || '',
+          birthDate: formatDateForDisplay(data.birthDate) || '',
+          birthTime: data.birthTime || '',
           sex: data.sex || '',
-          addressPreference: data.address_preference || ''
+          addressPreference: data.addressPreference || ''
         }
       };
     } catch (err) {

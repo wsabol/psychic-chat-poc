@@ -23,10 +23,26 @@ import { logErrorFromCatch } from '../../shared/errorLogger.js';
 /**
  * Get user personal information
  * @param {string} userId - User ID
- * @returns {Promise<Object>} Decrypted personal information
+ * @returns {Promise<Object>} Decrypted personal information in camelCase format
  */
 export async function getPersonalInfo(userId) {
-  return await findPersonalInfoByUserId(userId);
+  const data = await findPersonalInfoByUserId(userId);
+  
+  // Transform snake_case from DB to camelCase for consistent API response
+  // This ensures BOTH web and mobile apps get the same format
+  return {
+    firstName: data.first_name,
+    lastName: data.last_name,
+    email: data.email,
+    birthDate: data.birth_date,
+    birthTime: data.birth_time,
+    birthCountry: data.birth_country,
+    birthProvince: data.birth_province,
+    birthCity: data.birth_city,
+    birthTimezone: data.birth_timezone,
+    sex: data.sex,
+    addressPreference: data.address_preference
+  };
 }
 
 /**
