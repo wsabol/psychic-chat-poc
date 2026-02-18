@@ -108,19 +108,32 @@ Do NOT include tarot cards in this response - this is purely astrological guidan
             // Call Oracle - response is already in user's preferred language
             const oracleResponses = await callOracle(systemPrompt, [], horoscopePrompt, true);
             
+            // Generate mood, lucky color, and lucky number
+            const moods = ['Energetic', 'Reflective', 'Optimistic', 'Contemplative', 'Adventurous', 'Peaceful', 'Focused', 'Creative'];
+            const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DFE6E9', '#A29BFE', '#FD79A8'];
+            const mood = moods[Math.floor(Math.random() * moods.length)];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            const luckyNumber = Math.floor(Math.random() * 99) + 1;
+            
             // Store horoscope in database (already in user's language)
             const horoscopeDataFull = {
                 text: oracleResponses.full,
                 range: range,
                 generated_at: generatedAt,
-                zodiac_sign: astrologyInfo.zodiac_sign
+                zodiac_sign: astrologyInfo.zodiac_sign,
+                mood: mood,
+                color: color,
+                luckyNumber: luckyNumber
             };
             
             const horoscopeDataBrief = { 
                 text: oracleResponses.brief, 
                 range: range, 
                 generated_at: generatedAt, 
-                zodiac_sign: astrologyInfo.zodiac_sign 
+                zodiac_sign: astrologyInfo.zodiac_sign,
+                mood: mood,
+                color: color,
+                luckyNumber: luckyNumber
             };
             
             // Store message (no translation needed - response is already in user's language)
