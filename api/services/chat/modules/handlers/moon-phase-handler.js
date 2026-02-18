@@ -96,6 +96,15 @@ Address them directly and personally.
 Focus on how this specific phase influences them emotionally, spiritually, and practically.
 Include crystal recommendations aligned with their chart and this lunar phase.
 Do NOT include tarot cards - this is purely lunar + astrological insight enriched by their unique birth chart.
+
+CRITICAL OUTPUT FORMAT OVERRIDE FOR MOON PHASE:
+For moon phase responses ONLY, ignore the HTML formatting rules.
+Output your response in PLAIN TEXT with natural paragraph breaks.
+Use double line breaks (\\n\\n) between paragraphs for readability.
+Do NOT use HTML tags like <h3>, <p>, <strong>, etc.
+Do NOT use Markdown formatting like ** or # either.
+Write naturally and conversationally as plain text.
+Begin directly with your insight and flow naturally through your guidance.
 `;
         
         // Call Oracle - response is already in user's preferred language

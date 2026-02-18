@@ -102,6 +102,15 @@ Focus on practical guidance blended with cosmic timing.
 Include crystal recommendations aligned with their chart and this ${currentRange} period.
 Make it deeply personal and specific to their astrological signature.
 Do NOT include tarot cards in this response - this is purely astrological guidance enriched by their unique birth chart.
+
+CRITICAL OUTPUT FORMAT OVERRIDE FOR HOROSCOPES:
+For horoscope responses ONLY, ignore the HTML formatting rules.
+Output your response in PLAIN TEXT with natural paragraph breaks.
+Use double line breaks (\\n\\n) between paragraphs for readability.
+Do NOT use HTML tags like <h3>, <p>, <strong>, etc.
+Do NOT use Markdown formatting like ** or # either.
+Write naturally and conversationally as plain text.
+Begin directly with "Dear ${userGreeting}" and flow naturally through your guidance.
 `;
                 
                 const oracleResponses = await callOracle(systemPrompt, [], horoscopePrompt, true);

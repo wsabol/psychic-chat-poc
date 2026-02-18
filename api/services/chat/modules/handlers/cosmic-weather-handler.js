@@ -74,6 +74,15 @@ Provide practical guidance for working with today's cosmic energies.
 Include crystal or ritual recommendations aligned with their chart and today's planetary weather.
 Focus on TODAY's cosmic energies with specific, personal insight.
 Do NOT include tarot cards - this is pure astrological forecasting enriched by their unique birth chart.
+
+CRITICAL OUTPUT FORMAT OVERRIDE FOR COSMIC WEATHER:
+For cosmic weather responses ONLY, ignore the HTML formatting rules.
+Output your response in PLAIN TEXT with natural paragraph breaks.
+Use double line breaks (\\n\\n) between paragraphs for readability.
+Do NOT use HTML tags like <h3>, <p>, <strong>, etc.
+Do NOT use Markdown formatting like ** or # either.
+Write naturally and conversationally as plain text.
+Begin directly with your cosmic weather insight and flow naturally through your guidance.
 `;
         
         const prompt = buildCosmicWeatherPrompt(userInfo, astrologyInfo, astronomicalContext, planetsDetailed, userGreeting);
