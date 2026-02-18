@@ -114,7 +114,7 @@
     "title": "Security & Privacy",
     "password": "Password",
     "changePassword": "Change Password",
-    "twoFactor": "Enable Two-Factor Authentication. Two-Factor Authentication is bypassed on trusted devices.",
+    "twoFactor": "Enable Two-Factor Authentication",
     "enable2FA": "Enable 2FA",
     "disable2FA": "Disable 2FA",
     "sessions": "Active Sessions",
