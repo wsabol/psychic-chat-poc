@@ -32,10 +32,8 @@ async function clearStaleCustomer(userId) {
     }
 
     const currentCustomerId = checkResult.rows[0].customer_id;
-    console.log(`\n📋 Current customer ID for user ${userId}: ${currentCustomerId || '(none)'}`);
 
-    if (!currentCustomerId) {
-      console.log('✅ No customer ID to clear - user already has no customer ID set');
+    if (!currentCustomerId) {;
       process.exit(0);
     }
 

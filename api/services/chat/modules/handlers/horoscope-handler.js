@@ -65,9 +65,14 @@ export async function generateHoroscope(userId, range = 'daily') {
         const astrologyInfo = await fetchUserAstrology(userId);
         const userLanguage = await fetchUserLanguagePreference(userId);
         const oracleLanguage = await fetchUserOracleLanguagePreference(userId);
-        
+
+        // Check if user is temporary/trial account
+        const isTemporary = await isTemporaryUser(userId);
+
         // Throw error if user hasn't completed personal info yet
-        if (!userInfo) {
+        // Exception: temp users who reached the horoscope via the sign-picker flow
+        // (they have astrology data but no personal info — that's fine)
+        if (!userInfo && !isTemporary) {
             throw new Error('Please complete your personal information before generating horoscopes');
         }
         
@@ -75,9 +80,6 @@ export async function generateHoroscope(userId, range = 'daily') {
         if (!astrologyInfo?.astrology_data) {
             throw new Error('Please complete your birth chart information before generating horoscopes');
         }
-        
-        // Check if user is temporary/trial account
-        const isTemporary = await isTemporaryUser(userId);
         
         // Get current astronomical context (planets, moon phase, etc.)
         const astronomicalContext = await getAstronomicalContext();
@@ -190,11 +192,15 @@ function buildHoroscopePrompt(userInfo, astrologyInfo, range, userGreeting, astr
     
     if (astro.sun_sign) {
         prompt += `COMPLETE BIRTH CHART:\n`;
-        prompt += `- Sun Sign: ${astro.sun_sign} (${astro.sun_degree}°) - Core Identity, Life Purpose\n`;
-        prompt += `- Moon Sign: ${astro.moon_sign} (${astro.moon_degree}°) - Inner Emotional World, Needs, Instincts\n`;
-        prompt += `- Rising Sign/Ascendant: ${astro.rising_sign} (${astro.rising_degree}°) - How they appear to others, First Impression\n`;
-        prompt += `- Birth Location: ${userInfo.birth_city}, ${userInfo.birth_province}, ${userInfo.birth_country}\n`;
-        prompt += `- Birth Time: ${userInfo.birth_time || 'Unknown'}\n`;
+        prompt += `- Sun Sign: ${astro.sun_sign} (${astro.sun_degree || 0}°) - Core Identity, Life Purpose\n`;
+        if (astro.moon_sign) prompt += `- Moon Sign: ${astro.moon_sign} (${astro.moon_degree || 0}°) - Inner Emotional World, Needs, Instincts\n`;
+        if (astro.rising_sign) prompt += `- Rising Sign/Ascendant: ${astro.rising_sign} (${astro.rising_degree || 0}°) - How they appear to others, First Impression\n`;
+        if (userInfo) {
+            if (userInfo.birth_city || userInfo.birth_country) {
+                prompt += `- Birth Location: ${[userInfo.birth_city, userInfo.birth_province, userInfo.birth_country].filter(Boolean).join(', ') || 'Unknown'}\n`;
+            }
+            prompt += `- Birth Time: ${userInfo.birth_time || 'Unknown'}\n`;
+        }
         if (astro.venus_sign) prompt += `- Venus Sign: ${astro.venus_sign} (${astro.venus_degree}°) - Love, Attraction, Values\n`;
         if (astro.mars_sign) prompt += `- Mars Sign: ${astro.mars_sign} (${astro.mars_degree}°) - Action, Drive, Passion\n`;
         if (astro.mercury_sign) prompt += `- Mercury Sign: ${astro.mercury_sign} (${astro.mercury_degree}°) - Communication, Thinking Style\n`;

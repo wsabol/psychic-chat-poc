@@ -13,6 +13,7 @@ import {
 } from '../shared/freeTrialUtils.js';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
 import { serverError, validationError, forbiddenError, rateLimitError, notFoundError, successResponse } from '../utils/responses.js';
+import { hashUserId } from '../shared/hashUtils.js';
 import { validateAge } from '../shared/ageValidator.js';
 import { handleAgeViolation } from '../shared/violationHandler.js';
 import { parseDateForStorage, isValidFreeTrialStep } from '../shared/validationUtils.js';
@@ -299,6 +300,110 @@ router.post('/save-personal-info/:tempUserId', async (req, res) => {
   } catch (err) {
     await logErrorFromCatch(err, 'free-trial', 'Error saving personal info');
     return serverError(res, 'Failed to save personal information');
+  }
+});
+
+/**
+ * GET /free-trial/horoscope/:tempUserId
+ * Generate a daily horoscope for a free trial user (no auth required).
+ * Requires personal info (at minimum a birth date) to have been saved first.
+ * Falls back to a provided ?zodiacSign= query param for users who skipped personal info.
+ * NOTE: No rate limiter for development
+ */
+router.get('/horoscope/:tempUserId', async (req, res) => {
+  try {
+    const { tempUserId } = req.params;
+    const { zodiacSign: signParam } = req.query;
+
+    if (!tempUserId) {
+      return validationError(res, 'Missing tempUserId');
+    }
+
+    // Verify the free trial session exists
+    const userIdHash = hashUserId(tempUserId);
+    const sessionCheck = await db.query(
+      `SELECT id FROM free_trial_sessions WHERE user_id_hash = $1`,
+      [userIdHash]
+    );
+    if (sessionCheck.rows.length === 0) {
+      return notFoundError(res, 'Free trial session not found');
+    }
+
+    // Determine zodiac sign: prefer stored astrology data, then birth date calculation, then query param
+    let zodiacSign = null;
+
+    const { rows: astrologyRows } = await db.query(
+      `SELECT zodiac_sign FROM user_astrology WHERE user_id_hash = $1`,
+      [userIdHash]
+    );
+    if (astrologyRows.length > 0 && astrologyRows[0].zodiac_sign) {
+      zodiacSign = astrologyRows[0].zodiac_sign;
+    }
+
+    if (!zodiacSign) {
+      // Try to calculate from stored birth date
+      const { rows: piRows } = await db.query(
+        `SELECT pgp_sym_decrypt(birth_date_encrypted, $1)::text AS birth_date
+         FROM user_personal_info WHERE user_id = $2`,
+        [process.env.ENCRYPTION_KEY, tempUserId]
+      );
+      if (piRows.length > 0 && piRows[0].birth_date && piRows[0].birth_date !== 'null') {
+        const { calculateSunSignFromDate } = await import('../shared/zodiacUtils.js');
+        zodiacSign = calculateSunSignFromDate(piRows[0].birth_date);
+      }
+    }
+
+    // Final fallback: sign provided by client (user picked manually via sign-picker UI)
+    if (!zodiacSign && signParam) {
+      zodiacSign = String(signParam).toLowerCase();
+
+      // Persist the picked sign so processHoroscopeSync can find it in user_astrology.
+      // Without this the horoscope generator has no sign data and would throw.
+      try {
+        const minimalAstrologyData = {
+          sun_sign: zodiacSign,
+          sun_degree: 0,
+          moon_sign: null,
+          moon_degree: null,
+          rising_sign: null,
+          rising_degree: null,
+          calculated_at: new Date().toISOString()
+        };
+        await db.query(
+          `INSERT INTO user_astrology (user_id_hash, zodiac_sign, astrology_data)
+           VALUES ($1, $2, $3)
+           ON CONFLICT (user_id_hash) DO UPDATE SET
+             zodiac_sign = EXCLUDED.zodiac_sign,
+             astrology_data = EXCLUDED.astrology_data,
+             updated_at = CURRENT_TIMESTAMP`,
+          [userIdHash, zodiacSign, JSON.stringify(minimalAstrologyData)]
+        );
+      } catch (saveErr) {
+        console.error('[FREE-TRIAL] Failed to save picked zodiac sign:', saveErr.message);
+        // Non-fatal — attempt horoscope generation anyway
+      }
+    }
+
+    if (!zodiacSign) {
+      return validationError(res, 'Zodiac sign unavailable. Please save your birth date or select your sign.');
+    }
+
+    // Generate horoscope synchronously (works for temp users — no compliance checks required)
+    const { processHoroscopeSync } = await import('../services/chat/processor.js');
+    const result = await processHoroscopeSync(tempUserId, 'daily');
+
+    if (!result || !result.horoscope) {
+      return serverError(res, 'Failed to generate horoscope');
+    }
+
+    return successResponse(res, {
+      horoscope: result.horoscope,
+      zodiacSign,
+      generatedAt: result.generated_at,
+    });
+  } catch (err) {
+    await logErrorFromCatch(err, 'free-trial', 'Error generating horoscope');
+    return serverError(res, 'Failed to generate horoscope');
   }
 });
 
