@@ -271,7 +271,8 @@ app.use("/user", authenticateToken, validateUserHash, userDataRoutes);
 app.use("/astrology", authenticateToken, astrologyRoutes);
 app.use("/horoscope", authenticateToken, validateUserHash, horoscopeRoutes);
 app.use("/moon-phase", authenticateToken, validateUserHash, moonPhaseRoutes);
-app.use("/astrology-insights", authenticateToken, validateUserHash, astrologyInsightsRoutes);
+// Note: astrology-insights routes have their own authorizeUser middleware in each route
+app.use("/astrology-insights", authenticateToken, astrologyInsightsRoutes);
 
 app.use("/security", authenticateToken, validateUserHash, securityRoutes);
 

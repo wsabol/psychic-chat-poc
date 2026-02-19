@@ -6,6 +6,81 @@ const ASTROLOGY_LAMBDA_URL = process.env.ASTROLOGY_LAMBDA_URL || 'https://iay72s
 // Timeout for Lambda requests (in milliseconds)
 const REQUEST_TIMEOUT = 15000; // 15 seconds
 
+// Planet name translations (Lambda may return Spanish names)
+const PLANET_NAME_TRANSLATIONS = {
+    // Spanish to English
+    'Sol': 'Sun',
+    'Luna': 'Moon',
+    'Mercurio': 'Mercury',
+    'Venus': 'Venus',
+    'Marte': 'Mars',
+    'Júpiter': 'Jupiter',
+    'Jupiter': 'Jupiter',
+    'Saturno': 'Saturn',
+    'Urano': 'Uranus',
+    'Neptuno': 'Neptune',
+    'Plutón': 'Pluto',
+    'Pluto': 'Pluto',
+    // English (pass through)
+    'Sun': 'Sun',
+    'Moon': 'Moon',
+    'Mercury': 'Mercury',
+    'Mars': 'Mars',
+    'Saturn': 'Saturn',
+    'Uranus': 'Uranus',
+    'Neptune': 'Neptune'
+};
+
+// Zodiac sign translations (Lambda may return Spanish names)
+const ZODIAC_SIGN_TRANSLATIONS = {
+    // Spanish to English
+    'Aries': 'Aries',
+    'Tauro': 'Taurus',
+    'Taurus': 'Taurus',
+    'Géminis': 'Gemini',
+    'Gemini': 'Gemini',
+    'Cáncer': 'Cancer',
+    'Cancer': 'Cancer',
+    'Leo': 'Leo',
+    'Virgo': 'Virgo',
+    'Libra': 'Libra',
+    'Escorpio': 'Scorpio',
+    'Scorpio': 'Scorpio',
+    'Sagitario': 'Sagittarius',
+    'Sagittarius': 'Sagittarius',
+    'Capricornio': 'Capricorn',
+    'Capricorn': 'Capricorn',
+    'Acuario': 'Aquarius',
+    'Aquarius': 'Aquarius',
+    'Piscis': 'Pisces',
+    'Pisces': 'Pisces'
+};
+
+/**
+ * Normalize planet name to English
+ */
+function normalizePlanetName(name) {
+    return PLANET_NAME_TRANSLATIONS[name] || name;
+}
+
+/**
+ * Normalize zodiac sign to English
+ */
+function normalizeZodiacSign(sign) {
+    return ZODIAC_SIGN_TRANSLATIONS[sign] || sign.toLowerCase();
+}
+
+/**
+ * Normalize planet data to ensure English names
+ */
+function normalizePlanetData(planet) {
+    return {
+        ...planet,
+        name: normalizePlanetName(planet.name),
+        sign: normalizeZodiacSign(planet.sign)
+    };
+}
+
 /**
  * Make HTTP request to Lambda function with timeout
  */
@@ -159,7 +234,13 @@ export async function getCurrentPlanets() {
             };
         }
         
-        return result;
+        // Normalize planet names and signs to English
+        const normalizedPlanets = result.planets.map(normalizePlanetData);
+        
+        return {
+            ...result,
+            planets: normalizedPlanets
+        };
     } catch (error) {
         logErrorFromCatch(error, '[LAMBDA-ASTROLOGY] Error getting current planets');
         return {
