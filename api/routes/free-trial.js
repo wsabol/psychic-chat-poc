@@ -331,13 +331,31 @@ router.get('/horoscope/:tempUserId', async (req, res) => {
 
     // Determine zodiac sign: prefer stored astrology data, then birth date calculation, then query param
     let zodiacSign = null;
+    let chartData = null; // will hold { sunSign, moonSign, risingSign } when available
 
     const { rows: astrologyRows } = await db.query(
-      `SELECT zodiac_sign FROM user_astrology WHERE user_id_hash = $1`,
+      `SELECT zodiac_sign, astrology_data FROM user_astrology WHERE user_id_hash = $1`,
       [userIdHash]
     );
-    if (astrologyRows.length > 0 && astrologyRows[0].zodiac_sign) {
-      zodiacSign = astrologyRows[0].zodiac_sign;
+    if (astrologyRows.length > 0) {
+      if (astrologyRows[0].zodiac_sign) {
+        zodiacSign = astrologyRows[0].zodiac_sign;
+      }
+      // Extract full birth-chart data if it was calculated by the lambda
+      if (astrologyRows[0].astrology_data) {
+        const ad =
+          typeof astrologyRows[0].astrology_data === 'string'
+            ? JSON.parse(astrologyRows[0].astrology_data)
+            : astrologyRows[0].astrology_data;
+        // Only expose chart if we have at least moon or rising (not just sun)
+        if (ad && (ad.moon_sign || ad.rising_sign)) {
+          chartData = {
+            sunSign: ad.sun_sign || zodiacSign,
+            moonSign: ad.moon_sign || null,
+            risingSign: ad.rising_sign || null,
+          };
+        }
+      }
     }
 
     if (!zodiacSign) {
@@ -400,6 +418,7 @@ router.get('/horoscope/:tempUserId', async (req, res) => {
       horoscope: result.horoscope,
       zodiacSign,
       generatedAt: result.generated_at,
+      chartData, // null when only sun sign is available
     });
   } catch (err) {
     await logErrorFromCatch(err, 'free-trial', 'Error generating horoscope');

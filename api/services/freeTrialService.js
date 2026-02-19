@@ -238,7 +238,9 @@ export async function clearAstrologyMessages(userIdHash) {
 }
 
 /**
- * Calculate full birth chart directly using Lambda
+ * Calculate full birth chart directly using Lambda.
+ * Birth time is optional – defaults to noon (12:00:00) when not supplied, which
+ * still allows accurate moon-sign and rising-sign estimation.
  * @param {string} tempUserId - Temporary user ID
  * @param {Object} personalInfo - Personal information
  * @returns {Promise<void>}
@@ -246,8 +248,10 @@ export async function clearAstrologyMessages(userIdHash) {
 export async function enqueueFullBirthChartCalculation(tempUserId, personalInfo) {
   const { birthTime, birthCountry, birthProvince, birthCity, birthDate, birthTimezone } = personalInfo;
 
-  // Only calculate if we have complete location data
-  if (!birthTime || !birthCountry || !birthProvince || !birthCity || !birthDate) {
+  // Require at least city + province + country + date for a meaningful calculation.
+  // Birth time is optional; we default to noon so the lambda can still derive
+  // moon sign and rising sign (with ~30-minute accuracy).
+  if (!birthCountry || !birthProvince || !birthCity || !birthDate) {
     return;
   }
 
@@ -259,10 +263,11 @@ export async function enqueueFullBirthChartCalculation(tempUserId, personalInfo)
     // Import Lambda calculation function
     const { calculateBirthChart } = await import('./lambda-astrology.js');
     
-    // Call Lambda to calculate birth chart
+    // Call Lambda to calculate birth chart.
+    // Default birth_time to noon when not provided – still yields useful moon/rising signs.
     const result = await calculateBirthChart({
       birth_date: birthDate,
-      birth_time: birthTime,
+      birth_time: birthTime || '12:00:00',
       birth_country: birthCountry,
       birth_province: birthProvince,
       birth_city: birthCity,
@@ -344,21 +349,24 @@ export async function processPersonalInfoSave(tempUserId, personalInfo, zodiacSi
   // Update trial session with email
   await updateTrialSessionEmail(userIdHash, personalInfo.email);
 
-  // Determine if we have complete birth data for full calculation
-  const { birthTime, birthCountry, birthProvince, birthCity, birthDate } = personalInfo;
-  const hasCompleteBirthData = !!(birthTime && birthCountry && birthProvince && birthCity && birthDate);
+  // Determine if we have enough birth location data for a full chart calculation.
+  // Birth time is no longer required – the lambda defaults to noon when absent.
+  const { birthCountry, birthProvince, birthCity, birthDate } = personalInfo;
+  const hasLocationData = !!(birthCountry && birthProvince && birthCity && birthDate);
 
-  // Only save minimal astrology if we DON'T have complete birth data
-  // This prevents race condition where null values overwrite before worker completes
-  if (!hasCompleteBirthData) {
+  // Only save minimal astrology (sun sign) when we lack location data.
+  // If location data IS present we skip this so the upcoming full calculation
+  // doesn't race with a partial write.
+  if (!hasLocationData) {
     await saveMinimalAstrology(userIdHash, personalInfo.birthDate);
   }
 
   // Clear old astrology messages
   await clearAstrologyMessages(userIdHash);
 
-  // Enqueue full birth chart calculation if complete data provided
-  if (hasCompleteBirthData) {
+  // Trigger full birth chart calculation (awaited synchronously to guarantee
+  // data is written before the API response returns).
+  if (hasLocationData) {
     await enqueueFullBirthChartCalculation(tempUserId, personalInfo);
   }
 
