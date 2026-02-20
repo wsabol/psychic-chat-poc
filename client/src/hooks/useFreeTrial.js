@@ -30,23 +30,26 @@ export function useFreeTrial(isTemporaryAccount, tempUserId) {
       try {
         setLoading(true);
         
-        // FIRST: Check if session already exists to avoid rate limiting
+        // FIRST: Check if session already exists to avoid rate limiting.
+        // NOTE: If the session is completed we do NOT short-circuit here — we still
+        // call create-session so the server can reset it for whitelisted testers.
+        // For non-whitelisted users the server returns the completed state gracefully.
         try {
           const checkResponse = await fetch(`${API_URL}/free-trial/check-session/${tempUserId}`);
           if (checkResponse.ok) {
             const checkData = await checkResponse.json();
-            if (checkData.exists) {
+            if (checkData.exists && !checkData.isCompleted) {
+              // Active (non-completed) session found — resume it immediately
               sessionCreatedRef.current = true;
               setSessionId(checkData.sessionId);
               setCurrentStep(checkData.currentStep || 'chat');
-              setIsCompleted(checkData.isCompleted || false);
-              if (checkData.isCompleted) {
-                setError('This session has already been completed');
-              }
+              setIsCompleted(false);
               setLoading(false);
               creationInProgressRef.current = false;
               return;
             }
+            // Session is completed (or doesn't exist) — fall through to create-session
+            // so the server can apply whitelist reset logic if applicable.
           }
         } catch (checkErr) {
           // Check request failed, continue to creation attempt

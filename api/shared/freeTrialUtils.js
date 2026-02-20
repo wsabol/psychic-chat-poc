@@ -74,6 +74,33 @@ export async function createFreeTrialSession(tempUserId, ipAddress, db) {
 
     if (existingUserSession.rows.length > 0) {
       const session = existingUserSession.rows[0];
+
+      // Whitelisted IPs are testers - if their previous session is completed, reset it
+      // so they can run through the free trial flow again from the beginning.
+      if (isWhitelisted && session.is_completed) {
+        const resetResult = await db.query(
+          `UPDATE free_trial_sessions
+           SET current_step = 'chat',
+               is_completed = false,
+               completed_at = NULL,
+               started_at = NOW(),
+               last_activity_at = NOW(),
+               ip_address_hash = $2,
+               ip_address_encrypted = pgp_sym_encrypt($3, $4)
+           WHERE user_id_hash = $1
+           RETURNING id, current_step, started_at`,
+          [userIdHash, ipHash, ipAddress, process.env.ENCRYPTION_KEY]
+        );
+        return {
+          success: true,
+          sessionId: resetResult.rows[0].id,
+          currentStep: resetResult.rows[0].current_step,
+          startedAt: resetResult.rows[0].started_at,
+          resuming: false,
+          message: 'Session reset for whitelisted tester'
+        };
+      }
+
       // User found with existing session (different IP) - allow resume
       return {
         success: true,

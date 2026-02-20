@@ -76,7 +76,13 @@ export function useAuth() {
     handleLogout,
     resetAuthState: stateHook.resetAuthState,
     refreshEmailVerificationStatus: sessionHook.refreshEmailVerificationStatus,
-    createTemporaryAccount: () => sessionHook.createTemporaryAccount(stateHook.setLoading),
+    createTemporaryAccount: () => sessionHook.createTemporaryAccount(
+      stateHook.setLoading,
+      stateHook.setIsAuthenticated,
+      stateHook.setIsTemporaryAccount,
+      stateHook.setAuthUserId,
+      stateHook.setIsFirstTime
+    ),
     deleteTemporaryAccount: () => sessionHook.deleteTemporaryAccount(stateHook.isTemporaryAccount),
     exitApp: () => sessionHook.exitApp(stateHook.isTemporaryAccount),
 

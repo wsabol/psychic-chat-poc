@@ -25,6 +25,13 @@ router.post('/check-returning-user', async (req, res) => {
     const clientIp = extractClientIp(req);
     const ipHash = hashIpAddress(clientIp);
 
+    // Check 0: Is this IP whitelisted? Whitelisted IPs get unlimited trials (testers)
+    const whitelistCheck = await db.query(
+      'SELECT id FROM free_trial_whitelist WHERE ip_address_hash = $1',
+      [ipHash]
+    );
+    const isWhitelisted = whitelistCheck.rows.length > 0;
+
     // Check 1: Look for completed free trial sessions from this IP
     const freeTrialCheck = await db.query(
       `SELECT id, current_step, is_completed, user_id_hash, started_at, completed_at
@@ -52,12 +59,20 @@ router.post('/check-returning-user', async (req, res) => {
     let hasCompletedTrial = false;
 
     // If IP has completed free trial, they must log in or create account
+    // Exception: whitelisted IPs are testers who can always start fresh
     if (freeTrialCheck.rows.length > 0) {
       const trialSession = freeTrialCheck.rows[0];
-      hasCompletedTrial = trialSession.is_completed;
 
-      if (hasCompletedTrial) {
-        // Completed trial - must login
+      if (trialSession.is_completed && isWhitelisted) {
+        // Whitelisted tester with a completed session — treat as new user so the
+        // Landing page is shown and they can click "Try Free" again.  The actual
+        // session reset happens in createFreeTrialSession() when they click the button.
+        userType = 'new';
+        hasCompletedTrial = false;
+        sessionData = null;
+      } else if (trialSession.is_completed) {
+        // Non-whitelisted completed trial - must login
+        hasCompletedTrial = true;
         userType = 'free_trial_completed';
         sessionData = {
           completedAt: trialSession.completed_at,
@@ -65,6 +80,7 @@ router.post('/check-returning-user', async (req, res) => {
         };
       } else {
         // Incomplete trial - can resume
+        hasCompletedTrial = false;
         userType = 'free_trial_incomplete';
         sessionData = {
           currentStep: trialSession.current_step,

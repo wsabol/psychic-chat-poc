@@ -82,16 +82,31 @@ export function useAppState() {
   // Effect: Start email verification polling and cleanup old temp account on verification
   useEffect(() => {
     if (isVerification && auth.currentUser) {
-              const onVerified = async () => {
+      const onVerified = async () => {
         authState.setEmailVerified(true);
         authState.refreshEmailVerificationStatus();
         try {
           const newUserId = auth.currentUser?.uid;
           if (!newUserId) return;
+          const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+
+          // New approach: guest session stored as 'guest_user_id' (no Firebase account)
+          const guestUserId = localStorage.getItem('guest_user_id');
+          if (guestUserId && guestUserId.startsWith('temp_')) {
+            await fetch(`${API_URL}/cleanup/delete-temp-account/${guestUserId}`, {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' }
+            });
+            localStorage.removeItem('guest_user_id');
+          }
+
+          // Legacy: old Firebase-based temp account (temp_account_uid)
           const tempAccountUid = localStorage.getItem('temp_account_uid');
           if (tempAccountUid && tempAccountUid !== newUserId) {
-            const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
-            await fetch(`${API_URL}/cleanup/delete-temp-account/${tempAccountUid}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
+            await fetch(`${API_URL}/cleanup/delete-temp-account/${tempAccountUid}`, {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' }
+            });
             localStorage.removeItem('temp_account_uid');
             localStorage.removeItem('temp_account_email');
           }

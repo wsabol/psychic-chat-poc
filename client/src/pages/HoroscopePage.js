@@ -16,12 +16,15 @@ import BirthInfoMissingPrompt from '../components/BirthInfoMissingPrompt';
 import { formatDateByLanguage } from '../utils/dateLocaleUtils';
 import { formatTimestampToLocal } from '../utils/timestampFormatter';
 import LogoWithCopyright from '../components/LogoWithCopyright';
+import FreeTrialHoroscopePage from './FreeTrialHoroscopePage';
 import '../styles/responsive.css';
 import './HoroscopePage.css';
 
 /**
  * HoroscopePage - Displays daily/weekly horoscopes with voice support
  * FIXED: Prevents infinite re-render loop by only loading on mount + range change
+ * NOTE: Delegates to FreeTrialHoroscopePage for guest/temp users to avoid
+ * fetchWithTokenRefresh clearing localStorage on 401 responses.
  */
 export default function HoroscopePage({ userId, token, auth, onExit, onNavigateToPage }) {
   const { t, language } = useTranslation();
@@ -38,12 +41,17 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
   // Hooks
   const { speak, stop, pause, resume, isPlaying, isPaused, isLoading: isSpeechLoading, error: speechError, isSupported, volume, setVolume } = useSpeech();
   const { showingBrief, setShowingBrief, voiceEnabled } = useHoroscopePreferences(userId, token, API_URL);
-  const { horoscopeState, complianceStatus, setComplianceStatus, loadHoroscope, stopPolling } = useHoroscopeFetch(userId, token, API_URL, horoscopeRange, auth?.isAuthenticated || !!token);
+  // IMPORTANT: Do NOT enable horoscope fetching for temp/guest accounts.
+  // fetchWithTokenRefresh will get a 401, call localStorage.clear(), and destroy the guest session.
+  // FreeTrialHoroscopePage handles horoscope loading for temp accounts via its own unauthenticated endpoint.
+  const isTempAccount = auth?.isTemporaryAccount;
+  const { horoscopeState, complianceStatus, setComplianceStatus, loadHoroscope, stopPolling } = useHoroscopeFetch(userId, token, API_URL, horoscopeRange, (!isTempAccount && auth?.isAuthenticated) || !!token);
   const { astroInfo, fetchAstroInfo } = useAstroInfo(userId, token);
   const { completeTrial: completeFreeTrial } = useFreeTrial(auth?.isTemporaryAccount, userId);
 
-  // Fetch astro info on mount only
+  // Fetch astro info on mount only — skip for temp/guest accounts (auth-protected endpoint)
   useEffect(() => {
+    if (isTempAccount) return;
     if (!astroInfo) fetchAstroInfo();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -58,7 +66,11 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
 
   // ✅ CRITICAL FIX: Load horoscope only on mount and when range changes
   // Do NOT include loadHoroscope in deps - it changes on every render
+  // IMPORTANT: Skip for temp/guest accounts — FreeTrialHoroscopePage loads its own data
+  // via unauthenticated endpoints. Calling loadHoroscope() here would trigger
+  // fetchWithTokenRefresh on a 401-returning endpoint and wipe localStorage.
   useEffect(() => {
+    if (isTempAccount) return;
     // First mount: load initial horoscope
     if (!initLoadDoneRef.current) {
       initLoadDoneRef.current = true;
@@ -110,6 +122,14 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
     };
     loadSunSignData();
   }, [astroInfo, language]);
+
+  // Delegate to dedicated free trial page for guest users.
+  // Guest users have no Firebase token — any fetchWithTokenRefresh call on an
+  // auth-protected endpoint would clear localStorage and redirect to landing page.
+  // NOTE: This must come AFTER all hooks to comply with React's rules of hooks.
+  if (auth?.isTemporaryAccount) {
+    return <FreeTrialHoroscopePage userId={userId} auth={auth} onExit={onExit} />;
+  }
 
   // Handlers
   const handleClose = () => onExit?.();

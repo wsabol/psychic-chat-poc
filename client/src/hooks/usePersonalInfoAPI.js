@@ -17,8 +17,32 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 export function usePersonalInfoAPI(userId, token, isTemporaryAccount = false) {
   /**
    * Fetch personal information from server
+   * For temp/guest users: returns empty data directly (no auth token to use protected endpoint)
+   * For regular users: fetches from authenticated /user-profile endpoint
    */
   const fetchPersonalInfo = useCallback(async () => {
+    // IMPORTANT: Temp/guest users cannot call the auth-protected /user-profile endpoint.
+    // fetchWithTokenRefresh would detect the 401, find no Firebase user, clear localStorage,
+    // and redirect to the landing page — destroying the guest session.
+    // Temp users are filling in their info for the first time, so return empty data.
+    if (isTemporaryAccount) {
+      return {
+        success: true,
+        data: {
+          firstName: '',
+          lastName: '',
+          email: '',
+          birthCountry: '',
+          birthProvince: '',
+          birthCity: '',
+          birthDate: '',
+          birthTime: '',
+          sex: '',
+          addressPreference: ''
+        }
+      };
+    }
+
     try {
       const response = await fetchWithTokenRefresh(`${API_URL}/user-profile/${userId}`, {
         headers: { 'Authorization': token ? `Bearer ${token}` : '' }
@@ -49,7 +73,7 @@ export function usePersonalInfoAPI(userId, token, isTemporaryAccount = false) {
       logErrorFromCatch('[PERSONAL-INFO-API] Error fetching data:', err);
       return { success: false, error: err.message };
     }
-  }, [userId, token]);
+  }, [userId, token, isTemporaryAccount]);
 
   /**
    * Save personal information to server

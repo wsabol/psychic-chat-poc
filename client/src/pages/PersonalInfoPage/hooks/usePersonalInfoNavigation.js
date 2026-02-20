@@ -52,14 +52,19 @@ export function usePersonalInfoNavigation({
       return;
     }
 
-    // Poll for astrology data before navigating if needed
-    if (shouldPoll) {
-      const pollAttempts = isTemporaryAccount ? 60 : TIMING.ASTROLOGY_POLL_MAX_ATTEMPTS;
-      const pollInterval = isTemporaryAccount ? 200 : TIMING.ASTROLOGY_POLL_INTERVAL_MS;
+    // Temp/guest users cannot poll astrology (auth-protected endpoint, no token).
+    // Navigate directly to the horoscope page — FreeTrialHoroscopePage will load
+    // its own data via the /free-trial/horoscope endpoint (no auth required).
+    if (isTemporaryAccount) {
+      onNavigateToPage(targetPage);
+      return;
+    }
 
+    // Poll for astrology data before navigating if needed (regular users only)
+    if (shouldPoll) {
       await pollForAstrology(userId, token, API_URL, {
-        maxAttempts: pollAttempts,
-        intervalMs: pollInterval,
+        maxAttempts: TIMING.ASTROLOGY_POLL_MAX_ATTEMPTS,
+        intervalMs: TIMING.ASTROLOGY_POLL_INTERVAL_MS,
         onReady: () => {
           onNavigateToPage(targetPage);
         },

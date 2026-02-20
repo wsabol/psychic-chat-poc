@@ -15,9 +15,9 @@ import { useRegistrationFlow } from '../hooks/useRegistrationFlow';
  * Delegates registration flow to custom hook
  * Supports browser back button to return from register/forgot to login
  */
-export function Login() {
+export function Login({ defaultMode = 'login' }) {
   const { t } = useTranslation();
-  const [mode, setMode] = useState('login');
+  const [mode, setMode] = useState(defaultMode);
   
   // Shared state
   const [email, setEmail] = useState('');

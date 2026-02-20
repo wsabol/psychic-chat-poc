@@ -1,8 +1,8 @@
 import React from 'react';
 import { Login } from '../components/Login';
 
-export function LoginScreenWrapper() {
+export function LoginScreenWrapper({ defaultMode = 'login' }) {
     return (
-        <Login />
+        <Login defaultMode={defaultMode} />
     );
 }

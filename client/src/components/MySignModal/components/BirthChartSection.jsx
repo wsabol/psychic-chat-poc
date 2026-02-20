@@ -14,14 +14,6 @@ export function BirthChartSection({ astroData }) {
     <div className={styles.birthChartSection}>
       <h3 className={styles.birthChartTitle}>🔯 Your Birth Chart</h3>
       
-      {/* Sun Sign */}
-      <div className={`${styles.signCard} ${styles.sunSignCard}`}>
-        <p><strong>☀️ Sun Sign:</strong> {sun_sign} {sun_degree}°</p>
-        <p className={styles.signDescription}>
-          Your core identity, ego, and fundamental essence
-        </p>
-      </div>
-
       {/* Rising Sign */}
       {rising_sign && (
         <div className={`${styles.signCard} ${styles.risingSignCard}`}>
@@ -41,6 +33,14 @@ export function BirthChartSection({ astroData }) {
           </p>
         </div>
       )}
+
+      {/* Sun Sign */}
+      <div className={`${styles.signCard} ${styles.sunSignCard}`}>
+        <p><strong>☀️ Sun Sign:</strong> {sun_sign} {sun_degree}°</p>
+        <p className={styles.signDescription}>
+          Your core identity, ego, and fundamental essence
+        </p>
+      </div>
     </div>
   );
 }

@@ -33,8 +33,10 @@ export function useAuthHandlers(auth, modals, tempFlow) {
     }, [setShowRegisterMode]);
 
     const handleSignIn = useCallback(() => {
-        // Navigation to login handled by routing
-    }, []);
+        // Set hasLoggedOut=true so the router transitions to the login screen.
+        // Without this the landing page just re-renders itself (routing stays on 'landing').
+        auth.setHasLoggedOut(true);
+    }, [auth]);
 
     const handleSetupAccount = useCallback(async (onboardingData) => {
         setShowFinalModal(false);

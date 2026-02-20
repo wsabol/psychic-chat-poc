@@ -37,6 +37,7 @@ export function AppChat({ state }) {
     handleOnboardingClose,
     handleNavigateFromBilling,
     tempFlow,
+    handlers,
   } = state;
 
   const { user } = useAuth();
@@ -282,7 +283,12 @@ export function AppChat({ state }) {
           userId={authState.authUserId}
           onLogout={authState.handleLogout}
           onExit={() => {
-            tempFlow.setAppExited(true);
+            if (authState.isTemporaryAccount) {
+              // Skip the ThankYou/final modal — go directly to Firebase register screen
+              handlers.handleCreateAccount();
+            } else {
+              tempFlow.setAppExited(true);
+            }
           }}
           startingPage={startingPage}
           billingTab={billingTab}

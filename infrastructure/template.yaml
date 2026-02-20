@@ -126,23 +126,6 @@ Resources:
                   - logs:PutLogEvents
                 Resource: arn:aws:logs:*:*:*
 
-  # Lambda Function: Temp Account Cleanup
-  TempAccountCleanupFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub '${Environment}-temp-account-cleanup'
-      Description: Deletes temporary accounts older than 8 hours
-      CodeUri: ../lambdas/
-      Handler: temp-account-cleanup/index.handler
-      Role: !GetAtt LambdaExecutionRole.Arn
-      Events:
-        ScheduledEvent:
-          Type: Schedule
-          Properties:
-            Schedule: cron(0 */8 * * ? *)
-            Description: Run every 8 hours
-            Enabled: true
-
   # Lambda Function: Account Cleanup
   AccountCleanupFunction:
     Type: AWS::Serverless::Function
@@ -229,12 +212,6 @@ Resources:
             Enabled: true
 
   # CloudWatch Log Groups
-  TempAccountCleanupLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub '/aws/lambda/${Environment}-temp-account-cleanup'
-      RetentionInDays: 30
-
   AccountCleanupLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
@@ -266,12 +243,6 @@ Resources:
       RetentionInDays: 30
 
 Outputs:
-  TempAccountCleanupFunctionArn:
-    Description: ARN of the Temp Account Cleanup Lambda function
-    Value: !GetAtt TempAccountCleanupFunction.Arn
-    Export:
-      Name: !Sub '${Environment}-TempAccountCleanupFunctionArn'
-
   AccountCleanupFunctionArn:
     Description: ARN of the Account Cleanup Lambda function
     Value: !GetAtt AccountCleanupFunction.Arn

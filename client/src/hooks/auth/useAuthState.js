@@ -171,6 +171,27 @@ export function useAuthState(checkBillingStatus) {
             }
           }
         } else {
+          // ──────────────────────────────────────────────────────────────────
+          // No Firebase user — check for a local guest session (free trial).
+          // Guest sessions are identified by a temp_-prefixed UUID stored in
+          // localStorage (created by useAuthSession.createTemporaryAccount).
+          // This mirrors the mobile app's AsyncStorage-based guest approach;
+          // no Firebase account is ever created for free-trial users.
+          // ──────────────────────────────────────────────────────────────────
+          const guestUserId = localStorage.getItem('guest_user_id');
+          if (guestUserId && guestUserId.startsWith('temp_')) {
+            setAuthUserId(guestUserId);
+            setAuthEmail('');
+            setToken(null); // No Firebase token for guest sessions
+            setIsTemporaryAccount(true);
+            setIsAuthenticated(true);
+            setIsFirstTime(true);
+            setEmailVerified(false);
+            setIsEmailUser(false);
+            setLoading(false);
+            return;
+          }
+
           setIsAuthenticated(false);
           setAuthUserId(null);
           setAuthEmail(null);
@@ -179,7 +200,6 @@ export function useAuthState(checkBillingStatus) {
           setShowTwoFactor(false);
           setTempToken(null);
           setTempUserId(null);
-          // REMOVED: localStorage check for 'psychic_app_registered'
           // Now using database-driven session management via /auth/check-returning-user
           // isFirstTime will be determined by sessionCheckData in useAppRouting
           setLoading(false);

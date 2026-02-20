@@ -59,13 +59,15 @@ export function AppShells({ state }) {
             tempFlow.setAppExited(false);
             setVerificationFailed(false);
           }}
-                              onExit={async () => {
+          onExit={async () => {
             try {
               await authState.exitApp(authState.isTemporaryAccount);
-              // Reset app state like Create Account does
+              // Reset app state - keep hasLoggedOut=true so routing goes to login screen
               tempFlow.setAppExited(false);
               setVerificationFailed(false);
-              authState.setHasLoggedOut(false);
+              // NOTE: Do NOT call setHasLoggedOut(false) here.
+              // exitApp → handleLogout sets hasLoggedOut=true, which routes to login.
+              // Overriding it caused the login screen to never appear after free trial exit.
             } catch (err) {
               logErrorFromCatch('[EXIT-BUTTON] Error exiting app:', err);
               // Still reset state even if error
@@ -97,7 +99,7 @@ export function AppShells({ state }) {
   }
 
   if (isRegister) {
-    return <ErrorBoundary><LoginScreenWrapper /></ErrorBoundary>;
+    return <ErrorBoundary><LoginScreenWrapper defaultMode="register" /></ErrorBoundary>;
   }
 
   if (isLanding) {
@@ -115,7 +117,8 @@ export function AppShells({ state }) {
             handlers.handleCreateAccount();
           }}
           onSignIn={() => {
-            authState.setHasLoggedOut(false);
+            // handleSignIn sets hasLoggedOut=true to trigger the login route.
+            // Do NOT call setHasLoggedOut(false) here - that would cancel navigation.
             handlers.handleSignIn();
           }}
         />
