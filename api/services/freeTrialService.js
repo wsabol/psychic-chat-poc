@@ -239,8 +239,11 @@ export async function clearAstrologyMessages(userIdHash) {
 
 /**
  * Calculate full birth chart directly using Lambda.
- * Birth time is optional – defaults to noon (12:00:00) when not supplied, which
- * still allows accurate moon-sign and rising-sign estimation.
+ * Birth time is optional – defaults to noon (12:00:00) when not supplied.
+ * NOTE: Moon sign estimation is reasonably reliable at noon (the moon moves
+ * ~1 sign every 2–3 days). Rising sign WITHOUT birth time is NOT reliable —
+ * it changes every ~2 hours (one sign per 2 hours across 12 signs in 24 hours).
+ * When birth time is absent, treat any returned rising sign as approximate only.
  * @param {string} tempUserId - Temporary user ID
  * @param {Object} personalInfo - Personal information
  * @returns {Promise<void>}
@@ -249,8 +252,8 @@ export async function enqueueFullBirthChartCalculation(tempUserId, personalInfo)
   const { birthTime, birthCountry, birthProvince, birthCity, birthDate, birthTimezone } = personalInfo;
 
   // Require at least city + province + country + date for a meaningful calculation.
-  // Birth time is optional; we default to noon so the lambda can still derive
-  // moon sign and rising sign (with ~30-minute accuracy).
+  // Birth time is optional; we default to noon. Moon sign will be reasonable but
+  // rising sign will be unreliable without an accurate birth time.
   if (!birthCountry || !birthProvince || !birthCity || !birthDate) {
     return;
   }
