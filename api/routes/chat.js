@@ -160,9 +160,8 @@ router.get("/history/:userId", authorizeUser, verify2FA, async (req, res) => {
     try {
         const userIdHash = hashUserId(userId);
         
-                // Fetch messages from database
-        // Safe decrypt: handle NULL values gracefully with COALESCE
-                const query = `SELECT 
+        // Fetch messages from database - only user/assistant chat messages (exclude astrology)
+        const query = `SELECT 
             id, 
             role, 
             language_code,
@@ -170,6 +169,7 @@ router.get("/history/:userId", authorizeUser, verify2FA, async (req, res) => {
             pgp_sym_decrypt(content_brief_encrypted, $2)::text as brief_full
         FROM messages 
         WHERE user_id_hash = $1 
+        AND role IN ('user', 'assistant')
         ORDER BY created_at ASC`;
         
         const { rows } = await db.query(query, [userIdHash, ENCRYPTION_KEY]);

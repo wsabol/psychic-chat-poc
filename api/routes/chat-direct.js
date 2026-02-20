@@ -78,7 +78,7 @@ router.get("/history", async (req, res) => {
     try {
         const userIdHash = hashUserId(userId);
         
-        // Fetch messages from database - all messages (same as web app)
+        // Fetch messages from database - only user/assistant chat messages (exclude astrology)
         const query = `SELECT 
             id, 
             role, 
@@ -88,6 +88,7 @@ router.get("/history", async (req, res) => {
             created_at
         FROM messages 
         WHERE user_id_hash = $1 
+        AND role IN ('user', 'assistant')
         ORDER BY created_at ASC`;
         
         const { rows } = await db.query(query, [userIdHash, ENCRYPTION_KEY]);

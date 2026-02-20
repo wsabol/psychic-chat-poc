@@ -117,7 +117,7 @@ router.get('/history/:tempUserId', async (req, res) => {
       return validationError(res, 'Free trial session not found');
     }
 
-    // Fetch messages from database
+    // Fetch messages from database - only user/assistant chat messages (exclude astrology)
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
     const query = `SELECT 
       id, 
@@ -127,6 +127,7 @@ router.get('/history/:tempUserId', async (req, res) => {
       pgp_sym_decrypt(content_brief_encrypted, $2)::text as brief_full
     FROM messages 
     WHERE user_id_hash = $1 
+    AND role IN ('user', 'assistant')
     ORDER BY created_at ASC`;
 
     const { rows } = await db.query(query, [userIdHash, ENCRYPTION_KEY]);
