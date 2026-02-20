@@ -97,7 +97,7 @@ export function parseDateForStorage(dateString) {
  * @returns {boolean} True if valid step
  */
 export function isValidFreeTrialStep(step) {
-  const validSteps = ['chat', 'personal_info', 'horoscope', 'completed'];
+  const validSteps = ['created', 'chat', 'personal_info', 'horoscope', 'completed'];
   return validSteps.includes(step);
 }
 
@@ -106,7 +106,7 @@ export function isValidFreeTrialStep(step) {
  * @returns {string[]} Array of valid step values
  */
 export function getValidFreeTrialSteps() {
-  return ['chat', 'personal_info', 'horoscope', 'completed'];
+  return ['created', 'chat', 'personal_info', 'horoscope', 'completed'];
 }
 
 export default {

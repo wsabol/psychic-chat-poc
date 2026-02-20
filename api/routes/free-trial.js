@@ -304,6 +304,26 @@ router.post('/save-personal-info/:tempUserId', async (req, res) => {
 });
 
 /**
+ * Midpoint birth dates for each zodiac sign (used when user picks a sign without entering birth info).
+ * Year 2000 is arbitrary — only month/day matters for sun sign calculation.
+ * These dates fall squarely in the middle of each sign's range.
+ */
+const SIGN_MIDPOINT_DATES = {
+  aries:       '2000-04-05',
+  taurus:      '2000-05-05',
+  gemini:      '2000-06-05',
+  cancer:      '2000-07-07',
+  leo:         '2000-08-07',
+  virgo:       '2000-09-07',
+  libra:       '2000-10-07',
+  scorpio:     '2000-11-07',
+  sagittarius: '2000-12-07',
+  capricorn:   '2000-01-05',
+  aquarius:    '2000-02-08',
+  pisces:      '2000-03-05',
+};
+
+/**
  * GET /free-trial/horoscope/:tempUserId
  * Generate a daily horoscope for a free trial user (no auth required).
  * Requires personal info (at minimum a birth date) to have been saved first.
@@ -400,6 +420,25 @@ router.get('/horoscope/:tempUserId', async (req, res) => {
         console.error('[FREE-TRIAL] Failed to save picked zodiac sign:', saveErr.message);
         // Non-fatal — attempt horoscope generation anyway
       }
+
+      // Also save a synthetic birth date to user_personal_info so the horoscope
+      // pipeline (which requires a birth date) works correctly.
+      // The midpoint date falls squarely within the selected sign's range.
+      const syntheticBirthDate = SIGN_MIDPOINT_DATES[zodiacSign];
+      if (syntheticBirthDate) {
+        try {
+          await db.query(
+            `UPDATE user_personal_info
+             SET birth_date_encrypted = pgp_sym_encrypt($1, $2),
+                 updated_at = NOW()
+             WHERE user_id = $3`,
+            [syntheticBirthDate, process.env.ENCRYPTION_KEY, tempUserId]
+          );
+        } catch (birthDateErr) {
+          console.error('[FREE-TRIAL] Failed to save synthetic birth date:', birthDateErr.message);
+          // Non-fatal — astrology data alone may still be sufficient
+        }
+      }
     }
 
     if (!zodiacSign) {
@@ -416,6 +455,7 @@ router.get('/horoscope/:tempUserId', async (req, res) => {
 
     return successResponse(res, {
       horoscope: result.horoscope,
+      brief: result.brief ?? null,
       zodiacSign,
       generatedAt: result.generated_at,
       chartData, // null when only sun sign is available

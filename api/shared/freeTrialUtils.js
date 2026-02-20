@@ -80,7 +80,7 @@ export async function createFreeTrialSession(tempUserId, ipAddress, db) {
       if (isWhitelisted && session.is_completed) {
         const resetResult = await db.query(
           `UPDATE free_trial_sessions
-           SET current_step = 'chat',
+           SET current_step = 'created',
                is_completed = false,
                completed_at = NULL,
                started_at = NOW(),
@@ -123,7 +123,7 @@ export async function createFreeTrialSession(tempUserId, ipAddress, db) {
        (id, ip_address_hash, ip_address_encrypted, user_id_hash, current_step, is_completed, started_at, last_activity_at)
        VALUES ($1, $2, pgp_sym_encrypt($3, $7), $4, $5, $6, NOW(), NOW())
        RETURNING id, current_step, started_at`,
-      [sessionId, ipHash, ipAddress, userIdHash, 'chat', false, process.env.ENCRYPTION_KEY]
+      [sessionId, ipHash, ipAddress, userIdHash, 'created', false, process.env.ENCRYPTION_KEY]
     );
 
     // Create minimal user_personal_info entry so chat can work before full profile is completed
