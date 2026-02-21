@@ -7,7 +7,7 @@
 import express from 'express';
 import { db } from '../../shared/db.js';
 import { hashIpAddress } from '../../shared/hashUtils.js';
-import { extractClientIp } from '../../services/freeTrialService.js';
+import { extractClientIp } from '../../shared/ipUtils.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
 import { serverError, successResponse } from '../../utils/responses.js';
 

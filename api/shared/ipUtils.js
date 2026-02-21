@@ -4,18 +4,27 @@
  */
 
 /**
- * Extract client IP address from request
+ * Extract client IP address from request.
+ * Checks headers set by proxies/load-balancers first, then falls back to the
+ * raw socket address. IPv6 localhost variants are normalised to '127.0.0.1'.
  * @param {Object} req - Express request object
  * @returns {string} Client IP address
  */
 export function extractClientIp(req) {
-  return (
-    req.headers['x-client-ip'] || 
+  const ip =
+    req.headers['x-client-ip'] ||
     req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
     req.connection?.remoteAddress ||
     req.socket?.remoteAddress ||
-    'Unknown'
-  );
+    req.ip ||
+    '127.0.0.1'; // Fallback for local development
+
+  // Normalise IPv6 localhost representations
+  if (ip === '::1' || ip === '::ffff:127.0.0.1') {
+    return '127.0.0.1';
+  }
+
+  return ip;
 }
 
 /**

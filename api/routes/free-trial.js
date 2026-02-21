@@ -4,55 +4,68 @@
  */
 
 import express from 'express';
-import { db } from '../shared/db.js';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
+import {
+  serverError, validationError, forbiddenError,
+  rateLimitError, notFoundError, successResponse,
+} from '../utils/responses.js';
+import { hashTempUserId } from '../shared/hashUtils.js';
+import { validateAge } from '../shared/ageValidator.js';
+import { handleAgeViolation } from '../shared/violationHandler.js';
+import { parseDateForStorage, isValidFreeTrialStep } from '../shared/validationUtils.js';
+import { extractClientIp } from '../shared/ipUtils.js';
 import {
   createFreeTrialSession,
   updateFreeTrialStep,
   completeFreeTrialSession,
-  getFreeTrialSession
-} from '../shared/freeTrialUtils.js';
-import { logErrorFromCatch } from '../shared/errorLogger.js';
-import { serverError, validationError, forbiddenError, rateLimitError, notFoundError, successResponse } from '../utils/responses.js';
-import { hashUserId } from '../shared/hashUtils.js';
-import { validateAge } from '../shared/ageValidator.js';
-import { handleAgeViolation } from '../shared/violationHandler.js';
-import { parseDateForStorage, isValidFreeTrialStep } from '../shared/validationUtils.js';
-import {
-  extractClientIp,
+  getFreeTrialSession,
   sanitizePersonalInfo,
-  processPersonalInfoSave
+  processPersonalInfoSave,
+  resolveZodiacSignForTrial,
 } from '../services/freeTrialService.js';
 import { freeTrialSessionLimiter, freeTrialLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
 
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+
+/**
+ * Log an internal service error and return a generic 500 to the client.
+ * Keeps error-handling at route level DRY without leaking internal details.
+ * @param {Object} res           - Express response object
+ * @param {Object} result        - Failed service result (must have .error)
+ * @param {string} logContext    - Message passed to the error logger
+ * @param {string} clientMessage - Generic message returned to the client
+ */
+async function handleServiceFailure(res, result, logContext, clientMessage) {
+  await logErrorFromCatch(new Error(result.error), 'free-trial', logContext);
+  return serverError(res, clientMessage);
+}
+
+// ─── ROUTES ───────────────────────────────────────────────────────────────────
+
 /**
  * GET /free-trial/check-session/:tempUserId
- * Check if a session exists without creating one
- * NOTE: No rate limiter for development
+ * Check whether a session exists without creating one.
+ * Returns { exists: false } when no session is found — NOT a 404.
  */
-router.get('/check-session/:tempUserId', async (req, res) => {
+router.get('/check-session/:tempUserId', freeTrialLimiter, async (req, res) => {
   try {
     const { tempUserId } = req.params;
-    
-    if (!tempUserId) {
-      return validationError(res, 'Missing required information');
-    }
+    if (!tempUserId) return validationError(res, 'Missing required information');
 
-    const result = await getFreeTrialSession(tempUserId, db);
+    const result = await getFreeTrialSession(tempUserId);
 
     if (!result.success) {
-      if (result.notFound) {
-        return res.json({ exists: false });
-      }
+      if (result.notFound) return res.json({ exists: false });
       return serverError(res, 'Unable to check session');
     }
 
     return res.json({
-      exists: true,
-      sessionId: result.sessionId,
+      exists:      true,
+      sessionId:   result.sessionId,
       currentStep: result.currentStep,
-      isCompleted: result.isCompleted
+      isCompleted: result.isCompleted,
     });
   } catch (err) {
     await logErrorFromCatch(err, 'free-trial', 'Error checking session');
@@ -62,48 +75,34 @@ router.get('/check-session/:tempUserId', async (req, res) => {
 
 /**
  * POST /free-trial/create-session
- * Create a new free trial session for temp user
- * 
- * Body: { tempUserId }
- * Headers: x-client-ip (or from request)
- * 
- * NOTE: No rate limiter on this endpoint for development
- * Production uses IP-based device tracking in createFreeTrialSession()
+ * Create a new (or resume an existing) free trial session.
+ *
+ * Body   : { tempUserId }
+ * Headers: x-client-ip (or inferred from the request)
+ *
+ * IP-based device tracking and trial limits are enforced inside
+ * createFreeTrialSession() — no additional checks needed here.
  */
-router.post('/create-session', async (req, res) => {
+router.post('/create-session', freeTrialSessionLimiter, async (req, res) => {
   try {
     const { tempUserId } = req.body;
-    
-    if (!tempUserId) {
-      return validationError(res, 'Missing required information');
-    }
+    if (!tempUserId) return validationError(res, 'Missing required information');
 
-    // Get client IP from request
     const clientIp = extractClientIp(req);
-
-    const result = await createFreeTrialSession(tempUserId, clientIp, db);
+    const result   = await createFreeTrialSession(tempUserId, clientIp);
 
     if (!result.success) {
-      // Handle different types of trial restrictions
-      if (result.alreadyCompleted) {
-        return rateLimitError(res, 3600);
-      }
-      if (result.alreadyStarted) {
-        // Device already has a trial in progress with different user
-        return rateLimitError(res, 3600);
-      }
-      // Log detailed error but return generic message
+      if (result.alreadyCompleted || result.alreadyStarted) return rateLimitError(res, 3600);
       await logErrorFromCatch(new Error(result.error), 'free-trial', 'Session creation failed');
       return serverError(res, 'Unable to start free trial session');
     }
 
-    // Return success even if resuming existing session
     return res.json({
-      success: true,
-      sessionId: result.sessionId,
+      success:     true,
+      sessionId:   result.sessionId,
       currentStep: result.currentStep,
-      resuming: result.resuming || false,
-      message: result.message
+      resuming:    result.resuming || false,
+      message:     result.message,
     });
   } catch (err) {
     await logErrorFromCatch(err, 'free-trial', 'Error creating session');
@@ -113,30 +112,21 @@ router.post('/create-session', async (req, res) => {
 
 /**
  * POST /free-trial/update-step/:tempUserId
- * Update current step in free trial progress
- * 
+ * Advance the current step in the free trial progress.
+ *
  * Body: { step: 'chat' | 'personal_info' | 'horoscope' | 'completed' }
- * NOTE: No rate limiter for development
  */
-router.post('/update-step/:tempUserId', async (req, res) => {
+router.post('/update-step/:tempUserId', freeTrialLimiter, async (req, res) => {
   try {
     const { tempUserId } = req.params;
-    const { step } = req.body;
+    const { step }       = req.body;
 
-    if (!tempUserId || !step) {
-      return validationError(res, 'Missing required information');
-    }
+    if (!tempUserId || !step)        return validationError(res, 'Missing required information');
+    if (!isValidFreeTrialStep(step)) return validationError(res, 'Invalid step value');
 
-    if (!isValidFreeTrialStep(step)) {
-      return validationError(res, 'Invalid step value');
-    }
-
-    const result = await updateFreeTrialStep(tempUserId, step, db);
-
+    const result = await updateFreeTrialStep(tempUserId, step);
     if (!result.success) {
-      // Log detailed error but return generic message
-      await logErrorFromCatch(new Error(result.error), 'free-trial', 'Step update failed');
-      return serverError(res, 'Unable to update trial progress');
+      return handleServiceFailure(res, result, 'Step update failed', 'Unable to update trial progress');
     }
 
     return res.json(result);
@@ -148,23 +138,16 @@ router.post('/update-step/:tempUserId', async (req, res) => {
 
 /**
  * POST /free-trial/complete/:tempUserId
- * Mark free trial as completed
- * NOTE: No rate limiter for development
+ * Mark the free trial as completed.
  */
-router.post('/complete/:tempUserId', async (req, res) => {
+router.post('/complete/:tempUserId', freeTrialLimiter, async (req, res) => {
   try {
     const { tempUserId } = req.params;
+    if (!tempUserId) return validationError(res, 'Missing required information');
 
-    if (!tempUserId) {
-      return validationError(res, 'Missing required information');
-    }
-
-    const result = await completeFreeTrialSession(tempUserId, db);
-
+    const result = await completeFreeTrialSession(tempUserId);
     if (!result.success) {
-      // Log detailed error but return generic message
-      await logErrorFromCatch(new Error(result.error), 'free-trial', 'Completion failed');
-      return serverError(res, 'Unable to complete trial session');
+      return handleServiceFailure(res, result, 'Completion failed', 'Unable to complete trial session');
     }
 
     return res.json(result);
@@ -176,26 +159,17 @@ router.post('/complete/:tempUserId', async (req, res) => {
 
 /**
  * GET /free-trial/session/:tempUserId
- * Get current free trial session info
- * NOTE: No rate limiter for development
+ * Retrieve current free trial session details.
  */
-router.get('/session/:tempUserId', async (req, res) => {
+router.get('/session/:tempUserId', freeTrialLimiter, async (req, res) => {
   try {
     const { tempUserId } = req.params;
+    if (!tempUserId) return validationError(res, 'Missing required information');
 
-    if (!tempUserId) {
-      return validationError(res, 'Missing required information');
-    }
-
-    const result = await getFreeTrialSession(tempUserId, db);
-
+    const result = await getFreeTrialSession(tempUserId);
     if (!result.success) {
-      if (result.notFound) {
-        return notFoundError(res, 'Session not found');
-      }
-      // Log detailed error but return generic message
-      await logErrorFromCatch(new Error(result.error), 'free-trial', 'Session retrieval failed');
-      return serverError(res, 'Unable to retrieve trial session');
+      if (result.notFound) return notFoundError(res, 'Session not found');
+      return handleServiceFailure(res, result, 'Session retrieval failed', 'Unable to retrieve trial session');
     }
 
     return res.json(result);
@@ -207,94 +181,43 @@ router.get('/session/:tempUserId', async (req, res) => {
 
 /**
  * POST /free-trial/save-personal-info/:tempUserId
- * Save personal information for free trial users (no authentication required)
- * This endpoint allows temp users to save their personal info without Firebase auth tokens
- * 
- * Body: { 
- *   firstName, lastName, email, birthDate, birthTime, 
- *   birthCountry, birthProvince, birthCity, birthTimezone, 
- *   sex, addressPreference, zodiacSign, astrologyData 
- * }
- * NOTE: No rate limiter for development
+ * Save personal information for a free trial user (no authentication required).
+ *
+ * Body: { firstName, lastName, email, birthDate, birthTime,
+ *         birthCountry, birthProvince, birthCity, birthTimezone,
+ *         sex, addressPreference, zodiacSign, astrologyData }
+ *
+ * Only `email` and `birthDate` are required — all other fields are optional.
  */
-router.post('/save-personal-info/:tempUserId', async (req, res) => {
+router.post('/save-personal-info/:tempUserId', freeTrialLimiter, async (req, res) => {
   try {
     const { tempUserId } = req.params;
-    const { 
-      firstName, 
-      lastName, 
-      email, 
-      birthDate, 
-      birthTime, 
-      birthCountry, 
-      birthProvince, 
-      birthCity, 
-      birthTimezone, 
-      sex, 
-      addressPreference, 
-      zodiacSign, 
-      astrologyData 
-    } = req.body;
+    if (!tempUserId) return validationError(res, 'User ID is required');
 
-    // Validate required fields
-    if (!tempUserId) {
-      return validationError(res, 'User ID is required');
-    }
+    // Pull out fields that need up-front handling; spread the rest to sanitizePersonalInfo
+    const { email, birthDate, zodiacSign, astrologyData, ...profileFields } = req.body;
+    if (!email || !birthDate) return validationError(res, 'Missing required fields: email, birthDate');
 
-    // Temp users have relaxed requirements - only email and birthDate are required
-    if (!email || !birthDate) {
-      return validationError(res, 'Missing required fields: email, birthDate');
-    }
-
-    // Parse and validate birth date
+    // Normalise and validate birth date
     const parsedBirthDate = parseDateForStorage(birthDate);
-    
     if (!parsedBirthDate || parsedBirthDate === 'Invalid Date') {
       return validationError(res, 'Invalid birth date format');
     }
 
-    // Age validation (18+ requirement)
+    // Enforce 18+ age requirement
     const ageValidation = validateAge(parsedBirthDate);
     if (!ageValidation.isValid) {
-      return validationError(res, ageValidation.error + ' (This app requires users to be 18 years or older)');
+      return validationError(res, `${ageValidation.error} (This app requires users to be 18 years or older)`);
     }
-
     if (!ageValidation.isAdult) {
-      const violationResult = await handleAgeViolation(tempUserId, ageValidation.age);
-
-      if (violationResult.deleted) {
-        return forbiddenError(res, violationResult.error);
-      } else {
-        return forbiddenError(res, violationResult.message);
-      }
+      const violation = await handleAgeViolation(tempUserId, ageValidation.age);
+      return forbiddenError(res, violation.deleted ? violation.error : violation.message);
     }
 
-    // Sanitize and apply defaults to personal information
-    const personalInfo = sanitizePersonalInfo({
-      firstName,
-      lastName,
-      email,
-      birthDate: parsedBirthDate,
-      birthTime,
-      birthCountry,
-      birthProvince,
-      birthCity,
-      birthTimezone,
-      sex,
-      addressPreference
-    });
-
-    // Process the complete personal info save operation
-    const result = await processPersonalInfoSave(
-      tempUserId, 
-      personalInfo, 
-      zodiacSign, 
-      astrologyData
-    );
-
-    if (!result.success) {
-      return serverError(res, result.error);
-    }
+    // Sanitize inputs and apply defaults, then orchestrate the full save
+    const personalInfo = sanitizePersonalInfo({ ...profileFields, email, birthDate: parsedBirthDate });
+    const result       = await processPersonalInfoSave(tempUserId, personalInfo, zodiacSign, astrologyData);
+    if (!result.success) return serverError(res, result.error);
 
     return res.json(result);
   } catch (err) {
@@ -304,161 +227,50 @@ router.post('/save-personal-info/:tempUserId', async (req, res) => {
 });
 
 /**
- * Midpoint birth dates for each zodiac sign (used when user picks a sign without entering birth info).
- * Year 2000 is arbitrary — only month/day matters for sun sign calculation.
- * These dates fall squarely in the middle of each sign's range.
- */
-const SIGN_MIDPOINT_DATES = {
-  aries:       '2000-04-05',
-  taurus:      '2000-05-05',
-  gemini:      '2000-06-05',
-  cancer:      '2000-07-07',
-  leo:         '2000-08-07',
-  virgo:       '2000-09-07',
-  libra:       '2000-10-07',
-  scorpio:     '2000-11-07',
-  sagittarius: '2000-12-07',
-  capricorn:   '2000-01-05',
-  aquarius:    '2000-02-08',
-  pisces:      '2000-03-05',
-};
-
-/**
  * GET /free-trial/horoscope/:tempUserId
  * Generate a daily horoscope for a free trial user (no auth required).
+ *
  * Requires personal info (at minimum a birth date) to have been saved first.
- * Falls back to a provided ?zodiacSign= query param for users who skipped personal info.
- * NOTE: No rate limiter for development
+ * Falls back to ?zodiacSign= query param for users who skipped personal info.
+ *
+ * Note: processor.js is imported dynamically to avoid circular-dependency issues
+ * at module load time — this is the established pattern across all route files.
  */
-router.get('/horoscope/:tempUserId', async (req, res) => {
+router.get('/horoscope/:tempUserId', freeTrialLimiter, async (req, res) => {
   try {
-    const { tempUserId } = req.params;
+    const { tempUserId }          = req.params;
     const { zodiacSign: signParam } = req.query;
 
-    if (!tempUserId) {
-      return validationError(res, 'Missing tempUserId');
+    if (!tempUserId) return validationError(res, 'Missing tempUserId');
+
+    // Confirm a free trial session exists before doing any work
+    const sessionResult = await getFreeTrialSession(tempUserId);
+    if (!sessionResult.success) {
+      if (sessionResult.notFound) return notFoundError(res, 'Free trial session not found');
+      return serverError(res, 'Unable to verify trial session');
     }
 
-    // Verify the free trial session exists
-    const userIdHash = hashUserId(tempUserId);
-    const sessionCheck = await db.query(
-      `SELECT id FROM free_trial_sessions WHERE user_id_hash = $1`,
-      [userIdHash]
-    );
-    if (sessionCheck.rows.length === 0) {
-      return notFoundError(res, 'Free trial session not found');
-    }
-
-    // Determine zodiac sign: prefer stored astrology data, then birth date calculation, then query param
-    let zodiacSign = null;
-    let chartData = null; // will hold { sunSign, moonSign, risingSign } when available
-
-    const { rows: astrologyRows } = await db.query(
-      `SELECT zodiac_sign, astrology_data FROM user_astrology WHERE user_id_hash = $1`,
-      [userIdHash]
-    );
-    if (astrologyRows.length > 0) {
-      if (astrologyRows[0].zodiac_sign) {
-        zodiacSign = astrologyRows[0].zodiac_sign;
-      }
-      // Extract full birth-chart data if it was calculated by the lambda
-      if (astrologyRows[0].astrology_data) {
-        const ad =
-          typeof astrologyRows[0].astrology_data === 'string'
-            ? JSON.parse(astrologyRows[0].astrology_data)
-            : astrologyRows[0].astrology_data;
-        // Only expose chart if we have at least moon or rising (not just sun)
-        if (ad && (ad.moon_sign || ad.rising_sign)) {
-          chartData = {
-            sunSign: ad.sun_sign || zodiacSign,
-            moonSign: ad.moon_sign || null,
-            risingSign: ad.rising_sign || null,
-          };
-        }
-      }
-    }
-
-    if (!zodiacSign) {
-      // Try to calculate from stored birth date
-      const { rows: piRows } = await db.query(
-        `SELECT pgp_sym_decrypt(birth_date_encrypted, $1)::text AS birth_date
-         FROM user_personal_info WHERE user_id = $2`,
-        [process.env.ENCRYPTION_KEY, tempUserId]
-      );
-      if (piRows.length > 0 && piRows[0].birth_date && piRows[0].birth_date !== 'null') {
-        const { calculateSunSignFromDate } = await import('../shared/zodiacUtils.js');
-        zodiacSign = calculateSunSignFromDate(piRows[0].birth_date);
-      }
-    }
-
-    // Final fallback: sign provided by client (user picked manually via sign-picker UI)
-    if (!zodiacSign && signParam) {
-      zodiacSign = String(signParam).toLowerCase();
-
-      // Persist the picked sign so processHoroscopeSync can find it in user_astrology.
-      // Without this the horoscope generator has no sign data and would throw.
-      try {
-        const minimalAstrologyData = {
-          sun_sign: zodiacSign,
-          sun_degree: 0,
-          moon_sign: null,
-          moon_degree: null,
-          rising_sign: null,
-          rising_degree: null,
-          calculated_at: new Date().toISOString()
-        };
-        await db.query(
-          `INSERT INTO user_astrology (user_id_hash, zodiac_sign, astrology_data)
-           VALUES ($1, $2, $3)
-           ON CONFLICT (user_id_hash) DO UPDATE SET
-             zodiac_sign = EXCLUDED.zodiac_sign,
-             astrology_data = EXCLUDED.astrology_data,
-             updated_at = CURRENT_TIMESTAMP`,
-          [userIdHash, zodiacSign, JSON.stringify(minimalAstrologyData)]
-        );
-      } catch (saveErr) {
-        console.error('[FREE-TRIAL] Failed to save picked zodiac sign:', saveErr.message);
-        // Non-fatal — attempt horoscope generation anyway
-      }
-
-      // Also save a synthetic birth date to user_personal_info so the horoscope
-      // pipeline (which requires a birth date) works correctly.
-      // The midpoint date falls squarely within the selected sign's range.
-      const syntheticBirthDate = SIGN_MIDPOINT_DATES[zodiacSign];
-      if (syntheticBirthDate) {
-        try {
-          await db.query(
-            `UPDATE user_personal_info
-             SET birth_date_encrypted = pgp_sym_encrypt($1, $2),
-                 updated_at = NOW()
-             WHERE user_id = $3`,
-            [syntheticBirthDate, process.env.ENCRYPTION_KEY, tempUserId]
-          );
-        } catch (birthDateErr) {
-          console.error('[FREE-TRIAL] Failed to save synthetic birth date:', birthDateErr.message);
-          // Non-fatal — astrology data alone may still be sufficient
-        }
-      }
-    }
+    // Resolve zodiac sign — three-tier fallback:
+    //   1. Stored astrology data  →  2. Birth date calculation  →  3. Client sign-picker param
+    const userIdHash              = hashTempUserId(tempUserId);
+    const { zodiacSign, chartData } = await resolveZodiacSignForTrial(userIdHash, tempUserId, signParam);
 
     if (!zodiacSign) {
       return validationError(res, 'Zodiac sign unavailable. Please save your birth date or select your sign.');
     }
 
-    // Generate horoscope synchronously (works for temp users — no compliance checks required)
+    // Generate horoscope synchronously (temp users skip compliance checks)
     const { processHoroscopeSync } = await import('../services/chat/processor.js');
     const result = await processHoroscopeSync(tempUserId, 'daily');
 
-    if (!result || !result.horoscope) {
-      return serverError(res, 'Failed to generate horoscope');
-    }
+    if (!result?.horoscope) return serverError(res, 'Failed to generate horoscope');
 
     return successResponse(res, {
-      horoscope: result.horoscope,
-      brief: result.brief ?? null,
+      horoscope:   result.horoscope,
+      brief:       result.brief ?? null,
       zodiacSign,
       generatedAt: result.generated_at,
-      chartData, // null when only sun sign is available
+      chartData,   // null when only sun sign is available
     });
   } catch (err) {
     await logErrorFromCatch(err, 'free-trial', 'Error generating horoscope');
