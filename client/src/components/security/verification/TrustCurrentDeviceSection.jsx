@@ -4,9 +4,9 @@ import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * TrustCurrentDeviceSection - Trust the current device
- * Allows user to trust their current device for 30 days
+ * Allows user to permanently trust their current device
  */
-export function TrustCurrentDeviceSection({ userId, token, apiUrl }) {
+export function TrustCurrentDeviceSection({ userId, token, apiUrl, onDeviceTrusted }) {
   const { t } = useTranslation();
   const [isCurrentDeviceTrusted, setIsCurrentDeviceTrusted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -52,6 +52,7 @@ export function TrustCurrentDeviceSection({ userId, token, apiUrl }) {
         setIsCurrentDeviceTrusted(true);
         setSuccess(t('security.trustDevice.successTrusted'));
         setTimeout(() => setSuccess(null), 3000);
+        onDeviceTrusted?.();
       } else {
         setError(data.error || t('security.trustDevice.errorTrust'));
       }

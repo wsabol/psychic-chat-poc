@@ -173,7 +173,10 @@ app.use((req, res, next) => {
   const isLocalhost = rawIp?.includes('127.0.0.1') || 
                       rawIp?.includes('::1') || 
                       rawIp?.includes('localhost') ||
-                      forwardedFor?.includes('127.0.0.1');
+                      forwardedFor?.includes('127.0.0.1') ||
+                      // Android emulator connects to host via 10.0.2.2; host sees it as 10.0.2.15
+                      rawIp?.includes('10.0.2.2') ||
+                      rawIp?.includes('10.0.2.15');
   
   if (isDevEnvironment || isLocalhost) {
     return next();

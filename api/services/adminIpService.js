@@ -198,6 +198,27 @@ export async function getTrustedIPs(userId) {
 }
 
 /**
+ * Revoke trust on an IP for an admin user by current IP address
+ * (used by the "revoke current device" flow where we know the IP but not the row id)
+ */
+export async function revokeTrustedIPByAddress(userId, ipAddress) {
+  try {
+    const userIdHash = hashUserId(userId);
+    const result = await db.query(
+      `DELETE FROM admin_trusted_ips
+       WHERE user_id_hash = $1
+         AND pgp_sym_decrypt(ip_address_encrypted, $2) = $3
+       RETURNING id`,
+      [userIdHash, ENCRYPTION_KEY, ipAddress]
+    );
+    return result.rows.length > 0;
+  } catch (err) {
+    logErrorFromCatch(err, 'admin', 'revoke trusted IP by address');
+    return false;
+  }
+}
+
+/**
  * Revoke trust on an IP for an admin user
  */
 export async function revokeTrustedIP(userId, ipId) {

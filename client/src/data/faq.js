@@ -233,12 +233,12 @@ export const FAQ_DATA = [
       {
         id: 'trust-device',
         question: 'How do I trust a device?',
-        answer: 'To skip 2FA on a trusted device:\n1. Enable 2FA in Security settings\n2. When logging in, verify with the 2FA code\n3. Check "Trust this device for 30 days"\n4. Complete login\n\nThe device will be trusted for 30 days and won\'t require 2FA codes. You can manage trusted devices in the Security page.'
+        answer: 'To skip 2FA on a trusted device:\n1. Enable 2FA in Security settings\n2. Go to Security → 2FA tab\n3. Click "Trust This Device"\n\nThe device will be trusted permanently and won\'t require 2FA codes. You can manage trusted devices in the Security page.'
       },
       {
         id: 'manage-devices',
         question: 'How do I manage my devices?',
-        answer: 'To manage trusted devices:\n1. Go to Security page → Verification & 2FA\n2. Scroll to "Trusted Devices"\n3. View all devices that are trusted\n4. Click "Revoke" to remove trust from any device\n5. You can also trust your current device from this page'
+        answer: 'To manage trusted devices:\n1. Go to Security page → Verification & 2FA\n2. Scroll to "Trusted Devices"\n3. View all devices that are trusted (no expiry — trusted permanently)\n4. Click "Revoke" to remove trust from any device\n5. You can also trust your current device from this page'
       },
       {
         id: 'forgot-password',

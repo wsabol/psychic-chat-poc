@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import registerRoutes from './auth-endpoints/register.js';
 import loginRoutes from './auth-endpoints/login.js';
-import twoFARoutes from './auth-endpoints/2fa.js';
+import twoFARoutes from './auth-endpoints/2fa/index.js';
 import accountRoutes from './auth-endpoints/account.js';
 
 const router = Router();

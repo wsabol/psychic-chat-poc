@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import AlertMessage from './verification/AlertMessage';
 import { useVerificationMethods } from './verification/hooks/useVerificationMethods';
 import { useVerificationAPI } from './verification/hooks/useVerificationAPI';
@@ -21,6 +21,9 @@ export default function VerificationAndTwoFATab({ userId, token, apiUrl, userEma
 
   // 2FA settings
   const twoFA = use2FASettings(userId, token, apiUrl);
+
+  // Increment to force TrustedDevicesSection to remount and re-fetch after a device is trusted
+  const [deviceListVersion, setDeviceListVersion] = useState(0);
 
   const error = loadError || apiError || twoFA.twoFAError;
 
@@ -101,12 +104,14 @@ export default function VerificationAndTwoFATab({ userId, token, apiUrl, userEma
           userId={userId}
           token={token}
           apiUrl={apiUrl}
+          onDeviceTrusted={() => setDeviceListVersion(v => v + 1)}
         />
       )}
 
       {/* Section 4: Trusted Devices List */}
       {twoFA.twoFAEnabled && (
         <TrustedDevicesSection
+          key={deviceListVersion}
           userId={userId}
           token={token}
           apiUrl={apiUrl}

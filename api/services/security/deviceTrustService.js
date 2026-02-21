@@ -36,8 +36,9 @@ export async function checkDeviceTrust(userId, userAgent, ipAddress = null) {
 
     const session = result.rows[0];
 
-    // Check if device is trusted and not expired
-    if (session.is_trusted && session.trust_expiry && new Date(session.trust_expiry) > new Date()) {
+    // NULL trust_expiry means permanent trust; otherwise check expiry date
+    const trustValid = !session.trust_expiry || new Date(session.trust_expiry) > new Date();
+    if (session.is_trusted && trustValid) {
       // Only check user-agent, not IP (IP changes frequently on mobile)
       if (session.stored_ua === userAgent) {
         return { isTrusted: true, session };
@@ -58,53 +59,26 @@ export async function checkDeviceTrust(userId, userAgent, ipAddress = null) {
  * @param {number} durationDays - How many days to trust the device
  * @returns {Promise<Object>} Result with success status
  */
-export async function trustDevice(userId, deviceInfo, durationDays = SECURITY_CONFIG.DEVICE_TRUST_DURATION_DAYS) {
+export async function trustDevice(userId, deviceInfo) {
   try {
     const { userAgent, ipAddress, deviceName: providedDeviceName } = deviceInfo;
     const userIdHash = hashUserId(userId);
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
     const deviceName = providedDeviceName || extractDeviceName(userAgent);
 
-    // UPSERT pattern: Update if exists, insert if not
-    const updateResult = await db.query(
-      `UPDATE security_sessions 
-       SET device_name_encrypted = pgp_sym_encrypt($2, $3),
-           ip_address_encrypted = pgp_sym_encrypt($4, $3),
-           user_agent_encrypted = pgp_sym_encrypt($5, $3),
-           is_trusted = true,
-           trust_expiry = NOW() + INTERVAL '${durationDays} days',
-           last_active = NOW()
-       WHERE user_id_hash = $1
-       RETURNING id`,
+    // UPSERT: trust_expiry = NULL means permanent trust
+    await db.query(
+      `INSERT INTO security_sessions (user_id_hash, device_name_encrypted, ip_address_encrypted, user_agent_encrypted, is_trusted, trust_expiry, last_active, created_at)
+       VALUES ($1, pgp_sym_encrypt($2, $3), pgp_sym_encrypt($4, $3), pgp_sym_encrypt($5, $3), true, NULL, NOW(), NOW())
+       ON CONFLICT (user_id_hash) DO UPDATE SET
+         device_name_encrypted = pgp_sym_encrypt($2, $3),
+         ip_address_encrypted = pgp_sym_encrypt($4, $3),
+         user_agent_encrypted = pgp_sym_encrypt($5, $3),
+         is_trusted = true,
+         trust_expiry = NULL,
+         last_active = NOW()`,
       [userIdHash, deviceName, ENCRYPTION_KEY, ipAddress, userAgent]
     );
-
-    // If no row was updated, insert new one
-    if (updateResult.rows.length === 0) {
-      await db.query(
-        `INSERT INTO security_sessions (
-          user_id_hash, 
-          device_name_encrypted, 
-          ip_address_encrypted, 
-          user_agent_encrypted, 
-          is_trusted, 
-          trust_expiry, 
-          last_active, 
-          created_at
-        )
-        VALUES (
-          $1, 
-          pgp_sym_encrypt($2, $3), 
-          pgp_sym_encrypt($4, $3), 
-          pgp_sym_encrypt($5, $3), 
-          true, 
-          NOW() + INTERVAL '${durationDays} days', 
-          NOW(), 
-          NOW()
-        )`,
-        [userIdHash, deviceName, ENCRYPTION_KEY, ipAddress, userAgent]
-      );
-    }
 
     return { success: true, deviceName };
   } catch (error) {
@@ -176,7 +150,6 @@ export async function getTrustedDevices(userId) {
        FROM security_sessions 
        WHERE user_id_hash = $2 
        AND is_trusted = true
-       AND trust_expiry > NOW()
        ORDER BY last_active DESC`,
       [ENCRYPTION_KEY, userIdHash]
     );

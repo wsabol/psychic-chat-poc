@@ -63,13 +63,6 @@ export function TrustedDevicesSection({ userId, token, apiUrl }) {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  const calculateDaysLeft = (expiryString) => {
-    if (!expiryString) return 0;
-    const expiry = new Date(expiryString);
-    const today = new Date();
-    const daysLeft = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
-    return Math.max(0, daysLeft);
-  };
 
   if (loading) {
     return <div style={{ textAlign: 'center', padding: '1rem' }}>Loading trusted devices...</div>;
@@ -87,7 +80,7 @@ export function TrustedDevicesSection({ userId, token, apiUrl }) {
 
       {devices.length === 0 ? (
         <p style={{ fontSize: '12px', color: '#666', margin: 0 }}>
-          No trusted devices yet. Check "Trust this device for 30 days" when entering your 2FA code to add one.
+          No trusted devices yet. Use "Trust This Device" in Security settings to add one.
         </p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -108,10 +101,10 @@ export function TrustedDevicesSection({ userId, token, apiUrl }) {
                 <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>
                   {device.device_name}
                 </div>
-                <div style={{ color: '#666', fontSize: '11px' }}>
+              <div style={{ color: '#666', fontSize: '11px' }}>
                   Added: {formatDate(device.created_at)}
                   <br />
-                  Expires in: {calculateDaysLeft(device.trust_expiry)} days
+                  <span style={{ color: '#2e7d32' }}>Trusted permanently</span>
                 </div>
               </div>
               <button

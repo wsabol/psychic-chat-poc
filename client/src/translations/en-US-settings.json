@@ -258,12 +258,12 @@
     },
     "trustDevice": {
       "heading": "🔒 Trust This Device",
-      "infoTrusted": "✓ This device is trusted for 30 days. You will not need to enter a 2FA code when logging in.",
-      "infoUntrusted": "Trust this device to skip 2FA for 30 days. You will not need to enter a verification code when logging in from this device.",
+      "infoTrusted": "✓ This device is trusted. You will not need to enter a 2FA code when logging in.",
+      "infoUntrusted": "Trust this device to permanently skip 2FA. You will not need to enter a verification code when logging in from this device.",
       "trustButton": "Trust This Device",
       "removeButton": "Remove Trust",
       "processing": "Processing...",
-      "successTrusted": "Device trusted for 30 days",
+      "successTrusted": "Device trusted permanently",
       "successRemoved": "Device trust removed",
       "errorTrust": "Failed to trust device",
       "errorRevoke": "Failed to revoke device trust"
@@ -271,10 +271,9 @@
     "trustedDevices": {
       "heading": "🔓 Trusted Devices",
       "loading": "Loading trusted devices...",
-      "noDevices": "No trusted devices yet. Check \"Trust this device for 30 days\" when entering your 2FA code to add one.",
+      "noDevices": "No trusted devices yet. Use \"Trust This Device\" in Security settings to add one.",
       "addedLabel": "Added:",
-      "expiresLabel": "Expires in:",
-      "dayLabel": "days",
+      "trustedLabel": "Trusted permanently",
       "revokeButton": "Revoke",
       "errorLoading": "Failed to load trusted devices",
       "errorRevoke": "Error revoking device"

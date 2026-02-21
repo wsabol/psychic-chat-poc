@@ -5,7 +5,7 @@ import '../styles/screens/TwoFAScreen.css';
 
 /**
  * TwoFAScreen - Full screen 2FA verification
- * Includes option to trust device for 30 days
+ * Includes option to trust device permanently
  */
 export default function TwoFAScreen({
   userId,
