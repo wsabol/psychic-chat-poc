@@ -209,7 +209,7 @@ jobs:
         if: github.event.inputs.dry_run != 'true'
         run: |
           # Verify all Lambda functions are active
-          for fn in temp-account-cleanup account-cleanup subscription-check policy-reminder grace-period-enforcement price-migration; do
+          for fn in account-cleanup subscription-check policy-reminder grace-period-enforcement price-migration; do
             aws lambda get-function \
               --function-name production-$fn \
               --query 'Configuration.State' \

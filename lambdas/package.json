@@ -23,7 +23,8 @@
     "dotenv": "^16.4.5"
   },
   "overrides": {
-    "fast-xml-parser": "^5.3.4"
+    "fast-xml-parser": ">=5.3.7",
+    "qs": ">=6.15.0"
   },
   "engines": {
     "node": ">=20.0.0"
