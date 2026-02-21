@@ -1,8 +1,17 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { auth } from '../firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { saveUserTimezone } from '../utils/timezoneUtils';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
+
+// ─── Module-level flag ────────────────────────────────────────────────────────
+// Tracks whether the FIRST onAuthStateChanged call has been processed.
+// On page load, Firebase fires onAuthStateChanged once with the stored session.
+// That is the only time we enforce the "persistent_session" preference check.
+// Subsequent calls (explicit login, token refresh) skip the check so a user
+// is never accidentally signed out immediately after logging in.
+// This flag resets to true on every full page load / app restart.
+let _isFirstAuthStateChange = true;
 
 // Client-side error logging helper (non-critical, for debugging)
 function logClientError(context, error) {
@@ -33,12 +42,46 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      // Capture and immediately reset the "first call" flag.
+      // We only enforce the persistent-session check on the very first
+      // onAuthStateChanged event (page load with a stored Firebase session).
+      const isPageLoad = _isFirstAuthStateChange;
+      _isFirstAuthStateChange = false;
+
       try {
         if (firebaseUser) {
           
           // Get ID token
           const token = await firebaseUser.getIdToken();
-          
+
+          // ── Active Sessions check (page-load only) ───────────────────────
+          // On page load Firebase automatically restores the stored session.
+          // If the user has turned off "Stay Logged In", sign them out now so
+          // they are required to log in again.  We only run this on the first
+          // onAuthStateChanged event so an explicit login is never rejected.
+          if (isPageLoad && !firebaseUser.isAnonymous) {
+            try {
+              const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+              const prefRes = await fetch(
+                `${API_URL}/security/session-preference/${firebaseUser.uid}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+              if (prefRes.ok) {
+                const prefData = await prefRes.json();
+                // persistent_session === false → user explicitly disabled it.
+                // null or true → "stay logged in" (default or explicitly enabled).
+                if (prefData.persistent_session === false) {
+                  await signOut(auth);
+                  // onAuthStateChanged will fire again with null — state clears there.
+                  return;
+                }
+              }
+            } catch (sessionErr) {
+              // Non-fatal: network error or API down — default to staying logged in.
+              logClientError('AUTH-SESSION-PREF', sessionErr);
+            }
+          }
+
           // Check if user has accepted consent
           let consentStatus = {
             hasConsent: false,

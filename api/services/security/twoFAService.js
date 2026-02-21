@@ -80,6 +80,33 @@ export async function update2FASettings(userId, { enabled, method }) {
 }
 
 /**
+ * Get session persistence preference for a user.
+ * Returns null if the user has never set a preference (no row in DB).
+ * Returns true/false when the user has explicitly set it.
+ * Used by: App startup check (web + mobile) to enforce logout when sessions are disabled.
+ */
+export async function getSessionPreference(userId) {
+  try {
+    const userIdHash = hashUserId(userId);
+
+    const result = await db.query(
+      `SELECT persistent_session FROM user_2fa_settings WHERE user_id_hash = $1`,
+      [userIdHash]
+    );
+
+    if (result.rows.length === 0) {
+      // No preference set — return null so the client defaults to staying logged in
+      return null;
+    }
+
+    return result.rows[0].persistent_session;
+  } catch (err) {
+    logErrorFromCatch(err, 'app', 'security');
+    throw err;
+  }
+}
+
+/**
  * Update session persistence preference
  * Uses UPSERT to create row if it doesn't exist
  * Used by: SessionPrivacyTab

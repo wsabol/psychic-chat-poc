@@ -301,6 +301,26 @@ router.post('/2fa-settings/:userId', verifyUserOwnership(), async (req, res) => 
 });
 
 /**
+ * GET /api/security/session-preference/:userId
+ * Get "Stay Logged In" (persistent session) preference only.
+ * Called on app startup to decide whether to keep or clear the Firebase session.
+ * Returns { persistent_session: boolean | null }
+ *   - null  → user has never set a preference; client defaults to staying logged in
+ *   - true  → user explicitly enabled persistent sessions (stay logged in)
+ *   - false → user explicitly disabled persistent sessions (sign out on app close)
+ */
+router.get('/session-preference/:userId', verifyUserOwnership(), async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const persistentSession = await securityService.getSessionPreference(userId);
+    successResponse(res, { success: true, persistent_session: persistentSession });
+  } catch (err) {
+    logErrorFromCatch(err, 'app', 'security');
+    return serverError(res, 'Failed to get session preference');
+  }
+});
+
+/**
  * POST /api/security/session-preference/:userId
  * Update "Stay Logged In" preference
  */
@@ -319,8 +339,8 @@ router.post('/session-preference/:userId', verifyUserOwnership(), async (req, re
       success: true, 
       persistentSession: result.persistent_session,
       message: persistentSession 
-        ? 'You will stay logged in for 30 days' 
-        : 'You will log out when closing the browser'
+        ? 'You will stay logged in on this device' 
+        : 'You will be logged out when closing the app or browser'
     });
   } catch (err) {
     logErrorFromCatch(err, 'app', 'security');

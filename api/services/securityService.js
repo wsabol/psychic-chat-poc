@@ -23,7 +23,7 @@ export { getPhoneData, savePhoneNumber, verifyPhoneCode } from './security/phone
 export { getEmailData, saveRecoveryEmail, verifyEmailCode, removeRecoveryEmail } from './security/emailService.js';
 
 // 2FA & Session Settings
-export { get2FASettings, update2FASettings, updateSessionPreference } from './security/twoFAService.js';
+export { get2FASettings, update2FASettings, updateSessionPreference, getSessionPreference } from './security/twoFAService.js';
 
 // Verification Code Management (NEW)
 export { 
