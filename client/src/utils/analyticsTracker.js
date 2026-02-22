@@ -130,11 +130,17 @@ export async function trackEvent(eventType, pageName, eventAction = null, sessio
       error_stack: errorData?.stack || null,
     };
 
-    // Send to backend
+    // Send to backend.
+    // X-Analytics-Opt-In signals consent to the server-side gate in
+    // /analytics/track, which rejects storage for any request that
+    // omits this header or has DNT: 1 set.  We only reach this point
+    // when isAnalyticsEnabled() returned true, so the header is always
+    // accurate — opted-out users never call this function.
     await fetch(`${API_URL}/analytics/track`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-Analytics-Opt-In': 'true',
       },
       body: JSON.stringify(payload),
       // Don't include auth token - truly anonymous

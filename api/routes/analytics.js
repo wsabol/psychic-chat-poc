@@ -16,9 +16,24 @@ const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
 /**
  * POST /analytics/track
  * Log an analytics event (public endpoint - no auth required)
+ *
+ * Server-side gate: the client must include `X-Analytics-Opt-In: true` to
+ * signal the user has consented.  The standard browser `DNT: 1` header is
+ * also honoured.  Either condition causes the request to be silently accepted
+ * (HTTP 201) but NOT stored — this mirrors the client-side isAnalyticsEnabled()
+ * check and ensures opted-out users cannot be tracked even if the client-side
+ * guard is bypassed.
  */
 router.post('/track', async (req, res) => {
   try {
+    // ── Server-side consent gate ─────────────────────────────────────────
+    const dnt      = req.headers['dnt'];
+    const optInHdr = req.headers['x-analytics-opt-in'];
+    if (dnt === '1' || optInHdr !== 'true') {
+      // Silently accept — do NOT store anything for opted-out clients
+      return createdResponse(res, { success: true, message: 'Event tracked' });
+    }
+
     const {
       event_type,
       page_name,

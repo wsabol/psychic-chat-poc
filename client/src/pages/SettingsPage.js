@@ -3,6 +3,8 @@ import { useTranslation } from '../context/TranslationContext';
 import { getAuth } from 'firebase/auth';
 import DeleteAccountModal from '../components/settings/DeleteAccountModal';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
+import { clearNonEssentialCookies } from '../utils/cookieManager.js';
+import { setAnalyticsEnabled } from '../utils/analyticsTracker.js';
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
@@ -155,6 +157,9 @@ export default function SettingsPage({ userId, token, auth, onboarding }) {
         dbs.forEach(db => window.indexedDB.deleteDatabase(db.name));
       }
 
+      // Clear non-essential cookies (same list as cookieManager enforces)
+      clearNonEssentialCookies();
+
       setMessage({ type: 'success', text: t('settings.clearSuccess') });
     } catch (error) {
       logErrorFromCatch('Clear browsing data error:', error);
@@ -172,6 +177,19 @@ export default function SettingsPage({ userId, token, auth, onboarding }) {
     
     // Save to localStorage immediately for offline use
     localStorage.setItem(settingKey, newValue.toString());
+
+    // Apply side-effects immediately so the change takes effect in the
+    // current session — not just on the next page load.
+    if (settingKey === 'cookiesEnabled' && !newValue) {
+      // User just disabled cookies — purge all non-essential cookies right now
+      clearNonEssentialCookies();
+    }
+    if (settingKey === 'analyticsEnabled') {
+      // Update the in-memory flag so isAnalyticsEnabled() reflects the new
+      // value immediately (localStorage write alone is not enough because
+      // _analyticsEnabled in analyticsTracker takes priority once set).
+      setAnalyticsEnabled(newValue);
+    }
     
     // Save to database asynchronously
     await saveSettingsToDatabase(newSettings);
