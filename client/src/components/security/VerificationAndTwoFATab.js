@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import AlertMessage from './verification/AlertMessage';
 import { useVerificationMethods } from './verification/hooks/useVerificationMethods';
 import { useVerificationAPI } from './verification/hooks/useVerificationAPI';
@@ -8,10 +8,14 @@ import { TwoFASection } from './verification/TwoFASection';
 import { VerificationMethodsSection } from './verification/VerificationMethodsSection';
 import { TrustCurrentDeviceSection } from './verification/TrustCurrentDeviceSection';
 import { TrustedDevicesSection } from './verification/TrustedDevicesSection';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * VerificationAndTwoFATab - Orchestrator component
- * Composes 2FA, Verification Methods, Trust Current Device, and Trusted Devices sections
+ *
+ * Owns the single trusted-devices fetch so that TrustCurrentDeviceSection
+ * and TrustedDevicesSection always show data from the exact same API call —
+ * they cannot disagree about whether the current device is trusted.
  */
 export default function VerificationAndTwoFATab({ userId, token, apiUrl, userEmail }) {
   // Verification methods
@@ -22,12 +26,42 @@ export default function VerificationAndTwoFATab({ userId, token, apiUrl, userEma
   // 2FA settings
   const twoFA = use2FASettings(userId, token, apiUrl);
 
-  // Increment to force TrustedDevicesSection to remount and re-fetch after a device is trusted
-  const [deviceListVersion, setDeviceListVersion] = useState(0);
+  // ── Single source of truth for device list ──────────────────────────────
+  const [devices, setDevices] = useState([]);
+  const [isCurrentDeviceTrusted, setIsCurrentDeviceTrusted] = useState(false);
+  const [devicesLoading, setDevicesLoading] = useState(false);
+
+  const loadDevices = useCallback(async () => {
+    if (!userId || !token) return;
+    try {
+      setDevicesLoading(true);
+      const response = await fetch(`${apiUrl}/auth/trusted-devices/${userId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const list = data.devices || [];
+        setDevices(list);
+        // Derive current-device trust from the list — same row the table shows
+        const currentRow = list.find(d => d.is_current_device);
+        setIsCurrentDeviceTrusted(currentRow ? currentRow.is_trusted !== false : false);
+      }
+    } catch (err) {
+      logErrorFromCatch('[DEVICE-LIST] Error loading devices:', err);
+    } finally {
+      setDevicesLoading(false);
+    }
+  }, [apiUrl, userId, token]);
+
+  useEffect(() => {
+    if (twoFA.twoFAEnabled) {
+      loadDevices();
+    }
+  }, [twoFA.twoFAEnabled, loadDevices]);
+  // ────────────────────────────────────────────────────────────────────────
 
   const error = loadError || apiError || twoFA.twoFAError;
 
-  // Handlers
   const handleSaveVerificationMethods = async () => {
     try {
       setError(null);
@@ -60,7 +94,6 @@ export default function VerificationAndTwoFATab({ userId, token, apiUrl, userEma
     }
   };
 
-  // Check if verification methods are ready for 2FA
   const hasVerificationMethods = methods?.phoneVerified || methods?.recoveryEmailVerified;
 
   if (loading || twoFA.twoFALoading) {
@@ -69,7 +102,6 @@ export default function VerificationAndTwoFATab({ userId, token, apiUrl, userEma
 
   return (
     <div style={{ fontSize: '13px' }}>
-      {/* Error/Success Messages */}
       <AlertMessage type="error" message={error} />
       <AlertMessage type="success" message={flow.success || twoFA.twoFASuccess} />
 
@@ -98,24 +130,27 @@ export default function VerificationAndTwoFATab({ userId, token, apiUrl, userEma
         onEnterEditMode={flow.enterEditMode}
       />
 
-      {/* Section 3: Trust This Device (Current) */}
+      {/* Section 3: Trust This Device — receives trust status from the same fetch as the table */}
       {twoFA.twoFAEnabled && (
         <TrustCurrentDeviceSection
           userId={userId}
           token={token}
           apiUrl={apiUrl}
-          onDeviceTrusted={() => setDeviceListVersion(v => v + 1)}
-          onDeviceRevoked={() => setDeviceListVersion(v => v + 1)}
+          isCurrentDeviceTrusted={isCurrentDeviceTrusted}
+          onDeviceTrusted={loadDevices}
+          onDeviceRevoked={loadDevices}
         />
       )}
 
-      {/* Section 4: Trusted Devices List */}
+      {/* Section 4: Trusted Devices List — receives same device list */}
       {twoFA.twoFAEnabled && (
         <TrustedDevicesSection
-          key={deviceListVersion}
+          devices={devices}
+          loading={devicesLoading}
           userId={userId}
           token={token}
           apiUrl={apiUrl}
+          onRevoked={loadDevices}
         />
       )}
     </div>

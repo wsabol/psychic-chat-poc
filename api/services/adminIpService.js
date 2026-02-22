@@ -214,7 +214,8 @@ export async function getTrustedIPs(userId) {
         first_seen,
         last_accessed,
         created_at,
-        is_trusted
+        is_trusted,
+        user_agent_hash
        FROM admin_trusted_ips 
        WHERE user_id_hash = $1
        ORDER BY last_accessed DESC`,

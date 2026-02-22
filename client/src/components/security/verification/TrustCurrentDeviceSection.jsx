@@ -1,36 +1,19 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from '../../../context/TranslationContext';
 import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * TrustCurrentDeviceSection - Trust the current device
- * Allows user to permanently trust their current device
+ *
+ * isCurrentDeviceTrusted is passed in from VerificationAndTwoFATab, which
+ * derives it from the same device-list fetch that TrustedDevicesSection uses.
+ * Both sections therefore always show the same status.
  */
-export function TrustCurrentDeviceSection({ userId, token, apiUrl, onDeviceTrusted, onDeviceRevoked }) {
+export function TrustCurrentDeviceSection({ userId, token, apiUrl, isCurrentDeviceTrusted, onDeviceTrusted, onDeviceRevoked }) {
   const { t } = useTranslation();
-  const [isCurrentDeviceTrusted, setIsCurrentDeviceTrusted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-
-  const checkCurrentDeviceTrust = useCallback(async () => {
-    try {
-      const response = await fetch(`${apiUrl}/auth/check-current-device-trust/${userId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setIsCurrentDeviceTrusted(data.isTrusted || false);
-      }
-    } catch (err) {
-      logErrorFromCatch('[TRUST-DEVICE] Error checking trust status:', err);
-    }
-  }, [apiUrl, userId, token]);
-
-  useEffect(() => {
-    checkCurrentDeviceTrust();
-  }, [checkCurrentDeviceTrust]);
 
   const handleTrustDevice = async () => {
     try {
@@ -40,7 +23,7 @@ export function TrustCurrentDeviceSection({ userId, token, apiUrl, onDeviceTrust
 
       const response = await fetch(`${apiUrl}/auth/trust-current-device/${userId}`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
@@ -49,10 +32,9 @@ export function TrustCurrentDeviceSection({ userId, token, apiUrl, onDeviceTrust
       const data = await response.json();
 
       if (response.ok) {
-        setIsCurrentDeviceTrusted(true);
         setSuccess(t('security.trustDevice.successTrusted'));
         setTimeout(() => setSuccess(null), 3000);
-        onDeviceTrusted?.();
+        onDeviceTrusted?.();   // parent re-fetches → updates isCurrentDeviceTrusted
       } else {
         setError(data.error || t('security.trustDevice.errorTrust'));
       }
@@ -72,7 +54,7 @@ export function TrustCurrentDeviceSection({ userId, token, apiUrl, onDeviceTrust
 
       const response = await fetch(`${apiUrl}/auth/revoke-current-device-trust/${userId}`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
@@ -81,11 +63,9 @@ export function TrustCurrentDeviceSection({ userId, token, apiUrl, onDeviceTrust
       const data = await response.json();
 
       if (response.ok) {
-        setIsCurrentDeviceTrusted(false);
         setSuccess(t('security.trustDevice.successRemoved'));
         setTimeout(() => setSuccess(null), 3000);
-        // Notify parent so TrustedDevicesSection can refresh
-        onDeviceRevoked?.();
+        onDeviceRevoked?.();   // parent re-fetches → updates isCurrentDeviceTrusted
       } else {
         setError(data.error || t('security.trustDevice.errorRevoke'));
       }
@@ -114,7 +94,7 @@ export function TrustCurrentDeviceSection({ userId, token, apiUrl, onDeviceTrust
           {isCurrentDeviceTrusted ? '✓ Trusted' : '✕ Not trusted'}
         </span>
       </div>
-      
+
       {error && (
         <div style={{ color: '#d32f2f', fontSize: '12px', marginBottom: '0.75rem' }}>
           ⚠️ {error}
@@ -148,7 +128,11 @@ export function TrustCurrentDeviceSection({ userId, token, apiUrl, onDeviceTrust
           opacity: loading ? 0.6 : 1
         }}
       >
-        {loading ? t('security.trustDevice.processing') : (isCurrentDeviceTrusted ? t('security.trustDevice.removeButton') : t('security.trustDevice.trustButton'))}
+        {loading
+          ? t('security.trustDevice.processing')
+          : isCurrentDeviceTrusted
+            ? t('security.trustDevice.removeButton')
+            : t('security.trustDevice.trustButton')}
       </button>
     </div>
   );

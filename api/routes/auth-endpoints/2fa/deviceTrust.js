@@ -24,6 +24,7 @@
  * is untouched here.  Only the *settings-page* device-trust UI uses UA matching.
  */
 
+import crypto from 'crypto';
 import { db } from '../../../shared/db.js';
 import { logAudit } from '../../../shared/auditLog.js';
 import { extractDeviceName } from '../../../shared/deviceFingerprint.js';
@@ -37,6 +38,7 @@ import {
   getTrustedIPs,
   revokeTrustedIP,
   checkTrustedDevice,
+  checkTrustedIP,
   recordTrustedDevice,
   setTrustedDeviceInactiveByUA,
 } from '../../../services/adminIpService.js';
@@ -64,9 +66,22 @@ export async function checkCurrentDeviceTrustHandler(req, res) {
     const { userId } = req.params;
     if (req.user.uid !== userId) return forbiddenError(res, 'Unauthorized');
 
-    // Prefer X-Device-ID (mobile) over User-Agent (web)
-    const deviceKey = req.get('x-device-id') || req.get('user-agent') || '';
-    const trusted = await checkTrustedDevice(userId, deviceKey);
+    // 1. Try X-Device-ID (mobile persistent UUID)
+    const xDeviceId = req.get('x-device-id') || '';
+    let trusted = xDeviceId ? await checkTrustedDevice(userId, xDeviceId) : null;
+
+    // 2. Try User-Agent (web browser / older mobile rows)
+    if (!trusted) {
+      const userAgent = req.get('user-agent') || '';
+      if (userAgent) trusted = await checkTrustedDevice(userId, userAgent);
+    }
+
+    // 3. Fall back to IP match — covers admin rows stored by recordTrustedIP
+    //    which have no user_agent_hash but ARE shown as trusted in the devices table.
+    if (!trusted) {
+      const { ipAddress } = parseDeviceInfo(req);
+      if (ipAddress) trusted = await checkTrustedIP(userId, ipAddress);
+    }
 
     return successResponse(res, { success: true, isTrusted: !!trusted });
   } catch (err) {
@@ -143,9 +158,16 @@ export async function revokeCurrentDeviceTrustHandler(req, res) {
     const { userId } = req.params;
     if (req.user.uid !== userId) return forbiddenError(res, 'Unauthorized');
 
-    // Prefer X-Device-ID (mobile) over User-Agent (web)
-    const deviceKey = req.get('x-device-id') || req.get('user-agent') || '';
-    const updated = await setTrustedDeviceInactiveByUA(userId, deviceKey);
+    // Try X-Device-ID first (mobile persistent UUID)
+    const xDeviceId = req.get('x-device-id') || '';
+    let updated = xDeviceId ? await setTrustedDeviceInactiveByUA(userId, xDeviceId) : false;
+
+    // Fall back to User-Agent — covers web browsers and mobile devices whose trust
+    // record was created before X-Device-ID was introduced.
+    if (!updated) {
+      const userAgent = req.get('user-agent') || '';
+      if (userAgent) updated = await setTrustedDeviceInactiveByUA(userId, userAgent);
+    }
 
     if (!updated) {
       // Row doesn't exist yet — nothing to revoke (not an error)
@@ -185,14 +207,34 @@ export async function trustedDevicesHandler(req, res) {
     const { userId } = req.params;
     if (req.user.uid !== userId) return forbiddenError(res, 'Unauthorized');
 
+    // Build the set of UA hashes for this request (web: User-Agent, mobile: X-Device-ID)
+    const hashKey = (v) => v ? crypto.createHash('sha256').update(v.trim()).digest('hex') : null;
+    const xDeviceId     = req.get('x-device-id') || '';
+    const userAgent     = req.get('user-agent')  || '';
+    const currentHashes = new Set([hashKey(xDeviceId), hashKey(userAgent)].filter(Boolean));
+
+    // ALWAYS check by IP (user's explicit requirement: match user_id + IP address).
+    // This runs in parallel with the UA check and is the primary signal for old rows
+    // that have no user_agent_hash.
+    const { ipAddress } = parseDeviceInfo(req);
+    const ipRow = ipAddress ? await checkTrustedIP(userId, ipAddress) : null;
+    const ipMatchId = ipRow?.id ?? null;
+
     const rows = await getTrustedIPs(userId);
+
     const devices = rows.map(r => ({
-      id:           r.id,
-      device_name:  r.device_name || 'Unknown Device',
-      created_at:   r.created_at,
-      last_active:  r.last_accessed,
-      trust_expiry: null, // all trust in admin_trusted_ips is permanent
-      is_trusted:   r.is_trusted,
+      id:                r.id,
+      device_name:       r.device_name || 'Unknown Device',
+      created_at:        r.created_at,
+      last_active:       r.last_accessed,
+      trust_expiry:      null,
+      is_trusted:        r.is_trusted,
+      // A row belongs to the current device if it matches by UA hash (web/new mobile rows)
+      // OR by IP address (admin rows + old rows that pre-date user_agent_hash column).
+      is_current_device: !!(
+        (r.user_agent_hash && currentHashes.has(r.user_agent_hash)) ||
+        (ipMatchId && r.id === ipMatchId)
+      ),
     }));
 
     return successResponse(res, { success: true, devices });

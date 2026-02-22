@@ -1,54 +1,25 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * TrustedDevicesSection - Manage trusted devices
- * Shows ALL device records (trusted and untrusted) so users can see "Not trusted"
- * in red for devices whose trust was removed, and can fully Revoke any row.
+ *
+ * Receives devices + loading state from VerificationAndTwoFATab so it shares
+ * the exact same data as TrustCurrentDeviceSection — both sections always agree.
  */
-export function TrustedDevicesSection({ userId, token, apiUrl }) {
-  const [devices, setDevices] = useState([]);
-  const [loading, setLoading] = useState(true);
+export function TrustedDevicesSection({ devices, loading, userId, token, apiUrl, onRevoked }) {
   const [error, setError] = useState(null);
-
-  const loadTrustedDevices = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await fetch(`${apiUrl}/auth/trusted-devices/${userId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setDevices(data.devices || []);
-      } else if (response.status === 404) {
-        setDevices([]);
-      } else {
-        setError('Failed to load trusted devices');
-      }
-    } catch (err) {
-      logErrorFromCatch('[TRUSTED-DEVICES] Error:', err);
-      setError('Failed to load trusted devices');
-    } finally {
-      setLoading(false);
-    }
-  }, [userId, token, apiUrl]);
-
-  useEffect(() => {
-    loadTrustedDevices();
-  }, [loadTrustedDevices]);
 
   const handleRevoke = async (deviceId) => {
     try {
+      setError(null);
       const response = await fetch(`${apiUrl}/auth/trusted-device/${userId}/${deviceId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
       if (response.ok) {
-        // Remove the row from the UI entirely
-        setDevices(devices.filter(d => d.id !== deviceId));
+        onRevoked?.();   // parent re-fetches the list (and updates the badge)
       } else {
         setError('Failed to revoke device');
       }
@@ -60,8 +31,7 @@ export function TrustedDevicesSection({ userId, token, apiUrl }) {
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Unknown';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
   if (loading) {
@@ -71,7 +41,7 @@ export function TrustedDevicesSection({ userId, token, apiUrl }) {
   return (
     <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '6px', marginTop: '1.5rem' }}>
       <h3 style={{ margin: '0 0 1rem 0', fontSize: '15px' }}>🔓 Trusted Devices</h3>
-      
+
       {error && (
         <div style={{ color: '#d32f2f', fontSize: '12px', marginBottom: '1rem' }}>
           ⚠️ {error}
@@ -80,12 +50,12 @@ export function TrustedDevicesSection({ userId, token, apiUrl }) {
 
       {devices.length === 0 ? (
         <p style={{ fontSize: '12px', color: '#666', margin: 0 }}>
-          No trusted devices yet. Use "Trust This Device" in Security settings to add one.
+          No trusted devices yet. Use "Trust This Device" above to add one.
         </p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           {devices.map((device) => {
-            const trusted = device.is_trusted !== false; // treat missing as trusted (legacy rows)
+            const trusted = device.is_trusted !== false;
             return (
               <div
                 key={device.id}
@@ -102,6 +72,11 @@ export function TrustedDevicesSection({ userId, token, apiUrl }) {
                 <div style={{ fontSize: '12px', flex: 1 }}>
                   <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>
                     {device.device_name}
+                    {device.is_current_device && (
+                      <span style={{ marginLeft: '6px', fontSize: '10px', color: '#1565c0', fontWeight: '400' }}>
+                        (this device)
+                      </span>
+                    )}
                   </div>
                   <div style={{ color: '#666', fontSize: '11px' }}>
                     Added: {formatDate(device.created_at)}
