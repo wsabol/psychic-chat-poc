@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../context/TranslationContext';
 import { getAuth } from 'firebase/auth';
 import ReAuthModal from '../components/ReAuthModal';
-import DevicesTab from '../components/security/DevicesTab';
 import VerificationAndTwoFATab from '../components/security/VerificationAndTwoFATab';
 import SessionPrivacyTab from '../components/security/SessionPrivacyTab';
 import PasswordTab from '../components/security/PasswordTab';
@@ -81,7 +80,6 @@ export default function SecurityPage({ userId, token, auth, onboarding, onNaviga
   const tabs = [
     { id: 'verification', label: t('security.twoFactor'), icon: '🔐' },
     { id: 'password', label: t('security.changePassword'), icon: '🔒' },
-    { id: 'devices', label: t('security.trustedDevices.heading'), icon: '📱' },
     { id: 'session', label: t('security.sessions'), icon: '⏱️' }
   ];
 
@@ -135,9 +133,6 @@ export default function SecurityPage({ userId, token, auth, onboarding, onNaviga
           maxHeight: 'calc(100vh - 220px)',
           overflowY: 'auto'
         }}>
-          {activeTab === 'devices' && (
-            <DevicesTab userId={userId} token={token} apiUrl={API_URL} />
-          )}
           {activeTab === 'verification' && (
             <VerificationAndTwoFATab userId={userId} token={token} apiUrl={API_URL} userEmail={userEmail} />
           )}

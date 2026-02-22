@@ -40,7 +40,13 @@ export function TrustedDevicesSection({ devices, loading, userId, token, apiUrl,
 
   return (
     <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '6px', marginTop: '1.5rem' }}>
-      <h3 style={{ margin: '0 0 1rem 0', fontSize: '15px' }}>🔓 Trusted Devices</h3>
+      <h3 style={{ margin: '0 0 0.25rem 0', fontSize: '15px' }}>🔓 Your Devices</h3>
+      <p style={{ margin: '0 0 0.5rem 0', fontSize: '12px', color: '#555' }}>
+        These devices skip the 2FA prompt when signing in.
+      </p>
+      <p style={{ margin: '0 0 1rem 0', fontSize: '12px', color: '#c62828' }}>
+        ⚠️ If you see a device you do not recognize, remove it immediately and change your password.
+      </p>
 
       {error && (
         <div style={{ color: '#d32f2f', fontSize: '12px', marginBottom: '1rem' }}>
