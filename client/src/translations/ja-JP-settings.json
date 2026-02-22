@@ -172,20 +172,6 @@
       "errorGeneric": "パスワード変更エラー",
       "warningNote": "⚠️ 注意: パスワードを変更すると、他のすべてのデバイスからログアウトされます。新しいパスワードで再度ログインする必要があります。"
     },
-    "devices": {
-      "title": "あなたのデバイス",
-      "subtitle": "現在ログインしているデバイス。認識できないデバイスからログアウトしてください。",
-      "loadingDevices": "デバイス読み込み中...",
-      "noDevices": "デバイスが見つかりません",
-      "logoutConfirm": "このデバイスからログアウトしますか?そのデバイスで再度ログインする必要があります。",
-      "logOut": "ログアウト",
-      "loggingOut": "ログアウト中...",
-      "ipLabel": "IP",
-      "lastActiveLabel": "最終アクティビティ",
-      "currentDeviceBadge": "現在のデバイス",
-      "errorLoading": "デバイスの読み込みエラー",
-      "errorLogout": "デバイスからのログアウトエラー"
-    },
     "session": {
       "title": "セッション＆プライバシー",
       "subtitle": "このデバイスでログインしたままの期間を制御します。",
@@ -256,12 +242,12 @@
     },
     "trustDevice": {
       "heading": "🔒 このデバイスを信頼",
-      "infoTrusted": "✓ このデバイスは30日間信頼できます。ログイン時に2FAコードを入力する必要はありません。",
-      "infoUntrusted": "このデバイスを信頼して30日間2FAをスキップしてください。このデバイスからのログイン時に確認コードを入力する必要はありません。",
+      "infoTrusted": "✓ このデバイスは永続的に信頼されています。ログイン時に2FAコードを入力する必要はありません。",
+      "infoUntrusted": "このデバイスを信頼して2FAを永続的にスキップしてください。このデバイスからのログイン時に確認コードを入力する必要はありません。",
       "trustButton": "このデバイスを信頼",
       "removeButton": "信頼を削除",
       "processing": "処理中...",
-      "successTrusted": "デバイスを30日間信頼",
+      "successTrusted": "デバイスを永続的に信頼",
       "successRemoved": "デバイス信頼が削除されました",
       "errorTrust": "デバイス信頼エラー",
       "errorRevoke": "デバイス信頼取消エラー"
@@ -269,10 +255,9 @@
     "trustedDevices": {
       "heading": "🔓 信頼できるデバイス",
       "loading": "信頼できるデバイスを読み込み中...",
-      "noDevices": "信頼できるデバイスはまだありません。2FAコード入力時に「このデバイスを30日間信頼」をチェック。",
+      "noDevices": "信頼できるデバイスはまだありません。セキュリティ設定で「このデバイスを信頼」を使用して追加してください。",
       "addedLabel": "追加日:",
-      "expiresLabel": "有効期限:",
-      "dayLabel": "日",
+      "trustedLabel": "永続的に信頼",
       "revokeButton": "失効させる",
       "errorLoading": "信頼できるデバイスの読み込みエラー",
       "errorRevoke": "デバイス失効エラー"

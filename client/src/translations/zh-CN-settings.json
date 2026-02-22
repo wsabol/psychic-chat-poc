@@ -172,20 +172,6 @@
       "errorGeneric": "更改密码失败",
       "warningNote": "⚠️ 注意: 更改密码将使您从所有其他设备登出。您需要使用新密码重新登录。"
     },
-    "devices": {
-      "title": "您的设备",
-      "subtitle": "您当前登录的设备。从您不认识的任何设备登出。",
-      "loadingDevices": "加载设备中...",
-      "noDevices": "未找到设备",
-      "logoutConfirm": "从此设备登出?您需要在该设备上重新登录。",
-      "logOut": "登出",
-      "loggingOut": "正在登出...",
-      "ipLabel": "IP",
-      "lastActiveLabel": "最后活跃",
-      "currentDeviceBadge": "当前设备",
-      "errorLoading": "加载设备失败",
-      "errorLogout": "设备登出失败"
-    },
     "session": {
       "title": "会话和隐私",
       "subtitle": "控制您在此设备上保持登录的时长。",
@@ -256,12 +242,12 @@
     },
     "trustDevice": {
       "heading": "🔒 信任此设备",
-      "infoTrusted": "✓ 此设备在30天内受信任。登录时不需要输入2FA代码。",
-      "infoUntrusted": "信任此设备以在30天内跳过2FA。从此设备登录时无需输入验证码。",
+      "infoTrusted": "✓ 此设备已被永久信任。登录时不需要输入2FA代码。",
+      "infoUntrusted": "信任此设备以永久跳过2FA。从此设备登录时无需输入验证码。",
       "trustButton": "信任此设备",
       "removeButton": "删除信任",
       "processing": "处理中...",
-      "successTrusted": "设备在30天内受信任",
+      "successTrusted": "设备已被永久信任",
       "successRemoved": "设备信任已删除",
       "errorTrust": "信任设备失败",
       "errorRevoke": "撤销设备信任失败"
@@ -269,10 +255,9 @@
     "trustedDevices": {
       "heading": "🔓 受信任的设备",
       "loading": "加载受信任设备中...",
-      "noDevices": "暂无受信任设备。输入2FA代码时勾选\"信任此设备30天\"。",
+      "noDevices": "暂无受信任设备。在安全设置中使用\"信任此设备\"添加一个。",
       "addedLabel": "添加:",
-      "expiresLabel": "过期:",
-      "dayLabel": "天",
+      "trustedLabel": "永久信任",
       "revokeButton": "撤销",
       "errorLoading": "加载受信任设备失败",
       "errorRevoke": "撤销设备失败"

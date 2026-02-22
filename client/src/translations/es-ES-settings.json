@@ -174,20 +174,6 @@
       "errorGeneric": "Error al cambiar la contraseña",
       "warningNote": "⚠️ Nota: Cambiar tu contraseña te cerrará la sesión en todos los demás dispositivos. Deberás iniciar sesión de nuevo con tu nueva contraseña."
     },
-    "devices": {
-      "title": "Tus Dispositivos",
-      "subtitle": "Dispositivos donde estás actualmente conectado. Cierra sesión de cualquier dispositivo que no reconozcas.",
-      "loadingDevices": "Cargando dispositivos...",
-      "noDevices": "No se encontraron dispositivos",
-      "logoutConfirm": "¿Cerrar sesión en este dispositivo? Deberás iniciar sesión de nuevo en ese dispositivo.",
-      "logOut": "Cerrar Sesión",
-      "loggingOut": "Cerrando sesión...",
-      "ipLabel": "IP",
-      "lastActiveLabel": "Última actividad",
-      "currentDeviceBadge": "Dispositivo Actual",
-      "errorLoading": "Error al cargar dispositivos",
-      "errorLogout": "Error al cerrar sesión en el dispositivo"
-    },
     "session": {
       "title": "Sesión y Privacidad",
       "subtitle": "Controla cuánto tiempo permaneces conectado en este dispositivo.",
@@ -258,12 +244,12 @@
     },
     "trustDevice": {
       "heading": "🔒 Confiar en Este Dispositivo",
-      "infoTrusted": "✓ Este dispositivo es de confianza por 30 días. No necesitarás ingresar un código 2FA al iniciar sesión.",
-      "infoUntrusted": "Confía en este dispositivo para omitir 2FA por 30 días. No necesitarás ingresar un código de verificación al iniciar sesión desde este dispositivo.",
+      "infoTrusted": "✓ Este dispositivo es de confianza permanentemente. No necesitarás ingresar un código 2FA al iniciar sesión.",
+      "infoUntrusted": "Confía en este dispositivo para omitir 2FA permanentemente. No necesitarás ingresar un código de verificación al iniciar sesión desde este dispositivo.",
       "trustButton": "Confiar en Este Dispositivo",
       "removeButton": "Remover Confianza",
       "processing": "Procesando...",
-      "successTrusted": "Dispositivo de confianza por 30 días",
+      "successTrusted": "Dispositivo de confianza permanentemente",
       "successRemoved": "Confianza del dispositivo removida",
       "errorTrust": "Error al confiar en el dispositivo",
       "errorRevoke": "Error al revocar la confianza del dispositivo"
@@ -271,10 +257,9 @@
     "trustedDevices": {
       "heading": "🔓 Dispositivos de Confianza",
       "loading": "Cargando dispositivos de confianza...",
-      "noDevices": "Sin dispositivos de confianza aún. Marca \"Confiar en este dispositivo por 30 días\" cuando ingreses tu código 2FA.",
+      "noDevices": "Sin dispositivos de confianza aún. Usa \"Confiar en Este Dispositivo\" en Seguridad para agregar uno.",
       "addedLabel": "Agregado:",
-      "expiresLabel": "Expira en:",
-      "dayLabel": "días",
+      "trustedLabel": "De confianza permanentemente",
       "revokeButton": "Revocar",
       "errorLoading": "Error al cargar dispositivos de confianza",
       "errorRevoke": "Error al revocar dispositivo"

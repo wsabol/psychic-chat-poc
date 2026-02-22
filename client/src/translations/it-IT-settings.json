@@ -174,20 +174,6 @@
       "errorGeneric": "Errore nel cambio della password",
       "warningNote": "⚠️ Nota: Cambiare la tua password ti disconnetterà da tutti gli altri dispositivi. Dovrai accedere di nuovo con la tua nuova password."
     },
-    "devices": {
-      "title": "I Tuoi Dispositivi",
-      "subtitle": "Dispositivi dove sei attualmente connesso. Disconnettiti da qualsiasi dispositivo che non riconosci.",
-      "loadingDevices": "Caricamento dispositivi...",
-      "noDevices": "Nessun dispositivo trovato",
-      "logoutConfirm": "Disconnetti questo dispositivo? Dovrai accedere di nuovo su quel dispositivo.",
-      "logOut": "Disconnetti",
-      "loggingOut": "Disconnessione in corso...",
-      "ipLabel": "IP",
-      "lastActiveLabel": "Ultima attività",
-      "currentDeviceBadge": "Dispositivo Attuale",
-      "errorLoading": "Errore nel caricamento dei dispositivi",
-      "errorLogout": "Errore nella disconnessione dal dispositivo"
-    },
     "session": {
       "title": "Sessione e Privacy",
       "subtitle": "Controlla per quanto tempo rimani connesso su questo dispositivo.",
@@ -258,12 +244,12 @@
     },
     "trustDevice": {
       "heading": "🔒 Fidati di Questo Dispositivo",
-      "infoTrusted": "✓ Questo dispositivo è attendibile per 30 giorni. Non dovrai inserire un codice 2FA quando accedi.",
-      "infoUntrusted": "Fidati di questo dispositivo per saltare 2FA per 30 giorni. Non dovrai inserire un codice di verifica quando accedi da questo dispositivo.",
+      "infoTrusted": "✓ Questo dispositivo è attendibile in modo permanente. Non dovrai inserire un codice 2FA quando accedi.",
+      "infoUntrusted": "Fidati di questo dispositivo per saltare 2FA in modo permanente. Non dovrai inserire un codice di verifica quando accedi da questo dispositivo.",
       "trustButton": "Fidati di Questo Dispositivo",
       "removeButton": "Rimuovi Fiducia",
       "processing": "Elaborazione in corso...",
-      "successTrusted": "Dispositivo attendibile per 30 giorni",
+      "successTrusted": "Dispositivo attendibile in modo permanente",
       "successRemoved": "Fiducia del dispositivo rimossa",
       "errorTrust": "Errore nel fidarsi del dispositivo",
       "errorRevoke": "Errore nella revoca della fiducia del dispositivo"
@@ -271,10 +257,9 @@
     "trustedDevices": {
       "heading": "🔓 Dispositivi Attendibili",
       "loading": "Caricamento dispositivi attendibili...",
-      "noDevices": "Nessun dispositivo attendibile ancora. Seleziona \"Fidati di questo dispositivo per 30 giorni\" quando inserisci il tuo codice 2FA.",
+      "noDevices": "Nessun dispositivo attendibile ancora. Usa \"Fidati di Questo Dispositivo\" nelle impostazioni di sicurezza per aggiungerne uno.",
       "addedLabel": "Aggiunto:",
-      "expiresLabel": "Scade tra:",
-      "dayLabel": "giorni",
+      "trustedLabel": "Attendibile in modo permanente",
       "revokeButton": "Revoca",
       "errorLoading": "Errore nel caricamento dei dispositivi attendibili",
       "errorRevoke": "Errore nella revoca del dispositivo"

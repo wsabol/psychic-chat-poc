@@ -174,20 +174,6 @@
       "errorGeneric": "Fehler beim Ändern des Passworts",
       "warningNote": "⚠️ Hinweis: Das Ändern des Passworts meldet Sie von allen anderen Geräten ab. Sie müssen sich mit Ihrem neuen Passwort erneut anmelden."
     },
-    "devices": {
-      "title": "Ihre Geräte",
-      "subtitle": "Geräte, auf denen Sie derzeit angemeldet sind. Melden Sie sich von einem Gerät ab, das Sie nicht erkennen.",
-      "loadingDevices": "Geräte werden geladen...",
-      "noDevices": "Keine Geräte gefunden",
-      "logoutConfirm": "Dieses Gerät abmelden? Sie müssen sich auf diesem Gerät erneut anmelden.",
-      "logOut": "Abmelden",
-      "loggingOut": "Wird abgemeldet...",
-      "ipLabel": "IP",
-      "lastActiveLabel": "Zuletzt aktiv",
-      "currentDeviceBadge": "Aktuelles Gerät",
-      "errorLoading": "Fehler beim Laden der Geräte",
-      "errorLogout": "Fehler beim Abmelden vom Gerät"
-    },
     "session": {
       "title": "Sitzung & Datenschutz",
       "subtitle": "Steuern Sie, wie lange Sie auf diesem Gerät angemeldet bleiben.",
@@ -258,12 +244,12 @@
     },
     "trustDevice": {
       "heading": "🔒 Dieses Gerät vertrauen",
-      "infoTrusted": "✓ Diesem Gerät wird 30 Tage lang vertraut. Sie müssen keinen 2FA-Code eingeben, wenn Sie sich anmelden.",
-      "infoUntrusted": "Vertrauen Sie diesem Gerät, um 2FA für 30 Tage zu überspringen. Sie müssen keinen Verifizierungscode eingeben, wenn Sie sich von diesem Gerät aus anmelden.",
+      "infoTrusted": "✓ Diesem Gerät wird dauerhaft vertraut. Sie müssen keinen 2FA-Code eingeben, wenn Sie sich anmelden.",
+      "infoUntrusted": "Vertrauen Sie diesem Gerät, um 2FA dauerhaft zu überspringen. Sie müssen keinen Verifizierungscode eingeben, wenn Sie sich von diesem Gerät aus anmelden.",
       "trustButton": "Dieses Gerät vertrauen",
       "removeButton": "Vertrauen entfernen",
       "processing": "Wird verarbeitet...",
-      "successTrusted": "Gerät 30 Tage lang vertraut",
+      "successTrusted": "Gerät dauerhaft vertraut",
       "successRemoved": "Gerätevertauen entfernt",
       "errorTrust": "Fehler beim Vertrauen auf Gerät",
       "errorRevoke": "Fehler beim Widerrufen des Gerätevertauens"
@@ -271,10 +257,9 @@
     "trustedDevices": {
       "heading": "🔓 Vertrauenswürdige Geräte",
       "loading": "Vertrauenswürdige Geräte werden geladen...",
-      "noDevices": "Noch keine vertrauenswürdigen Geräte. Wählen Sie \"Dieses Gerät 30 Tage lang vertrauen\" aus, wenn Sie Ihren 2FA-Code eingeben.",
+      "noDevices": "Noch keine vertrauenswürdigen Geräte. Verwenden Sie \"Dieses Gerät vertrauen\" in den Sicherheitseinstellungen, um eines hinzuzufügen.",
       "addedLabel": "Hinzugefügt:",
-      "expiresLabel": "Läuft ab in:",
-      "dayLabel": "Tage",
+      "trustedLabel": "Dauerhaft vertraut",
       "revokeButton": "Widerrufen",
       "errorLoading": "Fehler beim Laden vertrauenswürdiger Geräte",
       "errorRevoke": "Fehler beim Widerrufen des Geräts"

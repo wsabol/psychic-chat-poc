@@ -174,20 +174,6 @@
       "errorGeneric": "Failed to change password",
       "warningNote": "⚠️ Note: Changing your password will log you out of all other devices. You'll need to sign in again with your new password."
     },
-    "devices": {
-      "title": "Your Devices",
-      "subtitle": "Devices where you're currently signed in. Log out any device you don't recognize.",
-      "loadingDevices": "Loading devices...",
-      "noDevices": "No devices found",
-      "logoutConfirm": "Log out this device? You will need to sign in again on that device.",
-      "logOut": "Log Out",
-      "loggingOut": "Logging out...",
-      "ipLabel": "IP",
-      "lastActiveLabel": "Last active",
-      "currentDeviceBadge": "Current Device",
-      "errorLoading": "Failed to load devices",
-      "errorLogout": "Failed to logout device"
-    },
     "session": {
       "title": "Session & Privacy",
       "subtitle": "Control how long you stay logged in on this device.",

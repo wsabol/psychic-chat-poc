@@ -174,20 +174,6 @@
       "errorGeneric": "Échec de la modification du mot de passe",
       "warningNote": "⚠️ Remarque: La modification de votre mot de passe vous déconnectera de tous les autres appareils. Vous devrez vous reconnecter avec votre nouveau mot de passe."
     },
-    "devices": {
-      "title": "Vos Appareils",
-      "subtitle": "Appareils où vous êtes actuellement connecté. Déconnectez-vous d'un appareil que vous ne reconnaissez pas.",
-      "loadingDevices": "Chargement des appareils...",
-      "noDevices": "Aucun appareil trouvé",
-      "logoutConfirm": "Déconnecter cet appareil? Vous devrez vous reconnecter sur cet appareil.",
-      "logOut": "Se Déconnecter",
-      "loggingOut": "Déconnexion...",
-      "ipLabel": "IP",
-      "lastActiveLabel": "Dernière activité",
-      "currentDeviceBadge": "Appareil Actuel",
-      "errorLoading": "Échec du chargement des appareils",
-      "errorLogout": "Échec de la déconnexion de l'appareil"
-    },
     "session": {
       "title": "Session et Confidentialité",
       "subtitle": "Contrôlez la durée pendant laquelle vous restez connecté sur cet appareil.",
@@ -258,12 +244,12 @@
     },
     "trustDevice": {
       "heading": "🔒 Faire Confiance à Cet Appareil",
-      "infoTrusted": "✓ Cet appareil est de confiance pendant 30 jours. Vous n'aurez pas besoin d'entrer un code 2FA lors de la connexion.",
-      "infoUntrusted": "Faites confiance à cet appareil pour ignorer 2FA pendant 30 jours. Vous n'aurez pas besoin d'entrer de code de vérification lors de la connexion depuis cet appareil.",
+      "infoTrusted": "✓ Cet appareil est définitivement de confiance. Vous n'aurez pas besoin d'entrer un code 2FA lors de la connexion.",
+      "infoUntrusted": "Faites confiance à cet appareil pour ignorer définitivement 2FA. Vous n'aurez pas besoin d'entrer de code de vérification lors de la connexion depuis cet appareil.",
       "trustButton": "Faire Confiance à Cet Appareil",
       "removeButton": "Retirer la Confiance",
       "processing": "Traitement...",
-      "successTrusted": "Appareil de confiance pendant 30 jours",
+      "successTrusted": "Appareil définitivement de confiance",
       "successRemoved": "Confiance de l'appareil retirée",
       "errorTrust": "Échec du test de confiance pour l'appareil",
       "errorRevoke": "Échec de la révocation de la confiance de l'appareil"
@@ -271,10 +257,9 @@
     "trustedDevices": {
       "heading": "🔓 Appareils de Confiance",
       "loading": "Chargement des appareils de confiance...",
-      "noDevices": "Aucun appareil de confiance pour l'instant. Cochez \"Faire confiance à cet appareil pendant 30 jours\" lors de l'entrée de votre code 2FA.",
+      "noDevices": "Aucun appareil de confiance pour l'instant. Utilisez \"Faire Confiance à Cet Appareil\" dans les paramètres de sécurité pour en ajouter un.",
       "addedLabel": "Ajouté:",
-      "expiresLabel": "Expire dans:",
-      "dayLabel": "jours",
+      "trustedLabel": "Définitivement de confiance",
       "revokeButton": "Révoquer",
       "errorLoading": "Échec du chargement des appareils de confiance",
       "errorRevoke": "Échec de la révocation de l'appareil"
