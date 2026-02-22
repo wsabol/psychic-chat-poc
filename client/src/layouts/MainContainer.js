@@ -6,7 +6,7 @@ import Footer from '../components/Footer';
 import { HelpIcon } from '../components/help/HelpIcon';
 import { HelpChatWindow } from '../components/help/HelpChatWindow';
 import { useHelpChat } from '../hooks/useHelpChat';
-import { trackPageView } from '../utils/analyticsTracker';
+import { trackPageView, initializeAnalyticsFromSettings } from '../utils/analyticsTracker';
 import ChatPage from '../pages/ChatPage';
 import PersonalInfoPage from '../pages/PersonalInfoPage';
 import PreferencesPage from '../pages/PreferencesPage';
@@ -58,6 +58,40 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
   // Detect current application mode (free trial, onboarding, or normal)
   const currentMode = useModeDetection(auth, onboarding);
   const modeRules = useModeRules(currentMode);
+
+  // Load user settings from DB on login and initialize the analytics tracker.
+  // This runs once whenever userId/token become available (i.e. after login).
+  useEffect(() => {
+    if (!userId || !token) return;
+
+    const loadUserSettings = async () => {
+      try {
+        const response = await fetch(`${API_URL}/user-settings/${userId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.settings) {
+            // Prime the analytics tracker with the authoritative DB value
+            initializeAnalyticsFromSettings(data.settings.analyticsEnabled);
+            // Sync remaining preferences to localStorage for cookie / other checks
+            localStorage.setItem('cookiesEnabled', data.settings.cookiesEnabled.toString());
+            localStorage.setItem('emailEnabled', (data.settings.emailEnabled ?? true).toString());
+            localStorage.setItem('pushNotificationsEnabled', data.settings.pushNotificationsEnabled.toString());
+          }
+        }
+      } catch (err) {
+        // Non-fatal — tracker will fall back to localStorage value
+        logErrorFromCatch('[MAIN-CONTAINER] Failed to load user settings:', err);
+      }
+    };
+
+    loadUserSettings();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, token]);
 
   // CRITICAL: Define goToPage FIRST so it can be used in effects and handlers
   // This must come before any effect that calls it

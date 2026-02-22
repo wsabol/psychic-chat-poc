@@ -86,16 +86,17 @@ export async function processPendingMigrations() {
     const query = `
       SELECT 
         pcn.id,
-        pcn.user_id,
+        pcn.user_id_hash,
         pcn.old_price_id,
         pcn.new_price_id,
         pcn.price_interval,
         pcn.old_price_amount,
         pcn.new_price_amount,
         pcn.effective_date,
+        upi.user_id,
         pgp_sym_decrypt(upi.stripe_subscription_id_encrypted, $1) as subscription_id
       FROM price_change_notifications pcn
-      JOIN user_personal_info upi ON pcn.user_id = upi.user_id
+      JOIN user_personal_info upi ON pcn.user_id_hash = encode(digest(upi.user_id, 'sha256'), 'hex')
       WHERE pcn.effective_date <= NOW()
         AND pcn.migration_completed = false
         AND upi.subscription_status = 'active'

@@ -37,7 +37,7 @@
     "clearSuccess": "Browsing data cleared successfully",
     "clearError": "Error clearing browsing data",
     "anonymousAnalytics": "Anonymous Analytics",
-    "analyticsDescription": "Help us improve by sharing anonymous usage analytics",
+    "analyticsDescription": "Help improve our app with anonymous usage data. We never collect personal information.",
     "analyticsEnabled": "Anonymous analytics enabled",
     "analyticsDisabled": "Anonymous analytics disabled",
     "emailCommunication": "Email Marketing",

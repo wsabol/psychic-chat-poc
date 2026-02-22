@@ -419,6 +419,22 @@ CREATE INDEX IF NOT EXISTS idx_user_preferences_user_id_hash ON user_preferences
 CREATE INDEX IF NOT EXISTS idx_user_preferences_oracle_language ON user_preferences(oracle_language);
 CREATE INDEX IF NOT EXISTS idx_user_preferences_voice ON user_preferences(voice_selected);
 
+-- TABLE: user_settings
+-- Stores user privacy and communication preferences from the Settings page
+-- Separate from user_preferences (which stores UX/display preferences like language, voice)
+-- Added: 2026-02-22 (Settings page - Email Marketing, Push Notifications, Analytics, Cookies)
+CREATE TABLE IF NOT EXISTS user_settings (
+    id SERIAL PRIMARY KEY,
+    user_id_hash VARCHAR(255) NOT NULL UNIQUE,
+    cookies_enabled BOOLEAN DEFAULT TRUE,
+    analytics_enabled BOOLEAN DEFAULT TRUE,
+    email_marketing_enabled BOOLEAN DEFAULT TRUE,
+    push_notifications_enabled BOOLEAN DEFAULT TRUE,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_settings_user_id_hash ON user_settings(user_id_hash);
+
 -- TABLE: messages
 CREATE TABLE IF NOT EXISTS messages (
     id SERIAL PRIMARY KEY,

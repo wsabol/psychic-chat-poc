@@ -2,6 +2,10 @@
  * Anonymous Analytics Tracker
  * Tracks app usage WITHOUT storing user IDs
  * User can disable via Settings toggle
+ *
+ * Source of truth priority:
+ *   1. _analyticsEnabled (set from DB via initializeAnalyticsFromSettings on login)
+ *   2. localStorage (fallback while DB value hasn't loaded yet)
  */
 
 import { logErrorFromCatch } from '../shared/errorLogger.js';
@@ -10,9 +14,27 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 let sessionStartTime = Date.now();
 
 /**
- * Check if analytics is enabled in Settings
+ * In-memory flag loaded from the database on login.
+ * null = not yet loaded from DB; fall back to localStorage.
+ */
+let _analyticsEnabled = null;
+
+/**
+ * Called by MainContainer after loading user settings from DB.
+ * Sets the authoritative in-memory value and syncs localStorage.
+ */
+export function initializeAnalyticsFromSettings(enabled) {
+  _analyticsEnabled = Boolean(enabled);
+  localStorage.setItem('analyticsEnabled', _analyticsEnabled.toString());
+}
+
+/**
+ * Check if analytics is enabled.
+ * Uses DB-loaded value when available, localStorage otherwise.
  */
 function isAnalyticsEnabled() {
+  if (_analyticsEnabled !== null) return _analyticsEnabled;
+  // localStorage fallback (e.g. before DB settings have been fetched)
   return localStorage.getItem('analyticsEnabled') !== 'false';
 }
 
@@ -156,32 +178,27 @@ export function trackSessionEnd(pageName) {
 }
 
 /**
- * Initialize analytics on app load
+ * Initialize analytics on app load.
+ * Does NOT set a default in localStorage — the DB value loaded via
+ * initializeAnalyticsFromSettings() is the authoritative source of truth.
  */
 export function initializeAnalytics() {
   sessionStartTime = Date.now();
-  
-  // Default to enabled if not set
-  if (localStorage.getItem('analyticsEnabled') === null) {
-    localStorage.setItem('analyticsEnabled', 'true');
-  }
-  
-  if (isAnalyticsEnabled()) {
-  } else {
-  }
 
   // Track page unload
   window.addEventListener('beforeunload', () => {
-    // Get current page
     const currentPage = window.location.pathname;
     trackSessionEnd(currentPage);
   });
 }
 
 /**
- * Set analytics enabled/disabled (called from Settings toggle)
+ * Set analytics enabled/disabled (called from SettingsPage toggle).
+ * Updates both the in-memory flag and localStorage so the change takes
+ * effect immediately for the rest of the session.
  */
 export function setAnalyticsEnabled(enabled) {
-  localStorage.setItem('analyticsEnabled', enabled.toString());
+  _analyticsEnabled = Boolean(enabled);
+  localStorage.setItem('analyticsEnabled', _analyticsEnabled.toString());
 }
 
