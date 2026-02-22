@@ -30,7 +30,7 @@
     "backToLogin": "ログインに戻る",
     "forgotPasswordMessage": "パスワードリセットフロー近日公開",
     "passwordsDontMatch": "パスワードが一致しません",
-    "passwordTooShort": "パスワードは最低6文字である必要があります",
+    "passwordTooShort": "パスワードは最低8文字である必要があります",
     "acceptTermsAndPrivacy": "アカウントを作成するには、サービス利用規約とプライバシーポリシーに同意する必要があります",
     "accountCreated": "アカウントが作成されました。メールを確認してください。",
     "agreeTerms": "サービス利用規約に同意します",

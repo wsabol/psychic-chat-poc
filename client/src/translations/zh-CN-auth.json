@@ -30,7 +30,7 @@
     "backToLogin": "返回登录",
     "forgotPasswordMessage": "密码重置流程即将推出",
     "passwordsDontMatch": "密码不匹配",
-    "passwordTooShort": "密码至少需要6个字符",
+    "passwordTooShort": "密码至少需要8个字符",
     "acceptTermsAndPrivacy": "您必须接受服务条款和隐私政策才能创建账户",
     "accountCreated": "账户已创建！请检查您的邮箱。",
     "agreeTerms": "我同意服务条款",

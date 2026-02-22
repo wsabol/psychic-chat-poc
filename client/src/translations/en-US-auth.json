@@ -30,7 +30,7 @@
     "backToLogin": "Back to login",
     "forgotPasswordMessage": "Forgot password flow coming soon",
     "passwordsDontMatch": "Passwords do not match",
-    "passwordTooShort": "Password must be at least 6 characters",
+    "passwordTooShort": "Password must be at least 8 characters",
     "acceptTermsAndPrivacy": "You must accept Terms of Service and Privacy Policy to create an account",
     "accountCreated": "Account created! Check your email to verify your account.",
     "agreeTerms": "I agree to the Terms of Service",

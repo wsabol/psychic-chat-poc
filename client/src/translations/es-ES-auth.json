@@ -30,7 +30,7 @@
     "backToLogin": "Volver a iniciar sesión",
     "forgotPasswordMessage": "Flujo de restablecimiento de contraseña próximamente",
     "passwordsDontMatch": "Las contraseñas no coinciden",
-    "passwordTooShort": "La contraseña debe tener al menos 6 caracteres",
+    "passwordTooShort": "La contraseña debe tener al menos 8 caracteres",
     "acceptTermsAndPrivacy": "Debe aceptar los Términos de Servicio y la Política de Privacidad para crear una cuenta",
     "accountCreated": "¡Cuenta creada! Revise su correo electrónico para verificar su cuenta.",
     "agreeTerms": "Acepto los Términos de Servicio",

@@ -30,7 +30,7 @@
     "backToLogin": "Torna al login",
     "forgotPasswordMessage": "Flusso di ripristino della password prossimamente",
     "passwordsDontMatch": "Le password non corrispondono",
-    "passwordTooShort": "La password deve avere almeno 6 caratteri",
+    "passwordTooShort": "La password deve avere almeno 8 caratteri",
     "acceptTermsAndPrivacy": "Devi accettare i Termini di Servizio e l'Informativa sulla Privacy per creare un account",
     "accountCreated": "Account creato! Controlla la tua email.",
     "agreeTerms": "Accetto i Termini di Servizio",

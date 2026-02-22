@@ -30,7 +30,7 @@
     "backToLogin": "Voltar para login",
     "forgotPasswordMessage": "Fluxo de redefinição de senha em breve",
     "passwordsDontMatch": "As senhas não correspondem",
-    "passwordTooShort": "A senha deve ter pelo menos 6 caracteres",
+    "passwordTooShort": "A senha deve ter pelo menos 8 caracteres",
     "acceptTermsAndPrivacy": "Você deve aceitar os Termos de Serviço e Política de Privacidade para criar uma conta",
     "accountCreated": "Conta criada! Verifique seu email.",
     "agreeTerms": "Aceito os Termos de Serviço",

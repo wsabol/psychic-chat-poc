@@ -30,7 +30,7 @@
     "backToLogin": "Retour à la connexion",
     "forgotPasswordMessage": "Flux de réinitialisation de mot de passe bientôt disponible",
     "passwordsDontMatch": "Les mots de passe ne correspondent pas",
-    "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères",
+    "passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères",
     "acceptTermsAndPrivacy": "Vous devez accepter les Conditions de service et la Politique de confidentialité pour créer un compte",
     "accountCreated": "Compte créé! Vérifiez votre e-mail pour confirmer votre compte.",
     "agreeTerms": "J'accepte les Conditions de Service",
