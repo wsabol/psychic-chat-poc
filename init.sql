@@ -530,11 +530,24 @@ WHERE created_at > NOW() - INTERVAL '7 days'
 GROUP BY service, severity, DATE(created_at)
 ORDER BY DATE(created_at) DESC, COUNT(*) DESC;
 
--- TABLE: admin_trusted_ips (Admin IP whitelisting for 2FA)
+-- TABLE: admin_trusted_ips
+-- Stores trusted-device records for ALL users (not just admins).
+-- Each (user × device) pair has its own row, keyed by the SHA-256 hash of the
+-- device's User-Agent string (user_agent_hash).  This makes trust per-user:
+-- if two family members share a computer, each has independent trust rows.
+--
+-- ip_address_encrypted is retained for:
+--   • Admin login-bypass flow (checkTrustedIP still uses IP for security)
+--   • Audit / display purposes on UA-keyed rows (IP is stored but not matched)
+--
+-- user_agent_encrypted / user_agent_hash power the settings-page trust check
+-- for ALL users (admin and regular) — UA is stable on mobile where IPs change.
 CREATE TABLE IF NOT EXISTS admin_trusted_ips (
     id SERIAL PRIMARY KEY,
     user_id_hash VARCHAR(255) NOT NULL,
     ip_address_encrypted BYTEA NOT NULL,
+    user_agent_encrypted BYTEA,
+    user_agent_hash VARCHAR(64),
     device_name VARCHAR(255),
     browser_info VARCHAR(255),
     is_trusted BOOLEAN DEFAULT TRUE,
@@ -546,6 +559,12 @@ CREATE TABLE IF NOT EXISTS admin_trusted_ips (
 
 CREATE INDEX IF NOT EXISTS idx_admin_trusted_ips_user_id_hash ON admin_trusted_ips(user_id_hash);
 CREATE INDEX IF NOT EXISTS idx_admin_trusted_ips_is_trusted ON admin_trusted_ips(is_trusted);
+-- Unique index for UA-keyed rows (partial: only where user_agent_hash IS NOT NULL)
+-- Allows old IP-only rows to coexist without conflicting.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_admin_trusted_ips_ua_unique
+    ON admin_trusted_ips (user_id_hash, user_agent_hash)
+    WHERE user_agent_hash IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_admin_trusted_ips_ua_hash ON admin_trusted_ips(user_id_hash, user_agent_hash);
 
 -- TABLE: admin_login_attempts (Admin login audit trail)
 CREATE TABLE IF NOT EXISTS admin_login_attempts (

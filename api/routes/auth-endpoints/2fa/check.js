@@ -28,13 +28,13 @@ import { validationError, serverError, successResponse, ErrorCodes } from '../..
 import {
   isAdmin,
   checkTrustedIP,
+  checkTrustedDevice,
   recordTrustedIP,
   logAdminLoginAttempt,
 } from '../../../services/adminIpService.js';
 import { buildAdminNewIPEmailHTML } from '../../../services/adminEmailBuilder.js';
 import {
   buildAuditFields,
-  checkDeviceTrusted,
   generateTempToken,
   getUserEmail,
 } from './helpers.js';
@@ -127,9 +127,13 @@ export async function check2FAHandler(req, res) {
 
     // ------------------------------------------------------------------
     // 4. Trusted-device bypass
+    // Mobile apps send X-Device-ID (a persistent UUID) because User-Agent
+    // is a forbidden XHR header in React Native and cannot be set from JS.
+    // Web browsers use User-Agent automatically.
     // ------------------------------------------------------------------
-    const deviceTrusted = await checkDeviceTrusted(userIdHash, userAgent);
-    if (deviceTrusted) {
+    const deviceKey = req.get('x-device-id') || userAgent;
+    const deviceTrustedRow = await checkTrustedDevice(userId, deviceKey);
+    if (deviceTrustedRow) {
       await logAudit(
         db,
         buildAuditFields(req, {

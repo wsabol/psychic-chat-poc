@@ -105,6 +105,7 @@ export default function VerificationAndTwoFATab({ userId, token, apiUrl, userEma
           token={token}
           apiUrl={apiUrl}
           onDeviceTrusted={() => setDeviceListVersion(v => v + 1)}
+          onDeviceRevoked={() => setDeviceListVersion(v => v + 1)}
         />
       )}
 

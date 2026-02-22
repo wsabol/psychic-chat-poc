@@ -55,7 +55,7 @@ export function useAuthTwoFactor() {
       // CRITICAL FIX: Call complete2FA to immediately authenticate and trigger navigation to chat
       // This updates isAuthenticated state and triggers billing check, which navigates to chat
       if (complete2FA && authToken && authUserId) {
-        complete2FA(authUserId, authToken);
+        complete2FA(authUserId, authToken, trustDevice);
       } else {
         logErrorFromCatch('complete2FA not available, forcing auth reload', 'AUTH_STATE', 'useAuthTwoFactor.verify2FA');
         // Fallback: Force auth state to re-run listener if complete2FA not available

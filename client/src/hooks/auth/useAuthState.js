@@ -214,18 +214,22 @@ export function useAuthState(checkBillingStatus) {
     return unsubscribe;
   }, [checkBillingStatus]);
 
-    const complete2FA = useCallback((userId, idToken) => {
+    // trustDevice: whether the user explicitly checked "Trust This Device" on the 2FA screen.
+    // Only call /auth/trust-admin-device when this is true — never auto-trust on every login.
+    const complete2FA = useCallback((userId, idToken, trustDevice = false) => {
     setShowTwoFactor(false);
     setTempToken(null);
     setTempUserId(null);
     setIsAuthenticated(true);
     
-        // If admin completed 2FA from new IP, trust the device
+    // If admin completed 2FA from a new IP AND explicitly checked "Trust This Device",
+    // record the IP as trusted so future logins from this device skip 2FA.
     const adminNewIP = sessionStorage.getItem('admin_new_ip');
-    if (adminNewIP) {
+    sessionStorage.removeItem('admin_new_ip'); // always clean up regardless
+    if (adminNewIP && trustDevice) {
       try {
         const { browserInfo } = JSON.parse(adminNewIP);
-        // Server detected IP/device, just confirm 2FA passed
+        // Server detects the IP from req.ip — we just confirm 2FA passed and trust=true
         fetch(`${API_URL}/auth/trust-admin-device`, {
           method: 'POST',
           headers: {
@@ -234,7 +238,6 @@ export function useAuthState(checkBillingStatus) {
           },
           body: JSON.stringify({ browserInfo })
         }).catch(() => {});
-        sessionStorage.removeItem('admin_new_ip');
       } catch (err) {
         // Trust device request is non-critical, silently handle error
       }

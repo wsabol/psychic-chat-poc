@@ -6,7 +6,7 @@ import { logErrorFromCatch } from '../../../shared/errorLogger.js';
  * TrustCurrentDeviceSection - Trust the current device
  * Allows user to permanently trust their current device
  */
-export function TrustCurrentDeviceSection({ userId, token, apiUrl, onDeviceTrusted }) {
+export function TrustCurrentDeviceSection({ userId, token, apiUrl, onDeviceTrusted, onDeviceRevoked }) {
   const { t } = useTranslation();
   const [isCurrentDeviceTrusted, setIsCurrentDeviceTrusted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -84,6 +84,8 @@ export function TrustCurrentDeviceSection({ userId, token, apiUrl, onDeviceTrust
         setIsCurrentDeviceTrusted(false);
         setSuccess(t('security.trustDevice.successRemoved'));
         setTimeout(() => setSuccess(null), 3000);
+        // Notify parent so TrustedDevicesSection can refresh
+        onDeviceRevoked?.();
       } else {
         setError(data.error || t('security.trustDevice.errorRevoke'));
       }
@@ -97,7 +99,21 @@ export function TrustCurrentDeviceSection({ userId, token, apiUrl, onDeviceTrust
 
   return (
     <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '6px', marginTop: '1.5rem' }}>
-      <h3 style={{ margin: '0 0 1rem 0', fontSize: '15px' }}>{t('security.trustDevice.heading')}</h3>
+      {/* Header with title + trust status badge */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <h3 style={{ margin: 0, fontSize: '15px' }}>{t('security.trustDevice.heading')}</h3>
+        <span style={{
+          padding: '2px 10px',
+          borderRadius: '10px',
+          fontSize: '11px',
+          fontWeight: '700',
+          backgroundColor: isCurrentDeviceTrusted ? '#e8f5e9' : '#ffebee',
+          color: isCurrentDeviceTrusted ? '#2e7d32' : '#d32f2f',
+          border: `1px solid ${isCurrentDeviceTrusted ? '#c8e6c9' : '#ffcdd2'}`,
+        }}>
+          {isCurrentDeviceTrusted ? '✓ Trusted' : '✕ Not trusted'}
+        </span>
+      </div>
       
       {error && (
         <div style={{ color: '#d32f2f', fontSize: '12px', marginBottom: '0.75rem' }}>

@@ -3,7 +3,8 @@ import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 
 /**
  * TrustedDevicesSection - Manage trusted devices
- * Shows list of devices that don't require 2FA
+ * Shows ALL device records (trusted and untrusted) so users can see "Not trusted"
+ * in red for devices whose trust was removed, and can fully Revoke any row.
  */
 export function TrustedDevicesSection({ userId, token, apiUrl }) {
   const [devices, setDevices] = useState([]);
@@ -46,7 +47,7 @@ export function TrustedDevicesSection({ userId, token, apiUrl }) {
       });
 
       if (response.ok) {
-        // Remove from UI
+        // Remove the row from the UI entirely
         setDevices(devices.filter(d => d.id !== deviceId));
       } else {
         setError('Failed to revoke device');
@@ -62,7 +63,6 @@ export function TrustedDevicesSection({ userId, token, apiUrl }) {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
-
 
   if (loading) {
     return <div style={{ textAlign: 'center', padding: '1rem' }}>Loading trusted devices...</div>;
@@ -84,48 +84,53 @@ export function TrustedDevicesSection({ userId, token, apiUrl }) {
         </p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          {devices.map((device) => (
-            <div
-              key={device.id}
-              style={{
-                padding: '0.75rem',
-                backgroundColor: 'white',
-                border: '1px solid #e0e0e0',
-                borderRadius: '4px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-              }}
-            >
-              <div style={{ fontSize: '12px', flex: 1 }}>
-                <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>
-                  {device.device_name}
-                </div>
-              <div style={{ color: '#666', fontSize: '11px' }}>
-                  Added: {formatDate(device.created_at)}
-                  <br />
-                  <span style={{ color: '#2e7d32' }}>Trusted permanently</span>
-                </div>
-              </div>
-              <button
-                onClick={() => handleRevoke(device.id)}
+          {devices.map((device) => {
+            const trusted = device.is_trusted !== false; // treat missing as trusted (legacy rows)
+            return (
+              <div
+                key={device.id}
                 style={{
-                  padding: '0.35rem 0.7rem',
-                  backgroundColor: '#ffebee',
-                  color: '#d32f2f',
-                  border: '1px solid #ffcdd2',
-                  borderRadius: '3px',
-                  cursor: 'pointer',
-                  fontSize: '11px',
-                  fontWeight: '600',
-                  whiteSpace: 'nowrap',
-                  marginLeft: '0.5rem'
+                  padding: '0.75rem',
+                  backgroundColor: 'white',
+                  border: `1px solid ${trusted ? '#e0e0e0' : '#ffcdd2'}`,
+                  borderRadius: '4px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
                 }}
               >
-                Revoke
-              </button>
-            </div>
-          ))}
+                <div style={{ fontSize: '12px', flex: 1 }}>
+                  <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>
+                    {device.device_name}
+                  </div>
+                  <div style={{ color: '#666', fontSize: '11px' }}>
+                    Added: {formatDate(device.created_at)}
+                    <br />
+                    <span style={{ color: trusted ? '#2e7d32' : '#d32f2f', fontWeight: '600' }}>
+                      {trusted ? 'Trusted permanently' : '✕ Not trusted'}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleRevoke(device.id)}
+                  style={{
+                    padding: '0.35rem 0.7rem',
+                    backgroundColor: '#ffebee',
+                    color: '#d32f2f',
+                    border: '1px solid #ffcdd2',
+                    borderRadius: '3px',
+                    cursor: 'pointer',
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    whiteSpace: 'nowrap',
+                    marginLeft: '0.5rem'
+                  }}
+                >
+                  Revoke
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

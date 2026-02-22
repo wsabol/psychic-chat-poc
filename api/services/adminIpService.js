@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { db } from '../shared/db.js';
 import { send2FACodeEmail } from '../shared/emailService.js';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
@@ -5,6 +6,31 @@ import { hashUserId } from '../shared/hashUtils.js';
 
 const ADMIN_EMAILS = ['starshiptechnology1@gmail.com', 'wsabol39@gmail.com'];
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+
+/**
+ * Normalise an IP address for consistent storage and comparison.
+ *
+ * This mirrors the logic in extractIpAddress() (sessionManager/utils/deviceParser.js)
+ * so that IPs stored by trustAdminDeviceHandler (which uses parseDeviceInfo) always
+ * compare equal to IPs passed in from req.ip in the other handlers.
+ *
+ * Transformations applied (in order):
+ *   1. Trim whitespace
+ *   2. Strip IPv4-mapped IPv6 prefix  →  "::ffff:203.0.113.5" → "203.0.113.5"
+ *   3. Convert IPv6 loopback          →  "::1" → "localhost"
+ *   4. Lowercase
+ */
+function normalizeIP(ip) {
+  if (!ip) return ip;
+  let normalized = ip.trim();
+  // Strip IPv4-mapped IPv6 prefix
+  const ipv4Mapped = /^::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/i;
+  const match = normalized.match(ipv4Mapped);
+  if (match) normalized = match[1];
+  // Normalize IPv6 loopback to localhost (matches extractIpAddress behaviour)
+  if (normalized === '::1') normalized = 'localhost';
+  return normalized.toLowerCase();
+}
 
 /**
  * Check if an email is registered as an admin
@@ -19,13 +45,15 @@ export async function isAdmin(userEmail) {
 export async function checkTrustedIP(userId, ipAddress) {
   try {
     const userIdHash = hashUserId(userId);
+    const ip = normalizeIP(ipAddress);
     // Decrypt stored IPs and compare with plaintext to find match
     // (Can't compare encrypted values directly since each encryption is different)
     const result = await db.query(
       `SELECT id, first_seen, device_name FROM admin_trusted_ips 
        WHERE user_id_hash = $1 
-       AND pgp_sym_decrypt(ip_address_encrypted, $2) = $3`,
-      [userIdHash, ENCRYPTION_KEY, ipAddress]
+         AND pgp_sym_decrypt(ip_address_encrypted, $2) = $3
+         AND is_trusted = TRUE`,
+      [userIdHash, ENCRYPTION_KEY, ip]
     );
     
     return result.rows.length > 0 ? result.rows[0] : null;
@@ -41,6 +69,7 @@ export async function checkTrustedIP(userId, ipAddress) {
 export async function recordTrustedIP(userId, ipAddress, deviceName, browserInfo) {
   try {
     const userIdHash = hashUserId(userId);
+    const ip = normalizeIP(ipAddress);
     
     // Try to update existing first
     const updateResult = await db.query(
@@ -48,7 +77,7 @@ export async function recordTrustedIP(userId, ipAddress, deviceName, browserInfo
        SET last_accessed = NOW(), device_name = $2, browser_info = $3, is_trusted = TRUE
        WHERE user_id_hash = $1 AND pgp_sym_decrypt(ip_address_encrypted, $4) = $5
        RETURNING id, first_seen`,
-      [userIdHash, deviceName, browserInfo, ENCRYPTION_KEY, ipAddress]
+      [userIdHash, deviceName, browserInfo, ENCRYPTION_KEY, ip]
     );
     
     // If already exists, return the updated record
@@ -62,7 +91,7 @@ export async function recordTrustedIP(userId, ipAddress, deviceName, browserInfo
        (user_id_hash, ip_address_encrypted, device_name, browser_info, is_trusted, last_accessed, created_at)
        VALUES ($1, pgp_sym_encrypt($2, $3), $4, $5, TRUE, NOW(), NOW())
        RETURNING id, first_seen`,
-      [userIdHash, ipAddress, ENCRYPTION_KEY, deviceName, browserInfo]
+      [userIdHash, ip, ENCRYPTION_KEY, deviceName, browserInfo]
     );
     
     return insertResult.rows[0];
@@ -171,7 +200,8 @@ export async function sendNewIPAlert(adminEmail, ipAddress, deviceName) {
 }
 
 /**
- * Get all trusted IPs for an admin user
+ * Get ALL IP records for an admin user (both trusted and untrusted).
+ * Returns is_trusted so the UI can display the correct status badge.
  */
 export async function getTrustedIPs(userId) {
   try {
@@ -183,7 +213,8 @@ export async function getTrustedIPs(userId) {
         browser_info,
         first_seen,
         last_accessed,
-        created_at
+        created_at,
+        is_trusted
        FROM admin_trusted_ips 
        WHERE user_id_hash = $1
        ORDER BY last_accessed DESC`,
@@ -198,18 +229,43 @@ export async function getTrustedIPs(userId) {
 }
 
 /**
+ * Set is_trusted=false for a trusted IP record by IP address.
+ * Used by the "Remove Trust" flow in security settings — keeps the row in the
+ * database so it can be re-trusted later without inserting a new row.
+ */
+export async function setTrustedIPInactiveByAddress(userId, ipAddress) {
+  try {
+    const userIdHash = hashUserId(userId);
+    const ip = normalizeIP(ipAddress);
+    const result = await db.query(
+      `UPDATE admin_trusted_ips
+       SET is_trusted = FALSE, last_accessed = NOW()
+       WHERE user_id_hash = $1
+         AND pgp_sym_decrypt(ip_address_encrypted, $2) = $3
+       RETURNING id`,
+      [userIdHash, ENCRYPTION_KEY, ip]
+    );
+    return result.rows.length > 0;
+  } catch (err) {
+    logErrorFromCatch(err, 'admin', 'set trusted IP inactive by address');
+    return false;
+  }
+}
+
+/**
  * Revoke trust on an IP for an admin user by current IP address
  * (used by the "revoke current device" flow where we know the IP but not the row id)
  */
 export async function revokeTrustedIPByAddress(userId, ipAddress) {
   try {
     const userIdHash = hashUserId(userId);
+    const ip = normalizeIP(ipAddress);
     const result = await db.query(
       `DELETE FROM admin_trusted_ips
        WHERE user_id_hash = $1
          AND pgp_sym_decrypt(ip_address_encrypted, $2) = $3
        RETURNING id`,
-      [userIdHash, ENCRYPTION_KEY, ipAddress]
+      [userIdHash, ENCRYPTION_KEY, ip]
     );
     return result.rows.length > 0;
   } catch (err) {
@@ -219,7 +275,8 @@ export async function revokeTrustedIPByAddress(userId, ipAddress) {
 }
 
 /**
- * Revoke trust on an IP for an admin user
+ * Revoke trust on an IP for an admin user (by row ID — fully deletes the row).
+ * Used by the "Revoke" button in the Trusted Devices table.
  */
 export async function revokeTrustedIP(userId, ipId) {
   try {
@@ -234,6 +291,131 @@ export async function revokeTrustedIP(userId, ipId) {
     return result.rows.length > 0;
   } catch (err) {
     logErrorFromCatch(err, 'admin', 'revoke trusted IP');
+    return false;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UA-based device trust (used by ALL users via security-settings device panel)
+//
+// Every (user × device) pair gets its own row in admin_trusted_ips, keyed by
+// the SHA-256 hash of the User-Agent string.  This is stable across sessions
+// on the same device/app and works correctly on mobile where IPs change.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * SHA-256 hash of a User-Agent string — used as the lookup key so we never
+ * need to decrypt to find a matching row.
+ */
+function hashUA(userAgent) {
+  if (!userAgent) return null;
+  return crypto.createHash('sha256').update(userAgent.trim()).digest('hex');
+}
+
+/**
+ * Check whether the device identified by `userAgent` is currently trusted for
+ * the given user.  Returns the matching row or null.
+ *
+ * Used by:
+ *   • checkCurrentDeviceTrustHandler  (settings page badge)
+ *   • check2FAHandler regular-user path (login bypass)
+ */
+export async function checkTrustedDevice(userId, userAgent) {
+  try {
+    const userIdHash = hashUserId(userId);
+    const uaHash = hashUA(userAgent);
+    if (!uaHash) return null;
+
+    const result = await db.query(
+      `SELECT id, first_seen, device_name
+         FROM admin_trusted_ips
+        WHERE user_id_hash    = $1
+          AND user_agent_hash = $2
+          AND is_trusted      = TRUE`,
+      [userIdHash, uaHash]
+    );
+
+    return result.rows.length > 0 ? result.rows[0] : null;
+  } catch (err) {
+    logErrorFromCatch(err, 'admin', 'checkTrustedDevice');
+    return null;
+  }
+}
+
+/**
+ * Upsert a UA-keyed trusted-device row in admin_trusted_ips.
+ *
+ * • If a row already exists for (user, UA) → update last_accessed + re-trust.
+ * • Otherwise → insert a new row.
+ *
+ * The current IP is stored for audit purposes but is NOT used for matching.
+ *
+ * Used by trustCurrentDeviceHandler for ALL users.
+ */
+export async function recordTrustedDevice(userId, userAgent, ipAddress, deviceName) {
+  const userIdHash = hashUserId(userId);
+  const uaHash = hashUA(userAgent);
+  if (!uaHash) throw new Error('recordTrustedDevice: empty userAgent');
+
+  const ip = normalizeIP(ipAddress) || 'unknown';
+
+  // UPDATE if an entry already exists for this (user, UA)
+  const updateResult = await db.query(
+    `UPDATE admin_trusted_ips
+        SET last_accessed          = NOW(),
+            device_name            = $2,
+            ip_address_encrypted   = pgp_sym_encrypt($3, $4),
+            is_trusted             = TRUE
+      WHERE user_id_hash    = $1
+        AND user_agent_hash = $5
+      RETURNING id`,
+    [userIdHash, deviceName, ip, ENCRYPTION_KEY, uaHash]
+  );
+
+  if (updateResult.rows.length > 0) {
+    return updateResult.rows[0];
+  }
+
+  // INSERT a fresh row
+  const insertResult = await db.query(
+    `INSERT INTO admin_trusted_ips
+       (user_id_hash, ip_address_encrypted, user_agent_encrypted,
+        user_agent_hash, device_name, is_trusted, last_accessed, created_at)
+     VALUES
+       ($1, pgp_sym_encrypt($2, $3), pgp_sym_encrypt($4, $3),
+        $5, $6, TRUE, NOW(), NOW())
+     RETURNING id`,
+    [userIdHash, ip, ENCRYPTION_KEY, userAgent, uaHash, deviceName]
+  );
+
+  return insertResult.rows[0];
+}
+
+/**
+ * Set is_trusted = FALSE for the UA-keyed row (keeps the row so the UI can
+ * show "Not trusted" in red and the user can re-trust without a new insert).
+ *
+ * Used by revokeCurrentDeviceTrustHandler for ALL users.
+ */
+export async function setTrustedDeviceInactiveByUA(userId, userAgent) {
+  try {
+    const userIdHash = hashUserId(userId);
+    const uaHash = hashUA(userAgent);
+    if (!uaHash) return false;
+
+    const result = await db.query(
+      `UPDATE admin_trusted_ips
+          SET is_trusted    = FALSE,
+              last_accessed = NOW()
+        WHERE user_id_hash    = $1
+          AND user_agent_hash = $2
+        RETURNING id`,
+      [userIdHash, uaHash]
+    );
+
+    return result.rows.length > 0;
+  } catch (err) {
+    logErrorFromCatch(err, 'admin', 'setTrustedDeviceInactiveByUA');
     return false;
   }
 }
