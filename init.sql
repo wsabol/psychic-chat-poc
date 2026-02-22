@@ -69,11 +69,17 @@ CREATE TABLE IF NOT EXISTS user_personal_info (
     billing_address_line1_encrypted BYTEA,
     reengagement_email_6m_sent_at TIMESTAMP DEFAULT NULL,
     reengagement_email_1y_sent_at TIMESTAMP DEFAULT NULL,
-    reengagement_email_unsub BOOLEAN DEFAULT FALSE
+    reengagement_email_unsub BOOLEAN DEFAULT FALSE,
+    -- Google Play / Apple IAP billing (Phase 5.0)
+    billing_platform VARCHAR(20) DEFAULT 'stripe',
+    google_play_purchase_token TEXT,
+    google_play_product_id VARCHAR(100),
+    google_play_order_id VARCHAR(255)
 );
 
 CREATE INDEX IF NOT EXISTS idx_user_personal_info_email_hash ON user_personal_info(email_hash);
 CREATE INDEX IF NOT EXISTS idx_subscription_status ON user_personal_info(subscription_status);
+CREATE INDEX IF NOT EXISTS idx_google_play_purchase_token ON user_personal_info(google_play_purchase_token) WHERE google_play_purchase_token IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_current_period_end ON user_personal_info(current_period_end);
 CREATE INDEX IF NOT EXISTS idx_subscription_cancelled_at ON user_personal_info(subscription_cancelled_at);
 CREATE INDEX IF NOT EXISTS idx_last_status_check_at ON user_personal_info(last_status_check_at);

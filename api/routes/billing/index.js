@@ -7,6 +7,7 @@ import billingDataRouter from './billingData.js';
 import onboardingRouter from './onboarding.js';
 import updateCustomerAddressRouter from './update-customer-address.js';
 import saveBillingAddressRouter from './save-billing-address.js';
+import googlePlayRouter from './googlePlay.js';
 
 const router = express.Router();
 
@@ -21,5 +22,8 @@ router.use(billingDataRouter);
 router.use(onboardingRouter);
 router.use(updateCustomerAddressRouter);
 router.use(saveBillingAddressRouter);
+
+// Google Play Billing (Android IAP)
+router.use(googlePlayRouter);
 
 export default router;
