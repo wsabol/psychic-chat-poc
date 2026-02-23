@@ -94,12 +94,17 @@ export function useLanguagePreference() {
         }
 
         // Now save with language update + all other preferences preserved
+        // CRITICAL: oracle_language MUST be updated to match newLanguage so the oracle
+        // (AI) responds in the user's preferred language and dialect.
+        // The LanguageSwitcher changes BOTH the UI language and the oracle language.
+        // Users who want a different oracle language can set it independently via
+        // the PreferencesPage > Oracle Language section.
         const savePayload = {
           language: newLanguage,
           response_type: currentPrefs.response_type,
           voice_enabled: currentPrefs.voice_enabled,
           voice_selected: currentPrefs.voice_selected,
-          oracle_language: currentPrefs.oracle_language
+          oracle_language: newLanguage
         };
 
 

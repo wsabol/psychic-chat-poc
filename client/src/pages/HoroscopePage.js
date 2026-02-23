@@ -242,9 +242,7 @@ export default function HoroscopePage({ userId, token, auth, onExit, onNavigateT
               {t('horoscope.reading', { range: t(`horoscope.${horoscopeState.data.range}`) })}
             </p>
             <p className="horoscope-date">
-              {horoscopeState.data.generatedAt 
-                ? formatTimestampToLocal(horoscopeState.data.generatedAt, language)
-                : formatDateByLanguage(new Date(), language)}
+              {formatDateByLanguage(new Date(), language)}
             </p>
           </div>
 

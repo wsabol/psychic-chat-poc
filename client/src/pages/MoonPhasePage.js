@@ -14,7 +14,7 @@ import SunSignInfo from '../components/SunSignInfo';
 import BirthInfoMissingPrompt from '../components/BirthInfoMissingPrompt';
 import LogoWithCopyright from '../components/LogoWithCopyright';
 import { isBirthInfoMissing } from '../utils/birthInfoErrorHandler';
-import { formatTimestampToLocal } from '../utils/timestampFormatter';
+import { formatDateByLanguage } from '../utils/dateLocaleUtils';
 import '../styles/responsive.css';
 import './MoonPhasePage.css';
 
@@ -159,12 +159,10 @@ export default function MoonPhasePage({ userId, token, auth, onNavigateToPage })
           {/* Sun Sign Info */}
           <SunSignInfo sunSignData={sunSignData} />
 
-          {/* Last Updated Timestamp */}
-          {moonPhaseState.data?.generatedAt && (
-            <div className="moon-phase-timestamp">
-              <p className="text-muted">Generated: {formatTimestampToLocal(moonPhaseState.data.generatedAt, language)}</p>
-            </div>
-          )}
+          {/* Last Updated Timestamp - use browser local date */}
+          <div className="moon-phase-timestamp">
+            <p className="text-muted">{formatDateByLanguage(new Date(), language)}</p>
+          </div>
 
           {/* Lunar Cycle Grid */}
           <LunarCycleGrid currentPhase={currentPhase} />
