@@ -11,7 +11,12 @@
     "translating.horoscope": "Sto ora traducendo il tuo oroscopo {{range}} dall'inglese al {{language}}...",
     "disclaimer": "🔮 Gli oroscopi sono per intrattenimento e ispirazione. Le tue scelte e le tue azioni in ultima analisi plasmano il tuo destino.",
     "tryAgain": "Riprova",
-    "noHoroscope": "Nessun oroscopo disponibile"
+    "noHoroscope": "Nessun oroscopo disponibile",
+    "selectYourSign": "Seleziona Il Tuo Segno Zodiacale",
+    "selectSignSubtitle": "Scegli il tuo segno solare per una lettura giornaliera personalizzata.",
+    "getMyHoroscope": "Ottieni Il Mio Oroscopo ✨",
+    "loadError": "Impossibile caricare il tuo oroscopo. Per favore riprova.",
+    "freeTrialUpsell": "🔮 Crea un account per oroscopi giornalieri, letture complete della carta natale, clima cosmico, fasi lunari e accesso illimitato all'oracolo! Clicca su ✓ Esci per Continuare sopra per registrarti."
   },
   "moonPhase": {
     "title": "🌙 Fase Lunare",

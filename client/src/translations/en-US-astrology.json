@@ -11,7 +11,12 @@
     "reading": "{{range}} Reading",
     "disclaimer": "🔮 Horoscopes are for entertainment and inspiration. Your choices and actions ultimately shape your destiny.",
     "tryAgain": "Try Again",
-    "noHoroscope": "No horoscope available"
+    "noHoroscope": "No horoscope available",
+    "selectYourSign": "Select Your Zodiac Sign",
+    "selectSignSubtitle": "Choose your sun sign for a personalized daily reading.",
+    "getMyHoroscope": "Get My Horoscope ✨",
+    "loadError": "Unable to load your horoscope. Please try again.",
+    "freeTrialUpsell": "🔮 Create an account for daily horoscopes, full birth chart readings, cosmic weather, moon phases, and unlimited oracle access! Click ✓ Exit to Continue above to register."
   },
   "moonPhase": {
     "title": "🌙 Moon Phase",

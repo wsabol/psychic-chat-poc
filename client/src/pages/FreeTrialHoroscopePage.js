@@ -4,6 +4,7 @@ import LogoWithCopyright from '../components/LogoWithCopyright';
 import ExitButton from '../components/ExitButton';
 import BirthChartCard from '../components/BirthChartCard';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
+import { formatDateByLanguage } from '../utils/dateLocaleUtils';
 import '../styles/responsive.css';
 import './HoroscopePage.css';
 
@@ -37,7 +38,7 @@ const ZODIAC_SIGNS = [
  *   (AppChat wires onExit → handlers.handleCreateAccount → showRegisterMode = true)
  */
 export default function FreeTrialHoroscopePage({ userId, auth, onExit }) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   const [loading, setLoading] = useState(true);
   const [horoscope, setHoroscope] = useState(null);
@@ -94,7 +95,7 @@ export default function FreeTrialHoroscopePage({ userId, auth, onExit }) {
       }
     } catch (err) {
       logErrorFromCatch('[FREE-TRIAL-HOROSCOPE] Error loading horoscope:', err);
-      setError('Unable to load your horoscope. Please try again.');
+      setError('horoscope.loadError');
     } finally {
       setLoading(false);
     }
@@ -116,7 +117,7 @@ export default function FreeTrialHoroscopePage({ userId, auth, onExit }) {
         </div>
         <div className="horoscope-content loading" style={{ textAlign: 'center', padding: '3rem' }}>
           <div className="spinner" style={{ fontSize: 'var(--font-size-spinner)' }}>🔮</div>
-          <p style={{ marginTop: '1rem' }}>✨ Consulting the stars...</p>
+          <p style={{ marginTop: '1rem' }}>{t('horoscope.loading')}</p>
         </div>
       </div>
     );
@@ -172,7 +173,7 @@ export default function FreeTrialHoroscopePage({ userId, auth, onExit }) {
           <LogoWithCopyright size="80px" alt="Starship Psychics" />
         </div>
         <div className="horoscope-content" style={{ textAlign: 'center', padding: '2rem' }}>
-          <p className="error-message">⚠️ {error}</p>
+          <p className="error-message">⚠️ {t(error) || error}</p>
           <button onClick={() => loadHoroscope()} className="btn-secondary" style={{ marginTop: '1rem' }}>
             {t('common.tryAgain') || 'Try Again'}
           </button>
@@ -217,10 +218,8 @@ export default function FreeTrialHoroscopePage({ userId, auth, onExit }) {
 
       {/* Horoscope date */}
       <div className="horoscope-metadata" style={{ textAlign: 'center' }}>
-        <p className="horoscope-range">Daily Reading</p>
-        <p className="horoscope-date">
-          {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-        </p>
+        <p className="horoscope-range">{t('horoscope.reading', { range: t('horoscope.daily') })}</p>
+        <p className="horoscope-date">{formatDateByLanguage(new Date(), language)}</p>
       </div>
 
       {/* Horoscope text — uses same CSS classes as normal page for consistent styling */}
@@ -234,11 +233,7 @@ export default function FreeTrialHoroscopePage({ userId, auth, onExit }) {
 
       {/* Upsell — uses disclaimer styling to match normal page's bottom section */}
       <div className="horoscope-disclaimer">
-        <p>
-          🔮 <strong>Create an account</strong> for daily horoscopes, full birth chart readings,
-          cosmic weather, moon phases, and unlimited oracle access! Click{' '}
-          <strong>✓ Exit to Continue</strong> above to register.
-        </p>
+        <p>{t('horoscope.freeTrialUpsell')}</p>
       </div>
     </div>
   );

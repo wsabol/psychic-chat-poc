@@ -11,7 +11,12 @@
     "reading": "Lectura {{range}}",
     "disclaimer": "🔮 Los horóscopos son para entretenimiento e inspiración. Sus decisiones y acciones en última instancia forman su destino.",
     "tryAgain": "Intentar de nuevo",
-    "noHoroscope": "Sin horóscopo disponible"
+    "noHoroscope": "Sin horóscopo disponible",
+    "selectYourSign": "Selecciona Tu Signo Zodiacal",
+    "selectSignSubtitle": "Elige tu signo solar para una lectura diaria personalizada.",
+    "getMyHoroscope": "Ver Mi Horóscopo ✨",
+    "loadError": "No se pudo cargar tu horóscopo. Por favor, inténtalo de nuevo.",
+    "freeTrialUpsell": "🔮 ¡Crea una cuenta para horóscopos diarios, lecturas completas de carta natal, clima cósmico, fases lunares y acceso ilimitado al oráculo! Haz clic en ✓ Salir para Continuar arriba para registrarte."
   },
   "moonPhase": {
     "title": "🌙 Fase Lunar",

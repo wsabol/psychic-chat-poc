@@ -11,7 +11,12 @@
     "translating.horoscope": "Ich übersetze jetzt Ihr {{range}} Horoskop aus dem Englischen ins {{language}}...",
     "disclaimer": "🔮 Horoskope dienen zur Unterhaltung und Inspiration. Ihre Entscheidungen und Handlungen prägen letztendlich Ihr Schicksal.",
     "tryAgain": "Erneut versuchen",
-    "noHoroscope": "Kein Horoskop verfügbar"
+    "noHoroscope": "Kein Horoskop verfügbar",
+    "selectYourSign": "Wählen Sie Ihr Tierkreiszeichen",
+    "selectSignSubtitle": "Wählen Sie Ihr Sonnenzeichen für eine personalisierte tägliche Lesung.",
+    "getMyHoroscope": "Mein Horoskop anzeigen ✨",
+    "loadError": "Ihr Horoskop konnte nicht geladen werden. Bitte versuchen Sie es erneut.",
+    "freeTrialUpsell": "🔮 Erstellen Sie ein Konto für tägliche Horoskope, vollständige Geburtshoroskop-Lesungen, kosmisches Wetter, Mondphasen und unbegrenzten Orakel-Zugang! Klicken Sie oben auf ✓ Beenden und Fortfahren, um sich zu registrieren."
   },
   "moonPhase": {
     "title": "🌙 Mondphase",

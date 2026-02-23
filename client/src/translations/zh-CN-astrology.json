@@ -11,7 +11,12 @@
     "translating.horoscope": "我正在将您的{{range}}星座运势从英文翻译成{{language}}...",
     "disclaimer": "🔮 星座运势仅供娱乐和启发。您的选择和行动最终决定了您的命运。",
     "tryAgain": "重试",
-    "noHoroscope": "没有可用的星座运势"
+    "noHoroscope": "没有可用的星座运势",
+    "selectYourSign": "选择您的星座",
+    "selectSignSubtitle": "选择您的太阳星座以获得个性化的每日占卜。",
+    "getMyHoroscope": "查看我的星座运势 ✨",
+    "loadError": "无法加载您的星座运势。请重试。",
+    "freeTrialUpsell": "🔮 创建账户以获取每日星座运势、完整出生图解读、宇宙天气、月相信息和无限神谕访问！点击上方的 ✓ 退出并继续 进行注册。"
   },
   "moonPhase": {
     "title": "🌙 月相",
