@@ -265,8 +265,6 @@ router.get('/horoscope/:tempUserId', freeTrialLimiter, async (req, res) => {
       return validationError(res, 'Zodiac sign unavailable. Please select your sign.');
     }
 
-    console.log('[FREE-TRIAL-HOROSCOPE-DEBUG] zodiacSign resolved:', zodiacSign, '| signParam:', signParam, '| userIdHash:', userIdHash?.substring(0, 8));
-
     if (!zodiacSign) {
       return validationError(res, 'Zodiac sign unavailable. Please save your birth date or select your sign.');
     }
@@ -287,15 +285,12 @@ router.get('/horoscope/:tempUserId', freeTrialLimiter, async (req, res) => {
 
     // Generate horoscope synchronously (temp users skip compliance checks)
     const { processHoroscopeSync } = await import('../services/chat/processor.js');
-    console.log('[FREE-TRIAL-HOROSCOPE-DEBUG] calling processHoroscopeSync for tempUserId prefix:', tempUserId?.substring(0, 8));
     let result;
     try {
       result = await processHoroscopeSync(tempUserId, 'daily');
     } catch (procErr) {
-      console.log('[FREE-TRIAL-HOROSCOPE-DEBUG] processHoroscopeSync THREW:', procErr.message);
       throw procErr;
     }
-    console.log('[FREE-TRIAL-HOROSCOPE-DEBUG] processHoroscopeSync result keys:', result ? Object.keys(result) : 'null', '| horoscope truthy:', !!result?.horoscope);
 
     if (!result?.horoscope) return serverError(res, 'Failed to generate horoscope');
 

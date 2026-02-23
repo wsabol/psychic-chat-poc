@@ -69,10 +69,6 @@ export async function generateHoroscope(userId, range = 'daily') {
         // Check if user is temporary/trial account
         const isTemporary = await isTemporaryUser(userId);
 
-        console.log('[HOROSCOPE-DEBUG] userInfo:', userInfo ? 'found (birth_date:' + userInfo.birth_date + ')' : 'null',
-            '| astrologyInfo:', astrologyInfo ? 'found (zodiac:' + astrologyInfo.zodiac_sign + ', astrology_data:' + !!astrologyInfo.astrology_data + ')' : 'null',
-            '| isTemporary:', isTemporary);
-
         // Throw error if user hasn't completed personal info yet
         // Exception: temp users who reached the horoscope via the sign-picker flow
         // (they have astrology data but no personal info — that's fine)
@@ -85,7 +81,6 @@ export async function generateHoroscope(userId, range = 'daily') {
         // astrology_data object is missing due to a timing/scaffold edge case — synthesise
         // minimal data from the sign so generation can proceed rather than returning 500.
         if (!astrologyInfo?.astrology_data) {
-            console.log('[HOROSCOPE-DEBUG] astrology_data missing — isTemporary:', isTemporary, '| zodiac_sign:', astrologyInfo?.zodiac_sign);
             if (isTemporary && astrologyInfo?.zodiac_sign) {
                 // Build a minimal stand-in so the horoscope prompt has a sun sign at minimum
                 astrologyInfo = {

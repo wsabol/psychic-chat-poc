@@ -22,7 +22,6 @@
  */
 
 export const handler = async (_event) => {
-  console.log('[temp-account-cleanup] RETIRED: This Lambda is no longer needed. Please delete it and its EventBridge trigger.');
   return {
     statusCode: 200,
     body: JSON.stringify({
