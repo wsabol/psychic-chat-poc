@@ -22,6 +22,8 @@ import {
   sanitizePersonalInfo,
   processPersonalInfoSave,
   resolveZodiacSignForTrial,
+  clearAstrologyMessages,
+  refreshLanguagePreference,
 } from '../services/freeTrialService.js';
 import { freeTrialSessionLimiter, freeTrialLimiter } from '../middleware/rateLimiter.js';
 
@@ -77,7 +79,7 @@ router.get('/check-session/:tempUserId', freeTrialLimiter, async (req, res) => {
  * POST /free-trial/create-session
  * Create a new (or resume an existing) free trial session.
  *
- * Body   : { tempUserId }
+ * Body   : { tempUserId, language? }
  * Headers: x-client-ip (or inferred from the request)
  *
  * IP-based device tracking and trial limits are enforced inside
@@ -85,11 +87,11 @@ router.get('/check-session/:tempUserId', freeTrialLimiter, async (req, res) => {
  */
 router.post('/create-session', freeTrialSessionLimiter, async (req, res) => {
   try {
-    const { tempUserId } = req.body;
+    const { tempUserId, language } = req.body;
     if (!tempUserId) return validationError(res, 'Missing required information');
 
     const clientIp = extractClientIp(req);
-    const result   = await createFreeTrialSession(tempUserId, clientIp);
+    const result   = await createFreeTrialSession(tempUserId, clientIp, language || 'en-US');
 
     if (!result.success) {
       if (result.alreadyCompleted || result.alreadyStarted) return rateLimitError(res, 3600);
@@ -238,8 +240,8 @@ router.post('/save-personal-info/:tempUserId', freeTrialLimiter, async (req, res
  */
 router.get('/horoscope/:tempUserId', freeTrialLimiter, async (req, res) => {
   try {
-    const { tempUserId }          = req.params;
-    const { zodiacSign: signParam } = req.query;
+    const { tempUserId }                        = req.params;
+    const { zodiacSign: signParam, language }   = req.query;
 
     if (!tempUserId) return validationError(res, 'Missing tempUserId');
 
@@ -252,16 +254,48 @@ router.get('/horoscope/:tempUserId', freeTrialLimiter, async (req, res) => {
 
     // Resolve zodiac sign — three-tier fallback:
     //   1. Stored astrology data  →  2. Birth date calculation  →  3. Client sign-picker param
-    const userIdHash              = hashTempUserId(tempUserId);
-    const { zodiacSign, chartData } = await resolveZodiacSignForTrial(userIdHash, tempUserId, signParam);
+    // Wrapped in try/catch so any unexpected DB error during resolution returns 400
+    // (prompts the sign picker) instead of 500 (which would skip the sign picker entirely).
+    const userIdHash = hashTempUserId(tempUserId);
+    let zodiacSign, chartData;
+    try {
+      ({ zodiacSign, chartData } = await resolveZodiacSignForTrial(userIdHash, tempUserId, signParam));
+    } catch (resolveErr) {
+      await logErrorFromCatch(resolveErr, 'free-trial', 'Error resolving zodiac sign for trial');
+      return validationError(res, 'Zodiac sign unavailable. Please select your sign.');
+    }
+
+    console.log('[FREE-TRIAL-HOROSCOPE-DEBUG] zodiacSign resolved:', zodiacSign, '| signParam:', signParam, '| userIdHash:', userIdHash?.substring(0, 8));
 
     if (!zodiacSign) {
       return validationError(res, 'Zodiac sign unavailable. Please save your birth date or select your sign.');
     }
 
+    // Ensure oracle_language in user_preferences matches the client's current language.
+    // This handles the common case where the user changed language after the session
+    // was first created (which set oracle_language to the creation-time value).
+    // Non-fatal — refreshLanguagePreference swallows its own errors.
+    if (language) {
+      await refreshLanguagePreference(userIdHash, language);
+    }
+
+    // CRITICAL: Always clear any stale horoscope messages before generating so a
+    // free trial user NEVER receives a cached horoscope from a previous session.
+    // This ONLY affects messages belonging to this temp user's hash — established
+    // customers use a completely separate endpoint and are never touched here.
+    await clearAstrologyMessages(userIdHash);
+
     // Generate horoscope synchronously (temp users skip compliance checks)
     const { processHoroscopeSync } = await import('../services/chat/processor.js');
-    const result = await processHoroscopeSync(tempUserId, 'daily');
+    console.log('[FREE-TRIAL-HOROSCOPE-DEBUG] calling processHoroscopeSync for tempUserId prefix:', tempUserId?.substring(0, 8));
+    let result;
+    try {
+      result = await processHoroscopeSync(tempUserId, 'daily');
+    } catch (procErr) {
+      console.log('[FREE-TRIAL-HOROSCOPE-DEBUG] processHoroscopeSync THREW:', procErr.message);
+      throw procErr;
+    }
+    console.log('[FREE-TRIAL-HOROSCOPE-DEBUG] processHoroscopeSync result keys:', result ? Object.keys(result) : 'null', '| horoscope truthy:', !!result?.horoscope);
 
     if (!result?.horoscope) return serverError(res, 'Failed to generate horoscope');
 

@@ -132,9 +132,10 @@ async function checkSessionAccess(ipHash, userIdHash) {
  *
  * @param {string} tempUserId - Raw temporary user ID
  * @param {string} userIdHash - Hashed user ID
+ * @param {string} [language='en-US'] - Language selected on the landing screen
  * @returns {Promise<void>}
  */
-async function initializeUserScaffold(tempUserId, userIdHash) {
+async function initializeUserScaffold(tempUserId, userIdHash, language = 'en-US') {
   const key = process.env.ENCRYPTION_KEY;
   if (!key) {
     throw new Error('[FREE-TRIAL-SERVICE] ENCRYPTION_KEY is not set — cannot initialize user scaffold');
@@ -152,13 +153,18 @@ async function initializeUserScaffold(tempUserId, userIdHash) {
     [tempUserId, `${tempUserId}@psychic.local`, 'Seeker', 'Soul', key]
   );
 
-  // CRITICAL: also seed user_preferences so oracle greeting and timezone queries work
+  // CRITICAL: also seed user_preferences so oracle greeting and timezone queries work.
+  // Store the language the user selected on the landing screen so the oracle greets
+  // them and responds in that language from the very first message.
   await db.query(
     `INSERT INTO user_preferences
      (user_id_hash, language, oracle_language, timezone, response_type, created_at, updated_at)
-     VALUES ($1, 'en-US', 'en-US', 'UTC', 'full', NOW(), NOW())
-     ON CONFLICT (user_id_hash) DO UPDATE SET updated_at = NOW()`,
-    [userIdHash]
+     VALUES ($1, $2, $2, 'UTC', 'full', NOW(), NOW())
+     ON CONFLICT (user_id_hash) DO UPDATE SET
+       language        = EXCLUDED.language,
+       oracle_language = EXCLUDED.oracle_language,
+       updated_at      = NOW()`,
+    [userIdHash, language]
   );
 }
 
@@ -174,11 +180,12 @@ async function initializeUserScaffold(tempUserId, userIdHash) {
  * On first creation, placeholder `user_personal_info` and `user_preferences`
  * rows are also written so the chat layer always finds the user in the DB.
  *
- * @param {string} tempUserId - Temporary user ID
- * @param {string} ipAddress  - Client IP address
+ * @param {string} tempUserId          - Temporary user ID
+ * @param {string} ipAddress           - Client IP address
+ * @param {string} [language='en-US']  - Language selected on the landing screen
  * @returns {Promise<Object>} Session data or error descriptor
  */
-export async function createFreeTrialSession(tempUserId, ipAddress) {
+export async function createFreeTrialSession(tempUserId, ipAddress, language = 'en-US') {
   if (!tempUserId || !ipAddress) {
     return { success: false, error: 'Missing required parameters' };
   }
@@ -198,6 +205,19 @@ export async function createFreeTrialSession(tempUserId, ipAddress) {
     }
 
     if (action === 'resume') {
+      // Upsert user_preferences so the row always exists with the correct language.
+      // A plain UPDATE is a silent no-op when the row doesn't yet exist (e.g. the
+      // initial scaffold failed or was cleaned up), so use INSERT … ON CONFLICT instead.
+      await db.query(
+        `INSERT INTO user_preferences
+         (user_id_hash, language, oracle_language, timezone, response_type, created_at, updated_at)
+         VALUES ($1, $2, $2, 'UTC', 'full', NOW(), NOW())
+         ON CONFLICT (user_id_hash) DO UPDATE SET
+           language        = EXCLUDED.language,
+           oracle_language = EXCLUDED.oracle_language,
+           updated_at      = NOW()`,
+        [userIdHash, language]
+      );
       return {
         success:     true,
         sessionId:   session.id,
@@ -224,6 +244,35 @@ export async function createFreeTrialSession(tempUserId, ipAddress) {
          RETURNING id, current_step, started_at`,
         [userIdHash, ipHash, ipAddress, process.env.ENCRYPTION_KEY]
       );
+
+      // Upsert user_preferences so the language is always correct (UPDATE is a
+      // silent no-op when the row doesn't exist, so use INSERT … ON CONFLICT instead).
+      await db.query(
+        `INSERT INTO user_preferences
+         (user_id_hash, language, oracle_language, timezone, response_type, created_at, updated_at)
+         VALUES ($1, $2, $2, 'UTC', 'full', NOW(), NOW())
+         ON CONFLICT (user_id_hash) DO UPDATE SET
+           language        = EXCLUDED.language,
+           oracle_language = EXCLUDED.oracle_language,
+           updated_at      = NOW()`,
+        [userIdHash, language]
+      );
+
+      // CRITICAL: Wipe all stale horoscope/astrology messages AND the astrology
+      // profile so the tester gets a completely clean slate on each new run.
+      // Without this, the old cached horoscope would be served instead of a fresh
+      // one, and the zodiac picker would be skipped because old astrology data exists.
+      await clearAstrologyMessages(userIdHash);
+      try {
+        await db.query(
+          `DELETE FROM user_astrology WHERE user_id_hash = $1`,
+          [userIdHash]
+        );
+      } catch (err) {
+        // Non-fatal — log and continue
+        logErrorFromCatch(err, 'free-trial', '[FREE-TRIAL-SERVICE] Failed to clear user_astrology on reset');
+      }
+
       return {
         success:     true,
         sessionId:   rows[0].id,
@@ -245,8 +294,9 @@ export async function createFreeTrialSession(tempUserId, ipAddress) {
       [sessionId, ipHash, ipAddress, userIdHash, 'created', false, process.env.ENCRYPTION_KEY]
     );
 
-    // Scaffold placeholder DB rows so the chat handler works immediately
-    await initializeUserScaffold(tempUserId, userIdHash);
+    // Scaffold placeholder DB rows so the chat handler works immediately.
+    // Pass the landing-screen language so oracle_language is set correctly from the start.
+    await initializeUserScaffold(tempUserId, userIdHash, language);
 
     return {
       success:     true,
@@ -714,18 +764,45 @@ export async function resolveZodiacSignForTrial(userIdHash, tempUserId, signPara
           risingSign: ad.rising_sign || null,
         };
       }
+    } else if (zodiacSign) {
+      // Row exists but astrology_data is null — fill it in now so the horoscope
+      // handler never hits the "incomplete birth chart" guard.
+      try {
+        await upsertUserAstrology(userIdHash, zodiacSign, buildMinimalAstrologyData(zodiacSign));
+      } catch (fillErr) {
+        logErrorFromCatch(fillErr, 'free-trial', '[resolveZodiacSignForTrial] Failed to backfill astrology_data');
+      }
     }
   }
 
   // 2. Fallback: calculate from the stored birth date
+  // Use CASE to guard against NULL birth_date_encrypted — pgp_sym_decrypt on a NULL
+  // bytea can throw "Wrong key or corrupt data" on some pgcrypto builds, so we only
+  // decrypt when the column is actually non-NULL.
   if (!zodiacSign) {
-    const { rows: piRows } = await db.query(
-      `SELECT pgp_sym_decrypt(birth_date_encrypted, $1)::text AS birth_date
-       FROM user_personal_info WHERE user_id = $2`,
-      [process.env.ENCRYPTION_KEY, tempUserId]
-    );
-    if (piRows.length > 0 && piRows[0].birth_date && piRows[0].birth_date !== 'null') {
-      zodiacSign = calculateSunSignFromDate(piRows[0].birth_date);
+    try {
+      const { rows: piRows } = await db.query(
+        `SELECT CASE WHEN birth_date_encrypted IS NOT NULL
+                     THEN pgp_sym_decrypt(birth_date_encrypted, $1)::text
+                     ELSE NULL
+                END AS birth_date
+         FROM user_personal_info WHERE user_id = $2`,
+        [process.env.ENCRYPTION_KEY, tempUserId]
+      );
+      if (piRows.length > 0 && piRows[0].birth_date && piRows[0].birth_date !== 'null') {
+        zodiacSign = calculateSunSignFromDate(piRows[0].birth_date);
+        // Persist to user_astrology so the horoscope handler always finds astrology_data.
+        if (zodiacSign) {
+          try {
+            await upsertUserAstrology(userIdHash, zodiacSign, buildMinimalAstrologyData(zodiacSign));
+          } catch (writeErr) {
+            logErrorFromCatch(writeErr, 'free-trial', '[resolveZodiacSignForTrial] Failed to persist birth-date-derived astrology');
+          }
+        }
+      }
+    } catch (bdErr) {
+      // Non-fatal — log and continue to the next fallback (sign-picker param)
+      logErrorFromCatch(bdErr, 'free-trial', '[resolveZodiacSignForTrial] Failed to decrypt birth date; falling through to signParam');
     }
   }
 
@@ -739,7 +816,39 @@ export async function resolveZodiacSignForTrial(userIdHash, tempUserId, signPara
   return { zodiacSign, chartData };
 }
 
-// ─── 8. ORCHESTRATION ────────────────────────────────────────────────────────
+// ─── 8. LANGUAGE PREFERENCE ──────────────────────────────────────────────────
+
+/**
+ * Refresh `language` and `oracle_language` in `user_preferences` for a free
+ * trial user.  Called by the horoscope endpoint so that if the user changed
+ * their language AFTER session creation, the oracle still responds in the
+ * correct language instead of falling back to the creation-time value.
+ *
+ * Non-fatal: errors are logged but do not interrupt the caller.
+ *
+ * @param {string} userIdHash - Hashed user ID
+ * @param {string} language   - BCP-47 language code (e.g. 'pt-BR')
+ * @returns {Promise<void>}
+ */
+export async function refreshLanguagePreference(userIdHash, language) {
+  if (!userIdHash || !language) return;
+  try {
+    await db.query(
+      `INSERT INTO user_preferences
+       (user_id_hash, language, oracle_language, timezone, response_type, created_at, updated_at)
+       VALUES ($1, $2, $2, 'UTC', 'full', NOW(), NOW())
+       ON CONFLICT (user_id_hash) DO UPDATE SET
+         language        = EXCLUDED.language,
+         oracle_language = EXCLUDED.oracle_language,
+         updated_at      = NOW()`,
+      [userIdHash, language]
+    );
+  } catch (err) {
+    logErrorFromCatch(err, 'free-trial', '[FREE-TRIAL-SERVICE] Failed to refresh language preference');
+  }
+}
+
+// ─── 9. ORCHESTRATION ────────────────────────────────────────────────────────
 
 /**
  * Orchestrate the complete personal info save process.
@@ -824,6 +933,8 @@ export default {
   SIGN_MIDPOINT_DATES,
   persistPickedZodiacSign,
   resolveZodiacSignForTrial,
-  // § 8 — Orchestration
+  // § 8 — Language Preference
+  refreshLanguagePreference,
+  // § 9 — Orchestration
   processPersonalInfoSave,
 };

@@ -62,12 +62,16 @@ export async function generateHoroscope(userId, range = 'daily') {
         
         // Fetch user context
         const userInfo = await fetchUserPersonalInfo(userId);
-        const astrologyInfo = await fetchUserAstrology(userId);
+        let astrologyInfo = await fetchUserAstrology(userId);
         const userLanguage = await fetchUserLanguagePreference(userId);
         const oracleLanguage = await fetchUserOracleLanguagePreference(userId);
 
         // Check if user is temporary/trial account
         const isTemporary = await isTemporaryUser(userId);
+
+        console.log('[HOROSCOPE-DEBUG] userInfo:', userInfo ? 'found (birth_date:' + userInfo.birth_date + ')' : 'null',
+            '| astrologyInfo:', astrologyInfo ? 'found (zodiac:' + astrologyInfo.zodiac_sign + ', astrology_data:' + !!astrologyInfo.astrology_data + ')' : 'null',
+            '| isTemporary:', isTemporary);
 
         // Throw error if user hasn't completed personal info yet
         // Exception: temp users who reached the horoscope via the sign-picker flow
@@ -76,9 +80,29 @@ export async function generateHoroscope(userId, range = 'daily') {
             throw new Error('Please complete your personal information before generating horoscopes');
         }
         
-        // Throw error if user hasn't completed astrology setup yet
+        // Throw error if user hasn't completed astrology setup yet.
+        // Exception: temp users who have a zodiac sign (e.g. from the sign-picker) but whose
+        // astrology_data object is missing due to a timing/scaffold edge case — synthesise
+        // minimal data from the sign so generation can proceed rather than returning 500.
         if (!astrologyInfo?.astrology_data) {
-            throw new Error('Please complete your birth chart information before generating horoscopes');
+            console.log('[HOROSCOPE-DEBUG] astrology_data missing — isTemporary:', isTemporary, '| zodiac_sign:', astrologyInfo?.zodiac_sign);
+            if (isTemporary && astrologyInfo?.zodiac_sign) {
+                // Build a minimal stand-in so the horoscope prompt has a sun sign at minimum
+                astrologyInfo = {
+                    ...astrologyInfo,
+                    astrology_data: {
+                        sun_sign:      astrologyInfo.zodiac_sign,
+                        sun_degree:    0,
+                        moon_sign:     null,
+                        moon_degree:   null,
+                        rising_sign:   null,
+                        rising_degree: null,
+                        calculated_at: new Date().toISOString(),
+                    },
+                };
+            } else {
+                throw new Error('Please complete your birth chart information before generating horoscopes');
+            }
         }
         
         // Get current astronomical context (planets, moon phase, etc.)

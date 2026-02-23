@@ -57,24 +57,45 @@ export async function fetchUserAstrology(userId) {
 }
 
 /**
- * Check if user is on a trial/temporary account
- * Temporary accounts have emails matching: temp_*@psychic.local
- * 
- * Defense-in-depth check requires BOTH:
- * 1. Starts with 'temp_' prefix
- * 2. Ends with '@psychic.local' domain (only temp accounts use this)
+ * Check if user is on a trial/temporary account.
+ *
+ * Three indicators are checked (any one is sufficient):
+ * 1. Has a free_trial_sessions record  — covers Firebase anonymous UID users
+ *    who reached the sign-picker flow without a user_personal_info email.
+ * 2. Email starts with 'temp_' AND ends with '@psychic.local' — legacy temp
+ *    accounts created via the email-based trial flow.
+ * 3. Firebase anonymous UID pattern (20+ alphanumeric chars, no specials).
  */
 export async function isTemporaryUser(userId) {
   try {
+    const userIdHash = hashUserId(userId);
+
+    // 1. Most reliable: existence of a free_trial_sessions row
+    const { rows: ftsRows } = await db.query(
+      `SELECT id FROM free_trial_sessions WHERE user_id_hash = $1`,
+      [userIdHash]
+    );
+    if (ftsRows.length > 0) {
+      return true;
+    }
+
+    // 2. Email-based legacy check
     const { rows } = await db.query(
       `SELECT pgp_sym_decrypt(email_encrypted, $1) as email FROM user_personal_info WHERE user_id = $2`,
       [ENCRYPTION_KEY, userId]
     );
     if (rows.length > 0 && rows[0].email) {
       const email = rows[0].email;
-      // Defense-in-depth: Check both prefix AND domain
-      return email.startsWith('temp_') && email.endsWith('@psychic.local');
+      if (email.startsWith('temp_') && email.endsWith('@psychic.local')) {
+        return true;
+      }
     }
+
+    // 3. Firebase anonymous UID heuristic
+    if (/^[a-zA-Z0-9]{20,}$/.test(userId)) {
+      return true;
+    }
+
     return false;
   } catch (err) {
     return false;

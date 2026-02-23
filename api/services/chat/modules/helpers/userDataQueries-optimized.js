@@ -1,3 +1,4 @@
+
 /**
  * OPTIMIZED User Data Database Queries
  * Combines multiple queries into single JOIN for performance
@@ -29,18 +30,20 @@ export async function fetchAllUserData(userId) {
     
     const { rows } = await db.query(`
       SELECT 
-        -- Personal Info (with NULL handling for temp users)
-        pgp_sym_decrypt(upi.first_name_encrypted, $1) as first_name,
-        pgp_sym_decrypt(upi.last_name_encrypted, $1) as last_name,
-        pgp_sym_decrypt(upi.birth_date_encrypted, $1) as birth_date,
-        pgp_sym_decrypt(upi.birth_time_encrypted, $1) as birth_time,
-        pgp_sym_decrypt(upi.birth_country_encrypted, $1) as birth_country,
-        pgp_sym_decrypt(upi.birth_province_encrypted, $1) as birth_province,
-        pgp_sym_decrypt(upi.birth_city_encrypted, $1) as birth_city,
-        pgp_sym_decrypt(upi.birth_timezone_encrypted, $1) as birth_timezone,
-        pgp_sym_decrypt(upi.sex_encrypted, $1) as sex,
-        pgp_sym_decrypt(upi.familiar_name_encrypted, $1) as address_preference,
-        pgp_sym_decrypt(upi.email_encrypted, $1) as email,
+        -- Personal Info — use CASE WHEN to avoid pgp_sym_decrypt(NULL, key) which can
+        -- throw "Wrong key or corrupt data" on some pgcrypto builds when the column
+        -- is NULL (scaffold rows leave birth_date, birth_time, etc. as NULL).
+        CASE WHEN upi.first_name_encrypted IS NOT NULL THEN pgp_sym_decrypt(upi.first_name_encrypted, $1) ELSE NULL END as first_name,
+        CASE WHEN upi.last_name_encrypted IS NOT NULL THEN pgp_sym_decrypt(upi.last_name_encrypted, $1) ELSE NULL END as last_name,
+        CASE WHEN upi.birth_date_encrypted IS NOT NULL THEN pgp_sym_decrypt(upi.birth_date_encrypted, $1) ELSE NULL END as birth_date,
+        CASE WHEN upi.birth_time_encrypted IS NOT NULL THEN pgp_sym_decrypt(upi.birth_time_encrypted, $1) ELSE NULL END as birth_time,
+        CASE WHEN upi.birth_country_encrypted IS NOT NULL THEN pgp_sym_decrypt(upi.birth_country_encrypted, $1) ELSE NULL END as birth_country,
+        CASE WHEN upi.birth_province_encrypted IS NOT NULL THEN pgp_sym_decrypt(upi.birth_province_encrypted, $1) ELSE NULL END as birth_province,
+        CASE WHEN upi.birth_city_encrypted IS NOT NULL THEN pgp_sym_decrypt(upi.birth_city_encrypted, $1) ELSE NULL END as birth_city,
+        CASE WHEN upi.birth_timezone_encrypted IS NOT NULL THEN pgp_sym_decrypt(upi.birth_timezone_encrypted, $1) ELSE NULL END as birth_timezone,
+        CASE WHEN upi.sex_encrypted IS NOT NULL THEN pgp_sym_decrypt(upi.sex_encrypted, $1) ELSE NULL END as sex,
+        CASE WHEN upi.familiar_name_encrypted IS NOT NULL THEN pgp_sym_decrypt(upi.familiar_name_encrypted, $1) ELSE NULL END as address_preference,
+        CASE WHEN upi.email_encrypted IS NOT NULL THEN pgp_sym_decrypt(upi.email_encrypted, $1) ELSE NULL END as email,
         
         -- Astrology Data
         ua.zodiac_sign,
@@ -71,7 +74,46 @@ export async function fetchAllUserData(userId) {
       `, [userIdHash]);
       
       if (ftsRows.length > 0) {
-        
+        // user_personal_info scaffold hasn't been written yet (race condition on
+        // first request) — look up language from user_preferences directly so the
+        // oracle always responds in the user's selected language rather than always
+        // defaulting to 'en-US'.
+        let fallbackLanguage    = 'en-US';
+        let fallbackOracleLang  = 'en-US';
+        try {
+          const { rows: prefRows } = await db.query(
+            `SELECT COALESCE(language, 'en-US') as language,
+                    COALESCE(oracle_language, 'en-US') as oracle_language
+             FROM user_preferences WHERE user_id_hash = $1`,
+            [userIdHash]
+          );
+          if (prefRows.length > 0) {
+            fallbackLanguage   = prefRows[0].language;
+            fallbackOracleLang = prefRows[0].oracle_language;
+          }
+        } catch (_) { /* non-fatal — stick with defaults */ }
+
+        // Also look up any astrology data that was persisted (e.g. via the sign-picker
+        // flow) even though the user_personal_info scaffold is missing.  Without this,
+        // the horoscope generator throws "birth chart required" and returns 500.
+        let fallbackAstrologyInfo = null;
+        try {
+          const { rows: astroRows } = await db.query(
+            `SELECT zodiac_sign, astrology_data FROM user_astrology WHERE user_id_hash = $1`,
+            [userIdHash]
+          );
+          if (astroRows.length > 0 && astroRows[0].zodiac_sign) {
+            let astroData = astroRows[0].astrology_data;
+            if (astroData && typeof astroData === 'string') {
+              try { astroData = JSON.parse(astroData); } catch (_) { astroData = null; }
+            }
+            fallbackAstrologyInfo = {
+              zodiac_sign:    astroRows[0].zodiac_sign,
+              astrology_data: astroData,
+            };
+          }
+        } catch (_) { /* non-fatal — astrologyInfo stays null */ }
+
         // Return minimal temp user data structure so oracle can respond
         return {
           personalInfo: {
@@ -86,9 +128,9 @@ export async function fetchAllUserData(userId) {
             sex: null,
             address_preference: 'Seeker'
           },
-          astrologyInfo: null,
-          language: 'en-US',
-          oracleLanguage: 'en-US',
+          astrologyInfo: fallbackAstrologyInfo,
+          language: fallbackLanguage,
+          oracleLanguage: fallbackOracleLang,
           isTemp: true
         };
       }

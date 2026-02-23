@@ -13,7 +13,7 @@ import { validationError, serverError, successResponse } from '../utils/response
 import { logErrorFromCatch } from '../shared/errorLogger.js';
 import { getLocalDateForTimezone } from '../shared/timezoneHelper.js';
 import { generatePsychicOpening } from '../shared/opening.js';
-import { guardName } from '../shared/nameGuard.js';
+import { guardName, getSeekerName } from '../shared/nameGuard.js';
 import { freeTrialLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
@@ -175,6 +175,8 @@ router.get('/history/:tempUserId', async (req, res) => {
 router.get('/opening/:tempUserId', async (req, res) => {
   try {
     const { tempUserId } = req.params;
+    // language query param sent by the mobile app as a hint
+    const { language: langParam } = req.query;
 
     // Validate input
     if (!tempUserId) {
@@ -217,13 +219,18 @@ router.get('/opening/:tempUserId', async (req, res) => {
       return res.status(204).send(); // No content
     }
 
-    // Fetch user's language preference
+    // Fetch user's language preference.
+    // Fall back to the ?language= query param sent by the mobile app so the
+    // oracle greets in the correct language even before user_preferences is
+    // fully propagated (e.g. race condition on the very first request).
     const { rows: prefRows } = await db.query(
       `SELECT language, oracle_language FROM user_preferences WHERE user_id_hash = $1`,
       [userIdHash]
     );
-    const userLanguage = prefRows.length > 0 ? prefRows[0].language : 'en-US';
-    const oracleLanguage = prefRows.length > 0 ? prefRows[0].oracle_language : 'en-US';
+    const dbLanguage     = prefRows.length > 0 ? prefRows[0].language     : null;
+    const dbOracleLang   = prefRows.length > 0 ? prefRows[0].oracle_language : null;
+    const userLanguage   = dbLanguage   || langParam || 'en-US';
+    const oracleLanguage = dbOracleLang || langParam || 'en-US';
 
     // Get recent messages
     const recentMessages = await getRecentMessages(tempUserId);
@@ -243,8 +250,10 @@ router.get('/opening/:tempUserId', async (req, res) => {
       rawClientName = null;
     }
 
-    // Apply name protection
-    const clientName = guardName(rawClientName, true); // true = is temp user
+    // Apply name protection — for temp users, use the language-specific "Seeker" name
+    // so the oracle addresses them in their preferred language (e.g., "Buscador" for Spanish)
+    const baseName = guardName(rawClientName, true); // returns 'Seeker' for temp users
+    const clientName = baseName === 'Seeker' ? getSeekerName(oracleLanguage) : baseName;
 
     // Generate opening with error handling
     let opening = '';
@@ -262,8 +271,8 @@ router.get('/opening/:tempUserId', async (req, res) => {
 
     // Fallback if AI generation fails or returns empty
     if (!opening || opening.trim() === '') {
-      const safeFallbackName = guardName(clientName, true);
-      opening = `Hi ${safeFallbackName}, thank you for being here today. Before we begin, is there an area of your life you're hoping to get clarity on?`;
+      const localizedName = getSeekerName(oracleLanguage);
+      opening = `Hi ${localizedName}, thank you for being here today. Before we begin, is there an area of your life you're hoping to get clarity on?`;
     }
 
     // Store opening as proper content object

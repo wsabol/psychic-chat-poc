@@ -153,6 +153,28 @@ export function emergencyNameCleanup(name) {
 }
 
 /**
+ * Get the localized name for "Seeker" in the user's language.
+ * Used when greeting a free-trial (temp) user so the oracle addresses them
+ * in their own language rather than always saying "Dear Seeker" in English.
+ *
+ * @param {string} [language='en-US'] - BCP-47 language code
+ * @returns {string} The word for "Seeker" in the given language
+ */
+export function getSeekerName(language = 'en-US') {
+  const SEEKER_NAMES = {
+    'en-US': 'Seeker',
+    'es-ES': 'Buscador',
+    'fr-FR': 'Chercheur',
+    'de-DE': 'Suchender',
+    'it-IT': 'Cercatore',
+    'pt-BR': 'Buscador',
+    'ja-JP': '探求者',
+    'zh-CN': '寻道者',
+  };
+  return SEEKER_NAMES[language] || SEEKER_NAMES['en-US'];
+}
+
+/**
  * MASTER FUNCTION: Apply all three layers of protection
  * 
  * This is the main function to use throughout the application
@@ -186,5 +208,6 @@ export default {
   isNameSafeForOracle,
   emergencyNameCleanup,
   guardName,
-  getRandomFriendlyName
+  getRandomFriendlyName,
+  getSeekerName,
 };
