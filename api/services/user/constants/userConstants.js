@@ -9,7 +9,8 @@ export const VALID_LANGUAGES = [
 ];
 
 export const VALID_ORACLE_LANGUAGES = [
-  'en-US', 'en-GB', 'es-ES', 'es-MX', 'es-DO', 'fr-FR', 'fr-CA'
+  'en-US', 'en-GB', 'es-ES', 'es-MX', 'es-DO', 'fr-FR', 'fr-CA',
+  'de-DE', 'it-IT', 'pt-BR', 'ja-JP', 'zh-CN'
 ];
 
 export const VALID_RESPONSE_TYPES = ['full', 'brief'];
