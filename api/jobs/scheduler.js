@@ -1,20 +1,21 @@
 ﻿/**
- * Job Scheduler - Fixed Version with Debug Logging
+ * Job Scheduler
  * Initializes and manages scheduled tasks
- * Jobs: Temp account cleanup, account cleanup, subscription checks
+ * Jobs: Account cleanup, subscription checks, policy notifications, price migrations
+ *
+ * NOTE: Temp account cleanup was retired — temp accounts are no longer created in Firebase.
+ * The corresponding Lambda was also removed from AWS. Do not re-add it here.
  */
 
 import cron from 'node-cron';
 import { runAccountCleanupJob, getCleanupJobStatus } from './accountCleanupJob.js';
 import { runSubscriptionCheckJob, getSubscriptionCheckJobStatus } from './subscriptionCheckJob.js';
-import { runTempAccountCleanupJob, getTempAccountCleanupJobStatus } from './tempAccountCleanupJob.js';
 import { sendReminderNotifications, enforceGracePeriodExpiration, getPolicyNotificationJobStatus } from './policyChangeNotificationJob.js';
 import { processPendingMigrations } from './priceChangeMigrationJob.js';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 let cleanupJobHandle = null;
 let subscriptionCheckJobHandle = null;
-let tempAccountCleanupJobHandle = null;
 let policyReminderJobHandle = null;
 let gracePeriodEnforcementJobHandle = null;
 let priceChangeMigrationJobHandle = null;
@@ -25,22 +26,6 @@ let priceChangeMigrationJobHandle = null;
 export function initializeScheduler() {
   try {
 
-    
-    // Schedule temp account cleanup job to run every 8 hours (0, 8, 16 UTC)
-    tempAccountCleanupJobHandle = cron.schedule('0 */8 * * *',
-      async () => {
-        try {
-          const result = await runTempAccountCleanupJob();
-
-        } catch (error) {
-          logErrorFromCatch(error, 'scheduler', 'Temp account cleanup job failed');
-        }
-      },
-      {
-        scheduled: true,
-        timezone: 'UTC'
-      }
-    );
     
     // Schedule account cleanup job to run daily at 2:00 AM UTC
     cleanupJobHandle = cron.schedule('0 2 * * *', 
@@ -125,15 +110,6 @@ export function initializeScheduler() {
       
       setImmediate(async () => {
         try {
-          const result = await runTempAccountCleanupJob();
-        } catch (e) {
-          logErrorFromCatch('[Scheduler] ✗ Temp account cleanup failed:', e.message);
-          logErrorFromCatch(e, 'scheduler', 'Run temp account cleanup job on startup');
-        }
-      });
-      
-      setImmediate(async () => {
-        try {
           const result = await runAccountCleanupJob();
         } catch (e) {
           logErrorFromCatch('[Scheduler] ✗ Account cleanup failed:', e.message);
@@ -150,7 +126,6 @@ export function initializeScheduler() {
       });
     }
     return {
-      tempAccountCleanup: tempAccountCleanupJobHandle,
       cleanup: cleanupJobHandle,
       subscriptionCheck: subscriptionCheckJobHandle,
       policyReminder: policyReminderJobHandle,
@@ -170,11 +145,6 @@ export function initializeScheduler() {
  */
 export function stopScheduler() {
   try {
-    if (tempAccountCleanupJobHandle) {
-      tempAccountCleanupJobHandle.stop();
-      tempAccountCleanupJobHandle.destroy();
-    }
-
     if (cleanupJobHandle) {
       cleanupJobHandle.stop();
       cleanupJobHandle.destroy();
@@ -212,25 +182,12 @@ export async function triggerCleanupJobManually() {
 }
 
 /**
- * Manually trigger temp account cleanup (for testing/admin)
- */
-export async function triggerTempAccountCleanupJobManually() {
-  return await runTempAccountCleanupJob();
-}
-
-/**
  * Get scheduler status
  */
 export async function getSchedulerStatus() {
   return {
     status: 'running',
     jobs: {
-      tempAccountCleanup: {
-        name: 'Temporary Account Cleanup Job',
-        schedule: '0 1 * * * (daily at 01:00 UTC)',
-        active: tempAccountCleanupJobHandle?.status === 'scheduled',
-        stats: await getTempAccountCleanupJobStatus()
-      },
       cleanup: {
         name: 'Account Cleanup Job',
         schedule: '0 2 * * * (daily at 02:00 UTC)',
@@ -247,4 +204,4 @@ export async function getSchedulerStatus() {
   };
 }
 
-export default { initializeScheduler, stopScheduler, triggerCleanupJobManually, triggerTempAccountCleanupJobManually, getSchedulerStatus };
+export default { initializeScheduler, stopScheduler, triggerCleanupJobManually, getSchedulerStatus };
