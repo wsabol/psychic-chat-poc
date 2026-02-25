@@ -16,6 +16,17 @@
             }
             originalWarn.apply(console, args);
         };
+
+        // Suppress ResizeObserver loop errors.
+        // This script runs BEFORE the webpack HMR/CRA dev-overlay bundle, so our
+        // capture-phase listener is registered first and wins the stopImmediatePropagation race.
+        // The same suppression is also duplicated in index.jsx for belt-and-suspenders.
+        window.addEventListener('error', function(event) {
+            if (event && event.message && event.message.indexOf('ResizeObserver loop completed') !== -1) {
+                event.stopImmediatePropagation();
+                event.preventDefault();
+            }
+        }, true /* capture phase */);
     </script>
 </head>
 <body>

@@ -7,10 +7,12 @@ import SubscriptionRequiredModal from '../components/SubscriptionRequiredModal';
 import OnboardingModal from '../components/OnboardingModal';
 import WelcomeMessage from '../components/WelcomeMessage';
 import MainContainer from '../layouts/MainContainer';
+import FreeTrialCompletePage from '../pages/FreeTrialCompletePage';
 import { useLanguagePreference } from '../hooks/useLanguagePreference';
 import { useAuth } from '../context/AuthContext';
 import { initializeAnalytics, trackPageView } from '../utils/analyticsTracker';
 import { useFreeTrial } from '../hooks/useFreeTrial';
+import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 /**
  * AppChat - Handles authenticated chat flow
@@ -45,6 +47,8 @@ export function AppChat({ state }) {
   const [consentLoading, setConsentLoading] = React.useState(true);
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(false);
   const [welcomeShownOnce, setWelcomeShownOnce] = useState(false);
+  // Free trial completion page state
+  const [showFreeTrialComplete, setShowFreeTrialComplete] = useState(false);
   
   // Initialize free trial tracking for temp users (creates session on mount)
   const freeTrialState = useFreeTrial(authState.isTemporaryAccount, authState.authUserId);
@@ -231,6 +235,32 @@ export function AppChat({ state }) {
     );
   }
 
+  // Show free trial completion page when temp user exits from horoscope
+  // Replaces the ThankYouScreen for free trial users — shows full feature list
+  if (authState.isTemporaryAccount && showFreeTrialComplete) {
+    return (
+      <ErrorBoundary>
+        <FreeTrialCompletePage
+          userId={authState.authUserId}
+          onCreateAccount={handlers.handleCreateAccount}
+          onExit={async () => {
+            // handleLogout: signs out of Firebase, clears guest_user_id from localStorage,
+            // resets auth state, AND sets hasLoggedOut=true.
+            // With isAuthenticated=false + hasLoggedOut=true, useAppRouting → 'login'.
+            // App.jsx then renders AppShells (login screen) instead of AppChat,
+            // which unmounts this component — no need to call setShowFreeTrialComplete(false).
+            // Do NOT call setShowFreeTrialComplete(false) first — that flashes the chat screen.
+            try {
+              await authState.handleLogout();
+            } catch (err) {
+              logErrorFromCatch('[FREE-TRIAL-COMPLETE] Error during exit logout:', err);
+            }
+          }}
+        />
+      </ErrorBoundary>
+    );
+  }
+
   // Show chat with optional onboarding modal and welcome message
   if (isChat) {
     const shouldShowModal = !authState.isTemporaryAccount && onboarding.onboardingStatus?.isOnboarding === true;
@@ -284,8 +314,8 @@ export function AppChat({ state }) {
           onLogout={authState.handleLogout}
           onExit={() => {
             if (authState.isTemporaryAccount) {
-              // Skip the ThankYou/final modal — go directly to Firebase register screen
-              handlers.handleCreateAccount();
+              // Show the free trial completion page (replaces the old ThankYouScreen)
+              setShowFreeTrialComplete(true);
             } else {
               tempFlow.setAppExited(true);
             }

@@ -70,8 +70,10 @@ export function useChat(userId, token, isAuthenticated, authUserId, isTemporaryA
             
             // Use different endpoints for temp users vs authenticated users
             if (isTemporaryAccount) {
-                // Temp users: no authentication, different endpoint
-                url = `${API_URL}/free-trial-chat/opening/${userId}`;
+            // Temp users: no authentication, different endpoint
+                // Pass the browser's local timezone so the oracle greets at the correct time
+                const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                url = `${API_URL}/free-trial-chat/opening/${userId}?timezone=${encodeURIComponent(userTimezone)}`;
                 res = await fetch(url);
             } else {
                 // Authenticated users: use token

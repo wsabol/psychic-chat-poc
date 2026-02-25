@@ -45,5 +45,20 @@
   "personalInfo": {
     "title": "Personal Information",
     "privacyNotice": "By submitting this web form you agree to our processing of your personal data as provided in the Privacy Policy"
+  },
+  "freeTrial": {
+    "skipThisStep": "Skip this step →",
+    "complete": {
+      "title": "Your Free Trial is Complete! ✨",
+      "subtitle": "You've experienced a taste of what Starship Psychics has to offer. Create an account to unlock everything!",
+      "featuresTitle": "✨ Unlock the Full Experience:",
+      "feature1": "🔮 Unlimited Oracle Chat – Ask anything, anytime",
+      "feature2": "⭐ Daily Horoscopes – Personalized cosmic guidance",
+      "feature3": "🌙 Moon Phase Tracker – Align with lunar energy",
+      "feature4": "🌌 Cosmic Weather – Track planetary influences",
+      "feature5": "📊 Full Birth Chart – Sun, Moon & Rising signs",
+      "createAccount": "📝 Create Account to Continue",
+      "exit": "Exit"
+    }
   }
 }

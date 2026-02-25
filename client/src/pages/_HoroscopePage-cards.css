@@ -32,6 +32,16 @@
   box-shadow: var(--shadow-md);
 }
 
+.chart-label {
+  margin: 0 0 var(--spacing-xs) 0;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
 .chart-header {
   display: flex;
   align-items: center;

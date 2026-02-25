@@ -175,8 +175,8 @@ router.get('/history/:tempUserId', async (req, res) => {
 router.get('/opening/:tempUserId', async (req, res) => {
   try {
     const { tempUserId } = req.params;
-    // language query param sent by the mobile app as a hint
-    const { language: langParam } = req.query;
+    // language and timezone query params sent by the client
+    const { language: langParam, timezone: timezoneParam } = req.query;
 
     // Validate input
     if (!tempUserId) {
@@ -200,7 +200,12 @@ router.get('/opening/:tempUserId', async (req, res) => {
       `SELECT timezone FROM user_preferences WHERE user_id_hash = $1`,
       [userIdHash]
     );
-    const userTimezone = tzRows.length > 0 && tzRows[0].timezone ? tzRows[0].timezone : 'UTC';
+    // Prefer the client-sent timezone (browser local) because new temp users may have
+    // UTC stored as default in user_preferences, which would produce wrong time-of-day
+    // greetings.  Fall back to DB value, then UTC.
+    const userTimezone = timezoneParam
+      || (tzRows.length > 0 && tzRows[0].timezone)
+      || 'UTC';
     const todayLocalDate = getLocalDateForTimezone(userTimezone);
 
     // Check if opening already exists for today

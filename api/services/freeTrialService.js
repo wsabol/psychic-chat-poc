@@ -759,9 +759,12 @@ export async function resolveZodiacSignForTrial(userIdHash, tempUserId, signPara
       // Only surface chart data when we have more than just a sun sign
       if (ad && (ad.moon_sign || ad.rising_sign)) {
         chartData = {
-          sunSign:    ad.sun_sign || zodiacSign,
-          moonSign:   ad.moon_sign   || null,
-          risingSign: ad.rising_sign || null,
+          sunSign:     ad.sun_sign    || zodiacSign,
+          moonSign:    ad.moon_sign   || null,
+          risingSign:  ad.rising_sign || null,
+          sunDegree:   ad.sun_degree    != null ? ad.sun_degree    : null,
+          moonDegree:  ad.moon_degree   != null ? ad.moon_degree   : null,
+          risingDegree: ad.rising_degree != null ? ad.rising_degree : null,
         };
       }
     } else if (zodiacSign) {

@@ -240,8 +240,8 @@ router.post('/save-personal-info/:tempUserId', freeTrialLimiter, async (req, res
  */
 router.get('/horoscope/:tempUserId', freeTrialLimiter, async (req, res) => {
   try {
-    const { tempUserId }                        = req.params;
-    const { zodiacSign: signParam, language }   = req.query;
+    const { tempUserId }                                          = req.params;
+    const { zodiacSign: signParam, language, timezone }          = req.query;
 
     if (!tempUserId) return validationError(res, 'Missing tempUserId');
 
@@ -275,6 +275,23 @@ router.get('/horoscope/:tempUserId', freeTrialLimiter, async (req, res) => {
     // Non-fatal — refreshLanguagePreference swallows its own errors.
     if (language) {
       await refreshLanguagePreference(userIdHash, language);
+    }
+
+    // CRITICAL: Update the user's timezone in user_preferences so the horoscope
+    // handler uses the user's LOCAL date (not UTC/GMT) when generating the reading.
+    // Free trial sessions start with timezone='UTC' — this corrects it using the
+    // browser-supplied IANA timezone (e.g. 'America/Chicago') sent by the client.
+    if (timezone) {
+      try {
+        const { db } = await import('../shared/db.js');
+        await db.query(
+          `UPDATE user_preferences SET timezone = $1, updated_at = NOW() WHERE user_id_hash = $2`,
+          [timezone, userIdHash]
+        );
+      } catch (tzErr) {
+        // Non-fatal — log and continue; falls back to UTC if update fails
+        await logErrorFromCatch(tzErr, 'free-trial', 'Failed to update timezone preference');
+      }
     }
 
     // CRITICAL: Always clear any stale horoscope messages before generating so a

@@ -23,7 +23,19 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
   // ============================================================
   // CONFIGURATION
   // ============================================================
-  const isTemporaryAccount = auth?.isTemporaryAccount;
+  // Primary source: auth context flag.
+  // Secondary: userId prefix — guest userIds are always "temp_"-prefixed.
+  // Tertiary: localStorage 'guest_user_id' — the authoritative source of truth for
+  //   guest/free-trial sessions.  No Firebase account is created for these users,
+  //   so React auth-state can be momentarily false during async hydration.
+  //   Reading localStorage is synchronous and always reflects the actual session.
+  const guestUserIdInStorage = typeof window !== 'undefined'
+    ? localStorage.getItem('guest_user_id')
+    : null;
+  const isTemporaryAccount =
+    auth?.isTemporaryAccount ||
+    Boolean(userId?.startsWith('temp_')) ||
+    Boolean(guestUserIdInStorage?.startsWith('temp_'));
   const tempAccountConfig = useTempAccountConfig(isTemporaryAccount);
   
   // ============================================================
@@ -149,6 +161,44 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
   // ============================================================
   return (
     <div className="page-safe-area personal-info-page">
+      {/* Skip this step — only shown for free trial (temp) accounts */}
+      {isTemporaryAccount && (
+        <div style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          padding: '0.25rem 0 0.75rem 0'
+        }}>
+          <button
+            type="button"
+            onClick={() => onNavigateToPage && onNavigateToPage(5)}
+            style={{
+              backgroundColor: '#ffffff',
+              color: '#22c55e',
+              border: '3px solid #22c55e',
+              borderRadius: '12px',
+              padding: '0.75rem 1.25rem',
+              fontSize: '1rem',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)',
+              transition: 'all 0.3s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#22c55e';
+              e.currentTarget.style.color = '#ffffff';
+              e.currentTarget.style.transform = 'scale(1.05)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#ffffff';
+              e.currentTarget.style.color = '#22c55e';
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+          >
+            {t('freeTrial.skipThisStep') || 'Skip this step →'}
+          </button>
+        </div>
+      )}
+
       <PersonalInfoHeader t={t} />
       
       <FormAlerts error={error} success={success} t={t} />

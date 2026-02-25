@@ -31,8 +31,14 @@ router.delete("/delete-temp-account/:tempUserId", async (req, res) => {
         await db.query(`DELETE FROM messages WHERE user_id_hash = $1`, [userIdHash]);
         await db.query(`DELETE FROM free_trial_sessions WHERE user_id_hash = $1`, [userIdHash]);
         await db.query(`DELETE FROM user_preferences WHERE user_id_hash = $1`, [userIdHash]);
-        await db.query(`DELETE FROM user_2fa_settings WHERE user_id = $1`, [tempUserId]);
-        await db.query(`DELETE FROM user_2fa_codes WHERE user_id = $1`, [tempUserId]);
+        // 2FA tables are non-critical for free trial users — wrap in try-catch to
+        // prevent schema differences from surfacing as errors in the API logs
+        try {
+            await db.query(`DELETE FROM user_2fa_settings WHERE user_id = $1`, [tempUserId]);
+        } catch (_) { /* non-fatal: table may not have this column for guest users */ }
+        try {
+            await db.query(`DELETE FROM user_2fa_codes WHERE user_id = $1`, [tempUserId]);
+        } catch (_) { /* non-fatal */ }
 
         return successResponse(res, {
             success: true,

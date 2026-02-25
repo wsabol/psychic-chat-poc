@@ -120,10 +120,6 @@ IMPORTANT:
       fullResponse = fullResponse.replace(/===BRIEF VERSION===/g, '').trim();
       briefResponse = briefResponse.replace(/===BRIEF VERSION===/g, '').trim();
       
-      // Also remove any emojis or text that might appear at the very end after the brief
-      // (like the 🔊 that appears in the user's example)
-      briefResponse = briefResponse.split('\n')[0].trim(); // Take only first line/paragraph if multiple exist
-      
       // Validate that brief is actually different and shorter
       if (fullResponse === briefResponse || briefResponse.length < 50) {
         console.warn('[ORACLE] WARNING: Brief response is invalid - regenerating brief');

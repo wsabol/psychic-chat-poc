@@ -13,12 +13,14 @@ import './ChatPage.css';
  * - Shows oracle greeting for temp accounts
  * - Continue button appears after oracle responds (replaces 90-second timer)
  * - User can take time to read and consider the oracle's response
- * - Shows modal with birth info or exit options when Continue is clicked
+ * - Clicking Continue goes DIRECTLY to Personal Info page (no intermediate prompt)
  */
 export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogout, freeTrialState }) {
   const { t } = useTranslation();
   const isTemporaryAccount = auth?.isTemporaryAccount;
-  const [defaultShowBrief, setDefaultShowBrief] = useState(true);
+  // Default to full response for temp (free trial) accounts — they have no token so the
+  // preference fetch below is skipped and they'd otherwise be stuck on brief mode.
+  const [defaultShowBrief, setDefaultShowBrief] = useState(false);
   
   // Determine if free trial session is ready for temp users
   const sessionReady = isTemporaryAccount 
@@ -38,8 +40,6 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
         if (response.ok) {
           const data = await response.json();
           const responseType = data.response_type || 'full';
-          // If preference is 'full', show full first (defaultShowBrief = false)
-          // If preference is 'brief', show brief first (defaultShowBrief = true)
           setDefaultShowBrief(responseType === 'brief');
         }
       } catch (err) {
@@ -57,7 +57,6 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
   // Onboarding flow state
   const [firstMessageSent, setFirstMessageSent] = useState(false);
   const [showContinueButton, setShowContinueButton] = useState(false);
-  const [showAstrologyPrompt, setShowAstrologyPrompt] = useState(false);
   
   // Refs for message end and message count tracking
   const messagesEndRef = useRef(null);
@@ -89,10 +88,8 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
 
   // Auto-scroll to bottom ONLY when NEW messages arrive (not on every render)
   useEffect(() => {
-    // Only scroll if messages array has grown (new message arrived)
     if (displayMessages.length > previousMessageCountRef.current) {
       previousMessageCountRef.current = displayMessages.length;
-      // Small delay to ensure DOM is updated
       setTimeout(() => {
         if (messagesEndRef.current) {
           messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -106,108 +103,23 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
     await sendMessage();
   };
 
-  // Handle astrology prompt Yes - navigate to Personal Info page
-  const handleAstrologyYes = () => {
-    setShowAstrologyPrompt(false);
-    
-    if (!onNavigateToPage) {
-      return;
-    }
-    
-    // Small delay to ensure modal closes before navigation
-    setTimeout(() => {
+  // Handle Continue button click — go DIRECTLY to Personal Info page (no intermediate prompt)
+  const handleContinue = () => {
+    setShowContinueButton(false);
+    if (onNavigateToPage) {
       try {
         onNavigateToPage(1); // Personal Info is page index 1
       } catch (err) {
         logErrorFromCatch('[CHAT-PAGE] Failed to navigate to PersonalInfoPage', err);
       }
-    }, 100);
-  };
-
-  // Handle astrology prompt No - log out and go to login
-  const handleAstrologyNo = () => {
-    setShowAstrologyPrompt(false);
-    if (onLogout) {
-      onLogout();
     }
   };
 
-  // Handle Continue button click - proceed to astrology prompt
-  const handleContinue = () => {
-    setShowContinueButton(false);
-    setShowAstrologyPrompt(true);
-  };
-
-  const inputDisabled = isTemporaryAccount && firstMessageSent && !showAstrologyPrompt;
+  // Disable input after first message is sent in free trial
+  const inputDisabled = isTemporaryAccount && firstMessageSent;
 
   return (
     <div style={{ position: 'relative' }}>
-      {/* Astrology/Birth Info Prompt Modal */}
-      {showAstrologyPrompt && isTemporaryAccount && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'rgba(30, 30, 60, 0.95)',
-            padding: '2rem',
-            borderRadius: '10px',
-            maxWidth: '400px',
-            color: 'white',
-            textAlign: 'center',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
-            border: '1px solid rgba(100, 150, 255, 0.3)'
-          }}>
-                        <h2 style={{ marginBottom: '1rem' }}>{t('onboarding.enhanceReading')}</h2>
-            <p style={{ marginBottom: '2rem', lineHeight: '1.6', color: '#d0d0ff' }}>
-              {t('onboarding.birthInfoPrompt')}
-            </p>
-            <div style={{
-              display: 'flex',
-              gap: '1rem',
-              flexDirection: 'column'
-            }}>
-              <button
-                onClick={handleAstrologyYes}
-                style={{
-                  padding: '0.75rem',
-                  borderRadius: '5px',
-                  border: 'none',
-                  backgroundColor: '#7c63d8',
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontWeight: 'bold'
-                }}
-              >
-                {t('onboarding.enterBirthInfo')}
-              </button>
-              <button
-                onClick={handleAstrologyNo}
-                style={{
-                  padding: '0.75rem',
-                  borderRadius: '5px',
-                  border: '1px solid #7c63d8',
-                  backgroundColor: 'transparent',
-                  color: '#7c63d8',
-                  cursor: 'pointer',
-                  fontWeight: 'bold'
-                }}
-              >
-                {t('common.exit')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Main chat UI */}
       <div className="page-safe-area chat-page-container">
         <div className="chat-header">
