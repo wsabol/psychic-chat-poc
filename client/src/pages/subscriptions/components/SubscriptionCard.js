@@ -67,9 +67,10 @@ export default function SubscriptionCard({
           {!isCanceling && subscription.status === 'active' && (
             <button
               className="btn-secondary btn-small"
-              onClick={() => onChangeClick(subscription.id)}
+              onClick={() => expandedSub === subscription.id ? onChangeClick(null) : onChangeClick(subscription.id)}
+              title={expandedSub === subscription.id ? t('subscriptions.close') : t('subscriptions.switchPlanOrCancel')}
             >
-              {expandedSub === subscription.id ? `✕ ${t('subscriptions.close')}` : `📋 ${t('subscriptions.switchPlanOrCancel')}`}
+              {expandedSub === subscription.id ? `✕` : `📋 ${t('subscriptions.switchPlanOrCancel')}`}
             </button>
           )}
         </div>
