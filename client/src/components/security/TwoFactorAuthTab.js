@@ -1,10 +1,17 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import SMSConsentModal from './verification/SMSConsentModal';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
  * TwoFactorAuthTab - Manage 2FA on/off and method selection
  * Reads/writes from: user_2fa_settings table
- * 
+ *
+ * SMS Consent flow:
+ *   When the user selects SMS and clicks "Save Changes", the SMSConsentModal
+ *   is shown. The settings are only saved to the API after the user checks the
+ *   consent checkbox and clicks "Continue". Consent is required fresh each time
+ *   the user opens edit mode, ensuring it is always explicitly given.
+ *
  * CRITICAL: When user toggles 2FA OFF here, login flow automatically bypasses 2FA
  * because /check-2fa/:userId endpoint reads user_2fa_settings.enabled
  */
@@ -19,6 +26,26 @@ export default function TwoFactorAuthTab({ userId, token, apiUrl }) {
   // Form state
   const [enabled, setEnabled] = useState(true);
   const [method, setMethod] = useState('email');
+
+  // SMS consent state
+  const [showConsentModal, setShowConsentModal] = useState(false);
+  const [smsConsentGiven, setSmsConsentGiven] = useState(false);
+
+  // Reset consent whenever the user re-opens edit mode
+  const handleSetEditMode = useCallback((value) => {
+    setEditMode(value);
+    if (value) {
+      setSmsConsentGiven(false);
+    }
+  }, []);
+
+  // Reset consent when the method switches away from SMS
+  const handleSetMethod = useCallback((value) => {
+    setMethod(value);
+    if (value !== 'sms') {
+      setSmsConsentGiven(false);
+    }
+  }, []);
 
   const loadTwoFASettings = useCallback(async () => {
     try {
@@ -45,7 +72,8 @@ export default function TwoFactorAuthTab({ userId, token, apiUrl }) {
     loadTwoFASettings();
   }, [loadTwoFASettings]);
 
-  const handleSaveTwoFA = async () => {
+  // ── Internal: actually calls the API ──────────────────────────────────────
+  const performSave = useCallback(async (enabledVal, methodVal) => {
     try {
       setSaving(true);
       setError(null);
@@ -56,7 +84,7 @@ export default function TwoFactorAuthTab({ userId, token, apiUrl }) {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ enabled, method })
+        body: JSON.stringify({ enabled: enabledVal, method: methodVal })
       });
 
       if (response.ok) {
@@ -74,7 +102,30 @@ export default function TwoFactorAuthTab({ userId, token, apiUrl }) {
     } finally {
       setSaving(false);
     }
-  };
+  }, [apiUrl, userId, token]);
+
+  // ── Save — intercepts when SMS selected and no consent yet ────────────────
+  const handleSaveTwoFA = useCallback(async () => {
+    if (enabled && method === 'sms' && !smsConsentGiven) {
+      setShowConsentModal(true);
+      return;
+    }
+    await performSave(enabled, method);
+  }, [enabled, method, smsConsentGiven, performSave]);
+
+  // User accepted the SMS consent modal → save
+  const handleConsentAccept = useCallback(async () => {
+    setSmsConsentGiven(true);
+    setShowConsentModal(false);
+    await performSave(enabled, method);
+  }, [performSave, enabled, method]);
+
+  // User cancelled the SMS consent modal → do nothing
+  const handleConsentCancel = useCallback(() => {
+    setShowConsentModal(false);
+  }, []);
+
+  // ─────────────────────────────────────────────────────────────────────────
 
   if (loading) {
     return <div style={{ textAlign: 'center', padding: '2rem' }}>Loading 2FA settings...</div>;
@@ -82,6 +133,13 @@ export default function TwoFactorAuthTab({ userId, token, apiUrl }) {
 
   return (
     <div>
+      {/* SMS Consent Modal */}
+      <SMSConsentModal
+        isOpen={showConsentModal}
+        onAccept={handleConsentAccept}
+        onCancel={handleConsentCancel}
+      />
+
       <h2 style={{ marginTop: 0 }}>Two-Factor Authentication</h2>
 
       {error && (
@@ -164,7 +222,7 @@ export default function TwoFactorAuthTab({ userId, token, apiUrl }) {
           </p>
 
           <button
-            onClick={() => setEditMode(true)}
+            onClick={() => handleSetEditMode(true)}
             style={{
               padding: '0.75rem 1.5rem',
               backgroundColor: '#7c63d8',
@@ -222,7 +280,7 @@ export default function TwoFactorAuthTab({ userId, token, apiUrl }) {
                       type="radio"
                       value="sms"
                       checked={method === 'sms'}
-                      onChange={(e) => setMethod(e.target.value)}
+                      onChange={(e) => handleSetMethod(e.target.value)}
                       disabled={saving}
                       style={{ cursor: 'pointer', width: '18px', height: '18px' }}
                     />
@@ -238,7 +296,7 @@ export default function TwoFactorAuthTab({ userId, token, apiUrl }) {
                       type="radio"
                       value="email"
                       checked={method === 'email'}
-                      onChange={(e) => setMethod(e.target.value)}
+                      onChange={(e) => handleSetMethod(e.target.value)}
                       disabled={saving}
                       style={{ cursor: 'pointer', width: '18px', height: '18px' }}
                     />
@@ -273,7 +331,7 @@ export default function TwoFactorAuthTab({ userId, token, apiUrl }) {
             </button>
             <button
               onClick={() => {
-                setEditMode(false);
+                handleSetEditMode(false);
                 setEnabled(settings.enabled);
                 setMethod(settings.method || 'email');
               }}

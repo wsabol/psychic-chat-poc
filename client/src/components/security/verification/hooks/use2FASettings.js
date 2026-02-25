@@ -3,7 +3,17 @@ import { logErrorFromCatch } from '../../../../shared/errorLogger.js';
 
 /**
  * Custom hook for 2FA settings management
- * Handles all 2FA state, loading, and API calls
+ * Handles all 2FA state, loading, API calls, and SMS consent gating.
+ *
+ * SMS Consent flow:
+ *  1. User selects 'sms' as method and clicks Save.
+ *  2. handle2FASave detects method === 'sms' and no consent yet → sets
+ *     showSMSConsentModal = true (caller renders <SMSConsentModal>).
+ *  3. User accepts → handleSMSConsentAccept fires the actual API save.
+ *  4. User cancels → handleSMSConsentCancel closes the modal; nothing is saved.
+ *  5. Consent is reset whenever the method changes away from 'sms' or the
+ *     user re-enters edit mode, ensuring they see the modal on each new
+ *     SMS selection.
  */
 export function use2FASettings(userId, token, apiUrl) {
   const [twoFASettings, setTwoFASettings] = useState(null);
@@ -13,9 +23,28 @@ export function use2FASettings(userId, token, apiUrl) {
   const [twoFAError, setTwoFAError] = useState(null);
   const [twoFASuccess, setTwoFASuccess] = useState(null);
   const [twoFAEnabled, setTwoFAEnabled] = useState(false);
-  const [twoFAMethod, setTwoFAMethod] = useState('email');
+  const [twoFAMethod, setTwoFAMethodRaw] = useState('email');
 
-  // Load 2FA settings
+  // SMS consent state
+  const [showSMSConsentModal, setShowSMSConsentModal] = useState(false);
+  const [smsConsentGiven, setSmsConsentGiven] = useState(false);
+
+  // ── Reset consent whenever the user re-opens edit mode ───────────────────
+  useEffect(() => {
+    if (twoFAEditMode) {
+      setSmsConsentGiven(false);
+    }
+  }, [twoFAEditMode]);
+
+  /** Wrap the raw setter so switching away from 'sms' clears consent. */
+  const setTwoFAMethod = useCallback((m) => {
+    setTwoFAMethodRaw(m);
+    if (m !== 'sms') {
+      setSmsConsentGiven(false);
+    }
+  }, []);
+
+  // ── Load 2FA settings ─────────────────────────────────────────────────────
   const load2FASettings = useCallback(async () => {
     try {
       setTwoFALoading(true);
@@ -27,7 +56,7 @@ export function use2FASettings(userId, token, apiUrl) {
         const data = await response.json();
         setTwoFASettings(data.settings);
         setTwoFAEnabled(data.settings.enabled);
-        setTwoFAMethod(data.settings.method || 'email');
+        setTwoFAMethodRaw(data.settings.method || 'email');
       }
     } catch (err) {
       logErrorFromCatch('[2FA] Error loading settings:', err);
@@ -41,8 +70,8 @@ export function use2FASettings(userId, token, apiUrl) {
     load2FASettings();
   }, [load2FASettings]);
 
-  // Save 2FA settings
-  const handle2FASave = useCallback(async () => {
+  // ── Internal: performs the actual API call (post-consent) ─────────────────
+  const performSave = useCallback(async (enabledVal, methodVal) => {
     try {
       setTwoFASaving(true);
       setTwoFAError(null);
@@ -53,7 +82,7 @@ export function use2FASettings(userId, token, apiUrl) {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ enabled: twoFAEnabled, method: twoFAMethod })
+        body: JSON.stringify({ enabled: enabledVal, method: methodVal })
       });
 
       if (response.ok) {
@@ -71,7 +100,33 @@ export function use2FASettings(userId, token, apiUrl) {
     } finally {
       setTwoFASaving(false);
     }
-  }, [apiUrl, userId, token, twoFAEnabled, twoFAMethod]);
+  }, [apiUrl, userId, token]);
+
+  // ── Save — intercepts when SMS is selected and consent not yet given ───────
+  const handle2FASave = useCallback(async () => {
+    if (twoFAEnabled && twoFAMethod === 'sms' && !smsConsentGiven) {
+      setShowSMSConsentModal(true);
+      return;
+    }
+    await performSave(twoFAEnabled, twoFAMethod);
+  }, [twoFAEnabled, twoFAMethod, smsConsentGiven, performSave]);
+
+  // ── SMS consent modal callbacks ───────────────────────────────────────────
+
+  /** User accepted the SMS consent — mark consent given, close modal, save. */
+  const handleSMSConsentAccept = useCallback(async () => {
+    setSmsConsentGiven(true);
+    setShowSMSConsentModal(false);
+    // Use the current state values captured in the closure via the hook's
+    // state refs. performSave reads twoFAEnabled/twoFAMethod from the call
+    // params to avoid stale-closure issues.
+    await performSave(twoFAEnabled, twoFAMethod);
+  }, [performSave, twoFAEnabled, twoFAMethod]);
+
+  /** User cancelled the SMS consent modal — close without saving. */
+  const handleSMSConsentCancel = useCallback(() => {
+    setShowSMSConsentModal(false);
+  }, []);
 
   return {
     twoFASettings,
@@ -87,6 +142,10 @@ export function use2FASettings(userId, token, apiUrl) {
     twoFAMethod,
     setTwoFAMethod,
     handle2FASave,
-    load2FASettings
+    load2FASettings,
+    // SMS consent modal
+    showSMSConsentModal,
+    handleSMSConsentAccept,
+    handleSMSConsentCancel,
   };
 }

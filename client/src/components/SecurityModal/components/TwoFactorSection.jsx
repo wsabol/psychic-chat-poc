@@ -1,11 +1,15 @@
 /**
  * Two-Factor Authentication Section
  * Displays and manages 2FA settings
+ *
+ * Renders the SMSConsentModal when the user selects SMS and submits.
+ * The modal is driven by twoFAState.showSMSConsentModal from use2FASettings.
  */
 
 import React from 'react';
 import styles from '../SecurityModal.module.css';
 import { TWO_FA_METHODS } from '../utils/constants';
+import SMSConsentModal from '../../security/verification/SMSConsentModal';
 
 const TwoFactorSection = ({ twoFAState }) => {
   const {
@@ -22,6 +26,9 @@ const TwoFactorSection = ({ twoFAState }) => {
     handleSaveSettings,
     cancelEdit,
     saving,
+    showSMSConsentModal,
+    handleSMSConsentAccept,
+    handleSMSConsentCancel,
   } = twoFAState;
 
   const handleSubmit = async (e) => {
@@ -81,6 +88,13 @@ const TwoFactorSection = ({ twoFAState }) => {
 
   return (
     <div className={styles.securitySection}>
+      {/* SMS Consent Modal — shown when user selects SMS and clicks Save Changes */}
+      <SMSConsentModal
+        isOpen={showSMSConsentModal}
+        onAccept={handleSMSConsentAccept}
+        onCancel={handleSMSConsentCancel}
+      />
+
       <h3>Two-Factor Authentication (2FA)</h3>
 
       <form onSubmit={handleSubmit}>

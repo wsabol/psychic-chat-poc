@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 
 /**
- * SMSConsentModal - AWS-compliant SMS consent for 2FA phone verification
- * Shows before collecting phone number, requires explicit consent with:
- * - Brand name (Starship Psychics)
- * - Purpose (authentication)
- * - STOP/HELP keywords
- * - Rates disclosure
+ * SMSConsentModal - TCPA-compliant SMS consent for 2FA phone verification.
+ * Displayed before collecting a phone number and before sending any SMS.
+ * Requires explicit opt-in checkbox before proceeding.
+ *
+ * Disclosures required by TCPA / CTIA guidelines:
+ *  - Brand name (Starship Psychics)
+ *  - Purpose (login/verification only)
+ *  - Message frequency (1 msg/login)
+ *  - Msg & data rates disclosure
+ *  - STOP keyword to opt out
+ *  - HELP keyword for support info
  */
 export default function SMSConsentModal({ isOpen, onAccept, onCancel }) {
   const [consentChecked, setConsentChecked] = useState(false);
@@ -47,9 +52,10 @@ export default function SMSConsentModal({ isOpen, onAccept, onCancel }) {
           color: '#333',
           textAlign: 'center'
         }}>
-          Enable Two-Factor Authentication
+          Enable Two-Factor Authentication via SMS
         </h2>
 
+        {/* ── Conditions disclosure ── */}
         <div style={{
           backgroundColor: '#f8f9fa',
           padding: '20px',
@@ -63,7 +69,9 @@ export default function SMSConsentModal({ isOpen, onAccept, onCancel }) {
             color: '#495057',
             fontSize: '14px'
           }}>
-            By providing your phone number, you consent to receive SMS verification codes from <strong>Starship Psychics</strong> for authentication purposes only.
+            By providing your phone number, you consent to receive SMS verification
+            codes from <strong>Starship Psychics</strong> for login and
+            authentication purposes only.
           </p>
 
           <ul style={{
@@ -71,15 +79,16 @@ export default function SMSConsentModal({ isOpen, onAccept, onCancel }) {
             paddingLeft: '20px',
             color: '#6c757d',
             fontSize: '13px',
-            lineHeight: '1.8'
+            lineHeight: '2'
           }}>
-            <li>Codes sent only at login</li>
-            <li>Message & data rates may apply</li>
-            <li>Reply STOP to opt out anytime</li>
-            <li>Reply HELP for assistance</li>
+            <li>1 msg/login. Codes sent for login/verification only.</li>
+            <li>Msg &amp; data rates may apply.</li>
+            <li>Reply <strong>STOP</strong> to opt out anytime.</li>
+            <li>Reply <strong>HELP</strong> for info.</li>
           </ul>
         </div>
 
+        {/* ── Consent checkbox ── */}
         <label style={{
           display: 'flex',
           alignItems: 'flex-start',
@@ -109,10 +118,13 @@ export default function SMSConsentModal({ isOpen, onAccept, onCancel }) {
             color: '#495057',
             lineHeight: '1.5'
           }}>
-            I consent to receive SMS from <strong>Starship Psychics</strong>
+            I consent to receive SMS verification codes from{' '}
+            <strong>Starship Psychics</strong>. I understand that message &amp;
+            data rates may apply and I can reply STOP at any time to opt out.
           </span>
         </label>
 
+        {/* ── Action buttons ── */}
         <div style={{
           display: 'flex',
           gap: '12px'

@@ -5,6 +5,8 @@
  */
 
 import pg from 'pg';
+import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
+
 const { Pool } = pg;
 
 // Database connection
@@ -20,6 +22,32 @@ const pool = new Pool({
   connectionTimeoutMillis: 10000,
 });
 
+// AWS SNS client for sending outbound reply messages
+const snsClient = new SNSClient({
+  region: process.env.AWS_REGION || 'us-east-1',
+});
+
+// ─── TCPA-Compliant Reply Messages ───────────────────────────────────────────
+
+/**
+ * STOP reply: sent after successfully opting out the user.
+ * TCPA requires a confirmation message after a STOP request.
+ */
+const STOP_REPLY =
+  'Starship Psychics: You have been unsubscribed from SMS. No further messages will be sent. ' +
+  'To re-enable, update your MFA settings at starshippsychics.com';
+
+/**
+ * HELP reply: sent in response to a HELP or INFO keyword.
+ * Must identify the program, describe message frequency, and include support contact.
+ */
+const HELP_REPLY =
+  'Starship Psychics SMS Help: Codes sent only for login/verification. ' +
+  '1-3 msgs/login session. Msg&data rates may apply. Reply STOP to cancel. ' +
+  'Support: support@starshippsychics.com';
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
 /**
  * Parse AWS SNS message for SMS data
  * @param {Object} snsMessage - SNS message object
@@ -29,8 +57,8 @@ function parseSNSMessage(snsMessage) {
   try {
     // AWS sends SMS data in this format
     return {
-      originationNumber: snsMessage.originationNumber, // E.164 format
-      destinationNumber: snsMessage.destinationNumber,
+      originationNumber: snsMessage.originationNumber, // E.164 format — sender's number
+      destinationNumber: snsMessage.destinationNumber,  // Our AWS number
       messageBody: snsMessage.messageBody,
       messageKeyword: snsMessage.messageKeyword,
       inboundMessageId: snsMessage.inboundMessageId,
@@ -39,6 +67,51 @@ function parseSNSMessage(snsMessage) {
   } catch (error) {
     console.error('Error parsing SNS message:', error);
     return null;
+  }
+}
+
+/**
+ * Send an outbound SMS reply back to the user via AWS SNS.
+ * Uses the inbound message's destinationNumber as the origination identity
+ * (i.e., the AWS-managed number the user originally texted).
+ *
+ * NOTE: AWS SNS may also auto-respond to STOP keywords at the carrier level.
+ * This custom reply ensures our branded message is delivered regardless.
+ *
+ * @param {string} toPhoneNumber   - Recipient phone number in E.164 format
+ * @param {string} messageBody     - Text to send
+ * @param {string} originationNumber - Our AWS number that received the inbound message
+ */
+async function sendReply(toPhoneNumber, messageBody, originationNumber) {
+  try {
+    const params = {
+      PhoneNumber: toPhoneNumber,
+      Message: messageBody,
+      MessageAttributes: {
+        'AWS.SNS.SMS.SMSType': {
+          DataType: 'String',
+          StringValue: 'Transactional'
+        }
+      }
+    };
+
+    // If we have our origination number, pin the reply to the same number
+    // the user texted so carrier threading works correctly.
+    if (originationNumber) {
+      params.MessageAttributes['AWS.MM.SMS.OriginationNumber'] = {
+        DataType: 'String',
+        StringValue: originationNumber
+      };
+    }
+
+    const command = new PublishCommand(params);
+    await snsClient.send(command);
+    console.log(`✅ Reply sent to ${toPhoneNumber}`);
+    return true;
+  } catch (error) {
+    // Non-critical: log but don't throw — opt-out was already recorded
+    console.error('❌ Failed to send SMS reply:', error);
+    return false;
   }
 }
 
@@ -59,6 +132,55 @@ async function addOptOut(phoneNumber) {
   } catch (error) {
     console.error('Error adding opt-out:', error);
     throw error;
+  }
+}
+
+/**
+ * When a user opts out of SMS, switch their 2FA method to 'email' so they
+ * are never locked out of their account.
+ *
+ * Uses pgp_sym_decrypt to match the stored encrypted phone number against
+ * the opt-out phone number, then updates user_2fa_settings.
+ *
+ * Requires ENCRYPTION_KEY env var (same key used by the API for pgcrypto).
+ *
+ * @param {string} phoneNumber - Phone number in E.164 format
+ */
+async function downgradeToEmailIfSMS(phoneNumber) {
+  const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+
+  if (!ENCRYPTION_KEY) {
+    console.warn('⚠️  ENCRYPTION_KEY not set — skipping 2FA method downgrade');
+    return;
+  }
+
+  try {
+    // Find the user whose primary phone matches and whose 2FA method is 'sms',
+    // then flip the method to 'email' in a single UPDATE … WHERE subquery.
+    const result = await pool.query(
+      `UPDATE user_2fa_settings
+       SET    method     = 'email',
+              updated_at = NOW()
+       WHERE  user_id_hash = (
+         SELECT user_id_hash
+         FROM   security
+         WHERE  pgp_sym_decrypt(phone_number_encrypted::bytea, $1::text) = $2
+         LIMIT  1
+       )
+       AND method = 'sms'
+       RETURNING user_id_hash`,
+      [ENCRYPTION_KEY, phoneNumber]
+    );
+
+    if (result.rowCount > 0) {
+      console.log(`🔄 2FA method switched to email for user (hash: ${result.rows[0].user_id_hash})`);
+    } else {
+      // Not an error — the user may have had email 2FA already, or no account
+      console.log(`ℹ️  No SMS 2FA setting found for ${phoneNumber} — no update needed`);
+    }
+  } catch (error) {
+    // Non-critical: opt-out is already recorded; log and continue
+    console.error('❌ Failed to downgrade 2FA method to email:', error);
   }
 }
 
@@ -106,12 +228,15 @@ async function logInboundSMS(smsData, action) {
       ]
     ).catch(err => {
       // If table doesn't exist, log to console only
+      console.warn('sms_inbound_log table not available:', err.message);
     });
   } catch (error) {
     // Non-critical - just log
     console.error('Error logging inbound SMS:', error);
   }
 }
+
+// ─── Main Handler ─────────────────────────────────────────────────────────────
 
 /**
  * Main Lambda handler
@@ -135,38 +260,58 @@ export const handler = async (event) => {
       }
 
       const phoneNumber = smsData.originationNumber;
+      const ourNumber   = smsData.destinationNumber; // Our AWS-managed number
       const messageBody = (smsData.messageBody || '').trim().toUpperCase();
 
-      // Handle STOP/UNSUBSCRIBE keywords (REQUIRED by TCPA)
-      if (messageBody === 'STOP' || 
-          messageBody === 'STOPALL' || 
-          messageBody === 'UNSUBSCRIBE' || 
-          messageBody === 'CANCEL' || 
-          messageBody === 'END' || 
-          messageBody === 'QUIT') {
-        
+      // ── Handle STOP / UNSUBSCRIBE keywords (REQUIRED by TCPA) ────────────
+      if (
+        messageBody === 'STOP' ||
+        messageBody === 'STOPALL' ||
+        messageBody === 'UNSUBSCRIBE' ||
+        messageBody === 'CANCEL' ||
+        messageBody === 'END' ||
+        messageBody === 'QUIT'
+      ) {
+        // 1. Record opt-out in database first (TCPA-critical)
         await addOptOut(phoneNumber);
+
+        // 2. Switch the user's 2FA method from SMS → email so they stay
+        //    able to log in after opting out.
+        await downgradeToEmailIfSMS(phoneNumber);
+
+        // 3. Send branded STOP confirmation message
+        await sendReply(phoneNumber, STOP_REPLY, ourNumber);
+
+        // 4. Audit log
         await logInboundSMS(smsData, 'STOP');
+
+        console.log(`📵 STOP processed for ${phoneNumber}`);
       }
-      
-      // Handle START/SUBSCRIBE keywords (opt back in)
-      else if (messageBody === 'START' || 
-               messageBody === 'SUBSCRIBE' || 
-               messageBody === 'YES' || 
-               messageBody === 'UNSTOP') {
-        
+
+      // ── Handle START / SUBSCRIBE keywords (opt back in) ──────────────────
+      else if (
+        messageBody === 'START' ||
+        messageBody === 'SUBSCRIBE' ||
+        messageBody === 'YES' ||
+        messageBody === 'UNSTOP'
+      ) {
         await removeOptOut(phoneNumber);
         await logInboundSMS(smsData, 'START');
+
+        console.log(`✅ START processed for ${phoneNumber}`);
       }
-      
-      // Handle HELP keyword (informational)
+
+      // ── Handle HELP / INFO keywords (informational) ───────────────────────
       else if (messageBody === 'HELP' || messageBody === 'INFO') {
+        // Send branded HELP response with program info and support contact
+        await sendReply(phoneNumber, HELP_REPLY, ourNumber);
+
         await logInboundSMS(smsData, 'HELP');
-        // Note: AWS will automatically send a HELP response if configured
-        // Or you can send a custom response using SNS here
+
+        console.log(`ℹ️ HELP processed for ${phoneNumber}`);
       }
-      
-      // Ignore other messages
+
+      // ── Ignore other messages ─────────────────────────────────────────────
       else {
         await logInboundSMS(smsData, 'IGNORED');
       }

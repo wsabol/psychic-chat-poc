@@ -8,6 +8,7 @@ import { TwoFASection } from './verification/TwoFASection';
 import { VerificationMethodsSection } from './verification/VerificationMethodsSection';
 import { TrustCurrentDeviceSection } from './verification/TrustCurrentDeviceSection';
 import { TrustedDevicesSection } from './verification/TrustedDevicesSection';
+import SMSConsentModal from './verification/SMSConsentModal';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
 /**
@@ -102,6 +103,13 @@ export default function VerificationAndTwoFATab({ userId, token, apiUrl, userEma
 
   return (
     <div style={{ fontSize: '13px' }}>
+      {/* SMS consent modal — shown when user selects SMS 2FA and clicks Save */}
+      <SMSConsentModal
+        isOpen={twoFA.showSMSConsentModal}
+        onAccept={twoFA.handleSMSConsentAccept}
+        onCancel={twoFA.handleSMSConsentCancel}
+      />
+
       <AlertMessage type="error" message={error} />
       <AlertMessage type="success" message={flow.success || twoFA.twoFASuccess} />
 
