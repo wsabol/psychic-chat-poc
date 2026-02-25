@@ -82,6 +82,16 @@ export const FAQ_DATA = [
         id: 'data-privacy',
         question: 'Is my personal information secure?',
         answer: 'Yes. Your personal information is encrypted and securely stored. We take your privacy seriously and never share your personal data with third parties. See our Privacy Policy for more details.'
+      },
+      {
+        id: 'skip-onboarding',
+        question: 'Can I skip the Personal Info step during the free trial?',
+        answer: 'Yes! During the free trial, the Personal Info page shows a green "Skip this step →" button in the top-right corner. Tapping it takes you directly to your free horoscope reading — no birth details are required.\n\nIf you skip (or haven\'t entered a birth date), the horoscope page will show a zodiac sign picker so you can still get a personalized reading. See "What is the zodiac sign picker?" below for details.\n\nFor a full account, you can also complete your Personal Info later from the main menu — but providing your birth date, time, and location gives you the most accurate birth chart and readings.'
+      },
+      {
+        id: 'free-trial-zodiac-picker',
+        question: 'What is the zodiac sign picker during the free trial?',
+        answer: 'If you skipped Personal Info or didn\'t enter a birth date, the free trial horoscope page automatically shows a zodiac sign picker instead of asking for your full birth details.\n\nHow it works:\n1. A grid of all 12 zodiac signs is displayed (e.g., Aries ♈, Taurus ♉, Gemini ♊, etc.)\n2. Tap your sun sign to select it (it will highlight in purple)\n3. Tap "Get My Horoscope ✨" to generate your personalized daily reading\n\nOnce your horoscope loads, a "✓ Exit to Continue" button appears — tap it to proceed to create your full account and unlock all features.'
       }
     ]
   },
@@ -128,12 +138,7 @@ export const FAQ_DATA = [
         answer: 'When you first join, we guide you through setting up your account:\n1. Create your account and verify email\n2. Complete your Personal Info (birth date, time, location)\n3. Set up a payment method\n4. Choose a subscription plan\n\nThis ensures you get the full experience from day one.'
       },
       {
-        id: 'help-during-onboarding',
-        question: 'Can I get help during onboarding?',
-        answer: 'Yes! The Help button (?) is available throughout the onboarding process. Click it anytime to get assistance with any step. You can also skip onboarding and complete it later from your settings.'
-      },
-      {
-        id: 'skip-onboarding',
+        id: 'can-skip-onboarding',
         question: 'Can I skip the onboarding process?',
         answer: 'Yes, you can skip onboarding steps, but you\'ll need to complete your Personal Info and subscribe to access all features. You can always return to complete these steps later from the main menu.'
       }
@@ -228,17 +233,17 @@ export const FAQ_DATA = [
       {
         id: 'enable-2fa',
         question: 'What is 2FA and how do I enable it?',
-        answer: 'Two-Factor Authentication (2FA) adds an extra security layer to your account:\n1. Go to Security page → Verification & 2FA\n2. Enable 2FA\n3. Choose authentication method (Email)\n4. Verify your identity\n\nWith 2FA enabled, you\'ll need to enter a verification code when logging in from a new or untrusted device.'
+        answer: 'Two-Factor Authentication (2FA) adds an extra security layer to your account.\n\nImportant: You must add and verify a contact method before 2FA can be enabled:\n1. Go to Security page → Verification & 2FA tab\n2. In the "Verification Methods" section, add your email address or phone number and complete verification\n3. Once a method is verified, scroll up to the "Two-Factor Authentication" section\n4. Toggle 2FA on and choose your authentication method (Email or SMS)\n5. Click Save\n\nWith 2FA enabled, you\'ll need to enter a verification code sent to your verified email or phone when logging in from a new or untrusted device.'
       },
       {
         id: 'trust-device',
         question: 'How do I trust a device?',
-        answer: 'To skip 2FA on a trusted device:\n1. Enable 2FA in Security settings\n2. Go to Security → 2FA tab\n3. Click "Trust This Device"\n\nThe device will be trusted permanently and won\'t require 2FA codes. You can manage trusted devices in the Security page.'
+        answer: 'To skip 2FA on a trusted device:\n1. Make sure 2FA is enabled in Security → Verification & 2FA tab\n2. On the same page, scroll down to the "Trust This Device" section (this section only appears when 2FA is enabled)\n3. Click "Trust This Device"\n\nThe device will be permanently trusted and won\'t require 2FA codes on future logins. You can manage and revoke trusted devices in the "Trusted Devices" section just below it on the same page.'
       },
       {
         id: 'manage-devices',
-        question: 'How do I manage my devices?',
-        answer: 'To manage trusted devices:\n1. Go to Security page → Verification & 2FA\n2. Scroll to "Trusted Devices"\n3. View all devices that are trusted (no expiry — trusted permanently)\n4. Click "Revoke" to remove trust from any device\n5. You can also trust your current device from this page'
+        question: 'How do I manage my trusted devices?',
+        answer: 'Trusted device management is part of the Verification & 2FA tab — there is no separate Devices tab:\n1. Go to Security page → Verification & 2FA tab\n2. Scroll down to the "Trusted Devices" section (only visible when 2FA is enabled)\n3. View all your trusted devices listed there\n4. Click "Revoke" next to any device to remove its trusted status\n5. To trust your current device, use the "Trust This Device" section just above the list'
       },
       {
         id: 'forgot-password',
@@ -280,7 +285,7 @@ export const FAQ_DATA = [
       {
         id: 'cancel-subscription',
         question: 'How do I cancel my subscription?',
-        answer: 'To cancel your subscription:\n1. Go to Billing & Subscriptions → Subscriptions\n2. Find your active subscription card\n3. Toggle the subscription switch to OFF\n4. Confirm in the dialog that appears\n\nYour subscription will continue until the end of your current billing period, then stop. You can reactivate your subscription at any time by toggling it back ON. You\'ll keep your account and data.'
+        answer: 'To cancel your subscription:\n1. Go to Billing & Subscriptions → Subscriptions\n2. Find your active subscription card\n3. Click the "📋 Switch Plan or Cancel" button on the right side of the card\n4. The card will expand — scroll down to the "Or Cancel Subscription" section at the bottom\n5. Click the red "✕ Cancel Subscription" button\n6. Confirm in the dialog that appears\n\nYour subscription will remain active until the end of your current billing period, then stop. You\'ll keep your account and all your data. To reactivate later, return to Billing & Subscriptions → Subscriptions and choose a plan.'
       },
       {
         id: 'view-invoices',
