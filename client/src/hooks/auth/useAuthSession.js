@@ -59,11 +59,16 @@ export function useAuthSession() {
       // Persist so the auth state listener can restore the session on reload
       localStorage.setItem('guest_user_id', guestUserId);
 
-      // Register the session in the database (IP-based trial-limit check happens here)
+      // Register the session in the database (IP-based trial-limit check happens here).
+      // Pass the language the user selected on the landing page so oracle_language and
+      // language are set correctly from the very first message.
+      const sessionLanguage = localStorage.getItem('temp_user_language')
+        || localStorage.getItem('preferredLanguage')
+        || 'en-US';
       const response = await fetch(`${API_URL}/free-trial/create-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tempUserId: guestUserId })
+        body: JSON.stringify({ tempUserId: guestUserId, language: sessionLanguage })
       });
 
       let data;

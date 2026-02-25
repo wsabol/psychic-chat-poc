@@ -1,8 +1,15 @@
+import { useTranslation } from '../context/TranslationContext';
+
 /**
  * ExitButton - Temporary account exit button
+ * Label is translated via the freeTrial.exitToContinue key so it appears in
+ * the user's selected language (e.g. "✓ Quitter pour Continuer" for French).
  */
 export default function ExitButton({ onClick, isTemporaryAccount }) {
+  const { t } = useTranslation();
   if (!isTemporaryAccount) return null;
+
+  const label = t('freeTrial.exitToContinue') || '✓ Exit to Continue';
 
   return (
     <div style={{
@@ -38,9 +45,9 @@ export default function ExitButton({ onClick, isTemporaryAccount }) {
           e.target.style.color = '#22c55e';
           e.target.style.transform = 'scale(1)';
         }}
-        title="Click to exit and continue"
+        title={label}
       >
-        ✓ Exit to Continue
+        {label}
       </button>
     </div>
   );

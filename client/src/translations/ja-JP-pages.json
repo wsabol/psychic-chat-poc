@@ -1,1 +1,23 @@
-{"landing": {"title": "✨ サイキック チャット オラクル ✨", "subtitle": "プライバシー、データ、通信設定を管理します", "downloadMyData": "データをダウンロード", "downloadMyDataDescription": "すべてのデータをJSON形式でダウンロードして、バックアップまたは移植性を確保します。", "cookies": "クッキー", "cookiesDescription": "永続的なクッキーを使用して、設定を保存し、エクスペリエンスを向上させることを許可します。", "clearBrowsingData": "閲覧データを削除", "clearBrowsingDataDescription": "キャッシュされたデータ、閲覧履歴、およびこのデバイスに保存された情報を削除します。", "anonymousAnalytics": "匿名分析", "analyticsDescription": "匿名の使用データを共有することで改善を支援します。個人情報は収集しません。", "emailCommunication": "メール通信", "emailDescription": "更新、ヒント、時折のオファーをインボックスに直接受け取ります。", "pushNotifications": "プッシュ通知", "pushNotificationsDescription": "重要な更新とパーソナライズされた洞察の即座の通知を受け取ります。", "deleteAccount": "アカウント削除", "deleteAccountDescription": "アカウントと関連するすべてのデータを永続的に削除します。この操作は元に戻すことができません。", "deleteAccountWarning": "⚠️ 警告: これはアカウントとすべてのデータを永続的に削除します。", "downloading": "ダウンロード中...", "clearingData": "削除中...", "downloadSuccess": "データが正常にダウンロードされました!", "downloadError": "データのダウンロードに失敗しました。もう一度お試しください。", "clearSuccess": "閲覧データが正常に削除されました!", "clearError": "閲覧データの削除に失敗しました。もう一度お試しください。", "deleteSuccess": "アカウントが正常に削除されました。リダイレクト中...", "deleteError": "アカウントの削除に失敗しました。もう一度お試しください。", "download": "ダウンロード", "clear": "削除", "enabled": "[有効]", "disabled": "[無効]",  "subtitle": "古い知恵とつながってください。タロット、占星術、直感的なガイダンスの力を通じて、宇宙の運命を探索してください。", "description": "オラクルから無料リーディングを体験してください。アカウントは不要です。", "footer": "宇宙発見の旅があなたを待っています...", "buttons": {"tryFree": "🔮無料で試す", "createAccount": "📝アカウント作成/ログイン"}}, "chat": {"title": "🔮 オラクルとチャット", "titleTrial": "🔮 オラクル チャット（無料トライアル）", "subtitle": "あなたの旅についてオラクルに何でも質問してください", "placeholder": "オラクルに質問してください...", "send": "送信", "sending": "送信中...", "thinking": "オラクルは考えています...", "sessionExpired": "セッションの有効期限が切れています", "reconnecting": "再接続中...", "toggleMore": "📖 もっと教えて", "toggleLess": "📋 表示を少なくする", "noMessages": "メッセージはありません。オラクルに質問してください。", "privacyNotice": "このWebフォームを送信することで、プライバシーポリシーに規定されているように、お客様の個人データの処理に同意したことになります", "continueHint": "続行する準備ができましたか？"}, "thankyou": {"title": "ありがとうございます！", "subtitle": "オラクル セッションが終了しました", "message": "宇宙の洞察が記録されました", "createAccount": "アカウントを作成", "continue": "続行", "exit": "終了", "clickToRegister": "終了をクリックして続行してください"}, "help": {"title": "ヘルプ＆サポート", "faq": "よくある質問", "contact": "サポートに連絡", "aboutUs": "について", "terms": "利用規約", "privacy": "プライバシーポリシー"}, "personalInfo": {"title": "個人情報", "privacyNotice": "このWebフォームを送信することで、プライバシーポリシーに規定されているように、お客様の個人データの処理に同意したことになります"}}
+{
+  "landing": {"title": "✨ サイキック チャット オラクル ✨", "subtitle": "古い知恵とつながってください。タロット、占星術、直感的なガイダンスの力を通じて、宇宙の運命を探索してください。", "description": "オラクルから無料リーディングを体験してください。アカウントは不要です。", "footer": "宇宙発見の旅があなたを待っています...", "buttons": {"tryFree": "🔮 無料で試す", "createAccount": "📝 アカウント作成/ログイン"}},
+  "chat": {"title": "🔮 オラクルとチャット", "titleTrial": "🔮 オラクル チャット（無料トライアル）", "subtitle": "あなたの旅についてオラクルに何でも質問してください", "placeholder": "オラクルに質問してください...", "send": "送信", "sending": "送信中...", "thinking": "オラクルは考えています...", "sessionExpired": "セッションの有効期限が切れています", "reconnecting": "再接続中...", "toggleMore": "📖 もっと教えて", "toggleLess": "📋 表示を少なくする", "noMessages": "メッセージはありません。オラクルに質問してください。", "privacyNotice": "このWebフォームを送信することで、プライバシーポリシーに規定されているように、お客様の個人データの処理に同意したことになります", "continueHint": "続行する準備ができましたか？"},
+  "thankyou": {"title": "ありがとうございます！", "subtitle": "オラクル セッションが終了しました", "message": "宇宙の洞察が記録されました", "createAccount": "アカウントを作成", "continue": "続行", "exit": "終了", "clickToRegister": "終了をクリックして続行してください"},
+  "help": {"title": "ヘルプ＆サポート", "faq": "よくある質問", "contact": "サポートに連絡", "aboutUs": "について", "terms": "利用規約", "privacy": "プライバシーポリシー"},
+  "personalInfo": {"title": "個人情報", "privacyNotice": "このWebフォームを送信することで、プライバシーポリシーに規定されているように、お客様の個人データの処理に同意したことになります"},
+  "freeTrial": {
+    "skipThisStep": "このステップをスキップ →",
+    "exitToContinue": "✓ 終了して続ける",
+    "complete": {
+      "title": "無料トライアルが完了しました！✨",
+      "subtitle": "Starship Psychicsが提供するものの一部を体験していただきました。すべてをアンロックするにはアカウントを作成してください！",
+      "featuresTitle": "✨ フル体験をアンロック：",
+      "feature1": "🔮 無制限のOracle Chat – いつでも何でも質問",
+      "feature2": "⭐ 毎日の星占い – パーソナライズされた宇宙のガイダンス",
+      "feature3": "🌙 月相トラッカー – 月のエネルギーと調和する",
+      "feature4": "🌌 コズミック天気 – 惑星の影響を追跡",
+      "feature5": "📊 完全なバースチャート – 太陽・月・上昇サイン",
+      "createAccount": "📝 アカウントを作成して続ける",
+      "exit": "終了"
+    }
+  }
+}

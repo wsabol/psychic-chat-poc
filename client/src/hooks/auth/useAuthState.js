@@ -45,7 +45,7 @@ export function useAuthState(checkBillingStatus) {
           const isEmail = firebaseUser.providerData.some(p => p.providerId === 'password');
           setIsEmailUser(isEmail);
 
-                    if (isTemp) {
+          if (isTemp) {
             // TEMPORARY ACCOUNTS: Skip billing checks, go straight to authenticated
             setIsFirstTime(true);
             setIsAuthenticated(true);
@@ -56,6 +56,14 @@ export function useAuthState(checkBillingStatus) {
             setIsFirstTime(false);
             // REMOVED: localStorage.setItem('psychic_app_registered', 'true');
             // Now using database-driven session management via /auth/check-returning-user
+
+            // Clean up any stale free-trial guest session.
+            // When a guest user (guest_user_id in localStorage) clicks "Create Account",
+            // signs in via Firebase, and becomes a permanent user, the guest_user_id entry
+            // must be removed.  If it lingers, signing out later would re-hydrate the old
+            // guest session (onAuthStateChanged fires with null → guest branch → sets
+            // isTemporaryAccount=true again), which is incorrect.
+            localStorage.removeItem('guest_user_id');
             
                         // Track device on login (non-blocking) - server will detect IP via req.ip
             fetch(`${API_URL}/security/track-device/${firebaseUser.uid}`, {

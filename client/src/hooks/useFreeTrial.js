@@ -56,11 +56,16 @@ export function useFreeTrial(isTemporaryAccount, tempUserId) {
           console.warn('Session check failed, attempting creation:', checkErr);
         }
         
-        // Session doesn't exist or check failed, create it
+        // Session doesn't exist or check failed, create it.
+        // Pass the language the user selected on the landing page so oracle_language
+        // and language in user_preferences are set correctly from the very first message.
+        const sessionLanguage = localStorage.getItem('temp_user_language')
+          || localStorage.getItem('preferredLanguage')
+          || 'en-US';
         const response = await fetch(`${API_URL}/free-trial/create-session`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tempUserId })
+          body: JSON.stringify({ tempUserId, language: sessionLanguage })
         });
 
         let data;

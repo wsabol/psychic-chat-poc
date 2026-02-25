@@ -1,49 +1,23 @@
 {
-  "landing": {
-    "title": "✨ Oracle del Chat Psíquico ✨",
-    "subtitle": "Conecta con la sabiduría antigua. Explora tu destino cósmico a través del poder del tarot, la astrología y la guía intuitiva.",
-    "description": "Experimenta una lectura gratuita de nuestro oráculo. No se requiere cuenta.",
-    "footer": "Tu viaje de descubrimiento cósmico te espera...",
-    "buttons": {
-      "tryFree": "🔮 Prueba Gratis",
-      "createAccount": "📝 Crear Cuenta/Iniciar Sesión"
+  "landing": {"title": "✨ Oracle del Chat Psíquico ✨", "subtitle": "Conecta con la sabiduría antigua. Explora tu destino cósmico a través del poder del tarot, la astrología y la guía intuitiva.", "description": "Experimenta una lectura gratuita de nuestro oráculo. No se requiere cuenta.", "footer": "Tu viaje de descubrimiento cósmico te espera...", "buttons": {"tryFree": "🔮 Prueba Gratis", "createAccount": "📝 Crear Cuenta/Iniciar Sesión"}},
+  "chat": {"title": "🔮 Chat con El Oráculo", "titleTrial": "🔮 Chat del Oráculo (Prueba Gratuita)", "subtitle": "Preguntale al oráculo cualquier cosa sobre tu viaje", "placeholder": "Preguntale al oráculo una pregunta...", "send": "Enviar", "sending": "Enviando...", "thinking": "El oráculo está pensando...", "sessionExpired": "Su sesión ha expirado", "reconnecting": "Reconectando...", "toggleMore": "📖 Cuéntame más", "toggleLess": "📋 Mostrar menos", "noMessages": "Sin mensajes aún. Preguntale al oráculo una pregunta.", "privacyNotice": "Al enviar este formulario web, acepta nuestro procesamiento de sus datos personales según lo establecido en la Política de Privacidad", "continueHint": "¿Listo para continuar?"},
+  "thankyou": {"title": "¡Gracias!", "subtitle": "Su sesión de oráculo ha terminado", "message": "Sus insights cósmicos han sido registrados", "createAccount": "Crear Cuenta", "continue": "Continuar", "exit": "Salir", "clickToRegister": "Haga clic en salir para continuar"},
+  "help": {"title": "Ayuda y Soporte", "faq": "Preguntas Frecuentes", "contact": "Contactar Soporte", "aboutUs": "Acerca de Nosotros", "terms": "Términos de Servicio", "privacy": "Política de Privacidad"},
+  "personalInfo": {"title": "Información Personal", "privacyNotice": "Al enviar este formulario web, acepta nuestro procesamiento de sus datos personales según lo establecido en la Política de Privacidad"},
+  "freeTrial": {
+    "skipThisStep": "Saltar este paso →",
+    "exitToContinue": "✓ Salir para Continuar",
+    "complete": {
+      "title": "¡Tu Prueba Gratuita ha Terminado! ✨",
+      "subtitle": "Has experimentado un anticipo de lo que Starship Psychics tiene para ofrecer. ¡Crea una cuenta para desbloquear todo!",
+      "featuresTitle": "✨ Desbloquea la Experiencia Completa:",
+      "feature1": "🔮 Chat Oracle Ilimitado – Pregunta lo que quieras, cuando quieras",
+      "feature2": "⭐ Horóscopos Diarios – Guía cósmica personalizada",
+      "feature3": "🌙 Rastreador de Fases Lunares – Alinéate con la energía lunar",
+      "feature4": "🌌 Clima Cósmico – Rastrea las influencias planetarias",
+      "feature5": "📊 Carta Natal Completa – Signos Sol, Luna y Ascendente",
+      "createAccount": "📝 Crear Cuenta para Continuar",
+      "exit": "Salir"
     }
-  },
-  "chat": {
-    "title": "🔮 Chat con El Oráculo",
-    "titleTrial": "🔮 Chat del Oráculo (Prueba Gratuita)",
-    "subtitle": "Preguntale al oráculo cualquier cosa sobre tu viaje",
-    "placeholder": "Preguntale al oráculo una pregunta...",
-    "send": "Enviar",
-    "sending": "Enviando...",
-    "thinking": "El oráculo está pensando...",
-    "sessionExpired": "Su sesión ha expirado",
-    "reconnecting": "Reconectando...",
-    "toggleMore": "📖 Cuéntame más",
-    "toggleLess": "📋 Mostrar menos",
-    "noMessages": "Sin mensajes aún. Preguntale al oráculo una pregunta.",
-    "privacyNotice": "Al enviar este formulario web, acepta nuestro procesamiento de sus datos personales según lo establecido en la Política de Privacidad",
-    "continueHint": "¿Listo para continuar?"
-  },
-  "thankyou": {
-    "title": "¡Gracias!",
-    "subtitle": "Su sesión de oráculo ha terminado",
-    "message": "Sus insights cósmicos han sido registrados",
-    "createAccount": "Crear Cuenta",
-    "continue": "Continuar",
-    "exit": "Salir",
-    "clickToRegister": "Haga clic en salir para continuar"
-  },
-  "help": {
-    "title": "Ayuda y Soporte",
-    "faq": "Preguntas Frecuentes",
-    "contact": "Contactar Soporte",
-    "aboutUs": "Acerca de Nosotros",
-    "terms": "Términos de Servicio",
-    "privacy": "Política de Privacidad"
-  },
-  "personalInfo": {
-    "title": "Información Personal",
-    "privacyNotice": "Al enviar este formulario web, acepta nuestro procesamiento de sus datos personales según lo establecido en la Política de Privacidad"
   }
 }

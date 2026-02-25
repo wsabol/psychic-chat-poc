@@ -12,20 +12,12 @@ import './HoroscopePage.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
-const ZODIAC_SIGNS = [
-  { sign: 'aries',       label: 'Aries ♈' },
-  { sign: 'taurus',      label: 'Taurus ♉' },
-  { sign: 'gemini',      label: 'Gemini ♊' },
-  { sign: 'cancer',      label: 'Cancer ♋' },
-  { sign: 'leo',         label: 'Leo ♌' },
-  { sign: 'virgo',       label: 'Virgo ♍' },
-  { sign: 'libra',       label: 'Libra ♎' },
-  { sign: 'scorpio',     label: 'Scorpio ♏' },
-  { sign: 'sagittarius', label: 'Sagittarius ♐' },
-  { sign: 'capricorn',   label: 'Capricorn ♑' },
-  { sign: 'aquarius',    label: 'Aquarius ♒' },
-  { sign: 'pisces',      label: 'Pisces ♓' },
-];
+// Zodiac symbol glyphs (language-neutral)
+const ZODIAC_GLYPHS = {
+  aries: '♈', taurus: '♉', gemini: '♊', cancer: '♋',
+  leo: '♌', virgo: '♍', libra: '♎', scorpio: '♏',
+  sagittarius: '♐', capricorn: '♑', aquarius: '♒', pisces: '♓',
+};
 
 /**
  * FreeTrialHoroscopePage
@@ -203,7 +195,7 @@ export default function FreeTrialHoroscopePage({ userId, auth, onExit }) {
           {t('horoscope.selectSignSubtitle') || 'Choose your sun sign for a personalized daily reading.'}
         </p>
 
-        {/* Sign grid */}
+        {/* Sign grid — labels translated via mySign.* keys (same keys used by MySignPage) */}
         <div style={{
           display: 'flex',
           flexWrap: 'wrap',
@@ -211,7 +203,8 @@ export default function FreeTrialHoroscopePage({ userId, auth, onExit }) {
           gap: '0.6rem',
           marginBottom: '1.5rem',
         }}>
-          {ZODIAC_SIGNS.map(({ sign, label }) => {
+          {Object.entries(ZODIAC_GLYPHS).map(([sign, glyph]) => {
+            const label = `${t('mySign.' + sign) || sign.charAt(0).toUpperCase() + sign.slice(1)} ${glyph}`;
             const isActive = selectedSign === sign;
             const isHovered = hoveredSign === sign;
             return (

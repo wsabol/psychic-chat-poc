@@ -37,8 +37,14 @@ export function useAppRouting(auth, appExited, showRegisterMode = false, skipPay
             return 'twoFactor';
         }
 
-        // Register mode - CHECK THIS FIRST (before authenticated check)
-        if (showRegisterMode) return 'register';
+        // Register mode - only show if the user is not yet a *permanent* authenticated user.
+        // When a free-trial guest (isTemporaryAccount=true) clicks "Create Account",
+        // showRegisterMode becomes true but isAuthenticated is already true (guest session).
+        // If they switch to login mode and sign in, isAuthenticated stays true and never
+        // flips false→true, so the effect that normally clears showRegisterMode never fires.
+        // This guard lets the routing fall through to 'chat' (or 'verification') as soon as
+        // the user is permanently authenticated, without waiting for the state effect.
+        if (showRegisterMode && (!auth.isAuthenticated || auth.isTemporaryAccount)) return 'register';
 
         // Email verification for REAL email users only (NOT temp accounts)
         if (auth.isAuthenticated && 

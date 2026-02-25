@@ -3,5 +3,21 @@
   "chat": {"title": "🔮 Chat avec L'Oracle", "titleTrial": "🔮 Chat Oracle (Essai Gratuit)", "subtitle": "Demandez à l'oracle n'importe quoi sur votre voyage", "placeholder": "Posez une question à l'oracle...", "send": "Envoyer", "sending": "Envoi...", "thinking": "L'oracle réfléchit...", "sessionExpired": "Votre session a expiré", "reconnecting": "Reconnexion...", "toggleMore": "📖 Racontez-moi plus", "toggleLess": "📋 Afficher moins", "noMessages": "Aucun message pour l'instant. Posez une question à l'oracle.", "privacyNotice": "En soumettant ce formulaire web, vous acceptez notre traitement de vos données personnelles tel que prévu dans la Politique de Confidentialité", "continueHint": "Prêt à continuer?"},
   "thankyou": {"title": "Merci!", "subtitle": "Votre session oracle a pris fin", "message": "Vos intuitions cosmiques ont été enregistrées", "createAccount": "Créer un Compte", "continue": "Continuer", "exit": "Quitter", "clickToRegister": "Cliquez sur quitter pour continuer"},
   "help": {"title": "Aide et Support", "faq": "Questions Fréquemment Posées", "contact": "Contacter le Support", "aboutUs": "À Propos de Nous", "terms": "Conditions de Service", "privacy": "Politique de Confidentialité"},
-  "personalInfo": {"title": "Informations Personnelles", "privacyNotice": "En soumettant ce formulaire web, vous acceptez notre traitement de vos données personnelles tel que prévu dans la Politique de Confidentialité"}
+  "personalInfo": {"title": "Informations Personnelles", "privacyNotice": "En soumettant ce formulaire web, vous acceptez notre traitement de vos données personnelles tel que prévu dans la Politique de Confidentialité"},
+  "freeTrial": {
+    "skipThisStep": "Passer cette étape →",
+    "exitToContinue": "✓ Quitter pour Continuer",
+    "complete": {
+      "title": "Votre Essai Gratuit est Terminé ! ✨",
+      "subtitle": "Vous avez découvert un aperçu de ce que Starship Psychics offre. Créez un compte pour tout débloquer !",
+      "featuresTitle": "✨ Débloquez l'Expérience Complète :",
+      "feature1": "🔮 Chat Oracle Illimité – Demandez n'importe quoi, à tout moment",
+      "feature2": "⭐ Horoscopes Quotidiens – Guidage cosmique personnalisé",
+      "feature3": "🌙 Suivi des Phases Lunaires – Alignez-vous avec l'énergie lunaire",
+      "feature4": "🌌 Météo Cosmique – Suivez les influences planétaires",
+      "feature5": "📊 Thème Natal Complet – Signes Soleil, Lune et Ascendant",
+      "createAccount": "📝 Créer un Compte pour Continuer",
+      "exit": "Quitter"
+    }
+  }
 }
