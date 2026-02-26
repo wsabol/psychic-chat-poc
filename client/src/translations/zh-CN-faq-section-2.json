@@ -1,67 +1,67 @@
 {
   "faq": {
     "onboarding": {
-      "category": "Getting Started - Onboarding",
+      "category": "入门引导",
       "what-is-onboarding": {
-        "question": "What is the onboarding process?",
-        "answer": "When you first join, we guide you through setting up your account:\n1. Create your account and verify email\n2. Complete your Personal Info (birth date, time, location)\n3. Set up a payment method\n4. Choose a subscription plan\n\nThis ensures you get the full experience from day one."
+        "question": "引导流程是什么？",
+        "answer": "当您首次加入时，我们将引导您完成账户设置：\n1. 创建账户并验证电子邮件\n2. 填写您的个人信息（出生日期、时间、地点）\n3. 设置支付方式\n4. 选择订阅计划\n\n这确保您从第一天起就能获得完整体验。"
       },
       "can-skip-onboarding": {
-        "question": "Can I skip the onboarding process?",
-        "answer": "Yes, you can skip onboarding steps, but you'll need to complete your Personal Info and subscribe to access all features. You can always return to complete these steps later from the main menu."
+        "question": "我可以跳过引导流程吗？",
+        "answer": "是的，您可以跳过引导步骤，但需要完成个人信息填写并订阅才能使用所有功能。您随时可以从主菜单返回完成这些步骤。"
       }
     },
     "horoscope": {
-      "category": "Horoscopes",
+      "category": "星座运势",
       "what-is-horoscope": {
-        "question": "What is a horoscope?",
-        "answer": "A horoscope is a forecast of astrological influences for a specific time period. Our app provides:\n• Daily horoscopes (updated each day)\n• Weekly horoscopes (updated each week)\n• Monthly horoscopes (updated each month)\n\nThey show planetary movements and their potential influence on different aspects of your life like love, career, and health."
+        "question": "什么是星座运势？",
+        "answer": "星座运势是对特定时间段内占星影响的预测。我们的应用提供：\n• 每日运势（每天更新）\n• 每周运势（每周更新）\n\n它们展示行星运动及其对您生活各方面（如爱情、事业和健康）的潜在影响。"
       },
       "view-horoscope": {
-        "question": "How do I view my horoscope?",
-        "answer": "To view your horoscope:\n1. Go to the Horoscope page\n2. Your daily horoscope appears automatically (based on your sun sign)\n3. You can also view weekly and monthly horoscopes\n4. Each reading includes insights for love, career, health, and general guidance"
+        "question": "如何查看我的星座运势？",
+        "answer": "查看星座运势的步骤：\n1. 进入星座运势页面\n2. 您的每日运势将自动显示（基于您的太阳星座）\n3. 您也可以查看每周运势\n4. 每次解读包含爱情、事业、健康和综合指引"
       },
       "horoscope-accuracy": {
-        "question": "How accurate are horoscopes?",
-        "answer": "Horoscopes are meant to be insightful and thought-provoking rather than predictive guarantees. They offer general guidance based on planetary positions. For more personalized insights, use your full birth chart analysis or chat with the psychic AI."
+        "question": "星座运势有多准确？",
+        "answer": "星座运势旨在提供有见地和启发性的内容，而非预测性保证。它们基于行星位置提供一般性指引。如需更个性化的洞见，请使用您的完整星盘分析或与AI灵媒聊天。"
       },
       "different-signs": {
-        "question": "Can I read horoscopes for other signs?",
-        "answer": "Currently, the app shows horoscopes based on your sun sign. For insights on other signs (moon sign, rising sign, etc.), you can:\n• Read the moon sign horoscope interpretations in your birth chart\n• Ask the psychic AI for insights on specific signs\n• Contact support if you'd like this feature expanded"
+        "question": "我可以阅读其他星座的运势吗？",
+        "answer": "目前，应用根据您的太阳星座显示运势。如需了解其他星座（月亮星座、上升星座等）的洞见，您可以：\n• 阅读星盘中月亮星座运势解读\n• 向AI灵媒询问特定星座的洞见\n• 如希望扩展此功能，请联系客服"
       }
     },
     "moon-cosmic": {
-      "category": "Moon Phase & Cosmic Weather",
+      "category": "月相与宇宙天气",
       "moon-phase-meaning": {
-        "question": "What is the moon phase and why does it matter?",
-        "answer": "The moon phase shows where the moon is in its cycle (New Moon, Waxing, Full Moon, Waning). The moon affects:\n• Emotions and intuition\n• Energy levels\n• Timing for new projects (new moon) or completion (full moon)\n• Sleep and creativity\n\nUnderstanding the current moon phase helps you align your activities with lunar energy."
+        "question": "月相是什么，为什么重要？",
+        "answer": "月相显示月亮在其周期中的位置（新月、上弦月、满月、下弦月）。月亮影响：\n• 情绪和直觉\n• 能量水平\n• 新项目的时机（新月）或完成的时机（满月）\n• 睡眠和创造力\n\n了解当前月相有助于您将活动与月亮能量协调一致。"
       },
       "moon-phase-today": {
-        "question": "How do I check the current moon phase?",
-        "answer": "Go to the Moon Phase page to see:\n• Current moon phase with visual representation\n• Percentage illumination\n• Days until next full/new moon\n• Astrological significance\n• Guidance for current lunar energy"
+        "question": "如何查看当前月相？",
+        "answer": "进入月相页面查看：\n• 当前月相及视觉呈现\n• 照明百分比\n• 距下次满月/新月的天数\n• 占星学意义\n• 当前月亮能量指引"
       },
       "cosmic-weather": {
-        "question": "What is Cosmic Weather?",
-        "answer": "Cosmic Weather shows the current positions of planets and their astrological influence on each day. It tells you:\n• Which planets are most active today\n• Current astrological aspects\n• Energy forecast\n• Best times for different activities\n• Overall daily cosmic energy"
+        "question": "什么是宇宙天气？",
+        "answer": "宇宙天气显示行星的当前位置及其每天的占星影响。它告诉您：\n• 今天哪些行星最活跃\n• 当前占星相位\n• 能量预测\n• 不同活动的最佳时机\n• 整体每日宇宙能量"
       },
       "use-cosmic-weather": {
-        "question": "How do I use Cosmic Weather information?",
-        "answer": "Use Cosmic Weather to:\n• Understand current planetary influences\n• Know when Mercury Retrograde or other major events are happening\n• Time new projects, meetings, or personal goals\n• Gain insight into general daily energy"
+        "question": "如何使用宇宙天气信息？",
+        "answer": "使用宇宙天气来：\n• 了解当前行星影响\n• 了解水星逆行或其他重大事件的发生时间\n• 为新项目、会议或个人目标择时\n• 洞悉整体每日能量"
       }
     },
     "preferences": {
-      "category": "Preferences & Customization",
+      "category": "偏好与个性化",
       "change-language": {
-        "question": "How do I change the app language?",
-        "answer": "To change your language:\n1. Go to Preferences page\n2. Select your preferred language\n3. Available languages include:\n   • English\n   • Spanish (including regional dialects)\n   • French (including regional dialects)\n   • German, Italian, Portuguese, Japanese, Chinese\n\nThe app will automatically translate all content to your selected language."
+        "question": "如何更改应用语言？",
+        "answer": "更改语言的步骤：\n1. 进入偏好设置页面\n2. 选择您的首选语言\n3. 可用语言包括：\n   • 英语\n   • 西班牙语（包括地区方言）\n   • 法语（包括地区方言）\n   • 德语、意大利语、葡萄牙语、日语、中文\n\n应用将自动将所有内容翻译为您选择的语言。"
       },
       "oracle-response-type": {
-        "question": "What are Full and Brief response types?",
-        "answer": "You can customize how the psychic oracle responds:\n• Full Responses: Detailed, in-depth answers with context and explanations\n• Brief Responses: Concise, direct answers for quick guidance\n\nGo to Preferences to set your preferred response type."
+        "question": "完整和简短回复类型是什么？",
+        "answer": "您可以自定义灵媒神谕的回复方式：\n• 完整回复：包含背景和解释的详细深入答案\n• 简短回复：简洁直接的答案，提供快速指引\n\n进入偏好设置以设定您首选的回复类型。"
       },
       "voice-settings": {
-        "question": "Can I enable voice responses?",
-        "answer": "Yes! The app supports voice responses:\n1. Go to Preferences → Voice Settings\n2. Enable voice responses\n3. Choose from 4 different voice options\n4. Adjust voice settings to your preference\n\nThe psychic's responses will be read aloud in your chosen voice."
+        "question": "我可以启用语音回复吗？",
+        "answer": "可以！应用支持语音回复：\n1. 进入偏好设置 → 语音设置\n2. 启用语音回复\n3. 从4种不同语音选项中选择\n4. 根据您的喜好调整语音设置\n\n灵媒的回复将以您选择的声音朗读出来。"
       }
     }
   }

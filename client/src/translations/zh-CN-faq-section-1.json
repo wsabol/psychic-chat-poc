@@ -1,91 +1,91 @@
 {
   "faq": {
     "getting-started": {
-      "category": "Getting Started",
+      "category": "入门指南",
       "what-is-psychic-chat": {
-        "question": "What is Psychic Chat?",
-        "answer": "Psychic Chat is a spiritual wellness app that helps you connect with cosmic insights through AI-powered readings, personalized birth chart analysis, daily horoscopes, and cosmic weather updates. It combines astrology with artificial intelligence to provide meaningful spiritual guidance."
+        "question": "什么是灵媒聊天？",
+        "answer": "灵媒聊天是一款灵性健康应用，通过人工智能驱动的占卜解读、个性化星盘分析、每日星座运势和宇宙天气更新，帮助您与宇宙智慧相连接。它将占星学与人工智能相结合，提供有意义的灵性指引。"
       },
       "how-do-i-get-started": {
-        "question": "How do I get started with the app?",
-        "answer": "To get started:\n1. Create an account with your email\n2. Verify your email address\n3. (Optional) Complete your Personal Info with your birth date, time, and location for personalized readings\n4. Start exploring features from the main navigation menu at the bottom"
+        "question": "如何开始使用该应用？",
+        "answer": "开始使用步骤：\n1. 使用您的电子邮件创建账户\n2. 验证您的电子邮件地址\n3. （可选）填写您的个人信息，包括出生日期、时间和地点，以获取个性化解读\n4. 从底部的主导航菜单开始探索各项功能"
       },
       "do-i-need-birth-time": {
-        "question": "Do I need to provide my birth time?",
-        "answer": "Birth time is optional but recommended for the most accurate birth chart analysis. Your birth time helps calculate the exact position of planets at your birth, especially important for determining your rising sign (ascendant). If you don't know your exact birth time, you can enter an approximate time or just use your birth date."
+        "question": "我需要提供出生时间吗？",
+        "answer": "出生时间是可选的，但为了获得最准确的星盘分析，建议提供。您的出生时间有助于计算出生时行星的精确位置，对于确定上升星座（上升点）尤为重要。如果您不知道确切的出生时间，可以输入大致时间，或仅使用出生日期。"
       },
       "is-app-free": {
-        "question": "Is this app free to use?",
-        "answer": "The app offers both free and premium features. Some basic features are available for free, while advanced features like unlimited chat with the psychic, detailed birth chart analysis, and premium horoscope readings require a paid subscription. You can view pricing in Billing & Subscriptions."
+        "question": "这款应用是否免费使用？",
+        "answer": "该应用提供免费和高级功能。部分基本功能可免费使用，而无限与灵媒聊天、详细星盘分析和高级星座解读等高级功能则需要付费订阅。您可以在\"账单与订阅\"中查看价格详情。"
       }
     },
     "chat-features": {
-      "category": "Chat with Psychic",
+      "category": "与灵媒聊天",
       "how-to-chat": {
-        "question": "How do I chat with the psychic?",
-        "answer": "To chat with the psychic:\n1. Go to the Chat page (first menu item)\n2. Type your question or message in the input field\n3. Press Send or tap the send button\n4. The AI psychic will respond with spiritual guidance and insights\nYou can have ongoing conversations and ask follow-up questions."
+        "question": "如何与灵媒聊天？",
+        "answer": "与灵媒聊天的步骤：\n1. 进入聊天页面（第一个菜单项）\n2. 在输入框中输入您的问题或信息\n3. 按发送或点击发送按钮\n4. AI灵媒将以灵性指引和洞见进行回复\n您可以进行持续对话并提出追问。"
       },
       "what-can-i-ask": {
-        "question": "What can I ask the psychic?",
-        "answer": "You can ask about:\n• Love and relationships\n• Career and finances\n• Personal growth\n• Life decisions\n• Spiritual guidance\n• Future insights\n• Any spiritual or wellness question\n\nThe psychic AI is trained to provide thoughtful, meaningful responses based on astrological wisdom and spiritual knowledge."
+        "question": "我可以向灵媒询问什么？",
+        "answer": "您可以询问：\n• 爱情与人际关系\n• 职业与财务\n• 个人成长\n• 人生抉择\n• 灵性指引\n• 未来洞见\n• 任何灵性或健康问题\n\nAI灵媒经过训练，能够基于占星智慧和灵性知识提供深思熟虑、有意义的回应。"
       },
       "chat-history": {
-        "question": "Is my chat history saved?",
-        "answer": "Yes, your conversation history is saved in the app so you can revisit previous conversations and continue discussions. This helps the psychic provide more contextual and personalized responses over time."
+        "question": "我的聊天记录会被保存吗？",
+        "answer": "是的，您的对话记录会保存在应用中，方便您回顾以往的对话并继续讨论。这有助于灵媒随着时间推移提供更具针对性和个性化的回应。"
       },
       "premium-chat": {
-        "question": "What's the difference between free and premium chat?",
-        "answer": "Free users have limited single opportunity to try a chat and read a custom horoscope. Premium subscribers enjoy unlimited chat access with the psychic, enabling more in-depth conversations and ongoing guidance whenever you need it."
+        "question": "免费聊天和高级聊天有什么区别？",
+        "answer": "免费用户有一次有限的机会体验聊天并阅读自定义星座运势。高级订阅用户可享受与灵媒的无限聊天权限，随时进行更深入的对话和持续的指引。"
       }
     },
     "personal-info": {
-      "category": "Personal Information",
+      "category": "个人信息",
       "update-personal-info": {
-        "question": "How do I update my personal information?",
-        "answer": "To update your personal info:\n1. Go to Personal Info page\n2. Edit your details:\n   • Full name\n   • Birth date\n   • Birth time (optional but recommended)\n   • Birth location\n3. Tap Save to update your profile\nMore accurate information provides better personalized readings."
+        "question": "如何更新我的个人信息？",
+        "answer": "更新个人信息的步骤：\n1. 进入个人信息页面\n2. 编辑您的详细信息：\n   • 全名\n   • 出生日期\n   • 出生时间（可选，但建议填写）\n   • 出生地点\n3. 点击保存以更新您的个人资料\n更准确的信息能提供更好的个性化解读。"
       },
       "birth-location": {
-        "question": "Why does birth location matter?",
-        "answer": "Birth location is used to calculate the exact positions of celestial bodies at the moment of your birth. Different locations have different latitudes and longitudes, which affects astrological calculations, especially for determining house placements in your birth chart."
+        "question": "为什么出生地点很重要？",
+        "answer": "出生地点用于计算您出生时天体的精确位置。不同地点有不同的纬度和经度，这会影响占星学计算，尤其是对于确定星盘中的宫位位置至关重要。"
       },
       "change-birth-info": {
-        "question": "Can I change my birth information after entering it?",
-        "answer": "Yes! You can update any personal information at any time. Go to Personal Info and edit the fields you want to change. Your birth chart and readings will automatically update based on the new information."
+        "question": "输入出生信息后，我还能修改吗？",
+        "answer": "当然可以！您随时可以更新任何个人信息。进入个人信息页面，编辑您想要更改的字段。您的星盘和解读将根据新信息自动更新。"
       },
       "data-privacy": {
-        "question": "Is my personal information secure?",
-        "answer": "Yes. Your personal information is encrypted and securely stored. We take your privacy seriously and never share your personal data with third parties. See our Privacy Policy for more details."
+        "question": "我的个人信息安全吗？",
+        "answer": "是的。您的个人信息经过加密并安全存储。我们非常重视您的隐私，绝不与第三方共享您的个人数据。详情请查阅我们的隐私政策。"
       },
       "skip-onboarding": {
-        "question": "Can I skip the Personal Info step during the free trial?",
-        "answer": "Yes! During the free trial, the Personal Info page shows a green \"Skip this step →\" button in the top-right corner. Tapping it takes you directly to your free horoscope reading — no birth details are required.\n\nIf you skip (or haven't entered a birth date), the horoscope page will show a zodiac sign picker so you can still get a personalized reading. See \"What is the zodiac sign picker?\" below for details.\n\nFor a full account, you can also complete your Personal Info later from the main menu — but providing your birth date, time, and location gives you the most accurate birth chart and readings."
+        "question": "在免费试用期间，我可以跳过个人信息步骤吗？",
+        "answer": "可以！在免费试用期间，个人信息页面右上角会显示一个绿色的\"跳过此步骤 →\"按钮。点击它将直接带您进入免费星座运势解读页面——无需填写出生详细信息。\n\n如果您跳过（或未输入出生日期），星座运势页面将显示星座选择器，以便您仍能获得个性化解读。详情请参阅下方\"免费试用期间的星座选择器是什么？\"。\n\n对于完整账户，您也可以稍后从主菜单完成个人信息的填写——但提供出生日期、时间和地点可以为您带来最准确的星盘和解读。"
       },
       "free-trial-zodiac-picker": {
-        "question": "What is the zodiac sign picker during the free trial?",
-        "answer": "If you skipped Personal Info or didn't enter a birth date, the free trial horoscope page automatically shows a zodiac sign picker instead of asking for your full birth details.\n\nHow it works:\n1. A grid of all 12 zodiac signs is displayed (e.g., Aries ♈, Taurus ♉, Gemini ♊, etc.)\n2. Tap your sun sign to select it (it will highlight in purple)\n3. Tap \"Get My Horoscope ✨\" to generate your personalized daily reading\n\nOnce your horoscope loads, a \"✓ Exit to Continue\" button appears — tap it to proceed to create your full account and unlock all features."
+        "question": "免费试用期间的星座选择器是什么？",
+        "answer": "如果您跳过了个人信息或未输入出生日期，免费试用的星座运势页面将自动显示星座选择器，而不是要求您填写完整的出生详细信息。\n\n使用方法：\n1. 显示所有12个星座的网格（例如，白羊座♈、金牛座♉、双子座♊等）\n2. 点击您的太阳星座进行选择（它将以紫色高亮显示）\n3. 点击\"获取我的星座运势 ✨\"以生成您的个性化每日解读\n\n星座运势加载后，将出现\"✓ 退出并继续\"按钮——点击它继续创建完整账户并解锁所有功能。"
       }
     },
     "birth-chart": {
-      "category": "Birth Chart & My Sign",
+      "category": "星盘与我的星座",
       "what-is-birth-chart": {
-        "question": "What is a birth chart?",
-        "answer": "A birth chart (also called a natal chart) is a map of where all the planets were positioned at the exact moment and location of your birth. It includes:\n• Sun Sign (core identity)\n• Moon Sign (emotions)\n• Rising Sign/Ascendant (how others perceive you)\n• Planet placements\n• House placements\n\nThis creates a unique astrological blueprint of your personality and potential."
+        "question": "什么是星盘？",
+        "answer": "星盘（也称为本命盘）是一张显示您出生时刻和出生地点所有行星位置的地图。它包括：\n• 太阳星座（核心身份）\n• 月亮星座（情感）\n• 上升星座/上升点（他人对您的感知）\n• 行星位置\n• 宫位位置\n\n这创造了一个独特的占星蓝图，描绘您的个性和潜力。"
       },
       "sun-moon-rising": {
-        "question": "What's the difference between my Sun, Moon, and Rising signs?",
-        "answer": "Sun Sign: Your core identity and basic personality (what your zodiac sign represents)\nMoon Sign: Your emotional nature and inner world (how you feel and process emotions)\nRising Sign (Ascendant): How others perceive you and the impression you make (your outer personality)\n\nTogether, these three create a complete picture of your astrological profile."
+        "question": "我的太阳、月亮和上升星座有什么区别？",
+        "answer": "太阳星座：您的核心身份和基本个性（您的星座代表的含义）\n月亮星座：您的情感本质和内心世界（您如何感受和处理情绪）\n上升星座（上升点）：他人如何感知您以及您给人留下的印象（您的外在个性）\n\n这三者共同构成您完整的占星档案。"
       },
       "view-birth-chart": {
-        "question": "How do I view my full birth chart?",
-        "answer": "Go to the My Sign page to view your birth chart. You'll see:\n• Your Sun, Moon, and Rising signs\n• All planet placements\n• House positions\n• Aspects between planets\n• Detailed interpretations\n\nMake sure you've entered your birth time for the most accurate chart."
+        "question": "如何查看我的完整星盘？",
+        "answer": "进入\"我的星座\"页面查看您的星盘。您将看到：\n• 您的太阳、月亮和上升星座\n• 所有行星位置\n• 宫位位置\n• 行星相位\n• 详细解读\n\n请确保您已输入出生时间以获取最准确的星盘。"
       },
       "accurate-chart": {
-        "question": "How accurate is my birth chart?",
-        "answer": "The accuracy depends on how precise your birth information is:\n• Accurate birth time (within minutes) = very accurate chart\n• Approximate birth time = reasonably accurate, but some details may vary\n• Birth date only = sun sign and some placements accurate, but rising sign and houses won't be correct\n\nIf possible, get your birth certificate to verify your exact birth time."
+        "question": "我的星盘有多准确？",
+        "answer": "准确性取决于您出生信息的精确程度：\n• 准确的出生时间（精确到分钟）= 非常准确的星盘\n• 大致的出生时间 = 较为准确，但部分细节可能有所不同\n• 仅有出生日期 = 太阳星座和部分位置准确，但上升星座和宫位将不正确\n\n如有可能，请查阅您的出生证明以核实确切的出生时间。"
       },
       "zodiac-wheel": {
-        "question": "What is the Zodiac Wheel and how does it work?",
-        "answer": "The Zodiac Wheel is a visual representation of your birth chart showing all 12 zodiac signs arranged in concentric rings. The wheel includes:\n• Sign names and symbols\n• Ruling planets\n• Elements (Fire, Earth, Air, Water)\n• House numbers (I-XII)\n\nThe wheel rotates to position your Rising Sign at the eastern horizon (on the left side). This reflects how you would see the sky at the moment of your birth - looking UP at the celestial sphere rather than DOWN at a map. This is why East appears on the left and West on the right in astronomical charts, creating a mirror image of typical map directions. The horizontal line represents the horizon, with daytime signs above and nighttime signs below."
+        "question": "黄道轮是什么，它如何运作？",
+        "answer": "黄道轮是您星盘的视觉呈现，以同心环的形式展示所有12个星座。轮盘包括：\n• 星座名称和符号\n• 守护行星\n• 元素（火、土、风、水）\n• 宫位编号（I-XII）\n\n轮盘会旋转，将您的上升星座定位在东方地平线（左侧）。这反映了您出生时刻仰望天空的视角——向上看天球，而非向下看地图。这就是为什么在天文图表中东方在左侧、西方在右侧，与典型地图方向相反。水平线代表地平线，白天的星座在上方，夜晚的星座在下方。"
       }
     }
   }

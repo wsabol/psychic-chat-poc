@@ -66,7 +66,7 @@
       },
       "delete-account": {
         "question": "How do I delete my account?",
-        "answer": "To delete your account:\n1. Go to Security page\n2. Find \"Delete Account\" section\n3. Click \"Request Account Deletion\"\n4. Confirm your request\n5. Your account and data will be securely deleted\n\nThis action is permanent and cannot be undone."
+        "answer": "To delete your account:\n1. Go to Settings page\n2. Find \"Delete Account\" section\n3. Click \"Request Account Deletion\"\n4. Confirm your request\n5. Your account and data will be securely deleted\n\nThis action is permanent and cannot be undone."
       },
       "data-export": {
         "question": "Can I export my data?",

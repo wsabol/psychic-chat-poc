@@ -1,118 +1,118 @@
 {
   "faq": {
     "account-security": {
-      "category": "Account & Security",
+      "category": "账户与安全",
       "change-password": {
-        "question": "How do I change my password?",
-        "answer": "To change your password:\n1. Go to Security page\n2. Click on Password section\n3. Enter your current password\n4. Enter your new password (make it strong!)\n5. Confirm new password\n6. Save changes\n\nUse a strong password with uppercase, lowercase, numbers, and symbols."
+        "question": "如何更改密码？",
+        "answer": "更改密码的步骤：\n1. 进入安全页面\n2. 点击密码部分\n3. 输入您的当前密码\n4. 输入新密码（请设置强密码！）\n5. 确认新密码\n6. 保存更改\n\n请使用包含大写字母、小写字母、数字和符号的强密码。"
       },
       "enable-2fa": {
-        "question": "What is 2FA and how do I enable it?",
-        "answer": "Two-Factor Authentication (2FA) adds an extra security layer to your account.\n\nImportant: You must add and verify a contact method before 2FA can be enabled:\n1. Go to Security page → Verification & 2FA tab\n2. In the \"Verification Methods\" section, add your email address or phone number and complete verification\n3. Once a method is verified, scroll up to the \"Two-Factor Authentication\" section\n4. Toggle 2FA on and choose your authentication method (Email or SMS)\n5. Click Save\n\nWith 2FA enabled, you'll need to enter a verification code sent to your verified email or phone when logging in from a new or untrusted device."
+        "question": "什么是双重认证，如何启用？",
+        "answer": "双重认证（2FA）为您的账户增加额外的安全层。\n\n重要提示：必须先添加并验证联系方式，才能启用2FA：\n1. 进入安全页面 → 验证与2FA选项卡\n2. 在\"验证方式\"部分，添加您的电子邮件地址或手机号码并完成验证\n3. 一旦某种方式已验证，向上滚动至\"双重认证\"部分\n4. 开启2FA并选择您的认证方式（电子邮件或短信）\n5. 点击保存\n\n启用2FA后，从新设备或不受信任的设备登录时，您需要输入发送到已验证电子邮件或手机的验证码。"
       },
       "trust-device": {
-        "question": "How do I trust a device?",
-        "answer": "To skip 2FA on a trusted device:\n1. Make sure 2FA is enabled in Security → Verification & 2FA tab\n2. On the same page, scroll down to the \"Trust This Device\" section (this section only appears when 2FA is enabled)\n3. Click \"Trust This Device\"\n\nThe device will be permanently trusted and won't require 2FA codes on future logins. You can manage and revoke trusted devices in the \"Trusted Devices\" section just below it on the same page."
+        "question": "如何信任某设备？",
+        "answer": "在受信任设备上跳过2FA的步骤：\n1. 确保在安全 → 验证与2FA选项卡中已启用2FA\n2. 在同一页面上，向下滚动至\"信任此设备\"部分（此部分仅在启用2FA时显示）\n3. 点击\"信任此设备\"\n\n该设备将被永久信任，未来登录时不需要2FA验证码。您可以在其下方的\"受信任设备\"部分管理和撤销受信任设备。"
       },
       "manage-devices": {
-        "question": "How do I manage my trusted devices?",
-        "answer": "Trusted device management is part of the Verification & 2FA tab — there is no separate Devices tab:\n1. Go to Security page → Verification & 2FA tab\n2. Scroll down to the \"Trusted Devices\" section (only visible when 2FA is enabled)\n3. View all your trusted devices listed there\n4. Click \"Revoke\" next to any device to remove its trusted status\n5. To trust your current device, use the \"Trust This Device\" section just above the list"
+        "question": "如何管理我的受信任设备？",
+        "answer": "受信任设备管理是验证与2FA选项卡的一部分——没有单独的设备选项卡：\n1. 进入安全页面 → 验证与2FA选项卡\n2. 向下滚动至\"受信任设备\"部分（仅在启用2FA时可见）\n3. 查看所有受信任设备的列表\n4. 点击任何设备旁边的\"撤销\"以移除其信任状态\n5. 要信任当前设备，请使用列表上方的\"信任此设备\"部分"
       },
       "forgot-password": {
-        "question": "What do I do if I forgot my password?",
-        "answer": "If you forgot your password:\n1. On the login screen, click \"Forgot Password?\"\n2. Enter your email address\n3. Check your email for a password reset link\n4. Click the link and create a new password\n5. Log in with your new password\n\nIf you don't receive an email, check your spam folder or contact support."
+        "question": "如果我忘记了密码怎么办？",
+        "answer": "如果您忘记了密码：\n1. 在登录界面，点击\"忘记密码？\"\n2. 输入您的电子邮件地址\n3. 检查您的电子邮件中的密码重置链接\n4. 点击链接并创建新密码\n5. 使用新密码登录\n\n如果未收到电子邮件，请检查垃圾邮件文件夹或联系客服。"
       }
     },
     "billing": {
-      "category": "Billing & Subscriptions",
+      "category": "账单与订阅",
       "payment-method": {
-        "question": "How do I add a payment method?",
-        "answer": "To add a payment method:\n1. Go to Billing & Subscriptions page\n2. Click on \"Payment Methods\"\n3. Click \"Add Payment Method\"\n4. Enter your card details:\n   • Card number\n   • Expiration date\n   • CVV\n   • Billing address\n5. Click Save\n\nYour payment information is securely encrypted."
+        "question": "如何添加支付方式？",
+        "answer": "添加支付方式的步骤：\n1. 进入账单与订阅页面\n2. 点击\"支付方式\"\n3. 点击\"添加支付方式\"\n4. 输入您的银行卡详情：\n   • 卡号\n   • 有效期\n   • CVV安全码\n   • 账单地址\n5. 点击保存\n\n您的支付信息经过安全加密处理。"
       },
       "update-payment": {
-        "question": "How do I update my payment method?",
-        "answer": "To update a payment method:\n1. Go to Billing & Subscriptions → Payment Methods\n2. Click on the payment method you want to update\n3. Edit the information\n4. Save changes\n\nYou can add multiple payment methods and set a default one."
+        "question": "如何更新我的支付方式？",
+        "answer": "更新支付方式的步骤：\n1. 进入账单与订阅 → 支付方式\n2. 点击您要更新的支付方式\n3. 编辑信息\n4. 保存更改\n\n您可以添加多种支付方式并设置默认支付方式。"
       },
       "remove-payment": {
-        "question": "How do I remove a payment method?",
-        "answer": "To remove a payment method:\n1. Go to Billing & Subscriptions → Payment Methods\n2. Find the payment method to remove\n3. Click \"Delete\" or \"Remove\"\n4. Confirm deletion\n\nNote: You must have at least one valid payment method on file to maintain an active subscription."
+        "question": "如何删除支付方式？",
+        "answer": "删除支付方式的步骤：\n1. 进入账单与订阅 → 支付方式\n2. 找到要删除的支付方式\n3. 点击\"删除\"或\"移除\"\n4. 确认删除\n\n注意：要维持有效订阅，您必须至少保留一种有效的支付方式。"
       },
       "subscription-plans": {
-        "question": "What subscription plans are available?",
-        "answer": "We offer several subscription tiers with different features:\n• Free: Basic features and limited daily chat\n• Monthly: Unlimited chat and premium features (renews monthly)\n• Annual: Unlimited chat and premium features (renews yearly, better value)\n\nGo to Billing & Subscriptions → Subscriptions to see detailed plan comparison and pricing."
+        "question": "有哪些订阅计划？",
+        "answer": "我们提供具有不同功能的多种订阅级别：\n• 免费版：基本功能和有限的每日聊天\n• 月订阅：无限聊天和高级功能（按月续订）\n• 年订阅：无限聊天和高级功能（按年续订，更划算）\n\n进入账单与订阅 → 订阅计划，查看详细的计划对比和价格。"
       },
       "change-subscription": {
-        "question": "Can I change my subscription plan?",
-        "answer": "Yes! You can:\n1. Go to Billing & Subscriptions → Subscriptions\n2. Select a different plan\n3. Confirm the change\n4. Your billing will be adjusted accordingly\n\nYou can upgrade, downgrade, or cancel anytime. Changes take effect immediately."
+        "question": "我可以更改订阅计划吗？",
+        "answer": "可以！您可以：\n1. 进入账单与订阅 → 订阅计划\n2. 选择其他计划\n3. 确认更改\n4. 您的账单将相应调整\n\n您可以随时升级、降级或取消。更改立即生效。"
       },
       "cancel-subscription": {
-        "question": "How do I cancel my subscription?",
-        "answer": "To cancel your subscription:\n1. Go to Billing & Subscriptions → Subscriptions\n2. Find your active subscription card\n3. Click the \"📋 Switch Plan or Cancel\" button on the right side of the card\n4. The card will expand — scroll down to the \"Or Cancel Subscription\" section at the bottom\n5. Click the red \"✕ Cancel Subscription\" button\n6. Confirm in the dialog that appears\n\nYour subscription will remain active until the end of your current billing period, then stop. You'll keep your account and all your data. To reactivate later, return to Billing & Subscriptions → Subscriptions and choose a plan."
+        "question": "如何取消订阅？",
+        "answer": "取消订阅的步骤：\n1. 进入账单与订阅 → 订阅计划\n2. 找到您的有效订阅卡片\n3. 点击卡片右侧的\"📋 切换计划或取消\"按钮\n4. 卡片将展开——向下滚动至底部的\"或取消订阅\"部分\n5. 点击红色的\"✕ 取消订阅\"按钮\n6. 在出现的对话框中确认\n\n您的订阅将在当前计费周期结束前保持有效，然后停止。您将保留账户和所有数据。如需重新激活，请返回账单与订阅 → 订阅计划并选择计划。"
       },
       "view-invoices": {
-        "question": "How do I view my invoices?",
-        "answer": "To view your billing history:\n1. Go to Billing & Subscriptions → Invoices\n2. You'll see a list of all past and current invoices\n3. Click any invoice to view details\n4. You can download invoices for your records"
+        "question": "如何查看我的发票？",
+        "answer": "查看账单历史的步骤：\n1. 进入账单与订阅 → 发票\n2. 您将看到所有过去和当前发票的列表\n3. 点击任意发票查看详情\n4. 您可以下载发票以备记录"
       },
       "billing-problem": {
-        "question": "What if my payment failed?",
-        "answer": "If a payment fails:\n1. Check your payment method is valid and not expired\n2. Go to Billing & Subscriptions → Payment Methods\n3. Update or add a new payment method\n4. Try again\n5. If the problem persists, contact support\n\nYour subscription may be paused until payment is successful."
+        "question": "如果付款失败怎么办？",
+        "answer": "如果付款失败：\n1. 检查您的支付方式是否有效且未过期\n2. 进入账单与订阅 → 支付方式\n3. 更新或添加新的支付方式\n4. 重试\n5. 如果问题持续，请联系客服\n\n在付款成功之前，您的订阅可能会暂停。"
       }
     },
     "privacy": {
-      "category": "Privacy & Data",
+      "category": "隐私与数据",
       "data-privacy-policy": {
-        "question": "How is my data protected?",
-        "answer": "We take data security seriously:\n• All personal information is encrypted\n• We use secure SSL/TLS connections\n• Your data is never shared with third parties\n• Regular security audits and updates\n• Compliance with privacy regulations\n\nSee our Privacy Policy for complete details."
+        "question": "我的数据如何受到保护？",
+        "answer": "我们认真对待数据安全：\n• 所有个人信息均经过加密\n• 我们使用安全的SSL/TLS连接\n• 您的数据绝不与第三方共享\n• 定期进行安全审计和更新\n• 遵守隐私法规\n\n完整详情请查阅我们的隐私政策。"
       },
       "delete-account": {
-        "question": "How do I delete my account?",
-        "answer": "To delete your account:\n1. Go to Security page\n2. Find \"Delete Account\" section\n3. Click \"Request Account Deletion\"\n4. Confirm your request\n5. Your account and data will be securely deleted\n\nThis action is permanent and cannot be undone."
+        "question": "如何删除我的账户？",
+        "answer": "删除账户的步骤：\n1. 进入设置页面\n2. 找到\"删除账户\"部分\n3. 点击\"申请账户删除\"\n4. 确认您的请求\n5. 您的账户和数据将被安全删除\n\n此操作是永久性的，无法撤销。"
       },
       "data-export": {
-        "question": "Can I export my data?",
-        "answer": "Yes, you can download your data:\n1. Go to Settings page\n2. Find \"Download My Data\" section\n3. Click the \"Download\" button\n4. Your data will be downloaded as a JSON file\n\nThe file contains all your personal information, chat history, and account data."
+        "question": "我可以导出我的数据吗？",
+        "answer": "是的，您可以下载您的数据：\n1. 进入设置页面\n2. 找到\"下载我的数据\"部分\n3. 点击\"下载\"按钮\n4. 您的数据将以JSON文件格式下载\n\n该文件包含您所有的个人信息、聊天记录和账户数据。"
       },
       "read-terms-privacy": {
-        "question": "How do I read the Terms of Service and Privacy Policy?",
-        "answer": "You can access these documents anytime through the Help button:\n1. Click the ? (Help) button on any screen\n2. In the Help window header, you'll see icon buttons:\n   • 📋 (Terms) - Click to open Terms of Service\n   • 🔒 (Privacy) - Click to open Privacy Policy\n3. The documents open in a large, scrollable window\n4. Use your mouse wheel, or scrollbar to read\n5. Click the X button to close when finished\n\nYou can read these documents at any time to understand your rights and our policies."
+        "question": "如何阅读服务条款和隐私政策？",
+        "answer": "您可以随时通过帮助按钮访问这些文件：\n1. 点击任意界面上的？（帮助）按钮\n2. 在帮助窗口标题栏中，您将看到图标按钮：\n   • 📋（条款）- 点击打开服务条款\n   • 🔒（隐私）- 点击打开隐私政策\n3. 文件将在一个大型可滚动窗口中打开\n4. 使用鼠标滚轮或滚动条阅读\n5. 阅读完毕后点击X按钮关闭\n\n您随时可以阅读这些文件，了解您的权利和我们的政策。"
       }
     },
     "technical": {
-      "category": "Technical & Troubleshooting",
+      "category": "技术与故障排查",
       "app-compatibility": {
-        "question": "What devices does the app work on?",
-        "answer": "Psychic Chat works on:\n• iOS (iPhone, iPad)\n• Android (phones and tablets)\n• Web browsers (Chrome, Safari, Firefox, Edge)\n• Desktop and mobile devices\n\nJust visit our website or download from your app store."
+        "question": "该应用支持哪些设备？",
+        "answer": "灵媒聊天支持：\n• iOS（iPhone、iPad）\n• Android（手机和平板电脑）\n• 网页浏览器（Chrome、Safari、Firefox、Edge）\n• 桌面和移动设备\n\n只需访问我们的网站或从您的应用商店下载即可。"
       },
       "app-not-loading": {
-        "question": "What if the app won't load?",
-        "answer": "If the app won't load:\n1. Check your internet connection\n2. Clear your browser cache\n3. Close and reopen the app\n4. Restart your device\n5. Log out and log back in\n6. Try in a different browser\n7. Uninstall and reinstall the app (as last resort)\n\nIf problems persist, contact support."
+        "question": "如果应用无法加载怎么办？",
+        "answer": "如果应用无法加载：\n1. 检查您的网络连接\n2. 清除浏览器缓存\n3. 关闭并重新打开应用\n4. 重启您的设备\n5. 退出登录并重新登录\n6. 尝试在其他浏览器中打开\n7. 卸载并重新安装应用（作为最后手段）\n\n如果问题持续，请联系客服。"
       },
       "slow-performance": {
-        "question": "The app is running slowly. What can I do?",
-        "answer": "If the app is slow:\n1. Check your internet connection (try WiFi)\n2. Close other apps running in the background\n3. Clear browser cache and cookies\n4. Restart your device\n5. Update to the latest app version\n6. Check available storage space\n\nIf still slow, contact support with details about your device."
+        "question": "应用运行缓慢怎么办？",
+        "answer": "如果应用运行缓慢：\n1. 检查您的网络连接（尝试使用WiFi）\n2. 关闭后台运行的其他应用\n3. 清除浏览器缓存和Cookie\n4. 重启您的设备\n5. 更新至最新版本的应用\n6. 检查可用存储空间\n\n如仍然缓慢，请联系客服并提供您设备的详细信息。"
       },
       "sync-issues": {
-        "question": "My data isn't syncing across devices. What do I do?",
-        "answer": "If data isn't syncing:\n1. Make sure you're logged into the same account on all devices\n2. Check internet connection on all devices\n3. Log out and log back in\n4. Force app refresh or reload page\n5. Restart devices\n6. Update the app to latest version\n\nContact support if the issue continues."
+        "question": "我的数据在各设备间未同步怎么办？",
+        "answer": "如果数据未同步：\n1. 确保您在所有设备上登录了同一账户\n2. 检查所有设备的网络连接\n3. 退出登录并重新登录\n4. 强制刷新应用或重新加载页面\n5. 重启设备\n6. 将应用更新至最新版本\n\n如问题持续，请联系客服。"
       }
     },
     "support": {
-      "category": "Getting Help",
+      "category": "获取帮助",
       "contact-support": {
-        "question": "How do I contact support?",
-        "answer": "If you need help:\n1. Use the Help Chat (? button) in the app for quick answers\n2. Check this FAQ document\n3. Email support at: support@starshippsychics.com\n4. Visit our website for more resources\n\nOur support team usually responds within 24 hours."
+        "question": "如何联系客服？",
+        "answer": "如需帮助：\n1. 使用应用内的帮助聊天（？按钮）获取快速解答\n2. 查阅本常见问题文档\n3. 发送电子邮件至客服：support@starshippsychics.com\n4. 访问我们的网站获取更多资源\n\n我们的客服团队通常在24小时内回复。"
       },
       "bug-report": {
-        "question": "How do I report a bug?",
-        "answer": "If you find a bug:\n1. Note exactly what happened\n2. Include steps to reproduce the issue\n3. Share your device type and app version\n4. Email support@starshippsychics.com with details\n5. Include any error messages you see\n\nBug reports help us improve the app for everyone!"
+        "question": "如何报告错误？",
+        "answer": "如果您发现错误：\n1. 记录确切发生的情况\n2. 包括重现问题的步骤\n3. 提供您的设备类型和应用版本\n4. 将详情发送至 support@starshippsychics.com\n5. 附上您看到的任何错误信息\n\n错误报告有助于我们为所有用户改善应用！"
       },
       "feature-request": {
-        "question": "Can I suggest a new feature?",
-        "answer": "Absolutely! We love feature requests:\n1. Email support@starshippsychics.com\n2. Subject: \"Feature Request: [Your idea]\"\n3. Describe the feature and why it would help\n4. Let us know your use case\n\nGreat suggestions might be added in future updates!"
+        "question": "我可以建议新功能吗？",
+        "answer": "当然可以！我们热爱功能建议：\n1. 发送电子邮件至 support@starshippsychics.com\n2. 主题：\"功能请求：[您的想法]\"\n3. 描述该功能及其帮助之处\n4. 告知我们您的使用场景\n\n优秀的建议可能会在未来更新中添加！"
       },
       "feedback": {
-        "question": "How can I provide feedback?",
-        "answer": "We'd love to hear from you:\n1. Email: info@starshippsychics.com\n2. Subject: \"Feedback: [Topic]\"\n3. Share what you love and what could improve\n4. Be specific with examples\n\nYour feedback helps us create a better app!"
+        "question": "如何提供反馈？",
+        "answer": "我们很乐意听取您的意见：\n1. 电子邮件：info@starshippsychics.com\n2. 主题：\"反馈：[主题]\"\n3. 分享您喜欢的内容和可改进之处\n4. 提供具体示例\n\n您的反馈帮助我们打造更好的应用！"
       }
     }
   }

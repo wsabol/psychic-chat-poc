@@ -1,67 +1,67 @@
 {
   "faq": {
     "onboarding": {
-      "category": "Getting Started - Onboarding",
+      "category": "Primeros Pasos - Configuración Inicial",
       "what-is-onboarding": {
-        "question": "What is the onboarding process?",
-        "answer": "When you first join, we guide you through setting up your account:\n1. Create your account and verify email\n2. Complete your Personal Info (birth date, time, location)\n3. Set up a payment method\n4. Choose a subscription plan\n\nThis ensures you get the full experience from day one."
+        "question": "¿Qué es el proceso de configuración inicial?",
+        "answer": "Cuando te unes por primera vez, te guiamos para configurar tu cuenta:\n1. Crea tu cuenta y verifica el correo electrónico\n2. Completa tu Información Personal (fecha, hora y lugar de nacimiento)\n3. Configura un método de pago\n4. Elige un plan de suscripción\n\nEsto garantiza que obtengas la experiencia completa desde el primer día."
       },
       "can-skip-onboarding": {
-        "question": "Can I skip the onboarding process?",
-        "answer": "Yes, you can skip onboarding steps, but you'll need to complete your Personal Info and subscribe to access all features. You can always return to complete these steps later from the main menu."
+        "question": "¿Puedo omitir el proceso de configuración inicial?",
+        "answer": "Sí, puedes omitir los pasos de configuración inicial, pero necesitarás completar tu Información Personal y suscribirte para acceder a todas las funciones. Siempre puedes volver a completar estos pasos más tarde desde el menú principal."
       }
     },
     "horoscope": {
-      "category": "Horoscopes",
+      "category": "Horóscopos",
       "what-is-horoscope": {
-        "question": "What is a horoscope?",
-        "answer": "A horoscope is a forecast of astrological influences for a specific time period. Our app provides:\n• Daily horoscopes (updated each day)\n• Weekly horoscopes (updated each week)\n• Monthly horoscopes (updated each month)\n\nThey show planetary movements and their potential influence on different aspects of your life like love, career, and health."
+        "question": "¿Qué es un horóscopo?",
+        "answer": "Un horóscopo es un pronóstico de las influencias astrológicas para un período de tiempo específico. Nuestra aplicación ofrece:\n• Horóscopos diarios (actualizados cada día)\n• Horóscopos semanales (actualizados cada semana)\n\nMuestran los movimientos planetarios y su posible influencia en diferentes aspectos de tu vida, como el amor, la carrera y la salud."
       },
       "view-horoscope": {
-        "question": "How do I view my horoscope?",
-        "answer": "To view your horoscope:\n1. Go to the Horoscope page\n2. Your daily horoscope appears automatically (based on your sun sign)\n3. You can also view weekly and monthly horoscopes\n4. Each reading includes insights for love, career, health, and general guidance"
+        "question": "¿Cómo veo mi horóscopo?",
+        "answer": "Para ver tu horóscopo:\n1. Ve a la página de Horóscopo\n2. Tu horóscopo diario aparece automáticamente (basado en tu signo solar)\n3. También puedes ver horóscopos semanales\n4. Cada lectura incluye perspectivas sobre amor, carrera, salud y orientación general"
       },
       "horoscope-accuracy": {
-        "question": "How accurate are horoscopes?",
-        "answer": "Horoscopes are meant to be insightful and thought-provoking rather than predictive guarantees. They offer general guidance based on planetary positions. For more personalized insights, use your full birth chart analysis or chat with the psychic AI."
+        "question": "¿Qué tan precisos son los horóscopos?",
+        "answer": "Los horóscopos están diseñados para ser reflexivos e inspiradores, no garantías predictivas. Ofrecen orientación general basada en las posiciones planetarias. Para perspectivas más personalizadas, utiliza el análisis completo de tu carta natal o chatea con el psíquico de IA."
       },
       "different-signs": {
-        "question": "Can I read horoscopes for other signs?",
-        "answer": "Currently, the app shows horoscopes based on your sun sign. For insights on other signs (moon sign, rising sign, etc.), you can:\n• Read the moon sign horoscope interpretations in your birth chart\n• Ask the psychic AI for insights on specific signs\n• Contact support if you'd like this feature expanded"
+        "question": "¿Puedo leer horóscopos de otros signos?",
+        "answer": "Actualmente, la aplicación muestra horóscopos basados en tu signo solar. Para perspectivas sobre otros signos (signo lunar, ascendente, etc.), puedes:\n• Leer las interpretaciones del horóscopo del signo lunar en tu carta natal\n• Pedirle al psíquico de IA perspectivas sobre signos específicos\n• Contactar a soporte si deseas que esta función se amplíe"
       }
     },
     "moon-cosmic": {
-      "category": "Moon Phase & Cosmic Weather",
+      "category": "Fase Lunar y Clima Cósmico",
       "moon-phase-meaning": {
-        "question": "What is the moon phase and why does it matter?",
-        "answer": "The moon phase shows where the moon is in its cycle (New Moon, Waxing, Full Moon, Waning). The moon affects:\n• Emotions and intuition\n• Energy levels\n• Timing for new projects (new moon) or completion (full moon)\n• Sleep and creativity\n\nUnderstanding the current moon phase helps you align your activities with lunar energy."
+        "question": "¿Qué es la fase lunar y por qué importa?",
+        "answer": "La fase lunar muestra en qué punto del ciclo se encuentra la luna (Luna Nueva, Cuarto Creciente, Luna Llena, Cuarto Menguante). La luna afecta:\n• Las emociones y la intuición\n• Los niveles de energía\n• El momento para nuevos proyectos (luna nueva) o finalización (luna llena)\n• El sueño y la creatividad\n\nEntender la fase lunar actual te ayuda a alinear tus actividades con la energía lunar."
       },
       "moon-phase-today": {
-        "question": "How do I check the current moon phase?",
-        "answer": "Go to the Moon Phase page to see:\n• Current moon phase with visual representation\n• Percentage illumination\n• Days until next full/new moon\n• Astrological significance\n• Guidance for current lunar energy"
+        "question": "¿Cómo verifico la fase lunar actual?",
+        "answer": "Ve a la página de Fase Lunar para ver:\n• La fase lunar actual con representación visual\n• Porcentaje de iluminación\n• Días hasta la próxima luna llena/nueva\n• Significado astrológico\n• Orientación para la energía lunar actual"
       },
       "cosmic-weather": {
-        "question": "What is Cosmic Weather?",
-        "answer": "Cosmic Weather shows the current positions of planets and their astrological influence on each day. It tells you:\n• Which planets are most active today\n• Current astrological aspects\n• Energy forecast\n• Best times for different activities\n• Overall daily cosmic energy"
+        "question": "¿Qué es el Clima Cósmico?",
+        "answer": "El Clima Cósmico muestra las posiciones actuales de los planetas y su influencia astrológica en cada día. Te indica:\n• Qué planetas están más activos hoy\n• Los aspectos astrológicos actuales\n• Pronóstico de energía\n• Los mejores momentos para diferentes actividades\n• La energía cósmica diaria general"
       },
       "use-cosmic-weather": {
-        "question": "How do I use Cosmic Weather information?",
-        "answer": "Use Cosmic Weather to:\n• Understand current planetary influences\n• Know when Mercury Retrograde or other major events are happening\n• Time new projects, meetings, or personal goals\n• Gain insight into general daily energy"
+        "question": "¿Cómo uso la información del Clima Cósmico?",
+        "answer": "Usa el Clima Cósmico para:\n• Comprender las influencias planetarias actuales\n• Saber cuándo ocurre Mercurio Retrógrado u otros eventos importantes\n• Programar nuevos proyectos, reuniones o metas personales\n• Obtener perspectivas sobre la energía diaria general"
       }
     },
     "preferences": {
-      "category": "Preferences & Customization",
+      "category": "Preferencias y Personalización",
       "change-language": {
-        "question": "How do I change the app language?",
-        "answer": "To change your language:\n1. Go to Preferences page\n2. Select your preferred language\n3. Available languages include:\n   • English\n   • Spanish (including regional dialects)\n   • French (including regional dialects)\n   • German, Italian, Portuguese, Japanese, Chinese\n\nThe app will automatically translate all content to your selected language."
+        "question": "¿Cómo cambio el idioma de la aplicación?",
+        "answer": "Para cambiar tu idioma:\n1. Ve a la página de Preferencias\n2. Selecciona tu idioma preferido\n3. Los idiomas disponibles incluyen:\n   • Inglés\n   • Español (incluyendo dialectos regionales)\n   • Francés (incluyendo dialectos regionales)\n   • Alemán, Italiano, Portugués, Japonés, Chino\n\nLa aplicación traducirá automáticamente todo el contenido a tu idioma seleccionado."
       },
       "oracle-response-type": {
-        "question": "What are Full and Brief response types?",
-        "answer": "You can customize how the psychic oracle responds:\n• Full Responses: Detailed, in-depth answers with context and explanations\n• Brief Responses: Concise, direct answers for quick guidance\n\nGo to Preferences to set your preferred response type."
+        "question": "¿Qué son los tipos de respuesta Completa y Breve?",
+        "answer": "Puedes personalizar cómo responde el oráculo psíquico:\n• Respuestas Completas: Respuestas detalladas y profundas con contexto y explicaciones\n• Respuestas Breves: Respuestas concisas y directas para orientación rápida\n\nVe a Preferencias para establecer tu tipo de respuesta preferido."
       },
       "voice-settings": {
-        "question": "Can I enable voice responses?",
-        "answer": "Yes! The app supports voice responses:\n1. Go to Preferences → Voice Settings\n2. Enable voice responses\n3. Choose from 4 different voice options\n4. Adjust voice settings to your preference\n\nThe psychic's responses will be read aloud in your chosen voice."
+        "question": "¿Puedo habilitar las respuestas de voz?",
+        "answer": "¡Sí! La aplicación admite respuestas de voz:\n1. Ve a Preferencias → Configuración de Voz\n2. Habilita las respuestas de voz\n3. Elige entre 4 opciones de voz diferentes\n4. Ajusta la configuración de voz según tu preferencia\n\nLas respuestas del psíquico se leerán en voz alta en la voz que hayas elegido."
       }
     }
   }

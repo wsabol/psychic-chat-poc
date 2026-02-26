@@ -1,91 +1,91 @@
 {
   "faq": {
     "getting-started": {
-      "category": "Getting Started",
+      "category": "Primeros Pasos",
       "what-is-psychic-chat": {
-        "question": "What is Psychic Chat?",
-        "answer": "Psychic Chat is a spiritual wellness app that helps you connect with cosmic insights through AI-powered readings, personalized birth chart analysis, daily horoscopes, and cosmic weather updates. It combines astrology with artificial intelligence to provide meaningful spiritual guidance."
+        "question": "¿Qué es Psychic Chat?",
+        "answer": "Psychic Chat es una aplicación de bienestar espiritual que te ayuda a conectar con conocimientos cósmicos a través de lecturas impulsadas por IA, análisis personalizado de carta natal, horóscopos diarios y actualizaciones del clima cósmico. Combina la astrología con la inteligencia artificial para proporcionar una guía espiritual significativa."
       },
       "how-do-i-get-started": {
-        "question": "How do I get started with the app?",
-        "answer": "To get started:\n1. Create an account with your email\n2. Verify your email address\n3. (Optional) Complete your Personal Info with your birth date, time, and location for personalized readings\n4. Start exploring features from the main navigation menu at the bottom"
+        "question": "¿Cómo empiezo a usar la aplicación?",
+        "answer": "Para comenzar:\n1. Crea una cuenta con tu correo electrónico\n2. Verifica tu dirección de correo electrónico\n3. (Opcional) Completa tu Información Personal con tu fecha, hora y lugar de nacimiento para lecturas personalizadas\n4. Comienza a explorar funciones desde el menú de navegación principal en la parte inferior"
       },
       "do-i-need-birth-time": {
-        "question": "Do I need to provide my birth time?",
-        "answer": "Birth time is optional but recommended for the most accurate birth chart analysis. Your birth time helps calculate the exact position of planets at your birth, especially important for determining your rising sign (ascendant). If you don't know your exact birth time, you can enter an approximate time or just use your birth date."
+        "question": "¿Necesito proporcionar mi hora de nacimiento?",
+        "answer": "La hora de nacimiento es opcional pero recomendada para el análisis de carta natal más preciso. Tu hora de nacimiento ayuda a calcular la posición exacta de los planetas en tu nacimiento, especialmente importante para determinar tu signo ascendente. Si no conoces tu hora exacta de nacimiento, puedes ingresar una hora aproximada o simplemente usar tu fecha de nacimiento."
       },
       "is-app-free": {
-        "question": "Is this app free to use?",
-        "answer": "The app offers both free and premium features. Some basic features are available for free, while advanced features like unlimited chat with the psychic, detailed birth chart analysis, and premium horoscope readings require a paid subscription. You can view pricing in Billing & Subscriptions."
+        "question": "¿Es gratuita esta aplicación?",
+        "answer": "La aplicación ofrece funciones gratuitas y premium. Algunas funciones básicas están disponibles de forma gratuita, mientras que las funciones avanzadas como el chat ilimitado con el psíquico, el análisis detallado de la carta natal y las lecturas premium de horóscopos requieren una suscripción de pago. Puedes ver los precios en Facturación y Suscripciones."
       }
     },
     "chat-features": {
-      "category": "Chat with Psychic",
+      "category": "Chat con el Psíquico",
       "how-to-chat": {
-        "question": "How do I chat with the psychic?",
-        "answer": "To chat with the psychic:\n1. Go to the Chat page (first menu item)\n2. Type your question or message in the input field\n3. Press Send or tap the send button\n4. The AI psychic will respond with spiritual guidance and insights\nYou can have ongoing conversations and ask follow-up questions."
+        "question": "¿Cómo chateo con el psíquico?",
+        "answer": "Para chatear con el psíquico:\n1. Ve a la página de Chat (primer elemento del menú)\n2. Escribe tu pregunta o mensaje en el campo de entrada\n3. Presiona Enviar o toca el botón de enviar\n4. El psíquico de IA responderá con guía espiritual e intuiciones\nPuedes tener conversaciones continuas y hacer preguntas de seguimiento."
       },
       "what-can-i-ask": {
-        "question": "What can I ask the psychic?",
-        "answer": "You can ask about:\n• Love and relationships\n• Career and finances\n• Personal growth\n• Life decisions\n• Spiritual guidance\n• Future insights\n• Any spiritual or wellness question\n\nThe psychic AI is trained to provide thoughtful, meaningful responses based on astrological wisdom and spiritual knowledge."
+        "question": "¿Qué puedo preguntarle al psíquico?",
+        "answer": "Puedes preguntar sobre:\n• Amor y relaciones\n• Carrera y finanzas\n• Crecimiento personal\n• Decisiones de vida\n• Guía espiritual\n• Perspectivas futuras\n• Cualquier pregunta espiritual o de bienestar\n\nEl psíquico de IA está entrenado para proporcionar respuestas reflexivas y significativas basadas en la sabiduría astrológica y el conocimiento espiritual."
       },
       "chat-history": {
-        "question": "Is my chat history saved?",
-        "answer": "Yes, your conversation history is saved in the app so you can revisit previous conversations and continue discussions. This helps the psychic provide more contextual and personalized responses over time."
+        "question": "¿Se guarda mi historial de chat?",
+        "answer": "Sí, tu historial de conversaciones se guarda en la aplicación para que puedas revisar conversaciones anteriores y continuar las discusiones. Esto ayuda al psíquico a proporcionar respuestas más contextuales y personalizadas con el tiempo."
       },
       "premium-chat": {
-        "question": "What's the difference between free and premium chat?",
-        "answer": "Free users have limited single opportunity to try a chat and read a custom horoscope. Premium subscribers enjoy unlimited chat access with the psychic, enabling more in-depth conversations and ongoing guidance whenever you need it."
+        "question": "¿Cuál es la diferencia entre el chat gratuito y el premium?",
+        "answer": "Los usuarios gratuitos tienen una oportunidad única limitada para probar el chat y leer un horóscopo personalizado. Los suscriptores premium disfrutan de acceso ilimitado al chat con el psíquico, lo que permite conversaciones más profundas y orientación continua cuando la necesiten."
       }
     },
     "personal-info": {
-      "category": "Personal Information",
+      "category": "Información Personal",
       "update-personal-info": {
-        "question": "How do I update my personal information?",
-        "answer": "To update your personal info:\n1. Go to Personal Info page\n2. Edit your details:\n   • Full name\n   • Birth date\n   • Birth time (optional but recommended)\n   • Birth location\n3. Tap Save to update your profile\nMore accurate information provides better personalized readings."
+        "question": "¿Cómo actualizo mi información personal?",
+        "answer": "Para actualizar tu información personal:\n1. Ve a la página de Información Personal\n2. Edita tus datos:\n   • Nombre completo\n   • Fecha de nacimiento\n   • Hora de nacimiento (opcional pero recomendada)\n   • Lugar de nacimiento\n3. Toca Guardar para actualizar tu perfil\nUna información más precisa proporciona lecturas más personalizadas."
       },
       "birth-location": {
-        "question": "Why does birth location matter?",
-        "answer": "Birth location is used to calculate the exact positions of celestial bodies at the moment of your birth. Different locations have different latitudes and longitudes, which affects astrological calculations, especially for determining house placements in your birth chart."
+        "question": "¿Por qué importa el lugar de nacimiento?",
+        "answer": "El lugar de nacimiento se utiliza para calcular las posiciones exactas de los cuerpos celestes en el momento de tu nacimiento. Diferentes lugares tienen diferentes latitudes y longitudes, lo que afecta los cálculos astrológicos, especialmente para determinar las posiciones de las casas en tu carta natal."
       },
       "change-birth-info": {
-        "question": "Can I change my birth information after entering it?",
-        "answer": "Yes! You can update any personal information at any time. Go to Personal Info and edit the fields you want to change. Your birth chart and readings will automatically update based on the new information."
+        "question": "¿Puedo cambiar mi información de nacimiento después de ingresarla?",
+        "answer": "¡Sí! Puedes actualizar cualquier información personal en cualquier momento. Ve a Información Personal y edita los campos que desees cambiar. Tu carta natal y lecturas se actualizarán automáticamente en función de la nueva información."
       },
       "data-privacy": {
-        "question": "Is my personal information secure?",
-        "answer": "Yes. Your personal information is encrypted and securely stored. We take your privacy seriously and never share your personal data with third parties. See our Privacy Policy for more details."
+        "question": "¿Está segura mi información personal?",
+        "answer": "Sí. Tu información personal está encriptada y almacenada de forma segura. Nos tomamos muy en serio tu privacidad y nunca compartimos tus datos personales con terceros. Consulta nuestra Política de Privacidad para obtener más detalles."
       },
       "skip-onboarding": {
-        "question": "Can I skip the Personal Info step during the free trial?",
-        "answer": "Yes! During the free trial, the Personal Info page shows a green \"Skip this step →\" button in the top-right corner. Tapping it takes you directly to your free horoscope reading — no birth details are required.\n\nIf you skip (or haven't entered a birth date), the horoscope page will show a zodiac sign picker so you can still get a personalized reading. See \"What is the zodiac sign picker?\" below for details.\n\nFor a full account, you can also complete your Personal Info later from the main menu — but providing your birth date, time, and location gives you the most accurate birth chart and readings."
+        "question": "¿Puedo omitir el paso de Información Personal durante la prueba gratuita?",
+        "answer": "¡Sí! Durante la prueba gratuita, la página de Información Personal muestra un botón verde \"Omitir este paso →\" en la esquina superior derecha. Al tocarlo, te lleva directamente a tu lectura de horóscopo gratuita — no se requieren detalles de nacimiento.\n\nSi omites (o no has ingresado una fecha de nacimiento), la página del horóscopo mostrará un selector de signo zodiacal para que puedas obtener una lectura personalizada. Consulta \"¿Qué es el selector de signo zodiacal?\" a continuación para obtener más detalles.\n\nPara una cuenta completa, también puedes completar tu Información Personal más tarde desde el menú principal — pero proporcionar tu fecha, hora y lugar de nacimiento te da la carta natal y lecturas más precisas."
       },
       "free-trial-zodiac-picker": {
-        "question": "What is the zodiac sign picker during the free trial?",
-        "answer": "If you skipped Personal Info or didn't enter a birth date, the free trial horoscope page automatically shows a zodiac sign picker instead of asking for your full birth details.\n\nHow it works:\n1. A grid of all 12 zodiac signs is displayed (e.g., Aries ♈, Taurus ♉, Gemini ♊, etc.)\n2. Tap your sun sign to select it (it will highlight in purple)\n3. Tap \"Get My Horoscope ✨\" to generate your personalized daily reading\n\nOnce your horoscope loads, a \"✓ Exit to Continue\" button appears — tap it to proceed to create your full account and unlock all features."
+        "question": "¿Qué es el selector de signo zodiacal durante la prueba gratuita?",
+        "answer": "Si omitiste Información Personal o no ingresaste una fecha de nacimiento, la página del horóscopo de la prueba gratuita muestra automáticamente un selector de signo zodiacal en lugar de pedir todos tus detalles de nacimiento.\n\nCómo funciona:\n1. Se muestra una cuadrícula de los 12 signos del zodíaco (p. ej., Aries ♈, Tauro ♉, Géminis ♊, etc.)\n2. Toca tu signo solar para seleccionarlo (se resaltará en morado)\n3. Toca \"Obtener Mi Horóscopo ✨\" para generar tu lectura diaria personalizada\n\nUna vez que se cargue tu horóscopo, aparece un botón \"✓ Salir para Continuar\" — tócalo para proceder a crear tu cuenta completa y desbloquear todas las funciones."
       }
     },
     "birth-chart": {
-      "category": "Birth Chart & My Sign",
+      "category": "Carta Natal y Mi Signo",
       "what-is-birth-chart": {
-        "question": "What is a birth chart?",
-        "answer": "A birth chart (also called a natal chart) is a map of where all the planets were positioned at the exact moment and location of your birth. It includes:\n• Sun Sign (core identity)\n• Moon Sign (emotions)\n• Rising Sign/Ascendant (how others perceive you)\n• Planet placements\n• House placements\n\nThis creates a unique astrological blueprint of your personality and potential."
+        "question": "¿Qué es una carta natal?",
+        "answer": "Una carta natal (también llamada carta astral) es un mapa de dónde estaban posicionados todos los planetas en el momento exacto y lugar de tu nacimiento. Incluye:\n• Signo Solar (identidad central)\n• Signo Lunar (emociones)\n• Signo Ascendente (cómo te perciben los demás)\n• Posiciones planetarias\n• Posiciones de casas\n\nEsto crea un plano astrológico único de tu personalidad y potencial."
       },
       "sun-moon-rising": {
-        "question": "What's the difference between my Sun, Moon, and Rising signs?",
-        "answer": "Sun Sign: Your core identity and basic personality (what your zodiac sign represents)\nMoon Sign: Your emotional nature and inner world (how you feel and process emotions)\nRising Sign (Ascendant): How others perceive you and the impression you make (your outer personality)\n\nTogether, these three create a complete picture of your astrological profile."
+        "question": "¿Cuál es la diferencia entre mi signo Solar, Lunar y Ascendente?",
+        "answer": "Signo Solar: Tu identidad central y personalidad básica (lo que representa tu signo del zodíaco)\nSigno Lunar: Tu naturaleza emocional y mundo interior (cómo sientes y procesas las emociones)\nSigno Ascendente: Cómo te perciben los demás y la impresión que causas (tu personalidad exterior)\n\nJuntos, estos tres crean una imagen completa de tu perfil astrológico."
       },
       "view-birth-chart": {
-        "question": "How do I view my full birth chart?",
-        "answer": "Go to the My Sign page to view your birth chart. You'll see:\n• Your Sun, Moon, and Rising signs\n• All planet placements\n• House positions\n• Aspects between planets\n• Detailed interpretations\n\nMake sure you've entered your birth time for the most accurate chart."
+        "question": "¿Cómo veo mi carta natal completa?",
+        "answer": "Ve a la página Mi Signo para ver tu carta natal. Verás:\n• Tus signos Solar, Lunar y Ascendente\n• Todas las posiciones planetarias\n• Posiciones de casas\n• Aspectos entre planetas\n• Interpretaciones detalladas\n\nAsegúrate de haber ingresado tu hora de nacimiento para la carta más precisa."
       },
       "accurate-chart": {
-        "question": "How accurate is my birth chart?",
-        "answer": "The accuracy depends on how precise your birth information is:\n• Accurate birth time (within minutes) = very accurate chart\n• Approximate birth time = reasonably accurate, but some details may vary\n• Birth date only = sun sign and some placements accurate, but rising sign and houses won't be correct\n\nIf possible, get your birth certificate to verify your exact birth time."
+        "question": "¿Qué tan precisa es mi carta natal?",
+        "answer": "La precisión depende de cuán exacta sea tu información de nacimiento:\n• Hora de nacimiento precisa (al minuto) = carta muy precisa\n• Hora de nacimiento aproximada = razonablemente precisa, pero algunos detalles pueden variar\n• Solo fecha de nacimiento = el signo solar y algunas posiciones son precisas, pero el ascendente y las casas no serán correctos\n\nSi es posible, obtén tu acta de nacimiento para verificar tu hora exacta de nacimiento."
       },
       "zodiac-wheel": {
-        "question": "What is the Zodiac Wheel and how does it work?",
-        "answer": "The Zodiac Wheel is a visual representation of your birth chart showing all 12 zodiac signs arranged in concentric rings. The wheel includes:\n• Sign names and symbols\n• Ruling planets\n• Elements (Fire, Earth, Air, Water)\n• House numbers (I-XII)\n\nThe wheel rotates to position your Rising Sign at the eastern horizon (on the left side). This reflects how you would see the sky at the moment of your birth - looking UP at the celestial sphere rather than DOWN at a map. This is why East appears on the left and West on the right in astronomical charts, creating a mirror image of typical map directions. The horizontal line represents the horizon, with daytime signs above and nighttime signs below."
+        "question": "¿Qué es la Rueda del Zodíaco y cómo funciona?",
+        "answer": "La Rueda del Zodíaco es una representación visual de tu carta natal que muestra los 12 signos del zodíaco dispuestos en anillos concéntricos. La rueda incluye:\n• Nombres y símbolos de los signos\n• Planetas regentes\n• Elementos (Fuego, Tierra, Aire, Agua)\n• Números de casas (I-XII)\n\nLa rueda gira para posicionar tu Signo Ascendente en el horizonte oriental (en el lado izquierdo). Esto refleja cómo verías el cielo en el momento de tu nacimiento — mirando HACIA ARRIBA a la esfera celeste en lugar de HACIA ABAJO a un mapa. Por eso el Este aparece a la izquierda y el Oeste a la derecha en las cartas astronómicas, creando una imagen especular de las direcciones típicas de los mapas. La línea horizontal representa el horizonte, con signos diurnos arriba y nocturnos abajo."
       }
     }
   }

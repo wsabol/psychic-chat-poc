@@ -1,118 +1,118 @@
 {
   "faq": {
     "account-security": {
-      "category": "Account & Security",
+      "category": "Conta & Segurança",
       "change-password": {
-        "question": "How do I change my password?",
-        "answer": "To change your password:\n1. Go to Security page\n2. Click on Password section\n3. Enter your current password\n4. Enter your new password (make it strong!)\n5. Confirm new password\n6. Save changes\n\nUse a strong password with uppercase, lowercase, numbers, and symbols."
+        "question": "Como altero minha senha?",
+        "answer": "Para alterar sua senha:\n1. Acesse a página Segurança\n2. Clique na seção Senha\n3. Insira sua senha atual\n4. Insira sua nova senha (escolha uma forte!)\n5. Confirme a nova senha\n6. Salve as alterações\n\nUse uma senha forte com letras maiúsculas, minúsculas, números e símbolos."
       },
       "enable-2fa": {
-        "question": "What is 2FA and how do I enable it?",
-        "answer": "Two-Factor Authentication (2FA) adds an extra security layer to your account.\n\nImportant: You must add and verify a contact method before 2FA can be enabled:\n1. Go to Security page → Verification & 2FA tab\n2. In the \"Verification Methods\" section, add your email address or phone number and complete verification\n3. Once a method is verified, scroll up to the \"Two-Factor Authentication\" section\n4. Toggle 2FA on and choose your authentication method (Email or SMS)\n5. Click Save\n\nWith 2FA enabled, you'll need to enter a verification code sent to your verified email or phone when logging in from a new or untrusted device."
+        "question": "O que é a autenticação de dois fatores e como a ativo?",
+        "answer": "A autenticação de dois fatores (2FA) adiciona uma camada extra de segurança à sua conta.\n\nImportante: Você precisa adicionar e verificar um método de contato antes de ativar o 2FA:\n1. Acesse a página Segurança → aba Verificação & 2FA\n2. Na seção \"Métodos de Verificação\", adicione seu e-mail ou número de telefone e conclua a verificação\n3. Assim que um método for verificado, role para cima até a seção \"Autenticação de Dois Fatores\"\n4. Ative o 2FA e escolha seu método de autenticação (E-mail ou SMS)\n5. Clique em Salvar\n\nCom o 2FA ativado, você precisará inserir um código de verificação enviado ao seu e-mail ou telefone verificado ao fazer login em um dispositivo novo ou não confiável."
       },
       "trust-device": {
-        "question": "How do I trust a device?",
-        "answer": "To skip 2FA on a trusted device:\n1. Make sure 2FA is enabled in Security → Verification & 2FA tab\n2. On the same page, scroll down to the \"Trust This Device\" section (this section only appears when 2FA is enabled)\n3. Click \"Trust This Device\"\n\nThe device will be permanently trusted and won't require 2FA codes on future logins. You can manage and revoke trusted devices in the \"Trusted Devices\" section just below it on the same page."
+        "question": "Como confio em um dispositivo?",
+        "answer": "Para ignorar o 2FA em um dispositivo confiável:\n1. Certifique-se de que o 2FA está ativado em Segurança → aba Verificação & 2FA\n2. Na mesma página, role para baixo até a seção \"Confiar neste Dispositivo\" (essa seção só aparece quando o 2FA está ativado)\n3. Clique em \"Confiar neste Dispositivo\"\n\nO dispositivo será marcado como confiável permanentemente e não exigirá códigos 2FA em logins futuros. Você pode gerenciar e revogar dispositivos confiáveis na seção \"Dispositivos Confiáveis\", logo abaixo, na mesma página."
       },
       "manage-devices": {
-        "question": "How do I manage my trusted devices?",
-        "answer": "Trusted device management is part of the Verification & 2FA tab — there is no separate Devices tab:\n1. Go to Security page → Verification & 2FA tab\n2. Scroll down to the \"Trusted Devices\" section (only visible when 2FA is enabled)\n3. View all your trusted devices listed there\n4. Click \"Revoke\" next to any device to remove its trusted status\n5. To trust your current device, use the \"Trust This Device\" section just above the list"
+        "question": "Como gerencio meus dispositivos confiáveis?",
+        "answer": "O gerenciamento de dispositivos confiáveis faz parte da aba Verificação & 2FA — não há uma aba separada de Dispositivos:\n1. Acesse a página Segurança → aba Verificação & 2FA\n2. Role para baixo até a seção \"Dispositivos Confiáveis\" (visível apenas quando o 2FA está ativado)\n3. Veja todos os seus dispositivos confiáveis listados ali\n4. Clique em \"Revogar\" ao lado de qualquer dispositivo para remover seu status de confiável\n5. Para confiar no seu dispositivo atual, use a seção \"Confiar neste Dispositivo\" logo acima da lista"
       },
       "forgot-password": {
-        "question": "What do I do if I forgot my password?",
-        "answer": "If you forgot your password:\n1. On the login screen, click \"Forgot Password?\"\n2. Enter your email address\n3. Check your email for a password reset link\n4. Click the link and create a new password\n5. Log in with your new password\n\nIf you don't receive an email, check your spam folder or contact support."
+        "question": "O que faço se esqueci minha senha?",
+        "answer": "Se você esqueceu sua senha:\n1. Na tela de login, clique em \"Esqueci minha senha?\"\n2. Insira seu endereço de e-mail\n3. Verifique seu e-mail para encontrar um link de redefinição de senha\n4. Clique no link e crie uma nova senha\n5. Faça login com sua nova senha\n\nSe não receber o e-mail, verifique sua pasta de spam ou entre em contato com o suporte."
       }
     },
     "billing": {
-      "category": "Billing & Subscriptions",
+      "category": "Cobrança & Assinaturas",
       "payment-method": {
-        "question": "How do I add a payment method?",
-        "answer": "To add a payment method:\n1. Go to Billing & Subscriptions page\n2. Click on \"Payment Methods\"\n3. Click \"Add Payment Method\"\n4. Enter your card details:\n   • Card number\n   • Expiration date\n   • CVV\n   • Billing address\n5. Click Save\n\nYour payment information is securely encrypted."
+        "question": "Como adiciono um método de pagamento?",
+        "answer": "Para adicionar um método de pagamento:\n1. Acesse a página Cobrança e Assinaturas\n2. Clique em \"Métodos de Pagamento\"\n3. Clique em \"Adicionar Método de Pagamento\"\n4. Insira os dados do seu cartão:\n   • Número do cartão\n   • Data de validade\n   • CVV\n   • Endereço de cobrança\n5. Clique em Salvar\n\nSeus dados de pagamento são criptografados com segurança."
       },
       "update-payment": {
-        "question": "How do I update my payment method?",
-        "answer": "To update a payment method:\n1. Go to Billing & Subscriptions → Payment Methods\n2. Click on the payment method you want to update\n3. Edit the information\n4. Save changes\n\nYou can add multiple payment methods and set a default one."
+        "question": "Como atualizo meu método de pagamento?",
+        "answer": "Para atualizar um método de pagamento:\n1. Acesse Cobrança e Assinaturas → Métodos de Pagamento\n2. Clique no método de pagamento que deseja atualizar\n3. Edite as informações\n4. Salve as alterações\n\nVocê pode adicionar vários métodos de pagamento e definir um como padrão."
       },
       "remove-payment": {
-        "question": "How do I remove a payment method?",
-        "answer": "To remove a payment method:\n1. Go to Billing & Subscriptions → Payment Methods\n2. Find the payment method to remove\n3. Click \"Delete\" or \"Remove\"\n4. Confirm deletion\n\nNote: You must have at least one valid payment method on file to maintain an active subscription."
+        "question": "Como removo um método de pagamento?",
+        "answer": "Para remover um método de pagamento:\n1. Acesse Cobrança e Assinaturas → Métodos de Pagamento\n2. Encontre o método de pagamento a ser removido\n3. Clique em \"Excluir\" ou \"Remover\"\n4. Confirme a exclusão\n\nObservação: Você precisa ter ao menos um método de pagamento válido cadastrado para manter uma assinatura ativa."
       },
       "subscription-plans": {
-        "question": "What subscription plans are available?",
-        "answer": "We offer several subscription tiers with different features:\n• Free: Basic features and limited daily chat\n• Monthly: Unlimited chat and premium features (renews monthly)\n• Annual: Unlimited chat and premium features (renews yearly, better value)\n\nGo to Billing & Subscriptions → Subscriptions to see detailed plan comparison and pricing."
+        "question": "Quais planos de assinatura estão disponíveis?",
+        "answer": "Oferecemos diferentes níveis de assinatura com recursos variados:\n• Gratuito: Recursos básicos e chat diário limitado\n• Mensal: Chat ilimitado e recursos premium (renovação mensal)\n• Anual: Chat ilimitado e recursos premium (renovação anual, melhor custo-benefício)\n\nAcesse Cobrança e Assinaturas → Assinaturas para ver a comparação detalhada dos planos e os preços."
       },
       "change-subscription": {
-        "question": "Can I change my subscription plan?",
-        "answer": "Yes! You can:\n1. Go to Billing & Subscriptions → Subscriptions\n2. Select a different plan\n3. Confirm the change\n4. Your billing will be adjusted accordingly\n\nYou can upgrade, downgrade, or cancel anytime. Changes take effect immediately."
+        "question": "Posso mudar meu plano de assinatura?",
+        "answer": "Sim! Você pode:\n1. Acessar Cobrança e Assinaturas → Assinaturas\n2. Selecionar um plano diferente\n3. Confirmar a mudança\n4. Sua cobrança será ajustada de acordo\n\nVocê pode fazer upgrade, downgrade ou cancelar a qualquer momento. As alterações entram em vigor imediatamente."
       },
       "cancel-subscription": {
-        "question": "How do I cancel my subscription?",
-        "answer": "To cancel your subscription:\n1. Go to Billing & Subscriptions → Subscriptions\n2. Find your active subscription card\n3. Click the \"📋 Switch Plan or Cancel\" button on the right side of the card\n4. The card will expand — scroll down to the \"Or Cancel Subscription\" section at the bottom\n5. Click the red \"✕ Cancel Subscription\" button\n6. Confirm in the dialog that appears\n\nYour subscription will remain active until the end of your current billing period, then stop. You'll keep your account and all your data. To reactivate later, return to Billing & Subscriptions → Subscriptions and choose a plan."
+        "question": "Como cancelo minha assinatura?",
+        "answer": "Para cancelar sua assinatura:\n1. Acesse Cobrança e Assinaturas → Assinaturas\n2. Encontre o cartão da sua assinatura ativa\n3. Clique no botão \"📋 Trocar Plano ou Cancelar\" no lado direito do cartão\n4. O cartão se expandirá — role para baixo até a seção \"Ou Cancelar Assinatura\" no final\n5. Clique no botão vermelho \"✕ Cancelar Assinatura\"\n6. Confirme na caixa de diálogo que aparecer\n\nSua assinatura permanecerá ativa até o final do período de cobrança atual e será encerrada em seguida. Sua conta e todos os seus dados serão mantidos. Para reativar mais tarde, volte a Cobrança e Assinaturas → Assinaturas e escolha um plano."
       },
       "view-invoices": {
-        "question": "How do I view my invoices?",
-        "answer": "To view your billing history:\n1. Go to Billing & Subscriptions → Invoices\n2. You'll see a list of all past and current invoices\n3. Click any invoice to view details\n4. You can download invoices for your records"
+        "question": "Como vejo minhas faturas?",
+        "answer": "Para ver seu histórico de cobrança:\n1. Acesse Cobrança e Assinaturas → Faturas\n2. Você verá uma lista de todas as faturas anteriores e atuais\n3. Clique em qualquer fatura para ver os detalhes\n4. Você pode baixar as faturas para seus registros"
       },
       "billing-problem": {
-        "question": "What if my payment failed?",
-        "answer": "If a payment fails:\n1. Check your payment method is valid and not expired\n2. Go to Billing & Subscriptions → Payment Methods\n3. Update or add a new payment method\n4. Try again\n5. If the problem persists, contact support\n\nYour subscription may be paused until payment is successful."
+        "question": "O que fazer se meu pagamento falhar?",
+        "answer": "Se um pagamento falhar:\n1. Verifique se seu método de pagamento é válido e não está vencido\n2. Acesse Cobrança e Assinaturas → Métodos de Pagamento\n3. Atualize ou adicione um novo método de pagamento\n4. Tente novamente\n5. Se o problema persistir, entre em contato com o suporte\n\nSua assinatura pode ser pausada até que o pagamento seja realizado com sucesso."
       }
     },
     "privacy": {
-      "category": "Privacy & Data",
+      "category": "Privacidade & Dados",
       "data-privacy-policy": {
-        "question": "How is my data protected?",
-        "answer": "We take data security seriously:\n• All personal information is encrypted\n• We use secure SSL/TLS connections\n• Your data is never shared with third parties\n• Regular security audits and updates\n• Compliance with privacy regulations\n\nSee our Privacy Policy for complete details."
+        "question": "Como meus dados são protegidos?",
+        "answer": "Levamos a segurança dos dados a sério:\n• Todas as informações pessoais são criptografadas\n• Usamos conexões seguras SSL/TLS\n• Seus dados nunca são compartilhados com terceiros\n• Auditorias e atualizações de segurança regulares\n• Conformidade com as regulamentações de privacidade\n\nConsulte nossa Política de Privacidade para detalhes completos."
       },
       "delete-account": {
-        "question": "How do I delete my account?",
-        "answer": "To delete your account:\n1. Go to Security page\n2. Find \"Delete Account\" section\n3. Click \"Request Account Deletion\"\n4. Confirm your request\n5. Your account and data will be securely deleted\n\nThis action is permanent and cannot be undone."
+        "question": "Como excluo minha conta?",
+        "answer": "Para excluir sua conta:\n1. Acesse a página Segurança\n2. Encontre a seção \"Excluir Conta\"\n3. Clique em \"Solicitar Exclusão de Conta\"\n4. Confirme sua solicitação\n5. Sua conta e seus dados serão excluídos com segurança\n\nEssa ação é permanente e não pode ser desfeita."
       },
       "data-export": {
-        "question": "Can I export my data?",
-        "answer": "Yes, you can download your data:\n1. Go to Settings page\n2. Find \"Download My Data\" section\n3. Click the \"Download\" button\n4. Your data will be downloaded as a JSON file\n\nThe file contains all your personal information, chat history, and account data."
+        "question": "Posso exportar meus dados?",
+        "answer": "Sim, você pode baixar seus dados:\n1. Acesse a página Configurações\n2. Encontre a seção \"Baixar Meus Dados\"\n3. Clique no botão \"Baixar\"\n4. Seus dados serão baixados como um arquivo JSON\n\nO arquivo contém todas as suas informações pessoais, histórico de chat e dados da conta."
       },
       "read-terms-privacy": {
-        "question": "How do I read the Terms of Service and Privacy Policy?",
-        "answer": "You can access these documents anytime through the Help button:\n1. Click the ? (Help) button on any screen\n2. In the Help window header, you'll see icon buttons:\n   • 📋 (Terms) - Click to open Terms of Service\n   • 🔒 (Privacy) - Click to open Privacy Policy\n3. The documents open in a large, scrollable window\n4. Use your mouse wheel, or scrollbar to read\n5. Click the X button to close when finished\n\nYou can read these documents at any time to understand your rights and our policies."
+        "question": "Como leio os Termos de Serviço e a Política de Privacidade?",
+        "answer": "Você pode acessar esses documentos a qualquer momento pelo botão de Ajuda:\n1. Clique no botão ? (Ajuda) em qualquer tela\n2. No cabeçalho da janela de Ajuda, você verá botões com ícones:\n   • 📋 (Termos) - Clique para abrir os Termos de Serviço\n   • 🔒 (Privacidade) - Clique para abrir a Política de Privacidade\n3. Os documentos abrem em uma janela grande e rolável\n4. Use a roda do mouse ou a barra de rolagem para ler\n5. Clique no botão X para fechar quando terminar\n\nVocê pode ler esses documentos a qualquer momento para entender seus direitos e nossas políticas."
       }
     },
     "technical": {
-      "category": "Technical & Troubleshooting",
+      "category": "Técnico & Solução de Problemas",
       "app-compatibility": {
-        "question": "What devices does the app work on?",
-        "answer": "Psychic Chat works on:\n• iOS (iPhone, iPad)\n• Android (phones and tablets)\n• Web browsers (Chrome, Safari, Firefox, Edge)\n• Desktop and mobile devices\n\nJust visit our website or download from your app store."
+        "question": "Em quais dispositivos o aplicativo funciona?",
+        "answer": "O Psychic Chat funciona em:\n• iOS (iPhone, iPad)\n• Android (celulares e tablets)\n• Navegadores web (Chrome, Safari, Firefox, Edge)\n• Dispositivos desktop e móveis\n\nBasta acessar nosso site ou baixar pelo seu app store."
       },
       "app-not-loading": {
-        "question": "What if the app won't load?",
-        "answer": "If the app won't load:\n1. Check your internet connection\n2. Clear your browser cache\n3. Close and reopen the app\n4. Restart your device\n5. Log out and log back in\n6. Try in a different browser\n7. Uninstall and reinstall the app (as last resort)\n\nIf problems persist, contact support."
+        "question": "O que fazer se o aplicativo não carregar?",
+        "answer": "Se o aplicativo não carregar:\n1. Verifique sua conexão com a internet\n2. Limpe o cache do navegador\n3. Feche e reabra o aplicativo\n4. Reinicie seu dispositivo\n5. Saia e entre novamente na conta\n6. Tente em um navegador diferente\n7. Desinstale e reinstale o aplicativo (como último recurso)\n\nSe o problema persistir, entre em contato com o suporte."
       },
       "slow-performance": {
-        "question": "The app is running slowly. What can I do?",
-        "answer": "If the app is slow:\n1. Check your internet connection (try WiFi)\n2. Close other apps running in the background\n3. Clear browser cache and cookies\n4. Restart your device\n5. Update to the latest app version\n6. Check available storage space\n\nIf still slow, contact support with details about your device."
+        "question": "O aplicativo está lento. O que posso fazer?",
+        "answer": "Se o aplicativo estiver lento:\n1. Verifique sua conexão com a internet (tente usar Wi-Fi)\n2. Feche outros aplicativos em execução em segundo plano\n3. Limpe o cache e os cookies do navegador\n4. Reinicie seu dispositivo\n5. Atualize para a versão mais recente do aplicativo\n6. Verifique o espaço de armazenamento disponível\n\nSe continuar lento, entre em contato com o suporte informando os detalhes do seu dispositivo."
       },
       "sync-issues": {
-        "question": "My data isn't syncing across devices. What do I do?",
-        "answer": "If data isn't syncing:\n1. Make sure you're logged into the same account on all devices\n2. Check internet connection on all devices\n3. Log out and log back in\n4. Force app refresh or reload page\n5. Restart devices\n6. Update the app to latest version\n\nContact support if the issue continues."
+        "question": "Meus dados não estão sincronizando entre os dispositivos. O que faço?",
+        "answer": "Se os dados não estiverem sincronizando:\n1. Certifique-se de estar conectado à mesma conta em todos os dispositivos\n2. Verifique a conexão com a internet em todos os dispositivos\n3. Saia e entre novamente na conta\n4. Force a atualização do aplicativo ou recarregue a página\n5. Reinicie os dispositivos\n6. Atualize o aplicativo para a versão mais recente\n\nEntre em contato com o suporte se o problema continuar."
       }
     },
     "support": {
-      "category": "Getting Help",
+      "category": "Obtendo Ajuda",
       "contact-support": {
-        "question": "How do I contact support?",
-        "answer": "If you need help:\n1. Use the Help Chat (? button) in the app for quick answers\n2. Check this FAQ document\n3. Email support at: support@starshippsychics.com\n4. Visit our website for more resources\n\nOur support team usually responds within 24 hours."
+        "question": "Como entro em contato com o suporte?",
+        "answer": "Se precisar de ajuda:\n1. Use o Chat de Ajuda (botão ?) no aplicativo para respostas rápidas\n2. Consulte este documento de FAQ\n3. Envie um e-mail ao suporte: support@starshippsychics.com\n4. Acesse nosso site para mais recursos\n\nNossa equipe de suporte geralmente responde em até 24 horas."
       },
       "bug-report": {
-        "question": "How do I report a bug?",
-        "answer": "If you find a bug:\n1. Note exactly what happened\n2. Include steps to reproduce the issue\n3. Share your device type and app version\n4. Email support@starshippsychics.com with details\n5. Include any error messages you see\n\nBug reports help us improve the app for everyone!"
+        "question": "Como reporto um bug?",
+        "answer": "Se encontrar um bug:\n1. Anote exatamente o que aconteceu\n2. Inclua os passos para reproduzir o problema\n3. Informe o tipo de dispositivo e a versão do aplicativo\n4. Envie um e-mail para support@starshippsychics.com com os detalhes\n5. Inclua quaisquer mensagens de erro que aparecerem\n\nRelatórios de bugs nos ajudam a melhorar o aplicativo para todos!"
       },
       "feature-request": {
-        "question": "Can I suggest a new feature?",
-        "answer": "Absolutely! We love feature requests:\n1. Email support@starshippsychics.com\n2. Subject: \"Feature Request: [Your idea]\"\n3. Describe the feature and why it would help\n4. Let us know your use case\n\nGreat suggestions might be added in future updates!"
+        "question": "Posso sugerir um novo recurso?",
+        "answer": "Com certeza! Adoramos sugestões de recursos:\n1. Envie um e-mail para support@starshippsychics.com\n2. Assunto: \"Sugestão de Recurso: [Sua ideia]\"\n3. Descreva o recurso e como ele seria útil\n4. Conte-nos seu caso de uso\n\nÓtimas sugestões podem ser adicionadas em atualizações futuras!"
       },
       "feedback": {
-        "question": "How can I provide feedback?",
-        "answer": "We'd love to hear from you:\n1. Email: info@starshippsychics.com\n2. Subject: \"Feedback: [Topic]\"\n3. Share what you love and what could improve\n4. Be specific with examples\n\nYour feedback helps us create a better app!"
+        "question": "Como posso enviar um feedback?",
+        "answer": "Adoraríamos ouvir você:\n1. E-mail: info@starshippsychics.com\n2. Assunto: \"Feedback: [Tópico]\"\n3. Compartilhe o que você gosta e o que poderia melhorar\n4. Seja específico com exemplos\n\nSeu feedback nos ajuda a criar um aplicativo melhor!"
       }
     }
   }

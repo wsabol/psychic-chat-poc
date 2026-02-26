@@ -1,118 +1,118 @@
 {
   "faq": {
     "account-security": {
-      "category": "Account & Security",
+      "category": "アカウント・セキュリティ",
       "change-password": {
-        "question": "How do I change my password?",
-        "answer": "To change your password:\n1. Go to Security page\n2. Click on Password section\n3. Enter your current password\n4. Enter your new password (make it strong!)\n5. Confirm new password\n6. Save changes\n\nUse a strong password with uppercase, lowercase, numbers, and symbols."
+        "question": "パスワードを変更するにはどうすればいいですか？",
+        "answer": "パスワードを変更するには：\n1. セキュリティページに移動する\n2. 「パスワード」セクションをクリックする\n3. 現在のパスワードを入力する\n4. 新しいパスワードを入力する（強力なパスワードを設定してください）\n5. 新しいパスワードを確認する\n6. 変更を保存する\n\n大文字・小文字・数字・記号を含む強力なパスワードをご使用ください。"
       },
       "enable-2fa": {
-        "question": "What is 2FA and how do I enable it?",
-        "answer": "Two-Factor Authentication (2FA) adds an extra security layer to your account.\n\nImportant: You must add and verify a contact method before 2FA can be enabled:\n1. Go to Security page → Verification & 2FA tab\n2. In the \"Verification Methods\" section, add your email address or phone number and complete verification\n3. Once a method is verified, scroll up to the \"Two-Factor Authentication\" section\n4. Toggle 2FA on and choose your authentication method (Email or SMS)\n5. Click Save\n\nWith 2FA enabled, you'll need to enter a verification code sent to your verified email or phone when logging in from a new or untrusted device."
+        "question": "2段階認証とは何ですか？有効にするにはどうすればいいですか？",
+        "answer": "2段階認証（2FA）はアカウントにセキュリティの層を追加します。\n\n重要：2FAを有効にする前に、連絡先の方法を追加して確認する必要があります：\n1. セキュリティページ → 「確認・2FA」タブに移動する\n2. 「確認方法」セクションでメールアドレスまたは電話番号を追加し、確認を完了する\n3. 確認が完了したら、「2段階認証」セクションまで上にスクロールする\n4. 2FAをオンにして認証方法（メールまたはSMS）を選択する\n5. 「保存」をクリックする\n\n2FAを有効にすると、新しいデバイスや信頼されていないデバイスからログインする際に、確認済みのメールまたは電話番号に送信された確認コードの入力が必要になります。"
       },
       "trust-device": {
-        "question": "How do I trust a device?",
-        "answer": "To skip 2FA on a trusted device:\n1. Make sure 2FA is enabled in Security → Verification & 2FA tab\n2. On the same page, scroll down to the \"Trust This Device\" section (this section only appears when 2FA is enabled)\n3. Click \"Trust This Device\"\n\nThe device will be permanently trusted and won't require 2FA codes on future logins. You can manage and revoke trusted devices in the \"Trusted Devices\" section just below it on the same page."
+        "question": "デバイスを信頼済みに設定するにはどうすればいいですか？",
+        "answer": "信頼済みデバイスで2FAをスキップするには：\n1. セキュリティページ → 「確認・2FA」タブで2FAが有効になっていることを確認する\n2. 同じページで「このデバイスを信頼する」セクションまでスクロールする（このセクションは2FAが有効な場合のみ表示されます）\n3. 「このデバイスを信頼する」をクリックする\n\nデバイスは永続的に信頼済みとなり、以降のログインでは2FAコードが不要になります。信頼済みデバイスの管理と取り消しは、同じページの下にある「信頼済みデバイス」セクションで行えます。"
       },
       "manage-devices": {
-        "question": "How do I manage my trusted devices?",
-        "answer": "Trusted device management is part of the Verification & 2FA tab — there is no separate Devices tab:\n1. Go to Security page → Verification & 2FA tab\n2. Scroll down to the \"Trusted Devices\" section (only visible when 2FA is enabled)\n3. View all your trusted devices listed there\n4. Click \"Revoke\" next to any device to remove its trusted status\n5. To trust your current device, use the \"Trust This Device\" section just above the list"
+        "question": "信頼済みデバイスを管理するにはどうすればいいですか？",
+        "answer": "信頼済みデバイスの管理は「確認・2FA」タブの一部です（別途「デバイス」タブはありません）：\n1. セキュリティページ → 「確認・2FA」タブに移動する\n2. 「信頼済みデバイス」セクションまでスクロールする（2FAが有効な場合のみ表示されます）\n3. 登録されているすべての信頼済みデバイスを確認する\n4. デバイスの横にある「取り消す」をクリックして信頼済みステータスを削除する\n5. 現在のデバイスを信頼済みにするには、リストの上にある「このデバイスを信頼する」セクションを使用する"
       },
       "forgot-password": {
-        "question": "What do I do if I forgot my password?",
-        "answer": "If you forgot your password:\n1. On the login screen, click \"Forgot Password?\"\n2. Enter your email address\n3. Check your email for a password reset link\n4. Click the link and create a new password\n5. Log in with your new password\n\nIf you don't receive an email, check your spam folder or contact support."
+        "question": "パスワードを忘れた場合はどうすればいいですか？",
+        "answer": "パスワードを忘れた場合：\n1. ログイン画面で「パスワードをお忘れの方」をクリックする\n2. メールアドレスを入力する\n3. パスワードリセットリンクが記載されたメールを確認する\n4. リンクをクリックして新しいパスワードを作成する\n5. 新しいパスワードでログインする\n\nメールが届かない場合は、迷惑メールフォルダを確認するか、サポートにお問い合わせください。"
       }
     },
     "billing": {
-      "category": "Billing & Subscriptions",
+      "category": "請求・サブスクリプション",
       "payment-method": {
-        "question": "How do I add a payment method?",
-        "answer": "To add a payment method:\n1. Go to Billing & Subscriptions page\n2. Click on \"Payment Methods\"\n3. Click \"Add Payment Method\"\n4. Enter your card details:\n   • Card number\n   • Expiration date\n   • CVV\n   • Billing address\n5. Click Save\n\nYour payment information is securely encrypted."
+        "question": "支払い方法を追加するにはどうすればいいですか？",
+        "answer": "支払い方法を追加するには：\n1. 請求・サブスクリプションページに移動する\n2. 「支払い方法」をクリックする\n3. 「支払い方法を追加」をクリックする\n4. カード情報を入力する：\n   • カード番号\n   • 有効期限\n   • CVV\n   • 請求先住所\n5. 「保存」をクリックする\n\nお支払い情報は安全に暗号化されます。"
       },
       "update-payment": {
-        "question": "How do I update my payment method?",
-        "answer": "To update a payment method:\n1. Go to Billing & Subscriptions → Payment Methods\n2. Click on the payment method you want to update\n3. Edit the information\n4. Save changes\n\nYou can add multiple payment methods and set a default one."
+        "question": "支払い方法を更新するにはどうすればいいですか？",
+        "answer": "支払い方法を更新するには：\n1. 請求・サブスクリプション → 「支払い方法」に移動する\n2. 更新したい支払い方法をクリックする\n3. 情報を編集する\n4. 変更を保存する\n\n複数の支払い方法を追加し、デフォルトを設定することができます。"
       },
       "remove-payment": {
-        "question": "How do I remove a payment method?",
-        "answer": "To remove a payment method:\n1. Go to Billing & Subscriptions → Payment Methods\n2. Find the payment method to remove\n3. Click \"Delete\" or \"Remove\"\n4. Confirm deletion\n\nNote: You must have at least one valid payment method on file to maintain an active subscription."
+        "question": "支払い方法を削除するにはどうすればいいですか？",
+        "answer": "支払い方法を削除するには：\n1. 請求・サブスクリプション → 「支払い方法」に移動する\n2. 削除したい支払い方法を見つける\n3. 「削除」または「削除する」をクリックする\n4. 削除を確認する\n\n注意：有効なサブスクリプションを維持するには、少なくとも1つの有効な支払い方法を登録しておく必要があります。"
       },
       "subscription-plans": {
-        "question": "What subscription plans are available?",
-        "answer": "We offer several subscription tiers with different features:\n• Free: Basic features and limited daily chat\n• Monthly: Unlimited chat and premium features (renews monthly)\n• Annual: Unlimited chat and premium features (renews yearly, better value)\n\nGo to Billing & Subscriptions → Subscriptions to see detailed plan comparison and pricing."
+        "question": "どのようなサブスクリプションプランがありますか？",
+        "answer": "異なる機能を持つ複数のサブスクリプションティアをご用意しています：\n• 無料：基本機能と一度限りの無料体験チャット\n• 月間：無制限チャットとプレミアム機能（毎月更新）\n• 年間：無制限チャットとプレミアム機能（毎年更新、よりお得）\n\n請求・サブスクリプション → 「サブスクリプション」でプランの詳細比較と料金をご確認いただけます。"
       },
       "change-subscription": {
-        "question": "Can I change my subscription plan?",
-        "answer": "Yes! You can:\n1. Go to Billing & Subscriptions → Subscriptions\n2. Select a different plan\n3. Confirm the change\n4. Your billing will be adjusted accordingly\n\nYou can upgrade, downgrade, or cancel anytime. Changes take effect immediately."
+        "question": "サブスクリプションプランを変更できますか？",
+        "answer": "はい！以下の手順で変更できます：\n1. 請求・サブスクリプション → 「サブスクリプション」に移動する\n2. 別のプランを選択する\n3. 変更を確認する\n4. 請求が適宜調整されます\n\nいつでもアップグレード、ダウングレード、またはキャンセルできます。変更は即座に有効になります。"
       },
       "cancel-subscription": {
-        "question": "How do I cancel my subscription?",
-        "answer": "To cancel your subscription:\n1. Go to Billing & Subscriptions → Subscriptions\n2. Find your active subscription card\n3. Click the \"📋 Switch Plan or Cancel\" button on the right side of the card\n4. The card will expand — scroll down to the \"Or Cancel Subscription\" section at the bottom\n5. Click the red \"✕ Cancel Subscription\" button\n6. Confirm in the dialog that appears\n\nYour subscription will remain active until the end of your current billing period, then stop. You'll keep your account and all your data. To reactivate later, return to Billing & Subscriptions → Subscriptions and choose a plan."
+        "question": "サブスクリプションをキャンセルするにはどうすればいいですか？",
+        "answer": "サブスクリプションをキャンセルするには：\n1. 請求・サブスクリプション → 「サブスクリプション」に移動する\n2. 有効なサブスクリプションカードを見つける\n3. カード右側の「📋 プランの変更またはキャンセル」ボタンをクリックする\n4. カードが展開されます — 下にスクロールして「サブスクリプションのキャンセル」セクションを見つける\n5. 赤い「✕ サブスクリプションをキャンセル」ボタンをクリックする\n6. 表示されるダイアログで確認する\n\nサブスクリプションは現在の請求期間の終了まで継続され、その後停止されます。アカウントとすべてのデータは保持されます。後で再開する場合は、請求・サブスクリプション → 「サブスクリプション」に戻ってプランを選択してください。"
       },
       "view-invoices": {
-        "question": "How do I view my invoices?",
-        "answer": "To view your billing history:\n1. Go to Billing & Subscriptions → Invoices\n2. You'll see a list of all past and current invoices\n3. Click any invoice to view details\n4. You can download invoices for your records"
+        "question": "請求書を確認するにはどうすればいいですか？",
+        "answer": "請求履歴を確認するには：\n1. 請求・サブスクリプション → 「請求書」に移動する\n2. 過去および現在のすべての請求書の一覧が表示されます\n3. 請求書をクリックして詳細を確認する\n4. 記録用に請求書をダウンロードできます"
       },
       "billing-problem": {
-        "question": "What if my payment failed?",
-        "answer": "If a payment fails:\n1. Check your payment method is valid and not expired\n2. Go to Billing & Subscriptions → Payment Methods\n3. Update or add a new payment method\n4. Try again\n5. If the problem persists, contact support\n\nYour subscription may be paused until payment is successful."
+        "question": "支払いが失敗した場合はどうすればいいですか？",
+        "answer": "支払いが失敗した場合：\n1. 支払い方法が有効で期限切れでないことを確認する\n2. 請求・サブスクリプション → 「支払い方法」に移動する\n3. 支払い方法を更新または新しい方法を追加する\n4. 再度お試しください\n5. 問題が続く場合はサポートにお問い合わせください\n\n支払いが完了するまで、サブスクリプションが一時停止される場合があります。"
       }
     },
     "privacy": {
-      "category": "Privacy & Data",
+      "category": "プライバシー・データ",
       "data-privacy-policy": {
-        "question": "How is my data protected?",
-        "answer": "We take data security seriously:\n• All personal information is encrypted\n• We use secure SSL/TLS connections\n• Your data is never shared with third parties\n• Regular security audits and updates\n• Compliance with privacy regulations\n\nSee our Privacy Policy for complete details."
+        "question": "データはどのように保護されますか？",
+        "answer": "データセキュリティを真剣に取り組んでいます：\n• すべての個人情報は暗号化されています\n• 安全なSSL/TLS接続を使用しています\n• データを第三者に提供することはありません\n• 定期的なセキュリティ監査と更新\n• プライバシー規制への準拠\n\n詳細はプライバシーポリシーをご確認ください。"
       },
       "delete-account": {
-        "question": "How do I delete my account?",
-        "answer": "To delete your account:\n1. Go to Security page\n2. Find \"Delete Account\" section\n3. Click \"Request Account Deletion\"\n4. Confirm your request\n5. Your account and data will be securely deleted\n\nThis action is permanent and cannot be undone."
+        "question": "アカウントを削除するにはどうすればいいですか？",
+        "answer": "アカウントを削除するには：\n1. セキュリティページに移動する\n2. 「アカウントの削除」セクションを見つける\n3. 「アカウント削除のリクエスト」をクリックする\n4. リクエストを確認する\n5. アカウントとデータが安全に削除されます\n\nこの操作は永続的で、元に戻すことはできません。"
       },
       "data-export": {
-        "question": "Can I export my data?",
-        "answer": "Yes, you can download your data:\n1. Go to Settings page\n2. Find \"Download My Data\" section\n3. Click the \"Download\" button\n4. Your data will be downloaded as a JSON file\n\nThe file contains all your personal information, chat history, and account data."
+        "question": "データをエクスポートできますか？",
+        "answer": "はい、データをダウンロードできます：\n1. 設定ページに移動する\n2. 「データをダウンロード」セクションを見つける\n3. 「ダウンロード」ボタンをクリックする\n4. データがJSONファイルとしてダウンロードされます\n\nファイルにはすべての個人情報、チャット履歴、アカウントデータが含まれます。"
       },
       "read-terms-privacy": {
-        "question": "How do I read the Terms of Service and Privacy Policy?",
-        "answer": "You can access these documents anytime through the Help button:\n1. Click the ? (Help) button on any screen\n2. In the Help window header, you'll see icon buttons:\n   • 📋 (Terms) - Click to open Terms of Service\n   • 🔒 (Privacy) - Click to open Privacy Policy\n3. The documents open in a large, scrollable window\n4. Use your mouse wheel, or scrollbar to read\n5. Click the X button to close when finished\n\nYou can read these documents at any time to understand your rights and our policies."
+        "question": "利用規約とプライバシーポリシーはどこで確認できますか？",
+        "answer": "これらの文書はヘルプボタンからいつでもアクセスできます：\n1. 任意の画面で「？（ヘルプ）」ボタンをクリックする\n2. ヘルプウィンドウのヘッダーに以下のアイコンボタンが表示されます：\n   • 📋（利用規約）- クリックして利用規約を開く\n   • 🔒（プライバシー）- クリックしてプライバシーポリシーを開く\n3. 文書は大きなスクロール可能なウィンドウで開きます\n4. マウスホイールまたはスクロールバーでお読みください\n5. 閉じるにはXボタンをクリックする\n\nご自身の権利や当社のポリシーを確認するため、いつでもこれらの文書をお読みいただけます。"
       }
     },
     "technical": {
-      "category": "Technical & Troubleshooting",
+      "category": "技術・トラブルシューティング",
       "app-compatibility": {
-        "question": "What devices does the app work on?",
-        "answer": "Psychic Chat works on:\n• iOS (iPhone, iPad)\n• Android (phones and tablets)\n• Web browsers (Chrome, Safari, Firefox, Edge)\n• Desktop and mobile devices\n\nJust visit our website or download from your app store."
+        "question": "どのデバイスで使えますか？",
+        "answer": "Psychic Chatは以下でご利用いただけます：\n• iOS（iPhone、iPad）\n• Android（スマートフォンおよびタブレット）\n• Webブラウザ（Chrome、Safari、Firefox、Edge）\n• デスクトップおよびモバイルデバイス\n\nウェブサイトをご覧いただくか、アプリストアからダウンロードしてください。"
       },
       "app-not-loading": {
-        "question": "What if the app won't load?",
-        "answer": "If the app won't load:\n1. Check your internet connection\n2. Clear your browser cache\n3. Close and reopen the app\n4. Restart your device\n5. Log out and log back in\n6. Try in a different browser\n7. Uninstall and reinstall the app (as last resort)\n\nIf problems persist, contact support."
+        "question": "アプリが読み込まれない場合はどうすればいいですか？",
+        "answer": "アプリが読み込まれない場合：\n1. インターネット接続を確認する\n2. ブラウザのキャッシュをクリアする\n3. アプリを閉じて再度開く\n4. デバイスを再起動する\n5. ログアウトして再ログインする\n6. 別のブラウザで試してみる\n7. アプリをアンインストールして再インストールする（最終手段として）\n\n問題が続く場合はサポートにお問い合わせください。"
       },
       "slow-performance": {
-        "question": "The app is running slowly. What can I do?",
-        "answer": "If the app is slow:\n1. Check your internet connection (try WiFi)\n2. Close other apps running in the background\n3. Clear browser cache and cookies\n4. Restart your device\n5. Update to the latest app version\n6. Check available storage space\n\nIf still slow, contact support with details about your device."
+        "question": "アプリの動作が遅い場合はどうすればいいですか？",
+        "answer": "アプリが遅い場合：\n1. インターネット接続を確認する（Wi-Fiをお試しください）\n2. バックグラウンドで動作している他のアプリを閉じる\n3. ブラウザのキャッシュとCookieをクリアする\n4. デバイスを再起動する\n5. 最新バージョンに更新する\n6. デバイスの空き容量を確認する\n\nまだ遅い場合は、デバイスの詳細を添えてサポートにお問い合わせください。"
       },
       "sync-issues": {
-        "question": "My data isn't syncing across devices. What do I do?",
-        "answer": "If data isn't syncing:\n1. Make sure you're logged into the same account on all devices\n2. Check internet connection on all devices\n3. Log out and log back in\n4. Force app refresh or reload page\n5. Restart devices\n6. Update the app to latest version\n\nContact support if the issue continues."
+        "question": "デバイス間でデータが同期されない場合はどうすればいいですか？",
+        "answer": "データが同期されない場合：\n1. すべてのデバイスで同じアカウントにログインしていることを確認する\n2. すべてのデバイスのインターネット接続を確認する\n3. ログアウトして再ログインする\n4. アプリを強制更新またはページを再読み込みする\n5. デバイスを再起動する\n6. アプリを最新バージョンに更新する\n\n問題が続く場合はサポートにお問い合わせください。"
       }
     },
     "support": {
-      "category": "Getting Help",
+      "category": "サポート・ヘルプ",
       "contact-support": {
-        "question": "How do I contact support?",
-        "answer": "If you need help:\n1. Use the Help Chat (? button) in the app for quick answers\n2. Check this FAQ document\n3. Email support at: support@starshippsychics.com\n4. Visit our website for more resources\n\nOur support team usually responds within 24 hours."
+        "question": "サポートに連絡するにはどうすればいいですか？",
+        "answer": "ヘルプが必要な場合：\n1. アプリ内のヘルプチャット（？ボタン）で素早く回答を得る\n2. このFAQをご確認ください\n3. サポートにメールを送る：support@starshippsychics.com\n4. 詳しいリソースはウェブサイトをご覧ください\n\nサポートチームは通常24時間以内に返答いたします。"
       },
       "bug-report": {
-        "question": "How do I report a bug?",
-        "answer": "If you find a bug:\n1. Note exactly what happened\n2. Include steps to reproduce the issue\n3. Share your device type and app version\n4. Email support@starshippsychics.com with details\n5. Include any error messages you see\n\nBug reports help us improve the app for everyone!"
+        "question": "バグを報告するにはどうすればいいですか？",
+        "answer": "バグを発見した場合：\n1. 何が起きたか正確にメモする\n2. 問題の再現手順を含める\n3. デバイスの種類とアプリのバージョンを共有する\n4. 詳細を添えて support@starshippsychics.com にメールを送る\n5. 表示されたエラーメッセージがあれば含める\n\nバグ報告はアプリをより良くするために役立ちます！"
       },
       "feature-request": {
-        "question": "Can I suggest a new feature?",
-        "answer": "Absolutely! We love feature requests:\n1. Email support@starshippsychics.com\n2. Subject: \"Feature Request: [Your idea]\"\n3. Describe the feature and why it would help\n4. Let us know your use case\n\nGreat suggestions might be added in future updates!"
+        "question": "新機能を提案できますか？",
+        "answer": "ぜひお聞かせください！機能のご要望を歓迎します：\n1. support@starshippsychics.com にメールを送る\n2. 件名：「機能リクエスト：[ご提案内容]」\n3. 機能の内容とその理由を説明する\n4. ご自身のユースケースをお知らせください\n\n優れたご提案は将来のアップデートに追加されるかもしれません！"
       },
       "feedback": {
-        "question": "How can I provide feedback?",
-        "answer": "We'd love to hear from you:\n1. Email: info@starshippsychics.com\n2. Subject: \"Feedback: [Topic]\"\n3. Share what you love and what could improve\n4. Be specific with examples\n\nYour feedback helps us create a better app!"
+        "question": "フィードバックを送るにはどうすればいいですか？",
+        "answer": "ぜひご意見をお聞かせください：\n1. メール：info@starshippsychics.com\n2. 件名：「フィードバック：[トピック]」\n3. 気に入っている点と改善してほしい点をお知らせください\n4. 具体的な例を挙げていただけると助かります\n\nフィードバックはより良いアプリ作りに活かされます！"
       }
     }
   }

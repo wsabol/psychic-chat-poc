@@ -1,67 +1,67 @@
 {
   "faq": {
     "onboarding": {
-      "category": "Getting Started - Onboarding",
+      "category": "はじめに – オンボーディング",
       "what-is-onboarding": {
-        "question": "What is the onboarding process?",
-        "answer": "When you first join, we guide you through setting up your account:\n1. Create your account and verify email\n2. Complete your Personal Info (birth date, time, location)\n3. Set up a payment method\n4. Choose a subscription plan\n\nThis ensures you get the full experience from day one."
+        "question": "オンボーディングとはどのような手順ですか？",
+        "answer": "初めてご利用の際は、アカウント設定をご案内します：\n1. アカウントを作成してメールアドレスを確認する\n2. 個人情報（生年月日・出生時刻・出生地）を入力する\n3. お支払い方法を設定する\n4. サブスクリプションプランを選択する\n\nこれにより、初日から完全な体験をお楽しみいただけます。"
       },
       "can-skip-onboarding": {
-        "question": "Can I skip the onboarding process?",
-        "answer": "Yes, you can skip onboarding steps, but you'll need to complete your Personal Info and subscribe to access all features. You can always return to complete these steps later from the main menu."
+        "question": "オンボーディングをスキップできますか？",
+        "answer": "はい、オンボーディングの手順はスキップできます。ただし、すべての機能をご利用いただくには、個人情報の入力とサブスクリプションへの登録が必要です。後からメインメニューからいつでも手順を完了することができます。"
       }
     },
     "horoscope": {
-      "category": "Horoscopes",
+      "category": "星占い",
       "what-is-horoscope": {
-        "question": "What is a horoscope?",
-        "answer": "A horoscope is a forecast of astrological influences for a specific time period. Our app provides:\n• Daily horoscopes (updated each day)\n• Weekly horoscopes (updated each week)\n• Monthly horoscopes (updated each month)\n\nThey show planetary movements and their potential influence on different aspects of your life like love, career, and health."
+        "question": "星占いとは何ですか？",
+        "answer": "星占いは、特定の期間における占星術的影響の予測です。本アプリでは以下を提供しています：\n• 毎日の星占い（毎日更新）\n• 週間星占い（毎週更新）\n• 月間星占い（毎月更新）\n\n惑星の動きと、恋愛・仕事・健康など生活のさまざまな側面への潜在的な影響を示します。"
       },
       "view-horoscope": {
-        "question": "How do I view my horoscope?",
-        "answer": "To view your horoscope:\n1. Go to the Horoscope page\n2. Your daily horoscope appears automatically (based on your sun sign)\n3. You can also view weekly and monthly horoscopes\n4. Each reading includes insights for love, career, health, and general guidance"
+        "question": "星占いを見るにはどうすればいいですか？",
+        "answer": "星占いを見るには：\n1. 星占いページに移動する\n2. デイリー星占いが自動的に表示されます（太陽星座に基づきます）\n3. 週間・月間星占いも確認できます\n4. 各リーディングには恋愛・仕事・健康・総合運のインサイトが含まれます"
       },
       "horoscope-accuracy": {
-        "question": "How accurate are horoscopes?",
-        "answer": "Horoscopes are meant to be insightful and thought-provoking rather than predictive guarantees. They offer general guidance based on planetary positions. For more personalized insights, use your full birth chart analysis or chat with the psychic AI."
+        "question": "星占いの精度はどのくらいですか？",
+        "answer": "星占いは予測の保証ではなく、示唆に富む洞察として活用することを目的としています。惑星の位置に基づいた一般的なガイダンスを提供します。より個人的なインサイトを得たい場合は、完全なホロスコープ分析を使用するか、AIサイキックとチャットしてください。"
       },
       "different-signs": {
-        "question": "Can I read horoscopes for other signs?",
-        "answer": "Currently, the app shows horoscopes based on your sun sign. For insights on other signs (moon sign, rising sign, etc.), you can:\n• Read the moon sign horoscope interpretations in your birth chart\n• Ask the psychic AI for insights on specific signs\n• Contact support if you'd like this feature expanded"
+        "question": "他の星座の星占いも読めますか？",
+        "answer": "現在、アプリでは太陽星座に基づいた星占いを表示しています。他の星座（月星座・アセンダントなど）のインサイトについては、以下の方法があります：\n• ホロスコープで月星座の解釈を確認する\n• AIサイキックに特定の星座についてのインサイトを聞く\n• この機能の拡充をご希望の場合はサポートにお問い合わせください"
       }
     },
     "moon-cosmic": {
-      "category": "Moon Phase & Cosmic Weather",
+      "category": "月の満ち欠け・宇宙の気象",
       "moon-phase-meaning": {
-        "question": "What is the moon phase and why does it matter?",
-        "answer": "The moon phase shows where the moon is in its cycle (New Moon, Waxing, Full Moon, Waning). The moon affects:\n• Emotions and intuition\n• Energy levels\n• Timing for new projects (new moon) or completion (full moon)\n• Sleep and creativity\n\nUnderstanding the current moon phase helps you align your activities with lunar energy."
+        "question": "月の満ち欠けとは何ですか？なぜ重要なのですか？",
+        "answer": "月の満ち欠けは、月がサイクルのどの段階にあるかを示します（新月、上弦・満月・下弦）。月は以下に影響を与えます：\n• 感情と直感\n• エネルギーレベル\n• 新しいプロジェクトのタイミング（新月）や完成（満月）\n• 睡眠と創造性\n\n現在の月の満ち欠けを理解することで、活動を月のエネルギーに合わせることができます。"
       },
       "moon-phase-today": {
-        "question": "How do I check the current moon phase?",
-        "answer": "Go to the Moon Phase page to see:\n• Current moon phase with visual representation\n• Percentage illumination\n• Days until next full/new moon\n• Astrological significance\n• Guidance for current lunar energy"
+        "question": "現在の月の満ち欠けを確認するにはどうすればいいですか？",
+        "answer": "月相ページに移動すると、以下を確認できます：\n• ビジュアル表示付きの現在の月相\n• 照射率（パーセント）\n• 次の満月・新月までの日数\n• 占星術的な意味\n• 現在の月のエネルギーへのガイダンス"
       },
       "cosmic-weather": {
-        "question": "What is Cosmic Weather?",
-        "answer": "Cosmic Weather shows the current positions of planets and their astrological influence on each day. It tells you:\n• Which planets are most active today\n• Current astrological aspects\n• Energy forecast\n• Best times for different activities\n• Overall daily cosmic energy"
+        "question": "「宇宙の気象」とは何ですか？",
+        "answer": "「宇宙の気象」は、現在の惑星の位置とその日ごとの占星術的影響を示します。以下の情報がわかります：\n• 今日最も活発な惑星\n• 現在の占星術的アスペクト\n• エネルギー予報\n• さまざまな活動に適した時間帯\n• その日全体の宇宙エネルギー"
       },
       "use-cosmic-weather": {
-        "question": "How do I use Cosmic Weather information?",
-        "answer": "Use Cosmic Weather to:\n• Understand current planetary influences\n• Know when Mercury Retrograde or other major events are happening\n• Time new projects, meetings, or personal goals\n• Gain insight into general daily energy"
+        "question": "「宇宙の気象」の情報はどのように活用しますか？",
+        "answer": "「宇宙の気象」は以下のことに役立てられます：\n• 現在の惑星の影響を理解する\n• 水星逆行などの重要な出来事のタイミングを把握する\n• 新しいプロジェクト・会議・個人目標の時期を計画する\n• その日全体のエネルギーについての洞察を得る"
       }
     },
     "preferences": {
-      "category": "Preferences & Customization",
+      "category": "設定・カスタマイズ",
       "change-language": {
-        "question": "How do I change the app language?",
-        "answer": "To change your language:\n1. Go to Preferences page\n2. Select your preferred language\n3. Available languages include:\n   • English\n   • Spanish (including regional dialects)\n   • French (including regional dialects)\n   • German, Italian, Portuguese, Japanese, Chinese\n\nThe app will automatically translate all content to your selected language."
+        "question": "アプリの言語を変更するにはどうすればいいですか？",
+        "answer": "言語を変更するには：\n1. 設定ページに移動する\n2. ご希望の言語を選択する\n3. 利用可能な言語：\n   • 英語\n   • スペイン語（地域方言を含む）\n   • フランス語（地域方言を含む）\n   • ドイツ語、イタリア語、ポルトガル語、日本語、中国語\n\nアプリは選択した言語にすべてのコンテンツを自動的に翻訳します。"
       },
       "oracle-response-type": {
-        "question": "What are Full and Brief response types?",
-        "answer": "You can customize how the psychic oracle responds:\n• Full Responses: Detailed, in-depth answers with context and explanations\n• Brief Responses: Concise, direct answers for quick guidance\n\nGo to Preferences to set your preferred response type."
+        "question": "「詳細」と「簡潔」の回答タイプとは何ですか？",
+        "answer": "サイキックオラクルの返答スタイルをカスタマイズできます：\n• 詳細な回答：文脈と説明を含む、詳しく掘り下げた回答\n• 簡潔な回答：素早いガイダンスのための、簡潔で直接的な回答\n\n設定ページから希望の回答タイプを設定できます。"
       },
       "voice-settings": {
-        "question": "Can I enable voice responses?",
-        "answer": "Yes! The app supports voice responses:\n1. Go to Preferences → Voice Settings\n2. Enable voice responses\n3. Choose from 4 different voice options\n4. Adjust voice settings to your preference\n\nThe psychic's responses will be read aloud in your chosen voice."
+        "question": "音声応答を有効にできますか？",
+        "answer": "はい！アプリは音声応答に対応しています：\n1. 設定ページ → 「音声設定」に移動する\n2. 音声応答を有効にする\n3. 4種類の音声オプションから選択する\n4. 好みに合わせて音声設定を調整する\n\nサイキックの回答が選択した音声で読み上げられます。"
       }
     }
   }
