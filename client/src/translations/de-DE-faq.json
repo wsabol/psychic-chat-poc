@@ -1,0 +1,271 @@
+{
+  "faq": {
+    "getting-started": {
+      "category": "Erste Schritte",
+      "what-is-psychic-chat": {
+        "question": "Was ist Psychic Chat?",
+        "answer": "Psychic Chat ist eine App für spirituelles Wohlbefinden, die dir hilft, kosmische Einblicke durch KI-gestützte Lesungen, personalisierte Geburtshoroskop-Analysen, tägliche Horoskope und kosmische Wetterupdates zu entdecken. Sie verbindet Astrologie mit künstlicher Intelligenz, um bedeutungsvolle spirituelle Führung zu bieten."
+      },
+      "how-do-i-get-started": {
+        "question": "Wie fange ich mit der App an?",
+        "answer": "So geht's:\n1. Erstelle ein Konto mit deiner E-Mail-Adresse\n2. Bestätige deine E-Mail-Adresse\n3. (Optional) Ergänze deine persönlichen Daten mit Geburtsdatum, -uhrzeit und -ort für personalisierte Lesungen\n4. Erkunde die Funktionen über das Navigationsmenü am unteren Bildschirmrand"
+      },
+      "do-i-need-birth-time": {
+        "question": "Muss ich meine Geburtszeit angeben?",
+        "answer": "Die Geburtszeit ist optional, wird jedoch für die genaueste Geburtshoroskop-Analyse empfohlen. Sie hilft dabei, die genaue Position der Planeten zum Zeitpunkt deiner Geburt zu berechnen – besonders wichtig für die Bestimmung deines Aszendenten. Wenn du deine genaue Geburtszeit nicht kennst, kannst du eine ungefähre Uhrzeit eingeben oder nur dein Geburtsdatum verwenden."
+      },
+      "is-app-free": {
+        "question": "Ist diese App kostenlos?",
+        "answer": "Die App bietet sowohl kostenlose als auch Premium-Funktionen. Einige grundlegende Funktionen sind kostenlos verfügbar, während erweiterte Funktionen wie unbegrenzte Chats mit dem Psychic, detaillierte Geburtshoroskop-Analysen und Premium-Horoskop-Lesungen ein kostenpflichtiges Abonnement erfordern. Die Preise findest du unter Abrechnung & Abonnements."
+      }
+    },
+    "chat-features": {
+      "category": "Chat mit dem Psychic",
+      "how-to-chat": {
+        "question": "Wie chatte ich mit dem Psychic?",
+        "answer": "So chattest du mit dem Psychic:\n1. Gehe zur Chat-Seite (erstes Menüelement)\n2. Gib deine Frage oder Nachricht in das Eingabefeld ein\n3. Drücke Senden oder tippe auf den Senden-Button\n4. Der KI-Psychic antwortet mit spiritueller Führung und Einblicken\nDu kannst laufende Gespräche führen und Folgefragen stellen."
+      },
+      "what-can-i-ask": {
+        "question": "Was kann ich den Psychic fragen?",
+        "answer": "Du kannst fragen zu:\n• Liebe und Beziehungen\n• Karriere und Finanzen\n• Persönliche Entwicklung\n• Lebensentscheidungen\n• Spirituelle Führung\n• Zukunftsaussichten\n• Jede spirituelle oder Wellness-Frage\n\nDie Psychic-KI ist darauf trainiert, durchdachte, bedeutungsvolle Antworten basierend auf astrologischer Weisheit und spirituellem Wissen zu geben."
+      },
+      "chat-history": {
+        "question": "Wird mein Chat-Verlauf gespeichert?",
+        "answer": "Ja, dein Gesprächsverlauf wird in der App gespeichert, sodass du frühere Gespräche erneut aufrufen und Diskussionen fortsetzen kannst. Dies hilft dem Psychic, im Laufe der Zeit kontextuellere und personalisiertere Antworten zu geben."
+      },
+      "premium-chat": {
+        "question": "Was ist der Unterschied zwischen kostenlosem und Premium-Chat?",
+        "answer": "Kostenlose Nutzer haben eine begrenzte Einzelmöglichkeit, einen Chat auszuprobieren und ein personalisiertes Horoskop zu lesen. Premium-Abonnenten genießen unbegrenzten Chat-Zugang mit dem Psychic, was tiefergehende Gespräche und laufende Beratung ermöglicht, wann immer du sie brauchst."
+      }
+    },
+    "personal-info": {
+      "category": "Persönliche Informationen",
+      "update-personal-info": {
+        "question": "Wie aktualisiere ich meine persönlichen Daten?",
+        "answer": "So aktualisierst du deine persönlichen Daten:\n1. Gehe zur Seite Persoenliche Daten\n2. Bearbeite deine Angaben:\n   • Vollstaendiger Name\n   • Geburtsdatum\n   • Geburtszeit (optional, aber empfohlen)\n   • Geburtsort\n3. Tippe auf Speichern, um dein Profil zu aktualisieren\nGenauere Informationen ermoeglichen bessere personalisierte Lesungen."
+      },
+      "birth-location": {
+        "question": "Warum ist der Geburtsort wichtig?",
+        "answer": "Der Geburtsort wird verwendet, um die genauen Positionen der Himmelskörper zum Zeitpunkt deiner Geburt zu berechnen. Verschiedene Orte haben unterschiedliche Breiten- und Längengrade, was astrologische Berechnungen beeinflusst – besonders für die Bestimmung der Häuserstellungen in deinem Geburtshoroskop."
+      },
+      "change-birth-info": {
+        "question": "Kann ich meine Geburtsdaten nach der Eingabe ändern?",
+        "answer": "Ja! Du kannst jederzeit persönliche Informationen aktualisieren. Gehe zu Persoenliche Daten und bearbeite die gewünschten Felder. Dein Geburtshoroskop und deine Lesungen werden automatisch auf Basis der neuen Informationen aktualisiert."
+      },
+      "data-privacy": {
+        "question": "Sind meine persönlichen Daten sicher?",
+        "answer": "Ja. Deine persönlichen Informationen werden verschlüsselt und sicher gespeichert. Wir nehmen deinen Datenschutz ernst und geben deine persönlichen Daten niemals an Dritte weiter. Weitere Details findest du in unserer Datenschutzrichtlinie."
+      },
+      "skip-onboarding": {
+        "question": "Kann ich den Schritt Persoenliche Daten waehrend des kostenlosen Tests ueberspringen?",
+        "answer": "Ja! Waehrend des kostenlosen Tests zeigt die Seite Persoenliche Daten einen gruenen Button \"Diesen Schritt ueberspringen \u2192\" in der oberen rechten Ecke. Durch Tippen darauf gelangst du direkt zu deiner kostenlosen Horoskop-Lesung \u2013 Geburtsdaten sind nicht erforderlich.\n\nWenn du ueberspringst (oder kein Geburtsdatum eingegeben hast), zeigt die Horoskop-Seite eine Tierkreiszeichen-Auswahl, damit du dennoch eine personalisierte Lesung erhalten kannst. Weitere Details findest du unter Tierkreiszeichen-Auswahl weiter unten.\n\nFuer ein vollstaendiges Konto kannst du deine persoenlichen Daten auch spaeter ueber das Hauptmenue vervollstaendigen \u2013 aber die Angabe von Geburtsdatum, -uhrzeit und -ort liefert dir das genaueste Geburtshoroskop und die genauesten Lesungen."
+      },
+      "free-trial-zodiac-picker": {
+        "question": "Was ist die Tierkreiszeichen-Auswahl waehrend des kostenlosen Tests?",
+        "answer": "Wenn du Persoenliche Daten uebersprungen hast oder kein Geburtsdatum eingegeben hast, zeigt die Horoskop-Seite des kostenlosen Tests automatisch eine Tierkreiszeichen-Auswahl, anstatt nach deinen vollstaendigen Geburtsdaten zu fragen.\n\nSo funktioniert es:\n1. Ein Raster mit allen 12 Tierkreiszeichen wird angezeigt (z.B. Widder \u2648, Stier \u2649, Zwillinge \u264a usw.)\n2. Tippe auf dein Sonnenzeichen, um es auszuwaehlen (es wird lila hervorgehoben)\n3. Tippe auf \"Mein Horoskop abrufen \u2728\", um deine personalisierte Tageslesung zu erstellen\n\nSobald dein Horoskop geladen ist, erscheint ein Button \"\u2713 Beenden und fortfahren\" \u2013 tippe darauf, um fortzufahren, dein vollstaendiges Konto zu erstellen und alle Funktionen freizuschalten."
+      }
+    },
+    "birth-chart": {
+      "category": "Geburtshoroskop & Mein Zeichen",
+      "what-is-birth-chart": {
+        "question": "Was ist ein Geburtshoroskop?",
+        "answer": "Ein Geburtshoroskop (auch Natalhoroskop genannt) ist eine Karte der Positionen aller Planeten zum genauen Zeitpunkt und Ort deiner Geburt. Es enthält:\n• Sonnenzeichen (Kernidentität)\n• Mondzeichen (Emotionen)\n• Aszendent (wie andere dich wahrnehmen)\n• Planetenstellungen\n• Häuserstellungen\n\nDas ergibt einen einzigartigen astrologischen Bauplan deiner Persönlichkeit und deines Potenzials."
+      },
+      "sun-moon-rising": {
+        "question": "Was ist der Unterschied zwischen meinem Sonnen-, Mond- und Aszendenten-Zeichen?",
+        "answer": "Sonnenzeichen: Deine Kernidentität und grundlegende Persönlichkeit (was dein Tierkreiszeichen darstellt)\nMondzeichen: Dein emotionales Wesen und deine innere Welt (wie du Gefühle verarbeitest)\nAszendent: Wie andere dich wahrnehmen und welchen Eindruck du machst (deine äußere Persönlichkeit)\n\nZusammen ergeben diese drei Zeichen ein vollständiges Bild deines astrologischen Profils."
+      },
+      "view-birth-chart": {
+        "question": "Wie sehe ich mein vollständiges Geburtshoroskop?",
+        "answer": "Gehe zur Seite Mein Zeichen, um dein Geburtshoroskop anzusehen. Du siehst:\n• Dein Sonnen-, Mond- und Aszendenten-Zeichen\n• Alle Planetenstellungen\n• Häuserpositionen\n• Aspekte zwischen Planeten\n• Detaillierte Interpretationen\n\nStelle sicher, dass du deine Geburtszeit eingegeben hast, um das genaueste Horoskop zu erhalten."
+      },
+      "accurate-chart": {
+        "question": "Wie genau ist mein Geburtshoroskop?",
+        "answer": "Die Genauigkeit hängt davon ab, wie präzise deine Geburtsdaten sind:\n• Genaue Geburtszeit (auf die Minute) = sehr genaues Horoskop\n• Ungefähre Geburtszeit = recht genau, aber einige Details können abweichen\n• Nur Geburtsdatum = Sonnenzeichen korrekt, aber Aszendent und Häuser stimmen nicht\n\nHol dir wenn möglich deine Geburtsurkunde, um deine genaue Geburtszeit zu verifizieren."
+      },
+      "zodiac-wheel": {
+        "question": "Was ist das Tierkreisrad und wie funktioniert es?",
+        "answer": "Das Tierkreisrad ist eine visuelle Darstellung deines Geburtshoroskops, das alle 12 Tierkreiszeichen in konzentrischen Ringen zeigt. Das Rad enthält:\n• Zeichennamen und -symbole\n• Herrscherplaneten\n• Elemente (Feuer, Erde, Luft, Wasser)\n• Hausnummern (I-XII)\n\nDas Rad rotiert, um deinen Aszendenten am östlichen Horizont (auf der linken Seite) zu positionieren. Das spiegelt wider, wie du den Himmel zum Zeitpunkt deiner Geburt sehen würdest – mit Blick nach OBEN auf die Himmelssphäre, nicht nach UNTEN auf eine Karte. Deshalb erscheint Osten links und Westen rechts in astronomischen Karten. Die horizontale Linie stellt den Horizont dar, mit Tageszeichen oberhalb und Nachtzeichen unterhalb."
+      }
+    },
+    "onboarding": {
+      "category": "Erste Schritte – Onboarding",
+      "what-is-onboarding": {
+        "question": "Was ist der Onboarding-Prozess?",
+        "answer": "Wenn du zum ersten Mal beitrittst, führen wir dich durch die Einrichtung deines Kontos:\n1. Erstelle dein Konto und bestätige die E-Mail\n2. Ergänze deine persönlichen Daten (Geburtsdatum, -uhrzeit, -ort)\n3. Richte eine Zahlungsmethode ein\n4. Wähle einen Abonnementplan\n\nDas stellt sicher, dass du vom ersten Tag an das vollständige Erlebnis genießt."
+      },
+      "can-skip-onboarding": {
+        "question": "Kann ich den Onboarding-Prozess überspringen?",
+        "answer": "Ja, du kannst Onboarding-Schritte überspringen, aber du musst deine persönlichen Daten vervollständigen und ein Abonnement abschließen, um auf alle Funktionen zugreifen zu können. Du kannst jederzeit über das Hauptmenü zurückkehren, um diese Schritte zu erledigen."
+      }
+    },
+    "horoscope": {
+      "category": "Horoskope",
+      "what-is-horoscope": {
+        "question": "Was ist ein Horoskop?",
+        "answer": "Ein Horoskop ist eine Vorhersage astrologischer Einflüsse für einen bestimmten Zeitraum. Unsere App bietet:\n• Tageshoroskope (täglich aktualisiert)\n• Wochenhoroskope (wöchentlich aktualisiert)\n• Monatshoroskope (monatlich aktualisiert)\n\nSie zeigen Planetenbewegungen und ihren potenziellen Einfluss auf verschiedene Lebensbereiche wie Liebe, Karriere und Gesundheit."
+      },
+      "view-horoscope": {
+        "question": "Wie sehe ich mein Horoskop?",
+        "answer": "So siehst du dein Horoskop:\n1. Gehe zur Horoskop-Seite\n2. Dein Tageshoroskop erscheint automatisch (basierend auf deinem Sonnenzeichen)\n3. Du kannst auch Wochen- und Monatshoroskope anzeigen\n4. Jede Lesung enthält Einblicke zu Liebe, Karriere, Gesundheit und allgemeiner Orientierung"
+      },
+      "horoscope-accuracy": {
+        "question": "Wie genau sind Horoskope?",
+        "answer": "Horoskope sollen aufschlussreich und zum Nachdenken anregen, keine garantierten Vorhersagen. Sie bieten allgemeine Orientierung basierend auf Planetenpositionen. Für personalisiertere Einblicke nutze deine vollständige Geburtshoroskop-Analyse oder chatte mit der Psychic-KI."
+      },
+      "different-signs": {
+        "question": "Kann ich Horoskope für andere Zeichen lesen?",
+        "answer": "Derzeit zeigt die App Horoskope basierend auf deinem Sonnenzeichen. Für Einblicke zu anderen Zeichen (Mondzeichen, Aszendent usw.) kannst du:\n• Die Mondzeichen-Horoskop-Interpretationen in deinem Geburtshoroskop lesen\n• Die Psychic-KI um Einblicke zu bestimmten Zeichen bitten\n• Den Support kontaktieren, wenn du diese Funktion erweitert hättest"
+      }
+    },
+    "moon-cosmic": {
+      "category": "Mondphase & Kosmisches Wetter",
+      "moon-phase-meaning": {
+        "question": "Was ist die Mondphase und warum ist sie wichtig?",
+        "answer": "Die Mondphase zeigt, wo sich der Mond in seinem Zyklus befindet (Neumond, Zunehmend, Vollmond, Abnehmend). Der Mond beeinflusst:\n• Emotionen und Intuition\n• Energieniveau\n• Timing für neue Projekte (Neumond) oder Abschlüsse (Vollmond)\n• Schlaf und Kreativität\n\nDas Verstehen der aktuellen Mondphase hilft dir, deine Aktivitäten mit der Mondenergie in Einklang zu bringen."
+      },
+      "moon-phase-today": {
+        "question": "Wie überprüfe ich die aktuelle Mondphase?",
+        "answer": "Gehe zur Mondphasen-Seite, um zu sehen:\n• Aktuelle Mondphase mit visueller Darstellung\n• Prozentsatz der Beleuchtung\n• Tage bis zum nächsten Voll-/Neumond\n• Astrologische Bedeutung\n• Orientierung für die aktuelle Mondenergie"
+      },
+      "cosmic-weather": {
+        "question": "Was ist Kosmisches Wetter?",
+        "answer": "Kosmisches Wetter zeigt die aktuellen Positionen der Planeten und ihren astrologischen Einfluss auf jeden Tag. Es zeigt dir:\n• Welche Planeten heute am aktivsten sind\n• Aktuelle astrologische Aspekte\n• Energieprognose\n• Beste Zeiten für verschiedene Aktivitäten\n• Allgemeine tägliche kosmische Energie"
+      },
+      "use-cosmic-weather": {
+        "question": "Wie nutze ich Informationen über Kosmisches Wetter?",
+        "answer": "Nutze Kosmisches Wetter, um:\n• Aktuelle Planeteneinflüsse zu verstehen\n• Zu wissen, wann Merkur-Rückläufigkeit oder andere wichtige Ereignisse stattfinden\n• Neue Projekte, Meetings oder persönliche Ziele zu timen\n• Einblicke in die allgemeine tägliche Energie zu gewinnen"
+      }
+    },
+    "preferences": {
+      "category": "Einstellungen & Anpassung",
+      "change-language": {
+        "question": "Wie ändere ich die App-Sprache?",
+        "answer": "So änderst du deine Sprache:\n1. Gehe zur Einstellungsseite\n2. Wähle deine bevorzugte Sprache\n3. Verfügbare Sprachen sind:\n   • Englisch\n   • Spanisch (inkl. regionaler Dialekte)\n   • Französisch (inkl. regionaler Dialekte)\n   • Deutsch, Italienisch, Portugiesisch, Japanisch, Chinesisch\n\nDie App übersetzt automatisch alle Inhalte in deine gewählte Sprache."
+      },
+      "oracle-response-type": {
+        "question": "Was sind vollständige und kurze Antworttypen?",
+        "answer": "Du kannst anpassen, wie das Psychic-Orakel antwortet:\n• Vollständige Antworten: Detaillierte, ausführliche Antworten mit Kontext und Erklärungen\n• Kurze Antworten: Prägnante, direkte Antworten für schnelle Orientierung\n\nGehe zu Einstellungen, um deinen bevorzugten Antworttyp festzulegen."
+      },
+      "voice-settings": {
+        "question": "Kann ich Sprachantworten aktivieren?",
+        "answer": "Ja! Die App unterstützt Sprachantworten:\n1. Gehe zu Einstellungen → Spracheinstellungen\n2. Aktiviere Sprachantworten\n3. Wähle aus 4 verschiedenen Stimmoptionen\n4. Passe die Spracheinstellungen nach deinen Wünschen an\n\nDie Antworten des Psychic werden in der gewählten Stimme vorgelesen."
+      }
+    },
+    "account-security": {
+      "category": "Konto & Sicherheit",
+      "change-password": {
+        "question": "Wie ändere ich mein Passwort?",
+        "answer": "So änderst du dein Passwort:\n1. Gehe zur Sicherheitsseite\n2. Klicke auf den Bereich Passwort\n3. Gib dein aktuelles Passwort ein\n4. Gib dein neues Passwort ein (mach es stark!)\n5. Bestätige das neue Passwort\n6. Änderungen speichern\n\nVerwende ein starkes Passwort mit Groß- und Kleinbuchstaben, Zahlen und Symbolen."
+      },
+      "enable-2fa": {
+        "question": "Was ist die Zwei-Faktor-Authentifizierung und wie aktiviere ich sie?",
+        "answer": "Die Zwei-Faktor-Authentifizierung (2FA) fügt deinem Konto eine zusätzliche Sicherheitsebene hinzu.\n\nWichtig: Du musst eine Kontaktmethode hinzufügen und verifizieren, bevor 2FA aktiviert werden kann:\n1. Gehe zur Sicherheitsseite → Reiter Verifizierung & 2FA\n2. Füge im Bereich \"Verifizierungsmethoden\" deine E-Mail-Adresse oder Telefonnummer hinzu und schließe die Verifizierung ab\n3. Sobald eine Methode verifiziert ist, scrolle nach oben zum Bereich \"Zwei-Faktor-Authentifizierung\"\n4. Schalte 2FA ein und wähle deine Authentifizierungsmethode (E-Mail oder SMS)\n5. Klicke auf Speichern\n\nMit aktivierter 2FA musst du bei der Anmeldung von einem neuen oder nicht vertrauenswürdigen Gerät einen Verifizierungscode eingeben, der an deine verifizierte E-Mail oder Telefonnummer gesendet wird."
+      },
+      "trust-device": {
+        "question": "Wie vertraue ich einem Gerät?",
+        "answer": "So überspringst du 2FA auf einem vertrauenswürdigen Gerät:\n1. Stelle sicher, dass 2FA unter Sicherheit → Reiter Verifizierung & 2FA aktiviert ist\n2. Scrolle auf derselben Seite nach unten zum Bereich \"Diesem Gerät vertrauen\" (dieser Bereich erscheint nur, wenn 2FA aktiviert ist)\n3. Klicke auf \"Diesem Gerät vertrauen\"\n\nDas Gerät wird dauerhaft vertrauenswürdig sein und bei zukünftigen Anmeldungen keine 2FA-Codes mehr erfordern. Du kannst vertrauenswürdige Geräte im Bereich \"Vertrauenswürdige Geräte\" direkt darunter auf derselben Seite verwalten und widerrufen."
+      },
+      "manage-devices": {
+        "question": "Wie verwalte ich meine vertrauenswürdigen Geräte?",
+        "answer": "Die Verwaltung vertrauenswürdiger Geräte ist Teil des Reiters Verifizierung & 2FA – es gibt keinen separaten Geräte-Reiter:\n1. Gehe zur Sicherheitsseite → Reiter Verifizierung & 2FA\n2. Scrolle nach unten zum Bereich \"Vertrauenswürdige Geräte\" (nur sichtbar, wenn 2FA aktiviert ist)\n3. Sieh dir alle dort aufgelisteten vertrauenswürdigen Geräte an\n4. Klicke auf \"Widerrufen\" neben einem Gerät, um dessen Vertrauensstatus aufzuheben\n5. Um deinem aktuellen Gerät zu vertrauen, nutze den Bereich \"Diesem Gerät vertrauen\" direkt oberhalb der Liste"
+      },
+      "forgot-password": {
+        "question": "Was tue ich, wenn ich mein Passwort vergessen habe?",
+        "answer": "Wenn du dein Passwort vergessen hast:\n1. Klicke auf dem Anmeldebildschirm auf \"Passwort vergessen?\"\n2. Gib deine E-Mail-Adresse ein\n3. Prüfe deine E-Mail auf einen Link zum Zurücksetzen des Passworts\n4. Klicke auf den Link und erstelle ein neues Passwort\n5. Melde dich mit deinem neuen Passwort an\n\nWenn du keine E-Mail erhältst, prüfe deinen Spam-Ordner oder kontaktiere den Support."
+      }
+    },
+    "billing": {
+      "category": "Abrechnung & Abonnements",
+      "payment-method": {
+        "question": "Wie füge ich eine Zahlungsmethode hinzu?",
+        "answer": "So fügst du eine Zahlungsmethode hinzu:\n1. Gehe zur Seite Abrechnung & Abonnements\n2. Klicke auf \"Zahlungsmethoden\"\n3. Klicke auf \"Zahlungsmethode hinzufügen\"\n4. Gib deine Kartendaten ein:\n   • Kartennummer\n   • Ablaufdatum\n   • CVV\n   • Rechnungsadresse\n5. Klicke auf Speichern\n\nDeine Zahlungsinformationen werden sicher verschlüsselt."
+      },
+      "update-payment": {
+        "question": "Wie aktualisiere ich meine Zahlungsmethode?",
+        "answer": "So aktualisierst du eine Zahlungsmethode:\n1. Gehe zu Abrechnung & Abonnements → Zahlungsmethoden\n2. Klicke auf die Zahlungsmethode, die du aktualisieren möchtest\n3. Bearbeite die Informationen\n4. Änderungen speichern\n\nDu kannst mehrere Zahlungsmethoden hinzufügen und eine als Standard festlegen."
+      },
+      "remove-payment": {
+        "question": "Wie entferne ich eine Zahlungsmethode?",
+        "answer": "So entfernst du eine Zahlungsmethode:\n1. Gehe zu Abrechnung & Abonnements → Zahlungsmethoden\n2. Finde die zu entfernende Zahlungsmethode\n3. Klicke auf \"Löschen\" oder \"Entfernen\"\n4. Bestätige das Löschen\n\nHinweis: Du musst mindestens eine gültige Zahlungsmethode hinterlegt haben, um ein aktives Abonnement aufrechtzuerhalten."
+      },
+      "subscription-plans": {
+        "question": "Welche Abonnementpläne sind verfügbar?",
+        "answer": "Wir bieten verschiedene Abonnementoptionen mit unterschiedlichen Funktionen:\n• Kostenlos: Grundfunktionen und begrenzter täglicher Chat\n• Monatlich: Unbegrenzter Chat und Premium-Funktionen (monatliche Erneuerung)\n• Jährlich: Unbegrenzter Chat und Premium-Funktionen (jährliche Erneuerung, besseres Preis-Leistungs-Verhältnis)\n\nGehe zu Abrechnung & Abonnements → Abonnements für einen detaillierten Planvergleich und Preise."
+      },
+      "change-subscription": {
+        "question": "Kann ich meinen Abonnementplan ändern?",
+        "answer": "Ja! Du kannst:\n1. Gehe zu Abrechnung & Abonnements → Abonnements\n2. Wähle einen anderen Plan\n3. Bestätige die Änderung\n4. Deine Abrechnung wird entsprechend angepasst\n\nDu kannst jederzeit upgraden, downgraden oder kündigen. Änderungen treten sofort in Kraft."
+      },
+      "cancel-subscription": {
+        "question": "Wie kündige ich mein Abonnement?",
+        "answer": "So kündigst du dein Abonnement:\n1. Gehe zu Abrechnung & Abonnements → Abonnements\n2. Finde deine aktive Abonnementkarte\n3. Klicke auf den Button \"Plan wechseln oder kündigen\" auf der rechten Seite der Karte\n4. Die Karte klappt auf – scrolle nach unten zum Bereich \"Abonnement kündigen\" am unteren Ende\n5. Klicke auf den roten Button \"Abonnement kündigen\"\n6. Bestätige im erscheinenden Dialog\n\nDein Abonnement bleibt bis zum Ende des aktuellen Abrechnungszeitraums aktiv und wird dann beendet. Dein Konto und alle deine Daten bleiben erhalten. Um es später wieder zu aktivieren, kehre zu Abrechnung & Abonnements → Abonnements zurück und wähle einen Plan."
+      },
+      "view-invoices": {
+        "question": "Wie sehe ich meine Rechnungen?",
+        "answer": "So siehst du deine Abrechnungshistorie:\n1. Gehe zu Abrechnung & Abonnements → Rechnungen\n2. Du siehst eine Liste aller vergangenen und aktuellen Rechnungen\n3. Klicke auf eine Rechnung, um Details anzuzeigen\n4. Du kannst Rechnungen für deine Unterlagen herunterladen"
+      },
+      "billing-problem": {
+        "question": "Was ist, wenn meine Zahlung fehlgeschlagen ist?",
+        "answer": "Wenn eine Zahlung fehlschlägt:\n1. Prüfe, ob deine Zahlungsmethode gültig und nicht abgelaufen ist\n2. Gehe zu Abrechnung & Abonnements → Zahlungsmethoden\n3. Aktualisiere oder füge eine neue Zahlungsmethode hinzu\n4. Versuche es erneut\n5. Wenn das Problem anhält, kontaktiere den Support\n\nDein Abonnement kann bis zur erfolgreichen Zahlung pausiert werden."
+      }
+    },
+    "privacy": {
+      "category": "Datenschutz & Daten",
+      "data-privacy-policy": {
+        "question": "Wie werden meine Daten geschützt?",
+        "answer": "Wir nehmen Datensicherheit ernst:\n• Alle persönlichen Informationen werden verschlüsselt\n• Wir verwenden sichere SSL/TLS-Verbindungen\n• Deine Daten werden niemals an Dritte weitergegeben\n• Regelmäßige Sicherheitsaudits und -updates\n• Einhaltung der Datenschutzbestimmungen\n\nSiehe unsere Datenschutzrichtlinie für vollständige Details."
+      },
+      "delete-account": {
+        "question": "Wie lösche ich mein Konto?",
+        "answer": "So löschst du dein Konto:\n1. Gehe zur Sicherheitsseite\n2. Finde den Bereich \"Konto löschen\"\n3. Klicke auf \"Kontolöschung beantragen\"\n4. Bestätige deine Anfrage\n5. Dein Konto und deine Daten werden sicher gelöscht\n\nDiese Aktion ist dauerhaft und kann nicht rückgängig gemacht werden."
+      },
+      "data-export": {
+        "question": "Kann ich meine Daten exportieren?",
+        "answer": "Ja, du kannst deine Daten herunterladen:\n1. Gehe zur Einstellungsseite\n2. Finde den Bereich \"Meine Daten herunterladen\"\n3. Klicke auf den Button \"Herunterladen\"\n4. Deine Daten werden als JSON-Datei heruntergeladen\n\nDie Datei enthält alle deine persönlichen Informationen, den Chat-Verlauf und Kontodaten."
+      },
+      "read-terms-privacy": {
+        "question": "Wie lese ich die Nutzungsbedingungen und Datenschutzrichtlinie?",
+        "answer": "Du kannst jederzeit über den Hilfe-Button auf diese Dokumente zugreifen:\n1. Klicke auf den ? (Hilfe)-Button auf einem beliebigen Bildschirm\n2. Im Kopfbereich des Hilfefensters siehst du Symbol-Buttons:\n   • Nutzungsbedingungen - Klicke, um die Nutzungsbedingungen zu öffnen\n   • Datenschutz - Klicke, um die Datenschutzrichtlinie zu öffnen\n3. Die Dokumente öffnen sich in einem großen, scrollbaren Fenster\n4. Benutze das Mausrad oder die Bildlaufleiste zum Lesen\n5. Klicke auf den X-Button zum Schließen\n\nDu kannst diese Dokumente jederzeit lesen, um deine Rechte und unsere Richtlinien zu verstehen."
+      }
+    },
+    "technical": {
+      "category": "Technik & Fehlerbehebung",
+      "app-compatibility": {
+        "question": "Auf welchen Geräten funktioniert die App?",
+        "answer": "Psychic Chat funktioniert auf:\n• iOS (iPhone, iPad)\n• Android (Smartphones und Tablets)\n• Webbrowsern (Chrome, Safari, Firefox, Edge)\n• Desktop- und Mobilgeräten\n\nBesuche einfach unsere Website oder lade die App aus deinem App Store herunter."
+      },
+      "app-not-loading": {
+        "question": "Was ist, wenn die App nicht lädt?",
+        "answer": "Wenn die App nicht lädt:\n1. Prüfe deine Internetverbindung\n2. Lösche den Browser-Cache\n3. Schließe die App und öffne sie erneut\n4. Starte dein Gerät neu\n5. Melde dich ab und wieder an\n6. Versuche es in einem anderen Browser\n7. Deinstalliere und installiere die App neu (als letzten Ausweg)\n\nWenn das Problem anhält, kontaktiere den Support."
+      },
+      "slow-performance": {
+        "question": "Die App läuft langsam. Was kann ich tun?",
+        "answer": "Wenn die App langsam ist:\n1. Prüfe deine Internetverbindung (versuche WLAN)\n2. Schließe andere Apps, die im Hintergrund laufen\n3. Lösche Browser-Cache und Cookies\n4. Starte dein Gerät neu\n5. Aktualisiere auf die neueste App-Version\n6. Prüfe den verfügbaren Speicherplatz\n\nWenn sie immer noch langsam ist, kontaktiere den Support mit Details zu deinem Gerät."
+      },
+      "sync-issues": {
+        "question": "Meine Daten synchronisieren sich nicht auf allen Geräten. Was soll ich tun?",
+        "answer": "Wenn die Daten nicht synchronisiert werden:\n1. Stelle sicher, dass du auf allen Geräten mit demselben Konto angemeldet bist\n2. Prüfe die Internetverbindung auf allen Geräten\n3. Melde dich ab und wieder an\n4. Erzwinge eine App-Aktualisierung oder lade die Seite neu\n5. Starte die Geräte neu\n6. Aktualisiere die App auf die neueste Version\n\nKontaktiere den Support, wenn das Problem weiterhin besteht."
+      }
+    },
+    "support": {
+      "category": "Hilfe erhalten",
+      "contact-support": {
+        "question": "Wie kontaktiere ich den Support?",
+        "answer": "Wenn du Hilfe benötigst:\n1. Nutze den Hilfe-Chat (? Button) in der App für schnelle Antworten\n2. Prüfe dieses FAQ-Dokument\n3. Schreibe uns an: support@starshippsychics.com\n4. Besuche unsere Website für weitere Ressourcen\n\nUnser Support-Team antwortet in der Regel innerhalb von 24 Stunden."
+      },
+      "bug-report": {
+        "question": "Wie melde ich einen Fehler?",
+        "answer": "Wenn du einen Fehler findest:\n1. Notiere genau, was passiert ist\n2. Füge Schritte zur Reproduktion des Problems hinzu\n3. Gib deinen Gerätetyp und die App-Version an\n4. Sende eine E-Mail mit Details an support@starshippsychics.com\n5. Füge alle Fehlermeldungen hinzu, die du siehst\n\nFehlerberichte helfen uns, die App für alle zu verbessern!"
+      },
+      "feature-request": {
+        "question": "Kann ich eine neue Funktion vorschlagen?",
+        "answer": "Absolut! Wir freuen uns über Funktionswünsche:\n1. Sende eine E-Mail an support@starshippsychics.com\n2. Betreff: \"Funktionswunsch: [Deine Idee]\"\n3. Beschreibe die Funktion und warum sie helfen würde\n4. Teile uns deinen Anwendungsfall mit\n\nTolle Vorschläge könnten in zukünftigen Updates hinzugefügt werden!"
+      },
+      "feedback": {
+        "question": "Wie kann ich Feedback geben?",
+        "answer": "Wir würden gerne von dir hören:\n1. E-Mail: info@starshippsychics.com\n2. Betreff: \"Feedback: [Thema]\"\n3. Teile mit, was dir gefällt und was verbessert werden könnte\n4. Sei konkret mit Beispielen\n\nDein Feedback hilft uns, eine bessere App zu erstellen!"
+      }
+    }
+  }
+}

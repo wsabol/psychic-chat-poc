@@ -31,10 +31,10 @@ export function FAQViewer({ onClose, onViewChange }) {
 
     const search = searchTerm.toLowerCase();
     return (
-      category.category.toLowerCase().includes(search) ||
-      category.questions.some(q => 
-        q.question.toLowerCase().includes(search) || 
-        q.answer.toLowerCase().includes(search)
+      t(category.categoryKey).toLowerCase().includes(search) ||
+      category.questions.some(q =>
+        t(q.questionKey).toLowerCase().includes(search) ||
+        t(q.answerKey).toLowerCase().includes(search)
       )
     );
   });
@@ -72,7 +72,7 @@ export function FAQViewer({ onClose, onViewChange }) {
             className={`faq-category-btn ${selectedCategory === cat.id ? 'active' : ''}`}
             onClick={() => setSelectedCategory(cat.id)}
           >
-            {cat.icon} {cat.category}
+            {cat.icon} {t(cat.categoryKey)}
           </button>
         ))}
       </div>
@@ -88,7 +88,7 @@ export function FAQViewer({ onClose, onViewChange }) {
           filteredFAQ.map(category => (
             <div key={category.id} className="faq-category">
               <h3 className="faq-category-title">
-                {category.icon} {category.category}
+                {category.icon} {t(category.categoryKey)}
               </h3>
               <div className="faq-questions">
                 {category.questions.map(q => (
@@ -97,12 +97,12 @@ export function FAQViewer({ onClose, onViewChange }) {
                       className={`faq-question ${expandedIds.has(q.id) ? 'expanded' : ''}`}
                       onClick={() => toggleExpanded(q.id)}
                     >
-                      <span className="faq-question-text">{q.question}</span>
+                      <span className="faq-question-text">{t(q.questionKey)}</span>
                       <span className="faq-toggle-icon">{expandedIds.has(q.id) ? '▼' : '▶'}</span>
                     </button>
                     {expandedIds.has(q.id) && (
                       <div className="faq-answer">
-                        {q.answer.split('\n').map((line, idx) => (
+                        {t(q.answerKey).split('\n').map((line, idx) => (
                           <div key={idx}>{line}</div>
                         ))}
                       </div>

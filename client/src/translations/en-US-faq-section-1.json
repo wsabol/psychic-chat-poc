@@ -1,0 +1,92 @@
+{
+  "faq": {
+    "getting-started": {
+      "category": "Getting Started",
+      "what-is-psychic-chat": {
+        "question": "What is Psychic Chat?",
+        "answer": "Psychic Chat is a spiritual wellness app that helps you connect with cosmic insights through AI-powered readings, personalized birth chart analysis, daily horoscopes, and cosmic weather updates. It combines astrology with artificial intelligence to provide meaningful spiritual guidance."
+      },
+      "how-do-i-get-started": {
+        "question": "How do I get started with the app?",
+        "answer": "To get started:\n1. Create an account with your email\n2. Verify your email address\n3. (Optional) Complete your Personal Info with your birth date, time, and location for personalized readings\n4. Start exploring features from the main navigation menu at the bottom"
+      },
+      "do-i-need-birth-time": {
+        "question": "Do I need to provide my birth time?",
+        "answer": "Birth time is optional but recommended for the most accurate birth chart analysis. Your birth time helps calculate the exact position of planets at your birth, especially important for determining your rising sign (ascendant). If you don't know your exact birth time, you can enter an approximate time or just use your birth date."
+      },
+      "is-app-free": {
+        "question": "Is this app free to use?",
+        "answer": "The app offers both free and premium features. Some basic features are available for free, while advanced features like unlimited chat with the psychic, detailed birth chart analysis, and premium horoscope readings require a paid subscription. You can view pricing in Billing & Subscriptions."
+      }
+    },
+    "chat-features": {
+      "category": "Chat with Psychic",
+      "how-to-chat": {
+        "question": "How do I chat with the psychic?",
+        "answer": "To chat with the psychic:\n1. Go to the Chat page (first menu item)\n2. Type your question or message in the input field\n3. Press Send or tap the send button\n4. The AI psychic will respond with spiritual guidance and insights\nYou can have ongoing conversations and ask follow-up questions."
+      },
+      "what-can-i-ask": {
+        "question": "What can I ask the psychic?",
+        "answer": "You can ask about:\n• Love and relationships\n• Career and finances\n• Personal growth\n• Life decisions\n• Spiritual guidance\n• Future insights\n• Any spiritual or wellness question\n\nThe psychic AI is trained to provide thoughtful, meaningful responses based on astrological wisdom and spiritual knowledge."
+      },
+      "chat-history": {
+        "question": "Is my chat history saved?",
+        "answer": "Yes, your conversation history is saved in the app so you can revisit previous conversations and continue discussions. This helps the psychic provide more contextual and personalized responses over time."
+      },
+      "premium-chat": {
+        "question": "What's the difference between free and premium chat?",
+        "answer": "Free users have limited single opportunity to try a chat and read a custom horoscope. Premium subscribers enjoy unlimited chat access with the psychic, enabling more in-depth conversations and ongoing guidance whenever you need it."
+      }
+    },
+    "personal-info": {
+      "category": "Personal Information",
+      "update-personal-info": {
+        "question": "How do I update my personal information?",
+        "answer": "To update your personal info:\n1. Go to Personal Info page\n2. Edit your details:\n   • Full name\n   • Birth date\n   • Birth time (optional but recommended)\n   • Birth location\n3. Tap Save to update your profile\nMore accurate information provides better personalized readings."
+      },
+      "birth-location": {
+        "question": "Why does birth location matter?",
+        "answer": "Birth location is used to calculate the exact positions of celestial bodies at the moment of your birth. Different locations have different latitudes and longitudes, which affects astrological calculations, especially for determining house placements in your birth chart."
+      },
+      "change-birth-info": {
+        "question": "Can I change my birth information after entering it?",
+        "answer": "Yes! You can update any personal information at any time. Go to Personal Info and edit the fields you want to change. Your birth chart and readings will automatically update based on the new information."
+      },
+      "data-privacy": {
+        "question": "Is my personal information secure?",
+        "answer": "Yes. Your personal information is encrypted and securely stored. We take your privacy seriously and never share your personal data with third parties. See our Privacy Policy for more details."
+      },
+      "skip-onboarding": {
+        "question": "Can I skip the Personal Info step during the free trial?",
+        "answer": "Yes! During the free trial, the Personal Info page shows a green \"Skip this step →\" button in the top-right corner. Tapping it takes you directly to your free horoscope reading — no birth details are required.\n\nIf you skip (or haven't entered a birth date), the horoscope page will show a zodiac sign picker so you can still get a personalized reading. See \"What is the zodiac sign picker?\" below for details.\n\nFor a full account, you can also complete your Personal Info later from the main menu — but providing your birth date, time, and location gives you the most accurate birth chart and readings."
+      },
+      "free-trial-zodiac-picker": {
+        "question": "What is the zodiac sign picker during the free trial?",
+        "answer": "If you skipped Personal Info or didn't enter a birth date, the free trial horoscope page automatically shows a zodiac sign picker instead of asking for your full birth details.\n\nHow it works:\n1. A grid of all 12 zodiac signs is displayed (e.g., Aries ♈, Taurus ♉, Gemini ♊, etc.)\n2. Tap your sun sign to select it (it will highlight in purple)\n3. Tap \"Get My Horoscope ✨\" to generate your personalized daily reading\n\nOnce your horoscope loads, a \"✓ Exit to Continue\" button appears — tap it to proceed to create your full account and unlock all features."
+      }
+    },
+    "birth-chart": {
+      "category": "Birth Chart & My Sign",
+      "what-is-birth-chart": {
+        "question": "What is a birth chart?",
+        "answer": "A birth chart (also called a natal chart) is a map of where all the planets were positioned at the exact moment and location of your birth. It includes:\n• Sun Sign (core identity)\n• Moon Sign (emotions)\n• Rising Sign/Ascendant (how others perceive you)\n• Planet placements\n• House placements\n\nThis creates a unique astrological blueprint of your personality and potential."
+      },
+      "sun-moon-rising": {
+        "question": "What's the difference between my Sun, Moon, and Rising signs?",
+        "answer": "Sun Sign: Your core identity and basic personality (what your zodiac sign represents)\nMoon Sign: Your emotional nature and inner world (how you feel and process emotions)\nRising Sign (Ascendant): How others perceive you and the impression you make (your outer personality)\n\nTogether, these three create a complete picture of your astrological profile."
+      },
+      "view-birth-chart": {
+        "question": "How do I view my full birth chart?",
+        "answer": "Go to the My Sign page to view your birth chart. You'll see:\n• Your Sun, Moon, and Rising signs\n• All planet placements\n• House positions\n• Aspects between planets\n• Detailed interpretations\n\nMake sure you've entered your birth time for the most accurate chart."
+      },
+      "accurate-chart": {
+        "question": "How accurate is my birth chart?",
+        "answer": "The accuracy depends on how precise your birth information is:\n• Accurate birth time (within minutes) = very accurate chart\n• Approximate birth time = reasonably accurate, but some details may vary\n• Birth date only = sun sign and some placements accurate, but rising sign and houses won't be correct\n\nIf possible, get your birth certificate to verify your exact birth time."
+      },
+      "zodiac-wheel": {
+        "question": "What is the Zodiac Wheel and how does it work?",
+        "answer": "The Zodiac Wheel is a visual representation of your birth chart showing all 12 zodiac signs arranged in concentric rings. The wheel includes:\n• Sign names and symbols\n• Ruling planets\n• Elements (Fire, Earth, Air, Water)\n• House numbers (I-XII)\n\nThe wheel rotates to position your Rising Sign at the eastern horizon (on the left side). This reflects how you would see the sky at the moment of your birth - looking UP at the celestial sphere rather than DOWN at a map. This is why East appears on the left and West on the right in astronomical charts, creating a mirror image of typical map directions. The horizontal line represents the horizon, with daytime signs above and nighttime signs below."
+      }
+    }
+  }
+}
