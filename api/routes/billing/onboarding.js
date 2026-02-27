@@ -1,6 +1,7 @@
 import express from 'express';
 import { db } from '../../shared/db.js';
 import { validationError, serverError, successResponse } from '../../utils/responses.js';
+import { createUserDatabaseRecords } from '../auth-endpoints/helpers/userCreation.js';
 
 const router = express.Router();
 
@@ -124,12 +125,30 @@ router.post('/onboarding-step/:step', async (req, res) => {
     const updateResult = await db.query(updateQuery, [step, isOnboardingComplete, userId]);
     
     if (updateResult.rowCount === 0) {
-      return validationError(res, 'User not found');
+      // No row exists yet — mobile users who registered via Firebase client SDK
+      // (without going through POST /auth/register-firebase-user) hit this path.
+      // Auto-provision the user_personal_info row and then retry the update.
+      try {
+        await createUserDatabaseRecords(userId, req.user.email || '');
+      } catch (createErr) {
+        console.error('[onboarding] Failed to auto-create user record:', createErr);
+        return serverError(res, 'Failed to initialize user profile');
+      }
+
+      const retryResult = await db.query(updateQuery, [step, isOnboardingComplete, userId]);
+      const actualCompleted = retryResult.rows[0]?.onboarding_completed;
+
+      return successResponse(res, {
+        success: true,
+        step,
+        completed: actualCompleted === true,
+        message: actualCompleted === true ? 'Onboarding complete!' : `Step ${step} updated`,
+      });
     }
     
     const actualCompleted = updateResult.rows[0]?.onboarding_completed;
     
-        successResponse(res, { 
+    successResponse(res, { 
       success: true, 
       step, 
       completed: actualCompleted === true,

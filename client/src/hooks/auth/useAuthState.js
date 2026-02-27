@@ -5,6 +5,22 @@ import { logErrorFromCatch, logWarning } from '../../shared/errorLogger.js';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
+// ---------------------------------------------------------------------------
+// Module-level deduplication guard
+// ---------------------------------------------------------------------------
+// useAuth() may be called in multiple components simultaneously (e.g.
+// useAppState and useLanguagePreference), each creating its own
+// onAuthStateChanged subscription.  Without this guard, every instance would
+// concurrently hit /auth/check-2fa and trigger a separate 2FA email.
+//
+// Because JavaScript is single-threaded, the Set.add() below executes
+// synchronously before the first `await fetch(check-2fa)` is reached, so the
+// second (and any further) instance will always see the lock already set and
+// exit early.  The lock is cleared in the `finally` block so subsequent
+// legitimate logins (e.g. after sign-out) work normally.
+// ---------------------------------------------------------------------------
+const _pendingTwoFAChecks = new Set();
+
 /**
  * Core auth state management and Firebase listener
  * WITH DEBUG LOGGING
@@ -106,9 +122,16 @@ export function useAuthState(checkBillingStatus) {
                 checkBillingStatus(idToken, firebaseUser.uid);
               }
               setLoading(false);
-                        } else {
+            } else if (_pendingTwoFAChecks.has(firebaseUser.uid)) {
+              // Another useAuth() instance is already running check-2fa for this user.
+              // Silently exit — the primary instance will drive state forward.
+              setLoading(false);
+            } else {
+              // Claim the lock synchronously (before the first await) so concurrent
+              // instances see it and take the branch above.
+              _pendingTwoFAChecks.add(firebaseUser.uid);
               try {
-                                // Browser info for device tracking (IP detected server-side to avoid CORS issues)
+                // Browser info for device tracking (IP detected server-side to avoid CORS issues)
                 const browserInfo = navigator.userAgent.split(' ').slice(-2).join(' ');
                 
                 const controller = new AbortController();
@@ -125,14 +148,14 @@ export function useAuthState(checkBillingStatus) {
                 clearTimeout(timeoutId);
                 const twoFAData = await twoFAResponse.json();
 
-                                if (twoFAData.requires2FA) {
+                if (twoFAData.requires2FA) {
                   setTempToken(twoFAData.tempToken);
                   setTempUserId(firebaseUser.uid);
                   setShowTwoFactor(true);
                   setTwoFactorMethod(twoFAData.method || 'email');
                   setIsAuthenticated(false);
                   
-                   // Store browser info for after 2FA (server detects IP/device via req.ip and UAParser)
+                  // Store browser info for after 2FA (server detects IP/device via req.ip and UAParser)
                   if (twoFAData.isAdminNewIP) {
                     sessionStorage.setItem('admin_new_ip', JSON.stringify({
                       browserInfo
@@ -175,6 +198,9 @@ export function useAuthState(checkBillingStatus) {
                   }
                   setLoading(false);
                 }
+              } finally {
+                // Release the lock so future logins (after sign-out) work correctly.
+                _pendingTwoFAChecks.delete(firebaseUser.uid);
               }
             }
           }

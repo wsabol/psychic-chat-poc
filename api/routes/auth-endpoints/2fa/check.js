@@ -344,6 +344,41 @@ async function sendTwoFACode(res, req, { userId, userEmail, userIdHash, method }
     }
   } else {
     // ---- Email path ----
+
+    // ------------------------------------------------------------------
+    // Deduplication: prevent multiple emails when the client calls
+    // check-2fa concurrently (e.g. several useAuth() hook instances each
+    // firing onAuthStateChanged at the same time).
+    //
+    // If an unexpired, unverified code was already created within the last
+    // 60 seconds, skip generating a new one and return success so the
+    // existing code remains valid.  This mirrors the admin IP-alert
+    // deduplication that already exists above.
+    // ------------------------------------------------------------------
+    const recentCodeResult = await db.query(
+      `SELECT id FROM verification_codes
+       WHERE user_id_hash = $1
+         AND code_type = 'email'
+         AND created_at > NOW() - INTERVAL '60 seconds'
+         AND expires_at > NOW()
+         AND verified_at IS NULL
+       LIMIT 1`,
+      [userIdHash]
+    );
+
+    if (recentCodeResult.rows.length > 0) {
+      // A code was sent very recently — return success without flooding the inbox.
+      const tempToken = generateTempToken({ userId, isTempFor2FA: true });
+      return successResponse(res, {
+        success: true,
+        userId,
+        tempToken,
+        requires2FA: true,
+        method: 'email',
+        message: '2FA code sent to your email',
+      });
+    }
+
     const code = generate6DigitCode();
     recipientContact = userEmail;
 
