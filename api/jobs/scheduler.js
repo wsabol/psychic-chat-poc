@@ -42,8 +42,8 @@ export function initializeScheduler() {
       }
     );
     
-    // Schedule subscription check job to run every 4 hours
-    subscriptionCheckJobHandle = cron.schedule('0 */4 * * *',
+    // Schedule subscription check job to run every 4 hours (offset by 10 min to avoid collision with grace period job)
+    subscriptionCheckJobHandle = cron.schedule('10 */4 * * *',
       async () => {
         try {
           await runSubscriptionCheckJob();
@@ -73,9 +73,9 @@ export function initializeScheduler() {
       }
     );
 
-    // Schedule grace period enforcement job to run every 6 hours
+    // Schedule grace period enforcement job to run every 6 hours (offset by 20 min to avoid collision with subscription check job)
     // Automatically logs out users whose grace period has expired without accepting new terms
-    gracePeriodEnforcementJobHandle = cron.schedule('0 */6 * * *',
+    gracePeriodEnforcementJobHandle = cron.schedule('20 */6 * * *',
       async () => {
         try {
           await enforceGracePeriodExpiration();
