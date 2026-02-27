@@ -56,7 +56,7 @@
         "answer": "So änderst du die Sprache:\n1. Gehe zur Seite Einstellungen\n2. Wähle deine bevorzugte Sprache\n3. Verfügbare Sprachen sind:\n   • Englisch\n   • Spanisch (einschließlich regionaler Varianten)\n   • Französisch (einschließlich regionaler Varianten)\n   • Deutsch, Italienisch, Portugiesisch, Japanisch, Chinesisch\n\nDie App übersetzt automatisch alle Inhalte in deine gewählte Sprache."
       },
       "oracle-response-type": {
-        "question": "Was sind die Antworttypen „Ausführlich" und „Kurz"?",
+        "question": "Was sind die Antworttypen „Ausführlich“ und „Kurz“?",
         "answer": "Du kannst anpassen, wie der Psychic-Orakel antwortet:\n• Ausführliche Antworten: Detaillierte, tiefgründige Antworten mit Kontext und Erklärungen\n• Kurze Antworten: Prägnante, direkte Antworten für schnelle Orientierung\n\nGehe zu Einstellungen, um deinen bevorzugten Antworttyp festzulegen."
       },
       "voice-settings": {

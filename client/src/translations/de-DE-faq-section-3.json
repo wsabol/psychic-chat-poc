@@ -8,26 +8,26 @@
       },
       "enable-2fa": {
         "question": "Was ist die Zwei-Faktor-Authentifizierung und wie aktiviere ich sie?",
-        "answer": "Die Zwei-Faktor-Authentifizierung (2FA) fügt deinem Konto eine zusätzliche Sicherheitsebene hinzu.\n\nWichtig: Du musst zuerst eine Kontaktmethode hinzufügen und verifizieren, bevor 2FA aktiviert werden kann:\n1. Gehe zur Sicherheits-Seite → Tab Verifizierung & 2FA\n2. Füge im Abschnitt „Verifizierungsmethoden" deine E-Mail-Adresse oder Telefonnummer hinzu und schließe die Verifizierung ab\n3. Sobald eine Methode verifiziert ist, scrolle nach oben zum Abschnitt „Zwei-Faktor-Authentifizierung"\n4. Aktiviere 2FA und wähle deine Authentifizierungsmethode (E-Mail oder SMS)\n5. Klicke auf Speichern\n\nMit aktivierter 2FA musst du bei der Anmeldung von einem neuen oder nicht vertrauenswürdigen Gerät einen Verifizierungscode eingeben, der an deine verifizierte E-Mail-Adresse oder Telefonnummer gesendet wird."
+        "answer": "Die Zwei-Faktor-Authentifizierung (2FA) fügt deinem Konto eine zusätzliche Sicherheitsebene hinzu.\n\nWichtig: Du musst zuerst eine Kontaktmethode hinzufügen und verifizieren, bevor 2FA aktiviert werden kann:\n1. Gehe zur Sicherheits-Seite → Tab Verifizierung & 2FA\n2. Füge im Abschnitt „Verifizierungsmethoden“ deine E-Mail-Adresse oder Telefonnummer hinzu und schließe die Verifizierung ab\n3. Sobald eine Methode verifiziert ist, scrolle nach oben zum Abschnitt „Zwei-Faktor-Authentifizierung“\n4. Aktiviere 2FA und wähle deine Authentifizierungsmethode (E-Mail oder SMS)\n5. Klicke auf Speichern\n\nMit aktivierter 2FA musst du bei der Anmeldung von einem neuen oder nicht vertrauenswürdigen Gerät einen Verifizierungscode eingeben, der an deine verifizierte E-Mail-Adresse oder Telefonnummer gesendet wird."
       },
       "trust-device": {
         "question": "Wie vertraue ich einem Gerät?",
-        "answer": "So kannst du 2FA für ein vertrauenswürdiges Gerät überspringen:\n1. Stelle sicher, dass 2FA unter Sicherheit → Tab Verifizierung & 2FA aktiviert ist\n2. Scrolle auf derselben Seite nach unten zum Abschnitt „Diesem Gerät vertrauen" (dieser Abschnitt erscheint nur, wenn 2FA aktiviert ist)\n3. Klicke auf „Diesem Gerät vertrauen"\n\nDas Gerät wird dauerhaft als vertrauenswürdig eingestuft und benötigt bei zukünftigen Anmeldungen keinen 2FA-Code mehr. Du kannst vertrauenswürdige Geräte im Abschnitt „Vertrauenswürdige Geräte" direkt darunter auf derselben Seite verwalten und widerrufen."
+        "answer": "So kannst du 2FA für ein vertrauenswürdiges Gerät überspringen:\n1. Stelle sicher, dass 2FA unter Sicherheit → Tab Verifizierung & 2FA aktiviert ist\n2. Scrolle auf derselben Seite nach unten zum Abschnitt „Diesem Gerät vertrauen“ (dieser Abschnitt erscheint nur, wenn 2FA aktiviert ist)\n3. Klicke auf „Diesem Gerät vertrauen“\n\nDas Gerät wird dauerhaft als vertrauenswürdig eingestuft und benötigt bei zukünftigen Anmeldungen keinen 2FA-Code mehr. Du kannst vertrauenswürdige Geräte im Abschnitt „Vertrauenswürdige Geräte“ direkt darunter auf derselben Seite verwalten und widerrufen."
       },
       "manage-devices": {
         "question": "Wie verwalte ich meine vertrauenswürdigen Geräte?",
-        "answer": "Die Verwaltung vertrauenswürdiger Geräte ist Teil des Tabs Verifizierung & 2FA – es gibt keinen separaten Geräte-Tab:\n1. Gehe zur Sicherheits-Seite → Tab Verifizierung & 2FA\n2. Scrolle nach unten zum Abschnitt „Vertrauenswürdige Geräte" (nur sichtbar, wenn 2FA aktiviert ist)\n3. Alle deine vertrauenswürdigen Geräte werden dort aufgelistet\n4. Klicke neben einem Gerät auf „Widerrufen", um seinen vertrauenswürdigen Status zu entfernen\n5. Um deinem aktuellen Gerät zu vertrauen, nutze den Abschnitt „Diesem Gerät vertrauen" direkt oberhalb der Liste"
+        "answer": "Die Verwaltung vertrauenswürdiger Geräte ist Teil des Tabs Verifizierung & 2FA – es gibt keinen separaten Geräte-Tab:\n1. Gehe zur Sicherheits-Seite → Tab Verifizierung & 2FA\n2. Scrolle nach unten zum Abschnitt „Vertrauenswürdige Geräte“ (nur sichtbar, wenn 2FA aktiviert ist)\n3. Alle deine vertrauenswürdigen Geräte werden dort aufgelistet\n4. Klicke neben einem Gerät auf „Widerrufen“, um seinen vertrauenswürdigen Status zu entfernen\n5. Um deinem aktuellen Gerät zu vertrauen, nutze den Abschnitt „Diesem Gerät vertrauen“ direkt oberhalb der Liste"
       },
       "forgot-password": {
         "question": "Was tue ich, wenn ich mein Passwort vergessen habe?",
-        "answer": "Wenn du dein Passwort vergessen hast:\n1. Klicke auf dem Anmeldebildschirm auf „Passwort vergessen?"\n2. Gib deine E-Mail-Adresse ein\n3. Prüfe dein E-Mail-Postfach auf einen Link zum Zurücksetzen des Passworts\n4. Klicke auf den Link und erstelle ein neues Passwort\n5. Melde dich mit deinem neuen Passwort an\n\nWenn du keine E-Mail erhältst, überprüfe deinen Spam-Ordner oder wende dich an den Support."
+        "answer": "Wenn du dein Passwort vergessen hast:\n1. Klicke auf dem Anmeldebildschirm auf „Passwort vergessen?“\n2. Gib deine E-Mail-Adresse ein\n3. Prüfe dein E-Mail-Postfach auf einen Link zum Zurücksetzen des Passworts\n4. Klicke auf den Link und erstelle ein neues Passwort\n5. Melde dich mit deinem neuen Passwort an\n\nWenn du keine E-Mail erhältst, überprüfe deinen Spam-Ordner oder wende dich an den Support."
       }
     },
     "billing": {
       "category": "Abrechnung & Abonnements",
       "payment-method": {
         "question": "Wie füge ich eine Zahlungsmethode hinzu?",
-        "answer": "So fügst du eine Zahlungsmethode hinzu:\n1. Gehe zur Seite Abrechnung & Abonnements\n2. Klicke auf „Zahlungsmethoden"\n3. Klicke auf „Zahlungsmethode hinzufügen"\n4. Gib deine Kartendaten ein:\n   • Kartennummer\n   • Ablaufdatum\n   • CVV\n   • Rechnungsadresse\n5. Klicke auf Speichern\n\nDeine Zahlungsdaten werden sicher verschlüsselt."
+        "answer": "So fügst du eine Zahlungsmethode hinzu:\n1. Gehe zur Seite Abrechnung & Abonnements\n2. Klicke auf „Zahlungsmethoden“\n3. Klicke auf „Zahlungsmethode hinzufügen“\n4. Gib deine Kartendaten ein:\n   • Kartennummer\n   • Ablaufdatum\n   • CVV\n   • Rechnungsadresse\n5. Klicke auf Speichern\n\nDeine Zahlungsdaten werden sicher verschlüsselt."
       },
       "update-payment": {
         "question": "Wie aktualisiere ich meine Zahlungsmethode?",
@@ -35,7 +35,7 @@
       },
       "remove-payment": {
         "question": "Wie entferne ich eine Zahlungsmethode?",
-        "answer": "So entfernst du eine Zahlungsmethode:\n1. Gehe zu Abrechnung & Abonnements → Zahlungsmethoden\n2. Suche die zu entfernende Zahlungsmethode\n3. Klicke auf „Löschen" oder „Entfernen"\n4. Bestätige die Löschung\n\nHinweis: Du musst mindestens eine gültige Zahlungsmethode hinterlegt haben, um ein aktives Abonnement aufrechtzuerhalten."
+        "answer": "So entfernst du eine Zahlungsmethode:\n1. Gehe zu Abrechnung & Abonnements → Zahlungsmethoden\n2. Suche die zu entfernende Zahlungsmethode\n3. Klicke auf „Löschen“ oder „Entfernen“\n4. Bestätige die Löschung\n\nHinweis: Du musst mindestens eine gültige Zahlungsmethode hinterlegt haben, um ein aktives Abonnement aufrechtzuerhalten."
       },
       "subscription-plans": {
         "question": "Welche Abonnement-Pakete sind verfügbar?",
@@ -47,7 +47,7 @@
       },
       "cancel-subscription": {
         "question": "Wie kündige ich mein Abonnement?",
-        "answer": "So kündigst du dein Abonnement:\n1. Gehe zu Abrechnung & Abonnements → Abonnements\n2. Suche deine aktive Abonnement-Karte\n3. Klicke rechts auf der Karte auf den Button „📋 Paket wechseln oder kündigen"\n4. Die Karte klappt auf – scrolle nach unten zum Abschnitt „Oder Abonnement kündigen"\n5. Klicke auf den roten Button „✕ Abonnement kündigen"\n6. Bestätige im erscheinenden Dialogfeld\n\nDein Abonnement bleibt bis zum Ende des aktuellen Abrechnungszeitraums aktiv und endet dann. Dein Konto und alle deine Daten bleiben erhalten. Um es später wieder zu aktivieren, kehre zu Abrechnung & Abonnements → Abonnements zurück und wähle ein Paket."
+        "answer": "So kündigst du dein Abonnement:\n1. Gehe zu Abrechnung & Abonnements → Abonnements\n2. Suche deine aktive Abonnement-Karte\n3. Klicke rechts auf der Karte auf den Button „📋 Paket wechseln oder kündigen“\n4. Die Karte klappt auf – scrolle nach unten zum Abschnitt „Oder Abonnement kündigen“\n5. Klicke auf den roten Button „✕ Abonnement kündigen“\n6. Bestätige im erscheinenden Dialogfeld\n\nDein Abonnement bleibt bis zum Ende des aktuellen Abrechnungszeitraums aktiv und endet dann. Dein Konto und alle deine Daten bleiben erhalten. Um es später wieder zu aktivieren, kehre zu Abrechnung & Abonnements → Abonnements zurück und wähle ein Paket."
       },
       "view-invoices": {
         "question": "Wie sehe ich meine Rechnungen?",
@@ -66,11 +66,11 @@
       },
       "delete-account": {
         "question": "Wie lösche ich mein Konto?",
-        "answer": "So löschst du dein Konto:\n1. Gehe zur Sicherheits-Seite\n2. Suche den Abschnitt „Konto löschen"\n3. Klicke auf „Kontolöschung beantragen"\n4. Bestätige deine Anfrage\n5. Dein Konto und deine Daten werden sicher gelöscht\n\nDieser Vorgang ist endgültig und kann nicht rückgängig gemacht werden."
+        "answer": "So löschst du dein Konto:\n1. Gehe zur Sicherheits-Seite\n2. Suche den Abschnitt „Konto löschen“\n3. Klicke auf „Kontolöschung beantragen“\n4. Bestätige deine Anfrage\n5. Dein Konto und deine Daten werden sicher gelöscht\n\nDieser Vorgang ist endgültig und kann nicht rückgängig gemacht werden."
       },
       "data-export": {
         "question": "Kann ich meine Daten exportieren?",
-        "answer": "Ja, du kannst deine Daten herunterladen:\n1. Gehe zur Einstellungs-Seite\n2. Suche den Abschnitt „Meine Daten herunterladen"\n3. Klicke auf den Button „Herunterladen"\n4. Deine Daten werden als JSON-Datei heruntergeladen\n\nDie Datei enthält alle deine persönlichen Informationen, den Chat-Verlauf und die Kontodaten."
+        "answer": "Ja, du kannst deine Daten herunterladen:\n1. Gehe zur Einstellungs-Seite\n2. Suche den Abschnitt „Meine Daten herunterladen“\n3. Klicke auf den Button „Herunterladen“\n4. Deine Daten werden als JSON-Datei heruntergeladen\n\nDie Datei enthält alle deine persönlichen Informationen, den Chat-Verlauf und die Kontodaten."
       },
       "read-terms-privacy": {
         "question": "Wie lese ich die Nutzungsbedingungen und die Datenschutzrichtlinie?",
@@ -108,11 +108,11 @@
       },
       "feature-request": {
         "question": "Kann ich eine neue Funktion vorschlagen?",
-        "answer": "Natürlich! Wir freuen uns über Funktionswünsche:\n1. Schreibe eine E-Mail an support@starshippsychics.com\n2. Betreff: „Funktionswunsch: [Deine Idee]"\n3. Beschreibe die Funktion und warum sie hilfreich wäre\n4. Teile uns deinen Anwendungsfall mit\n\nTolle Vorschläge könnten in zukünftigen Updates umgesetzt werden!"
+        "answer": "Natürlich! Wir freuen uns über Funktionswünsche:\n1. Schreibe eine E-Mail an support@starshippsychics.com\n2. Betreff: „Funktionswunsch: [Deine Idee]“\n3. Beschreibe die Funktion und warum sie hilfreich wäre\n4. Teile uns deinen Anwendungsfall mit\n\nTolle Vorschläge könnten in zukünftigen Updates umgesetzt werden!"
       },
       "feedback": {
         "question": "Wie kann ich Feedback geben?",
-        "answer": "Wir freuen uns über deine Rückmeldung:\n1. E-Mail: info@starshippsychics.com\n2. Betreff: „Feedback: [Thema]"\n3. Teile mit, was dir gut gefällt und was verbessert werden könnte\n4. Sei konkret mit Beispielen\n\nDein Feedback hilft uns, die App besser zu machen!"
+        "answer": "Wir freuen uns über deine Rückmeldung:\n1. E-Mail: info@starshippsychics.com\n2. Betreff: „Feedback: [Thema]“\n3. Teile mit, was dir gut gefällt und was verbessert werden könnte\n4. Sei konkret mit Beispielen\n\nDein Feedback hilft uns, die App besser zu machen!"
       }
     }
   }

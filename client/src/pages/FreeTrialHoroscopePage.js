@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from '../context/TranslationContext';
+import { useSpeech } from '../hooks/useSpeech';
 import LogoWithCopyright from '../components/LogoWithCopyright';
 import ExitButton from '../components/ExitButton';
 import BirthChartCard from '../components/BirthChartCard';
 import SunSignInfo from '../components/SunSignInfo';
+import VoiceBar from '../components/VoiceBar';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
 import { formatDateByLanguage } from '../utils/dateLocaleUtils';
 import { getTranslatedAstrologyData } from '../utils/translatedAstroUtils';
@@ -31,12 +33,23 @@ const ZODIAC_GLYPHS = {
  * - "✓ Exit to Continue" button (ExitButton) → navigates directly to Firebase register screen
  *   (AppChat wires onExit → handlers.handleCreateAccount → showRegisterMode = true)
  *   NOTE: ExitButton is only shown AFTER the horoscope response — not on loading/sign-picker screens
+ * - VoiceBar with brief/full toggle — reads exactly the text currently displayed on screen
  */
 export default function FreeTrialHoroscopePage({ userId, auth, onExit }) {
   const { t, language } = useTranslation();
 
+  // ── Speech ─────────────────────────────────────────────────────────────────
+  const {
+    speak, stop, pause, resume,
+    isPlaying, isPaused, isLoading: isSpeechLoading,
+    error: speechError, isSupported, progress,
+  } = useSpeech();
+
+  // ── Horoscope data ─────────────────────────────────────────────────────────
   const [loading, setLoading] = useState(true);
-  const [horoscope, setHoroscope] = useState(null);
+  const [horoscope, setHoroscope] = useState(null);   // full text
+  const [brief, setBrief] = useState(null);            // brief / summary text (may be null)
+  const [showingBrief, setShowingBrief] = useState(false); // default: show full reading
   const [zodiacSign, setZodiacSign] = useState(null);
   const [chartData, setChartData] = useState(null);
   const [sunSignData, setSunSignData] = useState(null);
@@ -65,6 +78,12 @@ export default function FreeTrialHoroscopePage({ userId, auth, onExit }) {
     };
     load();
   }, [zodiacSign, language]);
+
+  /**
+   * The text currently visible on screen — respects the brief/full toggle.
+   * The VoiceBar "play" button reads this, so it always matches what the user sees.
+   */
+  const displayText = (showingBrief && brief) ? brief : horoscope;
 
   /**
    * Build the horoscope API URL, always including the current language so that
@@ -108,6 +127,9 @@ export default function FreeTrialHoroscopePage({ userId, auth, onExit }) {
 
       const data = await response.json();
       setHoroscope(data.horoscope);
+      // Store the brief/summary text returned by the API (may be null for older
+      // sessions that were generated without a brief_response).
+      setBrief(data.brief ?? null);
       setZodiacSign(data.zodiacSign);
       setChartData(data.chartData || null);
       setNeedsSignPicker(false);
@@ -133,6 +155,30 @@ export default function FreeTrialHoroscopePage({ userId, auth, onExit }) {
 
   const handleSignConfirm = () => {
     if (selectedSign) loadHoroscope(selectedSign);
+  };
+
+  // ── Voice handlers ─────────────────────────────────────────────────────────
+
+  /**
+   * Play the text currently visible on screen.
+   * If the user toggled to "Show me less" we read brief; otherwise full.
+   */
+  const handlePlayVoice = () => {
+    if (displayText) {
+      speak(displayText, { rate: 0.95, pitch: 1.2 });
+    }
+  };
+
+  const handleTogglePause = () => {
+    if (isPlaying) pause();
+    else if (isPaused) resume();
+  };
+
+  // Stop any active playback when the user switches between brief and full so
+  // the next press of ▶ always reads the newly-selected version from the start.
+  const handleToggleBrief = () => {
+    stop();
+    setShowingBrief(prev => !prev);
   };
 
   const capitalize = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
@@ -318,9 +364,34 @@ export default function FreeTrialHoroscopePage({ userId, auth, onExit }) {
             <p className="horoscope-date">{formatDateByLanguage(new Date(), language)}</p>
           </div>
 
-          {/* Horoscope text — same styling as normal page */}
+          {/* Horoscope text — displayText respects brief/full toggle */}
           <div className="horoscope-text">
-            <p className="markdown-p">{horoscope}</p>
+            <p className="markdown-p">{displayText}</p>
+
+            {/* VoiceBar — reads exactly the text currently shown on screen */}
+            {isSupported && (
+              <VoiceBar
+                isPlaying={isPlaying}
+                isPaused={isPaused}
+                isLoading={isSpeechLoading}
+                error={speechError}
+                onPlay={handlePlayVoice}
+                onTogglePause={handleTogglePause}
+                onStop={stop}
+                isSupported={isSupported}
+                progress={progress}
+              />
+            )}
+
+            {/* Brief / full toggle — only shown when the API returned a brief */}
+            {brief && (
+              <button
+                onClick={handleToggleBrief}
+                className="horoscope-toggle-btn"
+              >
+                {showingBrief ? t('chat.toggleMore') : t('chat.toggleLess')}
+              </button>
+            )}
           </div>
 
           {/* Sun sign info — dates, element, ruling planet, about (mirrors normal HoroscopePage) */}
