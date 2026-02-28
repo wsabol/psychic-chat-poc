@@ -106,11 +106,9 @@ async function sendReply(toPhoneNumber, messageBody, originationNumber) {
 
     const command = new PublishCommand(params);
     await snsClient.send(command);
-    console.log(`✅ Reply sent to ${toPhoneNumber}`);
     return true;
   } catch (error) {
     // Non-critical: log but don't throw — opt-out was already recorded
-    console.error('❌ Failed to send SMS reply:', error);
     return false;
   }
 }
@@ -172,12 +170,6 @@ async function downgradeToEmailIfSMS(phoneNumber) {
       [ENCRYPTION_KEY, phoneNumber]
     );
 
-    if (result.rowCount > 0) {
-      console.log(`🔄 2FA method switched to email for user (hash: ${result.rows[0].user_id_hash})`);
-    } else {
-      // Not an error — the user may have had email 2FA already, or no account
-      console.log(`ℹ️  No SMS 2FA setting found for ${phoneNumber} — no update needed`);
-    }
   } catch (error) {
     // Non-critical: opt-out is already recorded; log and continue
     console.error('❌ Failed to downgrade 2FA method to email:', error);
@@ -284,8 +276,6 @@ export const handler = async (event) => {
 
         // 4. Audit log
         await logInboundSMS(smsData, 'STOP');
-
-        console.log(`📵 STOP processed for ${phoneNumber}`);
       }
 
       // ── Handle START / SUBSCRIBE keywords (opt back in) ──────────────────
@@ -297,8 +287,6 @@ export const handler = async (event) => {
       ) {
         await removeOptOut(phoneNumber);
         await logInboundSMS(smsData, 'START');
-
-        console.log(`✅ START processed for ${phoneNumber}`);
       }
 
       // ── Handle HELP / INFO keywords (informational) ───────────────────────
@@ -307,8 +295,6 @@ export const handler = async (event) => {
         await sendReply(phoneNumber, HELP_REPLY, ourNumber);
 
         await logInboundSMS(smsData, 'HELP');
-
-        console.log(`ℹ️ HELP processed for ${phoneNumber}`);
       }
 
       // ── Ignore other messages ─────────────────────────────────────────────

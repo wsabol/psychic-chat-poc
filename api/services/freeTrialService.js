@@ -81,9 +81,12 @@ export function sanitizePersonalInfo(data) {
  * @returns {Promise<{ action: 'create'|'resume'|'block'|'reset', session?: Object }>}
  */
 async function checkSessionAccess(ipHash, userIdHash) {
-  // Whitelisted IPs get unlimited trials (testers / QA)
+  // Whitelisted IPs get unlimited trials (testers / QA).
+  // Only active entries grant whitelist privileges — inactive entries (is_active = false)
+  // are treated the same as non-whitelisted IPs so deactivated simulators/testers
+  // cannot bypass the one-trial-per-IP rule.
   const { rows: wlRows } = await db.query(
-    'SELECT id FROM free_trial_whitelist WHERE ip_address_hash = $1',
+    'SELECT id FROM free_trial_whitelist WHERE ip_address_hash = $1 AND is_active = true',
     [ipHash]
   );
   const isWhitelisted = wlRows.length > 0;

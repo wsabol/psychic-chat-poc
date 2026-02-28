@@ -73,27 +73,54 @@ export async function addIpToWhitelist({ ipAddress, deviceName, browserInfo, use
     const ipHash = hashIpAddress(ipAddress);
     const userIdHash = hashUserId(userId);
 
-    // Check if already whitelisted (active entries only)
+    // Check for any existing entry — active OR previously soft-deleted.
+    // The ip_address_hash column has a UNIQUE constraint, so we can never
+    // INSERT a second row for the same IP even after a soft-delete.
     const existing = await db.query(
-      `SELECT id FROM free_trial_whitelist 
-       WHERE ip_address_hash = $1 AND is_active = TRUE AND removed_at IS NULL`,
+      `SELECT id, is_active FROM free_trial_whitelist 
+       WHERE ip_address_hash = $1`,
       [ipHash]
     );
 
     if (existing.rows.length > 0) {
+      if (existing.rows[0].is_active) {
+        // Already whitelisted and active — nothing to do.
+        return {
+          success: false,
+          error: 'IP address already whitelisted',
+          code: 'ALREADY_WHITELISTED'
+        };
+      }
+
+      // Previously removed — reactivate the existing row instead of inserting.
+      const reactivated = await db.query(
+        `UPDATE free_trial_whitelist
+         SET is_active    = TRUE,
+             removed_at   = NULL,
+             device_name  = $2,
+             browser_info = $3,
+             user_id_hash = $4,
+             last_used_at = NOW()
+         WHERE ip_address_hash = $1
+         RETURNING id, ip_address_hash, device_name, browser_info, user_id_hash,
+                   is_active, added_at, last_used_at`,
+        [ipHash, deviceName, browserInfo, userIdHash]
+      );
+
       return {
-        success: false,
-        error: 'IP address already whitelisted',
-        code: 'ALREADY_WHITELISTED'
+        success: true,
+        whitelist: reactivated.rows[0]
       };
     }
 
-    // Add to whitelist with encryption
+    // No existing row — insert a fresh entry.
+    // ip_address_encrypted is VARCHAR(255) so we base64-encode the pgcrypto
+    // output (BYTEA) to keep it as a printable text string.
     const result = await db.query(
       `INSERT INTO free_trial_whitelist 
        (ip_address_hash, ip_address_encrypted, device_name, browser_info, 
         user_id_hash, is_active, added_at, last_used_at)
-       VALUES ($1, pgp_sym_encrypt($2, $3), $4, $5, $6, TRUE, NOW(), NOW())
+       VALUES ($1, encode(pgp_sym_encrypt($2, $3), 'base64'), $4, $5, $6, TRUE, NOW(), NOW())
        RETURNING id, ip_address_hash, device_name, browser_info, user_id_hash, 
                  is_active, added_at, last_used_at`,
       [ipHash, ipAddress, ENCRYPTION_KEY, deviceName, browserInfo, userIdHash]
