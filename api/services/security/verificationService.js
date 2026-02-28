@@ -1,20 +1,30 @@
 import { db } from '../../shared/db.js';
 import { hashUserId } from '../../shared/hashUtils.js';
+import { logErrorFromCatch } from '../../shared/errorLogger.js';
 import { decryptPhone, decryptEmail } from './helpers/securityHelpers.js';
 
 /**
- * Get verification methods (all from security table)
+ * Get all verification methods for a user (phone, recovery phone, recovery email).
+ * Also resolves the user's primary email from user_personal_info so callers
+ * do not need to perform a separate DB lookup.
  * Used by: VerificationMethodsTab
- * Combines phone + email + recovery phone into single view
- * 
- * SECURITY: All fields are encrypted at APPLICATION level using AES-256-GCM
- * Fetch encrypted data, then decrypt at application level (not database level)
+ *
+ * SECURITY: All fields are encrypted with pgp_sym_encrypt (same key as phoneService).
  */
-export async function getVerificationMethods(userId, userEmail) {
+export async function getVerificationMethods(userId) {
   try {
     const userIdHash = hashUserId(userId);
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
-    
+
+    // Fetch the user's primary email from user_personal_info
+    const emailResult = await db.query(
+      `SELECT pgp_sym_decrypt(email_encrypted, $1) as email
+       FROM user_personal_info
+       WHERE user_id = $2`,
+      [ENCRYPTION_KEY, userId]
+    );
+    const userEmail = emailResult.rows[0]?.email ?? '';
+
     // SECURITY: Decrypt using PGCRYPTO (same as phoneService)
     const securityResult = await db.query(
       `SELECT 
@@ -52,7 +62,6 @@ export async function getVerificationMethods(userId, userEmail) {
       recoveryEmailVerified: sec.recovery_email_verified || false
     };
   } catch (err) {
-    const { logErrorFromCatch } = await import('../../shared/errorLogger.js');
     logErrorFromCatch(err, 'app', 'security');
     throw err;
   }

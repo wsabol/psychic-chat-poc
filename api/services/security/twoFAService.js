@@ -1,6 +1,7 @@
 import { db } from '../../shared/db.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
+import { getPhoneData, savePhoneNumber } from './phoneService.js';
 
 /**
  * Get user's 2FA settings (from user_2fa_settings table + phone from security table)
@@ -133,4 +134,44 @@ export async function updateSessionPreference(userId, persistentSession) {
     logErrorFromCatch(err, 'app', 'security');
     throw err;
   }
+}
+
+/**
+ * Configure 2FA: orchestrates validation, settings update, and optional phone save.
+ *
+ * Flow:
+ *   1. If SMS method is being enabled without a new phone number, verify the user
+ *      already has a verified phone on file. Throws a validation error if not.
+ *   2. Persist the enabled/method settings.
+ *   3. If a new phoneNumber is provided, save it (triggers SMS verification code).
+ *   4. Return the freshly-fetched settings so the caller gets a consistent view.
+ *
+ * Throws an error with `err.isValidation = true` for user-facing validation failures
+ * so the route layer can distinguish them from unexpected server errors.
+ *
+ * Used by: POST /api/security/2fa-settings/:userId
+ */
+export async function configure2FA(userId, { enabled, method, phoneNumber, backupPhoneNumber }) {
+  // Guard: SMS 2FA without a new phone requires an existing verified phone
+  if (enabled && method === 'sms' && !phoneNumber) {
+    const existingPhone = await getPhoneData(userId);
+    if (!existingPhone?.phoneNumber || !existingPhone?.phoneVerified) {
+      const err = new Error(
+        'Phone number is required when 2FA SMS is enabled. Please verify your phone number first.'
+      );
+      err.isValidation = true;
+      throw err;
+    }
+  }
+
+  // Persist the 2FA toggle and method choice
+  await update2FASettings(userId, { enabled, method });
+
+  // Optionally save a new phone number (will trigger an SMS verification code)
+  if (phoneNumber) {
+    await savePhoneNumber(userId, phoneNumber, backupPhoneNumber);
+  }
+
+  // Return a fresh read so the caller always gets up-to-date settings + phone data
+  return get2FASettings(userId);
 }

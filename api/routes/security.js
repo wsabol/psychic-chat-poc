@@ -1,26 +1,42 @@
 /**
  * Security Routes
- * Handles user security settings: devices, 2FA, phone/email verification
+ * Handles user security settings: devices, 2FA, phone/email verification.
+ *
+ * All DB access and business logic lives in ../services/securityService.js.
+ * Route handlers are extracted as named functions so each section reads as a
+ * concise table of endpoints, and individual handlers are easy to locate and edit.
+ *
+ * Sections:
+ *   1. Device Management
+ *   2. Phone Verification
+ *   3. Email (Recovery) Verification
+ *   4. Two-Factor Authentication (2FA)
+ *   5. Session Preferences
+ *   6. Verification Methods
+ *   7. Password Operations
  */
 
 import express from 'express';
 import { authenticateToken } from '../middleware/auth.js';
 import { verifyUserOwnership } from '../middleware/verifyUserOwnership.js';
-import { db } from '../shared/db.js';
 import * as securityService from '../services/securityService.js';
 import { validationError, serverError, successResponse } from '../utils/responses.js';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 const router = express.Router();
 
-// Apply authentication to all routes
+// Apply authentication to all security routes
 router.use(authenticateToken);
 
+
+// ─── 1. Device Management ──────────────────────────────────────────────────
+
 /**
- * POST /api/security/track-device/:userId
- * Track a new device login
+ * Track/upsert the current device session for a user.
+ * Pulls the bearer token and user-agent from request headers before
+ * delegating all DB work to securityService.trackDevice().
  */
-router.post('/track-device/:userId', verifyUserOwnership(), async (req, res) => {
+async function handleTrackDevice(req, res) {
   try {
     const { userId } = req.params;
     const { deviceName, ipAddress } = req.body;
@@ -29,54 +45,28 @@ router.post('/track-device/:userId', verifyUserOwnership(), async (req, res) => 
       return validationError(res, 'deviceName and ipAddress required');
     }
 
-    // Import hashUserId
-    const { hashUserId } = await import('../shared/hashUtils.js');
-    
-    // Get the current device entry and hash the user ID
-    const userAgent = req.get('user-agent') || 'Unknown';
-    const token = req.get('authorization')?.split(' ')[1] || 'unknown';
-    const userIdHash = hashUserId(userId);
+    const token     = req.get('authorization')?.split(' ')[1] ?? 'unknown';
+    const userAgent = req.get('user-agent') ?? 'Unknown';
 
-    const result = await db.query(
-      `INSERT INTO security_sessions (user_id_hash, firebase_token_encrypted, device_name_encrypted, ip_address_encrypted, user_agent_encrypted, last_active, created_at)
-       VALUES ($1, pgp_sym_encrypt($2, $6), pgp_sym_encrypt($3, $6), pgp_sym_encrypt($4, $6), pgp_sym_encrypt($5, $6), NOW(), NOW())
-       ON CONFLICT (user_id_hash) DO UPDATE SET
-         firebase_token_encrypted = pgp_sym_encrypt($2, $6),
-         device_name_encrypted = pgp_sym_encrypt($3, $6),
-         ip_address_encrypted = pgp_sym_encrypt($4, $6),
-         user_agent_encrypted = pgp_sym_encrypt($5, $6),
-         last_active = NOW()
-       RETURNING id, last_active, created_at`,
-      [userIdHash, token, deviceName, ipAddress, userAgent, process.env.ENCRYPTION_KEY]
-    );
-
-    successResponse(res, { success: true, device: result.rows[0] });
+    const result = await securityService.trackDevice(userId, { token, deviceName, ipAddress, userAgent });
+    successResponse(res, result);
   } catch (err) {
     logErrorFromCatch(err, 'app', 'security');
     return serverError(res, 'Failed to track device');
   }
-});
+}
 
-/**
- * GET /api/security/devices/:userId
- * Get all devices user is logged in from
- */
-router.get('/devices/:userId', verifyUserOwnership(), async (req, res) => {
+async function handleGetDevices(req, res) {
   try {
-    const { userId } = req.params;
-    const result = await securityService.getDevices(userId);
+    const result = await securityService.getDevices(req.params.userId);
     successResponse(res, result);
   } catch (err) {
     logErrorFromCatch(err, 'app', 'security');
     return serverError(res, 'Failed to get devices');
   }
-});
+}
 
-/**
- * DELETE /api/security/devices/:userId/:deviceId
- * Log out a specific device
- */
-router.delete('/devices/:userId/:deviceId', verifyUserOwnership(), async (req, res) => {
+async function handleLogoutDevice(req, res) {
   try {
     const { userId, deviceId } = req.params;
     const result = await securityService.logoutDevice(userId, deviceId);
@@ -85,28 +75,26 @@ router.delete('/devices/:userId/:deviceId', verifyUserOwnership(), async (req, r
     logErrorFromCatch(err, 'app', 'security');
     return serverError(res, 'Failed to logout device');
   }
-});
+}
 
-/**
- * GET /api/security/phone/:userId
- * Get phone data
- */
-router.get('/phone/:userId', verifyUserOwnership(), async (req, res) => {
+router.post('/track-device/:userId',        verifyUserOwnership(), handleTrackDevice);
+router.get('/devices/:userId',              verifyUserOwnership(), handleGetDevices);
+router.delete('/devices/:userId/:deviceId', verifyUserOwnership(), handleLogoutDevice);
+
+
+// ─── 2. Phone Verification ─────────────────────────────────────────────────
+
+async function handleGetPhone(req, res) {
   try {
-    const { userId } = req.params;
-    const data = await securityService.getPhoneData(userId);
+    const data = await securityService.getPhoneData(req.params.userId);
     successResponse(res, data);
   } catch (err) {
     logErrorFromCatch(err, 'app', 'security');
     return serverError(res, 'Failed to get phone data');
   }
-});
+}
 
-/**
- * POST /api/security/phone/:userId
- * Save phone number and send verification code
- */
-router.post('/phone/:userId', verifyUserOwnership(), async (req, res) => {
+async function handleSavePhone(req, res) {
   try {
     const { userId } = req.params;
     const { phoneNumber, recoveryPhone } = req.body;
@@ -121,13 +109,14 @@ router.post('/phone/:userId', verifyUserOwnership(), async (req, res) => {
     logErrorFromCatch(err, 'app', 'security');
     return serverError(res, 'Failed to save phone number');
   }
-});
+}
 
 /**
- * POST /api/security/phone/:userId/verify
- * Verify phone code
+ * verifyPhoneCode throws descriptive user-facing errors on failure
+ * (wrong code, expired, too many attempts, etc.), so we return 400 here
+ * rather than 500 — these are anticipated validation outcomes, not crashes.
  */
-router.post('/phone/:userId/verify', verifyUserOwnership(), async (req, res) => {
+async function handleVerifyPhone(req, res) {
   try {
     const { userId } = req.params;
     const { code } = req.body;
@@ -142,28 +131,26 @@ router.post('/phone/:userId/verify', verifyUserOwnership(), async (req, res) => 
     logErrorFromCatch(err, 'app', 'security');
     return validationError(res, err.message);
   }
-});
+}
 
-/**
- * GET /api/security/email/:userId
- * Get email data
- */
-router.get('/email/:userId', verifyUserOwnership(), async (req, res) => {
+router.get('/phone/:userId',         verifyUserOwnership(), handleGetPhone);
+router.post('/phone/:userId',        verifyUserOwnership(), handleSavePhone);
+router.post('/phone/:userId/verify', verifyUserOwnership(), handleVerifyPhone);
+
+
+// ─── 3. Email (Recovery) Verification ─────────────────────────────────────
+
+async function handleGetEmail(req, res) {
   try {
-    const { userId } = req.params;
-    const data = await securityService.getEmailData(userId);
+    const data = await securityService.getEmailData(req.params.userId);
     successResponse(res, data);
   } catch (err) {
     logErrorFromCatch(err, 'app', 'security');
     return serverError(res, 'Failed to get email data');
   }
-});
+}
 
-/**
- * POST /api/security/email/:userId
- * Save recovery email and send verification code
- */
-router.post('/email/:userId', verifyUserOwnership(), async (req, res) => {
+async function handleSaveEmail(req, res) {
   try {
     const { userId } = req.params;
     const { recoveryEmail } = req.body;
@@ -178,13 +165,13 @@ router.post('/email/:userId', verifyUserOwnership(), async (req, res) => {
     logErrorFromCatch(err, 'app', 'security');
     return serverError(res, 'Failed to save recovery email');
   }
-});
+}
 
 /**
- * POST /api/security/email/:userId/verify
- * Verify email code
+ * Same rationale as handleVerifyPhone: the service throws user-facing errors
+ * (wrong code, expired, etc.) that map naturally to 400, not 500.
  */
-router.post('/email/:userId/verify', verifyUserOwnership(), async (req, res) => {
+async function handleVerifyEmail(req, res) {
   try {
     const { userId } = req.params;
     const { code } = req.body;
@@ -199,58 +186,47 @@ router.post('/email/:userId/verify', verifyUserOwnership(), async (req, res) => 
     logErrorFromCatch(err, 'app', 'security');
     return validationError(res, err.message);
   }
-});
+}
 
-/**
- * DELETE /api/security/email/:userId
- * Remove recovery email
- */
-router.delete('/email/:userId', verifyUserOwnership(), async (req, res) => {
+async function handleRemoveEmail(req, res) {
   try {
-    const { userId } = req.params;
-    const result = await securityService.removeRecoveryEmail(userId);
+    const result = await securityService.removeRecoveryEmail(req.params.userId);
     successResponse(res, result);
   } catch (err) {
     logErrorFromCatch(err, 'app', 'security');
     return serverError(res, 'Failed to remove recovery email');
   }
-});
+}
 
-/**
- * POST /api/security/password-changed/:userId
- * Record password change and log out other sessions
- */
-router.post('/password-changed/:userId', verifyUserOwnership(), async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const result = await securityService.recordPasswordChange(userId);
-    successResponse(res, result);
-  } catch (err) {
-    logErrorFromCatch(err, 'app', 'security');
-    return serverError(res, 'Failed to record password change');
-  }
-});
+router.get('/email/:userId',         verifyUserOwnership(), handleGetEmail);
+router.post('/email/:userId',        verifyUserOwnership(), handleSaveEmail);
+router.post('/email/:userId/verify', verifyUserOwnership(), handleVerifyEmail);
+router.delete('/email/:userId',      verifyUserOwnership(), handleRemoveEmail);
 
-/**
- * GET /api/security/2fa-settings/:userId
- * Get 2FA and session settings
- */
-router.get('/2fa-settings/:userId', verifyUserOwnership(), async (req, res) => {
+
+// ─── 4. Two-Factor Authentication ─────────────────────────────────────────
+
+async function handleGet2FASettings(req, res) {
   try {
-    const { userId } = req.params;
-    const settings = await securityService.get2FASettings(userId);
+    const settings = await securityService.get2FASettings(req.params.userId);
     successResponse(res, { success: true, settings });
   } catch (err) {
     logErrorFromCatch(err, 'app', 'security');
     return serverError(res, 'Failed to get 2FA settings');
   }
-});
+}
 
 /**
- * POST /api/security/2fa-settings/:userId
- * Update 2FA settings (enabled, method, and optionally phone number)
+ * configure2FA() owns the full orchestration:
+ *   - validates phone availability for SMS mode
+ *   - persists enabled/method settings
+ *   - optionally saves a new phone number
+ *   - returns freshly-fetched settings
+ *
+ * It signals user-facing validation failures via err.isValidation = true
+ * so they get a 400 instead of a 500.
  */
-router.post('/2fa-settings/:userId', verifyUserOwnership(), async (req, res) => {
+async function handleUpdate2FASettings(req, res) {
   try {
     const { userId } = req.params;
     const { enabled, method, phoneNumber, backupPhoneNumber } = req.body;
@@ -263,68 +239,42 @@ router.post('/2fa-settings/:userId', verifyUserOwnership(), async (req, res) => 
       return validationError(res, 'method must be sms or email');
     }
 
-    // Validate phone number if SMS method is enabled
-    if (enabled && method === 'sms' && !phoneNumber) {
-      // Check if user already has a verified phone number in database
-      const existingPhone = await securityService.getPhoneData(userId);
-      if (!existingPhone || !existingPhone.phoneNumber || !existingPhone.phoneVerified) {
-        return validationError(res, 'Phone number is required when 2FA SMS is enabled. Please verify your phone number first.');
-      }
-      // Phone already exists and verified - no need to send it again
-    }
-
-    // Update 2FA settings in user_2fa_settings table
-    const settings = await securityService.update2FASettings(userId, { enabled, method });
-
-    // If phone number provided, save it to security table
-    if (phoneNumber) {
-      try {
-        await securityService.savePhoneNumber(userId, phoneNumber, backupPhoneNumber);
-      } catch (phoneErr) {
-        logErrorFromCatch(phoneErr, 'app', 'security');
-        return serverError(res, 'Failed to save phone number: ' + phoneErr.message);
-      }
-    }
-
-    // Fetch updated settings including phone number
-    const updatedSettings = await securityService.get2FASettings(userId);
-
-    successResponse(res, { 
-      success: true, 
-      settings: updatedSettings,
-      message: enabled ? '2FA enabled' : '2FA disabled'
+    const settings = await securityService.configure2FA(userId, { enabled, method, phoneNumber, backupPhoneNumber });
+    successResponse(res, {
+      success: true,
+      settings,
+      message: enabled ? '2FA enabled' : '2FA disabled',
     });
   } catch (err) {
     logErrorFromCatch(err, 'app', 'security');
+    if (err.isValidation) return validationError(res, err.message);
     return serverError(res, 'Failed to update 2FA settings');
   }
-});
+}
+
+router.get('/2fa-settings/:userId',  verifyUserOwnership(), handleGet2FASettings);
+router.post('/2fa-settings/:userId', verifyUserOwnership(), handleUpdate2FASettings);
+
+
+// ─── 5. Session Preferences ────────────────────────────────────────────────
 
 /**
- * GET /api/security/session-preference/:userId
- * Get "Stay Logged In" (persistent session) preference only.
- * Called on app startup to decide whether to keep or clear the Firebase session.
  * Returns { persistent_session: boolean | null }
- *   - null  → user has never set a preference; client defaults to staying logged in
- *   - true  → user explicitly enabled persistent sessions (stay logged in)
- *   - false → user explicitly disabled persistent sessions (sign out on app close)
+ *   null  → user has never set a preference; client defaults to staying logged in
+ *   true  → user explicitly enabled persistent sessions
+ *   false → user explicitly disabled persistent sessions (sign out on app close)
  */
-router.get('/session-preference/:userId', verifyUserOwnership(), async (req, res) => {
+async function handleGetSessionPreference(req, res) {
   try {
-    const { userId } = req.params;
-    const persistentSession = await securityService.getSessionPreference(userId);
+    const persistentSession = await securityService.getSessionPreference(req.params.userId);
     successResponse(res, { success: true, persistent_session: persistentSession });
   } catch (err) {
     logErrorFromCatch(err, 'app', 'security');
     return serverError(res, 'Failed to get session preference');
   }
-});
+}
 
-/**
- * POST /api/security/session-preference/:userId
- * Update "Stay Logged In" preference
- */
-router.post('/session-preference/:userId', verifyUserOwnership(), async (req, res) => {
+async function handleUpdateSessionPreference(req, res) {
   try {
     const { userId } = req.params;
     const { persistentSession } = req.body;
@@ -334,41 +284,51 @@ router.post('/session-preference/:userId', verifyUserOwnership(), async (req, re
     }
 
     const result = await securityService.updateSessionPreference(userId, persistentSession);
-
-    successResponse(res, { 
-      success: true, 
+    successResponse(res, {
+      success: true,
       persistentSession: result.persistent_session,
-      message: persistentSession 
-        ? 'You will stay logged in on this device' 
-        : 'You will be logged out when closing the app or browser'
+      message: persistentSession
+        ? 'You will stay logged in on this device'
+        : 'You will be logged out when closing the app or browser',
     });
   } catch (err) {
     logErrorFromCatch(err, 'app', 'security');
     return serverError(res, 'Failed to update session preference');
   }
-});
+}
 
-/**
- * GET /api/security/verification-methods/:userId
- * Get combined verification methods (phone + email from both tables)
- */
-router.get('/verification-methods/:userId', verifyUserOwnership(), async (req, res) => {
+router.get('/session-preference/:userId',  verifyUserOwnership(), handleGetSessionPreference);
+router.post('/session-preference/:userId', verifyUserOwnership(), handleUpdateSessionPreference);
+
+
+// ─── 6. Verification Methods ───────────────────────────────────────────────
+
+async function handleGetVerificationMethods(req, res) {
   try {
-    const { userId } = req.params;
-
-    // Get user email from database
-    const userResult = await db.query(
-      `SELECT pgp_sym_decrypt(email_encrypted, $1) as email FROM user_personal_info WHERE user_id = $2`,
-      [process.env.ENCRYPTION_KEY, userId]
-    );
-    
-    const userEmail = userResult.rows[0]?.email || '';
-    const methods = await securityService.getVerificationMethods(userId, userEmail);
+    const methods = await securityService.getVerificationMethods(req.params.userId);
     successResponse(res, { success: true, methods });
   } catch (err) {
     logErrorFromCatch(err, 'app', 'security');
     return serverError(res, 'Failed to get verification methods');
   }
-});
+}
+
+router.get('/verification-methods/:userId', verifyUserOwnership(), handleGetVerificationMethods);
+
+
+// ─── 7. Password Operations ────────────────────────────────────────────────
+
+async function handlePasswordChanged(req, res) {
+  try {
+    const result = await securityService.recordPasswordChange(req.params.userId);
+    successResponse(res, result);
+  } catch (err) {
+    logErrorFromCatch(err, 'app', 'security');
+    return serverError(res, 'Failed to record password change');
+  }
+}
+
+router.post('/password-changed/:userId', verifyUserOwnership(), handlePasswordChanged);
+
 
 export default router;
