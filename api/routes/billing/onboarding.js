@@ -53,7 +53,9 @@ router.get('/onboarding-status', async (req, res) => {
     // Required steps for mobile: create_account, subscription, personal_info
     // Required steps for web: create_account, payment_method, subscription, personal_info
     // security_settings is OPTIONAL - removed from requirements
-    const stepOrder = ['create_account', 'payment_method', 'subscription', 'personal_info'];
+    // 'welcome' is the final step (set when the WelcomeModal is dismissed) and
+    // implies all prior steps are complete.
+    const stepOrder = ['create_account', 'payment_method', 'subscription', 'personal_info', 'welcome'];
     const currentStepIndex = onboarding_step ? stepOrder.indexOf(onboarding_step) : -1;
     
     const steps = {
