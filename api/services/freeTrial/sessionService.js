@@ -168,16 +168,61 @@ export async function createFreeTrialSession(tempUserId, ipAddress, language = '
     }
 
     if (action === 'resume') {
+      // ── Clean-slate guarantee ─────────────────────────────────────────────
+      // Every explicit call to createFreeTrialSession (i.e. the user taps
+      // "Try Free") must start with a completely empty chat, regardless of
+      // whether a previous session exists on this device.
+      //
+      // WHY: Temp user IDs are device-stable, so the same physical device
+      // always maps to the same user_id_hash.  Without this reset:
+      //   • A user who started a trial yesterday sees yesterday's conversation.
+      //   • A different person picking up the same device sees the previous
+      //     person's private chat.
+      //
+      // NOTE: This path is NOT reached when the app resumes from the background
+      // (that goes through handlePersistedGuestSession → checkSession, which
+      // never calls createFreeTrialSession).  So a genuine in-app continuation
+      // (user backgrounded then foregrounded) is unaffected.
+      if (!session.is_completed) {
+        // Reset the session clock so time-based filters in the chat endpoints
+        // naturally exclude any messages that pre-date this new invocation.
+        try {
+          await db.query(
+            `UPDATE free_trial_sessions
+             SET current_step     = 'created',
+                 started_at       = NOW(),
+                 last_activity_at = NOW()
+             WHERE user_id_hash = $1`,
+            [userIdHash]
+          );
+        } catch (err) {
+          logErrorFromCatch(err, 'free-trial', '[SESSION-SERVICE] Failed to reset started_at on resume');
+        }
+
+        // Remove any chat messages stored under this hash so the new session
+        // always starts with an empty conversation.  Non-fatal.
+        try {
+          await db.query(
+            `DELETE FROM messages
+             WHERE user_id_hash = $1
+             AND role IN ('user', 'assistant')`,
+            [userIdHash]
+          );
+        } catch (err) {
+          logErrorFromCatch(err, 'free-trial', '[SESSION-SERVICE] Failed to clear chat messages on resume');
+        }
+      }
+
       await upsertLanguagePreferences(userIdHash, language);
       return {
         success:     true,
         sessionId:   session.id,
-        currentStep: session.current_step,
+        currentStep: session.is_completed ? session.current_step : 'created',
         isCompleted: session.is_completed,
         resuming:    true,
         message:     session.is_completed
           ? 'Trial already completed'
-          : `Resuming from step: ${session.current_step}`,
+          : 'Starting fresh: previous chat cleared',
       };
     }
 
@@ -198,9 +243,19 @@ export async function createFreeTrialSession(tempUserId, ipAddress, language = '
 
       await upsertLanguagePreferences(userIdHash, language);
 
-      // CRITICAL: Wipe stale horoscope messages and astrology profile so the tester
-      // gets a completely clean slate on each new run.
+      // CRITICAL: Wipe ALL stale messages (chat + astrology) and astrology profile
+      // so the tester gets a completely clean slate on each new run.
       await clearAstrologyMessages(userIdHash);
+      try {
+        await db.query(
+          `DELETE FROM messages
+           WHERE user_id_hash = $1
+           AND role IN ('user', 'assistant')`,
+          [userIdHash]
+        );
+      } catch (err) {
+        logErrorFromCatch(err, 'free-trial', '[SESSION-SERVICE] Failed to clear chat messages on reset');
+      }
       try {
         await db.query(`DELETE FROM user_astrology WHERE user_id_hash = $1`, [userIdHash]);
       } catch (err) {

@@ -105,17 +105,25 @@ router.get('/history/:tempUserId', async (req, res) => {
       return validationError(res, 'Missing tempUserId');
     }
 
-    // Verify free trial session exists
+    // Verify free trial session exists and fetch started_at for time-based filtering.
     // Note: tempUserId is the Firebase UID for anonymous users, not prefixed with 'temp_'
     const userIdHash = hashUserId(tempUserId);
     const sessionCheck = await db.query(
-      `SELECT id FROM free_trial_sessions WHERE user_id_hash = $1`,
+      `SELECT id, started_at FROM free_trial_sessions WHERE user_id_hash = $1`,
       [userIdHash]
     );
 
     if (sessionCheck.rows.length === 0) {
       return validationError(res, 'Free trial session not found');
     }
+
+    // Safety net: only return messages that belong to the current session window
+    // (created_at >= started_at).  createFreeTrialSession already deletes old
+    // messages on every new trial start, but this filter ensures that even if
+    // deletion somehow failed no previous session's conversation surfaces here.
+    // This also prevents a different person on the same device from ever seeing
+    // a prior user's private chat.
+    const sessionStartedAt = sessionCheck.rows[0].started_at;
 
     // Fetch messages from database - only user/assistant chat messages (exclude astrology)
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
@@ -128,9 +136,10 @@ router.get('/history/:tempUserId', async (req, res) => {
     FROM messages 
     WHERE user_id_hash = $1 
     AND role IN ('user', 'assistant')
+    AND ($3::timestamptz IS NULL OR created_at >= $3::timestamptz)
     ORDER BY created_at ASC`;
 
-    const { rows } = await db.query(query, [userIdHash, ENCRYPTION_KEY]);
+    const { rows } = await db.query(query, [userIdHash, ENCRYPTION_KEY, sessionStartedAt ?? null]);
 
     // Transform: format for frontend
     const transformedRows = rows.map(msg => {
@@ -183,17 +192,26 @@ router.get('/opening/:tempUserId', async (req, res) => {
       return validationError(res, 'Missing tempUserId');
     }
 
-    // Verify free trial session exists
+    // Verify free trial session exists and fetch started_at for time-based filtering.
     // Note: tempUserId is the Firebase UID for anonymous users, not prefixed with 'temp_'
     const userIdHash = hashUserId(tempUserId);
     const sessionCheck = await db.query(
-      `SELECT id FROM free_trial_sessions WHERE user_id_hash = $1`,
+      `SELECT id, started_at FROM free_trial_sessions WHERE user_id_hash = $1`,
       [userIdHash]
     );
 
     if (sessionCheck.rows.length === 0) {
       return validationError(res, 'Free trial session not found');
     }
+
+    // Safety net: the session's started_at is used to scope the existing-opening
+    // check to the current session window only.  createFreeTrialSession resets
+    // started_at = NOW() on every new trial start (including resumes), so any
+    // messages from a previous session have created_at < started_at and are
+    // naturally excluded.  This prevents a stale greeting from a previous session
+    // (or a different person on the same device) triggering a spurious 204 that
+    // would cause the client to load old chat history.
+    const sessionStartedAt = sessionCheck.rows[0].started_at;
 
     // Get user's local timezone date
     const { rows: tzRows } = await db.query(
@@ -208,24 +226,23 @@ router.get('/opening/:tempUserId', async (req, res) => {
       || 'UTC';
     const todayLocalDate = getLocalDateForTimezone(userTimezone);
 
-    // Check if any oracle greeting has ever been sent to this free-trial user.
-    // We do NOT filter by date here because:
-    //  1. Free trial is a one-time experience — users don't return the next day.
-    //  2. A date-based check was causing mismatches when the stored date used
-    //     UTC (server default) but the query now uses the client's local date
-    //     (e.g. Feb 28 local vs Mar 1 UTC at 7 pm CST), making the check miss
-    //     an existing greeting and attempt a duplicate — sometimes causing a
-    //     silent 500 that swallowed the response entirely.
+    // Check if a greeting has already been sent in the CURRENT session window.
+    // We scope by started_at rather than by date to avoid the UTC vs. local-date
+    // mismatch that previously caused a duplicate-insert 500 (see history below).
+    // started_at is reset to NOW() by createFreeTrialSession on every new trial,
+    // so this check is always scoped to the current session.
     const { rows: existingOpenings } = await db.query(
       `SELECT id, created_at FROM messages 
        WHERE user_id_hash = $1 
        AND role = 'assistant'
+       AND ($2::timestamptz IS NULL OR created_at >= $2::timestamptz)
        ORDER BY created_at ASC 
        LIMIT 1`,
-      [userIdHash]
+      [userIdHash, sessionStartedAt ?? null]
     );
 
-    // If an oracle message already exists, tell the client to load from history
+    // If an oracle message already exists for this session, tell the client to
+    // load from history (genuine in-session resume, e.g. app was backgrounded).
     if (existingOpenings.length > 0) {
       return res.status(204).send(); // No content — client should load history
     }
