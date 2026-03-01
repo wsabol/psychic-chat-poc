@@ -24,6 +24,7 @@ import {
   resolveZodiacSignForTrial,
   clearAstrologyMessages,
   refreshLanguagePreference,
+  updateTimezonePreference,
 } from '../services/freeTrialService.js';
 import { freeTrialSessionLimiter, freeTrialLimiter } from '../middleware/rateLimiter.js';
 
@@ -277,22 +278,9 @@ router.get('/horoscope/:tempUserId', freeTrialLimiter, async (req, res) => {
       await refreshLanguagePreference(userIdHash, language);
     }
 
-    // CRITICAL: Update the user's timezone in user_preferences so the horoscope
-    // handler uses the user's LOCAL date (not UTC/GMT) when generating the reading.
-    // Free trial sessions start with timezone='UTC' — this corrects it using the
-    // browser-supplied IANA timezone (e.g. 'America/Chicago') sent by the client.
-    if (timezone) {
-      try {
-        const { db } = await import('../shared/db.js');
-        await db.query(
-          `UPDATE user_preferences SET timezone = $1, updated_at = NOW() WHERE user_id_hash = $2`,
-          [timezone, userIdHash]
-        );
-      } catch (tzErr) {
-        // Non-fatal — log and continue; falls back to UTC if update fails
-        await logErrorFromCatch(tzErr, 'free-trial', 'Failed to update timezone preference');
-      }
-    }
+    // CRITICAL: Update the user's timezone so the horoscope handler uses the
+    // user's LOCAL date (not UTC/GMT) when generating the reading.
+    if (timezone) await updateTimezonePreference(userIdHash, timezone);
 
     // CRITICAL: Always clear any stale horoscope messages before generating so a
     // free trial user NEVER receives a cached horoscope from a previous session.
@@ -302,12 +290,7 @@ router.get('/horoscope/:tempUserId', freeTrialLimiter, async (req, res) => {
 
     // Generate horoscope synchronously (temp users skip compliance checks)
     const { processHoroscopeSync } = await import('../services/chat/processor.js');
-    let result;
-    try {
-      result = await processHoroscopeSync(tempUserId, 'daily');
-    } catch (procErr) {
-      throw procErr;
-    }
+    const result = await processHoroscopeSync(tempUserId, 'daily');
 
     if (!result?.horoscope) return serverError(res, 'Failed to generate horoscope');
 
