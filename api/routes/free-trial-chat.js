@@ -208,20 +208,26 @@ router.get('/opening/:tempUserId', async (req, res) => {
       || 'UTC';
     const todayLocalDate = getLocalDateForTimezone(userTimezone);
 
-    // Check if opening already exists for today
+    // Check if any oracle greeting has ever been sent to this free-trial user.
+    // We do NOT filter by date here because:
+    //  1. Free trial is a one-time experience — users don't return the next day.
+    //  2. A date-based check was causing mismatches when the stored date used
+    //     UTC (server default) but the query now uses the client's local date
+    //     (e.g. Feb 28 local vs Mar 1 UTC at 7 pm CST), making the check miss
+    //     an existing greeting and attempt a duplicate — sometimes causing a
+    //     silent 500 that swallowed the response entirely.
     const { rows: existingOpenings } = await db.query(
       `SELECT id, created_at FROM messages 
        WHERE user_id_hash = $1 
-       AND role = 'assistant' 
-       AND created_at_local_date = $2
+       AND role = 'assistant'
        ORDER BY created_at ASC 
        LIMIT 1`,
-      [userIdHash, todayLocalDate]
+      [userIdHash]
     );
 
-    // If opening already exists, don't create a new one
+    // If an oracle message already exists, tell the client to load from history
     if (existingOpenings.length > 0) {
-      return res.status(204).send(); // No content
+      return res.status(204).send(); // No content — client should load history
     }
 
     // Fetch user's language preference.
