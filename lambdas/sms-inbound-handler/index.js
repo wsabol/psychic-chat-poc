@@ -43,8 +43,7 @@ const STOP_REPLY =
  */
 const HELP_REPLY =
   'Starship Psychics SMS Help: Codes sent only for login/verification. ' +
-  '1-3 msgs/login session. Msg&data rates may apply. Reply STOP to cancel. ' +
-  'Support: support@starshippsychics.com';
+  '1-3 msgs/login session. Msg&data rates may apply. Reply STOP to opt-out.';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
