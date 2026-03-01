@@ -111,6 +111,21 @@ export function use2FASettings(userId, token, apiUrl) {
     await performSave(twoFAEnabled, twoFAMethod);
   }, [twoFAEnabled, twoFAMethod, smsConsentGiven, performSave]);
 
+  // ── Cancel edit ───────────────────────────────────────────────────────────
+
+  /**
+   * Resets 2FA form state to whatever was last loaded from the API and exits
+   * edit mode.  Extracted here so TwoFASection doesn't need the raw
+   * twoFASettings object passed as a prop just to implement the cancel button.
+   */
+  const cancelEdit = useCallback(() => {
+    setTwoFAEditMode(false);
+    if (twoFASettings) {
+      setTwoFAEnabled(twoFASettings.enabled);
+      setTwoFAMethodRaw(twoFASettings.method || 'email');
+    }
+  }, [twoFASettings]);
+
   // ── SMS consent modal callbacks ───────────────────────────────────────────
 
   /** User accepted the SMS consent — mark consent given, close modal, save. */
@@ -142,6 +157,7 @@ export function use2FASettings(userId, token, apiUrl) {
     twoFAMethod,
     setTwoFAMethod,
     handle2FASave,
+    cancelEdit,
     load2FASettings,
     // SMS consent modal
     showSMSConsentModal,

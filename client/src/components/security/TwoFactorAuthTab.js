@@ -1,3 +1,19 @@
+/**
+ * @deprecated
+ *
+ * TwoFactorAuthTab is no longer used.
+ *
+ * SecurityPage now renders VerificationAndTwoFATab, which is a superset of this
+ * component — it combines 2FA settings (TwoFASection), verification methods,
+ * device-trust, and the trusted-devices list all in one tab.
+ *
+ * The logic that used to live here has been fully superseded by:
+ *  - use2FASettings hook  (verification/hooks/use2FASettings.js)
+ *  - TwoFASection         (verification/TwoFASection.jsx)
+ *
+ * This file can be safely deleted once you confirm nothing else imports it.
+ */
+
 import React, { useState, useCallback, useEffect } from 'react';
 import SMSConsentModal from './verification/SMSConsentModal';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';

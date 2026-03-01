@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { logErrorFromCatch } from '../../../shared/errorLogger.js';
+import { formatDate } from './utils/dateUtils.js';
 
 /**
- * TrustedDevicesSection - Manage trusted devices
+ * TrustedDevicesSection – Display and revoke trusted devices.
  *
- * Receives devices + loading state from VerificationAndTwoFATab so it shares
- * the exact same data as TrustCurrentDeviceSection — both sections always agree.
+ * Receives `devices` and `loading` from VerificationAndTwoFATab (via
+ * useTrustedDevices) so it shares the exact same data as
+ * TrustCurrentDeviceSection — both sections always agree on device state.
  */
 export function TrustedDevicesSection({ devices, loading, userId, token, apiUrl, onRevoked }) {
   const [error, setError] = useState(null);
@@ -27,11 +29,6 @@ export function TrustedDevicesSection({ devices, loading, userId, token, apiUrl,
       logErrorFromCatch('[TRUSTED-DEVICES] Revoke error:', err);
       setError('Error revoking device');
     }
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Unknown';
-    return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
   if (loading) {
