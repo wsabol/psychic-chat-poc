@@ -25,8 +25,8 @@ export function extractClientIp(req) {
   }
 
   // Strip IPv4-mapped IPv6 prefix (e.g. "::ffff:203.0.113.5" → "203.0.113.5")
-  // This matches the normalizeIP() behaviour in adminIpService.js so that IPs
-  // are always in plain IPv4 (or pure IPv6) form before validation / hashing.
+  // This matches the normalizeIP() behaviour in services/security/adminIpTrustService.js
+  // so that IPs are always in plain IPv4 (or pure IPv6) form before validation / hashing.
   const ipv4MappedMatch = ip.match(/^::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/i);
   if (ipv4MappedMatch) {
     return ipv4MappedMatch[1];
