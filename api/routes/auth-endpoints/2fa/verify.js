@@ -17,7 +17,8 @@ import { verifySMSCode } from '../../../shared/smsService-aws.js';
 import { decryptPhone } from '../../../services/security/helpers/securityHelpers.js';
 import { validationError, serverError, successResponse } from '../../../utils/responses.js';
 import { logErrorFromCatch } from '../../../shared/errorLogger.js';
-import { buildAuditFields, upsertDeviceTrust } from './helpers.js';
+import { buildAuditFields } from './helpers.js';
+import { recordTrustedDevice } from '../../../services/adminIpService.js';
 
 // ---------------------------------------------------------------------------
 // Route handler
@@ -61,13 +62,22 @@ export async function verify2FAHandler(req, res) {
     // ------------------------------------------------------------------
     // 2. Optionally trust the current device
     // ------------------------------------------------------------------
+    // Records the trust row in admin_trusted_ips — the same table that
+    // checkTrustedDevice(), check-current-device-trust, and the security
+    // page all read from.  Using the wrong table (security_sessions via the
+    // old upsertDeviceTrust helper) was the bug: trust was stored but never
+    // found, so the device always appeared untrusted after registration.
+    //
+    // Device key priority (mirrors trustCurrentDeviceHandler):
+    //   1. X-Device-ID header – mobile app's persistent UUID (React Native
+    //      cannot set User-Agent from JS, so this custom header is used instead)
+    //   2. User-Agent header  – web browsers send this automatically
     if (shouldTrustDevice) {
       try {
-        const userIdHash = hashUserId(userId);
-        const userAgent = req.get('user-agent') || '';
-        const ipAddress = req.ip || '';
-        const deviceName = extractDeviceName(userAgent);
-        await upsertDeviceTrust(userIdHash, deviceName, ipAddress, userAgent);
+        const deviceKey  = req.get('x-device-id') || req.get('user-agent') || '';
+        const ipAddress  = req.ip || '';
+        const deviceName = extractDeviceName(req.get('user-agent') || '');
+        await recordTrustedDevice(userId, deviceKey, ipAddress, deviceName);
       } catch (trustErr) {
         // Non-fatal: device trust failure should not block login
         logErrorFromCatch(trustErr, 'app', 'verify-2fa/trust-device');
