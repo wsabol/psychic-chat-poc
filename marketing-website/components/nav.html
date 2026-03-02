@@ -1,0 +1,35 @@
+<!--
+  ══════════════════════════════════════════════════════════════
+  CANONICAL NAVIGATION  —  components/nav.html
+  ══════════════════════════════════════════════════════════════
+  This file is the single source of truth for the site nav.
+
+  HOW TO UPDATE THE NAV:
+    1. Edit this file.
+    2. Copy the <nav>…</nav> block into each HTML page:
+         · index.html         (uses #anchor links, not index.html#)
+         · data-deletion.html (uses index.html# prefix)
+         · privacy.html       (uses index.html# prefix)
+    3. Deploy as normal.
+  ══════════════════════════════════════════════════════════════
+-->
+<nav class="navbar">
+    <div class="container nav-container">
+        <a href="index.html" class="logo" style="text-decoration:none;">
+            <img src="StarshipPsychics_Logo.png" alt="Starship Psychics Logo" class="logo-img">
+            <span class="logo-text">Starship Psychics</span>
+        </a>
+        <ul class="nav-menu" id="navMenu">
+            <li><a href="index.html#home-contact" class="nav-link">Get Notified</a></li>
+            <li><a href="index.html#coming-soon"  class="nav-link">Psychic Chat</a></li>
+            <li><a href="index.html#about"         class="nav-link">About</a></li>
+            <li><a href="index.html#testimonials"  class="nav-link">Testimonials</a></li>
+            <li><a href="index.html#contact"       class="nav-link">Contact</a></li>
+        </ul>
+        <div class="hamburger" id="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+</nav>

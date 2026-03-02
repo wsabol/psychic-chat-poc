@@ -110,20 +110,26 @@ if ($CreateBucket) {
 Write-Host ""
 Write-Host "Uploading website files to S3..." -ForegroundColor Yellow
 
+# ── Static assets and HTML pages ────────────────────────────────────────────
 $filesToUpload = @(
-    @{File="index.html"; ContentType="text/html"},
-    @{File="styles.css"; ContentType="text/css"},
-    @{File="script.js"; ContentType="application/javascript"},
+    # Core pages
+    @{File="index.html";         ContentType="text/html"},
+    @{File="privacy.html";       ContentType="text/html"},
+    @{File="data-deletion.html"; ContentType="text/html"},
+    # Shared assets
+    @{File="styles.css";         ContentType="text/css"},
+    @{File="script.js";          ContentType="application/javascript"},
+    # Images
     @{File="StarshipPsychics_Logo.png"; ContentType="image/png"},
-    @{File="iStock-1355328450.jpg"; ContentType="image/jpeg"},
-    @{File="knightofcups.jpeg"; ContentType="image/jpeg"}
+    @{File="iStock-1355328450.jpg";     ContentType="image/jpeg"},
+    @{File="knightofcups.jpeg";         ContentType="image/jpeg"}
 )
 
 $uploadedCount = 0
 foreach ($item in $filesToUpload) {
     $file = $item.File
     $contentType = $item.ContentType
-    
+
     if (Test-Path $file) {
         Write-Host "  Uploading $file..." -ForegroundColor Gray
         aws s3 cp $file "s3://$BucketName/$file" --content-type $contentType --cache-control "public, max-age=3600" 2>&1 | Out-Null
@@ -136,6 +142,27 @@ foreach ($item in $filesToUpload) {
     } else {
         Write-Host "  ⊗ $file not found, skipping" -ForegroundColor Yellow
     }
+}
+
+# ── Shared component partials (components/*.html) ────────────────────────────
+Write-Host ""
+Write-Host "Uploading shared components..." -ForegroundColor Yellow
+
+if (Test-Path "components") {
+    $componentFiles = Get-ChildItem -Path "components" -Filter "*.html"
+    foreach ($componentFile in $componentFiles) {
+        $s3Key = "components/$($componentFile.Name)"
+        Write-Host "  Uploading $s3Key..." -ForegroundColor Gray
+        aws s3 cp $componentFile.FullName "s3://$BucketName/$s3Key" --content-type "text/html" --cache-control "public, max-age=3600" 2>&1 | Out-Null
+        if ($LASTEXITCODE -eq 0) {
+            $uploadedCount++
+            Write-Host "  ✓ $s3Key uploaded" -ForegroundColor Green
+        } else {
+            Write-Host "  ✗ Failed to upload $s3Key" -ForegroundColor Red
+        }
+    }
+} else {
+    Write-Host "  ⊗ components/ directory not found, skipping" -ForegroundColor Yellow
 }
 
 Write-Host ""

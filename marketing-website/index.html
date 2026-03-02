@@ -12,31 +12,33 @@
     <title>Starship Psychics - Your Cosmic Journey Awaits</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" type="image/png" href="favicon.png">
-    
+
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17907083191"></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-
-      gtag('config', 'AW-17907083191');
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'AW-17907083191');
     </script>
 </head>
 <body>
-    <!-- Navigation -->
+
+    <!-- ═══════════════════════════════════════════════
+         NAVIGATION  ·  canonical source: components/nav.html
+    ═══════════════════════════════════════════════ -->
     <nav class="navbar">
         <div class="container nav-container">
-            <div class="logo">
+            <a href="index.html" class="logo" style="text-decoration:none;">
                 <img src="StarshipPsychics_Logo.png" alt="Starship Psychics Logo" class="logo-img">
                 <span class="logo-text">Starship Psychics</span>
-            </div>
+            </a>
             <ul class="nav-menu" id="navMenu">
                 <li><a href="#home-contact" class="nav-link">Get Notified</a></li>
-                <li><a href="#coming-soon" class="nav-link">Psychic Chat</a></li>
-                <li><a href="#about" class="nav-link">About</a></li>
+                <li><a href="#coming-soon"  class="nav-link">Psychic Chat</a></li>
+                <li><a href="#about"        class="nav-link">About</a></li>
                 <li><a href="#testimonials" class="nav-link">Testimonials</a></li>
-                <li><a href="#contact" class="nav-link">Contact</a></li>
+                <li><a href="#contact"      class="nav-link">Contact</a></li>
             </ul>
             <div class="hamburger" id="hamburger">
                 <span></span>
@@ -46,14 +48,16 @@
         </div>
     </nav>
 
-    <!-- Coming Soon Banner -->
+    <!-- ═══════════════════════════════════════════════
+         COMING SOON BANNER
+    ═══════════════════════════════════════════════ -->
     <section id="coming-soon" class="banner-section">
         <div class="psychic-chat-banner">
             <div class="banner-content">
                 <span class="banner-emoji">🔮✨🌟</span>
                 <h2 class="banner-title">Psychic Chat Coming Soon!</h2>
                 <p class="banner-subtitle">
-                    Experience personalized cosmic insights with our revolutionary AI-powered oracle. 
+                    Experience personalized cosmic insights with our revolutionary AI-powered oracle.
                     Connect with ancient wisdom through modern technology.
                 </p>
                 <a href="#home-contact" class="banner-cta">
@@ -63,12 +67,14 @@
         </div>
     </section>
 
-    <!-- Home Contact Form Section -->
+    <!-- ═══════════════════════════════════════════════
+         LAUNCH LIST / HOME CONTACT FORM
+    ═══════════════════════════════════════════════ -->
     <section id="home-contact" class="home-contact-section">
         <div class="container">
             <h2 class="section-title">Stay Connected - Join Our Launch List!</h2>
             <p class="section-subtitle">Be the first to know when Starship Psychics launches. Get exclusive early access and special offers.</p>
-            
+
             <div class="home-contact-wrapper">
                 <form action="https://formsubmit.co/info@starshippsychics.com" method="POST" class="home-contact-form" id="homeContactForm">
                     <!-- FormSubmit Configuration -->
@@ -76,39 +82,41 @@
                     <input type="hidden" name="_captcha" value="false">
                     <input type="hidden" name="_template" value="table">
                     <input type="text" name="_honey" style="display:none">
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="home-name">Name *</label>
                             <input type="text" id="home-name" name="name" required placeholder="Your name">
                         </div>
-                        
                         <div class="form-group">
                             <label for="home-email">Email *</label>
                             <input type="email" id="home-email" name="email" required placeholder="your@email.com">
                         </div>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="home-message">Message</label>
                         <textarea id="home-message" name="message" rows="4" placeholder="Tell us what you're interested in or any questions you have..."></textarea>
                     </div>
-                    
+
                     <button type="submit" class="btn btn-primary btn-large" id="homeSubmitBtn">
                         Send Message ✨
                     </button>
-                    
+
                     <div id="homeFormMessage" class="form-message" style="display: none;"></div>
-                    
+
                     <p class="form-privacy-note">
                         🔒 We respect your privacy. Your information will never be shared.
+                        <a href="privacy.html" style="color: var(--primary-color);">Privacy Policy</a>
                     </p>
                 </form>
             </div>
         </div>
     </section>
 
-    <!-- Hero Section -->
+    <!-- ═══════════════════════════════════════════════
+         HERO
+    ═══════════════════════════════════════════════ -->
     <section id="home" class="hero-section">
         <div class="hero-overlay"></div>
         <div class="container hero-content">
@@ -123,28 +131,23 @@
                 <a href="#about" class="btn btn-secondary">Learn More</a>
             </div>
         </div>
-        <!-- 
-            TO ADD YOUR EXISTING PHOTO:
-            1. Save your photo from the old website as "hero-background.jpg" or "hero-background.png"
-            2. Place it in the same folder as this HTML file
-            3. The CSS is already configured to use it as the background
-            4. Or update the CSS file to point to your image filename
-        -->
     </section>
 
-    <!-- Features Section -->
+    <!-- ═══════════════════════════════════════════════
+         FEATURES
+    ═══════════════════════════════════════════════ -->
     <section id="features" class="features-section">
         <div class="container">
             <h2 class="section-title">Your Gateway to Cosmic Wisdom</h2>
             <p class="section-subtitle">Explore the universe within and around you</p>
-            
+
             <div class="features-grid">
                 <div class="feature-card">
                     <div class="feature-icon">🔮</div>
                     <h3>Psychic Chat</h3>
                     <p>Connect with our AI-powered oracle for personalized spiritual guidance and cosmic insights</p>
                 </div>
-                
+
                 <div class="feature-card">
                     <div class="feature-icon feature-icon-image">
                         <img src="knightofcups.jpeg" alt="Tarot Card" style="width: 80px; height: auto; border-radius: 8px;">
@@ -152,25 +155,25 @@
                     <h3>Tarot Readings</h3>
                     <p>Receive intuitive tarot guidance powered by ancient wisdom and modern AI</p>
                 </div>
-                
+
                 <div class="feature-card">
                     <div class="feature-icon">⭐</div>
                     <h3>Birth Chart Analysis</h3>
                     <p>Unlock the secrets of your natal chart with detailed astrological interpretations</p>
                 </div>
-                
+
                 <div class="feature-card">
                     <div class="feature-icon">🌙</div>
                     <h3>Moon Phases</h3>
                     <p>Track lunar cycles and harness the moon's energy for manifestation and growth</p>
                 </div>
-                
+
                 <div class="feature-card">
                     <div class="feature-icon">♈</div>
                     <h3>Daily/Weekly Horoscopes</h3>
                     <p>Start each day with personalized astrological forecasts for your zodiac sign</p>
                 </div>
-                
+
                 <div class="feature-card">
                     <div class="feature-icon">🌌</div>
                     <h3>Cosmic Weather</h3>
@@ -180,25 +183,27 @@
         </div>
     </section>
 
-    <!-- About Section -->
+    <!-- ═══════════════════════════════════════════════
+         ABOUT
+    ═══════════════════════════════════════════════ -->
     <section id="about" class="about-section">
         <div class="container">
             <div class="about-content">
                 <div class="about-text">
                     <h2 class="section-title">About Starship Psychics</h2>
                     <p>
-                        Starship Psychics is a spiritual wellness platform that blends ancient arts of 
-                        tarot, astrology and crystals with modern artificial intelligence technology. Our mission is to make 
+                        Starship Psychics is a spiritual wellness platform that blends ancient arts of
+                        tarot, astrology and crystals with modern artificial intelligence technology. Our mission is to make
                         cosmic wisdom accessible to everyone seeking guidance, clarity, and personal growth.
                     </p>
                     <p>
-                        Whether you're navigating life's challenges, seeking answers about relationships, 
-                        career decisions, or personal development, our AI-powered oracle offers thoughtful 
+                        Whether you're navigating life's challenges, seeking answers about relationships,
+                        career decisions, or personal development, our AI-powered oracle offers thoughtful
                         perspectives rooted in ancient traditions spanning thousands of years.
                     </p>
                     <p>
-                        We believe that everyone deserves access to spiritual guidance that is personalized, 
-                        insightful, and meaningful. That's why we've created a platform that combines the 
+                        We believe that everyone deserves access to spiritual guidance that is personalized,
+                        insightful, and meaningful. That's why we've created a platform that combines the
                         depth of traditional tarot, astrological wisdom and crystal guidance with the convenience
                         and accessibility of modern technology.
                     </p>
@@ -219,62 +224,44 @@
                 </div>
                 <div class="about-image">
                     <img src="about-image.jpg" alt="Starship Psychics - Cosmic Wisdom" class="about-img">
-                    <!-- 
-                        Replace about-image.jpg with your actual image
-                        Or use your existing website photo here
-                    -->
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Testimonials Section -->
+    <!-- ═══════════════════════════════════════════════
+         TESTIMONIALS
+    ═══════════════════════════════════════════════ -->
     <section id="testimonials" class="testimonials-section">
         <div class="container">
             <div class="section-header">
                 <h2 class="section-title">What Experts Say</h2>
-                <p class="section-subtitle">
-                    Trusted by spiritual practitioners and wellness professionals
-                </p>
+                <p class="section-subtitle">Trusted by spiritual practitioners and wellness professionals</p>
             </div>
-            
+
             <div class="testimonial-card">
                 <div class="quote-icon">"</div>
                 <div class="testimonial-content">
                     <div class="testimonial-text">
-                        <!-- REPLACE THIS TEXT WITH SAMANTHA'S ACTUAL TESTIMONIAL -->
-                        “I think this is a really good idea, a door opener to metaphysical realities.
+                        "I think this is a really good idea, a door opener to metaphysical realities.
 I like what you have done bringing the planetary system into the readings.
-This will accomplish your goal to help people.”
-
-                        <!-- END OF TESTIMONIAL TEXT TO REPLACE -->
+This will accomplish your goal to help people."
                     </div>
-                    
+
                     <div class="testimonial-author">
-                        <div class="author-avatar">
-                            S
-                        </div>
-                        
+                        <div class="author-avatar">S</div>
                         <div class="author-info">
                             <div class="author-name">
-                                <!-- REPLACE WITH SAMANTHA'S FULL NAME -->
                                 Dr. Samantha Vanderslice
                                 <span class="verified-badge">✓ Verified</span>
                             </div>
-                            
                             <div class="author-credentials">
-                                <!-- REPLACE WITH SAMANTHA'S ACTUAL CREDENTIALS -->
-                               BFRP, DMsc, CCP Certified Esogetic Colorpuncture Practitioner, Bach Flower Registered Practitioner, Doctor of Metaphysical Sciences, Reiki Master, Massage Therapist, Author
+                                BFRP, DMsc, CCP &mdash; Certified Esogetic Colorpuncture Practitioner, Bach Flower Registered Practitioner, Doctor of Metaphysical Sciences, Reiki Master, Massage Therapist, Author
                             </div>
-                            
                             <div class="author-title">
-                                <!-- REPLACE WITH SAMANTHA'S ADDITIONAL INFO/TITLES -->
                                 Over 40 years of experience in spiritual wellness and astrological consultation
                             </div>
-                            
-                            <div class="star-rating">
-                                ★★★★★
-                            </div>
+                            <div class="star-rating">★★★★★</div>
                         </div>
                     </div>
                 </div>
@@ -282,12 +269,14 @@ This will accomplish your goal to help people.”
         </div>
     </section>
 
-    <!-- Contact Section -->
+    <!-- ═══════════════════════════════════════════════
+         CONTACT
+    ═══════════════════════════════════════════════ -->
     <section id="contact" class="contact-section">
         <div class="container">
             <h2 class="section-title">Get in Touch</h2>
             <p class="section-subtitle">We'd love to hear from you</p>
-            
+
             <div class="contact-content">
                 <div class="contact-info">
                     <div class="contact-item">
@@ -297,7 +286,7 @@ This will accomplish your goal to help people.”
                             <a href="mailto:info@starshippsychics.com">info@starshippsychics.com</a>
                         </div>
                     </div>
-                    
+
                     <div class="contact-item">
                         <div class="contact-icon">📍</div>
                         <div class="contact-details">
@@ -305,7 +294,7 @@ This will accomplish your goal to help people.”
                             <p>PO Box 13<br>Wimberley, TX 78676</p>
                         </div>
                     </div>
-                    
+
                     <div class="contact-item">
                         <div class="contact-icon">⏰</div>
                         <div class="contact-details">
@@ -314,7 +303,7 @@ This will accomplish your goal to help people.”
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="contact-form-container">
                     <form action="https://formsubmit.co/info@starshippsychics.com" method="POST" class="contact-form" id="contactForm">
                         <!-- FormSubmit Configuration -->
@@ -322,24 +311,22 @@ This will accomplish your goal to help people.”
                         <input type="hidden" name="_captcha" value="false">
                         <input type="hidden" name="_template" value="table">
                         <input type="text" name="_honey" style="display:none">
-                        
+
                         <div class="form-group">
                             <label for="name">Name</label>
                             <input type="text" id="name" name="name" required placeholder="Your name">
                         </div>
-                        
                         <div class="form-group">
                             <label for="email">Email</label>
                             <input type="email" id="email" name="email" required placeholder="your@email.com">
                         </div>
-                        
                         <div class="form-group">
                             <label for="message">Message</label>
                             <textarea id="message" name="message" rows="5" required placeholder="How can we help you?"></textarea>
                         </div>
-                        
+
                         <button type="submit" class="btn btn-primary" id="contactSubmitBtn">Send Message</button>
-                        
+
                         <div id="contactFormMessage" class="form-message" style="display: none;"></div>
                     </form>
                 </div>
@@ -347,7 +334,9 @@ This will accomplish your goal to help people.”
         </div>
     </section>
 
-    <!-- Footer -->
+    <!-- ═══════════════════════════════════════════════
+         FOOTER  ·  canonical source: components/footer.html
+    ═══════════════════════════════════════════════ -->
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
@@ -355,59 +344,60 @@ This will accomplish your goal to help people.”
                     <h3>Starship Psychics</h3>
                     <p>Your cosmic journey awaits. Connect with ancient wisdom through modern technology.</p>
                 </div>
-                
+
                 <div class="footer-section">
                     <h3>Quick Links</h3>
                     <ul class="footer-links">
-                        <li><a href="#home">Home</a></li>
+                        <li><a href="index.html">Home</a></li>
                         <li><a href="#about">About</a></li>
                         <li><a href="#coming-soon">Psychic Chat</a></li>
                         <li><a href="#testimonials">Testimonials</a></li>
                         <li><a href="#contact">Contact</a></li>
                         <li><a href="data-deletion.html">Data Deletion</a></li>
+                        <li><a href="privacy.html">Privacy Policy</a></li>
                     </ul>
                 </div>
-                
+
                 <div class="footer-section">
                     <h3>Contact</h3>
                     <p>Email: <a href="mailto:info@starshippsychics.com">info@starshippsychics.com</a></p>
+                    <p>Privacy: <a href="mailto:privacy@starshippsychics.com">privacy@starshippsychics.com</a></p>
                     <p>PO Box 13<br>Wimberley, TX 78676</p>
                 </div>
             </div>
-            
+
             <div class="footer-bottom">
-                <p>&copy; 2026 Starship Psychics. All rights reserved.</p>
+                <p>
+                    &copy; <span id="footer-year">2026</span> Starship Psychics. All rights reserved. |
+                    <a href="data-deletion.html" style="color:#a78bde;">Data Deletion</a> |
+                    <a href="privacy.html" style="color:#a78bde;">Privacy Policy</a>
+                </p>
             </div>
         </div>
     </footer>
 
+    <!-- ═══════════════════════════════════════════════
+         SCRIPTS
+    ═══════════════════════════════════════════════ -->
     <script src="script.js"></script>
-    
-    <!-- Google Ads Conversion Tracking Scripts -->
+
+    <!-- Google Ads Conversion Tracking -->
     <script>
-      window.addEventListener('load', function() {
-        if (window.location.href.indexOf('/') != -1) {
-          var x = 0;
-          var myVar = setInterval(function() {
-            if (x == 0) {
-              if (document.querySelector('.form-message.success').innerText.includes('Thank you')) {
-                gtag('event', 'conversion', {'send_to': 'AW-17907083191/Gk-pCPytn_MbELfP4dpC'});
-                clearInterval(myVar);
-                x = 1;
-              }
+        window.addEventListener('load', function() {
+            // Track form submission conversion
+            var conversionInterval = setInterval(function() {
+                var successMsg = document.querySelector('.form-message.success');
+                if (successMsg && successMsg.innerText.includes('Thank you')) {
+                    gtag('event', 'conversion', {'send_to': 'AW-17907083191/Gk-pCPytn_MbELfP4dpC'});
+                    clearInterval(conversionInterval);
+                }
+            }, 1000);
+
+            // Track page load conversion
+            if (window.location.pathname === '/') {
+                gtag('event', 'conversion', {'send_to': 'AW-17907083191/-x1zCMOshu0bELfP4dpC'});
             }
-          }, 1000);
-        }
-
-      });
-
-    </script>
-    <script>
-      window.addEventListener('load', function(){
-        if(window.location.pathname === "/"){
-          gtag('event', 'conversion', {'send_to': 'AW-17907083191/-x1zCMOshu0bELfP4dpC'});
-        }
-      });
+        });
     </script>
 </body>
 </html>
