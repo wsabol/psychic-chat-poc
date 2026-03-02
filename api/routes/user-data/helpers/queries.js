@@ -9,19 +9,30 @@ import { hashUserId } from '../../../shared/hashUtils.js';
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
 
 /**
- * Table configurations for deletion operations
+ * Table configurations for deletion operations.
+ *
+ * NOTE: 'messages' and 'user_personal_info' are intentionally excluded here.
+ * - messages          : retained for 7 years for legal/litigation purposes,
+ *                       then deleted by the account-cleanup Lambda (Phase 2).
+ * - user_personal_info: PII columns are NULLed out (anonymized) rather than
+ *                       the row being deleted, so that email_hash + user_id
+ *                       survive as a legal traceability anchor.
+ *
+ * Column name corrections vs. original:
+ *   user_2fa_codes    → user_id_hash (was incorrectly 'user_id')
+ *   user_2fa_settings → user_id_hash (was incorrectly 'user_id')
+ *   user_consents     → user_id_hash (was incorrectly 'user_id')
+ *   audit_log         → user_id_hash (was incorrectly 'user_id')
  */
 export const DELETION_TABLES = [
-  { table: 'user_2fa_codes', column: 'user_id' },
-  { table: 'user_2fa_settings', column: 'user_id' },
-  { table: 'messages', column: 'user_id_hash' },
-  { table: 'astrology_readings', column: 'user_id' },
-  { table: 'user_consents', column: 'user_id' },
-  { table: 'user_preferences', column: 'user_id_hash' },
-  { table: 'user_settings', column: 'user_id_hash' },
-  { table: 'password_reset_tokens', column: 'user_id' },
-  { table: 'audit_log', column: 'user_id' },
-  { table: 'user_personal_info', column: 'user_id' }
+  { table: 'user_2fa_codes',          column: 'user_id_hash' },
+  { table: 'user_2fa_settings',       column: 'user_id_hash' },
+  { table: 'astrology_readings',      column: 'user_id'      },
+  { table: 'user_consents',           column: 'user_id_hash' },
+  { table: 'user_preferences',        column: 'user_id_hash' },
+  { table: 'user_settings',           column: 'user_id_hash' },
+  { table: 'password_reset_tokens',   column: 'user_id'      },
+  { table: 'audit_log',               column: 'user_id_hash' },
 ];
 
 /**
@@ -154,18 +165,89 @@ export async function fetchDeletionStatus(userId) {
 }
 
 /**
- * Mark account for deletion (grace period)
+ * Mark account for deletion (starts 30-day grace period)
+ *
+ * Timeline after this call:
+ *   +30 days  → anonymization_date : PII columns are NULLed out by account-cleanup Lambda (Phase 1)
+ *   +7 years  → final_deletion_date: chat messages are deleted by account-cleanup Lambda (Phase 2)
+ *
+ * The 30-day window lets the user cancel/reactivate.
+ * email_hash is preserved indefinitely so legal lookup by email remains possible.
  */
 export async function markAccountForDeletion(userId) {
   return db.query(
     `UPDATE user_personal_info 
-     SET deletion_status = 'pending_deletion',
-         deletion_requested_at = NOW(),
-         final_deletion_date = NOW() + INTERVAL '730 days',
-         updated_at = NOW()
+     SET deletion_status        = 'pending_deletion',
+         deletion_requested_at  = NOW(),
+         anonymization_date     = NOW() + INTERVAL '30 days',
+         final_deletion_date    = NOW() + INTERVAL '2555 days',
+         updated_at             = NOW()
      WHERE user_id = $1
-     RETURNING deletion_requested_at, final_deletion_date`,
+     RETURNING deletion_requested_at, anonymization_date, final_deletion_date`,
     [userId]
+  );
+}
+
+/**
+ * Anonymize all PII columns for a user.
+ *
+ * Preserves the row itself (and email_hash + user_id) so that:
+ *   1. Legal lookup by email still works via SHA-256(email) → email_hash → user_id → messages
+ *   2. The account-cleanup Lambda can find and delete messages at the 7-year mark
+ *
+ * email_hash is computed from email_encrypted immediately before the encrypted
+ * column is NULLed out, so it is always available for future legal lookups.
+ *
+ * Called by:
+ *   - account-cleanup Lambda Phase 1 (at the 30-day mark for grace-period deletions)
+ *   - performCompleteAccountDeletion (immediately, for verification-code deletions)
+ */
+export async function anonymizeUserPII(userId) {
+  return db.query(
+    `UPDATE user_personal_info
+     SET
+       -- Compute and persist email_hash BEFORE nulling email_encrypted,
+       -- so legal lookup by email is still possible after anonymization.
+       email_hash                    = COALESCE(
+                                         email_hash,
+                                         CASE WHEN email_encrypted IS NOT NULL
+                                              THEN encode(
+                                                     digest(
+                                                       pgp_sym_decrypt(email_encrypted, $2)::text,
+                                                       'sha256'
+                                                     ),
+                                                     'hex'
+                                                   )
+                                              ELSE NULL
+                                         END
+                                       ),
+       -- NULL out every PII field
+       first_name_encrypted          = NULL,
+       last_name_encrypted           = NULL,
+       email_encrypted               = NULL,
+       phone_number_encrypted        = NULL,
+       birth_date_encrypted          = NULL,
+       birth_time_encrypted          = NULL,
+       birth_city_encrypted          = NULL,
+       birth_province_encrypted      = NULL,
+       birth_country_encrypted       = NULL,
+       birth_timezone_encrypted      = NULL,
+       sex_encrypted                 = NULL,
+       familiar_name_encrypted       = NULL,
+       stripe_customer_id_encrypted  = NULL,
+       stripe_subscription_id_encrypted = NULL,
+       billing_country_encrypted     = NULL,
+       billing_state_encrypted       = NULL,
+       billing_city_encrypted        = NULL,
+       billing_postal_code_encrypted = NULL,
+       billing_address_line1_encrypted = NULL,
+       -- Status + timestamps
+       deletion_status               = 'anonymized',
+       anonymization_date            = COALESCE(anonymization_date, NOW()),
+       final_deletion_date           = COALESCE(final_deletion_date, NOW() + INTERVAL '2555 days'),
+       updated_at                    = NOW()
+     WHERE user_id = $1`,
+    [userId, ENCRYPTION_KEY]
   );
 }
 

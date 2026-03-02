@@ -173,8 +173,7 @@ router.delete('/delete-account/:userId', authenticateToken, authorizeUser, async
         logErrorFromCatch(e, 'user-data-deletion', 'Log deletion audit').catch(() => {});
       });
 
-    const graceEndDate = new Date();
-    graceEndDate.setDate(graceEndDate.getDate() + 30);
+    const graceEndDate = new Date(deletionRecord.anonymization_date);
 
     return successResponse(res, {
       success: true,
@@ -182,7 +181,14 @@ router.delete('/delete-account/:userId', authenticateToken, authorizeUser, async
       userId,
       status: 'pending_deletion',
       grace_period_ends: graceEndDate.toISOString(),
-      message_detail: `Your account will be permanently deleted on ${new Date(deletionRecord.final_deletion_date).toISOString().split('T')[0]} unless you log in to cancel the deletion within 30 days.`
+      anonymization_date: deletionRecord.anonymization_date,
+      final_deletion_date: deletionRecord.final_deletion_date,
+      message_detail:
+        `You have 30 days to cancel this request. ` +
+        `On ${graceEndDate.toISOString().split('T')[0]}, your personal information ` +
+        `(name, email, phone, birth data) will be permanently deleted. ` +
+        `Chat message history is retained for up to 7 years for legal compliance ` +
+        `and will be purged on ${new Date(deletionRecord.final_deletion_date).toISOString().split('T')[0]}.`
     });
   } catch (error) {
     logErrorFromCatch(error, 'app', 'delete');

@@ -35,11 +35,12 @@ export async function createUserDatabaseRecords(userId, email, firstName = '', l
       // Use ON CONFLICT DO NOTHING to handle race conditions
       await db.query(
         `INSERT INTO user_personal_info (
-          user_id, email_encrypted, first_name_encrypted, last_name_encrypted,
+          user_id, email_encrypted, email_hash, first_name_encrypted, last_name_encrypted,
           is_admin, onboarding_step, onboarding_completed, onboarding_started_at,
           onboarding_completed_at, created_at, updated_at
         ) VALUES (
-          $1, pgp_sym_encrypt($2, $3), pgp_sym_encrypt($4, $5), pgp_sym_encrypt($6, $7),
+          $1, pgp_sym_encrypt($2, $3), encode(digest(lower(trim($2)), 'sha256'), 'hex'),
+          pgp_sym_encrypt($4, $5), pgp_sym_encrypt($6, $7),
           $8, $9, $10, NOW(),
           CASE WHEN $10 = true THEN NOW() ELSE NULL END, NOW(), NOW()
         )

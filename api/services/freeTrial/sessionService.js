@@ -88,11 +88,12 @@ async function initializeUserScaffold(tempUserId, userIdHash, language = 'en-US'
 
   await db.query(
     `INSERT INTO user_personal_info
-     (user_id, email_encrypted, first_name_encrypted, last_name_encrypted,
+     (user_id, email_encrypted, email_hash, first_name_encrypted, last_name_encrypted,
       birth_date_encrypted, birth_time_encrypted, birth_country_encrypted,
       birth_province_encrypted, birth_city_encrypted, birth_timezone_encrypted,
       sex_encrypted, familiar_name_encrypted, created_at, updated_at)
-     VALUES ($1, pgp_sym_encrypt($2, $5), pgp_sym_encrypt($3, $5), pgp_sym_encrypt($4, $5),
+     VALUES ($1, pgp_sym_encrypt($2, $5), encode(digest(lower(trim($2)), 'sha256'), 'hex'),
+             pgp_sym_encrypt($3, $5), pgp_sym_encrypt($4, $5),
              NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NOW(), NOW())
      ON CONFLICT (user_id) DO UPDATE SET updated_at = NOW()`,
     [tempUserId, `${tempUserId}@psychic.local`, 'Seeker', 'Soul', key]

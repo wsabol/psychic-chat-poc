@@ -4,12 +4,14 @@
  * Implements repository pattern for clean separation of concerns
  */
 
+import crypto from 'crypto';
 import { db } from '../../shared/db.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { getEncryptionKey } from '../../shared/decryptionHelper.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
 import {
   buildFindUserByEmailQuery,
+  buildFindUserByEmailHashQuery,
   buildGetMessagesQuery,
   buildGetAuditTrailQuery,
   buildGetUserProfileQuery,
@@ -25,8 +27,21 @@ import {
 import { LEGAL_AUDIT_ACTIONS, DEFAULT_LIMITS, ERROR_MESSAGES } from './constants.js';
 
 /**
- * Find user by email address
- * @param {string} email - Email address (will be sanitized and lowercased)
+ * Find user by email address.
+ *
+ * Two-stage lookup to handle both active and anonymized accounts:
+ *
+ * Stage 1 — Active accounts (email_encrypted still present)
+ *   Decrypts email_encrypted and compares to the supplied email.
+ *   Works for accounts that are active or within the 30-day grace period.
+ *
+ * Stage 2 — Anonymized accounts (email_encrypted has been NULLed)
+ *   Computes SHA-256(email) and compares to the stored email_hash.
+ *   This is the legal-traceability fallback: even after PII is deleted,
+ *   an admin who knows the plaintiff's email can still find the account
+ *   and retrieve the retained chat messages.
+ *
+ * @param {string} email - Email address (will be lowercased/trimmed)
  * @returns {Promise<UserSearchResult|null>}
  * @throws {Error} If database query fails
  */
@@ -34,16 +49,49 @@ export async function findUserByEmail(email) {
   try {
     const ENCRYPTION_KEY = getEncryptionKey();
     const emailLower = email.toLowerCase().trim();
-    
-    const { sql } = buildFindUserByEmailQuery();
-    
-    const result = await db.query(sql, [ENCRYPTION_KEY, emailLower]);
 
-    if (result.rows.length === 0) {
-      return null;
+    // ── Stage 1: active account lookup (decrypted email) ─────────────────
+    const { sql: activeSql } = buildFindUserByEmailQuery();
+    const activeResult = await db.query(activeSql, [ENCRYPTION_KEY, emailLower]);
+
+    if (activeResult.rows.length > 0) {
+      return transformUserSearchResult(activeResult.rows[0]);
     }
 
-    return transformUserSearchResult(result.rows[0]);
+    // ── Stage 2: anonymized account lookup (email_hash) ───────────────────
+    // Compute SHA-256 of the input email — the same hash stored during anonymization.
+    const emailHash = crypto
+      .createHash('sha256')
+      .update(emailLower)
+      .digest('hex');
+
+    const { sql: hashSql } = buildFindUserByEmailHashQuery();
+    const hashResult = await db.query(hashSql, [emailHash]);
+
+    if (hashResult.rows.length > 0) {
+      // Return the anonymized user result with is_anonymized flag
+      const row = hashResult.rows[0];
+      return {
+        user_id:               row.user_id,
+        email:                 null,                // PII deleted
+        first_name:            null,
+        last_name:             null,
+        phone_number:          null,
+        email_hash:            row.email_hash,
+        created_at:            row.created_at,
+        subscription_status:   row.subscription_status,
+        is_suspended:          row.is_suspended,
+        deletion_requested_at: row.deletion_requested_at,
+        deletion_status:       row.deletion_status,
+        anonymization_date:    row.anonymization_date,
+        final_deletion_date:   row.final_deletion_date,
+        is_anonymized:         true,
+        note: 'PII has been anonymized per 30-day retention policy. ' +
+              'Chat messages are retained under the 7-year legal hold and can be retrieved by user_id.'
+      };
+    }
+
+    return null;
   } catch (err) {
     logErrorFromCatch(err, 'legal-repository', 'findUserByEmail');
     throw new Error(`${ERROR_MESSAGES.DATABASE_ERROR}: ${err.message}`);

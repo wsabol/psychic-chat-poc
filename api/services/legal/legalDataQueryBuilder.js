@@ -32,12 +32,17 @@ function buildSelectClause(regularColumns, encryptedColumns, encryptionKeyParam)
 }
 
 /**
- * Build query to find user by email
+ * Build query to find user by email (active accounts — decrypts email_encrypted).
+ *
+ * This works for accounts that still have their PII intact (active or
+ * pending_deletion within the 30-day grace period).
+ *
  * @returns {Object} Query object with sql and parameterInfo
  */
 export function buildFindUserByEmailQuery() {
   const selectClause = buildSelectClause(
-    ['user_id', 'created_at', 'subscription_status', 'is_suspended', 'deletion_requested_at'],
+    ['user_id', 'email_hash', 'created_at', 'subscription_status', 'is_suspended',
+     'deletion_requested_at', 'deletion_status', 'anonymization_date'],
     ENCRYPTED_PROFILE_COLUMNS,
     '$1'
   );
@@ -45,7 +50,8 @@ export function buildFindUserByEmailQuery() {
   const sql = `
     SELECT ${selectClause}
     FROM ${TABLES.USER_PERSONAL_INFO}
-    WHERE LOWER(pgp_sym_decrypt(email_encrypted, $1)::text) = $2
+    WHERE email_encrypted IS NOT NULL
+      AND LOWER(pgp_sym_decrypt(email_encrypted, $1)::text) = $2
   `;
 
   return {
@@ -53,6 +59,51 @@ export function buildFindUserByEmailQuery() {
     parameterInfo: {
       '$1': 'ENCRYPTION_KEY',
       '$2': 'email (lowercase)'
+    }
+  };
+}
+
+/**
+ * Build query to find an anonymized user by their email_hash.
+ *
+ * After Phase 1 anonymization (30 days post-deletion), email_encrypted is
+ * NULLed but email_hash (SHA-256 of the email) is preserved.  This query
+ * lets an admin look up a deleted user by computing SHA-256(known_email)
+ * and comparing it to the stored hash — enabling legal traceability without
+ * storing the plaintext email.
+ *
+ * Param $1: SHA-256 hash of the email (hex, lowercase)
+ *
+ * @returns {Object} Query object with sql and parameterInfo
+ */
+export function buildFindUserByEmailHashQuery() {
+  const sql = `
+    SELECT
+      user_id,
+      email_hash,
+      created_at,
+      subscription_status,
+      is_suspended,
+      deletion_requested_at,
+      deletion_status,
+      anonymization_date,
+      final_deletion_date,
+      NULL::text AS email,
+      NULL::text AS first_name,
+      NULL::text AS last_name,
+      NULL::text AS phone_number,
+      NULL::text AS familiar_name,
+      NULL::text AS birth_date,
+      NULL::text AS birth_city,
+      TRUE        AS is_anonymized
+    FROM ${TABLES.USER_PERSONAL_INFO}
+    WHERE email_hash = $1
+  `;
+
+  return {
+    sql,
+    parameterInfo: {
+      '$1': 'SHA-256 hash of email (hex)'
     }
   };
 }
@@ -262,6 +313,7 @@ export function buildWhereClause(conditions, startParamIndex = 1) {
 
 export default {
   buildFindUserByEmailQuery,
+  buildFindUserByEmailHashQuery,
   buildGetMessagesQuery,
   buildGetAuditTrailQuery,
   buildGetUserProfileQuery,

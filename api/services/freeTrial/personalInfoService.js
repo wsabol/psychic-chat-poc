@@ -72,12 +72,13 @@ export async function savePersonalInfo(tempUserId, personalInfo) {
   try {
     await db.query(
       `INSERT INTO user_personal_info
-       (user_id, first_name_encrypted, last_name_encrypted, email_encrypted,
+       (user_id, first_name_encrypted, last_name_encrypted, email_encrypted, email_hash,
         birth_date_encrypted, birth_time_encrypted, birth_country_encrypted,
         birth_province_encrypted, birth_city_encrypted, birth_timezone_encrypted,
         sex_encrypted, familiar_name_encrypted)
        VALUES ($2, pgp_sym_encrypt($3, $1), pgp_sym_encrypt($4, $1),
-               pgp_sym_encrypt($5, $1), pgp_sym_encrypt($6, $1),
+               pgp_sym_encrypt($5, $1), encode(digest(lower(trim($5)), 'sha256'), 'hex'),
+               pgp_sym_encrypt($6, $1),
                pgp_sym_encrypt($7, $1), pgp_sym_encrypt($8, $1),
                pgp_sym_encrypt($9, $1), pgp_sym_encrypt($10, $1),
                pgp_sym_encrypt($11, $1), pgp_sym_encrypt($12, $1),
@@ -86,6 +87,7 @@ export async function savePersonalInfo(tempUserId, personalInfo) {
          first_name_encrypted      = EXCLUDED.first_name_encrypted,
          last_name_encrypted       = EXCLUDED.last_name_encrypted,
          email_encrypted           = EXCLUDED.email_encrypted,
+         email_hash                = EXCLUDED.email_hash,
          birth_date_encrypted      = EXCLUDED.birth_date_encrypted,
          birth_time_encrypted      = EXCLUDED.birth_time_encrypted,
          birth_country_encrypted   = EXCLUDED.birth_country_encrypted,

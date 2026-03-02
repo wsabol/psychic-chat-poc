@@ -51,8 +51,8 @@ export async function createUserWithEmail(email, password, phoneNumber) {
 
     // Create user record
     await db.query(
-      `INSERT INTO user_personal_info (user_id, email_encrypted, password_hash, email_verified, email_verified_at, created_at, updated_at)
-       VALUES ($1, pgp_sym_encrypt($2, $3), $4, true, NOW(), NOW(), NOW())`,
+      `INSERT INTO user_personal_info (user_id, email_encrypted, email_hash, password_hash, email_verified, email_verified_at, created_at, updated_at)
+       VALUES ($1, pgp_sym_encrypt($2, $3), encode(digest(lower(trim($2)), 'sha256'), 'hex'), $4, true, NOW(), NOW(), NOW())`,
       [userId, email, process.env.ENCRYPTION_KEY, passwordHash]
     );
 
@@ -99,8 +99,8 @@ export async function createFirebaseUser(userId, email) {
 
     // Create user record
     await db.query(
-      `INSERT INTO user_personal_info (user_id, email_encrypted, email_verified, created_at, updated_at)
-       VALUES ($1, pgp_sym_encrypt($2, $3), false, NOW(), NOW())`,
+      `INSERT INTO user_personal_info (user_id, email_encrypted, email_hash, email_verified, created_at, updated_at)
+       VALUES ($1, pgp_sym_encrypt($2, $3), encode(digest(lower(trim($2)), 'sha256'), 'hex'), false, NOW(), NOW())`,
       [userId, email, process.env.ENCRYPTION_KEY]
     );
 
