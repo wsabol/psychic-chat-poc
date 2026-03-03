@@ -13,23 +13,17 @@ export async function fetchWithTokenRefresh(url, options = {}) {
   try {
     let response = await fetch(url, options);
 
-    // Handle both 401 (token expired) and 403 (invalid token)
+    // Handle both 401 (token expired) and 403 (invalid/missing token).
+    //
+    // Why we retry on 403 too:
+    //   The server returns 403 "Invalid token" for any Firebase auth error that
+    //   isn't a simple expiry (e.g. auth/argument-error when the Authorization
+    //   header contains "Bearer undefined" due to a navigation race condition,
+    //   or auth/id-token-revoked).  In those cases the right thing to do is
+    //   ask Firebase for a fresh ID token and retry — exactly the same as for
+    //   a 401.  If the fresh token also fails the retry returns the error
+    //   response as-is, so there is no infinite loop.
     if (response.status === 401 || response.status === 403) {
-      // Check if it's a token expiration error
-      let errorData = {};
-      try {
-        errorData = await response.clone().json();
-      } catch (e) {
-        // response not JSON
-      }
-      
-      const isTokenExpired = errorData.code === 'TOKEN_EXPIRED' || response.status === 401;
-      
-      if (!isTokenExpired) {
-        // Not a token issue, return the error
-        return response;
-      }
-
       try {
         // Get fresh Firebase ID token from current user
         const currentUser = auth.currentUser;
