@@ -176,14 +176,32 @@ router.post('/log-login-success', async (req, res) => {
       // Non-admin, non-onboarding users: validate subscription
       try {
         const health = await validateSubscriptionHealth(userId);
+
+        // ✅ FAIL-OPEN: Stripe infrastructure errors (API down, wrong key, network issue) must
+        // NOT lock users out.  Only block for genuine subscription issues (cancelled, no sub, etc.)
+        const STRIPE_INFRA_REASONS = ['STRIPE_API_ERROR', 'STRIPE_ERROR'];
+        const isStripeInfraError =
+          STRIPE_INFRA_REASONS.includes(health.blockedReason) ||
+          STRIPE_INFRA_REASONS.includes(health.subscription?.reason) ||
+          STRIPE_INFRA_REASONS.includes(health.paymentMethod?.reason);
+
         subscriptionStatus = {
           healthy: health.healthy,
-          status: health.subscription.status,
-          paymentValid: health.paymentMethod.valid
+          status: health.subscription?.status ?? 'unknown',
+          paymentValid: health.paymentMethod?.valid ?? false
         };
 
-        // If subscription is not healthy, block login
-        if (!health.healthy) {
+        // If Stripe had an infrastructure error, log a warning but allow login to proceed
+        if (!health.healthy && isStripeInfraError) {
+          await logErrorFromCatch(
+            new Error(`Stripe unavailable during login health check: ${health.blockedReason}`),
+            'auth',
+            'subscription-check-stripe-infra-error',
+            userId
+          );
+          subscriptionStatus = { ...subscriptionStatus, stripeUnavailable: true };
+        // If subscription is not healthy for a real business reason, block login
+        } else if (!health.healthy) {
           await logAudit(db, {
             userId,
             action: 'USER_LOGIN_BLOCKED_NO_SUBSCRIPTION',
@@ -193,7 +211,7 @@ router.post('/log-login-success', async (req, res) => {
             details: { 
               email,
               blockedReason: health.blockedReason,
-              subscriptionStatus: health.subscription.status
+              subscriptionStatus: health.subscription?.status
             }
           });
 
@@ -204,8 +222,8 @@ router.post('/log-login-success', async (req, res) => {
             errorCode: ErrorCodes.FORBIDDEN,
             blockedReason: health.blockedReason,
             subscription: {
-              status: health.subscription.status,
-              paymentValid: health.paymentMethod.valid
+              status: health.subscription?.status,
+              paymentValid: health.paymentMethod?.valid
             },
             action: {
               type: 'STRIPE_PORTAL',
@@ -216,7 +234,7 @@ router.post('/log-login-success', async (req, res) => {
         }
       } catch (subError) {
         await logErrorFromCatch(subError, 'auth', 'subscription-check', userId);
-        // Continue with login on error
+        // Continue with login on error (fail-open)
       }
     }
 

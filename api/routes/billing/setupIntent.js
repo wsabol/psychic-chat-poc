@@ -83,6 +83,16 @@ router.post('/setup-intent', authenticateToken, async (req, res) => {
       if (error.message?.includes('Stripe is not configured')) {
         return validationError(res, 'Payment processing is not configured. Please contact support.');
       }
+
+      // ✅ Stripe auth errors (wrong/expired API key) → 503, not 500
+      if (error.type === 'StripeAuthenticationError' || error.statusCode === 401) {
+        return res.status(503).json({
+          success: false,
+          error: 'Payment Service Unavailable',
+          message: 'Payment processing is temporarily unavailable. Please try again later.',
+          retryAfter: 30
+        });
+      }
       
       return billingError(res, error.message || 'Failed to create setup intent');
     }

@@ -81,6 +81,11 @@ router.get('/subscriptions', authenticateToken, async (req, res) => {
     const userId = req.user.userId;
     const userEmail = req.user.email;
 
+    // ✅ GRACEFUL DEGRADATION: Return empty list if Stripe is not configured
+    if (!stripe) {
+      return successResponse(res, []);
+    }
+
     const customerId = await getOrCreateStripeCustomer(userId, userEmail);
     
     if (!customerId) {
@@ -90,6 +95,15 @@ router.get('/subscriptions', authenticateToken, async (req, res) => {
     const subscriptions = await getSubscriptions(customerId);
     return successResponse(res, subscriptions);
   } catch (error) {
+    // ✅ GRACEFUL DEGRADATION: Stripe auth/config errors → empty list instead of 500
+    if (
+      error.message?.includes('Stripe is not configured') ||
+      error.type === 'StripeAuthenticationError' ||
+      error.statusCode === 401
+    ) {
+      logErrorFromCatch(error, 'billing', 'fetch subscriptions - stripe unavailable', hashUserId(req.user?.userId)).catch(() => {});
+      return successResponse(res, []);
+    }
     logErrorFromCatch(error, 'billing', 'fetch subscriptions', hashUserId(req.user?.userId)).catch(() => {});
     return billingError(res, error.message || 'Failed to fetch subscriptions');
   }

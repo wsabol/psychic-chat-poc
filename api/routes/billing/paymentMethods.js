@@ -27,6 +27,11 @@ router.get('/payment-methods', authenticateToken, async (req, res) => {
     const userEmail = req.user.email;
     userIdHash = hashUserId(userId);
 
+    // ✅ GRACEFUL DEGRADATION: Return empty state if Stripe is not configured
+    if (!stripe) {
+      return res.json({ cards: [], defaultPaymentMethodId: null });
+    }
+
     // ✅ REQUEST DEDUPLICATION: If another request is already fetching for this user, wait for it
     const requestKey = `payment-methods:${userId}`;
     if (inflightRequests.has(requestKey)) {
