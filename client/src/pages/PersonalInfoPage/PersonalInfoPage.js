@@ -136,11 +136,6 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
     if (result.success) {
       const data = result.data;
       
-      // Leave email blank for temp accounts - don't pre-fill with temp email
-      if (isTemporaryAccount && data.email && data.email.startsWith('temp_')) {
-        data.email = '';
-      }
-      
       setFormData(data);
     }
   };

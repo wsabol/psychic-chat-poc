@@ -103,8 +103,6 @@ export async function deleteUserAccount(userId) {
     await db.query(
       `UPDATE user_personal_info
        SET 
-         first_name_encrypted = pgp_sym_encrypt('Deleted', $1),
-         last_name_encrypted = pgp_sym_encrypt('Account', $1),
          email_encrypted = pgp_sym_encrypt('deleted@deleted.local', $1),
          birth_date_encrypted = NULL,
          birth_city_encrypted = NULL,

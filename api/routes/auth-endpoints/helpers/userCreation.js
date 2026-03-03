@@ -19,40 +19,29 @@ export async function createUserDatabaseRecords(userId, email, firstName = '', l
     );
 
     if (existsCheck.rows.length === 0) {
-      // CRITICAL BUSINESS PROTECTION: For temp users, ALWAYS set first_name to "Seeker"
-      // This is Layer 4 of our quadruple redundancy system to prevent temp user IDs
-      // from ever being shown to customers in oracle greetings
-      const isTempUser = userId.startsWith('temp_');
-      const actualFirstName = isTempUser ? 'Seeker' : (firstName || '');
-      const actualLastName = isTempUser ? '' : (lastName || '');
-      
-      // Set onboarding values based on user type
-      // Admins skip onboarding, regular users go through it
+      // first_name_encrypted and last_name_encrypted have been dropped from the DB.
+      // The familiar_name_encrypted (oracle address preference) is set by the user
+      // on the PersonalInfoPage after registration.
       const onboardingStep = isAdmin ? 'welcome' : 'create_account';
       const onboardingCompleted = isAdmin ? true : false;
-      
-      // Create personal info for new user - mark as in onboarding
-      // Use ON CONFLICT DO NOTHING to handle race conditions
+
       await db.query(
         `INSERT INTO user_personal_info (
-          user_id, email_encrypted, email_hash, first_name_encrypted, last_name_encrypted,
+          user_id, email_encrypted, email_hash,
           is_admin, onboarding_step, onboarding_completed, onboarding_started_at,
           onboarding_completed_at, created_at, updated_at
         ) VALUES (
           $1, pgp_sym_encrypt($2, $3), encode(digest(lower(trim($2)), 'sha256'), 'hex'),
-          pgp_sym_encrypt($4, $5), pgp_sym_encrypt($6, $7),
-          $8, $9, $10, NOW(),
-          CASE WHEN $10 = true THEN NOW() ELSE NULL END, NOW(), NOW()
+          $4, $5, $6, NOW(),
+          CASE WHEN $6 = true THEN NOW() ELSE NULL END, NOW(), NOW()
         )
         ON CONFLICT (user_id) DO NOTHING`,
         [
-          userId, 
-          email, process.env.ENCRYPTION_KEY, 
-          actualFirstName, process.env.ENCRYPTION_KEY, 
-          actualLastName, process.env.ENCRYPTION_KEY,
-          isAdmin, // Set admin flag
-          onboardingStep, // 'welcome' for admins, 'create_account' for regular users
-          onboardingCompleted  // true for admins, false for regular users
+          userId,
+          email, process.env.ENCRYPTION_KEY,
+          isAdmin,
+          onboardingStep,
+          onboardingCompleted,
         ]
       );
     }
@@ -104,10 +93,10 @@ export async function createUserDatabaseRecords(userId, email, firstName = '', l
 export async function getUserProfile(userId) {
   try {
     const result = await db.query(
-      `SELECT user_id, pgp_sym_decrypt(email_encrypted, $1) as email, pgp_sym_decrypt(first_name_encrypted, $2) as first_name, pgp_sym_decrypt(last_name_encrypted, $3) as last_name, created_at, updated_at 
+      `SELECT user_id, pgp_sym_decrypt(email_encrypted, $1) as email, created_at, updated_at 
        FROM user_personal_info 
-       WHERE user_id = $4`,
-      [process.env.ENCRYPTION_KEY, process.env.ENCRYPTION_KEY, process.env.ENCRYPTION_KEY, userId]
+       WHERE user_id = $2`,
+      [process.env.ENCRYPTION_KEY, userId]
     );
     
     return result.rows[0] || null;
@@ -123,12 +112,10 @@ export async function anonymizeUser(userId) {
   try {
     await db.query(
       `UPDATE user_personal_info 
-       SET first_name_encrypted = pgp_sym_encrypt('DELETED', $1),
-           last_name_encrypted = pgp_sym_encrypt('DELETED', $2),
-           email_encrypted = pgp_sym_encrypt($3, $4),
+       SET email_encrypted = pgp_sym_encrypt($1, $2),
            updated_at = NOW()
-       WHERE user_id = $5`,
-      [process.env.ENCRYPTION_KEY, process.env.ENCRYPTION_KEY, `deleted_${userId}@deleted.local`, process.env.ENCRYPTION_KEY, userId]
+       WHERE user_id = $3`,
+      [`deleted_${userId}@deleted.local`, process.env.ENCRYPTION_KEY, userId]
     );
 
     // Delete associated data

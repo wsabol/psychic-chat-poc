@@ -12,20 +12,9 @@ export function validatePersonalInfoForm(formData, isTemporaryAccount, t) {
 
   // Required fields for non-temporary accounts
   if (!isTemporaryAccount) {
-    if (!formData.firstName.trim()) {
-      errors.firstName = t('personalInfo.errors.missingRequired');
-    }
-    if (!formData.lastName.trim()) {
-      errors.lastName = t('personalInfo.errors.missingRequired');
-    }
     if (!formData.sex) {
       errors.sex = t('personalInfo.errors.missingRequired');
     }
-  }
-
-  // Always required fields
-  if (!formData.email.trim()) {
-    errors.email = t('personalInfo.errors.missingRequired');
   }
 
   // Validate birth date

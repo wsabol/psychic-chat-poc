@@ -15,8 +15,6 @@ export async function fetchUserPersonalInfo(userId) {
   try {
     const { rows } = await db.query(`
       SELECT 
-        pgp_sym_decrypt(first_name_encrypted, $1) as first_name,
-        pgp_sym_decrypt(last_name_encrypted, $1) as last_name,
         pgp_sym_decrypt(birth_date_encrypted, $1) as birth_date,
         pgp_sym_decrypt(birth_time_encrypted, $1) as birth_time,
         pgp_sym_decrypt(birth_country_encrypted, $1) as birth_country,

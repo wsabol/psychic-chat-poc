@@ -27,21 +27,20 @@ import { logErrorFromCatch } from '../../shared/errorLogger.js';
  */
 export async function getPersonalInfo(userId) {
   const data = await findPersonalInfoByUserId(userId);
-  
-  // Transform snake_case from DB to camelCase for consistent API response
-  // This ensures BOTH web and mobile apps get the same format
+
+  // Transform snake_case from DB to camelCase for consistent API response.
+  // firstName, lastName, and email are no longer returned to the client:
+  //   - first/last name columns have been dropped from the DB
+  //   - email is kept server-side only (stored from Firebase token)
   return {
-    firstName: data.first_name,
-    lastName: data.last_name,
-    email: data.email,
-    birthDate: data.birth_date,
-    birthTime: data.birth_time,
-    birthCountry: data.birth_country,
-    birthProvince: data.birth_province,
-    birthCity: data.birth_city,
-    birthTimezone: data.birth_timezone,
-    sex: data.sex,
-    addressPreference: data.address_preference
+    birthDate:        data.birth_date,
+    birthTime:        data.birth_time,
+    birthCountry:     data.birth_country,
+    birthProvince:    data.birth_province,
+    birthCity:        data.birth_city,
+    birthTimezone:    data.birth_timezone,
+    sex:              data.sex,
+    addressPreference: data.address_preference,
   };
 }
 
@@ -68,9 +67,16 @@ async function updateTrialSessionEmail(userIdHash, email, isTempUser) {
  * @param {Object} data - Request body data
  * @returns {Promise<Object>} Result { success, error, accountDeleted }
  */
-export async function savePersonalInfo(userId, data) {
+/**
+ * Save personal information (main entry point)
+ * @param {string} userId         - User ID
+ * @param {Object} data           - Request body data
+ * @param {string} emailFromToken - Email from the verified Firebase auth token
+ * @returns {Promise<Object>} Result { success, error, accountDeleted }
+ */
+export async function savePersonalInfo(userId, data, emailFromToken) {
   const { 
-    firstName, lastName, email, birthDate, sex,
+    birthDate, sex,
     zodiacSign, astrologyData 
   } = data;
 
@@ -100,14 +106,13 @@ export async function savePersonalInfo(userId, data) {
   // Sanitize optional fields
   const sanitizedFields = sanitizeOptionalFields(data);
 
-  // Prepare complete personal info
+  // Prepare complete personal info.
+  // Email comes from the verified Firebase token, not the form.
   const personalInfo = {
-    firstName,
-    lastName,
-    email,
+    email: emailFromToken,
     birthDate: parsedBirthDate,
     sex,
-    ...sanitizedFields
+    ...sanitizedFields,
   };
 
   // Save to database
@@ -120,10 +125,6 @@ export async function savePersonalInfo(userId, data) {
   }
 
   const userIdHash = hashUserId(userId);
-  const isTempUser = userId.startsWith('temp_');
-
-  // Update trial session email for temp users
-  await updateTrialSessionEmail(userIdHash, email, isTempUser);
 
   // Determine if we have complete birth data for full calculation
   const hasCompleteBirthData = shouldEnqueueBirthChart(sanitizedFields, parsedBirthDate);

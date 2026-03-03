@@ -31,16 +31,16 @@ import {
  */
 export function sanitizePersonalInfo(data) {
   const {
-    firstName, lastName, email, birthDate, birthTime,
+    email, birthDate, birthTime,
     birthCountry, birthProvince, birthCity, birthTimezone,
     sex, addressPreference,
   } = data;
 
   const safeStr = (val) => (val && val.trim() ? val : null);
 
+  // firstName and lastName are no longer stored; familiar name (addressPreference)
+  // is used instead. The oracle falls back to "Seeker" when it is absent.
   return {
-    firstName:         firstName || 'Seeker',
-    lastName:          lastName  || 'Soul',
     email,
     birthDate,
     birthTime:         safeStr(birthTime),
@@ -64,7 +64,7 @@ export function sanitizePersonalInfo(data) {
  */
 export async function savePersonalInfo(tempUserId, personalInfo) {
   const {
-    firstName, lastName, email, birthDate, birthTime,
+    email, birthDate, birthTime,
     birthCountry, birthProvince, birthCity, birthTimezone,
     sex, addressPreference,
   } = personalInfo;
@@ -72,20 +72,18 @@ export async function savePersonalInfo(tempUserId, personalInfo) {
   try {
     await db.query(
       `INSERT INTO user_personal_info
-       (user_id, first_name_encrypted, last_name_encrypted, email_encrypted, email_hash,
+       (user_id, email_encrypted, email_hash,
         birth_date_encrypted, birth_time_encrypted, birth_country_encrypted,
         birth_province_encrypted, birth_city_encrypted, birth_timezone_encrypted,
         sex_encrypted, familiar_name_encrypted)
-       VALUES ($2, pgp_sym_encrypt($3, $1), pgp_sym_encrypt($4, $1),
-               pgp_sym_encrypt($5, $1), encode(digest(lower(trim($5)), 'sha256'), 'hex'),
-               pgp_sym_encrypt($6, $1),
+       VALUES ($2,
+               pgp_sym_encrypt($3, $1), encode(digest(lower(trim($3)), 'sha256'), 'hex'),
+               pgp_sym_encrypt($4, $1),
+               pgp_sym_encrypt($5, $1), pgp_sym_encrypt($6, $1),
                pgp_sym_encrypt($7, $1), pgp_sym_encrypt($8, $1),
                pgp_sym_encrypt($9, $1), pgp_sym_encrypt($10, $1),
-               pgp_sym_encrypt($11, $1), pgp_sym_encrypt($12, $1),
-               pgp_sym_encrypt($13, $1))
+               pgp_sym_encrypt($11, $1))
        ON CONFLICT (user_id) DO UPDATE SET
-         first_name_encrypted      = EXCLUDED.first_name_encrypted,
-         last_name_encrypted       = EXCLUDED.last_name_encrypted,
          email_encrypted           = EXCLUDED.email_encrypted,
          email_hash                = EXCLUDED.email_hash,
          birth_date_encrypted      = EXCLUDED.birth_date_encrypted,
@@ -99,7 +97,7 @@ export async function savePersonalInfo(tempUserId, personalInfo) {
          updated_at                = CURRENT_TIMESTAMP`,
       [
         process.env.ENCRYPTION_KEY,
-        tempUserId, firstName, lastName, email, birthDate,
+        tempUserId, email, birthDate,
         birthTime, birthCountry, birthProvince, birthCity,
         birthTimezone, sex, addressPreference,
       ]

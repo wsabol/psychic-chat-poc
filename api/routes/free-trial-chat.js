@@ -267,11 +267,11 @@ router.get('/opening/:tempUserId', async (req, res) => {
     let rawClientName = null;
     try {
       const { rows: personalInfoRows } = await db.query(
-        "SELECT pgp_sym_decrypt(first_name_encrypted, $1) as first_name, pgp_sym_decrypt(familiar_name_encrypted, $1) as familiar_name FROM user_personal_info WHERE user_id = $2",
+        "SELECT pgp_sym_decrypt(familiar_name_encrypted, $1) as familiar_name FROM user_personal_info WHERE user_id = $2",
         [process.env.ENCRYPTION_KEY, tempUserId]
       );
       if (personalInfoRows.length > 0 && personalInfoRows[0]) {
-        rawClientName = personalInfoRows[0].familiar_name || personalInfoRows[0].first_name;
+        rawClientName = personalInfoRows[0].familiar_name;
       }
     } catch (err) {
       await logErrorFromCatch(err, 'free-trial-chat-opening', 'Error fetching user name');

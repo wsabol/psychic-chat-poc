@@ -89,8 +89,6 @@ export const USER_PROFILE_COLUMNS = [
  */
 export const ENCRYPTED_PROFILE_COLUMNS = [
   { name: 'email_encrypted', alias: 'email' },
-  { name: 'first_name_encrypted', alias: 'first_name' },
-  { name: 'last_name_encrypted', alias: 'last_name' },
   { name: 'birth_date_encrypted', alias: 'birth_date' },
   { name: 'phone_number_encrypted', alias: 'phone_number' },
 ];

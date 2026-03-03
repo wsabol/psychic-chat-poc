@@ -23,8 +23,6 @@ export function preparePersonalInfoData(formData, isTemporaryAccount, storageBir
 
   // Apply temp account defaults
   if (isTemporaryAccount) {
-    dataToSend.firstName = dataToSend.firstName || 'Seeker';
-    dataToSend.lastName = dataToSend.lastName || 'Soul';
     dataToSend.sex = dataToSend.sex || 'Unspecified';
   }
 
@@ -47,9 +45,6 @@ export function hasBirthLocationData(formData) {
  * Get initial form data object with empty values
  */
 export const INITIAL_FORM_DATA = {
-  firstName: '',
-  lastName: '',
-  email: '',
   birthCountry: '',
   birthProvince: '',
   birthCity: '',

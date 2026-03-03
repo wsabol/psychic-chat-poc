@@ -34,9 +34,6 @@ export async function migrateOnboardingData(options) {
   const {
     newUserId,
     temp_user_id,
-    
-    firstName,
-    lastName,
     email,
     onboarding_first_message,
     onboarding_horoscope
@@ -67,14 +64,12 @@ export async function migrateOnboardingData(options) {
     
     // Step 1: Create user_personal_info for permanent user with migrated data
     await db.query(
-      `INSERT INTO user_personal_info (user_id, email, first_name, last_name, birth_date, 
+      `INSERT INTO user_personal_info (user_id, email, birth_date,
                                        birth_time, birth_country, birth_province, birth_city,
                                        birth_timezone, sex, address_preference, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW())
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
        ON CONFLICT (user_id) DO UPDATE SET
        email = EXCLUDED.email,
-       first_name = EXCLUDED.first_name,
-       last_name = EXCLUDED.last_name,
        birth_date = EXCLUDED.birth_date,
        birth_time = EXCLUDED.birth_time,
        birth_country = EXCLUDED.birth_country,
@@ -84,7 +79,7 @@ export async function migrateOnboardingData(options) {
        sex = EXCLUDED.sex,
        address_preference = EXCLUDED.address_preference,
        updated_at = NOW()`,
-      [newUserId, email, firstName, lastName, 
+      [newUserId, email,
        tempUserInfo.birth_date || null,
        tempUserInfo.birth_time || null,
        tempUserInfo.birth_country || null,

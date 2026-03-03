@@ -1,12 +1,11 @@
-import { FormInput } from '../../../components/forms/FormInput';
 import { FormSelect } from '../../../components/forms/FormSelect';
 import { FormSection } from '../../../components/forms/FormSection';
 import { SEX_OPTIONS } from '../../../utils/personalInfoUtils';
 
 /**
- * Additional Information section - Gender and Address Preference
+ * Additional Information section - Gender/Sex
  */
-export function AdditionalInfoSection({ formData, fieldErrors, isTemporaryAccount, handleChange, onLastFieldKeyDown, t }) {
+export function AdditionalInfoSection({ formData, fieldErrors, isTemporaryAccount, handleChange, t }) {
   return (
     <FormSection title={t('personalInfo.title')} icon="✨">
       <div className="form-grid">
@@ -19,15 +18,6 @@ export function AdditionalInfoSection({ formData, fieldErrors, isTemporaryAccoun
           required={!isTemporaryAccount}
           optional={isTemporaryAccount}
           error={fieldErrors.sex}
-        />
-        <FormInput
-          label="How should the oracle address you?"
-          name="addressPreference"
-          value={formData.addressPreference}
-          onChange={handleChange}
-          onKeyDown={onLastFieldKeyDown}
-          optional
-          placeholder="e.g., Alex, Sarah"
         />
       </div>
     </FormSection>

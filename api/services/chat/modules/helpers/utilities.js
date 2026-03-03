@@ -27,15 +27,6 @@ export function getUserGreeting(userInfo, userId, isTemporaryUser = false) {
     return familiarName;
   }
   
-  const firstName = userInfo.first_name?.trim();
-  if (firstName && firstName.length > 0) {
-    // CRITICAL SAFETY: Never return temp_ UIDs even if they're in the database  
-    if (firstName.includes('temp_')) {
-      return "Seeker";
-    }
-    return firstName;
-  }
-  
   // No name saved - use appropriate default based on user type
   if (userId && userId.includes('temp_')) {
     return "Seeker";

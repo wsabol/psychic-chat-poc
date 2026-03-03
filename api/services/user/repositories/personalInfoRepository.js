@@ -1,29 +1,33 @@
 /**
  * Personal Information Repository
- * Database operations for user personal information
+ * Database operations for user personal information.
+ *
+ * Data minimisation notes (2026-03-03):
+ *   - first_name_encrypted and last_name_encrypted have been dropped from the table.
+ *   - Email is no longer returned to the client; it is saved from the verified
+ *     Firebase auth token and kept server-side only.
  */
 
 import { db } from '../../../shared/db.js';
 
 /**
- * Get user personal information by user ID
+ * Get user personal information by user ID.
+ * Returns birth details, location, sex, and familiar name only.
+ *
  * @param {string} userId - User ID
  * @returns {Promise<Object>} Decrypted personal information
  */
 export async function findPersonalInfoByUserId(userId) {
   const { rows } = await db.query(
     `SELECT 
-      pgp_sym_decrypt(first_name_encrypted, $1) as first_name,
-      pgp_sym_decrypt(last_name_encrypted, $1) as last_name,
-      pgp_sym_decrypt(email_encrypted, $1) as email,
-      pgp_sym_decrypt(birth_date_encrypted, $1) as birth_date,
-      pgp_sym_decrypt(birth_time_encrypted, $1) as birth_time,
-      pgp_sym_decrypt(birth_country_encrypted, $1) as birth_country,
-      pgp_sym_decrypt(birth_province_encrypted, $1) as birth_province,
-      pgp_sym_decrypt(birth_city_encrypted, $1) as birth_city,
-      pgp_sym_decrypt(birth_timezone_encrypted, $1) as birth_timezone,
-      pgp_sym_decrypt(sex_encrypted, $1) as sex,
-      pgp_sym_decrypt(familiar_name_encrypted, $1) as address_preference
+      pgp_sym_decrypt(birth_date_encrypted,      $1) as birth_date,
+      pgp_sym_decrypt(birth_time_encrypted,      $1) as birth_time,
+      pgp_sym_decrypt(birth_country_encrypted,   $1) as birth_country,
+      pgp_sym_decrypt(birth_province_encrypted,  $1) as birth_province,
+      pgp_sym_decrypt(birth_city_encrypted,      $1) as birth_city,
+      pgp_sym_decrypt(birth_timezone_encrypted,  $1) as birth_timezone,
+      pgp_sym_decrypt(sex_encrypted,             $1) as sex,
+      pgp_sym_decrypt(familiar_name_encrypted,   $1) as address_preference
     FROM user_personal_info 
     WHERE user_id = $2`,
     [process.env.ENCRYPTION_KEY, userId]
@@ -33,15 +37,16 @@ export async function findPersonalInfoByUserId(userId) {
 }
 
 /**
- * Save or update personal information
- * @param {string} userId - User ID
+ * Save or update personal information.
+ * Email is passed in from the verified Firebase token (emailFromToken) — it is
+ * never taken from the client form body for registered users.
+ *
+ * @param {string} userId       - User ID
  * @param {Object} personalInfo - Personal information to save
  * @returns {Promise<void>}
  */
 export async function upsertPersonalInfo(userId, personalInfo) {
   const {
-    firstName,
-    lastName,
     email,
     birthDate,
     birthTime,
@@ -50,41 +55,37 @@ export async function upsertPersonalInfo(userId, personalInfo) {
     birthCity,
     birthTimezone,
     sex,
-    addressPreference
+    addressPreference,
   } = personalInfo;
 
   await db.query(
     `INSERT INTO user_personal_info 
-     (user_id, first_name_encrypted, last_name_encrypted, email_encrypted, email_hash,
+     (user_id, email_encrypted, email_hash,
       birth_date_encrypted, birth_time_encrypted, birth_country_encrypted, 
       birth_province_encrypted, birth_city_encrypted, birth_timezone_encrypted, 
       sex_encrypted, familiar_name_encrypted)
-     VALUES ($2, pgp_sym_encrypt($3, $1), pgp_sym_encrypt($4, $1), 
-             pgp_sym_encrypt($5, $1), encode(digest(lower(trim($5)), 'sha256'), 'hex'),
-             pgp_sym_encrypt($6, $1), 
+     VALUES ($2,
+             pgp_sym_encrypt($3, $1), encode(digest(lower(trim($3)), 'sha256'), 'hex'),
+             pgp_sym_encrypt($4, $1), 
+             pgp_sym_encrypt($5, $1), pgp_sym_encrypt($6, $1), 
              pgp_sym_encrypt($7, $1), pgp_sym_encrypt($8, $1), 
              pgp_sym_encrypt($9, $1), pgp_sym_encrypt($10, $1), 
-             pgp_sym_encrypt($11, $1), pgp_sym_encrypt($12, $1), 
-             pgp_sym_encrypt($13, $1))
+             pgp_sym_encrypt($11, $1))
      ON CONFLICT (user_id) DO UPDATE SET
-       first_name_encrypted = EXCLUDED.first_name_encrypted,
-       last_name_encrypted = EXCLUDED.last_name_encrypted,
-       email_encrypted = EXCLUDED.email_encrypted,
-       email_hash = EXCLUDED.email_hash,
-       birth_date_encrypted = EXCLUDED.birth_date_encrypted,
-       birth_time_encrypted = EXCLUDED.birth_time_encrypted,
-       birth_country_encrypted = EXCLUDED.birth_country_encrypted,
+       email_encrypted          = EXCLUDED.email_encrypted,
+       email_hash               = EXCLUDED.email_hash,
+       birth_date_encrypted     = EXCLUDED.birth_date_encrypted,
+       birth_time_encrypted     = EXCLUDED.birth_time_encrypted,
+       birth_country_encrypted  = EXCLUDED.birth_country_encrypted,
        birth_province_encrypted = EXCLUDED.birth_province_encrypted,
-       birth_city_encrypted = EXCLUDED.birth_city_encrypted,
+       birth_city_encrypted     = EXCLUDED.birth_city_encrypted,
        birth_timezone_encrypted = EXCLUDED.birth_timezone_encrypted,
-       sex_encrypted = EXCLUDED.sex_encrypted,
-       familiar_name_encrypted = EXCLUDED.familiar_name_encrypted,
-       updated_at = CURRENT_TIMESTAMP`,
+       sex_encrypted            = EXCLUDED.sex_encrypted,
+       familiar_name_encrypted  = EXCLUDED.familiar_name_encrypted,
+       updated_at               = CURRENT_TIMESTAMP`,
     [
       process.env.ENCRYPTION_KEY,
       userId,
-      firstName || 'Temporary',
-      lastName || 'User',
       email,
       birthDate,
       birthTime,
@@ -93,7 +94,7 @@ export async function upsertPersonalInfo(userId, personalInfo) {
       birthCity,
       birthTimezone,
       sex || 'Unspecified',
-      addressPreference
+      addressPreference,
     ]
   );
 }
@@ -114,7 +115,7 @@ export async function personalInfoExists(userId) {
 /**
  * Update free trial session email
  * @param {string} userIdHash - Hashed user ID
- * @param {string} email - User email
+ * @param {string} email      - User email
  * @returns {Promise<void>}
  */
 export async function updateTrialSessionEmail(userIdHash, email) {

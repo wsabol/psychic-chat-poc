@@ -1,6 +1,11 @@
 /**
  * Personal Information Validator
  * Validation logic for personal information fields
+ *
+ * NOTE: First name, last name, and email are no longer validated here.
+ *   - first_name_encrypted and last_name_encrypted have been dropped from the DB.
+ *   - Email is taken from the verified Firebase auth token (req.user.email),
+ *     not from the form, so it is always present and already validated.
  */
 
 import { validateAge } from '../../../shared/ageValidator.js';
@@ -16,32 +21,28 @@ export function sanitizeOptionalFields(data) {
   const { birthTime, birthCountry, birthProvince, birthCity, birthTimezone, addressPreference } = data;
 
   return {
-    birthTime: birthTime && birthTime.trim() ? birthTime : null,
-    birthCountry: birthCountry && birthCountry.trim() ? birthCountry : null,
-    birthProvince: birthProvince && birthProvince.trim() ? birthProvince : null,
-    birthCity: birthCity && birthCity.trim() ? birthCity : null,
-    birthTimezone: birthTimezone && birthTimezone.trim() ? birthTimezone : null,
-    addressPreference: addressPreference && addressPreference.trim() ? addressPreference : null
+    birthTime:         birthTime        && birthTime.trim()        ? birthTime        : null,
+    birthCountry:      birthCountry     && birthCountry.trim()     ? birthCountry     : null,
+    birthProvince:     birthProvince    && birthProvince.trim()    ? birthProvince    : null,
+    birthCity:         birthCity        && birthCity.trim()        ? birthCity        : null,
+    birthTimezone:     birthTimezone    && birthTimezone.trim()    ? birthTimezone    : null,
+    addressPreference: addressPreference && addressPreference.trim() ? addressPreference : null,
   };
 }
 
 /**
- * Validate required fields for personal information
+ * Validate required fields for personal information.
+ * Only birthDate is required; email comes from the Firebase token, and
+ * first/last names are no longer stored.
+ *
  * @param {Object} data - Personal information
  * @returns {Object} Validation result { valid, error }
  */
 export function validatePersonalInfoFields(data) {
-  const { email, birthDate, firstName, lastName, sex } = data;
-  const isTemporary = email && email.startsWith('tempuser');
+  const { birthDate } = data;
 
-  // All users need email and birthDate
-  if (!email || !birthDate) {
-    return { valid: false, error: 'Missing required fields: email, birthDate' };
-  }
-
-  // Non-temporary users need complete profile
-  if (!isTemporary && (!firstName || !lastName || !sex)) {
-    return { valid: false, error: 'Missing required fields: firstName, lastName, email, birthDate, sex' };
+  if (!birthDate) {
+    return { valid: false, error: 'Missing required field: birthDate' };
   }
 
   return { valid: true };
@@ -54,7 +55,7 @@ export function validatePersonalInfoFields(data) {
  */
 export function validateBirthDate(birthDate) {
   const parsedBirthDate = parseDateForStorage(birthDate);
-  
+
   if (!parsedBirthDate || parsedBirthDate === 'Invalid Date') {
     return { valid: false, error: 'Invalid birth date format' };
   }
@@ -70,11 +71,11 @@ export function validateBirthDate(birthDate) {
  */
 export async function validateUserAge(birthDate, userId) {
   const ageValidation = validateAge(birthDate);
-  
+
   if (!ageValidation.isValid) {
-    return { 
-      valid: false, 
-      error: ageValidation.error + ' (This app requires users to be 18 years or older)' 
+    return {
+      valid: false,
+      error: ageValidation.error + ' (This app requires users to be 18 years or older)',
     };
   }
 
@@ -84,7 +85,7 @@ export async function validateUserAge(birthDate, userId) {
     return {
       valid: false,
       error: violationResult.error || violationResult.message,
-      accountDeleted: violationResult.deleted
+      accountDeleted: violationResult.deleted,
     };
   }
 

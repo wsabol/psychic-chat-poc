@@ -41,8 +41,6 @@ export const DELETION_TABLES = [
 export async function fetchPersonalInfo(userId) {
   return db.query(
     `SELECT user_id, 
-            pgp_sym_decrypt(first_name_encrypted, $2) as first_name,
-            pgp_sym_decrypt(last_name_encrypted, $2) as last_name,
             pgp_sym_decrypt(email_encrypted, $2) as email,
             pgp_sym_decrypt(phone_number_encrypted, $2) as phone_number,
             pgp_sym_decrypt(sex_encrypted, $2) as sex,
@@ -222,8 +220,6 @@ export async function anonymizeUserPII(userId) {
                                          END
                                        ),
        -- NULL out every PII field
-       first_name_encrypted          = NULL,
-       last_name_encrypted           = NULL,
        email_encrypted               = NULL,
        phone_number_encrypted        = NULL,
        birth_date_encrypted          = NULL,

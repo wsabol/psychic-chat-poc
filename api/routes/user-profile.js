@@ -46,8 +46,12 @@ router.post("/:userId", async (req, res) => {
   // Web client sends hashed userId in URL, but we use the real one from token
   const userId = req.userId || req.params.userId;
 
+  // Email is taken from the verified Firebase token — never from the form body.
+  // This ensures the stored email always matches the verified email address.
+  const emailFromToken = req.user?.email;
+
   try {
-    const result = await savePersonalInfo(userId, req.body);
+    const result = await savePersonalInfo(userId, req.body, emailFromToken);
 
     if (!result.success) {
       // Check if account was deleted due to age violation

@@ -29,9 +29,6 @@ export function usePersonalInfoAPI(userId, token, isTemporaryAccount = false) {
       return {
         success: true,
         data: {
-          firstName: '',
-          lastName: '',
-          email: '',
           birthCountry: '',
           birthProvince: '',
           birthCity: '',
@@ -57,9 +54,6 @@ export function usePersonalInfoAPI(userId, token, isTemporaryAccount = false) {
       return {
         success: true,
         data: {
-          firstName: data.firstName || '',
-          lastName: data.lastName || '',
-          email: data.email || '',
           birthCountry: data.birthCountry || '',
           birthProvince: data.birthProvince || '',
           birthCity: data.birthCity || '',

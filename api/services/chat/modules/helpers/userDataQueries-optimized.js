@@ -33,8 +33,6 @@ export async function fetchAllUserData(userId) {
         -- Personal Info — use CASE WHEN to avoid pgp_sym_decrypt(NULL, key) which can
         -- throw "Wrong key or corrupt data" on some pgcrypto builds when the column
         -- is NULL (scaffold rows leave birth_date, birth_time, etc. as NULL).
-        CASE WHEN upi.first_name_encrypted IS NOT NULL THEN pgp_sym_decrypt(upi.first_name_encrypted, $1) ELSE NULL END as first_name,
-        CASE WHEN upi.last_name_encrypted IS NOT NULL THEN pgp_sym_decrypt(upi.last_name_encrypted, $1) ELSE NULL END as last_name,
         CASE WHEN upi.birth_date_encrypted IS NOT NULL THEN pgp_sym_decrypt(upi.birth_date_encrypted, $1) ELSE NULL END as birth_date,
         CASE WHEN upi.birth_time_encrypted IS NOT NULL THEN pgp_sym_decrypt(upi.birth_time_encrypted, $1) ELSE NULL END as birth_time,
         CASE WHEN upi.birth_country_encrypted IS NOT NULL THEN pgp_sym_decrypt(upi.birth_country_encrypted, $1) ELSE NULL END as birth_country,
@@ -117,8 +115,6 @@ export async function fetchAllUserData(userId) {
         // Return minimal temp user data structure so oracle can respond
         return {
           personalInfo: {
-            first_name: 'Seeker',
-            last_name: null,
             birth_date: null,
             birth_time: null,
             birth_country: null,
@@ -164,8 +160,6 @@ export async function fetchAllUserData(userId) {
     
     return {
       personalInfo: {
-        first_name: row.first_name || 'Seeker',  // Fallback for NULL
-        last_name: row.last_name,
         birth_date: row.birth_date,
         birth_time: row.birth_time,
         birth_country: row.birth_country,
@@ -173,7 +167,7 @@ export async function fetchAllUserData(userId) {
         birth_city: row.birth_city,
         birth_timezone: row.birth_timezone,
         sex: row.sex,
-        address_preference: row.address_preference || row.first_name || 'Seeker'
+        address_preference: row.address_preference || 'Seeker'
       },
       astrologyInfo: row.zodiac_sign ? {
         zodiac_sign: row.zodiac_sign,
