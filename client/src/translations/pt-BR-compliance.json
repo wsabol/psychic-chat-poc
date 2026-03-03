@@ -1,0 +1,40 @@
+{
+  "compliance": {
+    "updateModal": {
+      "title": "Importante: Termos de uso e Política de privacidade atualizados",
+      "subtitle": "Atualizamos nossos documentos legais. Por favor, revise e aceite as novas versões para continuar.",
+      "updatedFrom": "Atualizado da versão {{version}}",
+      "termsTitle": "Termos de uso",
+      "termsDescription": "Nossos Termos de uso foram significativamente atualizados. Por favor, leia os novos termos com atenção.",
+      "privacyTitle": "Política de privacidade",
+      "privacyDescription": "Nossa Política de privacidade foi significativamente atualizada com novas medidas de proteção de dados.",
+      "readTermsButton": "Ler os Termos de uso completos",
+      "readPrivacyButton": "Ler a Política de privacidade completa",
+      "openInNewTab": "Abrir em nova aba",
+      "acceptTermsCheckbox": "Li e aceito os Termos de uso atualizados",
+      "acceptPrivacyCheckbox": "Li e aceito a Política de privacidade atualizada",
+      "acceptTermsButton": "Aceitar Termos",
+      "acceptPrivacyButton": "Aceitar Política de privacidade",
+      "processing": "Processando...",
+      "accepted": "Aceito",
+      "whyTitle": "Por que estamos pedindo isso?",
+      "whyText": "Fizemos mudanças importantes para proteger melhor seus dados e melhorar nosso serviço. Essas atualizações são exigidas por lei para mantê-lo informado.",
+      "declineTitle": "E se eu não concordar?",
+      "declineText": "Infelizmente, você deve aceitar estes termos para continuar usando nosso serviço. Entre em contato com support@starshippsychics.com se tiver dúvidas."
+    },
+    "consentModal": {
+      "title": "Termos de uso e Política de privacidade",
+      "termsTitle": "Termos de uso",
+      "privacyTitle": "Política de privacidade",
+      "readTermsButton": "Ler Termos",
+      "readPrivacyButton": "Ler Política de privacidade",
+      "termsDescription": "Ao usar este aplicativo, você concorda com nossos Termos de uso e com todas as leis e regulamentações aplicáveis. Você concorda em ser responsável pelo cumprimento das leis locais da sua jurisdição.",
+      "privacyDescription": "Respeitamos sua privacidade. Nossa Política de privacidade explica como coletamos, usamos, divulgamos e protegemos suas informações pessoais.",
+      "acceptTermsCheckbox": "Aceito os Termos de uso",
+      "acceptPrivacyCheckbox": "Aceito a Política de privacidade",
+      "acceptButton": "Aceitar e continuar",
+      "accepting": "Aceitando...",
+      "errorBothRequired": "Você deve aceitar tanto os termos de uso quanto a política de privacidade"
+    }
+  }
+}

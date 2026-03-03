@@ -8,6 +8,83 @@ import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 import { getAuth } from 'firebase-admin/auth';
 import { fetchStripeCustomerId, deleteFromTable, logDeletionAudit, DELETION_TABLES, anonymizeUserPII } from './queries.js';
 import { decryptStripeCustomerId } from './dataDecryption.js';
+import { getStoredSubscriptionData } from '../../../services/stripe/database.js';
+import { cancelSubscription } from '../../../services/stripe/subscriptions.js';
+import { stripe } from '../../../services/stripe/stripeClient.js';
+
+/**
+ * Cancel the user's active Stripe subscription at the end of the current period.
+ * This prevents any future charges while preserving access until period end.
+ *
+ * Uses `cancel_at_period_end: true` so the subscription stays "active" until the
+ * billing period ends, then stops. The Stripe customer record is NOT deleted here —
+ * it is deleted later by performCompleteAccountDeletion when the account is finally
+ * anonymized (at anonymization_date / grace period end).
+ *
+ * @param {string} userId
+ * @returns {Promise<{success: boolean, subscription_id?: string, period_end?: number, message?: string, error?: string}>}
+ */
+export async function cancelStripeSubscriptionAtPeriodEnd(userId) {
+  try {
+    const subscriptionData = await getStoredSubscriptionData(userId);
+
+    if (!subscriptionData?.stripe_subscription_id) {
+      return { success: true, message: 'No active subscription found' };
+    }
+
+    // Only cancel if the subscription is in a cancellable state.
+    const cancellableStatuses = ['active', 'trialing', 'past_due'];
+    if (!cancellableStatuses.includes(subscriptionData.subscription_status)) {
+      return {
+        success: true,
+        message: `Subscription already in status '${subscriptionData.subscription_status}' — no action needed`,
+      };
+    }
+
+    // cancelSubscription() uses cancel_at_period_end: true (see services/stripe/subscriptions.js)
+    const updatedSub = await cancelSubscription(subscriptionData.stripe_subscription_id);
+
+    return {
+      success: true,
+      subscription_id: subscriptionData.stripe_subscription_id,
+      period_end: updatedSub?.current_period_end ?? subscriptionData.current_period_end,
+    };
+  } catch (error) {
+    logErrorFromCatch(error, 'user-data', 'cancel stripe subscription at period end');
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Re-enable a subscription that was set to cancel at period end.
+ * Called when a user cancels their deletion request during the grace period.
+ *
+ * @param {string} userId
+ * @returns {Promise<{success: boolean, message?: string, error?: string}>}
+ */
+export async function reactivateStripeSubscription(userId) {
+  try {
+    const subscriptionData = await getStoredSubscriptionData(userId);
+
+    if (!subscriptionData?.stripe_subscription_id) {
+      return { success: true, message: 'No subscription to reactivate' };
+    }
+
+    if (!stripe) {
+      return { success: false, error: 'Stripe is not configured' };
+    }
+
+    // Remove cancel_at_period_end so the subscription renews normally.
+    await stripe.subscriptions.update(subscriptionData.stripe_subscription_id, {
+      cancel_at_period_end: false,
+    });
+
+    return { success: true, subscription_id: subscriptionData.stripe_subscription_id };
+  } catch (error) {
+    logErrorFromCatch(error, 'user-data', 'reactivate stripe subscription');
+    return { success: false, error: error.message };
+  }
+}
 
 export async function deleteFromFirebase(userId) {
   try {

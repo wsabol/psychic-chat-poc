@@ -71,10 +71,10 @@ export async function upsertTermsAndPrivacyConsent(data) {
     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, false, NOW(), NOW())
     ON CONFLICT (user_id_hash) DO UPDATE SET
       terms_version = CASE WHEN excluded.terms_accepted THEN $2 ELSE user_consents.terms_version END,
-      terms_accepted = $3,
+      terms_accepted = CASE WHEN $3 THEN true ELSE user_consents.terms_accepted END,
       terms_accepted_at = CASE WHEN $3 THEN NOW() ELSE user_consents.terms_accepted_at END,
       privacy_version = CASE WHEN excluded.privacy_accepted THEN $5 ELSE user_consents.privacy_version END,
-      privacy_accepted = $6,
+      privacy_accepted = CASE WHEN $6 THEN true ELSE user_consents.privacy_accepted END,
       privacy_accepted_at = CASE WHEN $6 THEN NOW() ELSE user_consents.privacy_accepted_at END,
       agreed_from_ip_encrypted = $8,
       user_agent_encrypted = $9,

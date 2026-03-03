@@ -1,0 +1,40 @@
+{
+  "compliance": {
+    "updateModal": {
+      "title": "重要：利用規約とプライバシーポリシーの更新",
+      "subtitle": "法的文書を更新しました。続行するには、新しいバージョンをご確認の上、同意してください。",
+      "updatedFrom": "バージョン {{version}} から更新",
+      "termsTitle": "利用規約",
+      "termsDescription": "利用規約が大幅に更新されました。新しい規約をよくお読みください。",
+      "privacyTitle": "プライバシーポリシー",
+      "privacyDescription": "プライバシーポリシーが大幅に更新され、新しいデータ保護措置が追加されました。",
+      "readTermsButton": "利用規約の全文を読む",
+      "readPrivacyButton": "プライバシーポリシーの全文を読む",
+      "openInNewTab": "新しいタブで開く",
+      "acceptTermsCheckbox": "更新された利用規約を読み、同意します",
+      "acceptPrivacyCheckbox": "更新されたプライバシーポリシーを読み、同意します",
+      "acceptTermsButton": "利用規約に同意",
+      "acceptPrivacyButton": "プライバシーポリシーに同意",
+      "processing": "処理中...",
+      "accepted": "同意済み",
+      "whyTitle": "なぜこのお願いをしているのですか？",
+      "whyText": "お客様のデータをより適切に保護し、サービスを改善するために重要な変更を行いました。これらの更新は、お客様に情報を提供するために法律で義務付けられています。",
+      "declineTitle": "同意しない場合はどうなりますか？",
+      "declineText": "残念ながら、サービスを継続してご利用いただくためには、これらの規約に同意していただく必要があります。ご不明な点がある場合は、support@starshippsychics.com までお問い合わせください。"
+    },
+    "consentModal": {
+      "title": "利用規約とプライバシーポリシー",
+      "termsTitle": "利用規約",
+      "privacyTitle": "プライバシーポリシー",
+      "readTermsButton": "利用規約を読む",
+      "readPrivacyButton": "プライバシーポリシーを読む",
+      "termsDescription": "このアプリを使用することで、利用規約および適用されるすべての法律や規制に同意したことになります。お客様は、お住まいの地域の法律を遵守する責任を負うことに同意します。",
+      "privacyDescription": "私たちはお客様のプライバシーを尊重します。プライバシーポリシーでは、個人情報の収集、使用、開示、保護について説明しています。",
+      "acceptTermsCheckbox": "利用規約に同意します",
+      "acceptPrivacyCheckbox": "プライバシーポリシーに同意します",
+      "acceptButton": "同意して続行",
+      "accepting": "同意中...",
+      "errorBothRequired": "利用規約とプライバシーポリシーの両方に同意する必要があります"
+    }
+  }
+}

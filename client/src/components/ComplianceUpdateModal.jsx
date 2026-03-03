@@ -19,7 +19,7 @@ import { getLegalDocumentPath } from '../utils/legalDocumentUtils';
 import './ComplianceUpdateModal.css';
 
 export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpdated }) {
-  const { language } = useTranslation();
+  const { t, language } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [accepted, setAccepted] = useState({
@@ -109,9 +109,9 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
     <div className="compliance-modal-overlay">
       <div className="compliance-modal">
         <div className="compliance-header">
-          <h2>⚖️ Important: Updated Terms & Privacy Policy</h2>
+          <h2>⚖️ {t('compliance.updateModal.title')}</h2>
           <p className="compliance-subtitle">
-            We've updated our legal documents. Please review and accept the new versions to continue.
+            {t('compliance.updateModal.subtitle')}
           </p>
         </div>
 
@@ -122,29 +122,29 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
           {(compliance.termsVersion?.requiresReacceptance || compliance.requiresTermsUpdate) && (
             <div className="compliance-section">
               <div className="section-header">
-                <h3>Terms of Service {compliance.termsVersion.current}</h3>
+                <h3>{t('compliance.updateModal.termsTitle')} {compliance.termsVersion.current}</h3>
                 <span className="version-badge">
-                  Updated from {compliance.termsVersion.accepted}
+                  {t('compliance.updateModal.updatedFrom', { version: compliance.termsVersion.accepted })}
                 </span>
               </div>
               <div className="compliance-text">
-                <p>Our Terms of Service have been significantly updated. Please read the new terms carefully.</p>
+                <p>{t('compliance.updateModal.termsDescription')}</p>
                 <div className="action-buttons">
-                  <button 
+                  <button
                     onClick={() => setViewingDocument('terms')}
                     className="btn-view-document"
                     type="button"
                   >
-                    📖 Read Full Terms of Service
+                    📖 {t('compliance.updateModal.readTermsButton')}
                   </button>
-                  <a 
-                    href={termsPath} 
-                    target="_blank" 
+                  <a
+                    href={termsPath}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="btn-link-secondary"
-                    title="Open in new tab"
+                    title={t('compliance.updateModal.openInNewTab')}
                   >
-                    🔗 Open in New Tab
+                    🔗 {t('compliance.updateModal.openInNewTab')}
                   </a>
                 </div>
               </div>
@@ -156,18 +156,18 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
                   disabled={loading}
                 />
                 <span className="checkbox-text">
-                  I have read and accept the updated Terms of Service
+                  {t('compliance.updateModal.acceptTermsCheckbox')}
                 </span>
               </label>
-              <button 
+              <button
                 onClick={handleAcceptTerms}
                 disabled={loading || !accepted.terms}
                 className="btn-accept"
               >
-                {loading ? 'Processing...' : 'Accept Terms'}
+                {loading ? t('compliance.updateModal.processing') : t('compliance.updateModal.acceptTermsButton')}
               </button>
               {accepted.terms && !loading && (
-                <div className="accepted-badge">✓ Accepted</div>
+                <div className="accepted-badge">✓ {t('compliance.updateModal.accepted')}</div>
               )}
             </div>
           )}
@@ -176,29 +176,29 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
           {(compliance.privacyVersion?.requiresReacceptance || compliance.requiresPrivacyUpdate) && (
             <div className="compliance-section">
               <div className="section-header">
-                <h3>Privacy Policy {compliance.privacyVersion.current}</h3>
+                <h3>{t('compliance.updateModal.privacyTitle')} {compliance.privacyVersion.current}</h3>
                 <span className="version-badge">
-                  Updated from {compliance.privacyVersion.accepted}
+                  {t('compliance.updateModal.updatedFrom', { version: compliance.privacyVersion.accepted })}
                 </span>
               </div>
               <div className="compliance-text">
-                <p>Our Privacy Policy has been significantly updated with new data protection measures.</p>
+                <p>{t('compliance.updateModal.privacyDescription')}</p>
                 <div className="action-buttons">
-                  <button 
+                  <button
                     onClick={() => setViewingDocument('privacy')}
                     className="btn-view-document"
                     type="button"
                   >
-                    🔒 Read Full Privacy Policy
+                    🔒 {t('compliance.updateModal.readPrivacyButton')}
                   </button>
-                  <a 
-                    href={privacyPath} 
-                    target="_blank" 
+                  <a
+                    href={privacyPath}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="btn-link-secondary"
-                    title="Open in new tab"
+                    title={t('compliance.updateModal.openInNewTab')}
                   >
-                    🔗 Open in New Tab
+                    🔗 {t('compliance.updateModal.openInNewTab')}
                   </a>
                 </div>
               </div>
@@ -210,18 +210,18 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
                   disabled={loading}
                 />
                 <span className="checkbox-text">
-                  I have read and accept the updated Privacy Policy
+                  {t('compliance.updateModal.acceptPrivacyCheckbox')}
                 </span>
               </label>
-              <button 
+              <button
                 onClick={handleAcceptPrivacy}
                 disabled={loading || !accepted.privacy}
                 className="btn-accept"
               >
-                {loading ? 'Processing...' : 'Accept Privacy Policy'}
+                {loading ? t('compliance.updateModal.processing') : t('compliance.updateModal.acceptPrivacyButton')}
               </button>
               {accepted.privacy && !loading && (
-                <div className="accepted-badge">✓ Accepted</div>
+                <div className="accepted-badge">✓ {t('compliance.updateModal.accepted')}</div>
               )}
             </div>
           )}
@@ -232,10 +232,10 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
         {/* Help text */}
         <div className="compliance-help">
           <p>
-            <strong>Why are we asking you to do this?</strong> We've made important changes to better protect your data and improve our service. These updates are required by law to keep you informed.
+            <strong>{t('compliance.updateModal.whyTitle')}</strong> {t('compliance.updateModal.whyText')}
           </p>
           <p>
-            <strong>What if I don't agree?</strong> Unfortunately, you must accept these terms to continue using our service. Please contact support@example.com if you have concerns.
+            <strong>{t('compliance.updateModal.declineTitle')}</strong> {t('compliance.updateModal.declineText')}
           </p>
         </div>
       </div>
@@ -244,7 +244,7 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
       {viewingDocument && (
         <div className="compliance-document-viewer-overlay">
           <DocumentViewer
-            title={viewingDocument === 'terms' ? 'Terms of Service' : 'Privacy Policy'}
+            title={viewingDocument === 'terms' ? t('compliance.updateModal.termsTitle') : t('compliance.updateModal.privacyTitle')}
             docType={viewingDocument}
             onBack={() => setViewingDocument(null)}
           />

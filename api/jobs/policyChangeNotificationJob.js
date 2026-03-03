@@ -177,7 +177,6 @@ async function queryUsersForInitialNotification(termsVersion, privacyVersion) {
       uc.last_notified_at < NOW() - INTERVAL '${CONFIG.GRACE_PERIOD_DAYS} days'
     )
     AND upi.email_encrypted IS NOT NULL
-    AND upi.subscription_status = 'active'
     AND upi.user_id NOT LIKE 'temp_%'
     AND upi.deletion_requested_at IS NULL
     ORDER BY uc.last_notified_at ASC NULLS FIRST
@@ -218,7 +217,6 @@ async function queryUsersForReminder(termsVersion, privacyVersion) {
     AND uc.last_notified_at > NOW() - INTERVAL '${reminderEnd} days'
     AND COALESCE(uc.notification_count, 0) < $4
     AND upi.email_encrypted IS NOT NULL
-    AND upi.subscription_status = 'active'
     AND upi.user_id NOT LIKE 'temp_%'
     AND upi.deletion_requested_at IS NULL
     ORDER BY uc.last_notified_at ASC

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { DocumentViewer } from './help/DocumentViewer.jsx';
+import { useTranslation } from '../context/TranslationContext';
 import './ConsentModal.css';
 
 export function ConsentModal({ userId, token, onConsentAccepted }) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [termsRead, setTermsRead] = useState(false);
@@ -11,7 +13,7 @@ export function ConsentModal({ userId, token, onConsentAccepted }) {
 
   const handleAccept = async () => {
     if (!termsRead || !privacyRead) {
-      setError('You must accept both terms and privacy policy');
+      setError(t('compliance.consentModal.errorBothRequired'));
       return;
     }
 
@@ -49,69 +51,69 @@ export function ConsentModal({ userId, token, onConsentAccepted }) {
   return (
     <div className="consent-modal-overlay">
       <div className="consent-modal">
-        <h2>Terms & Privacy Policy</h2>
-        
+        <h2>{t('compliance.consentModal.title')}</h2>
+
         {error && <div className="consent-error-message">{error}</div>}
 
         <div className="consent-content">
           <div className="consent-section">
             <div className="consent-section-header">
-              <h3>Terms of Service</h3>
+              <h3>{t('compliance.consentModal.termsTitle')}</h3>
               <button
                 type="button"
                 onClick={() => setViewingDocument('terms')}
                 className="btn-read-document"
               >
-                📖 Read Terms
+                📖 {t('compliance.consentModal.readTermsButton')}
               </button>
             </div>
             <div className="consent-text">
-              <p>By using this application, you agree to our Terms of Service and all applicable laws and regulations. You agree that you are responsible for compliance with any local laws in your jurisdiction.</p>
+              <p>{t('compliance.consentModal.termsDescription')}</p>
               <label>
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   checked={termsRead}
                   onChange={(e) => setTermsRead(e.target.checked)}
                   disabled={loading}
                 />
-                <span>I accept the Terms of Service</span>
+                <span>{t('compliance.consentModal.acceptTermsCheckbox')}</span>
               </label>
             </div>
           </div>
 
           <div className="consent-section">
             <div className="consent-section-header">
-              <h3>Privacy Policy</h3>
+              <h3>{t('compliance.consentModal.privacyTitle')}</h3>
               <button
                 type="button"
                 onClick={() => setViewingDocument('privacy')}
                 className="btn-read-document"
               >
-                🔒 Read Privacy Policy
+                🔒 {t('compliance.consentModal.readPrivacyButton')}
               </button>
             </div>
             <div className="consent-text">
-              <p>We respect your privacy. Our Privacy Policy explains how we collect, use, disclose, and safeguard your personal information. Please review our Privacy Policy to understand our privacy practices.</p>
+              <p>{t('compliance.consentModal.privacyDescription')}</p>
               <label>
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   checked={privacyRead}
                   onChange={(e) => setPrivacyRead(e.target.checked)}
                   disabled={loading}
                 />
-                <span>I accept the Privacy Policy</span>
+                <span>{t('compliance.consentModal.acceptPrivacyCheckbox')}</span>
               </label>
             </div>
           </div>
         </div>
 
         <div className="consent-actions">
-          <button 
+          <button
             onClick={handleAccept}
             disabled={loading || !termsRead || !privacyRead}
             className="btn-consent-accept"
           >
-            {loading ? 'Accepting...' : 'Accept & Continue'}
+            {loading ? t('compliance.consentModal.accepting') : t('compliance.consentModal.acceptButton')}
           </button>
         </div>
       </div>
@@ -132,7 +134,7 @@ export function ConsentModal({ userId, token, onConsentAccepted }) {
           padding: '2rem'
         }}>
           <DocumentViewer
-            title={viewingDocument === 'terms' ? 'Terms of Service' : 'Privacy Policy'}
+            title={viewingDocument === 'terms' ? t('compliance.consentModal.termsTitle') : t('compliance.consentModal.privacyTitle')}
             docType={viewingDocument}
             onBack={() => setViewingDocument(null)}
           />

@@ -150,19 +150,42 @@ router.get('/compliance-dashboard/acceptance-by-version', async (req, res) => {
  */
 router.get('/compliance-dashboard/user-status', async (req, res) => {
   try {
-    const { status = 'all', limit = 50, offset = 0 } = req.query;
+    const { status = 'all' } = req.query;
+    const limitVal = parseInt(req.query.limit, 10) || 50;
+    const offsetVal = parseInt(req.query.offset, 10) || 0;
     const termsVersion = getCurrentTermsVersion();
     const privacyVersion = getCurrentPrivacyVersion();
 
-    let whereClause = '1=1';
-    
+    // Build query and params based on filter status.
+    // Always use $1/$2 for versions (or placeholders), $3/$4 for LIMIT/OFFSET
+    // so parameter count matches what PostgreSQL expects.
+    let whereClause;
+    let queryParams;
+    let countParams;
+
     if (status === 'compliant') {
       whereClause = `(uc.terms_version = $1 AND uc.privacy_version = $2)`;
+      queryParams  = [termsVersion, privacyVersion, limitVal, offsetVal];
+      countParams  = [termsVersion, privacyVersion];
     } else if (status === 'non-compliant') {
       whereClause = `(uc.terms_version != $1 OR uc.privacy_version != $2)`;
+      queryParams  = [termsVersion, privacyVersion, limitVal, offsetVal];
+      countParams  = [termsVersion, privacyVersion];
     } else if (status === 'requires-action') {
       whereClause = `uc.requires_consent_update = true`;
+      queryParams  = [limitVal, offsetVal];
+      countParams  = [];
+    } else {
+      // 'all' — no version filter
+      whereClause = `1=1`;
+      queryParams  = [limitVal, offsetVal];
+      countParams  = [];
     }
+
+    // For 'all' and 'requires-action', LIMIT/OFFSET are $1/$2.
+    // For filtered queries, LIMIT/OFFSET are $3/$4.
+    const limitPlaceholder  = queryParams.length === 4 ? '$3' : '$1';
+    const offsetPlaceholder = queryParams.length === 4 ? '$4' : '$2';
 
     const query = `
       SELECT 
@@ -176,41 +199,30 @@ router.get('/compliance-dashboard/user-status', async (req, res) => {
         uc.requires_consent_update,
         uc.last_notified_at,
         uc.notification_count,
-        (
-          SELECT COUNT(*) FROM messages 
-          WHERE user_id_hash = uc.user_id_hash 
-          AND created_at > NOW() - INTERVAL '30 days'
-        ) as recent_activity,
         uc.updated_at
       FROM user_consents uc
       WHERE ${whereClause}
       ORDER BY uc.updated_at DESC
-      LIMIT $3 OFFSET $4
+      LIMIT ${limitPlaceholder} OFFSET ${offsetPlaceholder}
     `;
 
-    const params = status === 'all' 
-      ? [null, null, limit, offset]
-      : [termsVersion, privacyVersion, limit, offset];
-
-    const result = await db.query(query, params);
-
-    // Get total count
     const countQuery = `
       SELECT COUNT(*) as count FROM user_consents uc
       WHERE ${whereClause}
     `;
-    const countParams = status === 'all' ? [null, null] : [termsVersion, privacyVersion];
+
+    const result      = await db.query(query, queryParams);
     const countResult = await db.query(countQuery, countParams);
 
     return successResponse(res, {
       success: true,
       timestamp: new Date().toISOString(),
-      filters: { status, limit: parseInt(limit), offset: parseInt(offset) },
+      filters: { status, limit: limitVal, offset: offsetVal },
       pagination: {
         total: parseInt(countResult.rows[0].count),
         returned: result.rows.length,
-        limit: parseInt(limit),
-        offset: parseInt(offset)
+        limit: limitVal,
+        offset: offsetVal
       },
       users: result.rows.map(row => ({
         userIdHash: row.user_id_hash,
@@ -231,13 +243,10 @@ router.get('/compliance-dashboard/user-status', async (req, res) => {
           lastNotified: row.last_notified_at,
           notificationCount: row.notification_count
         },
-        activity: {
-          recentActivityDays: row.recent_activity,
-          lastUpdated: row.updated_at
-        }
+        lastUpdated: row.updated_at
       }))
     });
-    } catch (error) {
+  } catch (error) {
     return serverError(res, 'Failed to get user status');
   }
 });

@@ -239,13 +239,34 @@ export default function SettingsPage({ userId, token, auth, onboarding }) {
     }
   };
 
-  // Delete Account
+  // Send deletion verification email (step 1 of 2)
+  const handleSendDeleteCode = async () => {
+    try {
+      const response = await fetch(`${API_URL}/user/send-delete-verification`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || t('settings.verificationCodeError'));
+      }
+      return { success: true, emailMasked: data.email_masked };
+    } catch (error) {
+      logErrorFromCatch(error, 'delete-account', 'Send delete verification error');
+      return { success: false, error: error.message || t('settings.verificationCodeError') };
+    }
+  };
+
+  // Confirm account deletion with verification code (step 2 of 2)
   const handleDeleteAccount = async (verificationCode) => {
     setIsLoading(true);
     setMessage({ type: '', text: '' });
 
     try {
-      const response = await fetch(`${API_URL}/api/user/delete-account`, {
+      const response = await fetch(`${API_URL}/user/delete-account`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -262,15 +283,17 @@ export default function SettingsPage({ userId, token, auth, onboarding }) {
         throw new Error(error.message || t('settings.deleteError'));
       }
 
-      setMessage({ type: 'success', text: t('settings.deleteSuccess') });
+      const data = await response.json();
       setShowDeleteModal(false);
+      setMessage({ type: 'success', text: data.message || t('settings.deleteSuccess') });
 
-      // Redirect after 2 seconds
+      // User retains access until subscription ends — stay on settings page
+      // so they can see the confirmation. Redirect to home after 5 seconds.
       setTimeout(() => {
         window.location.href = '/';
-      }, 2000);
+      }, 5000);
     } catch (error) {
-      logErrorFromCatch('Delete account error:', error);
+      logErrorFromCatch(error, 'delete-account', 'Delete account error');
       setMessage({ type: 'error', text: error.message || t('settings.deleteError') });
     } finally {
       setIsLoading(false);

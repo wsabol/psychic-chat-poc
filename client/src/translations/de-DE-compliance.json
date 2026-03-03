@@ -1,0 +1,40 @@
+{
+  "compliance": {
+    "updateModal": {
+      "title": "Wichtig: Aktualisierte Nutzungsbedingungen und Datenschutzerklärung",
+      "subtitle": "Wir haben unsere rechtlichen Dokumente aktualisiert. Bitte lesen und akzeptieren Sie die neuen Versionen, um fortzufahren.",
+      "updatedFrom": "Aktualisiert von {{version}}",
+      "termsTitle": "Nutzungsbedingungen",
+      "termsDescription": "Unsere Nutzungsbedingungen wurden erheblich aktualisiert. Bitte lesen Sie die neuen Bedingungen sorgfältig.",
+      "privacyTitle": "Datenschutzerklärung",
+      "privacyDescription": "Unsere Datenschutzerklärung wurde erheblich aktualisiert und enthält neue Datenschutzmaßnahmen.",
+      "readTermsButton": "Vollständige Nutzungsbedingungen lesen",
+      "readPrivacyButton": "Vollständige Datenschutzerklärung lesen",
+      "openInNewTab": "In neuem Tab öffnen",
+      "acceptTermsCheckbox": "Ich habe die aktualisierten Nutzungsbedingungen gelesen und akzeptiere sie",
+      "acceptPrivacyCheckbox": "Ich habe die aktualisierte Datenschutzerklärung gelesen und akzeptiere sie",
+      "acceptTermsButton": "Nutzungsbedingungen akzeptieren",
+      "acceptPrivacyButton": "Datenschutzerklärung akzeptieren",
+      "processing": "Verarbeitung...",
+      "accepted": "Akzeptiert",
+      "whyTitle": "Warum fragen wir Sie das?",
+      "whyText": "Wir haben wichtige Änderungen vorgenommen, um Ihre Daten besser zu schützen und unseren Service zu verbessern. Diese Aktualisierungen sind gesetzlich vorgeschrieben, um Sie zu informieren.",
+      "declineTitle": "Was ist, wenn ich nicht zustimme?",
+      "declineText": "Leider müssen Sie diese Bedingungen akzeptieren, um unseren Service weiterhin zu nutzen. Bitte kontaktieren Sie support@starshippsychics.com, wenn Sie Bedenken haben."
+    },
+    "consentModal": {
+      "title": "Nutzungsbedingungen und Datenschutzerklärung",
+      "termsTitle": "Nutzungsbedingungen",
+      "privacyTitle": "Datenschutzerklärung",
+      "readTermsButton": "Bedingungen lesen",
+      "readPrivacyButton": "Datenschutzerklärung lesen",
+      "termsDescription": "Durch die Nutzung dieser Anwendung stimmen Sie unseren Nutzungsbedingungen und allen geltenden Gesetzen und Vorschriften zu.",
+      "privacyDescription": "Wir respektieren Ihre Privatsphäre. Unsere Datenschutzerklärung erklärt, wie wir Ihre persönlichen Daten erheben, verwenden und schützen.",
+      "acceptTermsCheckbox": "Ich akzeptiere die Nutzungsbedingungen",
+      "acceptPrivacyCheckbox": "Ich akzeptiere die Datenschutzerklärung",
+      "acceptButton": "Akzeptieren und fortfahren",
+      "accepting": "Akzeptierung läuft...",
+      "errorBothRequired": "Sie müssen sowohl die Nutzungsbedingungen als auch die Datenschutzerklärung akzeptieren"
+    }
+  }
+}

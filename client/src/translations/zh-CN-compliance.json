@@ -1,0 +1,40 @@
+{
+  "compliance": {
+    "updateModal": {
+      "title": "重要：服务条款和隐私政策已更新",
+      "subtitle": "我们已更新法律文件。请查看并接受新版本以继续使用。",
+      "updatedFrom": "从版本 {{version}} 更新",
+      "termsTitle": "服务条款",
+      "termsDescription": "我们的服务条款已进行重大更新。请仔细阅读新条款。",
+      "privacyTitle": "隐私政策",
+      "privacyDescription": "我们的隐私政策已进行重大更新，包含新的数据保护措施。",
+      "readTermsButton": "阅读完整服务条款",
+      "readPrivacyButton": "阅读完整隐私政策",
+      "openInNewTab": "在新标签页中打开",
+      "acceptTermsCheckbox": "我已阅读并接受更新后的服务条款",
+      "acceptPrivacyCheckbox": "我已阅读并接受更新后的隐私政策",
+      "acceptTermsButton": "接受服务条款",
+      "acceptPrivacyButton": "接受隐私政策",
+      "processing": "处理中...",
+      "accepted": "已接受",
+      "whyTitle": "为什么我们需要您执行此操作？",
+      "whyText": "我们进行了重要更改，以更好地保护您的数据并改善我们的服务。这些更新依法要求我们向您告知。",
+      "declineTitle": "如果我不同意怎么办？",
+      "declineText": "很遗憾，您必须接受这些条款才能继续使用我们的服务。如有疑虑，请联系 support@starshippsychics.com。"
+    },
+    "consentModal": {
+      "title": "服务条款和隐私政策",
+      "termsTitle": "服务条款",
+      "privacyTitle": "隐私政策",
+      "readTermsButton": "阅读条款",
+      "readPrivacyButton": "阅读隐私政策",
+      "termsDescription": "使用本应用程序，即表示您同意我们的服务条款以及所有适用的法律法规。您同意对遵守您所在司法管辖区的当地法律负责。",
+      "privacyDescription": "我们尊重您的隐私。我们的隐私政策说明了我们如何收集、使用、披露和保护您的个人信息。",
+      "acceptTermsCheckbox": "我接受服务条款",
+      "acceptPrivacyCheckbox": "我接受隐私政策",
+      "acceptButton": "接受并继续",
+      "accepting": "接受中...",
+      "errorBothRequired": "您必须同时接受服务条款和隐私政策"
+    }
+  }
+}

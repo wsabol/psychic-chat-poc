@@ -1,0 +1,40 @@
+{
+  "compliance": {
+    "updateModal": {
+      "title": "Importante: Términos de servicio y Política de privacidad actualizados",
+      "subtitle": "Hemos actualizado nuestros documentos legales. Por favor, revise y acepte las nuevas versiones para continuar.",
+      "updatedFrom": "Actualizado desde {{version}}",
+      "termsTitle": "Términos de servicio",
+      "termsDescription": "Nuestros Términos de servicio han sido significativamente actualizados. Por favor, lea los nuevos términos detenidamente.",
+      "privacyTitle": "Política de privacidad",
+      "privacyDescription": "Nuestra Política de privacidad ha sido significativamente actualizada con nuevas medidas de protección de datos.",
+      "readTermsButton": "Leer los Términos de servicio completos",
+      "readPrivacyButton": "Leer la Política de privacidad completa",
+      "openInNewTab": "Abrir en nueva pestaña",
+      "acceptTermsCheckbox": "He leído y acepto los Términos de servicio actualizados",
+      "acceptPrivacyCheckbox": "He leído y acepto la Política de privacidad actualizada",
+      "acceptTermsButton": "Aceptar Términos",
+      "acceptPrivacyButton": "Aceptar Política de privacidad",
+      "processing": "Procesando...",
+      "accepted": "Aceptado",
+      "whyTitle": "¿Por qué le pedimos esto?",
+      "whyText": "Hemos realizado cambios importantes para proteger mejor sus datos y mejorar nuestro servicio. Estas actualizaciones son requeridas por ley para mantenerle informado.",
+      "declineTitle": "¿Qué pasa si no estoy de acuerdo?",
+      "declineText": "Lamentablemente, debe aceptar estos términos para continuar usando nuestro servicio. Por favor, contacte con support@starshippsychics.com si tiene preguntas."
+    },
+    "consentModal": {
+      "title": "Términos de servicio y Política de privacidad",
+      "termsTitle": "Términos de servicio",
+      "privacyTitle": "Política de privacidad",
+      "readTermsButton": "Leer Términos",
+      "readPrivacyButton": "Leer Política de privacidad",
+      "termsDescription": "Al usar esta aplicación, acepta nuestros Términos de servicio y todas las leyes y regulaciones aplicables. Usted acepta ser responsable del cumplimiento de las leyes locales de su jurisdicción.",
+      "privacyDescription": "Respetamos su privacidad. Nuestra Política de privacidad explica cómo recopilamos, usamos, divulgamos y protegemos su información personal.",
+      "acceptTermsCheckbox": "Acepto los Términos de servicio",
+      "acceptPrivacyCheckbox": "Acepto la Política de privacidad",
+      "acceptButton": "Aceptar y continuar",
+      "accepting": "Aceptando...",
+      "errorBothRequired": "Debe aceptar tanto los términos de servicio como la política de privacidad"
+    }
+  }
+}

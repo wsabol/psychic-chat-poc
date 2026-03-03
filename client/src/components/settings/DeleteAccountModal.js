@@ -170,13 +170,13 @@ const STYLES = {
     cursor: 'not-allowed',
   },
   infoBox: {
-    backgroundColor: '#fff3cd',
-    border: '1px solid #ffc107',
+    backgroundColor: '#e8f4fd',
+    border: '1px solid #90caf9',
     borderRadius: '6px',
     padding: '1rem',
     marginBottom: '1.5rem',
     fontSize: '13px',
-    color: '#856404',
+    color: '#0d47a1',
     lineHeight: '1.5',
   },
 };
@@ -211,17 +211,16 @@ export default function DeleteAccountModal({ isOpen, userEmail, onConfirm, onCan
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ email: userEmail }),
       });
       
       if (!response.ok) {
         let errorMsg = 'Failed to send verification code';
         try {
           const errorData = await response.json();
-          logErrorFromCatch('[DELETE] API Error:', errorData);
+          logErrorFromCatch(new Error(JSON.stringify(errorData)), 'delete-account', '[DELETE] API Error');
           errorMsg = errorData.error || errorData.message || errorMsg;
         } catch (e) {
-          logErrorFromCatch('[DELETE] Response status:', response.status, response.statusText);
+          logErrorFromCatch(new Error(`Status ${response.status}: ${response.statusText}`), 'delete-account', '[DELETE] Response status');
         }
         throw new Error(errorMsg);
       }
@@ -229,7 +228,7 @@ export default function DeleteAccountModal({ isOpen, userEmail, onConfirm, onCan
       setStep(STEPS.VERIFY);
       setResendTimer(RESEND_COOLDOWN);
     } catch (err) {
-      logErrorFromCatch('Error sending verification:', err);
+      logErrorFromCatch(err, 'delete-account', 'Error sending verification');
       setError(t('settings.verificationCodeError'));
     }
   };
@@ -370,7 +369,7 @@ export default function DeleteAccountModal({ isOpen, userEmail, onConfirm, onCan
         <div style={STYLES.infoBox}>{t('settings.deleteAccountFinalMessage')}</div>
 
         <div style={STYLES.detailsContainer}>
-          <p style={{ ...STYLES.detailText, fontWeight: 'bold', marginBottom: '1rem' }}>{t('settings.willBeDeleted')}:</p>
+          <p style={{ ...STYLES.detailText, fontWeight: 'bold', marginBottom: '1rem' }}>{t('settings.willBeDeleted')}</p>
           <ul style={{ margin: '0 0 1rem 1rem', fontSize: '12px', color: '#666' }}>
             <li>{t('settings.deleteAccountData')}</li>
             <li>{t('settings.deletePaymentInfo')}</li>

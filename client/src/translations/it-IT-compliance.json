@@ -1,0 +1,40 @@
+{
+  "compliance": {
+    "updateModal": {
+      "title": "Importante: Termini di servizio e Informativa sulla privacy aggiornati",
+      "subtitle": "Abbiamo aggiornato i nostri documenti legali. Si prega di rivedere e accettare le nuove versioni per continuare.",
+      "updatedFrom": "Aggiornato dalla versione {{version}}",
+      "termsTitle": "Termini di servizio",
+      "termsDescription": "I nostri Termini di servizio sono stati significativamente aggiornati. Si prega di leggere attentamente i nuovi termini.",
+      "privacyTitle": "Informativa sulla privacy",
+      "privacyDescription": "La nostra Informativa sulla privacy è stata significativamente aggiornata con nuove misure di protezione dei dati.",
+      "readTermsButton": "Leggi i Termini di servizio completi",
+      "readPrivacyButton": "Leggi l'Informativa sulla privacy completa",
+      "openInNewTab": "Apri in nuova scheda",
+      "acceptTermsCheckbox": "Ho letto e accetto i Termini di servizio aggiornati",
+      "acceptPrivacyCheckbox": "Ho letto e accetto l'Informativa sulla privacy aggiornata",
+      "acceptTermsButton": "Accetta i Termini",
+      "acceptPrivacyButton": "Accetta l'Informativa sulla privacy",
+      "processing": "Elaborazione...",
+      "accepted": "Accettato",
+      "whyTitle": "Perché te lo chiediamo?",
+      "whyText": "Abbiamo apportato importanti modifiche per proteggere meglio i tuoi dati e migliorare il nostro servizio. Questi aggiornamenti sono richiesti dalla legge per tenerti informato.",
+      "declineTitle": "Cosa succede se non sono d'accordo?",
+      "declineText": "Purtroppo, devi accettare questi termini per continuare a utilizzare il nostro servizio. Contatta support@starshippsychics.com se hai preoccupazioni."
+    },
+    "consentModal": {
+      "title": "Termini di servizio e Informativa sulla privacy",
+      "termsTitle": "Termini di servizio",
+      "privacyTitle": "Informativa sulla privacy",
+      "readTermsButton": "Leggi i Termini",
+      "readPrivacyButton": "Leggi l'Informativa sulla privacy",
+      "termsDescription": "Utilizzando questa applicazione, accetti i nostri Termini di servizio e tutte le leggi e normative applicabili. Accetti di essere responsabile del rispetto delle leggi locali della tua giurisdizione.",
+      "privacyDescription": "Rispettiamo la tua privacy. La nostra Informativa sulla privacy spiega come raccogliamo, utilizziamo, divulghiamo e proteggiamo le tue informazioni personali.",
+      "acceptTermsCheckbox": "Accetto i Termini di servizio",
+      "acceptPrivacyCheckbox": "Accetto l'Informativa sulla privacy",
+      "acceptButton": "Accetta e continua",
+      "accepting": "Accettazione in corso...",
+      "errorBothRequired": "Devi accettare sia i termini di servizio che l'informativa sulla privacy"
+    }
+  }
+}

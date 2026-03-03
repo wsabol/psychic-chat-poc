@@ -163,27 +163,56 @@ export async function fetchDeletionStatus(userId) {
 }
 
 /**
- * Mark account for deletion (starts 30-day grace period)
+ * Mark account for deletion.
+ *
+ * Grace-period end (anonymization_date) is set to the LATER of:
+ *   • The user's current Stripe subscription period end (so they keep access
+ *     for the full paid period and cannot be auto-charged again), OR
+ *   • 30 days from now (minimum grace period for accounts with no subscription).
  *
  * Timeline after this call:
- *   +30 days  → anonymization_date : PII columns are NULLed out by account-cleanup Lambda (Phase 1)
- *   +7 years  → final_deletion_date: chat messages are deleted by account-cleanup Lambda (Phase 2)
+ *   gracePeriodEnd → anonymization_date : PII columns are NULLed out by account-cleanup Lambda (Phase 1)
+ *   +7 years       → final_deletion_date: chat messages deleted by account-cleanup Lambda (Phase 2)
  *
- * The 30-day window lets the user cancel/reactivate.
  * email_hash is preserved indefinitely so legal lookup by email remains possible.
+ *
+ * @param {string}      userId          - The user's ID
+ * @param {string|null} gracePeriodEnd  - ISO-8601 string for the subscription period end.
+ *                                        Falls back to NOW()+30 days if null or in the past.
  */
-export async function markAccountForDeletion(userId) {
-  return db.query(
-    `UPDATE user_personal_info 
-     SET deletion_status        = 'pending_deletion',
-         deletion_requested_at  = NOW(),
-         anonymization_date     = NOW() + INTERVAL '30 days',
-         final_deletion_date    = NOW() + INTERVAL '2555 days',
-         updated_at             = NOW()
-     WHERE user_id = $1
-     RETURNING deletion_requested_at, anonymization_date, final_deletion_date`,
-    [userId]
-  );
+export async function markAccountForDeletion(userId, gracePeriodEnd = null) {
+  // Enforce a minimum grace period of 30 days so users always have time to cancel.
+  const thirtyDaysFromNow = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  const useSubscriptionEnd =
+    gracePeriodEnd && new Date(gracePeriodEnd) > thirtyDaysFromNow;
+
+  if (useSubscriptionEnd) {
+    // Use the subscription period end as the anonymization date.
+    return db.query(
+      `UPDATE user_personal_info 
+       SET deletion_status        = 'pending_deletion',
+           deletion_requested_at  = NOW(),
+           anonymization_date     = $2::timestamptz,
+           final_deletion_date    = NOW() + INTERVAL '2555 days',
+           updated_at             = NOW()
+       WHERE user_id = $1
+       RETURNING deletion_requested_at, anonymization_date, final_deletion_date`,
+      [userId, gracePeriodEnd]
+    );
+  } else {
+    // Fallback: 30-day grace period (no active subscription or end date already past).
+    return db.query(
+      `UPDATE user_personal_info 
+       SET deletion_status        = 'pending_deletion',
+           deletion_requested_at  = NOW(),
+           anonymization_date     = NOW() + INTERVAL '30 days',
+           final_deletion_date    = NOW() + INTERVAL '2555 days',
+           updated_at             = NOW()
+       WHERE user_id = $1
+       RETURNING deletion_requested_at, anonymization_date, final_deletion_date`,
+      [userId]
+    );
+  }
 }
 
 /**

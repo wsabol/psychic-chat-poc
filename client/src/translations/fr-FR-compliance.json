@@ -1,0 +1,40 @@
+{
+  "compliance": {
+    "updateModal": {
+      "title": "Important : Conditions d'utilisation et Politique de confidentialité mises à jour",
+      "subtitle": "Nous avons mis à jour nos documents légaux. Veuillez examiner et accepter les nouvelles versions pour continuer.",
+      "updatedFrom": "Mis à jour depuis {{version}}",
+      "termsTitle": "Conditions d'utilisation",
+      "termsDescription": "Nos Conditions d'utilisation ont été considérablement mises à jour. Veuillez lire attentivement les nouvelles conditions.",
+      "privacyTitle": "Politique de confidentialité",
+      "privacyDescription": "Notre Politique de confidentialité a été considérablement mise à jour avec de nouvelles mesures de protection des données.",
+      "readTermsButton": "Lire les Conditions d'utilisation complètes",
+      "readPrivacyButton": "Lire la Politique de confidentialité complète",
+      "openInNewTab": "Ouvrir dans un nouvel onglet",
+      "acceptTermsCheckbox": "J'ai lu et j'accepte les Conditions d'utilisation mises à jour",
+      "acceptPrivacyCheckbox": "J'ai lu et j'accepte la Politique de confidentialité mise à jour",
+      "acceptTermsButton": "Accepter les Conditions",
+      "acceptPrivacyButton": "Accepter la Politique de confidentialité",
+      "processing": "Traitement en cours...",
+      "accepted": "Accepté",
+      "whyTitle": "Pourquoi vous demandons-nous cela ?",
+      "whyText": "Nous avons apporté des modifications importantes pour mieux protéger vos données et améliorer notre service. Ces mises à jour sont requises par la loi pour vous tenir informé.",
+      "declineTitle": "Que se passe-t-il si je ne suis pas d'accord ?",
+      "declineText": "Malheureusement, vous devez accepter ces conditions pour continuer à utiliser notre service. Veuillez contacter support@starshippsychics.com si vous avez des préoccupations."
+    },
+    "consentModal": {
+      "title": "Conditions d'utilisation et Politique de confidentialité",
+      "termsTitle": "Conditions d'utilisation",
+      "privacyTitle": "Politique de confidentialité",
+      "readTermsButton": "Lire les Conditions",
+      "readPrivacyButton": "Lire la Politique de confidentialité",
+      "termsDescription": "En utilisant cette application, vous acceptez nos Conditions d'utilisation et toutes les lois et réglementations applicables. Vous acceptez d'être responsable du respect des lois locales de votre juridiction.",
+      "privacyDescription": "Nous respectons votre vie privée. Notre Politique de confidentialité explique comment nous collectons, utilisons, divulguons et protégeons vos informations personnelles.",
+      "acceptTermsCheckbox": "J'accepte les Conditions d'utilisation",
+      "acceptPrivacyCheckbox": "J'accepte la Politique de confidentialité",
+      "acceptButton": "Accepter et continuer",
+      "accepting": "Acceptation en cours...",
+      "errorBothRequired": "Vous devez accepter les conditions d'utilisation et la politique de confidentialité"
+    }
+  }
+}

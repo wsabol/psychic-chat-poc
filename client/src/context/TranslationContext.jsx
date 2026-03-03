@@ -14,6 +14,7 @@ import enUSWelcome from '../translations/en-US-welcome.json';
 import enUSZodiacWheel from '../translations/en-US-zodiacwheel.json';
 import enUSCountries from '../translations/en-US-countries.json';
 import enUSFAQ from '../translations/en-US-faq-module.js';
+import enUSCompliance from '../translations/en-US-compliance.json';
 
 // Spanish modular translations
 import esESAuth from '../translations/es-ES-auth.json';
@@ -29,6 +30,7 @@ import esESWelcome from '../translations/es-ES-welcome.json';
 import esESZodiacWheel from '../translations/es-ES-zodiacwheel.json';
 import esESCountries from '../translations/es-ES-countries.json';
 import esESFAQ from '../translations/es-ES-faq-module.js';
+import esESCompliance from '../translations/es-ES-compliance.json';
 
 // French modular translations
 import frFRAuth from '../translations/fr-FR-auth.json';
@@ -44,6 +46,7 @@ import frFRWelcome from '../translations/fr-FR-welcome.json';
 import frFRZodiacWheel from '../translations/fr-FR-zodiacwheel.json';
 import frFRCountries from '../translations/fr-FR-countries.json';
 import frFRFAQ from '../translations/fr-FR-faq-module.js';
+import frFRCompliance from '../translations/fr-FR-compliance.json';
 
 // German modular translations
 import deDEAuth from '../translations/de-DE-auth.json';
@@ -59,6 +62,7 @@ import deDEWelcome from '../translations/de-DE-welcome.json';
 import deDEZodiacWheel from '../translations/de-DE-zodiacwheel.json';
 import deDECountries from '../translations/de-DE-countries.json';
 import deDEFAQ from '../translations/de-DE-faq-module.js';
+import deDECompliance from '../translations/de-DE-compliance.json';
 
 // Italian modular translations
 import itITAuth from '../translations/it-IT-auth.json';
@@ -74,6 +78,7 @@ import itITWelcome from '../translations/it-IT-welcome.json';
 import itITZodiacWheel from '../translations/it-IT-zodiacwheel.json';
 import itITCountries from '../translations/it-IT-countries.json';
 import itITFAQ from '../translations/it-IT-faq-module.js';
+import itITCompliance from '../translations/it-IT-compliance.json';
 
 // Portuguese modular translations
 import ptBRAuth from '../translations/pt-BR-auth.json';
@@ -89,6 +94,7 @@ import ptBRWelcome from '../translations/pt-BR-welcome.json';
 import ptBRZodiacWheel from '../translations/pt-BR-zodiacwheel.json';
 import ptBRCountries from '../translations/pt-BR-countries.json';
 import ptBRFAQ from '../translations/pt-BR-faq-module.js';
+import ptBRCompliance from '../translations/pt-BR-compliance.json';
 
 // Japanese modular translations
 import jaJPAuth from '../translations/ja-JP-auth.json';
@@ -104,6 +110,7 @@ import jaJPWelcome from '../translations/ja-JP-welcome.json';
 import jaJPZodiacWheel from '../translations/ja-JP-zodiacwheel.json';
 import jaJPCountries from '../translations/ja-JP-countries.json';
 import jaJPFAQ from '../translations/ja-JP-faq-module.js';
+import jaJPCompliance from '../translations/ja-JP-compliance.json';
 
 // Chinese modular translations
 import zhCNAuth from '../translations/zh-CN-auth.json';
@@ -119,6 +126,7 @@ import zhCNWelcome from '../translations/zh-CN-welcome.json';
 import zhCNZodiacWheel from '../translations/zh-CN-zodiacwheel.json';
 import zhCNCountries from '../translations/zh-CN-countries.json';
 import zhCNFAQ from '../translations/zh-CN-faq-module.js';
+import zhCNCompliance from '../translations/zh-CN-compliance.json';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
 
 const TranslationContext = createContext();
@@ -160,16 +168,16 @@ function mergeTranslations(...objects) {
   }, {});
 }
 
-// English uses modular structure: merge auth + ui + pages + settings + legal + astrology + billing + hints + help + welcome + zodiacwheel + countries
-const enUS = mergeTranslations(enUSAuth, enUSUI, enUSPages, enUSSettings, enUSLegal, enUSAstrology, enUSBilling, enUSHints, enUSHelp, enUSWelcome, enUSZodiacWheel, { countries: enUSCountries }, enUSFAQ);
+// English uses modular structure: merge auth + ui + pages + settings + legal + astrology + billing + hints + help + welcome + zodiacwheel + countries + compliance
+const enUS = mergeTranslations(enUSAuth, enUSUI, enUSPages, enUSSettings, enUSLegal, enUSAstrology, enUSBilling, enUSHints, enUSHelp, enUSWelcome, enUSZodiacWheel, { countries: enUSCountries }, enUSFAQ, enUSCompliance);
 
-const esES = mergeTranslations(esESAuth, esESUI, esESPages, esESSettings, esESLegal, esESAstrology, esESBilling, esESHints, esESHelp, esESWelcome, esESZodiacWheel, { countries: esESCountries }, esESFAQ);
-const frFR = mergeTranslations(frFRAuth, frFRUI, frFRPages, frFRSettings, frFRLegal, frFRAstrology, frFRBilling, frFRHints, frFRHelp, frFRWelcome, frFRZodiacWheel, { countries: frFRCountries }, frFRFAQ);
-const deDE = mergeTranslations(deDEAuth, deDEUI, deDEPages, deDESettings, deDELegal, deDEAstrology, deDEBilling, deDEHints, deDEHelp, deDEWelcome, deDEZodiacWheel, { countries: deDECountries }, deDEFAQ);
-const itIT = mergeTranslations(itITAuth, itITUI, itITPages, itITSettings, itITLegal, itITAstrology, itITBilling, itITHints, itITHelp, itITWelcome, itITZodiacWheel, { countries: itITCountries }, itITFAQ);
-const ptBR = mergeTranslations(ptBRAuth, ptBRUI, ptBRPages, ptBRSettings, ptBRLegal, ptBRAstrology, ptBRBilling, ptBRHints, ptBRHelp, ptBRWelcome, ptBRZodiacWheel, { countries: ptBRCountries }, ptBRFAQ);
-const jaJP = mergeTranslations(jaJPAuth, jaJPUI, jaJPPages, jaJPSettings, jaJPLegal, jaJPAstrology, jaJPBilling, jaJPHints, jaJPHelp, jaJPWelcome, jaJPZodiacWheel, { countries: jaJPCountries }, jaJPFAQ);
-const zhCN = mergeTranslations(zhCNAuth, zhCNUI, zhCNPages, zhCNSettings, zhCNLegal, zhCNAstrology, zhCNBilling, zhCNHints, zhCNHelp, zhCNWelcome, zhCNZodiacWheel, { countries: zhCNCountries }, zhCNFAQ);
+const esES = mergeTranslations(esESAuth, esESUI, esESPages, esESSettings, esESLegal, esESAstrology, esESBilling, esESHints, esESHelp, esESWelcome, esESZodiacWheel, { countries: esESCountries }, esESFAQ, esESCompliance);
+const frFR = mergeTranslations(frFRAuth, frFRUI, frFRPages, frFRSettings, frFRLegal, frFRAstrology, frFRBilling, frFRHints, frFRHelp, frFRWelcome, frFRZodiacWheel, { countries: frFRCountries }, frFRFAQ, frFRCompliance);
+const deDE = mergeTranslations(deDEAuth, deDEUI, deDEPages, deDESettings, deDELegal, deDEAstrology, deDEBilling, deDEHints, deDEHelp, deDEWelcome, deDEZodiacWheel, { countries: deDECountries }, deDEFAQ, deDECompliance);
+const itIT = mergeTranslations(itITAuth, itITUI, itITPages, itITSettings, itITLegal, itITAstrology, itITBilling, itITHints, itITHelp, itITWelcome, itITZodiacWheel, { countries: itITCountries }, itITFAQ, itITCompliance);
+const ptBR = mergeTranslations(ptBRAuth, ptBRUI, ptBRPages, ptBRSettings, ptBRLegal, ptBRAstrology, ptBRBilling, ptBRHints, ptBRHelp, ptBRWelcome, ptBRZodiacWheel, { countries: ptBRCountries }, ptBRFAQ, ptBRCompliance);
+const jaJP = mergeTranslations(jaJPAuth, jaJPUI, jaJPPages, jaJPSettings, jaJPLegal, jaJPAstrology, jaJPBilling, jaJPHints, jaJPHelp, jaJPWelcome, jaJPZodiacWheel, { countries: jaJPCountries }, jaJPFAQ, jaJPCompliance);
+const zhCN = mergeTranslations(zhCNAuth, zhCNUI, zhCNPages, zhCNSettings, zhCNLegal, zhCNAstrology, zhCNBilling, zhCNHints, zhCNHelp, zhCNWelcome, zhCNZodiacWheel, { countries: zhCNCountries }, zhCNFAQ, zhCNCompliance);
 
 // All available languages (all using modular structure)
 const LANGUAGES = {

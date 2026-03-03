@@ -155,19 +155,29 @@ export function ComplianceDashboard({ token }) {
 
       const notifyResult = await notifyResponse.json();
 
-      // Show success message
-      setSuccessMessage(
-        `✅ Success! Sent ${notifyResult.results.successful} notifications to users. ` +
-        `Failed: ${notifyResult.results.failed}. Grace period ends: ${new Date(notifyResult.results.gracePeriodEnd).toLocaleDateString()}`
-      );
+      const { successful, failed, total, gracePeriodEnd } = notifyResult.results;
 
-      // Mark notifications as sent (disable button)
-      setNotificationsSent(true);
-
-      // Auto-dismiss after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage('');
-      }, 3000);
+      if (successful > 0) {
+        // Mark notifications as sent (disable button) only when emails actually went out
+        setNotificationsSent(true);
+        setSuccessMessage(
+          `✅ Success! Sent ${successful} of ${total} notifications. ` +
+          `Failed: ${failed}. Grace period ends: ${new Date(gracePeriodEnd).toLocaleDateString()}`
+        );
+        setTimeout(() => setSuccessMessage(''), 5000);
+      } else if (total === 0) {
+        // No users were found by the query at all
+        setError(
+          `⚠️ No users found to notify. Ensure users have been flagged (requires_consent_update = true), ` +
+          `have an encrypted email on file, and are not temp/deleted accounts.`
+        );
+      } else {
+        // Users were found but all sends failed
+        setError(
+          `⚠️ Found ${total} user(s) to notify but all ${failed} send(s) failed. ` +
+          `Check the email service configuration and API logs for details.`
+        );
+      }
 
       // Reload dashboard data
       await loadDashboardData();

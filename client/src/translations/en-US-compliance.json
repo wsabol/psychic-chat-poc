@@ -1,0 +1,40 @@
+{
+  "compliance": {
+    "updateModal": {
+      "title": "Important: Updated Terms & Privacy Policy",
+      "subtitle": "We've updated our legal documents. Please review and accept the new versions to continue.",
+      "updatedFrom": "Updated from {{version}}",
+      "termsTitle": "Terms of Service",
+      "termsDescription": "Our Terms of Service have been significantly updated. Please read the new terms carefully.",
+      "privacyTitle": "Privacy Policy",
+      "privacyDescription": "Our Privacy Policy has been significantly updated with new data protection measures.",
+      "readTermsButton": "Read Full Terms of Service",
+      "readPrivacyButton": "Read Full Privacy Policy",
+      "openInNewTab": "Open in New Tab",
+      "acceptTermsCheckbox": "I have read and accept the updated Terms of Service",
+      "acceptPrivacyCheckbox": "I have read and accept the updated Privacy Policy",
+      "acceptTermsButton": "Accept Terms",
+      "acceptPrivacyButton": "Accept Privacy Policy",
+      "processing": "Processing...",
+      "accepted": "Accepted",
+      "whyTitle": "Why are we asking you to do this?",
+      "whyText": "We've made important changes to better protect your data and improve our service. These updates are required by law to keep you informed.",
+      "declineTitle": "What if I don't agree?",
+      "declineText": "Unfortunately, you must accept these terms to continue using our service. Please contact support@starshippsychics.com if you have concerns."
+    },
+    "consentModal": {
+      "title": "Terms & Privacy Policy",
+      "termsTitle": "Terms of Service",
+      "privacyTitle": "Privacy Policy",
+      "readTermsButton": "Read Terms",
+      "readPrivacyButton": "Read Privacy Policy",
+      "termsDescription": "By using this application, you agree to our Terms of Service and all applicable laws and regulations. You agree that you are responsible for compliance with any local laws in your jurisdiction.",
+      "privacyDescription": "We respect your privacy. Our Privacy Policy explains how we collect, use, disclose, and safeguard your personal information. Please review our Privacy Policy to understand our privacy practices.",
+      "acceptTermsCheckbox": "I accept the Terms of Service",
+      "acceptPrivacyCheckbox": "I accept the Privacy Policy",
+      "acceptButton": "Accept & Continue",
+      "accepting": "Accepting...",
+      "errorBothRequired": "You must accept both the terms and privacy policy"
+    }
+  }
+}
