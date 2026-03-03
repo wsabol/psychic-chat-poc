@@ -109,12 +109,7 @@ export async function getOrCreateStripeCustomer(userId, userEmail) {
       let userRecord = null;
       const result = await db.query(
         `SELECT 
-          pgp_sym_decrypt(stripe_customer_id_encrypted, $1) as id,
-          pgp_sym_decrypt(billing_country_encrypted, $1) as country,
-          pgp_sym_decrypt(billing_state_encrypted, $1) as state,
-          pgp_sym_decrypt(billing_city_encrypted, $1) as city,
-          pgp_sym_decrypt(billing_postal_code_encrypted, $1) as postal_code,
-          pgp_sym_decrypt(billing_address_line1_encrypted, $1) as address_line1
+          pgp_sym_decrypt(stripe_customer_id_encrypted, $1) as id
         FROM user_personal_info WHERE user_id = $2`,
         [process.env.ENCRYPTION_KEY, userId]
       );
@@ -126,7 +121,6 @@ export async function getOrCreateStripeCustomer(userId, userEmail) {
       userRecord = result.rows[0];
 
       const storedId = userRecord.id;
-      const billingAddress = userRecord;
 
       // âœ… ALWAYS try to reuse stored customer
       if (storedId) {
@@ -147,23 +141,14 @@ export async function getOrCreateStripeCustomer(userId, userEmail) {
         }
       }
 
-      // Create new Stripe customer with address for automatic tax calculation
+      // Create new Stripe customer
+      // Note: billing address is no longer stored in DB - it is set separately
+      // via the /billing/save-billing-address endpoint which passes it directly to Stripe.
       const customerData = {
         email: userEmail,
         metadata: { userId },
       };
-    
-      // Add address if available (required for automatic tax)
-      if (billingAddress?.country) {
-        customerData.address = {
-          country: billingAddress.country,
-          state: billingAddress.state || undefined,
-          city: billingAddress.city || undefined,
-          postal_code: billingAddress.postal_code || undefined,
-          line1: billingAddress.address_line1 || undefined,
-        };
-      }
-      
+
       const customer = await stripe.customers.create(customerData);
 
       // Store in database

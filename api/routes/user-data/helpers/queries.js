@@ -236,11 +236,6 @@ export async function anonymizeUserPII(userId) {
        familiar_name_encrypted       = NULL,
        stripe_customer_id_encrypted  = NULL,
        stripe_subscription_id_encrypted = NULL,
-       billing_country_encrypted     = NULL,
-       billing_state_encrypted       = NULL,
-       billing_city_encrypted        = NULL,
-       billing_postal_code_encrypted = NULL,
-       billing_address_line1_encrypted = NULL,
        -- Status + timestamps
        deletion_status               = 'anonymized',
        anonymization_date            = COALESCE(anonymization_date, NOW()),

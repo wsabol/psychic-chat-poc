@@ -93,7 +93,6 @@ export const ENCRYPTED_PROFILE_COLUMNS = [
   { name: 'last_name_encrypted', alias: 'last_name' },
   { name: 'birth_date_encrypted', alias: 'birth_date' },
   { name: 'phone_number_encrypted', alias: 'phone_number' },
-  { name: 'billing_country_encrypted', alias: 'billing_country' }
 ];
 
 /**

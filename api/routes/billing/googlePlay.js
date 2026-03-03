@@ -248,7 +248,8 @@ router.get('/subscription-status/google', authenticateToken, async (req, res) =>
 
     const result = await db.query(
       `SELECT subscription_status, plan_name, current_period_end,
-              billing_platform, google_play_product_id, updated_at
+              billing_platform, google_play_product_id,
+              google_play_purchase_token, updated_at
        FROM user_personal_info
        WHERE user_id = $1`,
       [userId]
@@ -275,6 +276,10 @@ router.get('/subscription-status/google', authenticateToken, async (req, res) =>
       expiresAt: row.current_period_end
         ? new Date(row.current_period_end * 1000).toISOString()
         : null,
+      // purchaseToken is returned to the authenticated owner so the app can
+      // use it as the `oldPurchaseToken` when upgrading / downgrading plans.
+      purchaseToken: row.google_play_purchase_token ?? null,
+      productId: row.google_play_product_id ?? null,
     });
   } catch (error) {
     logErrorFromCatch(error, 'billing', 'google-subscription-status', hashUserId(req.user?.userId)).catch(() => {});

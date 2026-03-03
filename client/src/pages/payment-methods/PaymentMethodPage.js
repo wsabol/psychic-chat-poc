@@ -95,7 +95,16 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding, onP
       const { paymentMethod, error } = await stripeRef.current.createPaymentMethod({
         type: 'card',
         card: cardElement,
-        billing_details: { name: billingForm.cardholderName },
+        billing_details: {
+          name: billingForm.cardholderName,
+          address: {
+            country: billingForm.billingCountry || undefined,
+            state: billingForm.billingState || undefined,
+            city: billingForm.billingCity || undefined,
+            postal_code: billingForm.billingZip || undefined,
+            line1: billingForm.billingAddress || undefined,
+          },
+        },
       });
 
       if (error) {
@@ -129,7 +138,8 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding, onP
       // Set as default
       await billing.setDefaultPaymentMethod(paymentMethodId);
 
-      // Save billing address to database (for tax calculation)
+      // Update Stripe customer address for automatic tax calculation.
+      // Billing address is NOT saved in our database — Stripe owns it.
       if (billingForm.billingCountry) {
         try {
           const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
