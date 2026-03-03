@@ -44,7 +44,20 @@
   },
   "personalInfo": {
     "title": "Personal Information",
-    "privacyNotice": "By submitting this web form you agree to our processing of your personal data as provided in the Privacy Policy"
+    "privacyNotice": "By submitting this web form you agree to our processing of your personal data as provided in the Privacy Policy",
+    "sections": {
+      "basic": "Basic Information"
+    },
+    "familiarName": {
+      "label": "Familiar Name",
+      "placeholder": "e.g. Alex, Mia, Stardust…",
+      "hint": "What name would you like to be addressed by?"
+    },
+    "birthDateHint": "Enter your date of birth",
+    "birthTimeHint": "Required for accurate rising & moon sign calculation",
+    "birthCountryHint": "Country where you were born",
+    "birthProvinceHint": "Helps calculate your accurate rising & moon signs",
+    "birthCityHint": "City where you were born"
   },
   "freeTrial": {
     "skipThisStep": "Skip this step →",

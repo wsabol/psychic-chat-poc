@@ -3,7 +3,23 @@
   "chat": {"title": "🔮 与预言聊天", "titleTrial": "🔮 预言聊天（免费试用）", "subtitle": "询问预言关于您旅程的任何事情", "placeholder": "向预言提出问题...", "send": "发送", "sending": "发送中...", "thinking": "预言在思考...", "sessionExpired": "您的会话已过期", "reconnecting": "重新连接中...", "toggleMore": "📖 告诉我更多", "toggleLess": "📋 显示更少", "noMessages": "暂无消息。向预言提出问题。", "privacyNotice": "提交此网络表单即表示您同意我们按照隐私政策处理您的个人数据", "continueHint": "准备好继续了吗？"},
   "thankyou": {"title": "谢谢!", "subtitle": "您的预言会话已结束", "message": "您的宇宙洞察已被记录", "createAccount": "创建账户", "continue": "继续", "exit": "退出", "clickToRegister": "单击退出继续"},
   "help": {"title": "帮助和支持", "faq": "常见问题", "contact": "联系支持", "aboutUs": "关于我们", "terms": "服务条款", "privacy": "隐私政策"},
-  "personalInfo": {"title": "个人信息", "privacyNotice": "提交此网络表单即表示您同意我们按照隐私政策处理您的个人数据"},
+  "personalInfo": {
+    "title": "个人信息",
+    "privacyNotice": "提交此网络表单即表示您同意我们按照隐私政策处理您的个人数据",
+    "sections": {
+      "basic": "基本信息"
+    },
+    "familiarName": {
+      "label": "常用名",
+      "placeholder": "例如：小明、星星、阿云…",
+      "hint": "您希望我们如何称呼您？"
+    },
+    "birthDateHint": "输入您的出生日期",
+    "birthTimeHint": "准确计算上升星座和月亮星座所需",
+    "birthCountryHint": "您出生的国家",
+    "birthProvinceHint": "有助于精准计算您的上升星座和月亮星座",
+    "birthCityHint": "您出生的城市"
+  },
   "freeTrial": {
     "skipThisStep": "跳过此步骤 →",
     "exitToContinue": "✓ 退出并继续",

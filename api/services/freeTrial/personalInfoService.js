@@ -40,8 +40,9 @@ export function sanitizePersonalInfo(data) {
 
   // firstName and lastName are no longer stored; familiar name (addressPreference)
   // is used instead. The oracle falls back to "Seeker" when it is absent.
+  // email is optional — free trial users are not required to provide one.
   return {
-    email,
+    email: email || null,
     birthDate,
     birthTime:         safeStr(birthTime),
     birthCountry:      safeStr(birthCountry),

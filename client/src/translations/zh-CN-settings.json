@@ -87,9 +87,6 @@
   },
   "personalInfo": {
     "title": "个人信息",
-    "firstName": "名字",
-    "lastName": "姓氏",
-    "email": "电子邮件",
     "birthDate": "出生日期",
     "birthTime": "出生时间(可选)",
     "birthLocation": "出生地点",

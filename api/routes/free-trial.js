@@ -186,11 +186,11 @@ router.get('/session/:tempUserId', freeTrialLimiter, async (req, res) => {
  * POST /free-trial/save-personal-info/:tempUserId
  * Save personal information for a free trial user (no authentication required).
  *
- * Body: { firstName, lastName, email, birthDate, birthTime,
+ * Body: { birthDate, birthTime,
  *         birthCountry, birthProvince, birthCity, birthTimezone,
  *         sex, addressPreference, zodiacSign, astrologyData }
  *
- * Only `email` and `birthDate` are required — all other fields are optional.
+ * Only `birthDate` is required — all other fields are optional.
  */
 router.post('/save-personal-info/:tempUserId', freeTrialLimiter, async (req, res) => {
   try {
@@ -199,7 +199,7 @@ router.post('/save-personal-info/:tempUserId', freeTrialLimiter, async (req, res
 
     // Pull out fields that need up-front handling; spread the rest to sanitizePersonalInfo
     const { email, birthDate, zodiacSign, astrologyData, ...profileFields } = req.body;
-    if (!email || !birthDate) return validationError(res, 'Missing required fields: email, birthDate');
+    if (!birthDate) return validationError(res, 'Missing required field: birthDate');
 
     // Normalise and validate birth date
     const parsedBirthDate = parseDateForStorage(birthDate);

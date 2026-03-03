@@ -3,7 +3,23 @@
   "chat": {"title": "🔮 Chat con El Oráculo", "titleTrial": "🔮 Chat del Oráculo (Prueba Gratuita)", "subtitle": "Preguntale al oráculo cualquier cosa sobre tu viaje", "placeholder": "Preguntale al oráculo una pregunta...", "send": "Enviar", "sending": "Enviando...", "thinking": "El oráculo está pensando...", "sessionExpired": "Su sesión ha expirado", "reconnecting": "Reconectando...", "toggleMore": "📖 Cuéntame más", "toggleLess": "📋 Mostrar menos", "noMessages": "Sin mensajes aún. Preguntale al oráculo una pregunta.", "privacyNotice": "Al enviar este formulario web, acepta nuestro procesamiento de sus datos personales según lo establecido en la Política de Privacidad", "continueHint": "¿Listo para continuar?"},
   "thankyou": {"title": "¡Gracias!", "subtitle": "Su sesión de oráculo ha terminado", "message": "Sus insights cósmicos han sido registrados", "createAccount": "Crear Cuenta", "continue": "Continuar", "exit": "Salir", "clickToRegister": "Haga clic en salir para continuar"},
   "help": {"title": "Ayuda y Soporte", "faq": "Preguntas Frecuentes", "contact": "Contactar Soporte", "aboutUs": "Acerca de Nosotros", "terms": "Términos de Servicio", "privacy": "Política de Privacidad"},
-  "personalInfo": {"title": "Información Personal", "privacyNotice": "Al enviar este formulario web, acepta nuestro procesamiento de sus datos personales según lo establecido en la Política de Privacidad"},
+  "personalInfo": {
+    "title": "Información Personal",
+    "privacyNotice": "Al enviar este formulario web, acepta nuestro procesamiento de sus datos personales según lo establecido en la Política de Privacidad",
+    "sections": {
+      "basic": "Información Básica"
+    },
+    "familiarName": {
+      "label": "Nombre familiar",
+      "placeholder": "ej. Alex, Mia, Estrella…",
+      "hint": "¿Cómo le gustaría ser llamado?"
+    },
+    "birthDateHint": "Ingresa tu fecha de nacimiento",
+    "birthTimeHint": "Necesario para calcular con precisión tu ascendente y signo lunar",
+    "birthCountryHint": "País en el que naciste",
+    "birthProvinceHint": "Ayuda a calcular con precisión tu ascendente y signo lunar",
+    "birthCityHint": "Ciudad donde naciste"
+  },
   "freeTrial": {
     "skipThisStep": "Saltar este paso →",
     "exitToContinue": "✓ Salir para Continuar",

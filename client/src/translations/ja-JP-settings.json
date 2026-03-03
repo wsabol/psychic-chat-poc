@@ -87,9 +87,6 @@
   },
   "personalInfo": {
     "title": "個人情報",
-    "firstName": "名",
-    "lastName": "姓",
-    "email": "メール",
     "birthDate": "生年月日",
     "birthTime": "出生時刻(オプション)",
     "birthLocation": "出生地",

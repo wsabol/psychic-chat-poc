@@ -87,9 +87,6 @@
   },
   "personalInfo": {
     "title": "Personal Information",
-    "firstName": "First Name",
-    "lastName": "Last Name",
-    "email": "Email",
     "birthDate": "Birth Date",
     "birthTime": "Birth Time (optional)",
     "birthLocation": "Birth Location",

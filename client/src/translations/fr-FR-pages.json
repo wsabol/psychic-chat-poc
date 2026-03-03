@@ -3,7 +3,23 @@
   "chat": {"title": "🔮 Chat avec L'Oracle", "titleTrial": "🔮 Chat Oracle (Essai Gratuit)", "subtitle": "Demandez à l'oracle n'importe quoi sur votre voyage", "placeholder": "Posez une question à l'oracle...", "send": "Envoyer", "sending": "Envoi...", "thinking": "L'oracle réfléchit...", "sessionExpired": "Votre session a expiré", "reconnecting": "Reconnexion...", "toggleMore": "📖 Racontez-moi plus", "toggleLess": "📋 Afficher moins", "noMessages": "Aucun message pour l'instant. Posez une question à l'oracle.", "privacyNotice": "En soumettant ce formulaire web, vous acceptez notre traitement de vos données personnelles tel que prévu dans la Politique de Confidentialité", "continueHint": "Prêt à continuer?"},
   "thankyou": {"title": "Merci!", "subtitle": "Votre session oracle a pris fin", "message": "Vos intuitions cosmiques ont été enregistrées", "createAccount": "Créer un Compte", "continue": "Continuer", "exit": "Quitter", "clickToRegister": "Cliquez sur quitter pour continuer"},
   "help": {"title": "Aide et Support", "faq": "Questions Fréquemment Posées", "contact": "Contacter le Support", "aboutUs": "À Propos de Nous", "terms": "Conditions de Service", "privacy": "Politique de Confidentialité"},
-  "personalInfo": {"title": "Informations Personnelles", "privacyNotice": "En soumettant ce formulaire web, vous acceptez notre traitement de vos données personnelles tel que prévu dans la Politique de Confidentialité"},
+  "personalInfo": {
+    "title": "Informations Personnelles",
+    "privacyNotice": "En soumettant ce formulaire web, vous acceptez notre traitement de vos données personnelles tel que prévu dans la Politique de Confidentialité",
+    "sections": {
+      "basic": "Informations de Base"
+    },
+    "familiarName": {
+      "label": "Prénom familier",
+      "placeholder": "ex. Alex, Mia, Étoile…",
+      "hint": "Comment souhaitez-vous être appelé ?"
+    },
+    "birthDateHint": "Entrez votre date de naissance",
+    "birthTimeHint": "Nécessaire pour calculer précisément votre ascendant et signe lunaire",
+    "birthCountryHint": "Pays où vous êtes né(e)",
+    "birthProvinceHint": "Aide à calculer précisément votre ascendant et signe lunaire",
+    "birthCityHint": "Ville où vous êtes né(e)"
+  },
   "freeTrial": {
     "skipThisStep": "Passer cette étape →",
     "exitToContinue": "✓ Quitter pour Continuer",

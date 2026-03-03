@@ -87,9 +87,6 @@
   },
   "personalInfo": {
     "title": "Informations Personnelles",
-    "firstName": "Prénom",
-    "lastName": "Nom",
-    "email": "Email",
     "birthDate": "Date de Naissance",
     "birthTime": "Heure de Naissance (optionnel)",
     "birthLocation": "Lieu de Naissance",

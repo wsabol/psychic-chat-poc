@@ -3,7 +3,23 @@
   "chat": {"title": "🔮 オラクルとチャット", "titleTrial": "🔮 オラクル チャット（無料トライアル）", "subtitle": "あなたの旅についてオラクルに何でも質問してください", "placeholder": "オラクルに質問してください...", "send": "送信", "sending": "送信中...", "thinking": "オラクルは考えています...", "sessionExpired": "セッションの有効期限が切れています", "reconnecting": "再接続中...", "toggleMore": "📖 もっと教えて", "toggleLess": "📋 表示を少なくする", "noMessages": "メッセージはありません。オラクルに質問してください。", "privacyNotice": "このWebフォームを送信することで、プライバシーポリシーに規定されているように、お客様の個人データの処理に同意したことになります", "continueHint": "続行する準備ができましたか？"},
   "thankyou": {"title": "ありがとうございます！", "subtitle": "オラクル セッションが終了しました", "message": "宇宙の洞察が記録されました", "createAccount": "アカウントを作成", "continue": "続行", "exit": "終了", "clickToRegister": "終了をクリックして続行してください"},
   "help": {"title": "ヘルプ＆サポート", "faq": "よくある質問", "contact": "サポートに連絡", "aboutUs": "について", "terms": "利用規約", "privacy": "プライバシーポリシー"},
-  "personalInfo": {"title": "個人情報", "privacyNotice": "このWebフォームを送信することで、プライバシーポリシーに規定されているように、お客様の個人データの処理に同意したことになります"},
+  "personalInfo": {
+    "title": "個人情報",
+    "privacyNotice": "このWebフォームを送信することで、プライバシーポリシーに規定されているように、お客様の個人データの処理に同意したことになります",
+    "sections": {
+      "basic": "基本情報"
+    },
+    "familiarName": {
+      "label": "呼び名",
+      "placeholder": "例: アレックス、ミア、星...",
+      "hint": "どのようにお呼びすればよいですか？"
+    },
+    "birthDateHint": "生年月日を入力してください",
+    "birthTimeHint": "アセンダントと月星座の正確な計算に必要です",
+    "birthCountryHint": "生まれた国",
+    "birthProvinceHint": "アセンダントと月星座の正確な計算に役立ちます",
+    "birthCityHint": "生まれた市区町村"
+  },
   "freeTrial": {
     "skipThisStep": "このステップをスキップ →",
     "exitToContinue": "✓ 終了して続ける",
