@@ -35,6 +35,8 @@
     "accountCreated":  "Konto erstellt! ÃœberprÃ¼fen Sie Ihre E-Mail.",
     "agreeTerms":  "Ich akzeptiere die Nutzungsbedingungen",
     "agreePrivacy":  "Ich akzeptiere die Datenschutzrichtlinie",
+    "alreadyRegistered": "Sie sind bereits registriert.",
+    "needToRegister": "Sie müssen sich registrieren.",
     "errors":  {
         "invalidEmail":  "Bitte geben Sie eine gÃ¼ltige E-Mail-Adresse ein",
         "passwordMismatch":  "Die PasswÃ¶rter stimmen nicht Ã¼berein",

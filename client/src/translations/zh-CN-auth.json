@@ -35,6 +35,8 @@
     "accountCreated": "账户已创建！请检查您的邮箱。",
     "agreeTerms": "我同意服务条款",
     "agreePrivacy": "我同意隐私政策",
+    "alreadyRegistered": "您已经注册。",
+    "needToRegister": "您需要注册。",
     "errors": {
       "invalidEmail": "请输入有效的电子邮件地址",
       "passwordMismatch": "密码不匹配",

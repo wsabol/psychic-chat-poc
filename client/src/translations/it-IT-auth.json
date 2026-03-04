@@ -35,6 +35,8 @@
     "accountCreated": "Account creato! Controlla la tua email.",
     "agreeTerms": "Accetto i Termini di Servizio",
     "agreePrivacy": "Accetto l'Informativa sulla Privacy",
+    "alreadyRegistered": "Sei già registrato.",
+    "needToRegister": "Devi registrarti.",
     "errors": {
       "invalidEmail": "Inserisci un indirizzo email valido",
       "passwordMismatch": "Le password non corrispondono",

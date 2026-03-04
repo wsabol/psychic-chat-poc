@@ -35,6 +35,8 @@
     "accountCreated": "Conta criada! Verifique seu email.",
     "agreeTerms": "Aceito os Termos de Serviço",
     "agreePrivacy": "Aceito a Política de Privacidade",
+    "alreadyRegistered": "Você já está registrado.",
+    "needToRegister": "Você precisa se registrar.",
     "errors": {
       "invalidEmail": "Por favor, insira um endereço de email válido",
       "passwordMismatch": "As senhas não correspondem",

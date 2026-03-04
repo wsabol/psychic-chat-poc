@@ -35,6 +35,8 @@
     "accountCreated": "Compte créé! Vérifiez votre e-mail pour confirmer votre compte.",
     "agreeTerms": "J'accepte les Conditions de Service",
     "agreePrivacy": "J'accepte la Politique de Confidentialité",
+    "alreadyRegistered": "Vous êtes déjà inscrit.",
+    "needToRegister": "Vous devez vous inscrire.",
     "errors": {
       "invalidEmail": "Veuillez entrer une adresse e-mail valide",
       "passwordMismatch": "Les mots de passe ne correspondent pas",

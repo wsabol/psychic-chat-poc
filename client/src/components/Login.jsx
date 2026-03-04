@@ -76,7 +76,7 @@ export function Login({ defaultMode = 'login' }) {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (err) {
       if (err.code === 'auth/invalid-credential') {
-        setSuccessMessage('You need to register.');
+        setSuccessMessage(t('login.needToRegister'));
         setTimeout(() => {
           setSuccessMessage('');
           setMode('register');
@@ -128,7 +128,7 @@ export function Login({ defaultMode = 'login' }) {
       setPrivacyAccepted(false);
     } catch (err) {
       if (err.code === 'auth/email-already-in-use') {
-        setSuccessMessage('You are already registered.');
+        setSuccessMessage(t('login.alreadyRegistered'));
         setTimeout(() => {
           setSuccessMessage('');
           setMode('login');

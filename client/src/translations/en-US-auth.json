@@ -35,6 +35,8 @@
     "accountCreated": "Account created! Check your email to verify your account.",
     "agreeTerms": "I agree to the Terms of Service",
     "agreePrivacy": "I agree to the Privacy Policy",
+    "alreadyRegistered": "You are already registered.",
+    "needToRegister": "You need to register.",
     "errors": {
       "invalidEmail": "Please enter a valid email address",
       "passwordMismatch": "Passwords do not match",
