@@ -18,16 +18,16 @@
 // Update these when documents change
 const VERSION_CONFIG = {
   terms: {
-    version: process.env.TERMS_VERSION || '1.0',
+    version: process.env.TERMS_VERSION || '2.0',
     changeType: 'MAJOR',  // MAJOR | MINOR | PATCH
-    changedAt: process.env.TERMS_CHANGED_AT || '2025-11-24',
-    description: 'Initial Terms of Service'
+    changedAt: process.env.TERMS_CHANGED_AT || '2026-01-23',
+    description: 'Terms of Service v2.0'
   },
   privacy: {
-    version: process.env.PRIVACY_VERSION || '1.0',
+    version: process.env.PRIVACY_VERSION || '3.1',
     changeType: 'MAJOR',  // MAJOR | MINOR | PATCH
-    changedAt: process.env.PRIVACY_CHANGED_AT || '2026-01-01',
-    description: 'Initial Privacy Policy with GDPR, CCPA, PIPEDA, LGPD compliance'
+    changedAt: process.env.PRIVACY_CHANGED_AT || '2026-03-03',
+    description: 'Privacy Policy v3.1 with GDPR, CCPA, PIPEDA, LGPD compliance'
   }
 };
 

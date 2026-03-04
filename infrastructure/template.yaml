@@ -40,12 +40,12 @@ Parameters:
   
   TermsVersion:
     Type: String
-    Default: '1.0.0'
+    Default: '2.0'
     Description: Current Terms of Service version
   
   PrivacyVersion:
     Type: String
-    Default: '1.0.0'
+    Default: '3.1'
     Description: Current Privacy Policy version
 
 Globals:
@@ -194,6 +194,23 @@ Resources:
             Description: Run daily at 2:30 AM UTC
             Enabled: true
 
+  # Lambda Function: Temp User DB Cleanup
+  TempUserDbCleanupFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${Environment}-temp-account-cleanup'
+      Description: Daily cleanup of stale temp user rows from user_personal_info and messages
+      CodeUri: ../lambdas/
+      Handler: temp-account-cleanup/index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Events:
+        ScheduledEvent:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 1 * * ? *)
+            Description: Run daily at 1:00 AM UTC
+            Enabled: true
+
   # Lambda Function: Price Migration
   PriceMigrationFunction:
     Type: AWS::Serverless::Function
@@ -236,6 +253,12 @@ Resources:
       LogGroupName: !Sub '/aws/lambda/${Environment}-grace-period-enforcement'
       RetentionInDays: 30
 
+  TempUserDbCleanupLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${Environment}-temp-account-cleanup'
+      RetentionInDays: 30
+
   PriceMigrationLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
@@ -266,6 +289,12 @@ Outputs:
     Value: !GetAtt GracePeriodEnforcementFunction.Arn
     Export:
       Name: !Sub '${Environment}-GracePeriodEnforcementFunctionArn'
+
+  TempUserDbCleanupFunctionArn:
+    Description: ARN of the Temp User DB Cleanup Lambda function
+    Value: !GetAtt TempUserDbCleanupFunction.Arn
+    Export:
+      Name: !Sub '${Environment}-TempUserDbCleanupFunctionArn'
 
   PriceMigrationFunctionArn:
     Description: ARN of the Price Migration Lambda function

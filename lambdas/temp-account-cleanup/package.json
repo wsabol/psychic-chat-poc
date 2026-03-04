@@ -1,12 +1,11 @@
 {
   "name": "temp-account-cleanup",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
-  "description": "Cleanup temp accounts older than 8 hours",
+  "description": "Daily cleanup of stale temp user rows from user_personal_info and messages",
   "main": "index.js",
   "dependencies": {
     "@aws-sdk/client-secrets-manager": "^3.525.0",
-    "pg": "^8.11.3",
-    "firebase-admin": "^12.0.0"
+    "pg": "^8.11.3"
   }
 }
