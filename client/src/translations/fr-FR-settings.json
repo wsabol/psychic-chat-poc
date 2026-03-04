@@ -260,6 +260,36 @@
       "revokeButton": "Révoquer",
       "errorLoading": "Échec du chargement des appareils de confiance",
       "errorRevoke": "Échec de la révocation de l'appareil"
+    },
+    "twoFactorModal": {
+      "title": "Authentification à Deux Facteurs",
+      "settingsBody": "Configurez vos préférences d'authentification à deux facteurs ci-dessous.",
+      "enableLabel": "Activer l'Authentification à Deux Facteurs",
+      "enableCheckbox": "Activer l'Authentification à Deux Facteurs",
+      "methodLabel": "Méthode de Vérification",
+      "smsConsentTitle": "Activer l'Authentification à Deux Facteurs via SMS",
+      "save": "Enregistrer",
+      "methodSelectBody": "Choisissez comment vous souhaitez recevoir vos codes de vérification lors de la connexion.",
+      "emailMethod": "Email",
+      "emailMethodDesc": "Recevoir un code de vérification à votre adresse email",
+      "smsMethod": "SMS",
+      "smsMethodDesc": "Recevoir un code de vérification par SMS (frais opérateur possibles)",
+      "consentBody": "En fournissant votre numéro de téléphone, vous consentez à recevoir des codes de vérification SMS de Starship Psychics uniquement à des fins d'authentification.",
+      "consentItem1": "• 1 à 3 messages par session de connexion. Codes envoyés uniquement pour connexion/vérification.",
+      "consentItem2": "• Des frais de messages et de données peuvent s'appliquer.",
+      "consentItem3": "• Répondez STOP pour vous désabonner à tout moment.",
+      "consentItem4": "• Répondez HELP pour obtenir de l'aide.",
+      "consentCheckbox": "Je consens à recevoir des codes de vérification SMS de Starship Psychics. Je comprends que des frais peuvent s'appliquer et je peux répondre STOP à tout moment.",
+      "phoneLabel": "Numéro de Téléphone",
+      "phonePlaceholder": "+1 (555) 000-0000",
+      "cancel": "Annuler",
+      "sending": "Envoi…",
+      "continue": "Continuer",
+      "verifyBody": "Entrez le code de vérification à 6 chiffres envoyé au {{phoneNumber}}",
+      "verificationCodeLabel": "Code de Vérification",
+      "verificationCodePlaceholder": "000000",
+      "back": "Retour",
+      "verify": "Vérifier"
     }
   }
 }

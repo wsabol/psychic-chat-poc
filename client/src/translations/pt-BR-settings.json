@@ -258,6 +258,36 @@
       "revokeButton": "Revogar",
       "errorLoading": "Falha ao carregar dispositivos confiáveis",
       "errorRevoke": "Falha ao revogar dispositivo"
+    },
+    "twoFactorModal": {
+      "title": "Autenticação de Dois Fatores",
+      "settingsBody": "Configure suas preferências de autenticação de dois fatores abaixo.",
+      "enableLabel": "Ativar Autenticação de Dois Fatores",
+      "enableCheckbox": "Ativar Autenticação de Dois Fatores",
+      "methodLabel": "Método de Verificação",
+      "smsConsentTitle": "Ativar Autenticação de Dois Fatores via SMS",
+      "save": "Salvar",
+      "methodSelectBody": "Escolha como você gostaria de receber seus códigos de verificação ao entrar.",
+      "emailMethod": "Email",
+      "emailMethodDesc": "Receba um código de verificação no seu endereço de email",
+      "smsMethod": "SMS",
+      "smsMethodDesc": "Receba um código de verificação via SMS (tarifas da operadora podem ser aplicadas)",
+      "consentBody": "Ao fornecer seu número de telefone, você consente em receber códigos de verificação SMS da Starship Psychics apenas para fins de autenticação.",
+      "consentItem1": "• 1-3 mensagens por sessão de login. Códigos enviados apenas para login/verificação.",
+      "consentItem2": "• Tarifas de mensagens e dados podem ser aplicadas.",
+      "consentItem3": "• Responda STOP para cancelar a qualquer momento.",
+      "consentItem4": "• Responda HELP para assistência.",
+      "consentCheckbox": "Consinto em receber códigos de verificação SMS da Starship Psychics. Entendo que tarifas podem ser aplicadas e posso responder STOP a qualquer momento.",
+      "phoneLabel": "Número de Telefone",
+      "phonePlaceholder": "+1 (555) 000-0000",
+      "cancel": "Cancelar",
+      "sending": "Enviando…",
+      "continue": "Continuar",
+      "verifyBody": "Digite o código de verificação de 6 dígitos enviado para {{phoneNumber}}",
+      "verificationCodeLabel": "Código de Verificação",
+      "verificationCodePlaceholder": "000000",
+      "back": "Voltar",
+      "verify": "Verificar"
     }
   }
 }

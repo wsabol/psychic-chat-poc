@@ -260,6 +260,36 @@
       "revokeButton": "Widerrufen",
       "errorLoading": "Fehler beim Laden vertrauenswürdiger Geräte",
       "errorRevoke": "Fehler beim Widerrufen des Geräts"
+    },
+    "twoFactorModal": {
+      "title": "Zwei-Faktor-Authentifizierung",
+      "settingsBody": "Konfigurieren Sie Ihre Zwei-Faktor-Authentifizierungseinstellungen.",
+      "enableLabel": "Zwei-Faktor-Authentifizierung aktivieren",
+      "enableCheckbox": "Zwei-Faktor-Authentifizierung aktivieren",
+      "methodLabel": "Verifizierungsmethode",
+      "smsConsentTitle": "Zwei-Faktor-Authentifizierung via SMS aktivieren",
+      "save": "Speichern",
+      "methodSelectBody": "Wählen Sie, wie Sie Ihre Verifizierungscodes beim Anmelden erhalten möchten.",
+      "emailMethod": "E-Mail",
+      "emailMethodDesc": "Verifizierungscode per E-Mail erhalten",
+      "smsMethod": "SMS",
+      "smsMethodDesc": "Verifizierungscode per SMS erhalten (Gebühren können anfallen)",
+      "consentBody": "Durch Angabe Ihrer Telefonnummer stimmen Sie zu, SMS-Verifizierungscodes von Starship Psychics ausschließlich zu Authentifizierungszwecken zu erhalten.",
+      "consentItem1": "• 1-3 Nachrichten pro Login-Sitzung. Codes werden nur zum Login/zur Verifizierung gesendet.",
+      "consentItem2": "• Nachrichten- und Datengebühren können anfallen.",
+      "consentItem3": "• Antworten Sie STOP, um sich jederzeit abzumelden.",
+      "consentItem4": "• Antworten Sie HELP für Unterstützung.",
+      "consentCheckbox": "Ich stimme zu, SMS-Verifizierungscodes von Starship Psychics zu erhalten. Mir ist bewusst, dass Nachrichten- und Datengebühren anfallen können, und ich kann jederzeit STOP antworten.",
+      "phoneLabel": "Telefonnummer",
+      "phonePlaceholder": "+1 (555) 000-0000",
+      "cancel": "Abbrechen",
+      "sending": "Wird gesendet…",
+      "continue": "Fortfahren",
+      "verifyBody": "Geben Sie den 6-stelligen Verifizierungscode ein, der an {{phoneNumber}} gesendet wurde",
+      "verificationCodeLabel": "Verifizierungscode",
+      "verificationCodePlaceholder": "000000",
+      "back": "Zurück",
+      "verify": "Verifizieren"
     }
   }
 }

@@ -9,7 +9,7 @@ import { DocumentViewer } from '../../help/DocumentViewer';
  * Disclosures required by TCPA / CTIA guidelines:
  *  - Brand name (Starship Psychics) — main header
  *  - Purpose (login/verification only)
- *  - Message frequency (1 msg/login)
+ *  - Message frequency (1-3 msgs/login session)
  *  - Msg & data rates disclosure
  *  - STOP keyword to opt out
  *  - HELP keyword for support info
@@ -98,7 +98,7 @@ export default function SMSConsentModal({ isOpen, onAccept, onCancel }) {
             fontSize: '14px',
             lineHeight: '2.2'
           }}>
-            <li>One message per login. Codes sent for login/verification only.</li>
+            <li>1-3 messages per login session. Codes sent for login/verification only.</li>
             <li>Message and data rates may apply.</li>
             <li>Reply <strong style={{ color: '#ffffff' }}>STOP</strong> to opt-out anytime.</li>
             <li>Reply <strong style={{ color: '#ffffff' }}>HELP</strong> for support.</li>

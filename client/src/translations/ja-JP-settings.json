@@ -258,6 +258,36 @@
       "revokeButton": "失効させる",
       "errorLoading": "信頼できるデバイスの読み込みエラー",
       "errorRevoke": "デバイス失効エラー"
+    },
+    "twoFactorModal": {
+      "title": "二要素認証",
+      "settingsBody": "以下で二要素認証の設定を構成してください。",
+      "enableLabel": "二要素認証を有効にする",
+      "enableCheckbox": "二要素認証を有効にする",
+      "methodLabel": "確認方法",
+      "smsConsentTitle": "SMSで二要素認証を有効にする",
+      "save": "保存",
+      "methodSelectBody": "サインイン時の確認コードの受け取り方法を選択してください。",
+      "emailMethod": "メール",
+      "emailMethodDesc": "メールアドレスに確認コードを受け取ります",
+      "smsMethod": "SMS",
+      "smsMethodDesc": "SMSで確認コードを受け取ります（通信料金が発生する場合があります）",
+      "consentBody": "電話番号を提供することで、認証目的のみでStarship PsychicsからのSMS確認コードの受信に同意します。",
+      "consentItem1": "• ログインセッションごとに1〜3件のメッセージ。ログイン/認証目的のみコードを送信します。",
+      "consentItem2": "• メッセージとデータ料金が適用される場合があります。",
+      "consentItem3": "• STOPと返信していつでも拒否できます。",
+      "consentItem4": "• HELPと返信すると支援を受けられます。",
+      "consentCheckbox": "Starship PsychicsからのSMS確認コードの受信に同意します。メッセージとデータ料金が適用される場合があり、いつでもSTOPと返信できることを理解しています。",
+      "phoneLabel": "電話番号",
+      "phonePlaceholder": "+1 (555) 000-0000",
+      "cancel": "キャンセル",
+      "sending": "送信中…",
+      "continue": "続行",
+      "verifyBody": "{{phoneNumber}}に送信された6桁の確認コードを入力してください",
+      "verificationCodeLabel": "確認コード",
+      "verificationCodePlaceholder": "000000",
+      "back": "戻る",
+      "verify": "確認"
     }
   }
 }

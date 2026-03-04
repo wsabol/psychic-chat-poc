@@ -260,6 +260,36 @@
       "revokeButton": "Revoke",
       "errorLoading": "Failed to load trusted devices",
       "errorRevoke": "Error revoking device"
+    },
+    "twoFactorModal": {
+      "title": "Two-Factor Authentication",
+      "settingsBody": "Configure your two-factor authentication preferences below.",
+      "enableLabel": "Enable Two-Factor Authentication",
+      "enableCheckbox": "Enable Two-Factor Authentication",
+      "methodLabel": "Verification Method",
+      "smsConsentTitle": "Enable Two-Factor Authentication via SMS",
+      "save": "Save",
+      "methodSelectBody": "Choose how you would like to receive your verification codes when signing in.",
+      "emailMethod": "Email",
+      "emailMethodDesc": "Receive a verification code to your email address",
+      "smsMethod": "SMS Text Message",
+      "smsMethodDesc": "Receive a verification code via SMS (carrier rates may apply)",
+      "consentBody": "By providing your phone number, you consent to receive SMS verification codes from Starship Psychics for login and authentication purposes only.",
+      "consentItem1": "• 1-3 messages per login session. Codes sent for login/verification only.",
+      "consentItem2": "• Message and data rates may apply.",
+      "consentItem3": "• Reply STOP to opt-out anytime.",
+      "consentItem4": "• Reply HELP for support.",
+      "consentCheckbox": "I consent to receive SMS verification codes from Starship Psychics. I understand that message and data rates may apply, and I can reply STOP at any time to opt out.",
+      "phoneLabel": "Phone Number",
+      "phonePlaceholder": "+1 (555) 000-0000",
+      "cancel": "Cancel",
+      "sending": "Sending…",
+      "continue": "Continue",
+      "verifyBody": "Enter the 6-digit verification code sent to {{phoneNumber}}",
+      "verificationCodeLabel": "Verification Code",
+      "verificationCodePlaceholder": "000000",
+      "back": "Back",
+      "verify": "Verify"
     }
   }
 }
