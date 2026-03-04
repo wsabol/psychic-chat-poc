@@ -11,6 +11,12 @@ import styles from '../SecurityModal.module.css';
 import { TWO_FA_METHODS } from '../utils/constants';
 import SMSConsentModal from '../../security/verification/SMSConsentModal';
 
+/**
+ * SMS_DISABLED – set to true while AWS SMS approval is pending.
+ * Flip to false once outbound SMS is approved to re-enable the option.
+ */
+const SMS_DISABLED = true;
+
 const TwoFactorSection = ({ twoFAState }) => {
   const {
     editMode,
@@ -115,15 +121,37 @@ const TwoFactorSection = ({ twoFAState }) => {
             <div className={styles.formGroup}>
               <label>Authentication Method</label>
               <div className={styles.radioGroup}>
-                <label className={styles.radioLabel}>
+                {/* SMS option — disabled while AWS outbound SMS approval is pending */}
+                <label
+                  className={styles.radioLabel}
+                  style={SMS_DISABLED ? { opacity: 0.4, cursor: 'not-allowed' } : undefined}
+                  title={SMS_DISABLED ? 'SMS is not yet available — pending carrier approval' : undefined}
+                >
                   <input
                     type="radio"
                     value={TWO_FA_METHODS.SMS}
                     checked={method === TWO_FA_METHODS.SMS}
-                    onChange={(e) => setMethod(e.target.value)}
-                    disabled={saving}
+                    onChange={(e) => !SMS_DISABLED && setMethod(e.target.value)}
+                    disabled={saving || SMS_DISABLED}
+                    style={SMS_DISABLED ? { cursor: 'not-allowed' } : undefined}
                   />
-                  <span>Text Message (SMS)</span>
+                  <span>
+                    Text Message (SMS)
+                    {SMS_DISABLED && (
+                      <span style={{
+                        marginLeft: '8px',
+                        fontSize: '11px',
+                        backgroundColor: '#f0ad4e',
+                        color: '#7a5200',
+                        padding: '1px 6px',
+                        borderRadius: '10px',
+                        fontWeight: '600',
+                        verticalAlign: 'middle'
+                      }}>
+                        Coming Soon
+                      </span>
+                    )}
+                  </span>
                 </label>
                 <label className={styles.radioLabel}>
                   <input

@@ -3,7 +3,20 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <title>Oracle chat</title>
+    <title>Starship Psychics</title>
+
+    <!-- PWA Manifest & Theme -->
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <meta name="theme-color" content="#667eea" />
+
+    <!-- iOS PWA -->
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/icons/icon-180.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Starship Psychics" />
+
+    <!-- Android / Chrome PWA -->
+    <meta name="mobile-web-app-capable" content="yes" />
     <!-- Stripe.js is loaded by @stripe/stripe-js npm package in PaymentMethodPage.js -->
     <!-- Do NOT load https://js.stripe.com/v3/ here as it conflicts with the npm package version -->
     <script>

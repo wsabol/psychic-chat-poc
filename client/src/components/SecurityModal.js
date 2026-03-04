@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/AuthModals.css';
 
+/**
+ * SMS_DISABLED – set to true while AWS outbound SMS approval is pending.
+ * Flip to false once outbound SMS is approved to re-enable the option.
+ */
+const SMS_DISABLED = true;
+
 const SecurityModal = ({ userId, token, onClose }) => {
   const [twoFASettings, setTwoFASettings] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -11,7 +17,7 @@ const SecurityModal = ({ userId, token, onClose }) => {
 
   // Form state
   const [enabled, setEnabled] = useState(true);
-  const [method, setMethod] = useState('sms');
+  const [method, setMethod] = useState('email');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [backupPhoneNumber, setBackupPhoneNumber] = useState('');
 
@@ -44,7 +50,9 @@ const SecurityModal = ({ userId, token, onClose }) => {
         const data = await response.json();
         setTwoFASettings(data.settings);
         setEnabled(data.settings.enabled);
-        setMethod(data.settings.method || 'sms');
+        // If stored method is 'sms' but SMS is currently disabled, fall back to email.
+        const storedMethod = data.settings.method || 'email';
+        setMethod(SMS_DISABLED && storedMethod === 'sms' ? 'email' : storedMethod);
         setPhoneNumber(data.settings.phone_number || '');
         setBackupPhoneNumber(data.settings.backup_phone_number || '');
       } else {
@@ -62,8 +70,9 @@ const SecurityModal = ({ userId, token, onClose }) => {
     setError('');
     setSuccess('');
 
-    if (enabled && !phoneNumber.trim()) {
-      setError('Phone number is required when 2FA is enabled');
+    // Phone is only required when SMS method is selected (and SMS is available)
+    if (enabled && method === 'sms' && !SMS_DISABLED && !phoneNumber.trim()) {
+      setError('Phone number is required when SMS 2FA is enabled');
       return;
     }
 
@@ -285,15 +294,37 @@ const SecurityModal = ({ userId, token, onClose }) => {
                   <div className="form-group">
                     <label>Authentication Method</label>
                     <div className="radio-group">
-                      <label className="radio-label">
+                      {/* SMS option — greyed out while AWS outbound SMS approval is pending */}
+                      <label
+                        className="radio-label"
+                        style={SMS_DISABLED ? { opacity: 0.4, cursor: 'not-allowed' } : undefined}
+                        title={SMS_DISABLED ? 'SMS is not yet available — pending carrier approval' : undefined}
+                      >
                         <input
                           type="radio"
                           value="sms"
                           checked={method === 'sms'}
-                          onChange={(e) => setMethod(e.target.value)}
-                          disabled={saving}
+                          onChange={(e) => !SMS_DISABLED && setMethod(e.target.value)}
+                          disabled={saving || SMS_DISABLED}
+                          style={SMS_DISABLED ? { cursor: 'not-allowed' } : undefined}
                         />
-                        <span>Text Message (SMS)</span>
+                        <span>
+                          Text Message (SMS)
+                          {SMS_DISABLED && (
+                            <span style={{
+                              marginLeft: '8px',
+                              fontSize: '11px',
+                              backgroundColor: '#f0ad4e',
+                              color: '#7a5200',
+                              padding: '1px 6px',
+                              borderRadius: '10px',
+                              fontWeight: '600',
+                              verticalAlign: 'middle',
+                            }}>
+                              Coming Soon
+                            </span>
+                          )}
+                        </span>
                       </label>
                       <label className="radio-label">
                         <input
@@ -308,28 +339,33 @@ const SecurityModal = ({ userId, token, onClose }) => {
                     </div>
                   </div>
 
-                  <div className="form-group">
-                    <label>Primary Phone Number</label>
-                    <input
-                      type="tel"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      placeholder="(123) 456-7890 or +1234567890"
-                      disabled={saving}
-                    />
-                  </div>
+                  {/* Phone fields are only relevant when SMS method is active */}
+                  {method === 'sms' && !SMS_DISABLED && (
+                    <>
+                      <div className="form-group">
+                        <label>Primary Phone Number</label>
+                        <input
+                          type="tel"
+                          value={phoneNumber}
+                          onChange={(e) => setPhoneNumber(e.target.value)}
+                          placeholder="(123) 456-7890 or +1234567890"
+                          disabled={saving}
+                        />
+                      </div>
 
-                  <div className="form-group">
-                    <label>Backup Phone Number (Optional)</label>
-                    <input
-                      type="tel"
-                      value={backupPhoneNumber}
-                      onChange={(e) => setBackupPhoneNumber(e.target.value)}
-                      placeholder="(123) 456-7890 or +1234567890"
-                      disabled={saving}
-                    />
-                    <small>If your primary phone is unavailable</small>
-                  </div>
+                      <div className="form-group">
+                        <label>Backup Phone Number (Optional)</label>
+                        <input
+                          type="tel"
+                          value={backupPhoneNumber}
+                          onChange={(e) => setBackupPhoneNumber(e.target.value)}
+                          placeholder="(123) 456-7890 or +1234567890"
+                          disabled={saving}
+                        />
+                        <small>If your primary phone is unavailable</small>
+                      </div>
+                    </>
+                  )}
                 </>
               )}
 
@@ -348,7 +384,8 @@ const SecurityModal = ({ userId, token, onClose }) => {
                     setEditMode(false);
                     if (twoFASettings) {
                       setEnabled(twoFASettings.enabled);
-                      setMethod(twoFASettings.method || 'sms');
+                      const resetMethod = twoFASettings.method || 'email';
+                      setMethod(SMS_DISABLED && resetMethod === 'sms' ? 'email' : resetMethod);
                       setPhoneNumber(twoFASettings.phone_number || '');
                       setBackupPhoneNumber(twoFASettings.backup_phone_number || '');
                     }

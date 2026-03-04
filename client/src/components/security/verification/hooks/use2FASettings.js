@@ -2,6 +2,15 @@ import { useState, useCallback, useEffect } from 'react';
 import { logErrorFromCatch } from '../../../../shared/errorLogger.js';
 
 /**
+ * SMS_DISABLED – set to true while AWS outbound SMS approval is pending.
+ * Flip to false once outbound SMS is approved to re-enable SMS selection.
+ */
+const SMS_DISABLED = true;
+
+/** Normalise a stored method value — falls back to 'email' when SMS is disabled. */
+const resolveMethod = (m) => (SMS_DISABLED && m === 'sms' ? 'email' : (m || 'email'));
+
+/**
  * Custom hook for 2FA settings management
  * Handles all 2FA state, loading, API calls, and SMS consent gating.
  *
@@ -56,7 +65,8 @@ export function use2FASettings(userId, token, apiUrl) {
         const data = await response.json();
         setTwoFASettings(data.settings);
         setTwoFAEnabled(data.settings.enabled);
-        setTwoFAMethodRaw(data.settings.method || 'email');
+        // Normalise: fall back to 'email' if stored method is 'sms' while SMS is disabled
+        setTwoFAMethodRaw(resolveMethod(data.settings.method));
       }
     } catch (err) {
       logErrorFromCatch('[2FA] Error loading settings:', err);
@@ -122,7 +132,8 @@ export function use2FASettings(userId, token, apiUrl) {
     setTwoFAEditMode(false);
     if (twoFASettings) {
       setTwoFAEnabled(twoFASettings.enabled);
-      setTwoFAMethodRaw(twoFASettings.method || 'email');
+      // Normalise on cancel too — prevent restoring a stored 'sms' while disabled
+      setTwoFAMethodRaw(resolveMethod(twoFASettings.method));
     }
   }, [twoFASettings]);
 

@@ -31,6 +31,10 @@ function ReAuthModal({ isOpen, email, onSuccess, onCancel, onFailure }) {
     handleFacebookReAuth,
     handleAppleReAuth,
     handlePasswordReAuth,
+    hasGoogle,
+    hasFacebook,
+    hasApple,
+    hasPassword,
   } = useReAuth(email, onSuccess, onFailure, t);
 
   const {
@@ -74,22 +78,28 @@ function ReAuthModal({ isOpen, email, onSuccess, onCancel, onFailure }) {
           />
         ) : (
           <>
-            {/* Social Provider Buttons */}
+            {/* Social Provider Buttons
+                isLinked reflects whether the user signed up with that provider.
+                Buttons for providers the user hasn't linked are greyed out and
+                cannot be clicked. */}
             <div className={styles.socialButtonsContainer}>
               <FacebookAuthButton
                 loading={loading}
                 onFacebookReAuth={handleFacebookReAuth}
                 t={t}
+                isLinked={hasFacebook}
               />
               <GoogleAuthButton
                 loading={loading}
                 onGoogleReAuth={handleGoogleReAuth}
                 t={t}
+                isLinked={hasGoogle}
               />
               <AppleAuthButton
                 loading={loading}
                 onAppleReAuth={handleAppleReAuth}
                 t={t}
+                isLinked={hasApple}
               />
             </div>
 
@@ -100,7 +110,8 @@ function ReAuthModal({ isOpen, email, onSuccess, onCancel, onFailure }) {
               <div className={styles.dividerLine} />
             </div>
 
-            {/* Password Authentication Form */}
+            {/* Password Authentication Form
+                Greyed out if the user's account uses a social provider only. */}
             <PasswordAuthForm
               password={password}
               setPassword={setPassword}
@@ -110,6 +121,7 @@ function ReAuthModal({ isOpen, email, onSuccess, onCancel, onFailure }) {
               onSubmit={handlePasswordReAuth}
               onForgotPassword={() => setShowPasswordReset(true)}
               t={t}
+              isLinked={hasPassword}
             />
 
             {/* Cancel Button */}

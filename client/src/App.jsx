@@ -7,6 +7,7 @@ import { PoliciesPage } from './pages/PoliciesPage';
 import StarField from './components/StarField';
 import Footer from './components/Footer';
 import { initializeCookieManager } from './utils/cookieManager.js';
+import InstallPromptBanner from './components/InstallPromptBanner';
 
 /**
  * App - Main application component
@@ -33,6 +34,7 @@ function App() {
     if (isPoliciesPage) {
     return (
       <>
+        <InstallPromptBanner />
         <StarField />
         <PoliciesPage />
         <Footer />
@@ -44,6 +46,7 @@ function App() {
   if (state.isLoading || state.isThankyou || state.isVerification || state.isRegister || state.isLanding || state.isLogin || state.isTwoFactor) {
     return (
       <>
+        <InstallPromptBanner />
         <StarField />
         <AppShells state={state} />
       </>
@@ -53,6 +56,7 @@ function App() {
   // Otherwise show authenticated chat flow
   return (
     <>
+      <InstallPromptBanner />
       <StarField />
       <AppChat state={state} />
     </>

@@ -1,0 +1,126 @@
+/* eslint-disable no-restricted-globals */
+/**
+ * service-worker.js — CRA InjectManifest-compatible service worker
+ *
+ * CRA's InjectManifest plugin replaces the `self.__WB_MANIFEST` token at build
+ * time with the list of hashed, versioned assets to precache.  This file is the
+ * custom SW entry-point declared in package.json → "workbox" → "swSrc".
+ *
+ * Routing table
+ * ─────────────
+ * 1. Never-cache pass-through  → Firebase, Stripe, hCaptcha, /api/*
+ * 2. Navigation requests        → App-shell (cached index.html) + offline fallback
+ * 3. Images                     → CacheFirst  (30-day TTL, 200-entry cap)
+ * 4. JS/CSS bundles             → StaleWhileRevalidate
+ * 5. Precache manifest          → precacheAndRoute(self.__WB_MANIFEST)
+ */
+
+import { clientsClaim } from 'workbox-core';
+import {
+  precacheAndRoute,
+  createHandlerBoundToURL,
+} from 'workbox-precaching';
+import { registerRoute, NavigationRoute } from 'workbox-routing';
+import {
+  NetworkOnly,
+  CacheFirst,
+  StaleWhileRevalidate,
+} from 'workbox-strategies';
+import { ExpirationPlugin } from 'workbox-expiration';
+import { CacheableResponsePlugin } from 'workbox-cacheable-response';
+
+// ─── Core behaviour ──────────────────────────────────────────────────────────
+
+// Take control of all in-scope clients as soon as the new SW activates.
+clientsClaim();
+
+// ─── Precache (CRA injects the hashed asset manifest here at build time) ─────
+
+precacheAndRoute(self.__WB_MANIFEST);
+
+// ─── Never-cache pass-through patterns ───────────────────────────────────────
+// Firebase auth & DB, Stripe, hCaptcha, and all backend API calls must always
+// go to the network; stale data here would break auth, billing, and chat.
+
+const PASSTHROUGH_PATTERNS = [
+  // Firebase
+  /firebase\.googleapis\.com/,
+  /firebaseio\.com/,
+  /identitytoolkit\.googleapis\.com/,
+  /securetoken\.googleapis\.com/,
+  // Stripe
+  /js\.stripe\.com/,
+  /api\.stripe\.com/,
+  // hCaptcha
+  /hcaptcha\.com/,
+];
+
+PASSTHROUGH_PATTERNS.forEach((pattern) => {
+  registerRoute(pattern, new NetworkOnly());
+});
+
+// /api/* — backend REST calls (chat, billing, auth) — never cache.
+registerRoute(
+  ({ url }) => url.pathname.startsWith('/api/'),
+  new NetworkOnly()
+);
+
+// ─── Navigation requests → App Shell ─────────────────────────────────────────
+// Serve the pre-cached index.html for every navigation so the React app boots
+// offline.  React itself then handles any "offline" UI state in the browser.
+
+const appShellHandler = createHandlerBoundToURL('/index.html');
+registerRoute(new NavigationRoute(appShellHandler));
+
+// ─── Images → CacheFirst ──────────────────────────────────────────────────────
+// Tarot cards, icons, and logo images change rarely; cache aggressively.
+
+registerRoute(
+  ({ request }) => request.destination === 'image',
+  new CacheFirst({
+    cacheName: 'images-cache',
+    plugins: [
+      new CacheableResponsePlugin({ statuses: [0, 200] }),
+      new ExpirationPlugin({
+        maxEntries: 200,
+        maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+        purgeOnQuotaError: true,
+      }),
+    ],
+  })
+);
+
+// ─── JS / CSS bundles → StaleWhileRevalidate ─────────────────────────────────
+// Belt-and-suspenders for any chunk that isn't already covered by the precache
+// manifest (e.g. dynamically-loaded code-split chunks on old clients).
+
+registerRoute(
+  ({ request }) =>
+    request.destination === 'script' || request.destination === 'style',
+  new StaleWhileRevalidate({
+    cacheName: 'static-resources',
+    plugins: [
+      new CacheableResponsePlugin({ statuses: [0, 200] }),
+    ],
+  })
+);
+
+// ─── Offline fallback ─────────────────────────────────────────────────────────
+// If the app shell itself cannot be served (extreme edge case — the shell is
+// precached, so this is truly last-resort only), return /offline.html.
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open('offline-fallback').then((cache) =>
+      cache.addAll(['/offline.html'])
+    )
+  );
+});
+
+self.setCatchHandler(async ({ request }) => {
+  if (request.destination === 'document') {
+    const cache = await caches.open('offline-fallback');
+    return (await cache.match('/offline.html')) || Response.error();
+  }
+  return Response.error();
+});

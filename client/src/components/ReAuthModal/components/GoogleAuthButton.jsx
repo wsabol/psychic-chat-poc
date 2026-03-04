@@ -4,14 +4,17 @@ import styles from '../ReAuthModal.module.css';
 /**
  * GoogleAuthButton - Google Sign-in button icon
  * Extracted component for better organization
+ * isLinked: true if Google is a linked provider on this Firebase account.
+ *           false = grey out and disable (user didn't sign up with Google).
  */
-export function GoogleAuthButton({ loading, onGoogleReAuth, t }) {
+export function GoogleAuthButton({ loading, onGoogleReAuth, t, isLinked = true }) {
   return (
     <button
       onClick={onGoogleReAuth}
-      disabled={loading}
+      disabled={loading || !isLinked}
       className={styles.socialButton}
-      title={t('security.reauth.googleSignIn')}
+      title={isLinked ? t('security.reauth.googleSignIn') : t('security.reauth.providerNotLinked', { provider: 'Google' })}
+      style={!isLinked ? { opacity: 0.35, cursor: 'not-allowed', filter: 'grayscale(1)' } : undefined}
     >
       <svg viewBox="0 0 24 24" className={styles.socialIcon}>
         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>

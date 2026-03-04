@@ -4,6 +4,8 @@ import styles from '../ReAuthModal.module.css';
 /**
  * PasswordAuthForm - Password authentication form with show/hide toggle
  * Extracted component for better organization
+ * isLinked: true if email/password is a linked provider on this Firebase account.
+ *           false = grey out the entire form (user didn't sign up with email/password).
  */
 export function PasswordAuthForm({
   password,
@@ -13,10 +15,17 @@ export function PasswordAuthForm({
   loading,
   onSubmit,
   onForgotPassword,
-  t
+  t,
+  isLinked = true,
 }) {
+  const isDisabled = loading || !isLinked;
+
   return (
-    <form onSubmit={onSubmit}>
+    <form
+      onSubmit={onSubmit}
+      style={!isLinked ? { opacity: 0.35, pointerEvents: 'none', userSelect: 'none' } : undefined}
+      title={!isLinked ? t('security.reauth.providerNotLinked', { provider: 'Email/Password' }) : undefined}
+    >
       <div className={styles.formGroup}>
         <label className={styles.label}>
           {t('security.reauth.passwordLabel')}
@@ -27,14 +36,14 @@ export function PasswordAuthForm({
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder={t('security.reauth.passwordPlaceholder')}
-            autoFocus
-            disabled={loading}
+            autoFocus={isLinked}
+            disabled={isDisabled}
             className={styles.passwordInput}
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            disabled={loading}
+            disabled={isDisabled}
             className={styles.passwordToggle}
             title={showPassword ? t('security.reauth.hidePassword') : t('security.reauth.showPassword')}
           >
@@ -45,7 +54,7 @@ export function PasswordAuthForm({
 
       <button
         type="submit"
-        disabled={loading || !password.trim()}
+        disabled={isDisabled || !password.trim()}
         className={styles.primaryButton}
       >
         {loading ? t('security.reauth.verifying') : t('security.reauth.verify')}

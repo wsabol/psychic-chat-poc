@@ -43,8 +43,17 @@ aws s3 sync build/ s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --in
 # Sync CSS files with proper content type and cache
 aws s3 sync build/ s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.css" --content-type "text/css" --cache-control "public, max-age=31536000, immutable"
 
-# Sync JS files with proper content type and cache
-aws s3 sync build/ s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.js" --content-type "application/javascript" --cache-control "public, max-age=31536000, immutable"
+# Service worker: no-cache (browser must always check for updates)
+aws s3 cp build/service-worker.js s3://$S3_BUCKET/service-worker.js `
+    --region $REGION `
+    --content-type "application/javascript" `
+    --cache-control "no-cache, no-store, must-revalidate"
+
+# All other JS (content-hashed filenames): long-lived immutable cache
+aws s3 sync build/ s3://$S3_BUCKET/ --delete --region $REGION `
+    --exclude "*" --include "*.js" --exclude "service-worker.js" `
+    --content-type "application/javascript" `
+    --cache-control "public, max-age=31536000, immutable"
 
 # Sync image files (PNG, JPG, JPEG, GIF, SVG, ICO)
 aws s3 sync build/ s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.png" --content-type "image/png" --cache-control "public, max-age=31536000, immutable"

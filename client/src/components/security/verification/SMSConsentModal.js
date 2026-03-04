@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { DocumentViewer } from '../../help/DocumentViewer';
 
 /**
  * SMSConsentModal - TCPA-compliant SMS consent for 2FA phone verification.
@@ -6,15 +7,17 @@ import React, { useState } from 'react';
  * Requires explicit opt-in checkbox before proceeding.
  *
  * Disclosures required by TCPA / CTIA guidelines:
- *  - Brand name (Starship Psychics)
+ *  - Brand name (Starship Psychics) — main header
  *  - Purpose (login/verification only)
  *  - Message frequency (1 msg/login)
  *  - Msg & data rates disclosure
  *  - STOP keyword to opt out
  *  - HELP keyword for support info
+ *  - In-app links to Terms & Conditions and Privacy Policy (via DocumentViewer)
  */
 export default function SMSConsentModal({ isOpen, onAccept, onCancel }) {
   const [consentChecked, setConsentChecked] = useState(false);
+  const [viewingDocument, setViewingDocument] = useState(null); // 'terms' | 'privacy' | null
 
   if (!isOpen) return null;
 
@@ -39,17 +42,33 @@ export default function SMSConsentModal({ isOpen, onAccept, onCancel }) {
       padding: '20px'
     }}>
       <div style={{
-        backgroundColor: 'white',
+        backgroundColor: '#2a2a2a',
         borderRadius: '12px',
         padding: '30px',
-        maxWidth: '500px',
+        maxWidth: '520px',
         width: '100%',
-        boxShadow: '0 10px 40px rgba(0,0,0,0.3)'
+        boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
+        color: '#fff'
       }}>
+
+        {/* ── Main brand header ── */}
+        <h1 style={{
+          margin: '0 0 8px 0',
+          fontSize: '26px',
+          fontWeight: '800',
+          color: '#ffffff',
+          textAlign: 'center',
+          letterSpacing: '0.5px'
+        }}>
+          Starship Psychics
+        </h1>
+
+        {/* ── Sub-header ── */}
         <h2 style={{
-          margin: '0 0 20px 0',
-          fontSize: '22px',
-          color: '#333',
+          margin: '0 0 24px 0',
+          fontSize: '18px',
+          fontWeight: '600',
+          color: '#e0e0e0',
           textAlign: 'center'
         }}>
           Enable Two-Factor Authentication via SMS
@@ -57,35 +76,70 @@ export default function SMSConsentModal({ isOpen, onAccept, onCancel }) {
 
         {/* ── Conditions disclosure ── */}
         <div style={{
-          backgroundColor: '#f8f9fa',
           padding: '20px',
           borderRadius: '8px',
-          marginBottom: '20px',
-          border: '1px solid #e9ecef'
+          marginBottom: '20px'
         }}>
           <p style={{
-            margin: '0 0 15px 0',
-            lineHeight: '1.6',
-            color: '#495057',
-            fontSize: '14px'
+            margin: '0 0 16px 0',
+            lineHeight: '1.7',
+            color: '#e0e0e0',
+            fontSize: '15px'
           }}>
             By providing your phone number, you consent to receive SMS verification
-            codes from <strong>Starship Psychics</strong> for login and
+            codes from <strong style={{ color: '#ffffff' }}>Starship Psychics</strong> for login and
             authentication purposes only.
           </p>
 
           <ul style={{
-            margin: '0',
-            paddingLeft: '20px',
-            color: '#6c757d',
-            fontSize: '13px',
-            lineHeight: '2'
+            margin: '0 0 20px 0',
+            paddingLeft: '24px',
+            color: '#c8c8c8',
+            fontSize: '14px',
+            lineHeight: '2.2'
           }}>
-            <li>1 msg/login. Codes sent for login/verification only.</li>
-            <li>Msg &amp; data rates may apply.</li>
-            <li>Reply <strong>STOP</strong> to opt out anytime.</li>
-            <li>Reply <strong>HELP</strong> for info.</li>
+            <li>One message per login. Codes sent for login/verification only.</li>
+            <li>Message and data rates may apply.</li>
+            <li>Reply <strong style={{ color: '#ffffff' }}>STOP</strong> to opt-out anytime.</li>
+            <li>Reply <strong style={{ color: '#ffffff' }}>HELP</strong> for support.</li>
           </ul>
+
+          {/* ── In-app legal links ── */}
+          <div style={{ fontSize: '14px', marginBottom: '4px' }}>
+            <button
+              type="button"
+              onClick={() => setViewingDocument('terms')}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#6b9fff',
+                textDecoration: 'underline',
+                fontWeight: '600',
+                cursor: 'pointer',
+                padding: 0,
+                fontSize: '14px'
+              }}
+            >
+              Terms &amp; Conditions
+            </button>
+            <span style={{ color: '#c8c8c8', margin: '0 8px' }}>|</span>
+            <button
+              type="button"
+              onClick={() => setViewingDocument('privacy')}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#6b9fff',
+                textDecoration: 'underline',
+                fontWeight: '600',
+                cursor: 'pointer',
+                padding: 0,
+                fontSize: '14px'
+              }}
+            >
+              Privacy Policy
+            </button>
+          </div>
         </div>
 
         {/* ── Consent checkbox ── */}
@@ -94,9 +148,9 @@ export default function SMSConsentModal({ isOpen, onAccept, onCancel }) {
           alignItems: 'flex-start',
           cursor: 'pointer',
           padding: '15px',
-          backgroundColor: consentChecked ? '#e7f5ff' : '#f8f9fa',
+          backgroundColor: consentChecked ? 'rgba(75, 110, 245, 0.15)' : 'rgba(255,255,255,0.05)',
           borderRadius: '8px',
-          border: `2px solid ${consentChecked ? '#4c6ef5' : '#dee2e6'}`,
+          border: `2px solid ${consentChecked ? '#4c6ef5' : '#555'}`,
           marginBottom: '25px',
           transition: 'all 0.2s ease'
         }}>
@@ -110,17 +164,19 @@ export default function SMSConsentModal({ isOpen, onAccept, onCancel }) {
               marginRight: '12px',
               marginTop: '2px',
               cursor: 'pointer',
-              accentColor: '#4c6ef5'
+              accentColor: '#4c6ef5',
+              flexShrink: 0
             }}
           />
           <span style={{
             fontSize: '14px',
-            color: '#495057',
-            lineHeight: '1.5'
+            color: '#e0e0e0',
+            lineHeight: '1.6'
           }}>
             I consent to receive SMS verification codes from{' '}
-            <strong>Starship Psychics</strong>. I understand that message &amp;
-            data rates may apply and I can reply STOP at any time to opt out.
+            <strong style={{ color: '#ffffff' }}>Starship Psychics</strong>. I
+            understand that message and data rates may apply, and I can reply STOP
+            at any time to opt out.
           </span>
         </label>
 
@@ -134,17 +190,17 @@ export default function SMSConsentModal({ isOpen, onAccept, onCancel }) {
             style={{
               flex: 1,
               padding: '12px',
-              backgroundColor: '#f8f9fa',
-              border: '1px solid #dee2e6',
+              backgroundColor: 'transparent',
+              border: '2px solid #4c6ef5',
               borderRadius: '6px',
               cursor: 'pointer',
               fontSize: '15px',
               fontWeight: '600',
-              color: '#495057',
+              color: '#fff',
               transition: 'all 0.2s ease'
             }}
-            onMouseOver={(e) => e.target.style.backgroundColor = '#e9ecef'}
-            onMouseOut={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(76, 110, 245, 0.15)'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
             Cancel
           </button>
@@ -154,27 +210,50 @@ export default function SMSConsentModal({ isOpen, onAccept, onCancel }) {
             style={{
               flex: 1,
               padding: '12px',
-              backgroundColor: consentChecked ? '#4c6ef5' : '#ced4da',
-              border: 'none',
+              backgroundColor: consentChecked ? '#4c6ef5' : 'rgba(76, 110, 245, 0.3)',
+              border: '2px solid #4c6ef5',
               borderRadius: '6px',
               cursor: consentChecked ? 'pointer' : 'not-allowed',
               fontSize: '15px',
               fontWeight: '600',
               color: 'white',
               transition: 'all 0.2s ease',
-              opacity: consentChecked ? 1 : 0.6
+              opacity: consentChecked ? 1 : 0.5
             }}
             onMouseOver={(e) => {
-              if (consentChecked) e.target.style.backgroundColor = '#364fc7';
+              if (consentChecked) e.currentTarget.style.backgroundColor = '#364fc7';
             }}
             onMouseOut={(e) => {
-              if (consentChecked) e.target.style.backgroundColor = '#4c6ef5';
+              if (consentChecked) e.currentTarget.style.backgroundColor = '#4c6ef5';
             }}
           >
             Continue
           </button>
         </div>
       </div>
+
+      {/* ── In-app Document Viewer overlay ── */}
+      {viewingDocument && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.95)',
+          zIndex: 10001,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '2rem'
+        }}>
+          <DocumentViewer
+            title={viewingDocument === 'terms' ? 'Terms of Service' : 'Privacy Policy'}
+            docType={viewingDocument}
+            onBack={() => setViewingDocument(null)}
+          />
+        </div>
+      )}
     </div>
   );
 }

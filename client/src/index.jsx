@@ -5,6 +5,7 @@ import './index.css';
 import App from './App';
 import { AuthProvider } from './context/AuthContext';
 import { TranslationProvider } from './context/TranslationContext';
+import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 
 // Suppress ResizeObserver loop errors (browser-level timing, not code error).
 // Two guards are needed:
@@ -37,3 +38,5 @@ root.render(
     </Router>
   </React.StrictMode>
 );
+
+serviceWorkerRegistration.register();

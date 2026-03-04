@@ -114,6 +114,7 @@ Write-Host "Uploading website files to S3..." -ForegroundColor Yellow
 $filesToUpload = @(
     # Core pages
     @{File="index.html";         ContentType="text/html"},
+    @{File="terms.html";         ContentType="text/html"},
     @{File="privacy.html";       ContentType="text/html"},
     @{File="data-deletion.html"; ContentType="text/html"},
     # Shared assets

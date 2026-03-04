@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   reauthenticateWithCredential,
   reauthenticateWithPopup,
@@ -14,12 +14,28 @@ import { getFirebaseErrorMessage, shouldSkipFailureCallback } from '../utils/fir
 /**
  * Custom hook to handle re-authentication logic
  * Extracted from ReAuthModal for better separation of concerns
+ *
+ * Detects which sign-in providers are linked to the current Firebase user
+ * so the ReAuthModal can grey out options the user didn't sign up with.
+ * Provider IDs: 'password', 'google.com', 'facebook.com', 'apple.com'
  */
 export function useReAuth(email, onSuccess, onFailure, t) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // Detect which providers are linked to this Firebase account.
+  // auth.currentUser is available synchronously once the user is signed in.
+  const linkedProviders = useMemo(() => {
+    const providerData = auth.currentUser?.providerData || [];
+    return providerData.map((p) => p.providerId);
+  }, []);
+
+  const hasGoogle   = linkedProviders.includes('google.com');
+  const hasFacebook = linkedProviders.includes('facebook.com');
+  const hasApple    = linkedProviders.includes('apple.com');
+  const hasPassword = linkedProviders.includes('password');
 
   const handleGoogleReAuth = async () => {
     setError(null);
@@ -155,5 +171,10 @@ export function useReAuth(email, onSuccess, onFailure, t) {
     handleFacebookReAuth,
     handleAppleReAuth,
     handlePasswordReAuth,
+    // Provider availability flags (derived from Firebase providerData)
+    hasGoogle,
+    hasFacebook,
+    hasApple,
+    hasPassword,
   };
 }

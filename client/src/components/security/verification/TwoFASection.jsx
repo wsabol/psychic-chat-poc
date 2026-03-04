@@ -1,6 +1,12 @@
 import React from 'react';
 import { useTranslation } from '../../../context/TranslationContext';
 
+/**
+ * SMS_DISABLED – set to true while AWS outbound SMS approval is pending.
+ * Flip to false once outbound SMS is approved to re-enable the option.
+ */
+const SMS_DISABLED = true;
+
 // ── Styles ────────────────────────────────────────────────────────────────────
 // Extracted from inline style props so changes to the look-and-feel are made in
 // one place rather than scattered through JSX.
@@ -88,10 +94,33 @@ const styles = {
     cursor: 'pointer',
     fontSize: '12px',
   },
+  methodOptionLabelDisabled: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    cursor: 'not-allowed',
+    fontSize: '12px',
+    opacity: 0.4,
+  },
   radioInput: {
     cursor: 'pointer',
     width: '16px',
     height: '16px',
+  },
+  radioInputDisabled: {
+    cursor: 'not-allowed',
+    width: '16px',
+    height: '16px',
+  },
+  comingSoonBadge: {
+    marginLeft: '6px',
+    fontSize: '10px',
+    backgroundColor: '#f0ad4e',
+    color: '#7a5200',
+    padding: '1px 6px',
+    borderRadius: '10px',
+    fontWeight: '700',
+    verticalAlign: 'middle',
   },
   actionButtons: {
     display: 'flex',
@@ -220,16 +249,25 @@ export function TwoFASection({
                   />
                   <span>{t('security.twoFA.methodEmail')}</span>
                 </label>
-                <label style={styles.methodOptionLabel}>
+                {/* SMS option — greyed out while AWS outbound SMS approval is pending */}
+                <label
+                  style={SMS_DISABLED ? styles.methodOptionLabelDisabled : styles.methodOptionLabel}
+                  title={SMS_DISABLED ? 'SMS is not yet available — pending carrier approval' : undefined}
+                >
                   <input
                     type="radio"
                     value="sms"
                     checked={twoFAMethod === 'sms'}
-                    onChange={(e) => setTwoFAMethod(e.target.value)}
-                    disabled={twoFASaving}
-                    style={styles.radioInput}
+                    onChange={(e) => !SMS_DISABLED && setTwoFAMethod(e.target.value)}
+                    disabled={twoFASaving || SMS_DISABLED}
+                    style={SMS_DISABLED ? styles.radioInputDisabled : styles.radioInput}
                   />
-                  <span>{t('security.twoFA.methodSMS')}</span>
+                  <span>
+                    {t('security.twoFA.methodSMS')}
+                    {SMS_DISABLED && (
+                      <span style={styles.comingSoonBadge}>Coming Soon</span>
+                    )}
+                  </span>
                 </label>
               </div>
             </div>

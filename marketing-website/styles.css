@@ -1,4 +1,4 @@
-
+    
 /* ===================================
    Starship Psychics Website Styles
    =================================== */
@@ -111,6 +111,20 @@ a {
     color: var(--primary-color);
 }
 
+/* "Get the App" nav pill */
+.nav-link-app {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: var(--white) !important;
+    border-radius: 20px;
+    padding: 0.4rem 1.1rem;
+    font-weight: 700;
+}
+
+.nav-link-app:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+    color: var(--white) !important;
+}
+
 .hamburger {
     display: none;
     flex-direction: column;
@@ -221,6 +235,15 @@ a {
     color: var(--secondary-color);
 }
 
+/* Banner dual-CTA group */
+.banner-cta-group {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
 /* ===== Hero Section ===== */
 .hero-section {
     height: 100vh;
@@ -310,6 +333,20 @@ a {
     color: var(--white);
 }
 
+/* Green install / download button */
+.btn-install {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: var(--white);
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+}
+
+.btn-install:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    color: var(--white);
+}
+
 /* ===== Animations ===== */
 @keyframes fadeInDown {
     from {
@@ -350,6 +387,136 @@ a {
 
 .animate-fade-in-delay-2 {
     animation: fadeInDown 1s ease-out 0.6s both;
+}
+
+/* ===== Install / Get the App Section ===== */
+.install-section {
+    padding: 100px 20px;
+    background: var(--dark-bg);
+}
+
+.install-section .section-title {
+    color: var(--white);
+}
+
+.install-section .section-subtitle {
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 0;
+}
+
+.install-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.install-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 2.5rem 2rem;
+    border-radius: 15px;
+    text-align: center;
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+}
+
+.install-card:hover {
+    background: rgba(255, 255, 255, 0.09);
+    transform: translateY(-5px);
+    border-color: #10b981;
+    box-shadow: 0 8px 30px rgba(16, 185, 129, 0.2);
+}
+
+.install-icon {
+    font-size: 3rem;
+    margin-bottom: 0.75rem;
+    line-height: 1;
+}
+
+.install-card h3 {
+    font-size: 1.4rem;
+    color: var(--white);
+    margin-bottom: 1.5rem;
+}
+
+.install-steps {
+    list-style: none;
+    padding: 0;
+    text-align: left;
+    margin-bottom: 2rem;
+    flex: 1;
+    counter-reset: step-counter;
+}
+
+.install-steps li {
+    counter-increment: step-counter;
+    position: relative;
+    padding: 0.75rem 0 0.75rem 3rem;
+    color: rgba(255, 255, 255, 0.82);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    font-size: 0.95rem;
+    line-height: 1.55;
+}
+
+.install-steps li:last-child {
+    border-bottom: none;
+}
+
+.install-steps li::before {
+    content: counter(step-counter);
+    position: absolute;
+    left: 0;
+    top: 0.85rem;
+    width: 26px;
+    height: 26px;
+    background: #10b981;
+    border-radius: 50%;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: white;
+    text-align: center;
+    line-height: 26px;
+}
+
+.install-steps strong {
+    color: var(--white);
+}
+
+.install-steps code {
+    background: rgba(102, 126, 234, 0.25);
+    color: #a78bfa;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.83rem;
+}
+
+.install-key {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 4px;
+    padding: 0 5px;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    vertical-align: middle;
+    color: var(--white);
+}
+
+.btn-install-cta {
+    display: block;
+    width: 100%;
+    text-align: center;
+    margin-top: auto;
+}
+
+.install-note {
+    text-align: center;
+    margin-top: 3rem;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.95rem;
+    line-height: 1.7;
 }
 
 /* ===== Features Section ===== */
@@ -1172,6 +1339,22 @@ a {
         font-size: 3.5rem;
         top: 15px;
         left: 20px;
+    }
+
+    /* Install section — stack to single column */
+    .install-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Banner CTA group — stack on tablet */
+    .banner-cta-group {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .banner-cta-group .btn {
+        width: 100%;
+        max-width: 320px;
     }
 }
 
