@@ -1,4 +1,4 @@
-import { createUserWithEmailAndPassword, sendEmailVerification, signOut, signInWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signOut, signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
 import { useAuthAPI } from './useAuthAPI';
 import { logErrorFromCatch } from '../shared/errorLogger.js';
@@ -64,10 +64,8 @@ export function useRegistrationFlow() {
           // Re-authenticate as new user
           try {
             await signOut(auth);
-            const newUserCred = await signInWithEmailAndPassword(auth, email, password);
-
-            // Send verification email
-            await sendEmailVerification(newUserCred.user);
+            await signInWithEmailAndPassword(auth, email, password);
+            // Firebase email verification is skipped – SendGrid 2FA handles verification
           } catch (reAuthErr) {
           }
 
@@ -89,12 +87,8 @@ export function useRegistrationFlow() {
       // Step 3: Save T&C acceptance
       await api.saveTermsAcceptance(userId, termsAccepted, privacyAccepted, idToken);
 
-      // Step 4: Send verification email
-      try {
-        await sendEmailVerification(userCredential.user);
-      } catch (verifyErr) {
-        logErrorFromCatch('[EMAIL-VERIFY] ✗ Failed to send verification email:', verifyErr.message);
-      }
+      // Step 4: Firebase email verification is skipped – emailVerified is set to true
+      // server-side at account creation, and SendGrid 2FA handles identity verification.
 
       return { success: true, userId };
     } catch (err) {

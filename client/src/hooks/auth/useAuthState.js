@@ -50,7 +50,7 @@ export function useAuthState(checkBillingStatus) {
       try {
         if (firebaseUser) {
           const isTemp = firebaseUser.email.startsWith('temp_');
-          const idToken = await firebaseUser.getIdToken();
+          let idToken = await firebaseUser.getIdToken();
 
           // Set auth state
           setAuthUserId(firebaseUser.uid);
@@ -91,16 +91,42 @@ export function useAuthState(checkBillingStatus) {
               })
             }).catch(() => {});
 
-            // Check email verification
+            // Check email verification.
+            // If emailVerified is false, auto-verify via the Admin SDK so the normal
+            // 2FA flow runs instead of showing the Firebase link-click screen.
+            // SendGrid 2FA is the sole identity verification step for new users.
             if (!firebaseUser.emailVerified) {
-              setShowTwoFactor(false);
-              setIsAuthenticated(true);
-              if (!billingCheckedRef.current.has(firebaseUser.uid)) {
-                billingCheckedRef.current.add(firebaseUser.uid);
-                checkBillingStatus(idToken, firebaseUser.uid);
+              let autoVerified = false;
+              try {
+                const markRes = await fetch(`${API_URL}/auth/mark-email-verified`, {
+                  method: 'POST',
+                  headers: { 'Authorization': `Bearer ${idToken}` }
+                });
+                if (markRes.ok) {
+                  // Reload user object and force-refresh token so emailVerified:true
+                  // is reflected in the Firebase client state and all subsequent calls.
+                  await firebaseUser.reload();
+                  idToken = await firebaseUser.getIdToken(true);
+                  setToken(idToken);
+                  setEmailVerified(firebaseUser.emailVerified);
+                  autoVerified = firebaseUser.emailVerified;
+                }
+              } catch (markErr) {
+                // Non-blocking — fall back to legacy verification screen on error.
               }
-              setLoading(false);
-              return;
+
+              if (!autoVerified) {
+                // Fallback: show the legacy email-verification screen.
+                setShowTwoFactor(false);
+                setIsAuthenticated(true);
+                if (!billingCheckedRef.current.has(firebaseUser.uid)) {
+                  billingCheckedRef.current.add(firebaseUser.uid);
+                  checkBillingStatus(idToken, firebaseUser.uid);
+                }
+                setLoading(false);
+                return;
+              }
+              // autoVerified === true: fall through to the 2FA check below.
             }
 
             // Log login to audit

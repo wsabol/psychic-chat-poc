@@ -27,10 +27,13 @@ router.post('/register', async (req, res) => {
     const isAdminEmail = ADMIN_EMAILS.includes(email.toLowerCase());
     
     // Create user in Firebase
+    // emailVerified is set to true immediately – SendGrid 2FA handles identity
+    // verification, so we skip the Firebase verification email (which goes to spam).
     const userRecord = await auth.createUser({
       email,
       password,
-      displayName: `${firstName || ''} ${lastName || ''}`.trim()
+      displayName: `${firstName || ''} ${lastName || ''}`.trim(),
+      emailVerified: true
     });
     
     // Create user profile in database with admin flag
@@ -127,10 +130,13 @@ router.post('/register-and-migrate', async (req, res) => {
     const isAdminEmail = ADMIN_EMAILS.includes(email.toLowerCase());
 
     // Step 1: Create permanent Firebase user
+    // emailVerified is set to true immediately – SendGrid 2FA handles identity
+    // verification, so we skip the Firebase verification email (which goes to spam).
     const userRecord = await auth.createUser({
       email,
       password,
-      displayName: `${firstName || ''} ${lastName || ''}`.trim()
+      displayName: `${firstName || ''} ${lastName || ''}`.trim(),
+      emailVerified: true
     });
     
     const newUserId = userRecord.uid;
@@ -170,6 +176,29 @@ router.post('/register-and-migrate', async (req, res) => {
       return conflictError(res, 'Email address already registered');
     }
     return serverError(res, 'Failed to register and migrate account');
+  }
+});
+
+/**
+ * POST /auth/mark-email-verified
+ * Marks the calling user's Firebase email as verified using the Admin SDK.
+ * Called automatically by the client on first sign-in when emailVerified is false.
+ * Replaces Firebase's built-in email verification flow — SendGrid 2FA handles
+ * identity verification instead, so no verification email is ever sent.
+ */
+router.post('/mark-email-verified', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return validationError(res, 'Authorization token required');
+    }
+    const idToken = authHeader.split('Bearer ')[1];
+    const decodedToken = await auth.verifyIdToken(idToken);
+    await auth.updateUser(decodedToken.uid, { emailVerified: true });
+    return successResponse(res, { success: true });
+  } catch (err) {
+    await logErrorFromCatch(err, 'auth', 'Mark email verified');
+    return serverError(res, 'Failed to mark email as verified');
   }
 });
 

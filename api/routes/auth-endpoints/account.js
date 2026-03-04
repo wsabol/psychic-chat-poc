@@ -26,10 +26,13 @@ router.post('/register', async (req, res) => {
     const isAdminEmail = ADMIN_EMAILS.includes(email.toLowerCase());
     
     // Create user in Firebase
+    // emailVerified is set to true immediately – SendGrid 2FA handles identity
+    // verification, so we skip the Firebase verification email (which goes to spam).
     const userRecord = await auth.createUser({
       email,
       password,
-      displayName: `${firstName || ''} ${lastName || ''}`.trim()
+      displayName: `${firstName || ''} ${lastName || ''}`.trim(),
+      emailVerified: true
     });
     
     // Create user profile in database with admin flag
@@ -140,10 +143,13 @@ router.post('/register-and-migrate', async (req, res) => {
     const isAdminEmail = ADMIN_EMAILS.includes(email.toLowerCase());
 
     // Step 1: Create permanent Firebase user
+    // emailVerified is set to true immediately – SendGrid 2FA handles identity
+    // verification, so we skip the Firebase verification email (which goes to spam).
     const userRecord = await auth.createUser({
       email,
       password,
-      displayName: `${firstName || ''} ${lastName || ''}`.trim()
+      displayName: `${firstName || ''} ${lastName || ''}`.trim(),
+      emailVerified: true
     });
     
     const newUserId = userRecord.uid;
