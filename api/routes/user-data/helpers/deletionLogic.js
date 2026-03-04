@@ -1,16 +1,72 @@
 /**
  * Deletion Business Logic
+ *
+ * Exports:
+ *   getSubscriptionPeriodEnd       – Resolve grace-period end from Stripe subscription data
+ *   processDeletionRequest         – Shared orchestration: subscription end → mark DB → cancel Stripe
+ *   cancelStripeSubscriptionAtPeriodEnd
+ *   reactivateStripeSubscription
+ *   deleteFromFirebase
+ *   deleteFromStripe
+ *   deleteAllUserData
+ *   performCompleteAccountDeletion
  */
 
 import { db } from '../../../shared/db.js';
 import { logAudit } from '../../../shared/auditLog.js';
 import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 import { getAuth } from 'firebase-admin/auth';
-import { fetchStripeCustomerId, deleteFromTable, logDeletionAudit, DELETION_TABLES, anonymizeUserPII } from './queries.js';
+import {
+  fetchStripeCustomerId,
+  deleteFromTable,
+  logDeletionAudit,
+  DELETION_TABLES,
+  anonymizeUserPII,
+  markAccountForDeletion,
+} from './queries.js';
 import { decryptStripeCustomerId } from './dataDecryption.js';
 import { getStoredSubscriptionData } from '../../../services/stripe/database.js';
 import { cancelSubscription } from '../../../services/stripe/subscriptions.js';
 import { stripe } from '../../../services/stripe/stripeClient.js';
+
+// ─── Subscription Helpers ─────────────────────────────────────────────────────
+
+/**
+ * Derive the grace-period end date from the user's active Stripe subscription.
+ * Returns an ISO-8601 string, or null if no subscription data is available.
+ *
+ * Stripe stores `current_period_end` as a Unix timestamp (seconds).
+ * We only use it when the subscription is in an active/trialing state AND the
+ * period end is actually in the future.
+ *
+ * @param {string} userId
+ * @returns {Promise<string|null>} ISO date string or null
+ */
+export async function getSubscriptionPeriodEnd(userId) {
+  try {
+    const subscriptionData = await getStoredSubscriptionData(userId);
+    if (!subscriptionData) return null;
+
+    const activeStatuses = ['active', 'trialing'];
+    if (!activeStatuses.includes(subscriptionData.subscription_status)) return null;
+
+    if (!subscriptionData.current_period_end) return null;
+
+    // current_period_end may be a Unix timestamp (number) or a JS Date string.
+    const periodEndMs =
+      typeof subscriptionData.current_period_end === 'number'
+        ? subscriptionData.current_period_end * 1000           // Stripe Unix → ms
+        : new Date(subscriptionData.current_period_end).getTime(); // already a date
+
+    const periodEnd = new Date(periodEndMs);
+    if (isNaN(periodEnd.getTime()) || periodEnd <= new Date()) return null;
+
+    return periodEnd.toISOString();
+  } catch (err) {
+    logErrorFromCatch(err, 'user-data-deletion', 'getSubscriptionPeriodEnd');
+    return null;
+  }
+}
 
 /**
  * Cancel the user's active Stripe subscription at the end of the current period.
@@ -86,6 +142,53 @@ export async function reactivateStripeSubscription(userId) {
   }
 }
 
+// ─── Shared Orchestration ─────────────────────────────────────────────────────
+
+/**
+ * Core deletion orchestration shared by both DELETE routes.
+ *
+ * Sequence:
+ *   1. Resolve subscription period end from Stripe (falls back to 30-day minimum)
+ *   2. Mark the account as pending_deletion in the DB with correct grace period dates
+ *   3. Cancel Stripe subscription at period end (non-fatal if Stripe is unavailable)
+ *
+ * The caller is responsible for verification (code check or admin auth), audit
+ * logging, and response formatting.
+ *
+ * @param {string} userId
+ * @returns {Promise<{
+ *   deletionRecord: object,
+ *   graceEndDate: Date,
+ *   stripeCancellation: object,
+ *   subscriptionPeriodEnd: string|null
+ * }>}
+ */
+export async function processDeletionRequest(userId) {
+  const subscriptionPeriodEnd = await getSubscriptionPeriodEnd(userId);
+
+  // Mark account as pending_deletion with the correct grace period.
+  // markAccountForDeletion enforces a minimum of 30 days even when subscriptionPeriodEnd is null.
+  const result = await markAccountForDeletion(userId, subscriptionPeriodEnd);
+  const deletionRecord = result.rows[0];
+  const graceEndDate = new Date(deletionRecord.anonymization_date);
+
+  // Cancel Stripe subscription so no future charges are made.
+  // Done AFTER marking the DB so the cleanup Lambda still runs if Stripe fails.
+  const stripeCancellation = await cancelStripeSubscriptionAtPeriodEnd(userId);
+  if (!stripeCancellation.success) {
+    // Non-fatal: the account is already pending_deletion in the DB.
+    logErrorFromCatch(
+      new Error(stripeCancellation.error || 'Stripe cancellation failed'),
+      'user-data-deletion',
+      'cancelStripeSubscriptionAtPeriodEnd'
+    );
+  }
+
+  return { deletionRecord, graceEndDate, stripeCancellation, subscriptionPeriodEnd };
+}
+
+// ─── External Service Deletion ────────────────────────────────────────────────
+
 export async function deleteFromFirebase(userId) {
   try {
     const auth = getAuth();
@@ -100,12 +203,14 @@ export async function deleteFromFirebase(userId) {
 export async function deleteFromStripe(userId) {
   try {
     const result = await fetchStripeCustomerId(userId);
-    if (result.rows[0]?.stripe_customer_id_encrypted) {
-      const decryptedId = await decryptStripeCustomerId(result.rows[0].stripe_customer_id_encrypted);
-      if (decryptedId) {
-        const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-        await stripe.customers.del(decryptedId);
-      }
+    if (!result.rows[0]?.stripe_customer_id_encrypted) return { success: true };
+
+    const decryptedId = await decryptStripeCustomerId(
+      result.rows[0].stripe_customer_id_encrypted
+    );
+
+    if (decryptedId && stripe) {
+      await stripe.customers.del(decryptedId);
     }
     return { success: true };
   } catch (error) {
@@ -114,40 +219,56 @@ export async function deleteFromStripe(userId) {
   }
 }
 
+// ─── Database Cleanup ─────────────────────────────────────────────────────────
+
+/**
+ * Delete all supporting-table rows for a user (2FA, consents, preferences, etc.).
+ *
+ * NOTE: messages and user_personal_info are intentionally excluded.
+ * See DELETION_TABLES in queries.js for the full list and rationale.
+ *
+ * Each table is deleted independently — a failure on one table is logged and
+ * the loop continues so all other tables are still cleaned up.
+ *
+ * @param {string} userId
+ * @param {string} userIdHash
+ */
 export async function deleteAllUserData(userId, userIdHash) {
   for (const { table, column } of DELETION_TABLES) {
     try {
       const value = column === 'user_id_hash' ? userIdHash : userId;
       await deleteFromTable(table, column, value);
     } catch (e) {
-      // Silently continue
+      logErrorFromCatch(e, 'user-data', `deleteAllUserData: ${table}`);
     }
   }
 }
 
+// ─── Full Anonymization (Phase 1) ─────────────────────────────────────────────
+
 /**
- * Perform complete account deletion.
+ * Perform complete account anonymization (Phase 1 of the two-phase privacy model).
  *
- * Two-phase privacy model:
- *   Phase 1 (NOW)      – All PII is immediately anonymized:
- *                          • Firebase account deleted
- *                          • Stripe customer deleted
- *                          • Supporting tables cleared (2FA, sessions, consents, etc.)
- *                          • user_personal_info PII columns NULLed out (anonymizeUserPII)
- *                          • email_hash preserved for legal traceability
- *   Phase 2 (7 years)  – Chat messages are deleted by the account-cleanup Lambda
- *                        after the 7-year legal retention period expires.
+ * Phase 1 (NOW / grace-period end):
+ *   • Firebase account deleted       → user can no longer log in
+ *   • Stripe customer deleted        → billing data removed
+ *   • Supporting tables cleared      → 2FA, sessions, consents, preferences, etc.
+ *   • user_personal_info PII NULLed  → all encrypted columns cleared (anonymizeUserPII)
+ *   • email_hash preserved           → legal traceability anchor retained
  *
- * The chat messages are retained so that, should litigation arise, an admin can
- * hash the plaintiff's email → look up email_hash → find user_id → retrieve messages.
+ * Phase 2 (7 years later, handled by account-cleanup Lambda):
+ *   • Chat messages deleted after the legal retention period expires.
+ *
+ * Messages are retained so that, should litigation arise, an admin can hash the
+ * plaintiff's email → look up email_hash → find user_id → retrieve messages.
  */
 export async function performCompleteAccountDeletion(userId, userIdHash, req) {
   const results = {
-    firebase:       { success: false },
-    stripe:         { success: false },
-    database:       { success: false },
-    anonymization:  { success: false },
-    audit:          { success: false }
+    firebase:      { success: false },
+    stripe:        { success: false },
+    database:      { success: false },
+    anonymization: { success: false },
+    audit:         { success: false },
   };
 
   // Step 1: Delete Firebase account (user can no longer log in)
@@ -157,8 +278,6 @@ export async function performCompleteAccountDeletion(userId, userIdHash, req) {
   results.stripe = await deleteFromStripe(userId);
 
   // Step 3: Delete all supporting tables (2FA, consents, preferences, etc.)
-  //         NOTE: messages and user_personal_info are intentionally NOT deleted here.
-  //         See DELETION_TABLES in queries.js for the full list.
   try {
     await deleteAllUserData(userId, userIdHash);
     results.database = { success: true };
@@ -189,8 +308,8 @@ export async function performCompleteAccountDeletion(userId, userIdHash, req) {
       status: 'SUCCESS',
       details: {
         ...results,
-        note: 'Chat messages retained for 7-year legal hold; PII anonymized immediately.'
-      }
+        note: 'Chat messages retained for 7-year legal hold; PII anonymized immediately.',
+      },
     });
     results.audit = { success: true };
   } catch (error) {

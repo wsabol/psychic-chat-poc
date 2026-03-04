@@ -27,7 +27,6 @@ import { Router } from 'express';
 import { authenticateToken, authorizeUser } from '../../middleware/auth.js';
 import { logAudit } from '../../shared/auditLog.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
-import { hashUserId } from '../../shared/hashUtils.js';
 import { db } from '../../shared/db.js';
 import {
   validationError,
@@ -41,57 +40,32 @@ import {
   storeDeletionCode,
   markCodeAsUsed,
   fetchDeletionStatus,
-  markAccountForDeletion,
   reactivateDeletionAccount,
   logDeletionAudit,
 } from './helpers/queries.js';
 import { sendDeleteVerificationEmail, maskEmail } from './helpers/emailService.js';
 import { resolveLocaleFromRequest } from '../../shared/email/i18n/index.js';
 import {
-  cancelStripeSubscriptionAtPeriodEnd,
   reactivateStripeSubscription,
+  processDeletionRequest,
 } from './helpers/deletionLogic.js';
-import { getStoredSubscriptionData } from '../../services/stripe/database.js';
 
 const router = Router();
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 /**
- * Derive the grace-period end date from the user's active Stripe subscription.
- * Returns an ISO-8601 string, or null if no subscription data is available.
+ * Fire-and-forget audit log wrapper.
+ * Failures are logged but never allowed to bubble up to the caller, since an
+ * audit-log write failure must not block or roll back the primary operation.
  *
- * Stripe stores `current_period_end` as a Unix timestamp (seconds).
- * We only use it when the subscription is in an active/trialing state AND the
- * period end is actually in the future.
- *
- * @param {string} userId
- * @returns {Promise<string|null>} ISO date string or null
+ * @param {object} params   - logAudit payload
+ * @param {string} context  - human-readable context string for error logging
  */
-async function getSubscriptionPeriodEnd(userId) {
-  try {
-    const subscriptionData = await getStoredSubscriptionData(userId);
-    if (!subscriptionData) return null;
-
-    const activeStatuses = ['active', 'trialing'];
-    if (!activeStatuses.includes(subscriptionData.subscription_status)) return null;
-
-    if (!subscriptionData.current_period_end) return null;
-
-    // current_period_end may be a Unix timestamp (number) or a JS Date string.
-    const periodEndMs =
-      typeof subscriptionData.current_period_end === 'number'
-        ? subscriptionData.current_period_end * 1000          // Stripe Unix → ms
-        : new Date(subscriptionData.current_period_end).getTime(); // already a date
-
-    const periodEnd = new Date(periodEndMs);
-    if (isNaN(periodEnd.getTime()) || periodEnd <= new Date()) return null;
-
-    return periodEnd.toISOString();
-  } catch (err) {
-    logErrorFromCatch(err, 'user-data-deletion', 'getSubscriptionPeriodEnd');
-    return null;
-  }
+async function safeLogAudit(params, context) {
+  await logAudit(db, params).catch(e =>
+    logErrorFromCatch(e, 'user-data-deletion', context).catch(() => {})
+  );
 }
 
 // ─── Routes ──────────────────────────────────────────────────────────────────
@@ -106,14 +80,10 @@ router.post('/send-delete-verification', authenticateToken, async (req, res) => 
     const userId = req.user.uid || req.user.userId;
     const userEmail = req.user.email;
 
-    if (!userEmail) {
-      return validationError(res, 'User email not found');
-    }
+    if (!userEmail) return validationError(res, 'User email not found');
 
-    // Generate 6-digit code
+    // Generate 6-digit code and store with 10-minute expiry
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-    // Store code in DB with 10-minute expiry
     await storeDeletionCode(userId, verificationCode);
 
     // Send verification email in the user's language
@@ -128,8 +98,7 @@ router.post('/send-delete-verification', authenticateToken, async (req, res) => 
       return serverError(res, 'Failed to send verification email. Please try again.');
     }
 
-    // Audit
-    await logAudit(db, {
+    await safeLogAudit({
       userId,
       action: 'ACCOUNT_DELETION_VERIFICATION_SENT',
       resourceType: 'account',
@@ -138,7 +107,7 @@ router.post('/send-delete-verification', authenticateToken, async (req, res) => 
       httpMethod: req.method,
       endpoint: req.path,
       status: 'SUCCESS',
-    }).catch(e => logErrorFromCatch(e, 'user-data-deletion', 'Log verification sent').catch(() => {}));
+    }, 'Log verification sent');
 
     return successResponse(res, {
       success: true,
@@ -167,9 +136,7 @@ router.delete('/delete-account', authenticateToken, async (req, res) => {
     const userId = req.user.uid || req.user.userId;
     const { verificationCode } = req.body;
 
-    if (!verificationCode) {
-      return validationError(res, 'Verification code required');
-    }
+    if (!verificationCode) return validationError(res, 'Verification code required');
 
     // Verify the code is valid and unexpired
     const codeCheck = await fetchDeletionCode(userId, verificationCode);
@@ -180,29 +147,11 @@ router.delete('/delete-account', authenticateToken, async (req, res) => {
     // Mark code as used immediately to prevent replay
     await markCodeAsUsed(userId, verificationCode);
 
-    // Determine grace period end from subscription (fall back to 30 days)
-    const subscriptionPeriodEnd = await getSubscriptionPeriodEnd(userId);
+    // Core deletion orchestration: get subscription end → mark DB → cancel Stripe
+    const { deletionRecord, graceEndDate, stripeCancellation, subscriptionPeriodEnd } =
+      await processDeletionRequest(userId);
 
-    // Mark account as pending_deletion with correct grace period
-    const result = await markAccountForDeletion(userId, subscriptionPeriodEnd);
-    const deletionRecord = result.rows[0];
-    const graceEndDate = new Date(deletionRecord.anonymization_date);
-
-    // Cancel Stripe subscription at period end so no future charges are made.
-    // We do this AFTER marking the DB so that if Stripe fails the DB state is
-    // still correct and the cleanup Lambda will still run at the right time.
-    const stripeCancellation = await cancelStripeSubscriptionAtPeriodEnd(userId);
-    if (!stripeCancellation.success) {
-      // Non-fatal: log the error but proceed — the account is already pending_deletion.
-      logErrorFromCatch(
-        new Error(stripeCancellation.error || 'Stripe cancellation failed'),
-        'user-data-deletion',
-        'cancelStripeSubscriptionAtPeriodEnd'
-      );
-    }
-
-    // Audit log
-    await logAudit(db, {
+    await safeLogAudit({
       userId,
       action: 'ACCOUNT_DELETION_REQUESTED',
       resourceType: 'account',
@@ -217,7 +166,7 @@ router.delete('/delete-account', authenticateToken, async (req, res) => {
         stripe_subscription_cancelled: stripeCancellation.success,
         stripe_subscription_id: stripeCancellation.subscription_id || null,
       },
-    }).catch(e => logErrorFromCatch(e, 'user-data-deletion', 'Log deletion audit').catch(() => {}));
+    }, 'Log deletion audit');
 
     await logDeletionAudit(userId, 'DELETION_REQUESTED', req.ip, req.get('user-agent'))
       .catch(e => logErrorFromCatch(e, 'user-data-deletion', 'Log deletion audit table').catch(() => {}));
@@ -229,7 +178,10 @@ router.delete('/delete-account', authenticateToken, async (req, res) => {
       status: 'pending_deletion',
       grace_period_ends: graceEndDate.toISOString(),
       subscription_cancelled: stripeCancellation.success,
-      message: `Your account deletion has been scheduled. Your subscription has been cancelled — you will not be charged for any new billing period. You will continue to have full access until ${gracePeriodEndDisplay}. You may cancel this request before that date.`,
+      message:
+        `Your account deletion has been scheduled. Your subscription has been cancelled — ` +
+        `you will not be charged for any new billing period. You will continue to have full ` +
+        `access until ${gracePeriodEndDisplay}. You may cancel this request before that date.`,
     });
   } catch (error) {
     logErrorFromCatch(error, 'app', 'delete account');
@@ -244,16 +196,13 @@ router.delete('/delete-account', authenticateToken, async (req, res) => {
  * No verification code required (admin or owner-only via authorizeUser).
  */
 router.delete('/delete-account/:userId', authenticateToken, authorizeUser, async (req, res) => {
+  const { userId } = req.params;
   try {
-    const { userId } = req.params;
-
     // Verify user exists and check current status
     const user = await fetchDeletionStatus(userId);
-    if (user.rows.length === 0) {
-      return notFoundError(res, 'User not found');
-    }
+    if (user.rows.length === 0) return notFoundError(res, 'User not found');
 
-    const currentStatus = user.rows[0].deletion_status;
+    const { deletion_status: currentStatus } = user.rows[0];
 
     if (currentStatus === 'deleted') {
       return unprocessableError(res, 'Account already permanently deleted');
@@ -265,26 +214,11 @@ router.delete('/delete-account/:userId', authenticateToken, authorizeUser, async
       );
     }
 
-    // Determine grace period from subscription
-    const subscriptionPeriodEnd = await getSubscriptionPeriodEnd(userId);
+    // Core deletion orchestration: get subscription end → mark DB → cancel Stripe
+    const { deletionRecord, graceEndDate, stripeCancellation } =
+      await processDeletionRequest(userId);
 
-    // Mark for deletion
-    const result = await markAccountForDeletion(userId, subscriptionPeriodEnd);
-    const deletionRecord = result.rows[0];
-    const graceEndDate = new Date(deletionRecord.anonymization_date);
-
-    // Cancel Stripe subscription at period end
-    const stripeCancellation = await cancelStripeSubscriptionAtPeriodEnd(userId);
-    if (!stripeCancellation.success) {
-      logErrorFromCatch(
-        new Error(stripeCancellation.error || 'Stripe cancellation failed'),
-        'user-data-deletion',
-        'cancelStripeSubscriptionAtPeriodEnd (admin path)'
-      );
-    }
-
-    // Audit
-    await logAudit(db, {
+    await safeLogAudit({
       userId,
       action: 'ACCOUNT_DELETION_REQUESTED',
       resourceType: 'account',
@@ -295,11 +229,10 @@ router.delete('/delete-account/:userId', authenticateToken, authorizeUser, async
       status: 'SUCCESS',
       details: {
         grace_period_end: graceEndDate.toISOString(),
-        subscription_period_end: subscriptionPeriodEnd,
         stripe_subscription_cancelled: stripeCancellation.success,
         final_deletion_date: deletionRecord.final_deletion_date,
       },
-    }).catch(e => logErrorFromCatch(e, 'user-data-deletion', 'Log deletion audit').catch(() => {}));
+    }, 'Log deletion audit');
 
     await logDeletionAudit(userId, 'DELETION_REQUESTED', req.ip, req.get('user-agent'))
       .catch(e => logErrorFromCatch(e, 'user-data-deletion', 'Log deletion audit table').catch(() => {}));
@@ -320,8 +253,8 @@ router.delete('/delete-account/:userId', authenticateToken, authorizeUser, async
     });
   } catch (error) {
     logErrorFromCatch(error, 'app', 'delete account (admin path)');
-    await logAudit(db, {
-      userId: req.params.userId,
+    await safeLogAudit({
+      userId,
       action: 'ACCOUNT_DELETION_FAILED',
       resourceType: 'account',
       ipAddress: req.ip,
@@ -330,8 +263,7 @@ router.delete('/delete-account/:userId', authenticateToken, authorizeUser, async
       endpoint: req.path,
       status: 'FAILED',
       details: { error: error.message },
-    }).catch(e => logErrorFromCatch(e, 'user-data-deletion', 'Log deletion failed').catch(() => {}));
-
+    }, 'Log deletion failed');
     return serverError(res, 'Failed to delete account');
   }
 });
@@ -347,9 +279,7 @@ router.post('/cancel-deletion/:userId', authenticateToken, authorizeUser, async 
     const { userId } = req.params;
 
     const user = await fetchDeletionStatus(userId);
-    if (user.rows.length === 0) {
-      return notFoundError(res, 'User not found');
-    }
+    if (user.rows.length === 0) return notFoundError(res, 'User not found');
 
     const { deletion_status, deletion_requested_at } = user.rows[0];
 
@@ -358,12 +288,11 @@ router.post('/cancel-deletion/:userId', authenticateToken, authorizeUser, async 
     }
 
     // Check that the grace period has not yet expired
-    // (anonymization_date is the true end; fall back to 30-day check for safety)
+    // (anonymization_date is the true limit; 365 days is a safe upper bound)
     const daysSinceDeletion = Math.floor(
       (Date.now() - new Date(deletion_requested_at).getTime()) / (1000 * 60 * 60 * 24)
     );
     if (daysSinceDeletion > 365) {
-      // 365 days is a safe upper bound; the actual limit is anonymization_date
       return unprocessableError(res, 'Grace period has expired. Account cannot be recovered.');
     }
 
@@ -373,16 +302,15 @@ router.post('/cancel-deletion/:userId', authenticateToken, authorizeUser, async 
     // Re-enable Stripe subscription (removes cancel_at_period_end)
     const stripeReactivation = await reactivateStripeSubscription(userId);
     if (!stripeReactivation.success) {
+      // Non-fatal — DB is already restored; user should contact support about billing
       logErrorFromCatch(
         new Error(stripeReactivation.error || 'Stripe reactivation failed'),
         'user-data-deletion',
         'reactivateStripeSubscription'
       );
-      // Non-fatal — DB is already restored; user should contact support about billing
     }
 
-    // Audit
-    await logAudit(db, {
+    await safeLogAudit({
       userId,
       action: 'ACCOUNT_REACTIVATED',
       resourceType: 'account',
@@ -395,7 +323,7 @@ router.post('/cancel-deletion/:userId', authenticateToken, authorizeUser, async 
         days_since_deletion: daysSinceDeletion,
         stripe_subscription_reactivated: stripeReactivation.success,
       },
-    }).catch(e => logErrorFromCatch(e, 'user-data-deletion', 'Log reactivation audit').catch(() => {}));
+    }, 'Log reactivation audit');
 
     await logDeletionAudit(userId, 'REACTIVATED', req.ip, req.get('user-agent'))
       .catch(e => logErrorFromCatch(e, 'user-data-deletion', 'Log reactivation audit table').catch(() => {}));
