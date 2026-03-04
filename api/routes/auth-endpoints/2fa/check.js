@@ -22,6 +22,7 @@ import { isAccountLocked } from '../helpers/accountLockout.js';
 import { generate6DigitCode } from '../../../shared/authUtils.js';
 import { send2FACodeEmail } from '../../../shared/emailService.js';
 import { sendSMS } from '../../../shared/smsService-aws.js';
+import { resolveLocaleFromRequest } from '../../../shared/email/i18n/index.js';
 import { decryptPhone } from '../../../services/security/helpers/securityHelpers.js';
 import sgMail from '@sendgrid/mail';
 import { validationError, serverError, successResponse, ErrorCodes } from '../../../utils/responses.js';
@@ -388,7 +389,7 @@ async function sendTwoFACode(res, req, { userId, userEmail, userIdHash, method }
       return serverError(res, 'Failed to save 2FA code');
     }
 
-    sendResult = await send2FACodeEmail(userEmail, code);
+    sendResult = await send2FACodeEmail(userEmail, code, resolveLocaleFromRequest(req));
     if (!sendResult?.success) {
       return serverError(res, 'Failed to send 2FA code via email');
     }

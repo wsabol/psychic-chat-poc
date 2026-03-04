@@ -5,82 +5,73 @@ import { wrapInBaseTemplate } from './baseTemplate.js';
 import { createHeader, createParagraph, createButton, createInfoBox, createWarningBox, createSection, createOrderedList, createFooter } from './components.js';
 import { EMAIL_CONFIG } from '../config.js';
 import { formatEmailDate } from '../utils/dateFormatter.js';
+import { getEmailSection, t } from '../i18n/index.js';
 
 /**
- * Generate subscription price change notification email HTML
+ * Generate subscription price change notification email
  * @param {Object} data - Template data
  * @param {string} data.interval - 'month' | 'year'
  * @param {number} data.oldAmount - Old price in cents
  * @param {number} data.newAmount - New price in cents
- * @param {Date} data.effectiveDate - When the new price takes effect (next billing date)
- * @returns {Object} Email content with subject and HTML
+ * @param {Date}   data.effectiveDate - When the new price takes effect
+ * @param {string} [data.locale='en-US'] - User locale
+ * @returns {{ subject: string, html: string, trackingSettings: Object, emailType: string }}
  */
 export function generatePriceChangeEmail(data) {
-    const { interval, oldAmount, newAmount, effectiveDate } = data;
-    
+    const { interval, oldAmount, newAmount, effectiveDate, locale = 'en-US' } = data;
+    const s = getEmailSection(locale, 'priceChange');
+
     const billingLink = `${EMAIL_CONFIG.appBaseUrl}/billing`;
-    
-    // Format prices
+
     const oldPrice = (oldAmount / 100).toFixed(2);
     const newPrice = (newAmount / 100).toFixed(2);
-    
-    // Format effective date
     const effectiveDateFormatted = formatEmailDate(effectiveDate);
-    
-    // Determine interval display
-    const intervalDisplay = interval === 'month' ? 'monthly' : 'annual';
-    const intervalUnit = interval === 'month' ? 'month' : 'year';
-    
+
+    // Locale-aware interval labels
+    const intervalDisplay = interval === 'month' ? s.intervalMonthly : s.intervalAnnual;
+    const intervalUnit    = interval === 'month' ? s.intervalUnitMonth : s.intervalUnitYear;
+
+    const vars = { oldPrice, newPrice, effectiveDateFormatted, intervalDisplay, intervalUnit };
+
     const content = `
-        ${createHeader('💰 Subscription Price Update', EMAIL_CONFIG.colors.primary)}
-        <h2 style="color: ${EMAIL_CONFIG.colors.text}; margin-top: 0;">Important Update About Your ${intervalDisplay.charAt(0).toUpperCase() + intervalDisplay.slice(1)} Subscription</h2>
-        ${createParagraph(`We're writing to inform you of an update to our subscription pricing. Your ${intervalDisplay} subscription price will change on your next billing date.`)}
+        ${createHeader(s.headerTitle, EMAIL_CONFIG.colors.primary)}
+        <h2 style="color: ${EMAIL_CONFIG.colors.text}; margin-top: 0;">${t(s.heading, vars)}</h2>
+        ${createParagraph(t(s.intro, vars))}
         ${createInfoBox(`
-            <strong>Current Price:</strong> $${oldPrice}/${intervalUnit}<br>
-            <strong>New Price:</strong> $${newPrice}/${intervalUnit}<br>
-            <strong>Effective Date:</strong> ${effectiveDateFormatted}
+            ${t(s.labelCurrentPrice, vars)}<br>
+            ${t(s.labelNewPrice, vars)}<br>
+            ${t(s.labelEffectiveDate, vars)}
         `, EMAIL_CONFIG.colors.primary)}
+        ${createSection(s.whatMeansTitle, t(s.whatMeansBody, vars))}
+        ${createButton(s.buttonText, billingLink)}
+        ${createWarningBox(s.timelineTitle, `<strong>${t(s.timelineBody, vars)}</strong>`)}
         ${createSection(
-            'What This Means For You',
-            `Suscriptioin prices remain unchanged until ${effectiveDateFormatted}. After which, subscriptions renewals will reflect the new price of <strong>$${newPrice}/${intervalUnit}</strong>. This change allows us to continue providing you with quality service, new features, and ongoing improvements to your experience.`
-        )}
-        ${createButton('View Billing Details', billingLink)}
-        ${createWarningBox(
-            '📅 Important Timeline',
-            `<strong>The new subscription price becomes effective ${effectiveDateFormatted}</strong>. Until then, you'll continue to enjoy your current or renewed subscription at the current price. Renewals and new purchases after ${effectiveDateFormatted} will automatically reflect the new price of <strong>$${newPrice}/${intervalUnit}</strong>.`
-        )}
-        ${createSection(
-            'Your Options',
+            s.optionsTitle,
             createOrderedList([
-                '<strong>Continue Your Subscription:</strong> No action needed - your subscription will automatically continue at the new price',
-                '<strong>Review Your Billing:</strong> Visit your Billing & Payments page to review your subscription details',
-                '<strong>Cancel Anytime:</strong> If you prefer not to continue at the new price, you can cancel your subscription before your next billing date'
+                t(s.option1, vars),
+                t(s.option2, vars),
+                t(s.option3, vars),
             ])
         )}
         ${createSection(
-            'Why This Change?',
-            `We're committed to delivering the best possible experience for our users. This price adjustment helps us:
+            s.whyTitle,
+            `${s.whyIntro}
             <ul style="margin: 10px 0; padding-left: 20px;">
-                <li>Continue developing new features and improvements</li>
-                <li>Maintain our high-quality service and support</li>
-                <li>Invest in better infrastructure and reliability</li>
+                <li>${s.whyBullet1}</li>
+                <li>${s.whyBullet2}</li>
+                <li>${s.whyBullet3}</li>
             </ul>`
         )}
-        ${createFooter(`
-            Thank you for being a valued member of Starship Psychics. We appreciate your continued support. 
-            If you have any questions about this change, please don't hesitate to contact our support team.
-        `)}
+        ${createFooter(s.footerNote)}
     `;
-    
-    const subject = `Important: Your ${intervalDisplay.charAt(0).toUpperCase() + intervalDisplay.slice(1)} Subscription Price Update`;
-    
+
     return {
-        subject,
+        subject: t(s.subject, vars),
         html: wrapInBaseTemplate(content),
         trackingSettings: {
             clickTracking: { enable: true, enableText: true },
-            openTracking: { enable: true }
+            openTracking:  { enable: true },
         },
-        emailType: 'price_change'
+        emailType: 'price_change',
     };
 }

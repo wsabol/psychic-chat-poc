@@ -163,10 +163,13 @@ async function queryUsersForInitialNotification(termsVersion, privacyVersion) {
       uc.notification_count,
       uc.grace_period_end,
       pgp_sym_decrypt(upi.email_encrypted, $3) as email,
-      upi.user_id
+      upi.user_id,
+      COALESCE(up.language, 'en-US') as language
     FROM user_consents uc
     INNER JOIN user_personal_info upi 
       ON uc.user_id_hash = encode(digest(upi.user_id, 'sha256'), 'hex')
+    LEFT JOIN user_preferences up
+      ON up.user_id_hash = uc.user_id_hash
     WHERE (
       uc.terms_version != $1 OR 
       uc.privacy_version != $2
@@ -203,10 +206,13 @@ async function queryUsersForReminder(termsVersion, privacyVersion) {
       uc.notification_count,
       uc.grace_period_end,
       pgp_sym_decrypt(upi.email_encrypted, $3) as email,
-      upi.user_id
+      upi.user_id,
+      COALESCE(up.language, 'en-US') as language
     FROM user_consents uc
     INNER JOIN user_personal_info upi 
       ON uc.user_id_hash = encode(digest(upi.user_id, 'sha256'), 'hex')
+    LEFT JOIN user_preferences up
+      ON up.user_id_hash = uc.user_id_hash
     WHERE (
       uc.terms_version != $1 OR 
       uc.privacy_version != $2
@@ -323,11 +329,12 @@ async function processUserNotification(user, changeInfo, isReminder = false) {
       gracePeriodEnd
     };
     
-    // Send email
+    // Send email — pass the user's stored UI language as the email locale
     const emailResult = await sendPolicyChangeNotification(
-      user.email, 
-      notificationInfo, 
-      isReminder
+      user.email,
+      notificationInfo,
+      isReminder,
+      user.language || 'en-US'
     );
     
     if (!emailResult.success) {

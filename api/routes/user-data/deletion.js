@@ -46,6 +46,7 @@ import {
   logDeletionAudit,
 } from './helpers/queries.js';
 import { sendDeleteVerificationEmail, maskEmail } from './helpers/emailService.js';
+import { resolveLocaleFromRequest } from '../../shared/email/i18n/index.js';
 import {
   cancelStripeSubscriptionAtPeriodEnd,
   reactivateStripeSubscription,
@@ -115,8 +116,9 @@ router.post('/send-delete-verification', authenticateToken, async (req, res) => 
     // Store code in DB with 10-minute expiry
     await storeDeletionCode(userId, verificationCode);
 
-    // Send verification email via SendGrid
-    const emailResult = await sendDeleteVerificationEmail(userEmail, verificationCode);
+    // Send verification email in the user's language
+    const locale = resolveLocaleFromRequest(req);
+    const emailResult = await sendDeleteVerificationEmail(userEmail, verificationCode, locale);
     if (!emailResult.success) {
       logErrorFromCatch(
         new Error(emailResult.error || 'Email send failed'),

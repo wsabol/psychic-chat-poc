@@ -4,28 +4,35 @@
 import { wrapInBaseTemplate } from './baseTemplate.js';
 import { createCodeDisplay, createParagraph, createFooter } from './components.js';
 import { EMAIL_CONFIG } from '../config.js';
+import { getEmailSection, t } from '../i18n/index.js';
 
 /**
- * Generate password reset email HTML
+ * Generate password reset email
  * @param {Object} data - Template data
  * @param {string} data.code - Reset code
- * @param {number} data.expiryMinutes - Code expiry in minutes
- * @returns {string} HTML email content
+ * @param {number} [data.expiryMinutes] - Code expiry in minutes
+ * @param {string} [data.locale='en-US'] - User locale
+ * @returns {{ subject: string, html: string }}
  */
 export function generatePasswordResetEmail(data) {
-    const { code, expiryMinutes = EMAIL_CONFIG.expiry.passwordReset } = data;
-    
+    const { code, expiryMinutes = EMAIL_CONFIG.expiry.passwordReset, locale = 'en-US' } = data;
+    const s = getEmailSection(locale, 'passwordReset');
+
     const content = `
-        <h2 style="color: ${EMAIL_CONFIG.colors.text}; margin-top: 0;">Reset Your Password</h2>
-        ${createParagraph('We received a request to reset your password. If you did not make this request, please ignore this email.')}
-        ${createParagraph('Your password reset code is:')}
+        <h2 style="color: ${EMAIL_CONFIG.colors.text}; margin-top: 0;">${s.heading}</h2>
+        ${createParagraph(s.intro)}
+        ${createParagraph(s.codeIntro)}
         ${createCodeDisplay(code)}
-        ${createParagraph(`This code will expire in ${expiryMinutes} minutes.`, '14px')}
-        ${createParagraph('Use this code to reset your password. You will need to confirm your new password.', '14px')}
+        ${createParagraph(t(s.expiry, { expiryMinutes }), '14px')}
+        ${createParagraph(s.instruction, '14px')}
         ${createFooter()}
     `;
-    
-    return wrapInBaseTemplate(content);
+
+    return {
+        subject: s.subject,
+        html: wrapInBaseTemplate(content),
+    };
 }
 
+// Backward-compatible constant (English)
 export const passwordResetEmailSubject = 'Reset Your Password - Psychic Chat';

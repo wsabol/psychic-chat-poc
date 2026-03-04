@@ -4,35 +4,35 @@
 import { wrapInBaseTemplate } from '../templates/baseTemplate.js';
 import { createHeader, createParagraph, createFooter } from './components.js';
 import { EMAIL_CONFIG } from '../config.js';
-
-export const subscriptionCheckFailedEmailSubject = 'Subscription Verification';
+import { getEmailSection } from '../i18n/index.js';
 
 /**
  * Generate subscription check failed email
  * @param {Object} data - Email data
- * @param {string} data.reason - Reason for failure ('STRIPE_API_DOWN' | 'NO_SUBSCRIPTION' | other)
- * @returns {Object} Email content with subject and html
+ * @param {string} data.reason - 'STRIPE_API_DOWN' | 'NO_SUBSCRIPTION' | other
+ * @param {string} [data.locale='en-US'] - User locale
+ * @returns {{ subject: string, html: string }}
  */
 export function generateSubscriptionCheckFailedEmail(data) {
-  const { reason } = data;
+    const { reason, locale = 'en-US' } = data;
+    const s = getEmailSection(locale, 'subscriptionCheckFailed');
 
-  let message = 'We are unable to verify your subscription status. Please try logging in again.';
+    const message = reason === 'STRIPE_API_DOWN' ? s.messageStripeDown
+                  : reason === 'NO_SUBSCRIPTION' ? s.messageNoSub
+                  : s.messageDefault;
 
-  if (reason === 'STRIPE_API_DOWN') {
-    message = 'Stripe is temporarily unavailable. We will verify your subscription shortly.';
-  } else if (reason === 'NO_SUBSCRIPTION') {
-    message = 'No subscription found on your account. Please create one to continue using the app.';
-  }
+    const content = `
+        ${createHeader(s.headerTitle, EMAIL_CONFIG.colors.info, 'ℹ️')}
+        ${createParagraph(message)}
+        ${createParagraph(s.note, '14px')}
+        ${createFooter()}
+    `;
 
-  const content = `
-    ${createHeader('Subscription Verification', EMAIL_CONFIG.colors.info, 'ℹ️')}
-    ${createParagraph(message)}
-    ${createParagraph('If you continue to experience issues, please log in to your account and check your subscription status.', '14px')}
-    ${createFooter()}
-  `;
-
-  return {
-    subject: subscriptionCheckFailedEmailSubject,
-    html: wrapInBaseTemplate(content)
-  };
+    return {
+        subject: s.subject,
+        html: wrapInBaseTemplate(content),
+    };
 }
+
+// Backward-compatible constant (English)
+export const subscriptionCheckFailedEmailSubject = 'Subscription Verification';

@@ -199,8 +199,11 @@ export async function resetPassword(userId, newPassword) {
 
 /**
  * Send email verification code
+ * @param {string} userId
+ * @param {string} email
+ * @param {string} [locale='en-US']
  */
-export async function sendVerificationEmail(userId, email) {
+export async function sendVerificationEmail(userId, email, locale = 'en-US') {
   try {
     const code = generate6DigitCode();
     const codeExpires = new Date(Date.now() + 10 * 60000); // 10 minutes
@@ -211,7 +214,7 @@ export async function sendVerificationEmail(userId, email) {
       [userId, code, codeExpires]
     );
 
-    const result = await sendEmailVerification(email, code);
+    const result = await sendEmailVerification(email, code, locale);
 
     if (!result.success) {
       return { success: false, error: 'Failed to send email' };

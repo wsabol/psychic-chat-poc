@@ -253,10 +253,13 @@ async function send6MonthReengagementEmails() {
       `SELECT
          upi.user_id,
          pgp_sym_decrypt(upi.email_encrypted, $1) AS email,
-         encode(digest(upi.user_id, 'sha256'), 'hex') AS user_id_hash
+         encode(digest(upi.user_id, 'sha256'), 'hex') AS user_id_hash,
+         COALESCE(up.language, 'en-US') AS language
        FROM user_personal_info upi
        LEFT JOIN user_settings us
               ON us.user_id_hash = encode(digest(upi.user_id, 'sha256'), 'hex')
+       LEFT JOIN user_preferences up
+              ON up.user_id_hash = encode(digest(upi.user_id, 'sha256'), 'hex')
        WHERE upi.deletion_status = 'pending_deletion'
          AND upi.email_encrypted IS NOT NULL
          AND upi.deletion_requested_at IS NOT NULL
@@ -277,7 +280,8 @@ async function send6MonthReengagementEmails() {
           account.user_id,
           account.user_id_hash,
           '6_month',
-          db
+          db,
+          account.language || 'en-US'
         );
 
         if (result.skipped) { stats.skipped++; continue; }
@@ -342,10 +346,13 @@ async function send1YearReengagementEmails() {
       `SELECT
          upi.user_id,
          pgp_sym_decrypt(upi.email_encrypted, $1) AS email,
-         encode(digest(upi.user_id, 'sha256'), 'hex') AS user_id_hash
+         encode(digest(upi.user_id, 'sha256'), 'hex') AS user_id_hash,
+         COALESCE(up.language, 'en-US') AS language
        FROM user_personal_info upi
        LEFT JOIN user_settings us
               ON us.user_id_hash = encode(digest(upi.user_id, 'sha256'), 'hex')
+       LEFT JOIN user_preferences up
+              ON up.user_id_hash = encode(digest(upi.user_id, 'sha256'), 'hex')
        WHERE upi.deletion_status = 'pending_deletion'
          AND upi.email_encrypted IS NOT NULL
          AND upi.deletion_requested_at IS NOT NULL
@@ -366,7 +373,8 @@ async function send1YearReengagementEmails() {
           account.user_id,
           account.user_id_hash,
           '1_year',
-          db
+          db,
+          account.language || 'en-US'
         );
 
         if (result.skipped) { stats.skipped++; continue; }

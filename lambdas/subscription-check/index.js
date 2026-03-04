@@ -51,8 +51,11 @@ async function getAllUsersWithSubscriptions() {
          upi.last_status_check_at,
          pgp_sym_decrypt(upi.stripe_subscription_id_encrypted, $1) AS stripe_subscription_id,
          pgp_sym_decrypt(upi.email_encrypted, $1)                  AS email,
-         encode(digest(upi.user_id, 'sha256'), 'hex')              AS user_id_hash
+         encode(digest(upi.user_id, 'sha256'), 'hex')              AS user_id_hash,
+         COALESCE(up.language, 'en-US')                            AS language
        FROM user_personal_info upi
+       LEFT JOIN user_preferences up
+              ON up.user_id_hash = encode(digest(upi.user_id, 'sha256'), 'hex')
        WHERE upi.stripe_subscription_id_encrypted IS NOT NULL
        ORDER BY upi.last_status_check_at ASC NULLS FIRST
        LIMIT 1000`,
@@ -145,7 +148,8 @@ async function checkUserSubscription(user, stats) {
         user.user_id_hash,
         stripeSub.status,
         null, // stripePortalLink — not generated here; email falls back to /billing
-        db
+        db,
+        user.language || 'en-US'
       );
 
       if (emailResult.success) {

@@ -4,28 +4,32 @@
 import { wrapInBaseTemplate } from '../templates/baseTemplate.js';
 import { createHeader, createButton, createParagraph, createFooter } from './components.js';
 import { EMAIL_CONFIG } from '../config.js';
-
-export const subscriptionIncompleteEmailSubject = 'Complete Your Subscription';
+import { getEmailSection } from '../i18n/index.js';
 
 /**
  * Generate subscription incomplete email
  * @param {Object} data - Email data
  * @param {string} data.stripePortalLink - Link to Stripe portal
- * @returns {Object} Email content with subject and html
+ * @param {string} [data.locale='en-US'] - User locale
+ * @returns {{ subject: string, html: string }}
  */
 export function generateSubscriptionIncompleteEmail(data) {
-  const { stripePortalLink } = data;
+    const { stripePortalLink, locale = 'en-US' } = data;
+    const s = getEmailSection(locale, 'subscriptionIncomplete');
 
-  const content = `
-    ${createHeader('Complete Your Subscription', EMAIL_CONFIG.colors.warning, '📋')}
-    ${createParagraph('Your subscription setup is incomplete. Please complete the payment to activate your account.')}
-    ${createButton('Complete Setup', stripePortalLink)}
-    <p style="font-size: 14px; color: ${EMAIL_CONFIG.colors.textLight}; line-height: 1.6;">Your subscription setup needs to be completed to access Starship Psychics premium features.</p>
-    ${createFooter()}
-  `;
+    const content = `
+        ${createHeader(s.headerTitle, EMAIL_CONFIG.colors.warning, '📋')}
+        ${createParagraph(s.body)}
+        ${createButton(s.buttonText, stripePortalLink)}
+        <p style="font-size: 14px; color: ${EMAIL_CONFIG.colors.textLight}; line-height: 1.6;">${s.note}</p>
+        ${createFooter()}
+    `;
 
-  return {
-    subject: subscriptionIncompleteEmailSubject,
-    html: wrapInBaseTemplate(content)
-  };
+    return {
+        subject: s.subject,
+        html: wrapInBaseTemplate(content),
+    };
 }
+
+// Backward-compatible constant (English)
+export const subscriptionIncompleteEmailSubject = 'Complete Your Subscription';

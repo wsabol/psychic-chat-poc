@@ -91,12 +91,15 @@ async function queryUsersForReminder(termsVersion, privacyVersion) {
        uc.notification_count,
        uc.grace_period_end,
        pgp_sym_decrypt(upi.email_encrypted, $3) AS email,
-       upi.user_id
+       upi.user_id,
+       COALESCE(up.language, 'en-US') AS language
      FROM user_consents uc
      INNER JOIN user_personal_info upi
              ON uc.user_id_hash = encode(digest(upi.user_id, 'sha256'), 'hex')
      LEFT  JOIN user_settings us
              ON us.user_id_hash = uc.user_id_hash
+     LEFT  JOIN user_preferences up
+             ON up.user_id_hash = uc.user_id_hash
      WHERE (uc.terms_version   != $1 OR uc.privacy_version != $2)
        AND uc.requires_consent_update = true
        AND uc.last_notified_at IS NOT NULL
@@ -176,7 +179,7 @@ async function processUserReminder(user, currentTermsVersion, currentPrivacyVers
         || `We've updated our Privacy Policy to v${currentPrivacyVersion}.`;
     }
 
-    // Send the reminder (isReminder = true)
+    // Send the reminder (isReminder = true) in the user's stored language
     const result = await sendPolicyReminderEmail(
       user.email,
       user.user_id_hash,
@@ -184,7 +187,8 @@ async function processUserReminder(user, currentTermsVersion, currentPrivacyVers
       documentType,
       description,
       true, // isReminder
-      db
+      db,
+      user.language || 'en-US'
     );
 
     if (result.skipped) {

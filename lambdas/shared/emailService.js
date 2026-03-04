@@ -2,24 +2,31 @@
  * Email Service for Lambda Functions
  *
  * Provides SendGrid-based email sending for all scheduled Lambda jobs.
- * Mirrors the API's api/shared/email architecture but is self-contained
- * so Lambdas have no dependency on the API codebase.
+ * Self-contained so Lambdas have no dependency on the API codebase at
+ * runtime, but shares the canonical i18n string catalog via a thin shim
+ * at lambdas/shared/i18n/index.js.
+ *
+ * ─── Adding a new language ────────────────────────────────────────────────
+ *   1.  Create  api/shared/email/i18n/<locale>.js  (copy en-US.js as template)
+ *   2.  Register it in api/shared/email/i18n/index.js  (one line)
+ *   That's it — both the API and every Lambda pick it up automatically.
+ * ──────────────────────────────────────────────────────────────────────────
  *
  * Opt-out strategy:
- *   User email preferences are stored in user_settings.email_marketing_enabled.
- *   Setting this to false means the user has opted out of all non-critical emails.
- *   Every outbound email checks this flag before sending.
+ *   user_settings.email_marketing_enabled = false  →  skip non-critical emails.
+ *   Rows missing from user_settings are treated as opted-IN (COALESCE default).
  *
- * Functions exported:
- *   isEmailOptedOut(userIdHash, db)               – check opt-out status
- *   recordEmailUnsubscribe(userIdHash, db)         – record an unsubscribe
- *   sendReengagementEmail(...)                     – account re-engagement (6m / 1yr)
- *   sendSubscriptionNotificationEmail(...)         – past_due / canceled / etc.
- *   sendPolicyReminderEmail(...)                   – policy change / reminder
+ * Exported functions:
+ *   isEmailOptedOut(userIdHash, db)
+ *   recordEmailUnsubscribe(userIdHash, db)
+ *   sendReengagementEmail(to, userId, userIdHash, emailType, db, locale)
+ *   sendSubscriptionNotificationEmail(to, userIdHash, status, stripePortalLink, db, locale)
+ *   sendPolicyReminderEmail(to, userIdHash, gracePeriodEnd, documentType, description, isReminder, db, locale)
  */
 
 import sgMail from '@sendgrid/mail';
 import { createLogger } from './errorLogger.js';
+import { getEmailSection, t, resolveLocale } from './i18n/index.js';
 
 const logger = createLogger('email-service');
 
@@ -32,6 +39,7 @@ const CONFIG = {
   appBaseUrl:   process.env.APP_BASE_URL        || 'https://app.starshippsychics.com',
   supportEmail: 'support@starshippsychics.com',
   brandName:    'Starship Psychics',
+  // Design tokens — locale-independent
   colors: {
     primary:           '#667eea',
     warning:           '#f59e0b',
@@ -44,6 +52,22 @@ const CONFIG = {
     backgroundWarning: '#fff3cd',
     borderWarning:     '#ffc107',
   },
+};
+
+// Color map for Stripe subscription statuses (design tokens, not translated)
+const SUBSCRIPTION_STATUS_COLORS = {
+  past_due:   CONFIG.colors.warning,
+  canceled:   CONFIG.colors.primary,
+  incomplete: CONFIG.colors.warning,
+  unpaid:     CONFIG.colors.danger,
+};
+
+// Map Stripe status strings → i18n section keys (in api/shared/email/i18n/)
+const SUBSCRIPTION_STATUS_TO_SECTION = {
+  past_due:   'subscriptionPastDue',
+  canceled:   'subscriptionCancelled',
+  incomplete: 'subscriptionIncomplete',
+  unpaid:     'subscriptionPastDue', // closest semantic match; add own section when needed
 };
 
 // Initialise SendGrid lazily (once per Lambda container lifetime)
@@ -64,13 +88,8 @@ function ensureSendGrid() {
 /**
  * Check whether a user has opted out of email communications.
  *
- * Source of truth: user_settings.email_marketing_enabled
- *   - Row missing  → user has never saved preferences → treat as opted-IN
- *   - false        → user has explicitly opted out → skip sending
- *   - true / null  → opted in
- *
- * @param {string} userIdHash - SHA-256 hex hash of the user's ID
- * @param {Object} db         - Lambda db helper (lambdas/shared/db.js)
+ * @param {string} userIdHash  SHA-256 hex hash of the user's ID
+ * @param {Object} db          Lambda db helper (lambdas/shared/db.js)
  * @returns {Promise<boolean>} true = opted OUT (do not send)
  */
 export async function isEmailOptedOut(userIdHash, db) {
@@ -81,9 +100,8 @@ export async function isEmailOptedOut(userIdHash, db) {
         WHERE user_id_hash = $1`,
       [userIdHash]
     );
-
-    if (rows.length === 0) return false;              // No record → send
-    return rows[0].email_marketing_enabled === false; // Explicit opt-out
+    if (rows.length === 0) return false;
+    return rows[0].email_marketing_enabled === false;
   } catch (err) {
     logger.errorFromCatch(err, 'isEmailOptedOut', userIdHash);
     return false; // Fail-open: don't silently drop emails on DB errors
@@ -91,8 +109,7 @@ export async function isEmailOptedOut(userIdHash, db) {
 }
 
 /**
- * Persist an unsubscribe event for a user.
- * Sets user_settings.email_marketing_enabled = false (upserts the row).
+ * Persist an unsubscribe event (upsert).
  *
  * @param {string} userIdHash
  * @param {Object} db
@@ -104,8 +121,7 @@ export async function recordEmailUnsubscribe(userIdHash, db) {
       `INSERT INTO user_settings (user_id_hash, email_marketing_enabled, updated_at)
             VALUES ($1, false, NOW())
        ON CONFLICT (user_id_hash)
-       DO UPDATE SET email_marketing_enabled = false,
-                     updated_at              = NOW()`,
+       DO UPDATE SET email_marketing_enabled = false, updated_at = NOW()`,
       [userIdHash]
     );
     return true;
@@ -120,13 +136,7 @@ export async function recordEmailUnsubscribe(userIdHash, db) {
 // ─────────────────────────────────────────────
 
 /**
- * Send an email via SendGrid.
- *
- * @param {Object} opts
- * @param {string} opts.to
- * @param {string} opts.subject
- * @param {string} opts.html
- * @param {Object} [opts.trackingSettings]
+ * @param {{ to, subject, html, trackingSettings? }} opts
  * @returns {Promise<{success: boolean, messageId?: string, error?: string}>}
  */
 async function sendEmail({ to, subject, html, trackingSettings }) {
@@ -152,15 +162,14 @@ async function sendEmail({ to, subject, html, trackingSettings }) {
 }
 
 // ─────────────────────────────────────────────
-//  HTML TEMPLATE HELPERS
-// (self-contained; mirrors api/shared/email/templates/ style)
+//  HTML PRIMITIVES  (locale-independent)
 // ─────────────────────────────────────────────
 
 const C = CONFIG.colors;
 
-function wrapInBase(content) {
+function wrapInBase(content, lang = 'en') {
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="${lang}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -203,143 +212,114 @@ const warningBox = (title, body) =>
     <p style="margin:8px 0 0;font-size:14px;color:#856404;line-height:1.6;">${body}</p>
    </div>`;
 
-/** Standard opt-out footer for marketing / lifecycle emails */
-const optOutFooter = () =>
-  `<div style="margin-top:30px;padding-top:20px;border-top:1px solid ${C.border};text-align:center;">
+/** Standard opt-out footer for lifecycle / marketing emails */
+const optOutFooter = (unsubscribeText, unsubscribeUrl) => {
+  const unsubLink = unsubscribeUrl
+    ? `<br>Or <a href="${unsubscribeUrl}" style="color:${C.primary};text-decoration:none;">${unsubscribeText ?? 'unsubscribe'}</a>.`
+    : '';
+  return `<div style="margin-top:30px;padding-top:20px;border-top:1px solid ${C.border};text-align:center;">
     <p style="font-size:12px;color:#999;line-height:1.6;">
-      You're receiving this email because you have an account with ${CONFIG.brandName}.<br>
-      To update your email preferences, visit your
-      <a href="${CONFIG.appBaseUrl}/settings"
-         style="color:${C.primary};text-decoration:none;">account settings</a>.
+      You're receiving this because you have an account with ${CONFIG.brandName}.<br>
+      To update your preferences, visit your
+      <a href="${CONFIG.appBaseUrl}/settings" style="color:${C.primary};text-decoration:none;">account settings</a>.
+      ${unsubLink}
     </p>
-   </div>`;
+  </div>`;
+};
 
 /** Minimal footer for transactional (billing) emails */
 const transactionalFooter = () =>
   `<div style="margin-top:30px;padding-top:20px;border-top:1px solid ${C.border};text-align:center;">
     <p style="font-size:12px;color:#999;line-height:1.6;">
       This is a service notification about your ${CONFIG.brandName} subscription.<br>
-      Questions? Contact us at
-      <a href="mailto:${CONFIG.supportEmail}"
-         style="color:${C.primary};text-decoration:none;">${CONFIG.supportEmail}</a>.
+      Questions? <a href="mailto:${CONFIG.supportEmail}" style="color:${C.primary};text-decoration:none;">${CONFIG.supportEmail}</a>.
     </p>
    </div>`;
 
 // ─────────────────────────────────────────────
-//  TEMPLATE: Re-engagement
+//  TEMPLATE BUILDERS  (all locale-aware, all string-free)
 // ─────────────────────────────────────────────
 
-function buildReengagementEmail(userId, emailType) {
-  const is6Month      = emailType === '6_month';
+function buildReengagementEmail(userId, emailType, locale = 'en-US') {
+  const resolved     = resolveLocale(locale);
+  const s            = getEmailSection(resolved, 'reengagement');
+  const is6Month     = emailType === '6_month';
   const reactivateUrl = `${CONFIG.appBaseUrl}/reactivate?userId=${encodeURIComponent(userId)}`;
+  const unsubscribeUrl = `${CONFIG.appBaseUrl}/unsubscribe-reengagement?userId=${encodeURIComponent(userId)}`;
 
-  const headline = is6Month
-    ? '💫 We Miss You!'
-    : '⚠️ Your Account is About to Be Deleted';
-
-  const message = is6Month
-    ? "It's been 6 months since you requested to delete your account. We understand life changes — we'd love to welcome you back whenever you're ready. Your data is safely stored and can be reactivated at any time."
-    : "It's been a year since you requested account deletion. This is your final notice before permanent data deletion in 6 months. If you'd like to keep your account active, please reactivate it now.";
-
-  const subject = is6Month
-    ? 'We Miss You! Your Starship Psychics Account is Ready to Reactivate'
-    : 'Last Chance: Reactivate Your Starship Psychics Account';
+  const lang = resolved.split('-')[0]; // 'en', 'es', 'fr', etc.
 
   const html = wrapInBase(`
-    <h1 style="color:${C.primary};text-align:center;margin-top:0;">${headline}</h1>
-    ${para(message)}
-    ${btn('Reactivate My Account', reactivateUrl)}
-    ${para('Reactivating is quick and easy — all your data will be restored immediately.', '14px')}
-    ${optOutFooter()}
-  `);
+    <h1 style="color:${C.primary};text-align:center;margin-top:0;">
+      ${is6Month ? s.headline6Month : s.headline12Month}
+    </h1>
+    ${para(is6Month ? s.message6Month : s.message12Month)}
+    ${btn(s.buttonText, reactivateUrl)}
+    ${para(s.note, '14px')}
+    ${optOutFooter(s.unsubscribeText, unsubscribeUrl)}
+  `, lang);
 
-  return { subject, html };
+  return {
+    subject: is6Month ? s.subject6Month : s.subject12Month,
+    html,
+  };
 }
 
-// ─────────────────────────────────────────────
-//  TEMPLATE: Subscription notification
-// ─────────────────────────────────────────────
+function buildSubscriptionNotificationEmail(status, stripePortalLink, locale = 'en-US') {
+  const resolved   = resolveLocale(locale);
+  const sectionKey = SUBSCRIPTION_STATUS_TO_SECTION[status] ?? 'subscriptionPastDue';
+  const s          = getEmailSection(resolved, sectionKey);
+  const color      = SUBSCRIPTION_STATUS_COLORS[status] ?? C.warning;
+  const portalUrl  = stripePortalLink ?? `${CONFIG.appBaseUrl}/billing`;
+  const lang       = resolved.split('-')[0];
 
-const SUBSCRIPTION_COPY = {
-  past_due: {
-    subject:    'Payment Overdue – Action Required',
-    headline:   '⚠️ Payment Overdue',
-    color:      C.warning,
-    message:    'Your subscription payment is overdue. Please update your payment method to avoid losing access to your account.',
-    buttonText: 'Update Payment Now',
-    note:       "We've made several attempts to process your payment. Please take action now to restore full access.",
-  },
-  canceled: {
-    subject:    'Your Subscription Has Been Cancelled',
-    headline:   '📋 Subscription Cancelled',
-    color:      C.primary,
-    message:    'Your Starship Psychics subscription has been cancelled. You will lose access to premium features at the end of your current billing period.',
-    buttonText: 'Reactivate Subscription',
-    note:       'You can reactivate your subscription anytime through your account settings.',
-  },
-  incomplete: {
-    subject:    'Action Required: Complete Your Subscription Setup',
-    headline:   '⚠️ Subscription Incomplete',
-    color:      C.warning,
-    message:    'Your subscription setup is incomplete. Please provide payment information to activate your account.',
-    buttonText: 'Complete Setup',
-    note:       'Your access will remain limited until your subscription is fully set up.',
-  },
-  unpaid: {
-    subject:    'Subscription Suspended – Payment Required',
-    headline:   '🚨 Payment Required',
-    color:      C.danger,
-    message:    'Your subscription has been suspended due to an unpaid invoice. Please update your payment method to restore access.',
-    buttonText: 'Pay Now',
-    note:       'Your account access has been suspended. Please update your payment information immediately.',
-  },
-};
-
-function buildSubscriptionNotificationEmail(status, stripePortalLink) {
-  const cfg      = SUBSCRIPTION_COPY[status] ?? SUBSCRIPTION_COPY.past_due;
-  const portalUrl = stripePortalLink ?? `${CONFIG.appBaseUrl}/billing`;
-
+  // Each section has: subject, headerTitle, body, buttonText, note
   const html = wrapInBase(`
-    <h1 style="color:${cfg.color};text-align:center;margin-top:0;">${cfg.headline}</h1>
-    ${para(cfg.message)}
-    ${btn(cfg.buttonText, portalUrl, cfg.color)}
-    ${para(cfg.note, '14px')}
+    <h1 style="color:${color};text-align:center;margin-top:0;">${s.headerTitle}</h1>
+    ${para(s.body ?? s.body1 ?? '')}
+    ${s.body2 ? para(s.body2) : ''}
+    ${btn(s.buttonText, portalUrl, color)}
+    ${para(s.note, '14px')}
     ${transactionalFooter()}
-  `);
+  `, lang);
 
-  return { subject: cfg.subject, html };
+  return { subject: s.subject, html };
 }
 
-// ─────────────────────────────────────────────
-//  TEMPLATE: Policy reminder
-// ─────────────────────────────────────────────
+function buildPolicyReminderEmail(gracePeriodEnd, documentType, description, isReminder, locale = 'en-US') {
+  const resolved = resolveLocale(locale);
+  const s        = getEmailSection(resolved, 'policyChange');
+  const lang     = resolved.split('-')[0];
 
-function buildPolicyReminderEmail(gracePeriodEnd, documentType, description, isReminder) {
-  const docName = documentType === 'both'
-    ? 'Terms of Service and Privacy Policy'
-    : documentType === 'terms'
-      ? 'Terms of Service'
-      : 'Privacy Policy';
+  // Resolve document name from locale strings
+  const docName = documentType === 'both'  ? s.docBoth
+                : documentType === 'terms' ? s.docTerms
+                :                            s.docPrivacy;
 
+  // Format deadline date in user's locale
   const deadline = gracePeriodEnd
-    ? new Date(gracePeriodEnd).toLocaleDateString('en-US', {
+    ? new Date(gracePeriodEnd).toLocaleDateString(resolved, {
         year: 'numeric', month: 'long', day: 'numeric',
       })
-    : 'the grace period deadline';
+    : '';
 
-  const daysLeft = gracePeriodEnd
+  const daysRemaining = gracePeriodEnd
     ? Math.max(0, Math.ceil((new Date(gracePeriodEnd) - Date.now()) / 86_400_000))
     : 30;
 
-  const headerColor  = isReminder ? C.warning : C.primary;
-  const headerIcon   = isReminder ? '⚠️ Reminder' : '📋 Important Update';
+  const headerColor  = isReminder ? C.warning  : C.primary;
+  const headerIcon   = isReminder ? s.headerReminder : s.headerInitial;
   const urgencyMsg   = isReminder
-    ? `<strong>⚠️ ${daysLeft} days remaining</strong> – Please log in to review and accept the updated ${docName}.`
-    : `You have <strong>30 days</strong> (until ${deadline}) to review and accept these changes.`;
+    ? t(s.urgencyReminder, { daysRemaining, documentName: docName })
+    : t(s.urgencyInitial,  { gracePeriodDate: deadline });
+
+  const intro = isReminder
+    ? t(s.introReminder, { documentName: docName })
+    : t(s.introInitial,  { documentName: docName });
 
   const subject = isReminder
-    ? `Reminder: Action Required – Review Updated ${docName}`
-    : `Important: Updates to Our ${docName}`;
+    ? t(s.subjectReminder, { documentName: docName })
+    : t(s.subjectInitial,  { documentName: docName });
 
   const loginUrl = `${CONFIG.appBaseUrl}/login`;
 
@@ -347,26 +327,24 @@ function buildPolicyReminderEmail(gracePeriodEnd, documentType, description, isR
     <div style="text-align:center;margin-bottom:20px;">
       <span style="font-size:28px;">${headerIcon}</span>
     </div>
-    <h2 style="color:${C.text};margin-top:0;">We've Updated Our ${docName}</h2>
-    ${para(`${isReminder ? 'This is a reminder that you' : 'You'} need to review and accept our updated ${docName}.`)}
+    <h2 style="color:${C.text};margin-top:0;">${t(s.heading, { documentName: docName })}</h2>
+    ${para(intro)}
     ${infoBox(urgencyMsg, headerColor)}
-    <h3 style="color:${C.text};">What's Changed?</h3>
-    ${para(description || `We've made important updates to better serve you and maintain compliance with current regulations.`)}
-    ${btn('Log In to Review & Accept', loginUrl)}
+    <h3 style="color:${C.text};">${s.whatChangedTitle}</h3>
+    ${para(description || s.defaultDescription)}
+    ${btn(s.buttonText, loginUrl)}
     ${warningBox(
-      '⏰ Important Deadline',
-      `By <strong>${deadline}</strong>, you must log in and accept the updated ${docName}.
-       If you do not accept by this date, you will be automatically logged out and unable to
-       access your account until you accept the new terms.`
+      s.deadlineTitle,
+      t(s.deadlineBody, { gracePeriodDate: deadline, documentName: docName })
     )}
-    <h3 style="color:${C.text};">What You Need to Do</h3>
+    <h3 style="color:${C.text};">${s.whatToDoTitle}</h3>
     <ol style="color:${C.text};font-size:15px;line-height:2.2;">
-      <li>Log in to your Starship Psychics account</li>
-      <li>Review the updated ${docName}</li>
-      <li>Accept the changes to continue using your account</li>
+      <li>${s.step1}</li>
+      <li>${t(s.step2, { documentName: docName })}</li>
+      <li>${s.step3}</li>
     </ol>
     ${optOutFooter()}
-  `);
+  `, lang);
 
   return { subject, html };
 }
@@ -378,29 +356,27 @@ function buildPolicyReminderEmail(gracePeriodEnd, documentType, description, isR
 /**
  * Send a re-engagement email to a user whose account is pending deletion.
  *
- * The SQL query in account-cleanup already filters reengagement_email_unsub = FALSE.
- * This function additionally checks user_settings.email_marketing_enabled.
- *
- * @param {string}          to         Recipient email address
- * @param {string}          userId     Raw user ID (used in reactivation link)
- * @param {string}          userIdHash SHA-256 hex hash (used for opt-out check)
+ * @param {string}             to          Recipient email address
+ * @param {string}             userId      Raw user ID (used in reactivation link)
+ * @param {string}             userIdHash  SHA-256 hex hash (opt-out check)
  * @param {'6_month'|'1_year'} emailType
- * @param {Object}          db         Lambda DB helper
- * @returns {Promise<{success: boolean, messageId?: string, skipped?: boolean, reason?: string, error?: string}>}
+ * @param {Object}             db          Lambda DB helper
+ * @param {string}             [locale='en-US']
  */
-export async function sendReengagementEmail(to, userId, userIdHash, emailType, db) {
+export async function sendReengagementEmail(to, userId, userIdHash, emailType, db, locale = 'en-US') {
   const optedOut = await isEmailOptedOut(userIdHash, db);
-  if (optedOut) {
-    return { success: false, skipped: true, reason: 'email_opted_out' };
-  }
+  if (optedOut) return { success: false, skipped: true, reason: 'email_opted_out' };
 
-  const { subject, html } = buildReengagementEmail(userId, emailType);
+  const resolved           = resolveLocale(locale);
+  const s                  = getEmailSection(resolved, 'reengagement');
+  const { subject, html }  = buildReengagementEmail(userId, emailType, resolved);
+
   return sendEmail({
     to, subject, html,
     trackingSettings: {
       clickTracking:       { enable: true, enableText: true },
       openTracking:        { enable: true },
-      unsubscribeTracking: { enable: true, text: 'Unsubscribe from re-engagement emails' },
+      unsubscribeTracking: { enable: true, text: s.unsubscribeText },
     },
   });
 }
@@ -408,45 +384,40 @@ export async function sendReengagementEmail(to, userId, userIdHash, emailType, d
 /**
  * Send a subscription status notification email.
  *
- * Triggered when Stripe subscription status changes to past_due, canceled,
- * incomplete, or unpaid.  Checks email_marketing_enabled opt-out.
- *
- * @param {string}  to               Recipient email
- * @param {string}  userIdHash       SHA-256 hex hash
- * @param {string}  status           Stripe subscription status
- * @param {string|null} stripePortalLink  Stripe customer portal URL (or null)
- * @param {Object}  db
+ * @param {string}      to               Recipient email
+ * @param {string}      userIdHash       SHA-256 hex hash
+ * @param {string}      status           Stripe subscription status
+ * @param {string|null} stripePortalLink Stripe portal URL (or null → /billing)
+ * @param {Object}      db
+ * @param {string}      [locale='en-US']
  */
-export async function sendSubscriptionNotificationEmail(to, userIdHash, status, stripePortalLink, db) {
+export async function sendSubscriptionNotificationEmail(to, userIdHash, status, stripePortalLink, db, locale = 'en-US') {
   const optedOut = await isEmailOptedOut(userIdHash, db);
-  if (optedOut) {
-    return { success: false, skipped: true, reason: 'email_opted_out' };
-  }
+  if (optedOut) return { success: false, skipped: true, reason: 'email_opted_out' };
 
-  const { subject, html } = buildSubscriptionNotificationEmail(status, stripePortalLink);
+  const { subject, html } = buildSubscriptionNotificationEmail(status, stripePortalLink, locale);
   return sendEmail({ to, subject, html });
 }
 
 /**
  * Send a policy change or reminder email.
  *
- * @param {string}        to             Recipient email
- * @param {string}        userIdHash     SHA-256 hex hash
- * @param {Date|string}   gracePeriodEnd Grace period deadline
- * @param {string}        documentType   'terms' | 'privacy' | 'both'
- * @param {string}        description    Human-readable description of what changed
- * @param {boolean}       isReminder     true = reminder email, false = initial notice
- * @param {Object}        db
+ * @param {string}      to             Recipient email
+ * @param {string}      userIdHash     SHA-256 hex hash
+ * @param {Date|string} gracePeriodEnd Grace period deadline
+ * @param {string}      documentType   'terms' | 'privacy' | 'both'
+ * @param {string}      description    Human-readable description of what changed
+ * @param {boolean}     isReminder     true = reminder, false = initial notice
+ * @param {Object}      db
+ * @param {string}      [locale='en-US']
  */
 export async function sendPolicyReminderEmail(
-  to, userIdHash, gracePeriodEnd, documentType, description, isReminder, db
+  to, userIdHash, gracePeriodEnd, documentType, description, isReminder, db, locale = 'en-US'
 ) {
   const optedOut = await isEmailOptedOut(userIdHash, db);
-  if (optedOut) {
-    return { success: false, skipped: true, reason: 'email_opted_out' };
-  }
+  if (optedOut) return { success: false, skipped: true, reason: 'email_opted_out' };
 
-  const { subject, html } = buildPolicyReminderEmail(gracePeriodEnd, documentType, description, isReminder);
+  const { subject, html } = buildPolicyReminderEmail(gracePeriodEnd, documentType, description, isReminder, locale);
   return sendEmail({
     to, subject, html,
     trackingSettings: {
