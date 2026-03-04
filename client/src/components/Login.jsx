@@ -75,7 +75,16 @@ export function Login({ defaultMode = 'login' }) {
     try {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (err) {
-      setError(err.message);
+      if (err.code === 'auth/invalid-credential') {
+        setSuccessMessage('You need to register.');
+        setTimeout(() => {
+          setSuccessMessage('');
+          setMode('register');
+          setError('');
+        }, 1000);
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -118,7 +127,16 @@ export function Login({ defaultMode = 'login' }) {
       setTermsAccepted(false);
       setPrivacyAccepted(false);
     } catch (err) {
-      setError(err.message);
+      if (err.code === 'auth/email-already-in-use') {
+        setSuccessMessage('You are already registered.');
+        setTimeout(() => {
+          setSuccessMessage('');
+          setMode('login');
+          setError('');
+        }, 1000);
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
