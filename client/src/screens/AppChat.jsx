@@ -126,9 +126,12 @@ export function AppChat({ state }) {
 
   // Handle consent accepted
   const handleConsentAccepted = () => {
+    // Simply hide the consent modal — the user is already authenticated
+    // (they reached AppChat), so there is no need to reload the page.
+    // A full reload was causing Firebase auth to reinitialise from scratch,
+    // sending the user back through the login / 2FA flow even though their
+    // session was still valid.
     setShowConsentModal(false);
-    // User will be redirected or updated by AuthContext
-    window.location.reload();
   };
 
   // Handle welcome message close
