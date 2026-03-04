@@ -11,15 +11,25 @@
  */
 
 import enUS from './en-US.js';
+import deDE from './de-DE.js';
 import esES from './es-ES.js';
 import frFR from './fr-FR.js';
+import itIT from './it-IT.js';
+import jaJP from './ja-JP.js';
+import ptBR from './pt-BR.js';
+import zhCN from './zh-CN.js';
 
 // ─── Registry ────────────────────────────────────────────────────────────────
 // Add new locales here — no other file needs to change.
 const LOCALES = {
   'en-US': enUS,
+  'de-DE': deDE,
   'es-ES': esES,
   'fr-FR': frFR,
+  'it-IT': itIT,
+  'ja-JP': jaJP,
+  'pt-BR': ptBR,
+  'zh-CN': zhCN,
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

@@ -27,6 +27,10 @@ let lastRunStats = {
   errors: 0
 };
 
+// Number of Stripe API calls to run in parallel.
+// Stripe's default rate limit is 100 req/s; 10 concurrent is safe and fast.
+const STRIPE_CONCURRENCY = 10;
+
 /**
  * Main job function - runs every 4 hours
  */
@@ -60,14 +64,21 @@ export async function runSubscriptionCheckJob() {
       };
     }
 
-    // Check each user's subscription
-    for (const user of users) {
-      try {
-        await checkUserSubscription(user, stats);
-      } catch (error) {
-        logErrorFromCatch(error, 'job', 'subscription-check-job', user.user_id);
-        stats.errors++;
-      }
+    // Check subscriptions in concurrent batches to avoid sequential Stripe API
+    // calls taking 50+ minutes. STRIPE_CONCURRENCY controls parallelism while
+    // staying well within Stripe's 100 req/s rate limit.
+    for (let i = 0; i < users.length; i += STRIPE_CONCURRENCY) {
+      const batch = users.slice(i, i + STRIPE_CONCURRENCY);
+      await Promise.all(
+        batch.map(async (user) => {
+          try {
+            await checkUserSubscription(user, stats);
+          } catch (error) {
+            logErrorFromCatch(error, 'job', 'subscription-check-job', user.user_id);
+            stats.errors++;
+          }
+        })
+      );
     }
 
     // Update global stats

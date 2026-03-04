@@ -69,13 +69,19 @@ export async function notifyBillingEvent(userId, issueType, additionalData = {})
       return { success: false, error: 'Unknown issue type' };
     }
 
+    // Resolve user language — look up contact info before generating the email
+    // so we can render it in the user's preferred language.
+    const userInfo = await getUserContactInfo(userId);
+    const locale = userInfo?.language || additionalData.locale || 'en-US';
+
     // Set default stripe portal link if not provided
     const stripePortalLink = additionalData.stripePortalLink || 'https://billing.stripe.com/';
     
-    // Generate email content
+    // Generate email content in the user's language
     const emailContent = emailGenerator({
       stripePortalLink,
-      ...additionalData
+      ...additionalData,
+      locale,
     });
 
     // Generate SMS message
@@ -124,8 +130,8 @@ export async function notifySubscriptionCheckFailed(userId, reason) {
       message = 'No subscription found on your account. Please create one to continue using the app.';
     }
 
-    // Generate email content
-    const emailContent = generateSubscriptionCheckFailedEmail({ reason });
+    // Generate email content in the user's language
+    const emailContent = generateSubscriptionCheckFailedEmail({ reason, locale: userInfo.language });
 
     // Generate SMS message
     const smsMessage = getSMSMessage('SUBSCRIPTION_CHECK_FAILED', { message });
@@ -163,8 +169,8 @@ export async function notifySubscriptionExpiring(userId, daysRemaining) {
     const userInfo = await getUserContactInfo(userId);
     if (!userInfo) return;
 
-    // Generate email content
-    const emailContent = generateSubscriptionExpiringEmail({ daysRemaining });
+    // Generate email content in the user's language
+    const emailContent = generateSubscriptionExpiringEmail({ daysRemaining, locale: userInfo.language });
 
     // Generate SMS message
     const smsMessage = getSMSMessage('SUBSCRIPTION_EXPIRING', { daysRemaining });
@@ -259,19 +265,22 @@ export async function sendPriceChangeNotifications(interval, oldAmount, newAmoun
       throw new Error('ENCRYPTION_KEY not configured!');
     }
 
-    // Get all active subscribers with this interval
+    // Get all active subscribers with this interval, including their language preference
     // user_id = hashed value (SHA-256) for FK relationship and logging
     const query = `
-      SELECT 
-        user_id,
-        pgp_sym_decrypt(email_encrypted, $1) as email,
-        current_period_end
-      FROM user_personal_info
-      WHERE price_interval = $2
-        AND subscription_status = 'active'
-        AND stripe_subscription_id_encrypted IS NOT NULL
-        AND email_encrypted IS NOT NULL
-      ORDER BY user_id
+      SELECT
+        upi.user_id,
+        pgp_sym_decrypt(upi.email_encrypted, $1) as email,
+        upi.current_period_end,
+        COALESCE(up.language, 'en-US') as language
+      FROM user_personal_info upi
+      LEFT JOIN user_preferences up
+        ON up.user_id_hash = encode(digest(upi.user_id, 'sha256'), 'hex')
+      WHERE upi.price_interval = $2
+        AND upi.subscription_status = 'active'
+        AND upi.stripe_subscription_id_encrypted IS NOT NULL
+        AND upi.email_encrypted IS NOT NULL
+      ORDER BY upi.user_id
     `;
 
     const result = await db.query(query, [process.env.ENCRYPTION_KEY, interval]);
@@ -297,12 +306,13 @@ export async function sendPriceChangeNotifications(interval, oldAmount, newAmoun
         const effectiveDate = new Date();
         effectiveDate.setDate(effectiveDate.getDate() + 30);
         
-        // Generate email using existing template
+        // Generate email using existing template in the user's language
         const emailContent = generatePriceChangeEmail({
           interval,
           oldAmount,
           newAmount,
-          effectiveDate
+          effectiveDate,
+          locale: subscriber.language,
         });
         
         // Send email

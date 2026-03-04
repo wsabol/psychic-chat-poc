@@ -48,13 +48,19 @@ export async function runAccountCleanupJob() {
 async function send6MonthReengagementEmails() {
   try {
     const result = await db.query(
-      `SELECT user_id, pgp_sym_decrypt(email_encrypted, $1) as email FROM user_personal_info 
-       WHERE deletion_status = 'pending_deletion'
-         AND deletion_requested_at IS NOT NULL
-         AND reengagement_email_6m_sent_at IS NULL
-         AND reengagement_email_unsub = FALSE
-         AND (CURRENT_DATE - deletion_requested_at::DATE) >= 180
-         AND (CURRENT_DATE - deletion_requested_at::DATE) < 185`,
+      `SELECT
+         upi.user_id,
+         pgp_sym_decrypt(upi.email_encrypted, $1) as email,
+         COALESCE(up.language, 'en-US') as language
+       FROM user_personal_info upi
+       LEFT JOIN user_preferences up
+         ON up.user_id_hash = encode(digest(upi.user_id, 'sha256'), 'hex')
+       WHERE upi.deletion_status = 'pending_deletion'
+         AND upi.deletion_requested_at IS NOT NULL
+         AND upi.reengagement_email_6m_sent_at IS NULL
+         AND upi.reengagement_email_unsub = FALSE
+         AND (CURRENT_DATE - upi.deletion_requested_at::DATE) >= 180
+         AND (CURRENT_DATE - upi.deletion_requested_at::DATE) < 185`,
       [ENCRYPTION_KEY]
     );
 
@@ -64,7 +70,8 @@ async function send6MonthReengagementEmails() {
         const emailSendResult = await sendAccountReengagementEmail(
           account.email,
           account.user_id,
-          '6_month'
+          '6_month',
+          account.language
         );
 
         if (emailSendResult.success) {
@@ -116,13 +123,19 @@ async function send6MonthReengagementEmails() {
 async function send1YearReengagementEmails() {
   try {
     const result = await db.query(
-      `SELECT user_id, pgp_sym_decrypt(email_encrypted, $1) as email FROM user_personal_info 
-       WHERE deletion_status = 'pending_deletion'
-         AND deletion_requested_at IS NOT NULL
-         AND reengagement_email_1y_sent_at IS NULL
-         AND reengagement_email_unsub = FALSE
-         AND (CURRENT_DATE - deletion_requested_at::DATE) >= 365
-         AND (CURRENT_DATE - deletion_requested_at::DATE) < 370`,
+      `SELECT
+         upi.user_id,
+         pgp_sym_decrypt(upi.email_encrypted, $1) as email,
+         COALESCE(up.language, 'en-US') as language
+       FROM user_personal_info upi
+       LEFT JOIN user_preferences up
+         ON up.user_id_hash = encode(digest(upi.user_id, 'sha256'), 'hex')
+       WHERE upi.deletion_status = 'pending_deletion'
+         AND upi.deletion_requested_at IS NOT NULL
+         AND upi.reengagement_email_1y_sent_at IS NULL
+         AND upi.reengagement_email_unsub = FALSE
+         AND (CURRENT_DATE - upi.deletion_requested_at::DATE) >= 365
+         AND (CURRENT_DATE - upi.deletion_requested_at::DATE) < 370`,
       [ENCRYPTION_KEY]
     );
 
@@ -132,7 +145,8 @@ async function send1YearReengagementEmails() {
         const emailSendResult = await sendAccountReengagementEmail(
           account.email,
           account.user_id,
-          '1_year'
+          '1_year',
+          account.language
         );
 
         if (emailSendResult.success) {
