@@ -63,6 +63,12 @@
   },
   "twoFactor": {
     "title": "2要素認証",
+    "resendCooldown": "{{seconds}}秒後に再送",
+    "resendSuccess": "✓ 新しいコードを送信しました。メールを確認してください。",
+    "resendFailed": "コードの送信に失敗しました。もう一度お試しください。",
+    "codeInfo": "⏱️ コードの有効期間は10分です",
+    "trustDevice": "このデバイスを信頼する",
+    "trustDeviceHint": "次回このブラウザでは2FAをスキップ",
     "message": "{{method}}に送信されたコードを入力してください",
     "enterCode": "確認コードを入力",
     "verify": "確認",

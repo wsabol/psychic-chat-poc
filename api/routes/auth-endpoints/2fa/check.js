@@ -26,6 +26,7 @@ import { resolveLocaleFromRequest } from '../../../shared/email/i18n/index.js';
 import { decryptPhone } from '../../../services/security/helpers/securityHelpers.js';
 import sgMail from '@sendgrid/mail';
 import { validationError, serverError, successResponse, ErrorCodes } from '../../../utils/responses.js';
+import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 import {
   isAdmin,
   checkTrustedIP,
@@ -175,7 +176,28 @@ async function handleAdminIPCheck(
   req,
   { userId, userEmail, ipAddress, deviceName, browserInfo }
 ) {
+  // ── Diagnostic logging ────────────────────────────────────────────────────
+  // Log the IP and header chain so we can diagnose proxy/trust-proxy issues
+  // on AWS (CloudFront → ALB → ECS) vs local.
+  const xForwardedFor = req.headers['x-forwarded-for'] || '(none)';
+  const rawSocketIP   = req.socket?.remoteAddress || '(unknown)';
+  console.info(
+    `[2FA-ADMIN] check-2fa for ${userId.slice(0, 8)}… | ` +
+    `req.ip=${ipAddress} | X-Forwarded-For: ${xForwardedFor} | socket: ${rawSocketIP} | ` +
+    `device: ${deviceName}`
+  );
+
   const trustedIP = await checkTrustedIP(userId, ipAddress);
+
+  if (trustedIP) {
+    console.info(`[2FA-ADMIN] ✓ Trusted IP matched (row ${trustedIP.id}) — skipping 2FA`);
+  } else {
+    console.info(
+      `[2FA-ADMIN] ✗ IP not in trusted list — 2FA required. ` +
+      `If this IP should be trusted, check that trust-admin-device was called ` +
+      `after the previous 2FA verification with trustDevice=true.`
+    );
+  }
 
   // Known IP → skip 2FA entirely
   if (trustedIP) {
@@ -383,13 +405,36 @@ async function sendTwoFACode(res, req, { userId, userEmail, userIdHash, method }
     const code = generate6DigitCode();
     recipientContact = userEmail;
 
+    // Insert the code and capture its DB row ID so we can embed it in the
+    // magic-link JWT.  The magic link lets the user click a button in the
+    // email instead of copying the 6-digit code — exactly equivalent to
+    // entering the code manually.
+    let insertedCodeId = null;
     try {
-      await insertVerificationCode(db, userId, userEmail, null, code, 'email');
+      const insertResult = await insertVerificationCode(db, userId, userEmail, null, code, 'email');
+      insertedCodeId = insertResult.rows[0]?.id ?? null;
     } catch {
       return serverError(res, 'Failed to save 2FA code');
     }
 
-    sendResult = await send2FACodeEmail(userEmail, code, resolveLocaleFromRequest(req));
+    // Build the magic link (API endpoint → marks code used → redirects to
+    // the client app with magic_verified=true so the React app can skip the
+    // TwoFAScreen for this session).
+    let magicLink = null;
+    if (insertedCodeId) {
+      const magicToken = generateTempToken(
+        { userId, codeId: insertedCodeId, isMagicLink: true },
+        '15m'
+      );
+      // Use API_BASE_URL if set, otherwise derive from request host.
+      // In production behind CloudFront the Host header is the public domain.
+      const apiBase =
+        process.env.API_BASE_URL ||
+        `${req.protocol}://${req.get('host')}`;
+      magicLink = `${apiBase}/auth/verify-2fa-link?token=${encodeURIComponent(magicToken)}`;
+    }
+
+    sendResult = await send2FACodeEmail(userEmail, code, resolveLocaleFromRequest(req), magicLink);
     if (!sendResult?.success) {
       return serverError(res, 'Failed to send 2FA code via email');
     }

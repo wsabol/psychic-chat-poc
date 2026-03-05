@@ -11,8 +11,13 @@ import { getCurrentTermsVersion, getCurrentPrivacyVersion } from '../../shared/v
 import VERSION_CONFIG from '../../shared/versionConfig.js';
 import { serverError } from '../../utils/responses.js';
 import { successResponse } from '../../utils/responses.js';
+import { requireAdmin } from '../../middleware/adminAuth.js';
 
 const router = Router();
+
+// Apply admin check to ALL routes in this router
+// (authenticateToken is already applied in index.js at the "/admin" mount point)
+router.use(requireAdmin);
 
 /**
  * GET /admin/compliance-dashboard/overview
@@ -32,6 +37,8 @@ router.get('/compliance-dashboard/overview', async (req, res) => {
     // Get overall compliance status
     // INNER JOIN ensures we only count users who have an actual account (prevents orphaned
     // consent records from inflating counts when accounts are deleted or never fully created)
+    // encode(digest(upi.user_id, 'sha256'), 'hex') computes the SHA-256 hash of the raw
+    // Firebase UID stored in user_personal_info.user_id to match user_consents.user_id_hash
     const complianceResult = await db.query(`
       SELECT 
         COUNT(*) as total_with_consents,
@@ -40,7 +47,7 @@ router.get('/compliance-dashboard/overview', async (req, res) => {
         COUNT(*) FILTER (WHERE uc.privacy_version = $2) as privacy_current,
         COUNT(*) FILTER (WHERE uc.requires_consent_update = true) as requires_action
       FROM user_consents uc
-      INNER JOIN user_personal_info upi ON uc.user_id_hash = upi.user_id_hash
+      INNER JOIN user_personal_info upi ON uc.user_id_hash = encode(digest(upi.user_id, 'sha256'), 'hex')
     `, [termsVersion, privacyVersion]);
 
     const compliance = complianceResult.rows[0];
@@ -82,7 +89,7 @@ router.get('/compliance-dashboard/overview', async (req, res) => {
           : 0
       }
     });
-    } catch (error) {
+  } catch (error) {
     return serverError(res, 'Failed to get compliance overview');
   }
 });
@@ -106,7 +113,7 @@ router.get('/compliance-dashboard/acceptance-by-version', async (req, res) => {
         MIN(uc.terms_accepted_at) as earliest_acceptance,
         MAX(uc.terms_accepted_at) as latest_acceptance
       FROM user_consents uc
-      INNER JOIN user_personal_info upi ON uc.user_id_hash = upi.user_id_hash
+      INNER JOIN user_personal_info upi ON uc.user_id_hash = encode(digest(upi.user_id, 'sha256'), 'hex')
       WHERE uc.terms_version IS NOT NULL
       GROUP BY uc.terms_version
       
@@ -122,7 +129,7 @@ router.get('/compliance-dashboard/acceptance-by-version', async (req, res) => {
         MIN(uc.privacy_accepted_at) as earliest_acceptance,
         MAX(uc.privacy_accepted_at) as latest_acceptance
       FROM user_consents uc
-      INNER JOIN user_personal_info upi ON uc.user_id_hash = upi.user_id_hash
+      INNER JOIN user_personal_info upi ON uc.user_id_hash = encode(digest(upi.user_id, 'sha256'), 'hex')
       WHERE uc.privacy_version IS NOT NULL
       GROUP BY uc.privacy_version
       
@@ -141,7 +148,7 @@ router.get('/compliance-dashboard/acceptance-by-version', async (req, res) => {
         latestAcceptance: row.latest_acceptance
       }))
     });
-    } catch (error) {
+  } catch (error) {
     return serverError(res, 'Failed to get acceptance breakdown');
   }
 });
@@ -209,7 +216,7 @@ router.get('/compliance-dashboard/user-status', async (req, res) => {
         uc.notification_count,
         uc.updated_at
       FROM user_consents uc
-      INNER JOIN user_personal_info upi ON uc.user_id_hash = upi.user_id_hash
+      INNER JOIN user_personal_info upi ON uc.user_id_hash = encode(digest(upi.user_id, 'sha256'), 'hex')
       WHERE ${whereClause}
       ORDER BY uc.updated_at DESC
       LIMIT ${limitPlaceholder} OFFSET ${offsetPlaceholder}
@@ -217,7 +224,7 @@ router.get('/compliance-dashboard/user-status', async (req, res) => {
 
     const countQuery = `
       SELECT COUNT(*) as count FROM user_consents uc
-      INNER JOIN user_personal_info upi ON uc.user_id_hash = upi.user_id_hash
+      INNER JOIN user_personal_info upi ON uc.user_id_hash = encode(digest(upi.user_id, 'sha256'), 'hex')
       WHERE ${whereClause}
     `;
 
@@ -278,7 +285,7 @@ router.get('/compliance-dashboard/notification-metrics', async (req, res) => {
         COUNT(*) FILTER (WHERE uc.last_notified_at IS NOT NULL AND uc.requires_consent_update = false) as accepted_after_notification,
         COUNT(*) FILTER (WHERE uc.last_notified_at IS NOT NULL AND uc.requires_consent_update = true) as still_requires_action_after_notification
       FROM user_consents uc
-      INNER JOIN user_personal_info upi ON uc.user_id_hash = upi.user_id_hash
+      INNER JOIN user_personal_info upi ON uc.user_id_hash = encode(digest(upi.user_id, 'sha256'), 'hex')
       WHERE uc.requires_consent_update = true OR uc.notification_count > 0
     `);
 
@@ -309,7 +316,7 @@ router.get('/compliance-dashboard/notification-metrics', async (req, res) => {
         }
       }
     });
-    } catch (error) {
+  } catch (error) {
     return serverError(res, 'Failed to get notification metrics');
   }
 });
@@ -333,7 +340,7 @@ router.get('/compliance-dashboard/timeline', async (req, res) => {
         'terms' as document_type,
         COUNT(*) as acceptances
       FROM user_consents uc
-      INNER JOIN user_personal_info upi ON uc.user_id_hash = upi.user_id_hash
+      INNER JOIN user_personal_info upi ON uc.user_id_hash = encode(digest(upi.user_id, 'sha256'), 'hex')
       WHERE uc.terms_accepted_at IS NOT NULL
       AND uc.terms_accepted_at > NOW() - INTERVAL '${parseInt(days)} days'
       GROUP BY DATE(uc.terms_accepted_at)
@@ -348,7 +355,7 @@ router.get('/compliance-dashboard/timeline', async (req, res) => {
           'privacy' as document_type,
           COUNT(*) as acceptances
         FROM user_consents uc
-        INNER JOIN user_personal_info upi ON uc.user_id_hash = upi.user_id_hash
+        INNER JOIN user_personal_info upi ON uc.user_id_hash = encode(digest(upi.user_id, 'sha256'), 'hex')
         WHERE uc.privacy_accepted_at IS NOT NULL
         AND uc.privacy_accepted_at > NOW() - INTERVAL '${parseInt(days)} days'
         GROUP BY DATE(uc.privacy_accepted_at)
@@ -380,7 +387,7 @@ router.get('/compliance-dashboard/timeline', async (req, res) => {
       documentType,
       timeline: Object.values(timeline).sort((a, b) => new Date(b.date) - new Date(a.date))
     });
-    } catch (error) {
+  } catch (error) {
     return serverError(res, 'Failed to get compliance timeline');
   }
 });
@@ -398,7 +405,7 @@ router.get('/compliance-dashboard/export', async (req, res) => {
     // so the export only includes consent records belonging to active accounts
     const consentsResult = await db.query(`
       SELECT uc.* FROM user_consents uc
-      INNER JOIN user_personal_info upi ON uc.user_id_hash = upi.user_id_hash
+      INNER JOIN user_personal_info upi ON uc.user_id_hash = encode(digest(upi.user_id, 'sha256'), 'hex')
       ORDER BY uc.updated_at DESC
     `);
 
@@ -436,7 +443,7 @@ router.get('/compliance-dashboard/export', async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="compliance-export-${new Date().getTime()}.json"`);
 
     return res.json(exportData);
-    } catch (error) {
+  } catch (error) {
     return serverError(res, 'Failed to export compliance data');
   }
 });

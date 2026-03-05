@@ -4,9 +4,11 @@
  *
  * Access-control tiers:
  *   - Whitelisted IPs may create / reset unlimited sessions (testers / QA).
- *   - A non-whitelisted IP that already has any session is blocked unless the
- *     same user is resuming their own session.
- *   - A user with an existing session on a different IP is always allowed to resume.
+ *   - A non-whitelisted IP whose most recent session is COMPLETED and belongs to a
+ *     different user_id_hash is blocked (the device has exhausted its free trial).
+ *   - A non-whitelisted IP whose most recent session is INCOMPLETE is allowed to
+ *     create a fresh session (covers returning users who cleared localStorage).
+ *   - The same user_id_hash on any IP always resumes their own session.
  */
 
 import crypto from 'crypto';
@@ -51,7 +53,15 @@ async function checkSessionAccess(ipHash, userIdHash) {
   if (ipRows.length > 0 && !isWhitelisted) {
     const session = ipRows[0];
     if (session.user_id_hash === userIdHash) return { action: 'resume', session };
-    return { action: 'block' };
+    // Only block if the device has already COMPLETED a free trial.
+    // An incomplete/abandoned session on the same IP (e.g. the user cleared
+    // localStorage mid-trial, or the browser wiped storage) must NOT prevent
+    // a fresh attempt — that would permanently lock out the device even though
+    // no trial was ever finished.  Only a completed session means the device
+    // has exhausted its free trial.
+    if (session.is_completed) return { action: 'block' };
+    // Incomplete session from a different user_id → fall through to 'create'
+    // so a clean new session is inserted for the current user.
   }
 
   const { rows: userRows } = await db.query(

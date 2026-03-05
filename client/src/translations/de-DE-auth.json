@@ -62,7 +62,13 @@
                                     }
                      },
     "twoFactor":  {
-                      "title":  "Zwei-Faktor-Authentifizierung",
+      "title":  "Zwei-Faktor-Authentifizierung",
+      "resendCooldown": "In {{seconds}}s erneut senden",
+      "resendSuccess": "✓ Neuer Code gesendet! Prüfen Sie Ihre E-Mail.",
+      "resendFailed": "Code konnte nicht gesendet werden. Bitte erneut versuchen.",
+      "codeInfo": "⏱️ Code 10 Minuten gültig",
+      "trustDevice": "Diesem Gerät vertrauen",
+      "trustDeviceHint": "2FA in diesem Browser beim nächsten Mal überspringen",
                       "message":  "Geben Sie den Code ein, der an {{method}} gesendet wurde",
                       "enterCode":  "Verifikationscode eingeben",
                       "verify":  "ÃœberprÃ¼fen",

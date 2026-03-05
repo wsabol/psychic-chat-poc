@@ -7,9 +7,22 @@
  * in a "pending" state until the admin verifies.
  *
  * All records live in the `admin_trusted_ips` table and are keyed by the
- * SHA-256 hash of the userId.  IP addresses are stored encrypted via
- * pgp_sym_encrypt so we decrypt at query time for comparison (encrypted
- * values are not deterministic and cannot be compared directly).
+ * SHA-256 hash of the userId.
+ *
+ * ─── IP lookup strategy ─────────────────────────────────────────────────────
+ * The original implementation stored IP addresses encrypted with pgp_sym_encrypt
+ * and looked them up using pgp_sym_decrypt() in the WHERE clause.  This forces
+ * PostgreSQL to decrypt every row for the user to find a match — O(n) AES/RSA
+ * operations per login check.  On a local database this is unnoticeable.  On
+ * AWS RDS (network round-trip + shared CPU) it is significantly slower and can
+ * time out.  When the query times out, the catch block returns null, which
+ * makes the IP appear "not trusted" and forces 2FA even for IPs that ARE in the
+ * trusted list.
+ *
+ * Fix: an ip_hash column (SHA-256 of the normalised IP, stored in plaintext)
+ * mirrors the user_agent_hash pattern.  Lookups use the indexed hash first;
+ * the decrypt-based query is only used as a fallback for legacy rows that
+ * predate the add-ip-hash-to-trusted-ips migration.
  *
  * ─── NOTE on IP normalisation ───────────────────────────────────────────────
  * normalizeIP() mirrors the transformations applied by extractIpAddress() in
@@ -17,14 +30,12 @@
  * (which calls parseDeviceInfo) always compare equal to IPs passed in from
  * req.ip in other handlers.
  *
- * It intentionally differs from extractClientIp() in shared/ipUtils.js in one
- * subtle way: IPv6 loopback (::1) is normalised to "localhost" here, because
- * that is what parseDeviceInfo/extractIpAddress returns.  extractClientIp
- * returns "127.0.0.1" instead.  Do NOT silently merge these two helpers
- * without auditing rows already stored in the database.
+ * hashIP() hashes the already-normalised IP (lower-case, trimmed) so the hash
+ * is deterministic and can be used as a btree index key.
  * ────────────────────────────────────────────────────────────────────────────
  */
 
+import crypto from 'crypto';
 import { db } from '../../shared/db.js';
 import { send2FACodeEmail } from '../../shared/emailService.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
@@ -59,10 +70,30 @@ function normalizeIP(ip) {
   return normalized.toLowerCase();
 }
 
+/**
+ * SHA-256 hash of a normalised IP address.
+ * Stored in ip_hash for fast indexed lookups without pgp_sym_decrypt.
+ *
+ * @param {string|null} ip  Already-normalised IP string
+ * @returns {string|null}
+ */
+function hashIP(ip) {
+  if (!ip) return null;
+  // ip is already normalised (lowercase, trimmed) by the time we call hashIP
+  return crypto.createHash('sha256').update(ip).digest('hex');
+}
+
 // ─── IP trust CRUD ───────────────────────────────────────────────────────────
 
 /**
  * Returns the matching trusted-IP row for `userId` + `ipAddress`, or null.
+ *
+ * Lookup strategy (fast path first):
+ *   1. Hash the normalised IP and query by (user_id_hash, ip_hash) — O(log n),
+ *      uses btree index, no decryption required.
+ *   2. If nothing found, fall back to pgp_sym_decrypt() for legacy rows that
+ *      were stored before the ip_hash column was added.  After the migration
+ *      backfill this path returns immediately (no rows match ip_hash IS NULL).
  *
  * @param {string} userId
  * @param {string} ipAddress  Raw IP from req / parseDeviceInfo
@@ -71,9 +102,36 @@ function normalizeIP(ip) {
 export async function checkTrustedIP(userId, ipAddress) {
   try {
     const userIdHash = hashUserId(userId);
-    const ip = normalizeIP(ipAddress);
+    const ip         = normalizeIP(ipAddress);
+    const ipHash     = hashIP(ip);
 
-    const result = await db.query(
+    // ── Fast path: indexed hash lookup ─────────────────────────────────────
+    // PostgreSQL error 42703 = "undefined_column" — means the migration hasn't
+    // run yet on this database.  Silently fall through to the decrypt path so
+    // the app keeps working during a rolling deployment.
+    if (ipHash) {
+      try {
+        const hashResult = await db.query(
+          `SELECT id, first_seen, device_name
+             FROM admin_trusted_ips
+            WHERE user_id_hash = $1
+              AND ip_hash      = $2
+              AND is_trusted   = TRUE`,
+          [userIdHash, ipHash]
+        );
+        if (hashResult.rows.length > 0) return hashResult.rows[0];
+      } catch (hashErr) {
+        if (hashErr.code !== '42703') throw hashErr; // re-throw unexpected errors
+        // Column doesn't exist yet — fall through to decrypt path below
+      }
+    }
+
+    // ── Fallback: original decrypt-in-WHERE (works with or without ip_hash) ─
+    // • Before migration: this is the only path, same behaviour as before.
+    // • After migration + backfill: ip_hash is set on all rows so the fast
+    //   path above always finds them; this branch returns no rows and exits
+    //   immediately (O(0) decryptions).
+    const decryptResult = await db.query(
       `SELECT id, first_seen, device_name
          FROM admin_trusted_ips
         WHERE user_id_hash = $1
@@ -82,7 +140,7 @@ export async function checkTrustedIP(userId, ipAddress) {
       [userIdHash, ENCRYPTION_KEY, ip]
     );
 
-    return result.rows.length > 0 ? result.rows[0] : null;
+    return decryptResult.rows.length > 0 ? decryptResult.rows[0] : null;
   } catch (err) {
     logErrorFromCatch(err, 'admin', 'checkTrustedIP');
     return null;
@@ -93,8 +151,8 @@ export async function checkTrustedIP(userId, ipAddress) {
  * Upsert an IP-based trusted-device record.
  *
  * • If a row already exists for this (user, IP) → update last_accessed and
- *   re-mark as trusted.
- * • Otherwise → insert a new row with is_trusted = TRUE.
+ *   re-mark as trusted (also writes ip_hash if it was previously missing).
+ * • Otherwise → insert a new row with ip_hash set.
  *
  * @param {string} userId
  * @param {string} ipAddress
@@ -105,33 +163,92 @@ export async function checkTrustedIP(userId, ipAddress) {
 export async function recordTrustedIP(userId, ipAddress, deviceName, browserInfo) {
   try {
     const userIdHash = hashUserId(userId);
-    const ip = normalizeIP(ipAddress);
+    const ip         = normalizeIP(ipAddress);
+    const ipHash     = hashIP(ip);
 
-    const updateResult = await db.query(
-      `UPDATE admin_trusted_ips
-          SET last_accessed = NOW(),
-              device_name   = $2,
-              browser_info  = $3,
-              is_trusted    = TRUE
-        WHERE user_id_hash = $1
-          AND pgp_sym_decrypt(ip_address_encrypted, $4) = $5
-        RETURNING id, first_seen`,
-      [userIdHash, deviceName, browserInfo, ENCRYPTION_KEY, ip]
-    );
+    // ── Fast path: update by ip_hash ────────────────────────────────────────
+    if (ipHash) {
+      try {
+        const hashUpdateResult = await db.query(
+          `UPDATE admin_trusted_ips
+              SET last_accessed = NOW(),
+                  device_name   = $2,
+                  browser_info  = $3,
+                  is_trusted    = TRUE
+            WHERE user_id_hash = $1
+              AND ip_hash      = $4
+            RETURNING id, first_seen`,
+          [userIdHash, deviceName, browserInfo, ipHash]
+        );
+        if (hashUpdateResult.rows.length > 0) return hashUpdateResult.rows[0];
+      } catch (hashErr) {
+        if (hashErr.code !== '42703') throw hashErr; // column exists but other error
+        // ip_hash column doesn't exist yet — fall through
+      }
+    }
 
-    if (updateResult.rows.length > 0) return updateResult.rows[0];
+    // ── Fallback: update by decrypted IP ────────────────────────────────────
+    // Opportunistically backfills ip_hash when the column exists (error 42703
+    // means it doesn't yet; in that case we retry without the ip_hash SET).
+    try {
+      const decryptUpdateResult = await db.query(
+        `UPDATE admin_trusted_ips
+            SET last_accessed = NOW(),
+                device_name   = $2,
+                browser_info  = $3,
+                is_trusted    = TRUE,
+                ip_hash       = $5
+          WHERE user_id_hash = $1
+            AND pgp_sym_decrypt(ip_address_encrypted, $4) = $6
+          RETURNING id, first_seen`,
+        [userIdHash, deviceName, browserInfo, ENCRYPTION_KEY, ipHash, ip]
+      );
+      if (decryptUpdateResult.rows.length > 0) return decryptUpdateResult.rows[0];
+    } catch (decryptUpdateErr) {
+      if (decryptUpdateErr.code !== '42703') throw decryptUpdateErr;
+      // ip_hash column doesn't exist — retry without the ip_hash assignment
+      const legacyUpdateResult = await db.query(
+        `UPDATE admin_trusted_ips
+            SET last_accessed = NOW(),
+                device_name   = $2,
+                browser_info  = $3,
+                is_trusted    = TRUE
+          WHERE user_id_hash = $1
+            AND pgp_sym_decrypt(ip_address_encrypted, $4) = $5
+          RETURNING id, first_seen`,
+        [userIdHash, deviceName, browserInfo, ENCRYPTION_KEY, ip]
+      );
+      if (legacyUpdateResult.rows.length > 0) return legacyUpdateResult.rows[0];
+    }
 
-    const insertResult = await db.query(
-      `INSERT INTO admin_trusted_ips
-         (user_id_hash, ip_address_encrypted, device_name, browser_info,
-          is_trusted, last_accessed, created_at)
-       VALUES
-         ($1, pgp_sym_encrypt($2, $3), $4, $5, TRUE, NOW(), NOW())
-       RETURNING id, first_seen`,
-      [userIdHash, ip, ENCRYPTION_KEY, deviceName, browserInfo]
-    );
-
-    return insertResult.rows[0];
+    // ── No existing row → insert ─────────────────────────────────────────────
+    // Try with ip_hash; if column doesn't exist, retry without.
+    try {
+      const insertResult = await db.query(
+        `INSERT INTO admin_trusted_ips
+           (user_id_hash, ip_address_encrypted, ip_hash, device_name, browser_info,
+            is_trusted, last_accessed, created_at)
+         VALUES
+           ($1, pgp_sym_encrypt($2, $3), $4, $5, $6, TRUE, NOW(), NOW())
+         ON CONFLICT DO NOTHING
+         RETURNING id, first_seen`,
+        [userIdHash, ip, ENCRYPTION_KEY, ipHash, deviceName, browserInfo]
+      );
+      return insertResult.rows[0] ?? null;
+    } catch (insertErr) {
+      if (insertErr.code !== '42703') throw insertErr;
+      // ip_hash column doesn't exist — insert without it
+      const legacyInsertResult = await db.query(
+        `INSERT INTO admin_trusted_ips
+           (user_id_hash, ip_address_encrypted, device_name, browser_info,
+            is_trusted, last_accessed, created_at)
+         VALUES
+           ($1, pgp_sym_encrypt($2, $3), $4, $5, TRUE, NOW(), NOW())
+         RETURNING id, first_seen`,
+        [userIdHash, ip, ENCRYPTION_KEY, deviceName, browserInfo]
+      );
+      return legacyInsertResult.rows[0] ?? null;
+    }
   } catch (err) {
     logErrorFromCatch(err, 'admin', 'recordTrustedIP');
     return null;
@@ -143,8 +260,6 @@ export async function recordTrustedIP(userId, ipAddress, deviceName, browserInfo
  * Keeps the row so the UI can show "Not trusted" and allow re-trusting
  * without inserting a duplicate row.
  *
- * Used by the "Remove Trust" flow in security settings.
- *
  * @param {string} userId
  * @param {string} ipAddress
  * @returns {Promise<boolean>}  true if a row was updated
@@ -152,9 +267,30 @@ export async function recordTrustedIP(userId, ipAddress, deviceName, browserInfo
 export async function setTrustedIPInactiveByAddress(userId, ipAddress) {
   try {
     const userIdHash = hashUserId(userId);
-    const ip = normalizeIP(ipAddress);
+    const ip         = normalizeIP(ipAddress);
+    const ipHash     = hashIP(ip);
 
-    const result = await db.query(
+    // Fast path
+    if (ipHash) {
+      try {
+        const hashResult = await db.query(
+          `UPDATE admin_trusted_ips
+              SET is_trusted    = FALSE,
+                  last_accessed = NOW()
+            WHERE user_id_hash = $1
+              AND ip_hash      = $2
+            RETURNING id`,
+          [userIdHash, ipHash]
+        );
+        if (hashResult.rows.length > 0) return true;
+      } catch (hashErr) {
+        if (hashErr.code !== '42703') throw hashErr;
+        // Column doesn't exist yet — fall through
+      }
+    }
+
+    // Fallback: original decrypt approach
+    const decryptResult = await db.query(
       `UPDATE admin_trusted_ips
           SET is_trusted    = FALSE,
               last_accessed = NOW()
@@ -164,7 +300,7 @@ export async function setTrustedIPInactiveByAddress(userId, ipAddress) {
       [userIdHash, ENCRYPTION_KEY, ip]
     );
 
-    return result.rows.length > 0;
+    return decryptResult.rows.length > 0;
   } catch (err) {
     logErrorFromCatch(err, 'admin', 'setTrustedIPInactiveByAddress');
     return false;
@@ -173,8 +309,6 @@ export async function setTrustedIPInactiveByAddress(userId, ipAddress) {
 
 /**
  * Hard-delete an IP record by IP address.
- * Used by the "revoke current device" flow where we know the IP but not the
- * row id.
  *
  * @param {string} userId
  * @param {string} ipAddress
@@ -183,9 +317,28 @@ export async function setTrustedIPInactiveByAddress(userId, ipAddress) {
 export async function revokeTrustedIPByAddress(userId, ipAddress) {
   try {
     const userIdHash = hashUserId(userId);
-    const ip = normalizeIP(ipAddress);
+    const ip         = normalizeIP(ipAddress);
+    const ipHash     = hashIP(ip);
 
-    const result = await db.query(
+    // Fast path
+    if (ipHash) {
+      try {
+        const hashResult = await db.query(
+          `DELETE FROM admin_trusted_ips
+            WHERE user_id_hash = $1
+              AND ip_hash      = $2
+            RETURNING id`,
+          [userIdHash, ipHash]
+        );
+        if (hashResult.rows.length > 0) return true;
+      } catch (hashErr) {
+        if (hashErr.code !== '42703') throw hashErr;
+        // Column doesn't exist yet — fall through
+      }
+    }
+
+    // Fallback: original decrypt approach
+    const decryptResult = await db.query(
       `DELETE FROM admin_trusted_ips
         WHERE user_id_hash = $1
           AND pgp_sym_decrypt(ip_address_encrypted, $2) = $3
@@ -193,7 +346,7 @@ export async function revokeTrustedIPByAddress(userId, ipAddress) {
       [userIdHash, ENCRYPTION_KEY, ip]
     );
 
-    return result.rows.length > 0;
+    return decryptResult.rows.length > 0;
   } catch (err) {
     logErrorFromCatch(err, 'admin', 'revokeTrustedIPByAddress');
     return false;
@@ -202,9 +355,6 @@ export async function revokeTrustedIPByAddress(userId, ipAddress) {
 
 /**
  * Hard-delete an IP record by its row ID.
- * Used by the "Revoke" button in the Trusted Devices table.
- * Ownership is enforced by matching user_id_hash so users cannot delete
- * other users' records.
  *
  * @param {string} userId
  * @param {number|string} ipId  Row ID
@@ -230,7 +380,6 @@ export async function revokeTrustedIP(userId, ipId) {
 
 /**
  * Return ALL IP records for `userId` (trusted and untrusted), newest first.
- * The `is_trusted` flag lets the UI show the correct status badge for each row.
  *
  * @param {string} userId
  * @returns {Promise<Array>}

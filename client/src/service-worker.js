@@ -20,7 +20,7 @@ import {
   precacheAndRoute,
   createHandlerBoundToURL,
 } from 'workbox-precaching';
-import { registerRoute, NavigationRoute } from 'workbox-routing';
+import { registerRoute, NavigationRoute, setCatchHandler } from 'workbox-routing';
 import {
   NetworkOnly,
   CacheFirst,
@@ -117,8 +117,8 @@ self.addEventListener('install', (event) => {
   );
 });
 
-self.setCatchHandler(async ({ request }) => {
-  if (request.destination === 'document') {
+setCatchHandler(async ({ event }) => {
+  if (event.request.destination === 'document') {
     const cache = await caches.open('offline-fallback');
     return (await cache.match('/offline.html')) || Response.error();
   }

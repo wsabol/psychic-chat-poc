@@ -21,6 +21,7 @@ import { Router } from 'express';
 import { authenticateToken } from '../../../middleware/auth.js';
 import { verify2FAHandler } from './verify.js';
 import { check2FAHandler } from './check.js';
+import { verify2FALinkHandler } from './magicLink.js';
 import {
   checkCurrentDeviceTrustHandler,
   trustCurrentDeviceHandler,
@@ -35,6 +36,8 @@ const router = Router();
 // --- 2FA challenge flow (no auth token required – user is mid-login) ---
 router.post('/verify-2fa', verify2FAHandler);
 router.post('/check-2fa/:userId', check2FAHandler);
+// Magic-link email verification (GET so email clients open it directly)
+router.get('/verify-2fa-link', verify2FALinkHandler);
 
 // --- Device trust management (full auth required) ---
 router.get('/check-current-device-trust/:userId', authenticateToken, checkCurrentDeviceTrustHandler);

@@ -568,6 +568,7 @@ CREATE TABLE IF NOT EXISTS admin_trusted_ips (
     id SERIAL PRIMARY KEY,
     user_id_hash VARCHAR(255) NOT NULL,
     ip_address_encrypted BYTEA NOT NULL,
+    ip_hash VARCHAR(64),                -- SHA-256(normalised IP) for fast indexed lookups
     user_agent_encrypted BYTEA,
     user_agent_hash VARCHAR(64),
     device_name VARCHAR(255),
@@ -587,6 +588,14 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_admin_trusted_ips_ua_unique
     ON admin_trusted_ips (user_id_hash, user_agent_hash)
     WHERE user_agent_hash IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_admin_trusted_ips_ua_hash ON admin_trusted_ips(user_id_hash, user_agent_hash);
+-- Fast IP-hash lookup index (avoids pgp_sym_decrypt in WHERE clause — fixes slow trusted-IP
+-- checks on AWS RDS vs local PostgreSQL)
+CREATE INDEX IF NOT EXISTS idx_admin_trusted_ips_ip_hash
+    ON admin_trusted_ips (user_id_hash, ip_hash)
+    WHERE ip_hash IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_admin_trusted_ips_ip_hash_unique
+    ON admin_trusted_ips (user_id_hash, ip_hash)
+    WHERE ip_hash IS NOT NULL;
 
 -- TABLE: admin_login_attempts (Admin login audit trail)
 CREATE TABLE IF NOT EXISTS admin_login_attempts (

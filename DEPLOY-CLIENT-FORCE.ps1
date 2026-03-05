@@ -62,31 +62,33 @@ Write-Host ""
 # Step 5: Sync to S3 with proper content types
 Write-Host "[5/6] Syncing to S3 with proper content types..." -ForegroundColor Yellow
 
+$BUILD_PATH = "$PSScriptRoot\client\build"
+
 # Sync HTML files with proper content type and no cache
-aws s3 sync build/ s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.html" --content-type "text/html" --cache-control "no-cache, no-store, must-revalidate"
+aws s3 sync $BUILD_PATH s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.html" --content-type "text/html" --cache-control "no-cache, no-store, must-revalidate"
 
 # Sync JSON files with proper content type
-aws s3 sync build/ s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.json" --content-type "application/json" --cache-control "no-cache, no-store, must-revalidate"
+aws s3 sync $BUILD_PATH s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.json" --content-type "application/json" --cache-control "no-cache, no-store, must-revalidate"
 
 # Sync CSS files with proper content type and cache
-aws s3 sync build/ s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.css" --content-type "text/css" --cache-control "public, max-age=31536000, immutable"
+aws s3 sync $BUILD_PATH s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.css" --content-type "text/css" --cache-control "public, max-age=31536000, immutable"
 
 # Sync JS files with proper content type and cache
-aws s3 sync build/ s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.js" --content-type "application/javascript" --cache-control "public, max-age=31536000, immutable"
+aws s3 sync $BUILD_PATH s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.js" --content-type "application/javascript" --cache-control "public, max-age=31536000, immutable"
 
 # Sync image files (PNG, JPG, JPEG, GIF, SVG, ICO)
-aws s3 sync build/ s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.png" --content-type "image/png" --cache-control "public, max-age=31536000, immutable"
-aws s3 sync build/ s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.jpg" --content-type "image/jpeg" --cache-control "public, max-age=31536000, immutable"
-aws s3 sync build/ s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.jpeg" --content-type "image/jpeg" --cache-control "public, max-age=31536000, immutable"
-aws s3 sync build/ s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.gif" --content-type "image/gif" --cache-control "public, max-age=31536000, immutable"
-aws s3 sync build/ s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.svg" --content-type "image/svg+xml" --cache-control "public, max-age=31536000, immutable"
-aws s3 sync build/ s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.ico" --content-type "image/x-icon" --cache-control "public, max-age=31536000, immutable"
+aws s3 sync $BUILD_PATH s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.png" --content-type "image/png" --cache-control "public, max-age=31536000, immutable"
+aws s3 sync $BUILD_PATH s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.jpg" --content-type "image/jpeg" --cache-control "public, max-age=31536000, immutable"
+aws s3 sync $BUILD_PATH s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.jpeg" --content-type "image/jpeg" --cache-control "public, max-age=31536000, immutable"
+aws s3 sync $BUILD_PATH s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.gif" --content-type "image/gif" --cache-control "public, max-age=31536000, immutable"
+aws s3 sync $BUILD_PATH s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.svg" --content-type "image/svg+xml" --cache-control "public, max-age=31536000, immutable"
+aws s3 sync $BUILD_PATH s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.ico" --content-type "image/x-icon" --cache-control "public, max-age=31536000, immutable"
 
 # Sync PDF files
-aws s3 sync build/ s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.pdf" --content-type "application/pdf" --cache-control "public, max-age=86400"
+aws s3 sync $BUILD_PATH s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.pdf" --content-type "application/pdf" --cache-control "public, max-age=86400"
 
 # Sync any remaining files (fonts, etc.)
-aws s3 sync build/ s3://$S3_BUCKET/ --delete --region $REGION --exclude "*.html" --exclude "*.json" --exclude "*.css" --exclude "*.js" --exclude "*.png" --exclude "*.jpg" --exclude "*.jpeg" --exclude "*.gif" --exclude "*.svg" --exclude "*.ico" --exclude "*.pdf"
+aws s3 sync $BUILD_PATH s3://$S3_BUCKET/ --delete --region $REGION --exclude "*.html" --exclude "*.json" --exclude "*.css" --exclude "*.js" --exclude "*.png" --exclude "*.jpg" --exclude "*.jpeg" --exclude "*.gif" --exclude "*.svg" --exclude "*.ico" --exclude "*.pdf"
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "✗ S3 sync failed" -ForegroundColor Red

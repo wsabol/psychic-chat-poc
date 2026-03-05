@@ -67,14 +67,26 @@
   },
   "twoFactor": {
     "title": "Two-Factor Authentication",
-    "message": "Enter the code sent to {{method}}",
-    "enterCode": "Enter verification code",
+    "message": "Enter the 6-digit code sent to your {{method}}",
+    "enterCode": "Enter 6-digit code",
     "verify": "Verify",
     "resend": "Resend Code",
+    "resendCooldown": "Resend in {{seconds}}s",
+    "resendSuccess": "✓ New code sent! Check your email.",
+    "resendFailed": "Failed to send code. Please try again.",
+    "codeInfo": "⏱️ Code valid for 10 minutes",
+    "trustDevice": "Trust this device",
+    "trustDeviceHint": "Skip 2FA on this browser next time",
     "errors": {
-      "invalidCode": "Invalid code",
-      "expired": "Code has expired",
+      "invalidCode": "Invalid or expired code. Please try again.",
+      "expired": "Code has expired. Please request a new code.",
       "tooManyAttempts": "Too many attempts. Please try again later."
+    },
+    "linkErrors": {
+      "expired": "The verification link has expired. Please enter the code or request a new one.",
+      "invalid": "Invalid verification link. Please enter the code manually.",
+      "already_used": "This link has already been used. Please enter the code or request a new one.",
+      "server_error": "Server error during verification. Please enter the code manually."
     }
   },
   "passwords": {

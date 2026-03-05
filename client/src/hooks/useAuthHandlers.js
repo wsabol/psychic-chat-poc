@@ -25,6 +25,18 @@ export function useAuthHandlers(auth, modals, tempFlow) {
             await auth.createTemporaryAccount();
         } catch (err) {
             logErrorFromCatch('Failed to create temporary account:', err);
+            // Surface the error to the user so the button doesn't silently do nothing.
+            // A 429 from the server means the device's free trial was already completed.
+            if (
+                err.message?.includes('already used') ||
+                err.message?.includes('already started') ||
+                err.message?.includes('free trial')
+            ) {
+                alert('Your free trial has already been used from this device. Please create an account to continue.');
+                setShowRegisterMode(true);
+            } else {
+                alert('Unable to start free trial. Please try again in a moment.');
+            }
         }
     }, [auth, canTryFree, setShowRegisterMode]);
 

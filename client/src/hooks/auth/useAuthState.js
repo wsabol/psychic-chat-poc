@@ -112,21 +112,24 @@ export function useAuthState(checkBillingStatus) {
                   autoVerified = firebaseUser.emailVerified;
                 }
               } catch (markErr) {
-                // Non-blocking — fall back to legacy verification screen on error.
+                // Non-blocking — fall back gracefully on network error.
               }
 
               if (!autoVerified) {
-                // Fallback: show the legacy email-verification screen.
-                setShowTwoFactor(false);
-                setIsAuthenticated(true);
-                if (!billingCheckedRef.current.has(firebaseUser.uid)) {
-                  billingCheckedRef.current.add(firebaseUser.uid);
-                  checkBillingStatus(idToken, firebaseUser.uid);
-                }
-                setLoading(false);
-                return;
+                // FIXED: Do NOT return early and skip the 2FA check.
+                // On Safari / Brave / Edge, the mark-email-verified request can
+                // fail due to strict privacy settings or network conditions.
+                // Previously this caused an early return that completely bypassed
+                // the 2FA flow, so users never saw the code-entry screen.
+                //
+                // Instead: override emailVerified locally to true so the routing
+                // layer doesn't redirect to the legacy link-click screen after
+                // 2FA completes. Our 2FA code is sent to the email address, so
+                // receiving it proves email access — equivalent to verification.
+                setEmailVerified(true);
+                // Fall through to the 2FA check below.
               }
-              // autoVerified === true: fall through to the 2FA check below.
+              // autoVerified or locally-overridden: fall through to 2FA check.
             }
 
             // Log login to audit

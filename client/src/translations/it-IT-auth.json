@@ -67,6 +67,12 @@
   },
   "twoFactor": {
     "title": "Autenticazione a Due Fattori",
+    "resendCooldown": "Reinvia tra {{seconds}}s",
+    "resendSuccess": "✓ Nuovo codice inviato! Controlla la tua email.",
+    "resendFailed": "Impossibile inviare il codice. Riprova.",
+    "codeInfo": "⏱️ Codice valido per 10 minuti",
+    "trustDevice": "Considera affidabile questo dispositivo",
+    "trustDeviceHint": "Salta 2FA su questo browser la prossima volta",
     "message": "Inserisci il codice inviato a {{method}}",
     "enterCode": "Inserisci il codice di verifica",
     "verify": "Verifica",

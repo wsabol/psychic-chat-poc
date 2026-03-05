@@ -15,6 +15,7 @@ import {
 } from './versionConfig.js';
 import VERSION_CONFIG from './versionConfig.js';
 import { logAudit } from './auditLog.js';
+import { logErrorFromCatch } from './errorLogger.js';
 
 /**
  * Check user's compliance status
@@ -176,7 +177,7 @@ export async function getComplianceReport() {
         COUNT(*) FILTER (WHERE uc.requires_consent_update = true) as requires_action_count,
         MAX(uc.terms_accepted_at) as latest_acceptance
       FROM user_consents uc
-      INNER JOIN user_personal_info upi ON uc.user_id_hash = upi.user_id_hash
+      INNER JOIN user_personal_info upi ON uc.user_id_hash = encode(digest(upi.user_id, 'sha256'), 'hex')
       GROUP BY uc.terms_version
       
       UNION ALL
@@ -190,7 +191,7 @@ export async function getComplianceReport() {
         COUNT(*) FILTER (WHERE uc.requires_consent_update = true) as requires_action_count,
         MAX(uc.privacy_accepted_at) as latest_acceptance
       FROM user_consents uc
-      INNER JOIN user_personal_info upi ON uc.user_id_hash = upi.user_id_hash
+      INNER JOIN user_personal_info upi ON uc.user_id_hash = encode(digest(upi.user_id, 'sha256'), 'hex')
       GROUP BY uc.privacy_version
       ORDER BY version DESC
     `);
@@ -234,7 +235,7 @@ export async function getUsersRequiringAction() {
           AND created_at > NOW() - INTERVAL '7 days'
         ) as recent_activity_count
       FROM user_consents uc
-      INNER JOIN user_personal_info upi ON uc.user_id_hash = upi.user_id_hash
+      INNER JOIN user_personal_info upi ON uc.user_id_hash = encode(digest(upi.user_id, 'sha256'), 'hex')
       WHERE uc.requires_consent_update = true
       ORDER BY uc.last_notified_at ASC NULLS FIRST
       LIMIT 1000

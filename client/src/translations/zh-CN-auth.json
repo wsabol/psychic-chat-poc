@@ -63,6 +63,12 @@
   },
   "twoFactor": {
     "title": "双因素认证",
+    "resendCooldown": "{{seconds}}秒后重新发送",
+    "resendSuccess": "✓ 新验证码已发送！请检查您的邮件。",
+    "resendFailed": "发送验证码失败，请重试。",
+    "codeInfo": "⏱️ 验证码有效期10分钟",
+    "trustDevice": "信任此设备",
+    "trustDeviceHint": "下次在此浏览器跳过双因素认证",
     "message": "输入发送到{{method}}的代码",
     "enterCode": "输入验证码",
     "verify": "验证",

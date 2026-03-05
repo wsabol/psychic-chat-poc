@@ -158,12 +158,76 @@
   cursor: not-allowed;
 }
 
-.twofa-code-expiry {
+/* Info text (replaces the old always-shown "expired" text) */
+.twofa-code-info {
   text-align: center;
   color: #8080a0;
   font-size: 0.85rem;
-  margin: 0;
+  margin: 0.25rem 0 0 0;
   font-weight: 500;
+}
+
+/* Resend button */
+.twofa-resend-button {
+  padding: 0.65rem;
+  background: transparent;
+  color: #7c63d8;
+  border: 1px solid rgba(124, 99, 216, 0.4);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.5px;
+  width: 100%;
+}
+
+.twofa-resend-button:hover:not(:disabled) {
+  background: rgba(124, 99, 216, 0.1);
+  border-color: #7c63d8;
+}
+
+.twofa-resend-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Inline resend link inside error box */
+.twofa-inline-resend {
+  background: none;
+  border: none;
+  color: #ffb347;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: inherit;
+  padding: 0;
+  font-weight: 600;
+}
+
+.twofa-inline-resend:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Resend feedback messages */
+.twofa-resend-message {
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  text-align: center;
+  font-weight: 500;
+}
+
+.twofa-resend-success {
+  background: rgba(50, 200, 100, 0.12);
+  border: 1px solid rgba(50, 200, 100, 0.4);
+  color: #5cd65c;
+}
+
+.twofa-resend-error {
+  background: rgba(220, 53, 69, 0.12);
+  border: 1px solid rgba(220, 53, 69, 0.4);
+  color: #ff8888;
 }
 
 .twofa-screen-footer {
