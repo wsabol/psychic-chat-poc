@@ -35,12 +35,13 @@ export function TermsCheckbox({
     }}>
       <label style={{ 
         display: 'flex', 
-        alignItems: 'flex-start', 
+        alignItems: 'center',
         gap: '0.5rem', 
         cursor: 'pointer', 
         marginBottom: '0.75rem' 
-      }}>
+      }} htmlFor={'terms-checkbox'}>
         <input
+            id={'terms-checkbox'}
           type="checkbox"
           checked={termsAccepted}
           onChange={(e) => onTermsChange(e.target.checked)}
@@ -80,12 +81,13 @@ export function TermsCheckbox({
 
       <label style={{ 
         display: 'flex', 
-        alignItems: 'flex-start', 
+        alignItems: 'center',
         gap: '0.5rem', 
         cursor: 'pointer',
         marginBottom: '0.75rem'
-      }}>
+      }} htmlFor={'privacy-checkbox'}>
         <input
+            id={'privacy-checkbox'}
           type="checkbox"
           checked={privacyAccepted}
           onChange={(e) => onPrivacyChange(e.target.checked)}
