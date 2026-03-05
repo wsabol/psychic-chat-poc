@@ -164,30 +164,34 @@ export async function flagUsersForUpdate(documentType = 'both') {
  */
 export async function getComplianceReport() {
   try {
+    // INNER JOIN ensures orphaned consent records (no matching user_personal_info row)
+    // are excluded, so counts only reflect users with active accounts
     const result = await db.query(`
       SELECT 
         'terms' as document_type,
-        terms_version as version,
+        uc.terms_version as version,
         COUNT(*) as total_users,
-        COUNT(*) FILTER (WHERE terms_accepted = true) as accepted_count,
-        COUNT(*) FILTER (WHERE terms_accepted = true) * 100.0 / NULLIF(COUNT(*), 0) as acceptance_percentage,
-        COUNT(*) FILTER (WHERE requires_consent_update = true) as requires_action_count,
-        MAX(terms_accepted_at) as latest_acceptance
-      FROM user_consents
-      GROUP BY terms_version
+        COUNT(*) FILTER (WHERE uc.terms_accepted = true) as accepted_count,
+        COUNT(*) FILTER (WHERE uc.terms_accepted = true) * 100.0 / NULLIF(COUNT(*), 0) as acceptance_percentage,
+        COUNT(*) FILTER (WHERE uc.requires_consent_update = true) as requires_action_count,
+        MAX(uc.terms_accepted_at) as latest_acceptance
+      FROM user_consents uc
+      INNER JOIN user_personal_info upi ON uc.user_id_hash = upi.user_id_hash
+      GROUP BY uc.terms_version
       
       UNION ALL
       
       SELECT 
         'privacy' as document_type,
-        privacy_version as version,
+        uc.privacy_version as version,
         COUNT(*) as total_users,
-        COUNT(*) FILTER (WHERE privacy_accepted = true) as accepted_count,
-        COUNT(*) FILTER (WHERE privacy_accepted = true) * 100.0 / NULLIF(COUNT(*), 0) as acceptance_percentage,
-        COUNT(*) FILTER (WHERE requires_consent_update = true) as requires_action_count,
-        MAX(privacy_accepted_at) as latest_acceptance
-      FROM user_consents
-      GROUP BY privacy_version
+        COUNT(*) FILTER (WHERE uc.privacy_accepted = true) as accepted_count,
+        COUNT(*) FILTER (WHERE uc.privacy_accepted = true) * 100.0 / NULLIF(COUNT(*), 0) as acceptance_percentage,
+        COUNT(*) FILTER (WHERE uc.requires_consent_update = true) as requires_action_count,
+        MAX(uc.privacy_accepted_at) as latest_acceptance
+      FROM user_consents uc
+      INNER JOIN user_personal_info upi ON uc.user_id_hash = upi.user_id_hash
+      GROUP BY uc.privacy_version
       ORDER BY version DESC
     `);
     
@@ -214,22 +218,25 @@ export async function getComplianceReport() {
  */
 export async function getUsersRequiringAction() {
   try {
+    // INNER JOIN ensures orphaned consent records (no matching user_personal_info row)
+    // are excluded - we only want to action real, active accounts
     const result = await db.query(`
       SELECT DISTINCT
-        user_id_hash,
-        requires_consent_update,
-        last_notified_at,
-        notification_count,
-        terms_version,
-        privacy_version,
+        uc.user_id_hash,
+        uc.requires_consent_update,
+        uc.last_notified_at,
+        uc.notification_count,
+        uc.terms_version,
+        uc.privacy_version,
         (
           SELECT COUNT(*) FROM messages 
-          WHERE user_id_hash = user_consents.user_id_hash 
+          WHERE user_id_hash = uc.user_id_hash 
           AND created_at > NOW() - INTERVAL '7 days'
         ) as recent_activity_count
-      FROM user_consents
-      WHERE requires_consent_update = true
-      ORDER BY last_notified_at ASC NULLS FIRST
+      FROM user_consents uc
+      INNER JOIN user_personal_info upi ON uc.user_id_hash = upi.user_id_hash
+      WHERE uc.requires_consent_update = true
+      ORDER BY uc.last_notified_at ASC NULLS FIRST
       LIMIT 1000
     `);
     

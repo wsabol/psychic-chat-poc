@@ -30,14 +30,17 @@ router.get('/compliance-dashboard/overview', async (req, res) => {
     const totalUsers = parseInt(totalUsersResult.rows[0].count);
 
     // Get overall compliance status
+    // INNER JOIN ensures we only count users who have an actual account (prevents orphaned
+    // consent records from inflating counts when accounts are deleted or never fully created)
     const complianceResult = await db.query(`
       SELECT 
         COUNT(*) as total_with_consents,
-        COUNT(*) FILTER (WHERE terms_version = $1 AND privacy_version = $2) as fully_compliant,
-        COUNT(*) FILTER (WHERE terms_version = $1) as terms_current,
-        COUNT(*) FILTER (WHERE privacy_version = $2) as privacy_current,
-        COUNT(*) FILTER (WHERE requires_consent_update = true) as requires_action
-      FROM user_consents
+        COUNT(*) FILTER (WHERE uc.terms_version = $1 AND uc.privacy_version = $2) as fully_compliant,
+        COUNT(*) FILTER (WHERE uc.terms_version = $1) as terms_current,
+        COUNT(*) FILTER (WHERE uc.privacy_version = $2) as privacy_current,
+        COUNT(*) FILTER (WHERE uc.requires_consent_update = true) as requires_action
+      FROM user_consents uc
+      INNER JOIN user_personal_info upi ON uc.user_id_hash = upi.user_id_hash
     `, [termsVersion, privacyVersion]);
 
     const compliance = complianceResult.rows[0];
@@ -90,34 +93,38 @@ router.get('/compliance-dashboard/overview', async (req, res) => {
  */
 router.get('/compliance-dashboard/acceptance-by-version', async (req, res) => {
   try {
+    // INNER JOIN ensures orphaned consent records (no matching user_personal_info row)
+    // are excluded from version-based counts
     const result = await db.query(`
       SELECT 
         'terms' as document_type,
-        terms_version as version,
+        uc.terms_version as version,
         COUNT(*) as total_users,
-        COUNT(*) FILTER (WHERE terms_accepted = true) as accepted,
-        COUNT(*) FILTER (WHERE terms_accepted = true) * 100.0 / NULLIF(COUNT(*), 0) as acceptance_percentage,
-        COUNT(*) FILTER (WHERE requires_consent_update = true) as requires_action,
-        MIN(terms_accepted_at) as earliest_acceptance,
-        MAX(terms_accepted_at) as latest_acceptance
-      FROM user_consents
-      WHERE terms_version IS NOT NULL
-      GROUP BY terms_version
+        COUNT(*) FILTER (WHERE uc.terms_accepted = true) as accepted,
+        COUNT(*) FILTER (WHERE uc.terms_accepted = true) * 100.0 / NULLIF(COUNT(*), 0) as acceptance_percentage,
+        COUNT(*) FILTER (WHERE uc.requires_consent_update = true) as requires_action,
+        MIN(uc.terms_accepted_at) as earliest_acceptance,
+        MAX(uc.terms_accepted_at) as latest_acceptance
+      FROM user_consents uc
+      INNER JOIN user_personal_info upi ON uc.user_id_hash = upi.user_id_hash
+      WHERE uc.terms_version IS NOT NULL
+      GROUP BY uc.terms_version
       
       UNION ALL
       
       SELECT 
         'privacy' as document_type,
-        privacy_version as version,
+        uc.privacy_version as version,
         COUNT(*) as total_users,
-        COUNT(*) FILTER (WHERE privacy_accepted = true) as accepted,
-        COUNT(*) FILTER (WHERE privacy_accepted = true) * 100.0 / NULLIF(COUNT(*), 0) as acceptance_percentage,
-        COUNT(*) FILTER (WHERE requires_consent_update = true) as requires_action,
-        MIN(privacy_accepted_at) as earliest_acceptance,
-        MAX(privacy_accepted_at) as latest_acceptance
-      FROM user_consents
-      WHERE privacy_version IS NOT NULL
-      GROUP BY privacy_version
+        COUNT(*) FILTER (WHERE uc.privacy_accepted = true) as accepted,
+        COUNT(*) FILTER (WHERE uc.privacy_accepted = true) * 100.0 / NULLIF(COUNT(*), 0) as acceptance_percentage,
+        COUNT(*) FILTER (WHERE uc.requires_consent_update = true) as requires_action,
+        MIN(uc.privacy_accepted_at) as earliest_acceptance,
+        MAX(uc.privacy_accepted_at) as latest_acceptance
+      FROM user_consents uc
+      INNER JOIN user_personal_info upi ON uc.user_id_hash = upi.user_id_hash
+      WHERE uc.privacy_version IS NOT NULL
+      GROUP BY uc.privacy_version
       
       ORDER BY document_type, version DESC
     `);
@@ -187,6 +194,7 @@ router.get('/compliance-dashboard/user-status', async (req, res) => {
     const limitPlaceholder  = queryParams.length === 4 ? '$3' : '$1';
     const offsetPlaceholder = queryParams.length === 4 ? '$4' : '$2';
 
+    // INNER JOIN filters out orphaned consent records that have no matching account
     const query = `
       SELECT 
         uc.user_id_hash,
@@ -201,6 +209,7 @@ router.get('/compliance-dashboard/user-status', async (req, res) => {
         uc.notification_count,
         uc.updated_at
       FROM user_consents uc
+      INNER JOIN user_personal_info upi ON uc.user_id_hash = upi.user_id_hash
       WHERE ${whereClause}
       ORDER BY uc.updated_at DESC
       LIMIT ${limitPlaceholder} OFFSET ${offsetPlaceholder}
@@ -208,6 +217,7 @@ router.get('/compliance-dashboard/user-status', async (req, res) => {
 
     const countQuery = `
       SELECT COUNT(*) as count FROM user_consents uc
+      INNER JOIN user_personal_info upi ON uc.user_id_hash = upi.user_id_hash
       WHERE ${whereClause}
     `;
 
@@ -257,17 +267,19 @@ router.get('/compliance-dashboard/user-status', async (req, res) => {
  */
 router.get('/compliance-dashboard/notification-metrics', async (req, res) => {
   try {
+    // INNER JOIN filters out orphaned consent records (no matching user_personal_info row)
     const result = await db.query(`
       SELECT 
         COUNT(*) as total_flagged,
-        COUNT(*) FILTER (WHERE last_notified_at IS NOT NULL) as notified,
-        COUNT(*) FILTER (WHERE last_notified_at IS NULL) as not_yet_notified,
-        ROUND(AVG(notification_count)::numeric, 2) as avg_notifications_per_user,
-        MAX(notification_count) as max_notifications,
-        COUNT(*) FILTER (WHERE last_notified_at IS NOT NULL AND requires_consent_update = false) as accepted_after_notification,
-        COUNT(*) FILTER (WHERE last_notified_at IS NOT NULL AND requires_consent_update = true) as still_requires_action_after_notification
-      FROM user_consents
-      WHERE requires_consent_update = true OR notification_count > 0
+        COUNT(*) FILTER (WHERE uc.last_notified_at IS NOT NULL) as notified,
+        COUNT(*) FILTER (WHERE uc.last_notified_at IS NULL) as not_yet_notified,
+        ROUND(AVG(uc.notification_count)::numeric, 2) as avg_notifications_per_user,
+        MAX(uc.notification_count) as max_notifications,
+        COUNT(*) FILTER (WHERE uc.last_notified_at IS NOT NULL AND uc.requires_consent_update = false) as accepted_after_notification,
+        COUNT(*) FILTER (WHERE uc.last_notified_at IS NOT NULL AND uc.requires_consent_update = true) as still_requires_action_after_notification
+      FROM user_consents uc
+      INNER JOIN user_personal_info upi ON uc.user_id_hash = upi.user_id_hash
+      WHERE uc.requires_consent_update = true OR uc.notification_count > 0
     `);
 
     const metrics = result.rows[0];
@@ -314,15 +326,17 @@ router.get('/compliance-dashboard/timeline', async (req, res) => {
   try {
     const { days = 30, documentType = 'both' } = req.query;
 
+    // INNER JOIN filters out orphaned consent records (no matching user_personal_info row)
     let query = `
       SELECT 
-        DATE(terms_accepted_at) as date,
+        DATE(uc.terms_accepted_at) as date,
         'terms' as document_type,
         COUNT(*) as acceptances
-      FROM user_consents
-      WHERE terms_accepted_at IS NOT NULL
-      AND terms_accepted_at > NOW() - INTERVAL '${parseInt(days)} days'
-      GROUP BY DATE(terms_accepted_at)
+      FROM user_consents uc
+      INNER JOIN user_personal_info upi ON uc.user_id_hash = upi.user_id_hash
+      WHERE uc.terms_accepted_at IS NOT NULL
+      AND uc.terms_accepted_at > NOW() - INTERVAL '${parseInt(days)} days'
+      GROUP BY DATE(uc.terms_accepted_at)
     `;
 
     if (documentType === 'both' || documentType === 'privacy') {
@@ -330,13 +344,14 @@ router.get('/compliance-dashboard/timeline', async (req, res) => {
         UNION ALL
         
         SELECT 
-          DATE(privacy_accepted_at) as date,
+          DATE(uc.privacy_accepted_at) as date,
           'privacy' as document_type,
           COUNT(*) as acceptances
-        FROM user_consents
-        WHERE privacy_accepted_at IS NOT NULL
-        AND privacy_accepted_at > NOW() - INTERVAL '${parseInt(days)} days'
-        GROUP BY DATE(privacy_accepted_at)
+        FROM user_consents uc
+        INNER JOIN user_personal_info upi ON uc.user_id_hash = upi.user_id_hash
+        WHERE uc.privacy_accepted_at IS NOT NULL
+        AND uc.privacy_accepted_at > NOW() - INTERVAL '${parseInt(days)} days'
+        GROUP BY DATE(uc.privacy_accepted_at)
       `;
     }
 
@@ -379,10 +394,12 @@ router.get('/compliance-dashboard/export', async (req, res) => {
     const termsVersion = getCurrentTermsVersion();
     const privacyVersion = getCurrentPrivacyVersion();
 
-    // Get all data
+    // INNER JOIN filters out orphaned consent records (no matching user_personal_info row)
+    // so the export only includes consent records belonging to active accounts
     const consentsResult = await db.query(`
-      SELECT * FROM user_consents
-      ORDER BY updated_at DESC
+      SELECT uc.* FROM user_consents uc
+      INNER JOIN user_personal_info upi ON uc.user_id_hash = upi.user_id_hash
+      ORDER BY uc.updated_at DESC
     `);
 
     // Build export
