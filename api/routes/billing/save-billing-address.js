@@ -55,6 +55,13 @@ router.post('/save-billing-address', authenticateToken, async (req, res) => {
       }
     }
 
+    // Persist the country code for currency resolution on future subscriptions.
+    // country_code is not PII and is stored plain for fast lookup.
+    await db.query(
+      `UPDATE user_personal_info SET country_code = $1 WHERE user_id = $2`,
+      [country.toUpperCase(), userId]
+    );
+
     return successResponse(res, {
       success: true,
       message: 'Billing address sent to payment processor',

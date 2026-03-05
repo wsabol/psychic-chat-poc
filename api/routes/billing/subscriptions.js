@@ -12,32 +12,52 @@ import {
   storeSubscriptionData,
 } from '../../services/stripeService.js';
 import { validationError, billingError, successResponse } from '../../utils/responses.js';
+import { getCurrencyForCountry, isSupportedCurrency } from '../../utils/currencyByCountry.js';
+import { db } from '../../shared/db.js';
 
 const router = express.Router();
 
 /**
  * Create subscription
  * ✅ OPTIMIZED: Database storage happens in background (fire-and-forget)
+ * ✅ GLOBAL: Accepts `country` to select correct local currency & payment methods
  */
 router.post('/create-subscription', authenticateToken, async (req, res) => {
   const startTime = Date.now();
   try {
-    const { priceId } = req.body;
+    const { priceId, country, currency: requestedCurrency } = req.body;
     const userId = req.user.userId;
     const userEmail = req.user.email;
 
     if (!priceId) {
       return validationError(res, 'priceId is required');
     }
-    const customerStart = Date.now();
+
+    // Resolve currency: explicit request > country lookup > fallback USD
+    let currency = 'usd';
+    if (requestedCurrency && isSupportedCurrency(requestedCurrency)) {
+      currency = requestedCurrency.toLowerCase();
+    } else if (country) {
+      currency = getCurrencyForCountry(country);
+    }
+
     const customerId = await getOrCreateStripeCustomer(userId, userEmail);
     
     if (!customerId) {
       return validationError(res, 'Stripe is not configured');
     }
+
+    // If a country was provided, update the Stripe customer address so that
+    // automatic_tax can determine the correct jurisdiction.
+    if (country) {
+      stripe.customers.update(customerId, {
+        address: { country },
+      }).catch(err => {
+        logErrorFromCatch(err, 'billing', 'update customer country', hashUserId(userId)).catch(() => {});
+      });
+    }
     
-    const stripeStart = Date.now();
-    const subscription = await createSubscription(customerId, priceId);
+    const subscription = await createSubscription(customerId, priceId, { currency, countryCode: country });
 
     // ✅ OPTIMIZED: Store subscription data in background (don't wait)
     // Return response immediately while database update happens in parallel
@@ -48,7 +68,9 @@ router.post('/create-subscription', authenticateToken, async (req, res) => {
       plan_name: subscription.items?.data?.[0]?.plan?.product?.name,
       price_amount: subscription.items?.data?.[0]?.price?.unit_amount,
       price_interval: subscription.items?.data?.[0]?.price?.recurring?.interval,
-        }).catch(err => {
+      currency,
+      country_code: country || null,
+    }).catch(err => {
       // Non-critical: Database storage failed, but Stripe subscription was created
       logErrorFromCatch(err, 'billing', 'store subscription data', hashUserId(userId)).catch(() => {});
     });

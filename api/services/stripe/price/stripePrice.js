@@ -8,7 +8,8 @@ import {
   PRODUCT_CONFIGS, 
   PRICE_DEFAULTS, 
   METADATA_TAGS,
-  STRIPE_LIMITS 
+  STRIPE_LIMITS,
+  buildCurrencyOptions,
 } from './priceConfig.js';
 
 /**
@@ -51,7 +52,10 @@ export async function createNewPrice(amount, interval) {
     // Create a new product for this price
     const product = await createProduct(interval);
 
-    // Create price for the product
+    // Build localised currency_options from the USD base amount
+    const currencyOptions = buildCurrencyOptions(amount);
+
+    // Create price for the product with multi-currency support
     const price = await stripe.prices.create({
       product: product.id,
       unit_amount: amount,
@@ -61,6 +65,7 @@ export async function createNewPrice(amount, interval) {
         interval_count: PRICE_DEFAULTS.intervalCount,
       },
       tax_behavior: PRICE_DEFAULTS.taxBehavior,
+      currency_options: currencyOptions,
       metadata: {
         created_by: METADATA_TAGS.createdBy,
         created_at: new Date().toISOString(),
@@ -121,14 +126,16 @@ export async function getAllActivePrices() {
       throw new Error('Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable.');
     }
 
-    // Get all active prices from Stripe
+    // Get all active prices from Stripe, excluding those whose parent product
+    // has been archived. Archived products have product.active === false even
+    // when their prices are still technically active.
     const prices = await stripe.prices.list({
       active: true,
       expand: ['data.product'],
       limit: STRIPE_LIMITS.priceListLimit,
     });
 
-    return prices.data;
+    return prices.data.filter(price => price.product?.active !== false);
   } catch (error) {
     logErrorFromCatch(error, 'stripe-price', 'get-all-active-prices');
     throw new Error(`Failed to fetch prices: ${error.message}`);

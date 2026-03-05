@@ -14,8 +14,10 @@ export async function storeSubscriptionData(userId, stripeSubscriptionId, subscr
       current_period_end = $5,
       plan_name = $6,
       price_amount = $7,
-      price_interval = $8
-      WHERE user_id = $9`;
+      price_interval = $8,
+      subscription_currency = COALESCE($9, subscription_currency, 'usd'),
+      country_code = COALESCE($10, country_code)
+      WHERE user_id = $11`;
 
     const result = await db.query(query, [
       stripeSubscriptionId,
@@ -26,6 +28,8 @@ export async function storeSubscriptionData(userId, stripeSubscriptionId, subscr
       subscriptionData.plan_name || null,
       subscriptionData.price_amount || null,
       subscriptionData.price_interval || null,
+      subscriptionData.currency || null,
+      subscriptionData.country_code || null,
       userId
     ]);
     return result;

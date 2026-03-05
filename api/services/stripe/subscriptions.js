@@ -1,21 +1,39 @@
 import { stripe } from './stripeClient.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
-export async function createSubscription(customerId, priceId) {
+/**
+ * Create a Stripe subscription.
+ *
+ * @param {string} customerId  - Stripe customer ID
+ * @param {string} priceId     - Stripe price ID (must have currency_options for non-USD)
+ * @param {object} [options]
+ * @param {string} [options.currency]    - ISO 4217 code (e.g. 'brl'). Defaults to price base currency.
+ * @param {string} [options.countryCode] - ISO 3166-1 alpha-2 (e.g. 'BR'). Stored for reporting only.
+ */
+export async function createSubscription(customerId, priceId, options = {}) {
   try {
     if (!stripe) {
       throw new Error('Stripe is not configured.');
     }
 
-    const subscription = await stripe.subscriptions.create({
+    const { currency } = options;
+
+    const subscriptionParams = {
       customer: customerId,
       items: [{ price: priceId }],
       automatic_tax: { enabled: true },
       payment_behavior: 'default_incomplete',
       collection_method: 'charge_automatically',
       expand: ['latest_invoice.payment_intent'],
-    });
+    };
 
+    // If a specific currency was requested (and it differs from the base USD price),
+    // Stripe will use the matching currency_option on the price object.
+    if (currency && currency !== 'usd') {
+      subscriptionParams.currency = currency;
+    }
+
+    const subscription = await stripe.subscriptions.create(subscriptionParams);
     return subscription;
   } catch (error) {
     logErrorFromCatch(error, 'app', 'stripe');
@@ -100,7 +118,10 @@ export async function getAvailablePrices() {
       expand: ['data.product'],
       limit: 100,
     });
-    return prices.data;
+    // Filter out prices whose product has been archived in Stripe.
+    // A price can remain active even when its parent product is archived,
+    // which would otherwise surface stale/outdated pricing on the subscription page.
+    return prices.data.filter(price => price.product?.active !== false);
   } catch (error) {
     logErrorFromCatch(error, 'app', 'stripe');
     return [];

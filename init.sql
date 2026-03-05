@@ -69,7 +69,10 @@ CREATE TABLE IF NOT EXISTS user_personal_info (
     billing_platform VARCHAR(20) DEFAULT 'stripe',
     google_play_purchase_token TEXT,
     google_play_product_id VARCHAR(100),
-    google_play_order_id VARCHAR(255)
+    google_play_order_id VARCHAR(255),
+    -- Global multi-currency billing (Phase 6.0)
+    country_code VARCHAR(2),            -- ISO 3166-1 alpha-2 from billing address (e.g. 'BR', 'DE')
+    subscription_currency VARCHAR(3)    -- ISO 4217 currency of active subscription (e.g. 'brl', 'eur')
 );
 
 CREATE INDEX IF NOT EXISTS idx_user_personal_info_email_hash ON user_personal_info(email_hash);
@@ -78,6 +81,8 @@ CREATE INDEX IF NOT EXISTS idx_google_play_purchase_token ON user_personal_info(
 CREATE INDEX IF NOT EXISTS idx_current_period_end ON user_personal_info(current_period_end);
 CREATE INDEX IF NOT EXISTS idx_subscription_cancelled_at ON user_personal_info(subscription_cancelled_at);
 CREATE INDEX IF NOT EXISTS idx_last_status_check_at ON user_personal_info(last_status_check_at);
+CREATE INDEX IF NOT EXISTS idx_user_country_code ON user_personal_info(country_code) WHERE country_code IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_user_subscription_currency ON user_personal_info(subscription_currency) WHERE subscription_currency IS NOT NULL;
 
 -- TABLE: user_astrology
 CREATE TABLE IF NOT EXISTS user_astrology (

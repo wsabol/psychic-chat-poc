@@ -30,8 +30,13 @@ router.post('/setup-intent', authenticateToken, async (req, res) => {
         return validationError(res, 'Stripe is not configured');
       }
 
+      // Accept optional country code from the client so we can include locally
+      // relevant recurring payment methods (SEPA, BACS, ACH, ACSS) in the
+      // SetupIntent.  Falls back to card-only if country is not provided.
+      const country = req.body?.country || null;
+
       // Create setup intent
-      const setupIntent = await createSetupIntent(customerId);
+      const setupIntent = await createSetupIntent(customerId, { country });
 
       if (!setupIntent || !setupIntent.client_secret) {
         return billingError(res, 'Failed to generate payment setup credentials');
