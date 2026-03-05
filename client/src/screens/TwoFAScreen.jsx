@@ -121,6 +121,7 @@ export default function TwoFAScreen({
                 className="twofa-code-input"
                 disabled={verifying || isLoading}
                 autoFocus
+                autoComplete={'one-time-code'}
               />
               <p className="twofa-code-hint">{t('twoFactor.enterCode')}</p>
             </div>
