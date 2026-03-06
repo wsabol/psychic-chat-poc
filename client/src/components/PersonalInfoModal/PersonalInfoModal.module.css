@@ -9,9 +9,13 @@
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.6);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   z-index: 2000;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 20px 0;
+  box-sizing: border-box;
 }
 
 /* Modal Container */
@@ -21,9 +25,8 @@
   padding: 2rem;
   max-width: 500px;
   width: 90%;
-  max-height: 90vh;
-  overflow-y: auto;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  margin: auto 0;
 }
 
 /* Header */
@@ -159,7 +162,7 @@
 .buttonGroup {
   display: flex;
   gap: 1rem;
-  margin-top: 1.5rem;
+  margin-top: 0.75rem;
 }
 
 .submitButton,

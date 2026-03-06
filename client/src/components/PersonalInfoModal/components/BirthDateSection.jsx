@@ -30,10 +30,11 @@ export function BirthDateSection({ formData, handleChange }) {
           Time of Birth <span className={styles.optional}>(Optional)</span>
         </label>
         <input
-          type="time"
+          type="text"
           name="birthTime"
           value={formData.birthTime}
           onChange={handleChange}
+          placeholder="HH:MM (e.g., 14:30 or 02:30)"
           className={styles.input}
         />
       </div>
