@@ -405,36 +405,13 @@ async function sendTwoFACode(res, req, { userId, userEmail, userIdHash, method }
     const code = generate6DigitCode();
     recipientContact = userEmail;
 
-    // Insert the code and capture its DB row ID so we can embed it in the
-    // magic-link JWT.  The magic link lets the user click a button in the
-    // email instead of copying the 6-digit code — exactly equivalent to
-    // entering the code manually.
-    let insertedCodeId = null;
     try {
-      const insertResult = await insertVerificationCode(db, userId, userEmail, null, code, 'email');
-      insertedCodeId = insertResult.rows[0]?.id ?? null;
+      await insertVerificationCode(db, userId, userEmail, null, code, 'email');
     } catch {
       return serverError(res, 'Failed to save 2FA code');
     }
 
-    // Build the magic link (API endpoint → marks code used → redirects to
-    // the client app with magic_verified=true so the React app can skip the
-    // TwoFAScreen for this session).
-    let magicLink = null;
-    if (insertedCodeId) {
-      const magicToken = generateTempToken(
-        { userId, codeId: insertedCodeId, isMagicLink: true },
-        '15m'
-      );
-      // Use API_BASE_URL if set, otherwise derive from request host.
-      // In production behind CloudFront the Host header is the public domain.
-      const apiBase =
-        process.env.API_BASE_URL ||
-        `${req.protocol}://${req.get('host')}`;
-      magicLink = `${apiBase}/auth/verify-2fa-link?token=${encodeURIComponent(magicToken)}`;
-    }
-
-    sendResult = await send2FACodeEmail(userEmail, code, resolveLocaleFromRequest(req), magicLink);
+    sendResult = await send2FACodeEmail(userEmail, code, resolveLocaleFromRequest(req));
     if (!sendResult?.success) {
       return serverError(res, 'Failed to send 2FA code via email');
     }

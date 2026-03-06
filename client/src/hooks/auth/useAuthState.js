@@ -39,10 +39,46 @@ export function useAuthState(checkBillingStatus) {
   const [tempToken, setTempToken] = useState(null);
   const [tempUserId, setTempUserId] = useState(null);
   const [twoFactorMethod, setTwoFactorMethod] = useState('email');
-  
+
   const billingCheckedRef = useRef(new Set());
 
-  // Setup Firebase auth listener
+  // ── complete2FA ──────────────────────────────────────────────────────────
+  // trustDevice: whether the user explicitly checked "Trust This Device" on the
+  // 2FA screen.  Only call /auth/trust-admin-device when true — never auto-trust.
+  const complete2FA = useCallback((userId, idToken, trustDevice = false) => {
+    setShowTwoFactor(false);
+    setTempToken(null);
+    setTempUserId(null);
+    setIsAuthenticated(true);
+
+    // If admin completed 2FA from a new IP AND explicitly checked "Trust This Device",
+    // record the IP as trusted so future logins from this device skip 2FA.
+    const adminNewIP = sessionStorage.getItem('admin_new_ip');
+    sessionStorage.removeItem('admin_new_ip'); // always clean up regardless
+    if (adminNewIP && trustDevice) {
+      try {
+        const { browserInfo } = JSON.parse(adminNewIP);
+        // Server detects the IP from req.ip — we just confirm 2FA passed and trust=true
+        fetch(`${API_URL}/auth/trust-admin-device`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${idToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ browserInfo })
+        }).catch(() => {});
+      } catch (err) {
+        // Trust device request is non-critical, silently handle error
+      }
+    }
+
+    if (checkBillingStatus && !billingCheckedRef.current.has(userId)) {
+      billingCheckedRef.current.add(userId);
+      checkBillingStatus(idToken, userId);
+    }
+  }, [checkBillingStatus]);
+
+  // ── Firebase auth listener ───────────────────────────────────────────────
   useEffect(() => {
     if (!checkBillingStatus) return;
 
@@ -80,8 +116,8 @@ export function useAuthState(checkBillingStatus) {
             // guest session (onAuthStateChanged fires with null → guest branch → sets
             // isTemporaryAccount=true again), which is incorrect.
             localStorage.removeItem('guest_user_id');
-            
-                        // Track device on login (non-blocking) - server will detect IP via req.ip
+
+            // Track device on login (non-blocking) - server will detect IP via req.ip
             fetch(`${API_URL}/security/track-device/${firebaseUser.uid}`, {
               method: 'POST',
               headers: { 'Authorization': `Bearer ${idToken}`, 'Content-Type': 'application/json' },
@@ -139,9 +175,10 @@ export function useAuthState(checkBillingStatus) {
               body: JSON.stringify({ userId: firebaseUser.uid, email: firebaseUser.email })
             }).catch(() => {});
 
-            // Check if 2FA was already verified in THIS SESSION
+            // Check if 2FA was already verified in sessionStorage
+            // (set by verify2FAHandler after the user enters the correct code).
             const twoFAVerifiedKey = `2fa_verified_${firebaseUser.uid}`;
-            const alreadyVerified = sessionStorage.getItem(twoFAVerifiedKey);
+            let alreadyVerified = sessionStorage.getItem(twoFAVerifiedKey);
 
             if (alreadyVerified) {
               setShowTwoFactor(false);
@@ -162,10 +199,10 @@ export function useAuthState(checkBillingStatus) {
               try {
                 // Browser info for device tracking (IP detected server-side to avoid CORS issues)
                 const browserInfo = navigator.userAgent.split(' ').slice(-2).join(' ');
-                
+
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 15000);
-                
+
                 // Server will detect IP from request headers (req.ip) to avoid CORS issues with ipapi.co
                 const twoFAResponse = await fetch(`${API_URL}/auth/check-2fa/${firebaseUser.uid}`, {
                   method: 'POST',
@@ -183,14 +220,14 @@ export function useAuthState(checkBillingStatus) {
                   setShowTwoFactor(true);
                   setTwoFactorMethod(twoFAData.method || 'email');
                   setIsAuthenticated(false);
-                  
+
                   // Store browser info for after 2FA (server detects IP/device via req.ip and UAParser)
                   if (twoFAData.isAdminNewIP) {
                     sessionStorage.setItem('admin_new_ip', JSON.stringify({
                       browserInfo
                     }));
                   }
-                  
+
                   setLoading(false);
                 } else {
                   // 2FA not required - proceed to authentication
@@ -204,7 +241,7 @@ export function useAuthState(checkBillingStatus) {
                 }
               } catch (err) {
                 logErrorFromCatch('[AUTH-LISTENER] /auth/check-2fa FAILED:', err.message, err.name);
-                
+
                 // SECURITY FIX: Don't bypass 2FA on network errors
                 // If the 2FA check endpoint fails, we should NOT assume 2FA is not required
                 // Instead, treat it as a temporary error and allow retry
@@ -275,41 +312,6 @@ export function useAuthState(checkBillingStatus) {
     });
 
     return unsubscribe;
-  }, [checkBillingStatus]);
-
-    // trustDevice: whether the user explicitly checked "Trust This Device" on the 2FA screen.
-    // Only call /auth/trust-admin-device when this is true — never auto-trust on every login.
-    const complete2FA = useCallback((userId, idToken, trustDevice = false) => {
-    setShowTwoFactor(false);
-    setTempToken(null);
-    setTempUserId(null);
-    setIsAuthenticated(true);
-    
-    // If admin completed 2FA from a new IP AND explicitly checked "Trust This Device",
-    // record the IP as trusted so future logins from this device skip 2FA.
-    const adminNewIP = sessionStorage.getItem('admin_new_ip');
-    sessionStorage.removeItem('admin_new_ip'); // always clean up regardless
-    if (adminNewIP && trustDevice) {
-      try {
-        const { browserInfo } = JSON.parse(adminNewIP);
-        // Server detects the IP from req.ip — we just confirm 2FA passed and trust=true
-        fetch(`${API_URL}/auth/trust-admin-device`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${idToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ browserInfo })
-        }).catch(() => {});
-      } catch (err) {
-        // Trust device request is non-critical, silently handle error
-      }
-    }
-    
-    if (checkBillingStatus && !billingCheckedRef.current.has(userId)) {
-      billingCheckedRef.current.add(userId);
-      checkBillingStatus(idToken, userId);
-    }
   }, [checkBillingStatus]);
 
   const resetAuthState = useCallback(() => {

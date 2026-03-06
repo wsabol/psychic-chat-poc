@@ -59,10 +59,9 @@ export async function sendEmailVerificationCode(userEmail, code, locale = 'en-US
  * @param {string} userEmail
  * @param {string} code
  * @param {string} [locale='en-US']
- * @param {string|null} [magicLink] - Optional one-click verify URL to embed in the email
  */
-export async function send2FACodeEmail(userEmail, code, locale = 'en-US', magicLink = null) {
-    const { subject, html } = generateTwoFactorEmail({ code, locale, magicLink });
+export async function send2FACodeEmail(userEmail, code, locale = 'en-US') {
+    const { subject, html } = generateTwoFactorEmail({ code, locale });
     return sendEmail({ to: userEmail, subject, html });
 }
 
