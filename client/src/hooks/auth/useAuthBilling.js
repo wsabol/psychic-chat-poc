@@ -59,6 +59,7 @@ export function useAuthBilling() {
   }, []);
 
   // Fetch subscription status when user authenticates
+  // Checks both Stripe (web) and Google Play (mobile) subscriptions
   const checkSubscriptionStatus = useCallback(async (idToken, userId) => {
     try {
       setSubscriptionChecking(true);
@@ -69,21 +70,52 @@ export function useAuthBilling() {
       
       try {
         const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+
+        // ── 1. Check Stripe subscriptions ────────────────────────────────
         const response = await fetch(`${API_URL}/billing/subscriptions`, {
           headers: { 'Authorization': `Bearer ${idToken}` },
           signal: controller.signal
         });
         clearTimeout(timeoutId);
 
+        let hasStripeActive = false;
         if (response.ok) {
           const subscriptions = await response.json();
-          const hasActive = subscriptions.some(sub => sub.status === 'active');
-          setHasActiveSubscription(hasActive);
-          return hasActive;
-        } else {
-          setHasActiveSubscription(false);
-          return false;
+          hasStripeActive = subscriptions.some(sub => sub.status === 'active');
         }
+
+        // ── 2. If no Stripe subscription, check Google Play ───────────────
+        let hasGooglePlayActive = false;
+        if (!hasStripeActive) {
+          try {
+            const gpController = new AbortController();
+            const gpTimeoutId = setTimeout(() => gpController.abort(), 8000);
+            const gpResponse = await fetch(`${API_URL}/billing/subscription-status/google`, {
+              headers: { 'Authorization': `Bearer ${idToken}` },
+              signal: gpController.signal
+            });
+            clearTimeout(gpTimeoutId);
+            if (gpResponse.ok) {
+              const gpData = await gpResponse.json();
+              hasGooglePlayActive = gpData.hasSubscription === true;
+            }
+          } catch (gpErr) {
+            // Google Play check failed — non-fatal, continue
+            logErrorFromCatch('[AUTH] Google Play subscription check failed', gpErr);
+          }
+        }
+
+        const hasActive = hasStripeActive || hasGooglePlayActive;
+        setHasActiveSubscription(hasActive);
+
+        // Google Play subscribers don't have a Stripe payment method —
+        // treat them as having a valid payment method so the payment gate
+        // doesn't block them.
+        if (hasGooglePlayActive && !hasStripeActive) {
+          setHasValidPaymentMethod(true);
+        }
+
+        return hasActive;
       } catch (timeoutErr) {
         clearTimeout(timeoutId);
         // Timeout or abort - assume no subscription and continue

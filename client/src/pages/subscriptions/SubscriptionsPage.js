@@ -10,7 +10,7 @@
  * 5. Info Section
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from '../../context/TranslationContext';
 import { useBilling } from '../../hooks/useBilling';
 import { useSubscriptionState } from './hooks/useSubscriptionState';
@@ -25,11 +25,16 @@ import { logErrorFromCatch } from '../../shared/errorLogger.js';
 import '../SubscriptionsPage.css';
 import '../../styles/modals.css';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+
 export default function SubscriptionsPage({ userId, token, auth, onboarding }) {
   const { t } = useTranslation();
   // State management
   const state = useSubscriptionState(token);
   const billing = useBilling(token);
+
+  // Google Play subscription state (mobile purchases shown read-only on web)
+  const [googlePlaySubscription, setGooglePlaySubscription] = useState(null);
 
   // Get Stripe instance from window (or create one)
   const stripeRef = React.useRef(null);
@@ -42,9 +47,9 @@ export default function SubscriptionsPage({ userId, token, auth, onboarding }) {
     }
   }
 
-  // Load available prices, subscriptions, and payment methods on mount
+  // Load available prices, subscriptions, payment methods, and Google Play status on mount
   useEffect(() => {
-            const loadData = async () => {
+    const loadData = async () => {
       try {
         await Promise.all([
           billing.fetchAvailablePrices(),
@@ -56,7 +61,27 @@ export default function SubscriptionsPage({ userId, token, auth, onboarding }) {
       }
     };
 
+    const loadGooglePlayStatus = async () => {
+      if (!token) return;
+      try {
+        const response = await fetch(`${API_URL}/billing/subscription-status/google`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          // Only store if actually a Google Play subscription
+          if (data.hasSubscription || data.billing_platform === 'google_play') {
+            setGooglePlaySubscription(data);
+          }
+        }
+      } catch (err) {
+        // Non-fatal — Google Play status is supplemental
+        logErrorFromCatch('[SUBSCRIPTIONS] Failed to load Google Play status:', err);
+      }
+    };
+
     loadData();
+    loadGooglePlayStatus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -93,23 +118,27 @@ export default function SubscriptionsPage({ userId, token, auth, onboarding }) {
     sub => sub.status !== 'canceled'
   ) || [];
 
+  // User has an active subscription if they have a Stripe OR Google Play subscription
+  const hasGooglePlay = googlePlaySubscription?.hasSubscription === true;
+  const hasAnyActiveSubscription = activeSubscriptionsList.length > 0 || hasGooglePlay;
+
   return (
     <div className="subscriptions-page">
       {/* Header */}
-            <div className="section-header">
+      <div className="section-header">
         <h2>📋 {t('subscriptions.title')}</h2>
         <p>{t('subscriptions.managePlans') || 'Manage your subscription plans and billing'}</p>
       </div>
 
-            {/* Alerts */}
+      {/* Alerts */}
       {state.error && <div className="alert alert-error">{state.error}</div>}
       {state.success && <div className="alert alert-success">✓ {t('subscriptions.changesSaved') || 'Changes saved successfully!'}</div>}
 
       {/* LAYOUT: Show Available Plans FIRST if no subscription, otherwise show Active Subscriptions */}
-      {activeSubscriptionsList.length === 0 ? (
+      {!hasAnyActiveSubscription ? (
         <>
           {/* NO ACTIVE SUBSCRIPTION - Show products first */}
-                    <div style={{ marginBottom: '2rem', padding: '1rem', backgroundColor: '#fff3e0', borderRadius: '8px', borderLeft: '4px solid #ff9800' }}>
+          <div style={{ marginBottom: '2rem', padding: '1rem', backgroundColor: '#fff3e0', borderRadius: '8px', borderLeft: '4px solid #ff9800' }}>
             <p style={{ margin: 0, fontWeight: 'bold', color: '#e65100' }}>
               ⚠️ {t('subscriptions.needActiveSubscription') || 'You need an active subscription to use this site. Choose a plan below to get started.'}
             </p>
@@ -126,9 +155,10 @@ export default function SubscriptionsPage({ userId, token, auth, onboarding }) {
       ) : (
         <>
           {/* HAS ACTIVE SUBSCRIPTION */}
-          <AutoRenewalNotice />
+          {/* Show AutoRenewalNotice only for Stripe (not Google Play) subscriptions */}
+          {activeSubscriptionsList.length > 0 && <AutoRenewalNotice />}
 
-          {/* Active Subscriptions */}
+          {/* Active Subscriptions - includes Google Play if present */}
           <ActiveSubscriptionsSection
             subscriptions={activeSubscriptionsList}
             activeSubscriptions={state.activeSubscriptions}
@@ -138,16 +168,19 @@ export default function SubscriptionsPage({ userId, token, auth, onboarding }) {
             onChangeClick={state.setExpandedSub}
             onChangeSubscription={handlers.handleChangeSubscription}
             billing={billing}
+            googlePlaySubscription={googlePlaySubscription}
           />
 
-          {/* Available Plans - always show to allow plan changes */}
-          <AvailablePlansSection
-            pricesByProduct={pricesByProduct}
-            onSubscribe={handlers.handleSubscribe}
-            billing={billing}
-            showSection={true}
-            defaultPaymentMethodId={billing.paymentMethods?.defaultPaymentMethodId}
-          />
+          {/* Available Plans - show only for Stripe subscribers to allow plan changes */}
+          {activeSubscriptionsList.length > 0 && (
+            <AvailablePlansSection
+              pricesByProduct={pricesByProduct}
+              onSubscribe={handlers.handleSubscribe}
+              billing={billing}
+              showSection={true}
+              defaultPaymentMethodId={billing.paymentMethods?.defaultPaymentMethodId}
+            />
+          )}
         </>
       )}
 

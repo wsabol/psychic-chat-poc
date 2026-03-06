@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSwipeable } from 'react-swipeable';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navigation from './Navigation';
@@ -38,7 +38,10 @@ const PAGES = [
   { id: 'admin', label: 'Admin', component: AdminPage },
 ];
 
-export default function MainContainer({ auth, token, userId, onLogout, onCreateAccount, onExit, startingPage = 0, billingTab = 'payment-methods', onNavigateFromBilling, onboarding, freeTrialState }) {
+// Billing page index (constant to avoid magic numbers)
+const BILLING_PAGE_INDEX = 9;
+
+export default function MainContainer({ auth, token, userId, onLogout, onCreateAccount, onExit, startingPage = 0, billingTab = 'payment-methods', onNavigateFromBilling, onboarding, freeTrialState, subscriptionRequiredMode = false }) {
   const [currentPageIndex, setCurrentPageIndex] = useState(startingPage);
   const [swipeDirection, setSwipeDirection] = useState(0);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -96,7 +99,11 @@ export default function MainContainer({ auth, token, userId, onLogout, onCreateA
   // CRITICAL: Define goToPage FIRST so it can be used in effects and handlers
   // This must come before any effect that calls it
   const goToPage = useCallback((index) => {
-    
+    // Block all navigation except to billing when subscription is required
+    if (subscriptionRequiredMode && index !== BILLING_PAGE_INDEX) {
+      return;
+    }
+
     // Check if page is allowed in current mode
     const isAllowed = modeRules.isPageAllowed(index);
     
@@ -112,7 +119,24 @@ export default function MainContainer({ auth, token, userId, onLogout, onCreateA
       }
       return newIndex;
     });
-  }, [modeRules]);
+  }, [modeRules, subscriptionRequiredMode]);
+
+  // Effect: When subscriptionRequiredMode activates, force navigation to billing page
+  useEffect(() => {
+    if (subscriptionRequiredMode && currentPageIndex !== BILLING_PAGE_INDEX) {
+      setCurrentPageIndex(BILLING_PAGE_INDEX);
+    }
+  }, [subscriptionRequiredMode, currentPageIndex]);
+
+  // Effect: When subscription lock releases, navigate to chat (page 0)
+  const prevSubscriptionRequiredMode = useRef(subscriptionRequiredMode);
+  useEffect(() => {
+    if (prevSubscriptionRequiredMode.current === true && subscriptionRequiredMode === false) {
+      // Lock was just released — subscription is now active, go to chat
+      setCurrentPageIndex(0);
+    }
+    prevSubscriptionRequiredMode.current = subscriptionRequiredMode;
+  }, [subscriptionRequiredMode]);
 
   // Handle navigation away from billing page - separate effect to avoid setState in render
   useEffect(() => {
@@ -234,9 +258,27 @@ export default function MainContainer({ auth, token, userId, onLogout, onCreateA
         onLogout={onLogout}
         onCreateAccount={onCreateAccount}
         isTemporaryAccount={auth?.isTemporaryAccount}
-        isDisabled={modeRules.isNavDisabled()}
+        isDisabled={modeRules.isNavDisabled() || subscriptionRequiredMode}
         userEmail={auth?.authEmail}
       />
+
+      {/* Subscription Required Banner — shown when user has no active subscription */}
+      {subscriptionRequiredMode && (
+        <div style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 1000,
+          backgroundColor: '#ff6f00',
+          color: 'white',
+          textAlign: 'center',
+          padding: '0.75rem 1rem',
+          fontWeight: '600',
+          fontSize: '0.95rem',
+          letterSpacing: '0.01em',
+        }}>
+          🔒 An active subscription is required to access all features. Please subscribe below to continue.
+        </div>
+      )}
 
       <div className="pages-container" {...swipeHandlers}>
         <AnimatePresence mode="wait">

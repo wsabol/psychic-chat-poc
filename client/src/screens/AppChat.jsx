@@ -40,6 +40,7 @@ export function AppChat({ state }) {
     handleNavigateFromBilling,
     tempFlow,
     handlers,
+    subscriptionRequiredMode,
   } = state;
 
   const { user } = useAuth();
@@ -329,6 +330,7 @@ export function AppChat({ state }) {
           onNavigateFromBilling={handleNavigateFromBilling}
           onboarding={onboarding}
           freeTrialState={freeTrialState}
+          subscriptionRequiredMode={subscriptionRequiredMode}
         />
       </ErrorBoundary>
     );

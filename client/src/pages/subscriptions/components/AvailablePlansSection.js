@@ -79,16 +79,35 @@ export default function AvailablePlansSection({
                 ))}
               </div>
 
-                            {product?.features && (
-                <div className="plan-features">
-                  <h5>{t('subscriptions.features')}:</h5>
-                  <ul>
-                    {product.features.map((feature, idx) => (
-                      <li key={idx}>✓ {feature}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              {/* Feature list from translations - always shown */}
+              {(() => {
+                const isMonthly = product?.name?.toLowerCase().includes('monthly') || prices[0]?.recurring?.interval === 'month';
+                const isYearly = product?.name?.toLowerCase().includes('annual') || product?.name?.toLowerCase().includes('yearly') || prices[0]?.recurring?.interval === 'year';
+                const monthlyFeatures = [
+                  t('subscriptions.monthlyFeature1'),
+                  t('subscriptions.monthlyFeature2'),
+                  t('subscriptions.monthlyFeature3'),
+                  t('subscriptions.monthlyFeature4'),
+                  t('subscriptions.monthlyFeature5'),
+                ];
+                const yearlyFeatures = [
+                  t('subscriptions.yearlyFeature1'),
+                  t('subscriptions.yearlyFeature2'),
+                  t('subscriptions.yearlyFeature3'),
+                ];
+                const features = isYearly ? yearlyFeatures : isMonthly ? monthlyFeatures : [];
+                if (features.length === 0) return null;
+                return (
+                  <div className="plan-features">
+                    <h5>{t('subscriptions.features')}:</h5>
+                    <ul>
+                      {features.map((feature, idx) => (
+                        <li key={idx}>✓ {feature}</li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })()}
             </div>
           ))
                 ) : (

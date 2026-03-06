@@ -140,8 +140,9 @@ export default function SubscriptionCard({
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 1rem 1.5rem;
+          padding: 1.25rem 1.5rem;
           gap: 1.5rem;
+          min-height: 90px;
         }
 
         .sub-simple-left {
@@ -184,8 +185,9 @@ export default function SubscriptionCard({
         .sub-simple-right {
           flex: 0 0 auto;
           display: flex;
-          align-items: center;
-          gap: 1rem;
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 0.5rem;
         }
 
         .sub-simple-expires {
@@ -201,6 +203,7 @@ export default function SubscriptionCard({
           border: none;
           cursor: pointer;
           font-weight: 600;
+          white-space: nowrap;
         }
 
         .btn-secondary {

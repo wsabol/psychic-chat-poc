@@ -29,6 +29,8 @@ export function useAppState() {
   const [verificationFailed, setVerificationFailed] = useState(false);
   const [previousAuthState, setPreviousAuthState] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  // Subscription required mode: locks navigation to billing page until subscription is active
+  const [subscriptionRequiredMode, setSubscriptionRequiredMode] = useState(false);
 
   // Core hooks
   const authState = useAuth();
@@ -118,19 +120,62 @@ export function useAppState() {
     }
   }, [isVerification, emailVerification, authState]);
 
-  // Effect: Route established users with COMPLETED onboarding to Chat
-  // CRITICAL: If onboarding_completed = true, user should ALWAYS go to Chat (index 0)
+  // Effect: Route established users with COMPLETED onboarding
+  // CRITICAL: If onboarding_completed = true AND user has active subscription → Chat (index 0)
+  //           If onboarding_completed = true AND NO active subscription → lock to Billing/Subscriptions
+  //           Admins are always exempt from the subscription requirement
   useEffect(() => {
-    // Only for authenticated, non-temp users with loaded onboarding status
-    if (authState.isAuthenticated && !authState.isTemporaryAccount && onboarding.onboardingStatus !== null) {
-      // Check if onboarding is COMPLETE (isOnboarding = false)
-      if (onboarding.onboardingStatus?.isOnboarding === false) {
-        setStartingPage(0); // Chat page
+    if (
+      authState.isAuthenticated &&
+      !authState.isTemporaryAccount &&
+      onboarding.onboardingStatus !== null &&
+      onboarding.onboardingStatus?.isOnboarding === false &&
+      !authState.subscriptionChecking  // wait until billing check finishes
+    ) {
+      if (authState.hasActiveSubscription || isAdmin) {
+        // Active subscriber OR admin — go directly to chat, no lock
+        setStartingPage(0);
         setSkipPaymentCheck(true);
         setSkipSubscriptionCheck(true);
+        setSubscriptionRequiredMode(false);
+      } else {
+        // Established user with expired/missing subscription — lock to subscriptions tab
+        setSkipPaymentCheck(true);
+        setSkipSubscriptionCheck(true);
+        setBillingTab('subscriptions');
+        setStartingPage(9); // Billing page
+        setSubscriptionRequiredMode(true);
       }
     }
-  }, [authState.isAuthenticated, authState.isTemporaryAccount, onboarding.onboardingStatus]);
+  }, [
+    authState.isAuthenticated,
+    authState.isTemporaryAccount,
+    authState.subscriptionChecking,
+    authState.hasActiveSubscription,
+    onboarding.onboardingStatus,
+    isAdmin,
+  ]);
+
+  // Effect: Clear subscriptionRequiredMode when user subscribes successfully
+  useEffect(() => {
+    if (authState.hasActiveSubscription && subscriptionRequiredMode) {
+      setSubscriptionRequiredMode(false);
+      setStartingPage(0);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authState.hasActiveSubscription]);
+
+  // Effect: Poll subscription status every 5s while navigation is locked
+  // This auto-unlocks when the user completes a subscription on the billing page
+  useEffect(() => {
+    if (!subscriptionRequiredMode || !authState.token || !authState.authUserId) return;
+    const intervalId = setInterval(async () => {
+      await authState.recheckSubscriptionOnly(authState.token, authState.authUserId);
+    }, 5000);
+    return () => clearInterval(intervalId);
+  // recheckSubscriptionOnly is stable (useCallback), authState object reference changes — use specific values
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subscriptionRequiredMode, authState.token, authState.authUserId, authState.recheckSubscriptionOnly]);
 
     // Effect: Route users based on their current onboarding step
   // CRITICAL: Check the database field onboarding_step (last completed step)
@@ -209,11 +254,12 @@ export function useAppState() {
     }
   }, [authState]);
 
-    const handleNavigateToSubscriptions = useCallback(() => {
+  const handleNavigateToSubscriptions = useCallback(() => {
     setSkipPaymentCheck(true);
     setSkipSubscriptionCheck(true);
     setBillingTab('subscriptions');
     setStartingPage(9); // billing page is now index 9 after adding admin
+    setSubscriptionRequiredMode(true);
   }, []);
 
   const handleOnboardingNavigate = useCallback((step) => {
@@ -302,6 +348,9 @@ export function useAppState() {
     handleOnboardingNavigate,
     handleOnboardingClose,
     setVerificationFailed,
+    // Subscription lock
+    subscriptionRequiredMode,
+    setSubscriptionRequiredMode,
   };
 }
 
