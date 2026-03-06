@@ -42,8 +42,10 @@ export function initializeScheduler() {
       }
     );
     
-    // Schedule subscription check job to run every 4 hours (offset by 10 min to avoid collision with grace period job)
-    subscriptionCheckJobHandle = cron.schedule('10 */4 * * *',
+    // Schedule subscription check job to run once daily at 01:00 UTC.
+    // Real-time Google Play renewals are handled by the RTDN webhook; this job
+    // is a daily safety net that also covers Stripe subscriptions.
+    subscriptionCheckJobHandle = cron.schedule('0 1 * * *',
       async () => {
         try {
           await runSubscriptionCheckJob();
@@ -196,7 +198,7 @@ export async function getSchedulerStatus() {
       },
       subscriptionCheck: {
         name: 'Subscription Check Job',
-        schedule: '0 */4 * * * (every 4 hours)',
+        schedule: '0 1 * * * (daily at 01:00 UTC)',
         active: subscriptionCheckJobHandle?.status === 'scheduled',
         stats: getSubscriptionCheckJobStatus()
       }

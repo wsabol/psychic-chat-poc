@@ -1,14 +1,20 @@
 /**
  * Subscription Check Lambda Function
  *
- * Scheduled to run every 4 hours via EventBridge (10 *\/4 * * * — offset 10 min
- * from the top of the hour to avoid collision with other jobs).
+ * Scheduled to run once daily via EventBridge (0 1 * * *  — 01:00 UTC).
+ * Real-time Google Play events are handled by the RTDN webhook endpoint; this
+ * Lambda is a daily safety net that also covers Stripe subscriptions.
  *
  * For every user with an active Stripe subscription:
  *   1. Fetches the current subscription status from Stripe
  *   2. Compares it against the status stored in the database
  *   3. If changed → updates the DB and sends a notification email
  *   4. If unchanged → updates the last_status_check_at timestamp
+ *
+ * For every user with a Google Play subscription:
+ *   1. Calls the Google Play Developer API with the stored purchase token
+ *   2. Updates subscription_status and current_period_end if they've changed
+ *   3. Falls back to time-based expiry check when API credentials aren't set
  *
  * Email opt-out:
  *   Notification emails respect user_settings.email_marketing_enabled.
@@ -28,6 +34,133 @@ const stripe         = process.env.STRIPE_SECRET_KEY
 
 // Stripe statuses that warrant a user-facing email notification
 const NOTIFY_STATUSES = new Set(['past_due', 'canceled', 'incomplete', 'unpaid']);
+
+// ─────────────────────────────────────────────
+//  GOOGLE PLAY HELPERS
+// ─────────────────────────────────────────────
+
+/**
+ * Calls the Google Play Developer API to verify a purchase token.
+ * Returns null in sandbox mode (GOOGLE_PLAY_SERVICE_ACCOUNT_JSON not set).
+ */
+async function verifyGooglePlayToken(packageName, productId, purchaseToken) {
+  const serviceAccountJson = process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON;
+  if (!serviceAccountJson) {
+    return null;
+  }
+  const { google } = await import('googleapis');
+  const auth = new google.auth.GoogleAuth({
+    credentials: JSON.parse(serviceAccountJson),
+    scopes: ['https://www.googleapis.com/auth/androidpublisher'],
+  });
+  const androidPublisher = google.androidpublisher({ version: 'v3', auth });
+  const response = await androidPublisher.purchases.subscriptions.get({
+    packageName,
+    subscriptionId: productId,
+    token: purchaseToken,
+  });
+  return response.data;
+}
+
+/**
+ * Fetch Google Play subscribers who haven't been checked in the past 20 hours.
+ */
+async function getAllGooglePlayUsers() {
+  try {
+    const { rows } = await db.query(
+      `SELECT user_id,
+              subscription_status,
+              current_period_end,
+              google_play_purchase_token,
+              google_play_product_id
+       FROM user_personal_info
+       WHERE billing_platform = 'google_play'
+         AND google_play_purchase_token IS NOT NULL
+         AND user_id NOT LIKE 'temp_%'
+         AND (
+           last_status_check_at IS NULL
+           OR last_status_check_at < NOW() - INTERVAL '20 hours'
+         )
+       ORDER BY last_status_check_at ASC NULLS FIRST
+       LIMIT 1000`
+    );
+    return rows;
+  } catch (error) {
+    logger.errorFromCatch(error, 'getAllGooglePlayUsers');
+    return [];
+  }
+}
+
+/**
+ * Re-validate a single Google Play subscriber.
+ * Updates the DB if the status or expiry has changed.
+ */
+async function checkGooglePlayUser(user, stats) {
+  const {
+    user_id: userId,
+    subscription_status: currentStatus,
+    google_play_purchase_token: purchaseToken,
+    google_play_product_id: productId,
+  } = user;
+
+  const touch = () =>
+    db.query(
+      `UPDATE user_personal_info SET last_status_check_at = NOW() WHERE user_id = $1`,
+      [userId]
+    );
+
+  let googleSubscription = null;
+  try {
+    googleSubscription = await verifyGooglePlayToken(
+      'com.starshippsychicsmobile',
+      productId,
+      purchaseToken
+    );
+  } catch (err) {
+    logger.errorFromCatch(err, 'checkGooglePlayUser-apiCall', userId);
+  }
+
+  if (!googleSubscription) {
+    // No API credentials — fall back to time-based expiry
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    const isExpired  = user.current_period_end && user.current_period_end < nowSeconds;
+    if (isExpired && currentStatus === 'active') {
+      await db.query(
+        `UPDATE user_personal_info
+         SET subscription_status  = 'expired',
+             last_status_check_at = NOW(),
+             updated_at           = NOW()
+         WHERE user_id = $1`,
+        [userId]
+      );
+      stats.statusChanged++;
+    } else {
+      await touch();
+    }
+    return;
+  }
+
+  const expiryMs       = parseInt(googleSubscription.expiryTimeMillis, 10);
+  const isExpired      = expiryMs < Date.now();
+  const paymentPending = googleSubscription.paymentState === 0;
+  const newStatus      = (!isExpired && !paymentPending) ? 'active' : 'expired';
+  const newPeriodEnd   = Math.floor(expiryMs / 1000);
+
+  if (newStatus !== currentStatus || newPeriodEnd !== user.current_period_end) {
+    stats.statusChanged++;
+    await db.query(
+      `UPDATE user_personal_info
+       SET subscription_status  = $2,
+           current_period_end   = $3,
+           last_status_check_at = NOW(),
+           updated_at           = NOW()
+       WHERE user_id = $1`,
+      [userId, newStatus, newPeriodEnd]
+    );
+  } else {
+    await touch();
+  }
+}
 
 // ─────────────────────────────────────────────
 //  DATABASE HELPERS
@@ -169,7 +302,7 @@ async function checkUserSubscription(user, stats) {
 // ─────────────────────────────────────────────
 
 /**
- * Lambda entry point — invoked by EventBridge every 4 hours.
+ * Lambda entry point — invoked by EventBridge once daily at 01:00 UTC.
  *
  * @param {Object} event - EventBridge scheduled event
  * @returns {Object} HTTP-style response with run statistics
@@ -181,9 +314,6 @@ export const handler = async (event) => {
     if (!ENCRYPTION_KEY) {
       throw new Error('ENCRYPTION_KEY environment variable is not set');
     }
-    if (!stripe) {
-      throw new Error('STRIPE_SECRET_KEY environment variable is not set');
-    }
 
     const stats = {
       totalUsersChecked:    0,
@@ -194,10 +324,44 @@ export const handler = async (event) => {
       skipped:              0,
     };
 
-    const users = await getAllUsersWithSubscriptions();
-    stats.totalUsersChecked = users.length;
+    // ── Stripe subscriptions ──────────────────────────────────────────────────
+    if (stripe) {
+      const stripeUsers = await getAllUsersWithSubscriptions();
+      stats.totalUsersChecked += stripeUsers.length;
 
-    if (users.length === 0) {
+      for (const user of stripeUsers) {
+        try {
+          await checkUserSubscription(user, stats);
+        } catch (error) {
+          if (error.message?.includes('connect ENOTFOUND') || error.type === 'StripeConnectionError') {
+            logger.errorFromCatch(error, 'Stripe API unreachable', user.user_id);
+          } else {
+            logger.errorFromCatch(error, 'checkUserSubscription', user.user_id);
+          }
+          stats.errors++;
+        }
+      }
+    } else {
+      logger.errorFromCatch(
+        new Error('STRIPE_SECRET_KEY not set — Stripe subscription check skipped'),
+        'handler'
+      );
+    }
+
+    // ── Google Play subscriptions ─────────────────────────────────────────────
+    const googlePlayUsers = await getAllGooglePlayUsers();
+    stats.totalUsersChecked += googlePlayUsers.length;
+
+    for (const user of googlePlayUsers) {
+      try {
+        await checkGooglePlayUser(user, stats);
+      } catch (error) {
+        logger.errorFromCatch(error, 'checkGooglePlayUser', user.user_id);
+        stats.errors++;
+      }
+    }
+
+    if (stats.totalUsersChecked === 0) {
       return {
         statusCode: 200,
         body: JSON.stringify({
@@ -207,20 +371,6 @@ export const handler = async (event) => {
           note: 'No users with subscriptions found',
         }),
       };
-    }
-
-    for (const user of users) {
-      try {
-        await checkUserSubscription(user, stats);
-      } catch (error) {
-        // Stripe API unreachable — log and continue so other users still get checked
-        if (error.message?.includes('connect ENOTFOUND') || error.type === 'StripeConnectionError') {
-          logger.errorFromCatch(error, 'Stripe API unreachable', user.user_id);
-        } else {
-          logger.errorFromCatch(error, 'checkUserSubscription', user.user_id);
-        }
-        stats.errors++;
-      }
     }
 
     const duration = Date.now() - startTime;

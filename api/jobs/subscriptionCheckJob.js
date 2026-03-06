@@ -1,13 +1,20 @@
 /**
-/**
  * Subscription Check Job
- * 
- * Runs every 4 hours to verify active subscriptions
- * - Fetches current subscription status from Stripe
- * - Updates database if status changed
- * - Notifies users of issues
- * - Logs errors to database
- * 
+ *
+ * Runs once daily (scheduler: 0 1 * * * — 01:00 UTC) to verify active
+ * subscriptions for ALL billing platforms:
+ *
+ *   Stripe users:
+ *     - Fetches current subscription status from Stripe API
+ *     - Updates database if status changed
+ *     - Notifies users of issues (past_due, canceled, etc.)
+ *
+ *   Google Play users:
+ *     - Re-validates the stored purchase token with the Google Play Developer API
+ *     - Updates subscription_status and current_period_end if changed
+ *     - Acts as a safety net in case the RTDN webhook was missed or delayed
+ *     - The RTDN webhook handles real-time events; this job catches any gaps
+ *
  * Usage:
  *   import { runSubscriptionCheckJob } from './subscriptionCheckJob.js';
  *   await runSubscriptionCheckJob();
@@ -18,6 +25,7 @@ import { logErrorFromCatch } from '../shared/errorLogger.js';
 import { validateSubscriptionStatus, updateLastStatusCheck } from '../services/stripe/subscriptionValidator.js';
 import { notifyBillingEvent, notifySubscriptionCheckFailed } from '../services/stripe/billingNotifications.js';
 import { stripe } from '../services/stripe/stripeClient.js';
+import { hashUserId } from '../shared/hashUtils.js';
 
 let jobRunning = false;
 let lastRunTime = null;
@@ -33,7 +41,7 @@ let lastRunStats = {
 const STRIPE_CONCURRENCY = 10;
 
 /**
- * Main job function - runs every 4 hours
+ * Main job function - runs once daily at 01:00 UTC
  */
 export async function runSubscriptionCheckJob() {
   // Prevent concurrent execution
@@ -52,30 +60,38 @@ export async function runSubscriptionCheckJob() {
   };
 
   try {
-    // Get all users with subscriptions
-    const users = await getAllUsersWithSubscriptions();
-    stats.totalUsersChecked = users.length;
+    // ── Stripe subscriptions ─────────────────────────────────────────────────
+    const stripeUsers = await getAllUsersWithSubscriptions();
+    stats.totalUsersChecked += stripeUsers.length;
 
-    if (users.length === 0) {
-      jobRunning = false;
-      return {
-        status: 'completed',
-        stats,
-        duration: Date.now() - startTime
-      };
-    }
-
-    // Check subscriptions in concurrent batches to avoid sequential Stripe API
-    // calls taking 50+ minutes. STRIPE_CONCURRENCY controls parallelism while
-    // staying well within Stripe's 100 req/s rate limit.
-    for (let i = 0; i < users.length; i += STRIPE_CONCURRENCY) {
-      const batch = users.slice(i, i + STRIPE_CONCURRENCY);
+    for (let i = 0; i < stripeUsers.length; i += STRIPE_CONCURRENCY) {
+      const batch = stripeUsers.slice(i, i + STRIPE_CONCURRENCY);
       await Promise.all(
         batch.map(async (user) => {
           try {
             await checkUserSubscription(user, stats);
           } catch (error) {
             logErrorFromCatch(error, 'job', 'subscription-check-job', user.user_id);
+            stats.errors++;
+          }
+        })
+      );
+    }
+
+    // ── Google Play subscriptions ────────────────────────────────────────────
+    // Safety net: re-validates every Google Play subscription once per day
+    // in case an RTDN webhook was missed or delayed.
+    const googlePlayUsers = await getAllGooglePlayUsers();
+    stats.totalUsersChecked += googlePlayUsers.length;
+
+    for (let i = 0; i < googlePlayUsers.length; i += STRIPE_CONCURRENCY) {
+      const batch = googlePlayUsers.slice(i, i + STRIPE_CONCURRENCY);
+      await Promise.all(
+        batch.map(async (user) => {
+          try {
+            await checkGooglePlaySubscription(user, stats);
+          } catch (error) {
+            logErrorFromCatch(error, 'job', 'google-play-subscription-check', user.user_id);
             stats.errors++;
           }
         })
@@ -110,6 +126,144 @@ export async function runSubscriptionCheckJob() {
     jobRunning = false;
   }
 }
+
+// ─── Google Play helpers ──────────────────────────────────────────────────────
+
+/**
+ * Calls the Google Play Developer API to fetch the current subscription state
+ * for a stored purchase token.  Mirrors the same helper in googlePlay.js route.
+ * Returns null when GOOGLE_PLAY_SERVICE_ACCOUNT_JSON is not configured (sandbox).
+ */
+async function verifyGooglePlayToken(packageName, productId, purchaseToken) {
+  const serviceAccountJson = process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON;
+  if (!serviceAccountJson) {
+    return null; // sandbox — skip API call
+  }
+  const { google } = await import('googleapis');
+  const auth = new google.auth.GoogleAuth({
+    credentials: JSON.parse(serviceAccountJson),
+    scopes: ['https://www.googleapis.com/auth/androidpublisher'],
+  });
+  const androidPublisher = google.androidpublisher({ version: 'v3', auth });
+  const response = await androidPublisher.purchases.subscriptions.get({
+    packageName,
+    subscriptionId: productId,
+    token: purchaseToken,
+  });
+  return response.data;
+}
+
+/**
+ * Fetch all Google Play subscribers who haven't been checked in the past 20 hours.
+ * (The job runs daily; 20h guard prevents re-checking users who were recently
+ * updated by an RTDN webhook within the same day.)
+ */
+async function getAllGooglePlayUsers() {
+  try {
+    const { rows } = await db.query(
+      `SELECT user_id,
+              subscription_status,
+              current_period_end,
+              google_play_purchase_token,
+              google_play_product_id
+       FROM user_personal_info
+       WHERE billing_platform = 'google_play'
+         AND google_play_purchase_token IS NOT NULL
+         AND user_id NOT LIKE 'temp_%'
+         AND (
+           last_status_check_at IS NULL
+           OR last_status_check_at < NOW() - INTERVAL '20 hours'
+         )
+       ORDER BY last_status_check_at ASC NULLS FIRST
+       LIMIT 1000`
+    );
+    return rows;
+  } catch (error) {
+    logErrorFromCatch(error, 'job', 'get-google-play-users');
+    return [];
+  }
+}
+
+/**
+ * Re-validate a single Google Play subscriber against the Play Developer API.
+ * Updates the DB if the status or expiry has changed.
+ */
+async function checkGooglePlaySubscription(user, stats) {
+  const {
+    user_id: userId,
+    subscription_status: currentStatus,
+    google_play_purchase_token: purchaseToken,
+    google_play_product_id: productId,
+  } = user;
+
+  // Always touch last_status_check_at so the next daily run skips recently-checked users
+  const touchTimestamp = async () => {
+    await db.query(
+      `UPDATE user_personal_info SET last_status_check_at = NOW() WHERE user_id = $1`,
+      [userId]
+    );
+  };
+
+  // If we don't have Play API credentials, we can only do a time-based expiry check
+  const googleSubscription = await verifyGooglePlayToken(
+    'com.starshippsychicsmobile',
+    productId,
+    purchaseToken
+  ).catch((err) => {
+    logErrorFromCatch(err, 'job', 'google-play-api-verify', userId);
+    return null;
+  });
+
+  if (!googleSubscription) {
+    // No credentials (sandbox) — fall back to checking current_period_end
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    const isExpired  = user.current_period_end && user.current_period_end < nowSeconds;
+    if (isExpired && currentStatus === 'active') {
+      await db.query(
+        `UPDATE user_personal_info
+         SET subscription_status  = 'expired',
+             last_status_check_at = NOW(),
+             updated_at           = NOW()
+         WHERE user_id = $1`,
+        [userId]
+      );
+      stats.statusChanged++;
+      console.log(`[SubscriptionJob] Google Play user ${hashUserId(userId)} marked expired (no API creds)`);
+    } else {
+      await touchTimestamp();
+    }
+    return;
+  }
+
+  // ── We have live data from Google — use it ────────────────────────────────
+  const expiryMs       = parseInt(googleSubscription.expiryTimeMillis, 10);
+  const isExpired      = expiryMs < Date.now();
+  const paymentPending = googleSubscription.paymentState === 0;
+  const newStatus      = (!isExpired && !paymentPending) ? 'active' : 'expired';
+  const newPeriodEnd   = Math.floor(expiryMs / 1000);
+
+  if (newStatus !== currentStatus || newPeriodEnd !== user.current_period_end) {
+    stats.statusChanged++;
+    await db.query(
+      `UPDATE user_personal_info
+       SET subscription_status  = $2,
+           current_period_end   = $3,
+           last_status_check_at = NOW(),
+           updated_at           = NOW()
+       WHERE user_id = $1`,
+      [userId, newStatus, newPeriodEnd]
+    );
+    console.log(
+      `[SubscriptionJob] Google Play user ${hashUserId(userId)}: ` +
+      `${currentStatus} → ${newStatus} ` +
+      `expires=${new Date(expiryMs).toISOString()}`
+    );
+  } else {
+    await touchTimestamp();
+  }
+}
+
+// ─── Stripe helpers ───────────────────────────────────────────────────────────
 
 /**
  * Get all users with subscriptions from database
@@ -277,7 +431,7 @@ export function getSubscriptionCheckJobStatus() {
     running: jobRunning,
     lastRunTime,
     lastRunStats,
-    schedule: 'Every 4 hours (0, 4, 8, 12, 16, 20 hours UTC)'
+    schedule: 'Once daily at 01:00 UTC',
   };
 }
 

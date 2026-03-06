@@ -287,4 +287,191 @@ router.get('/subscription-status/google', authenticateToken, async (req, res) =>
   }
 });
 
+// ─── POST /billing/google-play-rtdn ──────────────────────────────────────────
+/**
+ * Google Play Real-Time Developer Notifications (RTDN) endpoint.
+ *
+ * Google Cloud Pub/Sub calls this endpoint whenever a subscription lifecycle
+ * event occurs on any user's account (auto-renewal, cancellation, expiry, etc.).
+ * Our database is updated immediately so both the mobile app AND the web app
+ * see the correct subscription status without the user having to open the app.
+ *
+ * Setup (one-time, in Google Cloud Console):
+ *   1. Create a Pub/Sub topic in the same GCP project as the Play Console app.
+ *   2. In Play Console → Monetize → Subscriptions → Real-time developer notifications,
+ *      enter the topic name.
+ *   3. Create a Pub/Sub PUSH subscription pointing to:
+ *        https://<your-api-domain>/billing/google-play-rtdn?token=<GOOGLE_PLAY_PUBSUB_TOKEN>
+ *   4. Set GOOGLE_PLAY_PUBSUB_TOKEN in your API secrets (any random secret string).
+ *
+ * Google Play notificationType values:
+ *   1  = SUBSCRIPTION_RECOVERED        (billing recovered after account hold)
+ *   2  = SUBSCRIPTION_RENEWED          ← the main one: auto-renewal succeeded
+ *   3  = SUBSCRIPTION_CANCELED
+ *   4  = SUBSCRIPTION_PURCHASED        (already handled by validate-receipt/google)
+ *   5  = SUBSCRIPTION_ON_HOLD          (payment failed, within grace period)
+ *   6  = SUBSCRIPTION_IN_GRACE_PERIOD
+ *   7  = SUBSCRIPTION_RESTARTED        (user re-enables a paused subscription)
+ *   8  = SUBSCRIPTION_PRICE_CHANGE_CONFIRMED
+ *   9  = SUBSCRIPTION_DEFERRED
+ *   10 = SUBSCRIPTION_PAUSED
+ *   11 = SUBSCRIPTION_PAUSE_SCHEDULE_CHANGED
+ *   12 = SUBSCRIPTION_REVOKED
+ *   13 = SUBSCRIPTION_EXPIRED
+ */
+router.post('/google-play-rtdn', express.json(), async (req, res) => {
+  try {
+    // ── Validate Pub/Sub bearer token ─────────────────────────────────────────
+    // Pub/Sub appends ?token=<value> to the push URL.  We compare it against
+    // GOOGLE_PLAY_PUBSUB_TOKEN to ensure the request is genuinely from Google.
+    const expectedToken = process.env.GOOGLE_PLAY_PUBSUB_TOKEN;
+    if (expectedToken) {
+      const providedToken = req.query.token;
+      if (providedToken !== expectedToken) {
+        console.warn('[GooglePlay RTDN] Rejected: invalid Pub/Sub token');
+        // Return 200 anyway — a 4xx would cause Pub/Sub to retry forever
+        return res.status(200).json({ received: true, error: 'unauthorized' });
+      }
+    }
+
+    // ── Decode the Pub/Sub message ────────────────────────────────────────────
+    const message = req.body?.message;
+    if (!message?.data) {
+      // Empty / malformed message — acknowledge so Pub/Sub stops retrying
+      return res.status(200).json({ received: true });
+    }
+
+    let notification;
+    try {
+      const decoded = Buffer.from(message.data, 'base64').toString('utf8');
+      notification = JSON.parse(decoded);
+    } catch {
+      console.error('[GooglePlay RTDN] Failed to decode Pub/Sub payload');
+      return res.status(200).json({ received: true });
+    }
+
+    // Only process subscription notifications (not one-time purchases / voided purchases)
+    const subNotif = notification.subscriptionNotification;
+    if (!subNotif) {
+      return res.status(200).json({ received: true });
+    }
+
+    const { purchaseToken, subscriptionId, notificationType } = subNotif;
+    const packageName = notification.packageName || 'com.starshippsychicsmobile';
+
+    console.log(
+      `[GooglePlay RTDN] type=${notificationType} productId=${subscriptionId} ` +
+      `token=${purchaseToken ? purchaseToken.substring(0, 16) + '…' : 'none'}`
+    );
+
+    if (!purchaseToken || !subscriptionId) {
+      return res.status(200).json({ received: true });
+    }
+
+    // ── Find the user who owns this purchase token ────────────────────────────
+    const userResult = await db.query(
+      `SELECT user_id
+       FROM user_personal_info
+       WHERE google_play_purchase_token = $1
+         AND billing_platform = 'google_play'`,
+      [purchaseToken]
+    );
+
+    if (userResult.rows.length === 0) {
+      // Token not in our DB yet — could be a brand-new purchase that the mobile
+      // app's validate-receipt/google call hasn't arrived for yet.  Log and
+      // acknowledge (the app will call validate-receipt/google momentarily).
+      console.warn(
+        `[GooglePlay RTDN] No user found for purchase token (type=${notificationType}) — ` +
+        'possibly a new purchase not yet validated by the app'
+      );
+      return res.status(200).json({ received: true });
+    }
+
+    const userId = userResult.rows[0].user_id;
+
+    // ── Fetch ground-truth from the Google Play Developer API ─────────────────
+    let googleSubscription = null;
+    try {
+      googleSubscription = await verifyWithGooglePlayAPI(packageName, subscriptionId, purchaseToken);
+    } catch (apiErr) {
+      console.error('[GooglePlay RTDN] Play Developer API call failed:', apiErr.message);
+      // Fall back to inferring status from the notification type alone
+    }
+
+    // ── Determine the new subscription status ─────────────────────────────────
+    // Notification types that mean the subscription should be considered active:
+    const ACTIVE_NOTIFICATION_TYPES   = new Set([1, 2, 4, 7, 8]); // recovered, renewed, purchased, restarted, price-confirmed
+    // Types that mean payment is delayed but we keep access (grace period / on-hold):
+    const GRACE_NOTIFICATION_TYPES    = new Set([5, 6]);            // on_hold, in_grace_period
+    // Types that mean the subscription is definitively inactive:
+    const INACTIVE_NOTIFICATION_TYPES = new Set([3, 10, 12, 13]);  // canceled, paused, revoked, expired
+
+    let newStatus;
+    let currentPeriodEnd   = null;
+    let currentPeriodStart = null;
+
+    if (googleSubscription) {
+      // Google API returned authoritative data — use it
+      const expiryMs       = parseInt(googleSubscription.expiryTimeMillis, 10);
+      const isExpired      = expiryMs < Date.now();
+      // paymentState: 0=pending, 1=received, 2=free-trial, 3=deferred
+      const paymentPending = googleSubscription.paymentState === 0;
+      newStatus            = (!isExpired && !paymentPending) ? 'active' : 'expired';
+      currentPeriodEnd     = Math.floor(expiryMs / 1000);
+      if (googleSubscription.startTimeMillis) {
+        currentPeriodStart = Math.floor(parseInt(googleSubscription.startTimeMillis, 10) / 1000);
+      }
+    } else if (ACTIVE_NOTIFICATION_TYPES.has(notificationType)) {
+      newStatus = 'active';
+    } else if (GRACE_NOTIFICATION_TYPES.has(notificationType)) {
+      // Keep 'active' during grace period so the user isn't locked out while
+      // Google retries payment.  The next RTDN will update once resolved.
+      newStatus = 'active';
+    } else if (INACTIVE_NOTIFICATION_TYPES.has(notificationType)) {
+      newStatus = notificationType === 10 ? 'paused' : 'canceled';
+    } else {
+      // Unknown type — don't update; just acknowledge
+      return res.status(200).json({ received: true });
+    }
+
+    // ── Write the updated status to the database ──────────────────────────────
+    await db.query(
+      `UPDATE user_personal_info
+       SET subscription_status  = $2,
+           current_period_start = COALESCE($3, current_period_start),
+           current_period_end   = COALESCE($4, current_period_end),
+           last_status_check_at = NOW(),
+           updated_at           = NOW()
+       WHERE user_id = $1`,
+      [userId, newStatus, currentPeriodStart, currentPeriodEnd]
+    );
+
+    // Record cancellation timestamp when the subscription is definitively cancelled
+    if (newStatus === 'canceled') {
+      await db.query(
+        `UPDATE user_personal_info
+         SET subscription_cancelled_at = NOW()
+         WHERE user_id = $1`,
+        [userId]
+      );
+    }
+
+    console.log(
+      `[GooglePlay RTDN] Updated user ${hashUserId(userId)}: ` +
+      `status=${newStatus} type=${notificationType}` +
+      (currentPeriodEnd ? ` expires=${new Date(currentPeriodEnd * 1000).toISOString()}` : '')
+    );
+
+    // Always respond 200 to acknowledge the Pub/Sub message.
+    // A non-2xx would cause Pub/Sub to retry with exponential backoff.
+    return res.status(200).json({ received: true });
+
+  } catch (error) {
+    logErrorFromCatch(error, 'billing', 'google-play-rtdn').catch(() => {});
+    // Return 200 to prevent Pub/Sub retry storm on transient errors
+    return res.status(200).json({ received: true, error: 'internal_error' });
+  }
+});
+
 export default router;

@@ -238,41 +238,29 @@ async function getUsersWithoutSubscriptions() {
  */
 function getJobStatus() {
   return {
-    schedule: 'Every 4 hours (00:00, 04:00, 08:00, 12:00, 16:00, 20:00 UTC)',
+    schedule: 'Once daily at 01:00 UTC (0 1 * * *)',
     nextRun: getNextJobRunTime(),
+    note: 'Google Play real-time renewals are handled by the RTDN webhook; this job is a daily safety net.',
     environmentVariables: {
-      checkAvailable: !!process.env.STRIPE_SECRET_KEY,
-      subscriptionCheckOnStartup: process.env.SUBSCRIPTION_CHECK_RUN_ON_STARTUP === 'true'
-    }
+      stripeCheckAvailable: !!process.env.STRIPE_SECRET_KEY,
+      googlePlayCheckAvailable: !!process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON,
+      subscriptionCheckOnStartup: process.env.SUBSCRIPTION_CHECK_RUN_ON_STARTUP === 'true',
+    },
   };
 }
 
 /**
- * Calculate next job run time
+ * Calculate next job run time (daily at 01:00 UTC)
  */
 function getNextJobRunTime() {
   const now = new Date();
-  const runHours = [0, 4, 8, 12, 16, 20];
-  let nextHour = null;
-
-  for (const hour of runHours) {
-    const nextRun = new Date(now);
-    nextRun.setUTCHours(hour, 0, 0, 0);
-
-    if (nextRun > now) {
-      nextHour = nextRun;
-      break;
-    }
+  const next = new Date(now);
+  next.setUTCHours(1, 0, 0, 0);
+  // If 01:00 UTC has already passed today, schedule for tomorrow
+  if (next <= now) {
+    next.setUTCDate(next.getUTCDate() + 1);
   }
-
-  if (!nextHour) {
-    // Next run is tomorrow at 00:00 UTC
-    nextHour = new Date(now);
-    nextHour.setUTCDate(nextHour.getUTCDate() + 1);
-    nextHour.setUTCHours(0, 0, 0, 0);
-  }
-
-  return nextHour.toISOString();
+  return next.toISOString();
 }
 
 export default router;
