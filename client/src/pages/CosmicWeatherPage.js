@@ -122,7 +122,9 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
           </div>
 
           <div className="cosmic-weather-text">
-            <div dangerouslySetInnerHTML={{ __html: showingBrief && cosmicData.brief ? cosmicData.brief : cosmicData.text }} />
+            {((showingBrief && cosmicData.brief ? cosmicData.brief : cosmicData.text) || '').split(/\n\n+/).filter(p => p.trim()).map((para, i) => (
+              <pre key={i} className="markdown-pre">{para.trim()}</pre>
+            ))}
             
             {/* Voice Bar */}
             {isSupported && (

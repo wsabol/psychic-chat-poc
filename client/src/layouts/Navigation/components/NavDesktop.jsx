@@ -8,6 +8,7 @@ export function NavDesktop({
   currentPageIndex,
   onNavigate,
   onLogout,
+  onCreateAccount,
   isTemporaryAccount,
   isDisabled = false,
   menuStructure,
@@ -91,13 +92,23 @@ export function NavDesktop({
       </ul>
 
       <div className="nav-footer">
-        <button
-          className="nav-logout-btn"
-          onClick={onLogout}
-          aria-label="Log out"
-        >
-          🚪 {t('menu.logout')}
-        </button>
+        {isTemporaryAccount ? (
+          <button
+            className="nav-logout-btn nav-create-account-btn"
+            onClick={onCreateAccount}
+            aria-label="Create account"
+          >
+            ✨ {t('menu.createAccount') || 'Create Account'}
+          </button>
+        ) : (
+          <button
+            className="nav-logout-btn"
+            onClick={onLogout}
+            aria-label="Log out"
+          >
+            🚪 {t('menu.logout')}
+          </button>
+        )}
         <p className="nav-version">v1.0</p>
       </div>
     </nav>

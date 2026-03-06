@@ -46,7 +46,9 @@ export function HoroscopeContent({ horoscopeData, showingBrief, setShowingBrief,
       </div>
 
       <div className="horoscope-text">
-        <div dangerouslySetInnerHTML={{ __html: showingBrief && horoscopeData.brief ? horoscopeData.brief : horoscopeData.text }} />
+        {((showingBrief && horoscopeData.brief ? horoscopeData.brief : horoscopeData.text) || '').split(/\n\n+/).filter(p => p.trim()).map((para, i) => (
+          <pre key={i} className="markdown-pre">{para.trim()}</pre>
+        ))}
         
         {/* Voice Bar */}
         {isSupported && (

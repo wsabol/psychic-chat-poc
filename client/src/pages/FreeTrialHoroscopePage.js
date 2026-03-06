@@ -366,11 +366,9 @@ export default function FreeTrialHoroscopePage({ userId, auth, onExit }) {
 
           {/* Horoscope text — displayText respects brief/full toggle */}
           <div className="horoscope-text">
-            <pre className="markdown-p" style={{
-              whiteSpace: 'pre-wrap',
-              wordWrap: 'break-word',
-              fontFamily: 'inherit',
-            }}>{displayText}</pre>
+            {(displayText || '').split(/\n\n+/).filter(p => p.trim()).map((para, i) => (
+              <pre key={i} className="markdown-pre">{para.trim()}</pre>
+            ))}
 
             {/* VoiceBar — reads exactly the text currently shown on screen */}
             {isSupported && (

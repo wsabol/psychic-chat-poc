@@ -36,7 +36,9 @@ export function MoonPhaseContent({ moonPhaseData, showingBrief, setShowingBrief,
   return (
     <section className="moon-phase-content">
       <div className="moon-phase-insight">
-        <div dangerouslySetInnerHTML={{ __html: showingBrief && moonPhaseData.brief ? moonPhaseData.brief : moonPhaseData.text }} />
+        {((showingBrief && moonPhaseData.brief ? moonPhaseData.brief : moonPhaseData.text) || '').split(/\n\n+/).filter(p => p.trim()).map((para, i) => (
+          <pre key={i} className="markdown-pre">{para.trim()}</pre>
+        ))}
         
         {/* Voice Bar */}
         {isSupported && (

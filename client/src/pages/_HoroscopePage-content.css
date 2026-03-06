@@ -19,18 +19,21 @@
    MARKDOWN CONTENT STYLING
    ============================================ */
 
-.markdown-p {
+.markdown-pre {
   margin: var(--spacing-md) 0;
   font-size: var(--font-size-base);
   line-height: var(--line-height-relaxed);
   color: var(--color-text);
+  font-family: inherit;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
-.markdown-p:first-child {
+.markdown-pre:first-child {
   margin-top: 0;
 }
 
-.markdown-p:last-child {
+.markdown-pre:last-child {
   margin-bottom: 0;
 }
 

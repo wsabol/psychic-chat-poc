@@ -315,6 +315,7 @@ export function AppChat({ state }) {
           token={authState.token}
           userId={authState.authUserId}
           onLogout={authState.handleLogout}
+          onCreateAccount={handlers.handleCreateAccount}
           onExit={() => {
             if (authState.isTemporaryAccount) {
               // Show the free trial completion page (replaces the old ThankYouScreen)

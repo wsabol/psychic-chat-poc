@@ -35,6 +35,7 @@ import {
   logAdminLoginAttempt,
 } from '../../../services/adminIpService.js';
 import { buildAdminNewIPEmailHTML } from '../../../services/adminEmailBuilder.js';
+import { auth } from '../../../shared/firebase-admin.js';
 import {
   buildAuditFields,
   generateTempToken,
@@ -93,9 +94,39 @@ export async function check2FAHandler(req, res) {
     }
 
     // ------------------------------------------------------------------
-    // 2. Admin IP check
+    // 2. Resolve user email (with registration race-condition guard)
     // ------------------------------------------------------------------
-    const userEmail = await getUserEmail(userId);
+    // getUserEmail() queries user_personal_info, which is inserted by the
+    // client's /auth/register-firebase-user call.  onAuthStateChanged fires
+    // synchronously after createUserWithEmailAndPassword — before that insert
+    // has committed — so check-2fa can arrive before the DB row exists.
+    //
+    // On Firefox (production) the mark-email-verified CORS preflight sometimes
+    // returns a non-ok response, causing the client to skip reload() and
+    // getIdToken(true).  This removes ~300 ms of extra round-trip delay, making
+    // the race far more likely to materialise.  When getUserEmail() returns null
+    // we fall back to the Firebase Admin SDK, which always has the email.
+    let userEmail = await getUserEmail(userId);
+    if (!userEmail) {
+      try {
+        const fbUser = await auth.getUser(userId);
+        userEmail = fbUser.email || null;
+        if (userEmail) {
+          console.info(
+            `[check-2fa] DB email lookup missed for ${userId.slice(0, 8)}… ` +
+            `(registration race) — fell back to Firebase Admin.`
+          );
+        }
+      } catch (fbErr) {
+        // Very unusual — user not found in Firebase either.  Continue and let
+        // sendTwoFACode surface the email-send failure gracefully.
+        logErrorFromCatch(fbErr, 'check-2fa', 'Firebase Admin email fallback');
+      }
+    }
+
+    // ------------------------------------------------------------------
+    // 3. Admin IP check
+    // ------------------------------------------------------------------
     const isAdminUser = userEmail ? await isAdmin(userEmail) : false;
 
     if (isAdminUser && ipAddress) {
@@ -109,16 +140,35 @@ export async function check2FAHandler(req, res) {
     }
 
     // ------------------------------------------------------------------
-    // 3. Regular-user 2FA settings check
+    // 4. Regular-user 2FA settings check
     // ------------------------------------------------------------------
     const userIdHash = hashUserId(userId);
     const twoFAResult = await db.query(
       'SELECT * FROM user_2fa_settings WHERE user_id_hash = $1',
       [userIdHash]
     );
-    const twoFASettings = twoFAResult.rows[0];
+    let twoFASettings = twoFAResult.rows[0];
 
-    if (!twoFASettings?.enabled) {
+    if (!twoFASettings) {
+      // No settings row found at all.  This is a timing race that is
+      // most visible in Chrome: onAuthStateChanged fires immediately after
+      // Firebase creates the account, before the client's
+      // /auth/register-firebase-user call has had time to insert the
+      // default user_2fa_settings row via createUserDatabaseRecords().
+      //
+      // All new users default to 2FA enabled (email). Insert that default
+      // row now so this request can fall through to send the verification
+      // code.  ON CONFLICT is a safety net in case a parallel request
+      // already created the row between our SELECT and this INSERT.
+      await db.query(
+        `INSERT INTO user_2fa_settings (user_id_hash, enabled, method, created_at, updated_at)
+         VALUES ($1, true, 'email', NOW(), NOW())
+         ON CONFLICT (user_id_hash) DO NOTHING`,
+        [userIdHash]
+      );
+      twoFASettings = { enabled: true, method: 'email' };
+      // Fall through to the trusted-device check and code-sending logic.
+    } else if (!twoFASettings.enabled) {
       return successResponse(res, {
         success: true,
         userId,
@@ -128,7 +178,7 @@ export async function check2FAHandler(req, res) {
     }
 
     // ------------------------------------------------------------------
-    // 4. Trusted-device bypass
+    // 5. Trusted-device bypass
     // Mobile apps send X-Device-ID (a persistent UUID) because User-Agent
     // is a forbidden XHR header in React Native and cannot be set from JS.
     // Web browsers use User-Agent automatically.
@@ -154,7 +204,7 @@ export async function check2FAHandler(req, res) {
     }
 
     // ------------------------------------------------------------------
-    // 5. Send 2FA code
+    // 6. Send 2FA code
     // ------------------------------------------------------------------
     return await sendTwoFACode(res, req, {
       userId,

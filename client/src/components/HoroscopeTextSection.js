@@ -29,7 +29,9 @@ export default function HoroscopeTextSection({
 
   return (
     <div className="horoscope-text">
-      <div dangerouslySetInnerHTML={{ __html: displayText }} />
+      {(displayText || '').split(/\n\n+/).filter(p => p.trim()).map((para, i) => (
+        <pre key={i} className="markdown-pre">{para.trim()}</pre>
+      ))}
       
       {isSupported && (
         <VoiceBar

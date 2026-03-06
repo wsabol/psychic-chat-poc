@@ -48,7 +48,8 @@
       "title": "Billing & Subscriptions"
     },
     "admin": "Admin",
-    "logout": "Log Out"
+    "logout": "Log Out",
+    "createAccount": "Create Account"
   },
   "modals": {
     "confirmDelete": "Are you sure?",

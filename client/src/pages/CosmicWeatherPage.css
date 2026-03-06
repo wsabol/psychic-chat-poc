@@ -116,15 +116,18 @@
   border-left: 4px solid #9c27b0;
 }
 
-.markdown-p {
+.markdown-pre {
   margin: var(--spacing-md) 0;
   font-size: 0.95rem;
   line-height: 1.8;
   color: var(--color-text);
+  font-family: inherit;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
-.markdown-p:first-child { margin-top: 0; }
-.markdown-p:last-child { margin-bottom: 0; }
+.markdown-pre:first-child { margin-top: 0; }
+.markdown-pre:last-child { margin-bottom: 0; }
 
 .markdown-strong {
   font-weight: 600;

@@ -48,7 +48,8 @@
     },
     "chat": "Chat",
     "admin": "Admin",
-    "logout": "Cerrar Sesión"
+    "logout": "Cerrar Sesión",
+    "createAccount": "Crear Cuenta"
   },
   "modals": {
     "confirmDelete": "¿Está seguro?",

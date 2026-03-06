@@ -8,6 +8,7 @@ export function NavMobile({
   currentPageIndex,
   onNavigate,
   onLogout,
+  onCreateAccount,
   isTemporaryAccount,
   isDisabled = false,
   menuStructure,
@@ -121,18 +122,32 @@ export function NavMobile({
               ))}
             </ul>
 
-            {/* Mobile Logout Button */}
-            <button
-              className="nav-mobile-logout-btn"
-              onClick={() => {
-                setMobileMenuOpen(false);
-                setExpandedSubmenu(null);
-                onLogout && onLogout();
-              }}
-              aria-label="Log out"
-            >
-              🚪 {t('menu.logout')}
-            </button>
+            {/* Mobile Logout / Create Account Button */}
+            {isTemporaryAccount ? (
+              <button
+                className="nav-mobile-logout-btn nav-create-account-btn"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setExpandedSubmenu(null);
+                  onCreateAccount && onCreateAccount();
+                }}
+                aria-label="Create account"
+              >
+                ✨ {t('menu.createAccount') || 'Create Account'}
+              </button>
+            ) : (
+              <button
+                className="nav-mobile-logout-btn"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setExpandedSubmenu(null);
+                  onLogout && onLogout();
+                }}
+                aria-label="Log out"
+              >
+                🚪 {t('menu.logout')}
+              </button>
+            )}
           </nav>
         </>
       )}

@@ -232,6 +232,34 @@ export function useAuthState(checkBillingStatus) {
                 });
 
                 clearTimeout(timeoutId);
+
+                // Guard: treat HTTP error responses (5xx/4xx) as temporary
+                // server-side failures.  Do NOT fall through to the else-branch
+                // that would authenticate the user without 2FA — that would
+                // silently bypass 2FA whenever the server errors during code
+                // dispatch (e.g. the registration race described below).
+                //
+                // Root-cause context (Firefox production):
+                //   createUserWithEmailAndPassword fires onAuthStateChanged
+                //   synchronously, before the client's register-firebase-user
+                //   call has committed user_personal_info.  On Firefox the
+                //   mark-email-verified CORS preflight can return non-ok,
+                //   skipping reload()/getIdToken(true) and removing ~300 ms of
+                //   delay.  check-2fa then arrives before the DB row exists,
+                //   getUserEmail() returns null, email dispatch fails → 500.
+                //   The server-side Firebase Admin fallback in check.js fixes
+                //   the race; this guard is an additional safety net.
+                if (!twoFAResponse.ok) {
+                  logWarning(
+                    `[AUTH-LISTENER] check-2fa returned HTTP ${twoFAResponse.status} — ` +
+                    'not authenticating; user should sign out and retry.'
+                  );
+                  setShowTwoFactor(false);
+                  setIsAuthenticated(false);
+                  setLoading(false);
+                  return; // inner finally releases the _pendingTwoFAChecks lock
+                }
+
                 const twoFAData = await twoFAResponse.json();
 
                 if (twoFAData.requires2FA) {

@@ -458,6 +458,18 @@
   color: white;
 }
 
+/* Create Account button - shown in place of Log Out for free trial users */
+.nav-create-account-btn {
+  color: #ffe066 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.nav-create-account-btn:hover,
+.nav-create-account-btn:active {
+  background: rgba(255, 224, 102, 0.15) !important;
+  color: white !important;
+}
+
 /* ============================================
    DISABLED MENU STYLES (TEMP ACCOUNTS)
    ============================================ */

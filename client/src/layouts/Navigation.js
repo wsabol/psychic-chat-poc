@@ -14,6 +14,7 @@ export default function Navigation({
   onNavigate,
   isVisible,
   onLogout,
+  onCreateAccount,
   isTemporaryAccount,
   isDisabled = false,
   userEmail = ''
@@ -37,6 +38,7 @@ export default function Navigation({
         currentPageIndex={currentPageIndex}
         onNavigate={onNavigate}
         onLogout={onLogout}
+        onCreateAccount={onCreateAccount}
         isTemporaryAccount={isTemporaryAccount}
         isDisabled={isDisabled}
         menuStructure={filteredMenu}
@@ -51,6 +53,7 @@ export default function Navigation({
         currentPageIndex={currentPageIndex}
         onNavigate={onNavigate}
         onLogout={onLogout}
+        onCreateAccount={onCreateAccount}
         isTemporaryAccount={isTemporaryAccount}
         isDisabled={isDisabled}
         menuStructure={filteredMenu}

@@ -38,7 +38,7 @@ const PAGES = [
   { id: 'admin', label: 'Admin', component: AdminPage },
 ];
 
-export default function MainContainer({ auth, token, userId, onLogout, onExit, startingPage = 0, billingTab = 'payment-methods', onNavigateFromBilling, onboarding, freeTrialState }) {
+export default function MainContainer({ auth, token, userId, onLogout, onCreateAccount, onExit, startingPage = 0, billingTab = 'payment-methods', onNavigateFromBilling, onboarding, freeTrialState }) {
   const [currentPageIndex, setCurrentPageIndex] = useState(startingPage);
   const [swipeDirection, setSwipeDirection] = useState(0);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -232,6 +232,7 @@ export default function MainContainer({ auth, token, userId, onLogout, onExit, s
         onNavigate={(index) => goToPage(index)}
         isVisible={navVisible}
         onLogout={onLogout}
+        onCreateAccount={onCreateAccount}
         isTemporaryAccount={auth?.isTemporaryAccount}
         isDisabled={modeRules.isNavDisabled()}
         userEmail={auth?.authEmail}
