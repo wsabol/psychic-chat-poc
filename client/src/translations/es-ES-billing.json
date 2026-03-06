@@ -152,7 +152,13 @@
     "fixCardErrors": "Por favor corrija los errores de la tarjeta antes de enviar",
     "cardElementNotReady": "El elemento de la tarjeta no está listo",
     "failedToInitialize": "Error al inicializar el formulario de tarjeta",
-    "containerNotFound": "Contenedor del elemento de tarjeta no encontrado"
+    "containerNotFound": "Contenedor del elemento de tarjeta no encontrado",
+    "completeCardDetails": "Por favor complete todos los detalles de la tarjeta",
+    "enterBillingCountry": "Por favor seleccione un país de facturación",
+    "enterStreetAddress": "Por favor ingrese una dirección",
+    "enterCity": "Por favor ingrese una ciudad",
+    "enterState": "Por favor ingrese un estado / provincia",
+    "enterZipCode": "Por favor ingrese un código postal"
   },
   "checkout": {
     "title": "Completa tu Compra",

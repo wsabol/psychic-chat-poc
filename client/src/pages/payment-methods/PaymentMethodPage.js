@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import { useTranslation } from '../../context/TranslationContext';
@@ -83,8 +83,33 @@ export default function PaymentMethodPage({ userId, token, auth, onboarding, onP
       return;
     }
 
-    if (!billingForm.cardholderName) {
+    if (!billingForm.cardholderName?.trim()) {
       setCardError(t('paymentMethods.enterCardholderName'));
+      return;
+    }
+
+    if (!billingForm.billingCountry) {
+      setCardError(t('paymentMethods.enterBillingCountry'));
+      return;
+    }
+
+    if (!billingForm.billingAddress?.trim()) {
+      setCardError(t('paymentMethods.enterStreetAddress'));
+      return;
+    }
+
+    if (!billingForm.billingCity?.trim()) {
+      setCardError(t('paymentMethods.enterCity'));
+      return;
+    }
+
+    if (!billingForm.billingState?.trim()) {
+      setCardError(t('paymentMethods.enterState'));
+      return;
+    }
+
+    if (!billingForm.billingZip?.trim()) {
+      setCardError(t('paymentMethods.enterZipCode'));
       return;
     }
 

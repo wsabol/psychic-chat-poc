@@ -66,7 +66,13 @@
     "fixCardErrors": "Bitte beheben Sie Kartenfehler vor dem Absenden",
     "cardElementNotReady": "Kartenelement ist nicht bereit",
     "failedToInitialize": "Fehler beim Initialisieren des Kartenformulars",
-    "containerNotFound": "Kartenelement-Container nicht gefunden"
+    "containerNotFound": "Kartenelement-Container nicht gefunden",
+    "completeCardDetails": "Bitte vervollständigen Sie alle Kartendetails",
+    "enterBillingCountry": "Bitte wählen Sie ein Rechnungsland aus",
+    "enterStreetAddress": "Bitte geben Sie eine Straßenadresse ein",
+    "enterCity": "Bitte geben Sie eine Stadt ein",
+    "enterState": "Bitte geben Sie ein Bundesland / eine Provinz ein",
+    "enterZipCode": "Bitte geben Sie eine Postleitzahl ein"
   },
   "subscriptions": {
     "title": "Abonnements",

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
 import { useTranslation } from '../../../context/TranslationContext';
 
@@ -19,6 +19,7 @@ export default function CardPaymentForm({
   const elements = useElements();
   const [elementError, setElementError] = useState(null);
   const [ready, setReady] = useState(false);
+  const [cardComplete, setCardComplete] = useState(false);
 
   // Store stripe instance in ref for parent to use
   useEffect(() => {
@@ -45,13 +46,14 @@ export default function CardPaymentForm({
     cardElementRef.current = cardElement;
     setReady(true);
     
-    // Handle card errors
+    // Handle card errors and track completeness
     const handleChange = (event) => {
       if (event.error) {
         setElementError(event.error.message);
       } else {
         setElementError(null);
       }
+      setCardComplete(event.complete === true);
     };
 
     const handleReady = () => {
@@ -74,9 +76,40 @@ export default function CardPaymentForm({
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    
-    if (elementError) {
-      setElementError(t('paymentMethods.fixCardErrors'));
+
+    // Validate all required fields before calling Stripe
+    if (!billingForm.cardholderName?.trim()) {
+      setElementError(t('paymentMethods.enterCardholderName'));
+      return;
+    }
+
+    if (!cardComplete) {
+      setElementError(elementError || t('paymentMethods.completeCardDetails'));
+      return;
+    }
+
+    if (!billingForm.billingCountry) {
+      setElementError(t('paymentMethods.enterBillingCountry'));
+      return;
+    }
+
+    if (!billingForm.billingAddress?.trim()) {
+      setElementError(t('paymentMethods.enterStreetAddress'));
+      return;
+    }
+
+    if (!billingForm.billingCity?.trim()) {
+      setElementError(t('paymentMethods.enterCity'));
+      return;
+    }
+
+    if (!billingForm.billingState?.trim()) {
+      setElementError(t('paymentMethods.enterState'));
+      return;
+    }
+
+    if (!billingForm.billingZip?.trim()) {
+      setElementError(t('paymentMethods.enterZipCode'));
       return;
     }
 
@@ -91,7 +124,8 @@ export default function CardPaymentForm({
       return;
     }
 
-    // Call parent handler with the card element
+    // All required fields complete — call parent handler
+    setElementError(null);
     onSubmit(cardElement);
   };
 
@@ -214,7 +248,7 @@ export default function CardPaymentForm({
 
       <div className="form-row">
         <div className="form-group full-width">
-          <label>{t('paymentMethods.streetAddress')}</label>
+          <label>{t('paymentMethods.streetAddress')} *</label>
           <input
             type="text"
             name="billingAddress"
@@ -222,13 +256,14 @@ export default function CardPaymentForm({
             onChange={onBillingFormChange}
             placeholder="123 Main St"
             className="form-input"
+            required
           />
         </div>
       </div>
 
       <div className="form-row">
         <div className="form-group">
-          <label>{t('paymentMethods.city')}</label>
+          <label>{t('paymentMethods.city')} *</label>
           <input
             type="text"
             name="billingCity"
@@ -236,10 +271,11 @@ export default function CardPaymentForm({
             onChange={onBillingFormChange}
             placeholder="New York"
             className="form-input"
+            required
           />
         </div>
         <div className="form-group">
-          <label>{t('paymentMethods.state')}</label>
+          <label>{t('paymentMethods.state')} *</label>
           <input
             type="text"
             name="billingState"
@@ -248,10 +284,11 @@ export default function CardPaymentForm({
             placeholder="NY"
             maxLength="2"
             className="form-input"
+            required
           />
         </div>
         <div className="form-group">
-          <label>{t('paymentMethods.zipCode')}</label>
+          <label>{t('paymentMethods.zipCode')} *</label>
           <input
             type="text"
             name="billingZip"
@@ -259,12 +296,13 @@ export default function CardPaymentForm({
             onChange={onBillingFormChange}
             placeholder="10001"
             className="form-input"
+            required
           />
         </div>
       </div>
 
       <div className="form-actions">
-        <button type="submit" className="btn-primary" disabled={loading || !ready || elementError}>
+      <button type="submit" className="btn-primary" disabled={loading || !ready}>
           {loading ? t('paymentMethods.processing') : t('paymentMethods.addCard')}
         </button>
         <button

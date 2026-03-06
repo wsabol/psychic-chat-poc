@@ -152,7 +152,13 @@
     "fixCardErrors": "Veuillez corriger les erreurs de carte avant de soumettre",
     "cardElementNotReady": "L'élément de carte n'est pas prêt",
     "failedToInitialize": "Impossible d'initialiser le formulaire de carte",
-    "containerNotFound": "Conteneur d'élément de carte non trouvé"
+    "containerNotFound": "Conteneur d'élément de carte non trouvé",
+    "completeCardDetails": "Veuillez compléter tous les détails de la carte",
+    "enterBillingCountry": "Veuillez sélectionner un pays de facturation",
+    "enterStreetAddress": "Veuillez entrer une adresse",
+    "enterCity": "Veuillez entrer une ville",
+    "enterState": "Veuillez entrer un état / une province",
+    "enterZipCode": "Veuillez entrer un code postal"
   },
   "checkout": {
     "title": "Complétez Votre Achat",

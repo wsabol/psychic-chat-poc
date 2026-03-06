@@ -66,7 +66,13 @@
     "fixCardErrors": "Please fix card errors before submitting",
     "cardElementNotReady": "Card element is not ready",
     "failedToInitialize": "Failed to initialize card form",
-    "containerNotFound": "Card element container not found"
+    "containerNotFound": "Card element container not found",
+    "completeCardDetails": "Please complete all card details",
+    "enterBillingCountry": "Please select a billing country",
+    "enterStreetAddress": "Please enter a street address",
+    "enterCity": "Please enter a city",
+    "enterState": "Please enter a state / province",
+    "enterZipCode": "Please enter a ZIP / postal code"
   },
   "subscriptions": {
     "title": "Subscriptions",
