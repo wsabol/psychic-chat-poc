@@ -109,12 +109,33 @@ registerRoute(
 // If the app shell itself cannot be served (extreme edge case — the shell is
 // precached, so this is truly last-resort only), return /offline.html.
 
+// ─── Force immediate SW activation (skip the waiting phase) ──────────────────
+// Without skipWaiting(), a new SW sits in 'waiting' state until ALL tabs using
+// the old SW are closed.  Microsoft Edge's "Startup Boost" and "Continue where
+// you left off" features keep the old SW client alive indefinitely — so the old
+// cached JS bundle never gets replaced on Edge, even after new deployments.
+// self.skipWaiting() causes the new SW to activate immediately, then
+// clientsClaim() (above) hands it control of all open clients.  The
+// serviceWorkerRegistration.js controllerchange listener then reloads the page
+// so the new JS bundle is served right away.
+
 self.addEventListener('install', (event) => {
+  self.skipWaiting(); // ← Activate immediately; don't wait for old tabs to close
   event.waitUntil(
     caches.open('offline-fallback').then((cache) =>
       cache.addAll(['/offline.html'])
     )
   );
+});
+
+// ─── SKIP_WAITING message (programmatic trigger from the app) ─────────────────
+// serviceWorkerRegistration.js sends { type: 'SKIP_WAITING' } when it detects
+// a waiting SW via the onUpdate callback.  Belt-and-suspenders alongside the
+// unconditional skipWaiting() above.
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 setCatchHandler(async ({ event }) => {

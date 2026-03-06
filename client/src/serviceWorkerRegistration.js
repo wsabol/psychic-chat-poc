@@ -60,6 +60,29 @@ export function register(config) {
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
 function registerValidSW(swUrl, config) {
+  // ── controllerchange → reload ───────────────────────────────────────────
+  // When a new SW takes control of this page (after skipWaiting() activates
+  // it), reload so the fresh JS bundle is executed instead of the stale
+  // in-memory one.  The guard prevents an infinite reload loop.
+  //
+  // Only attach the listener when there is already a controller — that means
+  // this is a returning visitor, not a first install.  On first install there
+  // is nothing to reload; on update the reload gives the user the latest code.
+  //
+  // Edge-specific: Edge's "Startup Boost" / "Continue where you left off"
+  // keeps old SW clients alive indefinitely.  Without this reload the new JS
+  // never runs even though the new SW is active.
+  let swUpdateRefreshing = false;
+  if (navigator.serviceWorker.controller) {
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!swUpdateRefreshing) {
+        swUpdateRefreshing = true;
+        console.log('[SW] New version activated — reloading for latest code.');
+        window.location.reload();
+      }
+    });
+  }
+
   navigator.serviceWorker
     .register(swUrl)
     .then((registration) => {
@@ -71,11 +94,16 @@ function registerValidSW(swUrl, config) {
           if (installingWorker.state !== 'installed') return;
 
           if (navigator.serviceWorker.controller) {
-            // A new version has been installed and is waiting to activate.
-            // The old content will be purged once all tabs are closed.
-            console.log(
-              '[SW] New content is available; please refresh to get the latest version.'
-            );
+            // A new version has been installed.
+            // skipWaiting() in the SW will activate it immediately, which
+            // fires controllerchange, which triggers the reload above.
+            // Send SKIP_WAITING as a belt-and-suspenders fallback in case
+            // the SW's own install-time skipWaiting() didn't fire (e.g. an
+            // older cached SW file without the skipWaiting() call).
+            console.log('[SW] New content available — sending SKIP_WAITING.');
+            if (installingWorker.state === 'installed' && registration.waiting) {
+              registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+            }
             if (config && typeof config.onUpdate === 'function') {
               config.onUpdate(registration);
             }

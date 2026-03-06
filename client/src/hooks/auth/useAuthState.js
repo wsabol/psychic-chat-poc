@@ -13,11 +13,20 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 // onAuthStateChanged subscription.  Without this guard, every instance would
 // concurrently hit /auth/check-2fa and trigger a separate 2FA email.
 //
-// Because JavaScript is single-threaded, the Set.add() below executes
-// synchronously before the first `await fetch(check-2fa)` is reached, so the
-// second (and any further) instance will always see the lock already set and
-// exit early.  The lock is cleared in the `finally` block so subsequent
-// legitimate logins (e.g. after sign-out) work normally.
+// IMPORTANT: The lock must be acquired BEFORE the very first `await` in the
+// onAuthStateChanged callback — not merely before the `await fetch(check-2fa)`
+// call.  The reason is that `await firebaseUser.reload()` (called during the
+// email-verification step) causes Firebase to update the user's emailVerified
+// flag, which can trigger a SECOND onAuthStateChanged callback.  That second
+// instance starts while the first is suspended at the reload() await.  If the
+// lock isn't set yet, the second instance bypasses the guard, claims the lock,
+// completes the 2FA check, releases the lock, and then the first instance also
+// claims the (now-released) lock and runs a second 2FA check.  On Edge this
+// racing second state update can override the first and clear showTwoFactor,
+// causing the 2FA screen to never appear even though the email was sent.
+//
+// The lock is cleared in a `finally` block that wraps the entire firebaseUser
+// processing body, so subsequent legitimate logins (after sign-out) work.
 // ---------------------------------------------------------------------------
 const _pendingTwoFAChecks = new Set();
 
@@ -85,6 +94,22 @@ export function useAuthState(checkBillingStatus) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
         if (firebaseUser) {
+          // ── Deduplication guard — acquire BEFORE the first await ─────────
+          // Must be synchronous so that a second onAuthStateChanged callback
+          // triggered by firebaseUser.reload() (emailVerified false→true) sees
+          // the lock and exits rather than racing the first instance to call
+          // /auth/check-2fa.  The old placement (just before the check-2fa
+          // fetch) left several await-gaps where a second callback on Edge
+          // could bypass the guard and clear showTwoFactor via a stale update.
+          if (_pendingTwoFAChecks.has(firebaseUser.uid)) {
+            // A sibling hook instance is already processing this uid.
+            // Let it drive auth state forward; we just clear loading.
+            setLoading(false);
+            return;
+          }
+          _pendingTwoFAChecks.add(firebaseUser.uid);
+
+          try {
           const isTemp = firebaseUser.email.startsWith('temp_');
           let idToken = await firebaseUser.getIdToken();
 
@@ -188,14 +213,9 @@ export function useAuthState(checkBillingStatus) {
                 checkBillingStatus(idToken, firebaseUser.uid);
               }
               setLoading(false);
-            } else if (_pendingTwoFAChecks.has(firebaseUser.uid)) {
-              // Another useAuth() instance is already running check-2fa for this user.
-              // Silently exit — the primary instance will drive state forward.
-              setLoading(false);
             } else {
-              // Claim the lock synchronously (before the first await) so concurrent
-              // instances see it and take the branch above.
-              _pendingTwoFAChecks.add(firebaseUser.uid);
+              // Lock is already held (acquired at the very top of the handler,
+              // before the first await).  Run the 2FA check directly.
               try {
                 // Browser info for device tracking (IP detected server-side to avoid CORS issues)
                 const browserInfo = navigator.userAgent.split(' ').slice(-2).join(' ');
@@ -264,11 +284,13 @@ export function useAuthState(checkBillingStatus) {
                   }
                   setLoading(false);
                 }
-              } finally {
-                // Release the lock so future logins (after sign-out) work correctly.
-                _pendingTwoFAChecks.delete(firebaseUser.uid);
               }
             }
+          }
+          } finally {
+            // Always release the lock — covers the temp-account early-return,
+            // the alreadyVerified bypass, and the full 2FA check path.
+            _pendingTwoFAChecks.delete(firebaseUser.uid);
           }
         } else {
           // ──────────────────────────────────────────────────────────────────

@@ -73,8 +73,20 @@ aws s3 sync $BUILD_PATH s3://$S3_BUCKET/ --delete --region $REGION --exclude "*"
 # Sync CSS files with proper content type and cache
 aws s3 sync $BUILD_PATH s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.css" --content-type "text/css" --cache-control "public, max-age=31536000, immutable"
 
-# Sync JS files with proper content type and cache
-aws s3 sync $BUILD_PATH s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.js" --content-type "application/javascript" --cache-control "public, max-age=31536000, immutable"
+# Service worker: MUST use no-cache so browsers always check for updates.
+# If service-worker.js is cached with max-age=immutable, the browser will
+# never fetch the new SW file and users (especially Edge PWA) will run
+# stale JS indefinitely — which was the root cause of the Edge 2FA bug.
+aws s3 cp "$BUILD_PATH\service-worker.js" s3://$S3_BUCKET/service-worker.js `
+    --region $REGION `
+    --content-type "application/javascript" `
+    --cache-control "no-cache, no-store, must-revalidate"
+
+# All other JS files use content-hashed filenames — safe to cache immutably.
+aws s3 sync $BUILD_PATH s3://$S3_BUCKET/ --delete --region $REGION `
+    --exclude "*" --include "*.js" --exclude "service-worker.js" `
+    --content-type "application/javascript" `
+    --cache-control "public, max-age=31536000, immutable"
 
 # Sync image files (PNG, JPG, JPEG, GIF, SVG, ICO)
 aws s3 sync $BUILD_PATH s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.png" --content-type "image/png" --cache-control "public, max-age=31536000, immutable"
