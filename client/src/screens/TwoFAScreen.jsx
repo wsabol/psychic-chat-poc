@@ -191,6 +191,7 @@ export default function TwoFAScreen({
                 className="twofa-code-input"
                 disabled={verifying || isLoading}
                 autoFocus
+                autoComplete="off"
               />
               {/* Show code validity info — NOT "expired" (that was the bug) */}
               <p className="twofa-code-info">
