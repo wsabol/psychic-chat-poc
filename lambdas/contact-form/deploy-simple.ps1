@@ -6,7 +6,7 @@ $sendgridKey = $sendgridLine -replace "SENDGRID_API_KEY=", ""
 Write-Host "Creating Lambda function..." -ForegroundColor Yellow
 aws lambda create-function `
     --function-name starship-contact-form `
-    --runtime nodejs20.x `
+    --runtime nodejs22.x `
     --role arn:aws:iam::586337033065:role/ContactFormLambdaRole `
     --handler index.handler `
     --zip-file fileb://function.zip `
