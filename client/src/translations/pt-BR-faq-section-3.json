@@ -77,6 +77,29 @@
         "answer": "Você pode acessar esses documentos a qualquer momento pelo botão de Ajuda:\n1. Clique no botão ? (Ajuda) em qualquer tela\n2. No cabeçalho da janela de Ajuda, você verá botões com ícones:\n   • 📋 (Termos) - Clique para abrir os Termos de Serviço\n   • 🔒 (Privacidade) - Clique para abrir a Política de Privacidade\n3. Os documentos abrem em uma janela grande e rolável\n4. Use a roda do mouse ou a barra de rolagem para ler\n5. Clique no botão X para fechar quando terminar\n\nVocê pode ler esses documentos a qualquer momento para entender seus direitos e nossas políticas."
       }
     },
+    "settings": {
+      "category": "Configurações",
+      "what-is-settings": {
+        "question": "O que posso gerenciar na página de Configurações?",
+        "answer": "A página de Configurações (em Minha Conta) permite gerenciar suas preferências de privacidade, dados e comunicação:\n• Baixar meus dados — exporte os dados da sua conta como arquivo JSON\n• Cookies — ativar ou desativar cookies não essenciais\n• Limpar dados de navegação — limpa armazenamento local, de sessão e cookies\n• Análise anônima — ativar ou desativar o rastreamento anônimo de uso\n• Comunicação por e-mail — ativar ou desativar e-mails de marketing\n• Notificações push — ativar ou desativar notificações push\n• Excluir conta — excluir sua conta permanentemente (requer verificação por e-mail)"
+      },
+      "how-to-access-settings": {
+        "question": "Como chego à página de Configurações?",
+        "answer": "Para acessar as Configurações:\n1. Abra o menu de navegação\n2. Vá para Minha Conta\n3. Selecione Configurações\n\nVocê encontrará todas as opções de privacidade e gerenciamento de dados aqui."
+      },
+      "download-my-data": {
+        "question": "Como faço para baixar meus dados?",
+        "answer": "Para baixar seus dados:\n1. Em Minha Conta, acesse a página Configurações\n2. Encontre a seção \"Baixar meus dados\"\n3. Clique no botão \"Baixar\"\n4. Um arquivo JSON com todas as suas informações pessoais, histórico de chat e dados da conta será salvo no seu dispositivo"
+      },
+      "delete-account-settings": {
+        "question": "Como excluo minha conta?",
+        "answer": "Para excluir sua conta:\n1. Em Minha Conta, acesse a página Configurações\n2. Role até a seção \"Excluir minha conta\"\n3. Clique em \"Excluir minha conta\"\n4. Siga as etapas de verificação por e-mail\n5. Confirme a exclusão\n\nSua assinatura será cancelada imediatamente e seus dados serão removidos ao final do período de cobrança atual."
+      },
+      "manage-cookies": {
+        "question": "Como gerencio cookies e análises?",
+        "answer": "Para gerenciar cookies e análises:\n1. Em Minha Conta, acesse a página Configurações\n2. Use os botões de alternância para ativar ou desativar:\n   • Cookies — controla o armazenamento de cookies não essenciais\n   • Análise anônima — controla o rastreamento anônimo de uso\n3. As alterações entram em vigor imediatamente"
+      }
+    },
     "technical": {
       "category": "Técnico & Solução de Problemas",
       "app-compatibility": {

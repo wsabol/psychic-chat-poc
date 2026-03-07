@@ -19,7 +19,6 @@
 import { db } from '../shared/db.js';
 
 async function up() {
-  console.log('Running migration: remove billing address columns...');
 
   await db.query(`
     ALTER TABLE user_personal_info
@@ -29,13 +28,10 @@ async function up() {
       DROP COLUMN IF EXISTS billing_postal_code_encrypted,
       DROP COLUMN IF EXISTS billing_address_line1_encrypted;
   `);
-
-  console.log('✅ Billing address columns dropped from user_personal_info.');
 }
 
 up()
   .then(() => {
-    console.log('Migration complete.');
     process.exit(0);
   })
   .catch((err) => {

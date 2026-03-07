@@ -42,11 +42,11 @@
       "category": "Persönliche Daten",
       "update-personal-info": {
         "question": "Wie aktualisiere ich meine persönlichen Daten?",
-        "answer": "So aktualisierst du deine persönlichen Daten:\n1. Gehe zur Seite Persönliche Daten\n2. Bearbeite deine Angaben:\n   • Vollständiger Name\n   • Geburtsdatum\n   • Geburtszeit (optional, aber empfohlen)\n   • Geburtsort\n3. Klicke auf Speichern, um dein Profil zu aktualisieren\nGenauere Informationen liefern bessere personalisierte Lesungen."
+        "answer": "So aktualisierst du deine persönlichen Daten:\n1. Gehe unter Mein Konto zur Seite Persönliche Daten\n2. Bearbeite deine Angaben:\n   \u2022 Vollständiger Name\n   \u2022 Geburtsdatum\n   \u2022 Geburtszeit (optional, aber empfohlen)\n   \u2022 Geburtsort\n3. Klicke auf Speichern, um dein Profil zu aktualisieren\nGenauere Informationen liefern bessere personalisierte Lesungen."
       },
       "birth-location": {
         "question": "Warum ist der Geburtsort wichtig?",
-        "answer": "Der Geburtsort wird verwendet, um die genauen Positionen der Himmelskörper zum Zeitpunkt deiner Geburt zu berechnen. Verschiedene Orte haben unterschiedliche Breiten- und Längengrade, was die astrologischen Berechnungen beeinflusst – insbesondere bei der Bestimmung der Häuserpositionen in deinem Geburtshoroskop."
+        "answer": "Der Geburtsort wird verwendet, um die genauen Positionen der Himmelskörper zum Zeitpunkt deiner Geburt zu berechnen. Verschiedene Orte haben unterschiedliche Breiten- und Längengrade, was die astrologischen Berechnungen beeinflusst \u2013 insbesondere bei der Bestimmung der Häuserpositionen in deinem Geburtshoroskop."
       },
       "change-birth-info": {
         "question": "Kann ich meine Geburtsdaten nach der Eingabe noch ändern?",
@@ -57,19 +57,19 @@
         "answer": "Ja. Deine persönlichen Daten sind verschlüsselt und sicher gespeichert. Wir nehmen deine Privatsphäre sehr ernst und geben deine persönlichen Daten niemals an Dritte weiter. Weitere Details findest du in unserer Datenschutzrichtlinie."
       },
       "skip-onboarding": {
-        "question": "Kann ich den Schritt „Persönliche Daten“ während der kostenlosen Testphase überspringen?",
-        "answer": "Ja! Während der kostenlosen Testphase zeigt die Seite Persönliche Daten oben rechts einen grünen Button „Diesen Schritt überspringen →“. Ein Klick darauf bringt dich direkt zu deiner kostenlosen Horoskop-Lesung – ohne Geburtsangaben.\n\nWenn du übersprungen hast (oder kein Geburtsdatum eingegeben hast), zeigt die Horoskop-Seite eine Sternzeichen-Auswahl, damit du trotzdem eine personalisierte Lesung erhalten kannst. Weitere Details findest du unter „Was ist die Sternzeichen-Auswahl?“ weiter unten.\n\nFür ein vollständiges Konto kannst du deine Persönlichen Daten auch später über das Hauptmenü ergänzen – die Angabe von Geburtsdatum, -uhrzeit und -ort liefert dir jedoch das genaueste Geburtshoroskop und die präzisesten Lesungen."
+        "question": "Kann ich den Schritt Persönliche Daten während der kostenlosen Testphase überspringen?",
+        "answer": "Ja! Während der kostenlosen Testphase zeigt die Seite Persönliche Daten oben rechts einen grünen Button \"Diesen Schritt überspringen \u2192\". Ein Klick darauf bringt dich direkt zu deiner kostenlosen Horoskop-Lesung \u2013 ohne Geburtsangaben.\n\nWenn du übersprungen hast (oder kein Geburtsdatum eingegeben hast), zeigt die Horoskop-Seite eine Sternzeichen-Auswahl, damit du trotzdem eine personalisierte Lesung erhalten kannst. Weitere Details findest du unter \"Was ist die Sternzeichen-Auswahl?\" weiter unten.\n\nFür ein vollständiges Konto kannst du deine Persönlichen Daten auch später über das Hauptmenü ergänzen \u2013 die Angabe von Geburtsdatum, -uhrzeit und -ort liefert dir jedoch das genaueste Geburtshoroskop und die präzisesten Lesungen."
       },
       "free-trial-zodiac-picker": {
         "question": "Was ist die Sternzeichen-Auswahl während der kostenlosen Testphase?",
-        "answer": "Wenn du Persönliche Daten übersprungen hast oder kein Geburtsdatum eingegeben hast, zeigt die Horoskop-Seite der kostenlosen Testphase automatisch eine Sternzeichen-Auswahl an, anstatt alle Geburtsdaten abzufragen.\n\nSo funktioniert es:\n1. Ein Raster mit allen 12 Sternzeichen wird angezeigt (z. B. Widder ♈, Stier ♉, Zwillinge ♊ usw.)\n2. Klicke auf dein Sonnenzeichen, um es auszuwählen (es wird lila hervorgehoben)\n3. Klicke auf „Mein Horoskop erhalten ✨“, um deine personalisierte Tageslesung zu generieren\n\nSobald dein Horoskop geladen ist, erscheint ein Button „✓ Beenden und fortfahren“ – klicke darauf, um ein vollständiges Konto zu erstellen und alle Funktionen freizuschalten."
+        "answer": "Wenn du Persönliche Daten übersprungen hast oder kein Geburtsdatum eingegeben hast, zeigt die Horoskop-Seite der kostenlosen Testphase automatisch eine Sternzeichen-Auswahl an, anstatt alle Geburtsdaten abzufragen.\n\nSo funktioniert es:\n1. Ein Raster mit allen 12 Sternzeichen wird angezeigt (z. B. Widder \u2648, Stier \u2649, Zwillinge \u264a usw.)\n2. Klicke auf dein Sonnenzeichen, um es auszuwählen (es wird lila hervorgehoben)\n3. Klicke auf \"Mein Horoskop erhalten \u2728\", um deine personalisierte Tageslesung zu generieren\n\nSobald dein Horoskop geladen ist, erscheint ein Button \"\u2713 Beenden und fortfahren\" \u2013 klicke darauf, um ein vollständiges Konto zu erstellen und alle Funktionen freizuschalten."
       }
     },
     "birth-chart": {
       "category": "Geburtshoroskop & Mein Zeichen",
       "what-is-birth-chart": {
         "question": "Was ist ein Geburtshoroskop?",
-        "answer": "Ein Geburtshoroskop (auch Radix oder Natalhoroskop genannt) ist eine Karte, die zeigt, wo alle Planeten zum genauen Zeitpunkt und am genauen Ort deiner Geburt positioniert waren. Es umfasst:\n• Sonnenzeichen (Kernidentität)\n• Mondzeichen (Emotionen)\n• Aszendent (wie andere dich wahrnehmen)\n• Planetenstellungen\n• Häuserpositionen\n\nDies ergibt einen einzigartigen astrologischen Bauplan deiner Persönlichkeit und deines Potenzials."
+        "answer": "Ein Geburtshoroskop (auch Radix oder Natalhoroskop genannt) ist eine Karte, die zeigt, wo alle Planeten zum genauen Zeitpunkt und am genauen Ort deiner Geburt positioniert waren. Es umfasst:\n\u2022 Sonnenzeichen (Kernidentität)\n\u2022 Mondzeichen (Emotionen)\n\u2022 Aszendent (wie andere dich wahrnehmen)\n\u2022 Planetenstellungen\n\u2022 Häuserpositionen\n\nDies ergibt einen einzigartigen astrologischen Bauplan deiner Persönlichkeit und deines Potenzials."
       },
       "sun-moon-rising": {
         "question": "Was ist der Unterschied zwischen meinem Sonnen-, Mond- und Aszendenten-Zeichen?",
@@ -77,15 +77,15 @@
       },
       "view-birth-chart": {
         "question": "Wie sehe ich mein vollständiges Geburtshoroskop?",
-        "answer": "Gehe zur Seite Mein Zeichen, um dein Geburtshoroskop anzusehen. Du siehst:\n• Dein Sonnen-, Mond- und Aszendenten-Zeichen\n• Alle Planetenstellungen\n• Häuserpositionen\n• Aspekte zwischen Planeten\n• Detaillierte Interpretationen\n\nStelle sicher, dass du deine Geburtszeit eingegeben hast, um das genaueste Horoskop zu erhalten."
+        "answer": "Gehe zur Seite Mein Zeichen, um dein Geburtshoroskop anzusehen. Du siehst:\n\u2022 Dein Sonnen-, Mond- und Aszendenten-Zeichen\n\u2022 Alle Planetenstellungen\n\u2022 Häuserpositionen\n\u2022 Aspekte zwischen Planeten\n\u2022 Detaillierte Interpretationen\n\nStelle sicher, dass du deine Geburtszeit eingegeben hast, um das genaueste Horoskop zu erhalten."
       },
       "accurate-chart": {
         "question": "Wie genau ist mein Geburtshoroskop?",
-        "answer": "Die Genauigkeit hängt davon ab, wie präzise deine Geburtsdaten sind:\n• Genaue Geburtszeit (auf die Minute) = sehr genaues Horoskop\n• Ungefähre Geburtszeit = angemessen genau, aber einige Details können abweichen\n• Nur Geburtsdatum = Sonnenzeichen und einige Stellungen sind korrekt, aber Aszendent und Häuser werden nicht stimmen\n\nHole dir wenn möglich deine Geburtsurkunde, um deine genaue Geburtszeit zu überprüfen."
+        "answer": "Die Genauigkeit hängt davon ab, wie präzise deine Geburtsdaten sind:\n\u2022 Genaue Geburtszeit (auf die Minute) = sehr genaues Horoskop\n\u2022 Ungefähre Geburtszeit = angemessen genau, aber einige Details können abweichen\n\u2022 Nur Geburtsdatum = Sonnenzeichen und einige Stellungen sind korrekt, aber Aszendent und Häuser werden nicht stimmen\n\nHole dir wenn möglich deine Geburtsurkunde, um deine genaue Geburtszeit zu überprüfen."
       },
       "zodiac-wheel": {
         "question": "Was ist das Tierkreisrad und wie funktioniert es?",
-        "answer": "Das Tierkreisrad ist eine visuelle Darstellung deines Geburtshoroskops, die alle 12 Sternzeichen in konzentrischen Ringen anzeigt. Das Rad enthält:\n• Zeichennamen und -symbole\n• Herrscherplaneten\n• Elemente (Feuer, Erde, Luft, Wasser)\n• Hausnummern (I–XII)\n\nDas Rad dreht sich, um deinen Aszendenten am östlichen Horizont (auf der linken Seite) zu positionieren. Dies spiegelt wider, wie du den Himmel zum Zeitpunkt deiner Geburt gesehen hättest – indem du NACH OBEN auf die Himmelssphäre schaust statt NACH UNTEN auf eine Karte. Deshalb erscheint Osten in astronomischen Karten links und Westen rechts, was ein Spiegelbild der üblichen Kartenrichtungen erzeugt. Die horizontale Linie stellt den Horizont dar, mit Tageszeichen oberhalb und Nachtzeichen unterhalb."
+        "answer": "Das Tierkreisrad ist eine visuelle Darstellung deines Geburtshoroskops, die alle 12 Sternzeichen in konzentrischen Ringen anzeigt. Das Rad enthält:\n\u2022 Zeichennamen und -symbole\n\u2022 Herrscherplaneten\n\u2022 Elemente (Feuer, Erde, Luft, Wasser)\n\u2022 Hausnummern (I\u2013XII)\n\nDas Rad dreht sich, um deinen Aszendenten am östlichen Horizont (auf der linken Seite) zu positionieren. Dies spiegelt wider, wie du den Himmel zum Zeitpunkt deiner Geburt gesehen hättest \u2013 indem du NACH OBEN auf die Himmelssphäre schaust statt NACH UNTEN auf eine Karte. Deshalb erscheint Osten in astronomischen Karten links und Westen rechts, was ein Spiegelbild der üblichen Kartenrichtungen erzeugt. Die horizontale Linie stellt den Horizont dar, mit Tageszeichen oberhalb und Nachtzeichen unterhalb."
       }
     }
   }

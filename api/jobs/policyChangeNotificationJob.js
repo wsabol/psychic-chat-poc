@@ -427,7 +427,6 @@ export async function sendInitialPolicyNotifications() {
     results.gracePeriodEnd = gracePeriodEnd;
 
     const durationMs = Date.now() - startTime.getTime();
-    console.log(`[Policy Notification Job] Initial: ${results.successful}/${results.total} sent in ${durationMs}ms`);
 
     jobStatus.initial = { lastRunTime: startTime, lastResult: results };
     return results;
@@ -465,7 +464,6 @@ export async function sendReminderNotifications() {
     const results = await processBatch(rows, changeInfo, true);
 
     const durationMs = Date.now() - startTime.getTime();
-    console.log(`[Policy Notification Job] Reminder: ${results.successful}/${results.total} sent in ${durationMs}ms`);
 
     jobStatus.reminder = { lastRunTime: startTime, lastResult: results };
     return results;
@@ -502,7 +500,6 @@ export async function enforceGracePeriodExpiration() {
     }
 
     const durationMs = Date.now() - startTime.getTime();
-    console.log(`[Policy Notification Job] Enforcement: ${results.sessionsInvalidated} sessions invalidated from ${results.total} users in ${durationMs}ms`);
 
     jobStatus.enforcement = { lastRunTime: startTime, lastResult: results };
     return results;

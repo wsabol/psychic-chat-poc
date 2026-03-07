@@ -77,6 +77,29 @@
         "answer": "Puedes acceder a estos documentos en cualquier momento a través del botón de Ayuda:\n1. Haz clic en el botón ? (Ayuda) en cualquier pantalla\n2. En el encabezado de la ventana de Ayuda, verás botones de iconos:\n   • 📋 (Términos) - Haz clic para abrir los Términos de Servicio\n   • 🔒 (Privacidad) - Haz clic para abrir la Política de Privacidad\n3. Los documentos se abren en una ventana grande y desplazable\n4. Usa la rueda del ratón o la barra de desplazamiento para leer\n5. Haz clic en el botón X para cerrar cuando termines\n\nPuedes leer estos documentos en cualquier momento para comprender tus derechos y nuestras políticas."
       }
     },
+    "settings": {
+      "category": "Configuración",
+      "what-is-settings": {
+        "question": "¿Qué puedo gestionar en la página de Configuración?",
+        "answer": "La página de Configuración (en Mi Cuenta) te permite gestionar tus preferencias de privacidad, datos y comunicación:\n• Descargar mis datos — exporta los datos de tu cuenta como archivo JSON\n• Cookies — activa o desactiva las cookies no esenciales\n• Limpiar datos de navegación — elimina almacenamiento local, de sesión y cookies\n• Análisis anónimo — activa o desactiva el seguimiento anónimo de uso\n• Comunicación por correo — activa o desactiva los correos de marketing\n• Notificaciones push — activa o desactiva las notificaciones push\n• Eliminar cuenta — elimina tu cuenta de forma permanente (requiere verificación por correo)"
+      },
+      "how-to-access-settings": {
+        "question": "¿Cómo accedo a la página de Configuración?",
+        "answer": "Para acceder a Configuración:\n1. Abre el menú de navegación\n2. Ve a Mi Cuenta\n3. Selecciona Configuración\n\nEncontrarás todas tus opciones de privacidad y gestión de datos aquí."
+      },
+      "download-my-data": {
+        "question": "¿Cómo descargo mis datos?",
+        "answer": "Para descargar tus datos:\n1. En Mi Cuenta ve a la página de Configuración\n2. Encuentra la sección \"Descargar mis datos\"\n3. Haz clic en el botón \"Descargar\"\n4. Se guardará en tu dispositivo un archivo JSON con toda tu información personal, historial de chats y datos de cuenta"
+      },
+      "delete-account-settings": {
+        "question": "¿Cómo elimino mi cuenta?",
+        "answer": "Para eliminar tu cuenta:\n1. En Mi Cuenta ve a la página de Configuración\n2. Desplázate hasta la sección \"Eliminar mi cuenta\"\n3. Haz clic en \"Eliminar mi cuenta\"\n4. Sigue los pasos de verificación por correo\n5. Confirma la eliminación\n\nTu suscripción se cancelará inmediatamente y tus datos se eliminarán al final del período de facturación actual."
+      },
+      "manage-cookies": {
+        "question": "¿Cómo gestiono las cookies y el análisis?",
+        "answer": "Para gestionar las cookies y el análisis:\n1. En Mi Cuenta ve a la página de Configuración\n2. Usa los interruptores para activar o desactivar:\n   • Cookies — controla el almacenamiento de cookies no esenciales\n   • Análisis anónimo — controla el seguimiento anónimo de uso\n3. Los cambios surten efecto inmediatamente"
+      }
+    },
     "technical": {
       "category": "Técnico y Solución de Problemas",
       "app-compatibility": {

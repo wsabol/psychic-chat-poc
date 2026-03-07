@@ -45,10 +45,6 @@ export function register(config) {
 
       // Extra logging to help developers understand what's happening.
       navigator.serviceWorker.ready.then(() => {
-        console.log(
-          '[SW] This web app is being served cache-first by a service worker. ' +
-            'To learn more, visit https://cra.link/PWA'
-        );
       });
     } else {
       // Non-localhost: just register the SW straight away.
@@ -77,7 +73,6 @@ function registerValidSW(swUrl, config) {
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (!swUpdateRefreshing) {
         swUpdateRefreshing = true;
-        console.log('[SW] New version activated — reloading for latest code.');
         window.location.reload();
       }
     });
@@ -100,7 +95,6 @@ function registerValidSW(swUrl, config) {
             // Send SKIP_WAITING as a belt-and-suspenders fallback in case
             // the SW's own install-time skipWaiting() didn't fire (e.g. an
             // older cached SW file without the skipWaiting() call).
-            console.log('[SW] New content available — sending SKIP_WAITING.');
             if (installingWorker.state === 'installed' && registration.waiting) {
               registration.waiting.postMessage({ type: 'SKIP_WAITING' });
             }
@@ -109,7 +103,6 @@ function registerValidSW(swUrl, config) {
             }
           } else {
             // Everything has been pre-cached for offline use.
-            console.log('[SW] Content is cached for offline use.');
             if (config && typeof config.onSuccess === 'function') {
               config.onSuccess(registration);
             }
@@ -142,7 +135,6 @@ function checkValidServiceWorker(swUrl, config) {
       }
     })
     .catch(() => {
-      console.log('[SW] No internet connection found. App is running in offline mode.');
     });
 }
 

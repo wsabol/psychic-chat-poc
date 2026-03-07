@@ -42,7 +42,7 @@
       "category": "Informations Personnelles",
       "update-personal-info": {
         "question": "Comment mettre à jour mes informations personnelles ?",
-        "answer": "Pour mettre à jour vos informations personnelles :\n1. Accédez à la page Informations Personnelles\n2. Modifiez vos données :\n   • Nom complet\n   • Date de naissance\n   • Heure de naissance (facultative mais recommandée)\n   • Lieu de naissance\n3. Touchez Enregistrer pour mettre à jour votre profil\nDes informations plus précises fournissent de meilleures lectures personnalisées."
+        "answer": "Pour mettre à jour vos informations personnelles :\n1. Dans Mon Compte, accédez à la page Informations Personnelles\n2. Modifiez vos données :\n   • Nom complet\n   • Date de naissance\n   • Heure de naissance (facultative mais recommandée)\n   • Lieu de naissance\n3. Touchez Enregistrer pour mettre à jour votre profil\nDes informations plus précises fournissent de meilleures lectures personnalisées."
       },
       "birth-location": {
         "question": "Pourquoi le lieu de naissance est-il important ?",

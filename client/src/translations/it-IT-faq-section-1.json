@@ -42,7 +42,7 @@
       "category": "Informazioni Personali",
       "update-personal-info": {
         "question": "Come aggiorno le mie informazioni personali?",
-        "answer": "Per aggiornare le tue informazioni personali:\n1. Vai alla pagina Informazioni Personali\n2. Modifica i tuoi dati:\n   • Nome completo\n   • Data di nascita\n   • Ora di nascita (facoltativa ma consigliata)\n   • Luogo di nascita\n3. Tocca Salva per aggiornare il tuo profilo\nInformazioni più accurate forniscono letture personalizzate migliori."
+        "answer": "Per aggiornare le tue informazioni personali:\n1. In Il Mio Account vai alla pagina Informazioni Personali\n2. Modifica i tuoi dati:\n   • Nome completo\n   • Data di nascita\n   • Ora di nascita (facoltativa ma consigliata)\n   • Luogo di nascita\n3. Tocca Salva per aggiornare il tuo profilo\nInformazioni più accurate forniscono letture personalizzate migliori."
       },
       "birth-location": {
         "question": "Perché il luogo di nascita è importante?",

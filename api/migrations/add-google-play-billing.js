@@ -17,7 +17,6 @@
 import { db } from '../shared/db.js';
 
 async function up() {
-  console.log('[Migration] Running add-google-play-billing...');
 
   await db.query(`
     ALTER TABLE user_personal_info
@@ -33,12 +32,9 @@ async function up() {
       ON user_personal_info(google_play_purchase_token)
       WHERE google_play_purchase_token IS NOT NULL;
   `);
-
-  console.log('[Migration] add-google-play-billing complete ✓');
 }
 
 async function down() {
-  console.log('[Migration] Rolling back add-google-play-billing...');
 
   await db.query(`
     ALTER TABLE user_personal_info
@@ -51,8 +47,6 @@ async function down() {
   await db.query(`
     DROP INDEX IF EXISTS idx_google_play_purchase_token;
   `);
-
-  console.log('[Migration] Rollback complete ✓');
 }
 
 // Run if called directly

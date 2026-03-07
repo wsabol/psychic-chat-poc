@@ -143,8 +143,6 @@ router.post('/validate-receipt/google', authenticateToken, async (req, res) => {
        purchaseToken, productId, orderId || null]
     );
 
-    console.log(`[GooglePlay] Subscription activated for user ${hashUserId(userId)}: ${planName}`);
-
     return successResponse(res, {
       success: true,
       plan: planName,
@@ -222,8 +220,6 @@ router.post('/restore-purchases/google', authenticateToken, async (req, res) => 
       [userId, planName, currentPeriodStart, currentPeriodEnd,
        purchaseToken, productId, orderId || null]
     );
-
-    console.log(`[GooglePlay] Subscription restored for user ${hashUserId(userId)}: ${planName}`);
 
     return successResponse(res, {
       success: true,
@@ -359,11 +355,6 @@ router.post('/google-play-rtdn', express.json(), async (req, res) => {
     const { purchaseToken, subscriptionId, notificationType } = subNotif;
     const packageName = notification.packageName || 'com.starshippsychicsmobile';
 
-    console.log(
-      `[GooglePlay RTDN] type=${notificationType} productId=${subscriptionId} ` +
-      `token=${purchaseToken ? purchaseToken.substring(0, 16) + '…' : 'none'}`
-    );
-
     if (!purchaseToken || !subscriptionId) {
       return res.status(200).json({ received: true });
     }
@@ -456,12 +447,6 @@ router.post('/google-play-rtdn', express.json(), async (req, res) => {
         [userId]
       );
     }
-
-    console.log(
-      `[GooglePlay RTDN] Updated user ${hashUserId(userId)}: ` +
-      `status=${newStatus} type=${notificationType}` +
-      (currentPeriodEnd ? ` expires=${new Date(currentPeriodEnd * 1000).toISOString()}` : '')
-    );
 
     // Always respond 200 to acknowledge the Pub/Sub message.
     // A non-2xx would cause Pub/Sub to retry with exponential backoff.

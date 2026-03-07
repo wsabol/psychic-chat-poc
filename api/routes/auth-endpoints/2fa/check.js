@@ -111,12 +111,7 @@ export async function check2FAHandler(req, res) {
       try {
         const fbUser = await auth.getUser(userId);
         userEmail = fbUser.email || null;
-        if (userEmail) {
-          console.info(
-            `[check-2fa] DB email lookup missed for ${userId.slice(0, 8)}… ` +
-            `(registration race) — fell back to Firebase Admin.`
-          );
-        }
+
       } catch (fbErr) {
         // Very unusual — user not found in Firebase either.  Continue and let
         // sendTwoFACode surface the email-send failure gracefully.
@@ -231,23 +226,8 @@ async function handleAdminIPCheck(
   // on AWS (CloudFront → ALB → ECS) vs local.
   const xForwardedFor = req.headers['x-forwarded-for'] || '(none)';
   const rawSocketIP   = req.socket?.remoteAddress || '(unknown)';
-  console.info(
-    `[2FA-ADMIN] check-2fa for ${userId.slice(0, 8)}… | ` +
-    `req.ip=${ipAddress} | X-Forwarded-For: ${xForwardedFor} | socket: ${rawSocketIP} | ` +
-    `device: ${deviceName}`
-  );
 
   const trustedIP = await checkTrustedIP(userId, ipAddress);
-
-  if (trustedIP) {
-    console.info(`[2FA-ADMIN] ✓ Trusted IP matched (row ${trustedIP.id}) — skipping 2FA`);
-  } else {
-    console.info(
-      `[2FA-ADMIN] ✗ IP not in trusted list — 2FA required. ` +
-      `If this IP should be trusted, check that trust-admin-device was called ` +
-      `after the previous 2FA verification with trustDevice=true.`
-    );
-  }
 
   // Known IP → skip 2FA entirely
   if (trustedIP) {

@@ -77,6 +77,29 @@
         "answer": "Puoi accedere a questi documenti in qualsiasi momento tramite il pulsante Aiuto:\n1. Clicca il pulsante ? (Aiuto) su qualsiasi schermata\n2. Nell'intestazione della finestra Aiuto, vedrai pulsanti con icone:\n   • 📋 (Termini) - Clicca per aprire i Termini di Servizio\n   • 🔒 (Privacy) - Clicca per aprire l'Informativa sulla Privacy\n3. I documenti si aprono in una grande finestra scorrevole\n4. Usa la rotella del mouse o la barra di scorrimento per leggere\n5. Clicca il pulsante X per chiudere quando hai finito\n\nPuoi leggere questi documenti in qualsiasi momento per comprendere i tuoi diritti e le nostre politiche."
       }
     },
+    "settings": {
+      "category": "Impostazioni",
+      "what-is-settings": {
+        "question": "Cosa posso gestire nella pagina Impostazioni?",
+        "answer": "La pagina Impostazioni (in Il Mio Account) ti permette di gestire le tue preferenze di privacy, dati e comunicazione:\n• Scarica i miei dati — esporta i dati del tuo account come file JSON\n• Cookie — abilita o disabilita i cookie non essenziali\n• Cancella dati di navigazione — cancella storage locale, di sessione e cookie\n• Analitiche anonime — abilita o disabilita il monitoraggio anonimo dell'utilizzo\n• Comunicazione e-mail — abilita o disabilita le e-mail di marketing\n• Notifiche push — abilita o disabilita le notifiche push\n• Elimina account — elimina definitivamente il tuo account (richiede verifica e-mail)"
+      },
+      "how-to-access-settings": {
+        "question": "Come accedo alla pagina Impostazioni?",
+        "answer": "Per accedere alle Impostazioni:\n1. Apri il menu di navigazione\n2. Vai a Il Mio Account\n3. Seleziona Impostazioni\n\nTroverai tutte le opzioni di privacy e gestione dei dati qui."
+      },
+      "download-my-data": {
+        "question": "Come scarico i miei dati?",
+        "answer": "Per scaricare i tuoi dati:\n1. In Il Mio Account vai alla pagina Impostazioni\n2. Trova la sezione \"Scarica i miei dati\"\n3. Clicca il pulsante \"Scarica\"\n4. Un file JSON contenente tutte le tue informazioni personali, la cronologia chat e i dati dell'account verrà salvato sul tuo dispositivo"
+      },
+      "delete-account-settings": {
+        "question": "Come elimino il mio account?",
+        "answer": "Per eliminare il tuo account:\n1. In Il Mio Account vai alla pagina Impostazioni\n2. Scorri fino alla sezione \"Elimina il mio account\"\n3. Clicca su \"Elimina il mio account\"\n4. Segui i passaggi di verifica e-mail\n5. Conferma l'eliminazione\n\nIl tuo abbonamento verrà annullato immediatamente e i tuoi dati verranno rimossi alla fine del periodo di fatturazione corrente."
+      },
+      "manage-cookies": {
+        "question": "Come gestisco i cookie e le analitiche?",
+        "answer": "Per gestire i cookie e le analitiche:\n1. In Il Mio Account vai alla pagina Impostazioni\n2. Usa i pulsanti di attivazione per abilitare o disabilitare:\n   • Cookie — controlla l'archiviazione dei cookie non essenziali\n   • Analitiche anonime — controlla il monitoraggio anonimo dell'utilizzo\n3. Le modifiche hanno effetto immediato"
+      }
+    },
     "technical": {
       "category": "Tecnico e Risoluzione Problemi",
       "app-compatibility": {

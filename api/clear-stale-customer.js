@@ -45,17 +45,11 @@ async function clearStaleCustomer(userId) {
       [userId]
     );
 
-    if (updateResult.rowCount > 0) {
-      console.log(`✅ Successfully cleared stale customer ID ${currentCustomerId}`);
-      console.log('   Next time user accesses billing, a fresh customer will be created');
-    } else {
-      console.error('❌ Failed to update user record');
+    if (updateResult.rowCount === 0) {
       process.exit(1);
     }
 
   } catch (error) {
-    console.error('❌ Error clearing stale customer:', error.message);
-    console.error(error.stack);
     process.exit(1);
   } finally {
     await db.end();

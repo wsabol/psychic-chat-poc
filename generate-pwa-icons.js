@@ -45,11 +45,8 @@ const SAFE_ZONE_RATIO = 0.70;
 function ensureSharp() {
   try {
     require.resolve('sharp');
-    console.log('✔ sharp already installed.');
   } catch {
-    console.log('⏳ sharp not found — installing temporarily (--no-save)…');
     execSync('npm install --no-save sharp', { stdio: 'inherit', cwd: __dirname });
-    console.log('✔ sharp installed.');
   }
 }
 
@@ -64,7 +61,6 @@ async function generateStandard(sharp, size) {
     })
     .png()
     .toFile(dest);
-  console.log(`  ✔ icon-${size}.png`);
 }
 
 async function generateMaskable(sharp, size) {
@@ -93,8 +89,6 @@ async function generateMaskable(sharp, size) {
     .composite([{ input: logoBuffer, top: padding, left: padding }])
     .png()
     .toFile(dest);
-
-  console.log(`  ✔ icon-${size}-maskable.png  (logo ${innerSize}px centred on ${size}px #0a0a1a canvas)`);
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -108,30 +102,19 @@ async function main() {
 
   // Create output directory
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-  console.log(`\n📁 Output directory: ${OUTPUT_DIR}\n`);
 
   ensureSharp();
 
   // Load sharp AFTER potential install using dynamic import
   const { default: sharp } = await import('sharp');
-
-  console.log('\n🖼  Generating standard icons…');
   for (const size of STANDARD_SIZES) {
     await generateStandard(sharp, size);
   }
-
-  console.log('\n🎭  Generating maskable icons…');
   for (const size of MASKABLE_SIZES) {
     await generateMaskable(sharp, size);
   }
-
-  console.log('\n✅  All PWA icons generated successfully!');
-  console.log(`    Location: ${OUTPUT_DIR}\n`);
-  console.log('Files created:');
   fs.readdirSync(OUTPUT_DIR)
-    .sort()
-    .forEach((f) => console.log(`  ${f}`));
-  console.log('');
+    .sort()fs
 }
 
 main().catch((err) => {

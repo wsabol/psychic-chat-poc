@@ -42,7 +42,7 @@
       "category": "Personal Information",
       "update-personal-info": {
         "question": "How do I update my personal information?",
-        "answer": "To update your personal info:\n1. Go to Personal Info page\n2. Edit your details:\n   • Full name\n   • Birth date\n   • Birth time (optional but recommended)\n   • Birth location\n3. Tap Save to update your profile\nMore accurate information provides better personalized readings."
+        "answer": "To update your personal info:\n1. In My Account go to Personal Info page\n2. Edit your details:\n   • Full name\n   • Birth date\n   • Birth time (optional but recommended)\n   • Birth location\n3. Tap Save to update your profile\nMore accurate information provides better personalized readings."
       },
       "birth-location": {
         "question": "Why does birth location matter?",

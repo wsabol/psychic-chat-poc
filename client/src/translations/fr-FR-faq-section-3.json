@@ -77,6 +77,29 @@
         "answer": "Vous pouvez accéder à ces documents à tout moment via le bouton Aide :\n1. Cliquez sur le bouton ? (Aide) sur n'importe quel écran\n2. Dans l'en-tête de la fenêtre d'aide, vous verrez des boutons d'icônes :\n   • 📋 (Conditions) - Cliquez pour ouvrir les Conditions d'Utilisation\n   • 🔒 (Confidentialité) - Cliquez pour ouvrir la Politique de Confidentialité\n3. Les documents s'ouvrent dans une grande fenêtre défilante\n4. Utilisez la molette de la souris ou la barre de défilement pour lire\n5. Cliquez sur le bouton X pour fermer\n\nVous pouvez lire ces documents à tout moment pour comprendre vos droits et nos politiques."
       }
     },
+    "settings": {
+      "category": "Paramètres",
+      "what-is-settings": {
+        "question": "Que puis-je gérer dans la page Paramètres ?",
+        "answer": "La page Paramètres (dans Mon Compte) vous permet de gérer vos préférences en matière de confidentialité, de données et de communication :\n• Télécharger mes données — exportez les données de votre compte sous forme de fichier JSON\n• Cookies — activer ou désactiver les cookies non essentiels\n• Effacer les données de navigation — efface le stockage local, de session et les cookies\n• Analytique anonyme — activer ou désactiver le suivi anonyme des usages\n• Communication par e-mail — activer ou désactiver les e-mails marketing\n• Notifications push — activer ou désactiver les notifications push\n• Supprimer le compte — supprimer définitivement votre compte (vérification par e-mail requise)"
+      },
+      "how-to-access-settings": {
+        "question": "Comment accéder à la page Paramètres ?",
+        "answer": "Pour accéder aux Paramètres :\n1. Ouvrez le menu de navigation\n2. Accédez à Mon Compte\n3. Sélectionnez Paramètres\n\nVous y trouverez toutes vos options de confidentialité et de gestion des données."
+      },
+      "download-my-data": {
+        "question": "Comment télécharger mes données ?",
+        "answer": "Pour télécharger vos données :\n1. Dans Mon Compte, accédez à la page Paramètres\n2. Trouvez la section \"Télécharger mes données\"\n3. Cliquez sur le bouton \"Télécharger\"\n4. Un fichier JSON contenant toutes vos informations personnelles, l'historique de chat et les données de compte sera sauvegardé sur votre appareil"
+      },
+      "delete-account-settings": {
+        "question": "Comment supprimer mon compte ?",
+        "answer": "Pour supprimer votre compte :\n1. Dans Mon Compte, accédez à la page Paramètres\n2. Faites défiler jusqu'à la section \"Supprimer mon compte\"\n3. Cliquez sur \"Supprimer mon compte\"\n4. Suivez les étapes de vérification par e-mail\n5. Confirmez la suppression\n\nVotre abonnement sera annulé immédiatement et vos données seront supprimées à la fin de votre période de facturation en cours."
+      },
+      "manage-cookies": {
+        "question": "Comment gérer les cookies et l'analytique ?",
+        "answer": "Pour gérer les cookies et l'analytique :\n1. Dans Mon Compte, accédez à la page Paramètres\n2. Utilisez les interrupteurs pour activer ou désactiver :\n   • Cookies — contrôle le stockage des cookies non essentiels\n   • Analytique anonyme — contrôle le suivi anonyme des usages\n3. Les modifications prennent effet immédiatement"
+      }
+    },
     "technical": {
       "category": "Technique et Dépannage",
       "app-compatibility": {

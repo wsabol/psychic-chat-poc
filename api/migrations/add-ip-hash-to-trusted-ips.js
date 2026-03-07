@@ -58,14 +58,12 @@ function hashIP(ip) {
 // ─── Migration ────────────────────────────────────────────────────────────────
 
 async function up() {
-  console.log('Running migration: add-ip-hash-to-trusted-ips');
 
   // ── 1. Add ip_hash column (idempotent) ─────────────────────────────────────
   await db.query(`
     ALTER TABLE admin_trusted_ips
       ADD COLUMN IF NOT EXISTS ip_hash VARCHAR(64)
   `);
-  console.log('  ✓ Column added: ip_hash');
 
   // ── 2. Create index for fast hash lookups ──────────────────────────────────
   await db.query(`
@@ -73,7 +71,6 @@ async function up() {
       ON admin_trusted_ips (user_id_hash, ip_hash)
       WHERE ip_hash IS NOT NULL
   `);
-  console.log('  ✓ Index created: idx_admin_trusted_ips_ip_hash');
 
   // Partial unique index — prevents duplicate IP entries per user
   await db.query(`
@@ -81,7 +78,6 @@ async function up() {
       ON admin_trusted_ips (user_id_hash, ip_hash)
       WHERE ip_hash IS NOT NULL
   `);
-  console.log('  ✓ Unique index created: idx_admin_trusted_ips_ip_hash_unique');
 
   // ── 3. Backfill existing rows ──────────────────────────────────────────────
   const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
@@ -89,7 +85,6 @@ async function up() {
     console.warn('  ⚠  ENCRYPTION_KEY not set — skipping backfill of existing rows.');
     console.warn('     New logins will populate ip_hash going forward.');
     console.warn('     Re-run this migration with ENCRYPTION_KEY set to backfill old rows.');
-    console.log('Migration complete (column + index added; no backfill).');
     return;
   }
 
@@ -130,9 +125,6 @@ async function up() {
       }
     }
   }
-
-  console.log(`  ✓ Backfilled ${backfilled} rows (${skipped} skipped / already set)`);
-  console.log('Migration complete.');
 }
 
 up()

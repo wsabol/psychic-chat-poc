@@ -151,7 +151,6 @@ function buildCurrencyOptions(baseAmountCents) {
 // ---------------------------------------------------------------------------
 
 async function main() {
-  console.log(`\n🌍  add-currency-options-to-prices  [${DRY_RUN ? 'DRY RUN' : 'LIVE'}]\n`);
 
   if (!process.env.STRIPE_SECRET_KEY) {
     console.error('❌  STRIPE_SECRET_KEY is not set');
@@ -179,11 +178,8 @@ async function main() {
   }
 
   if (prices.length === 0) {
-    console.log('No active prices found.');
     return;
   }
-
-  console.log(`Found ${prices.length} active price(s):\n`);
 
   // 2. Process each price
   let updated = 0;
@@ -195,11 +191,8 @@ async function main() {
     const interval    = price.recurring?.interval ?? 'one-time';
     const baseCurrency = price.currency.toLowerCase();
 
-    console.log(`  📦  ${price.id}  |  ${productName}  |  ${interval}  |  ${baseCurrency.toUpperCase()} ${(price.unit_amount / 100).toFixed(2)}`);
-
     // Only USD-based prices can use our USD multiplier table
     if (baseCurrency !== 'usd') {
-      console.log(`      ⏭  Skipping — base currency is ${baseCurrency.toUpperCase()} (only USD supported by this script)\n`);
       skipped++;
       continue;
     }
@@ -219,12 +212,7 @@ async function main() {
       }
     }
 
-    if (skippedCurrencies.length > 0) {
-      console.log(`      ℹ️   Already set (immutable — skipped): ${skippedCurrencies.join(', ')}`);
-    }
-
     if (Object.keys(newOptions).length === 0) {
-      console.log(`      ⏭   All ${existingCurrencies.size} currencies already set — nothing to add\n`);
       skipped++;
       continue;
     }
@@ -234,14 +222,12 @@ async function main() {
         .slice(0, 5)
         .map(([c, v]) => `${c.toUpperCase()} ${v.unit_amount}`)
         .join(', ');
-      console.log(`      🔍  Would add: ${preview} … (${Object.keys(newOptions).length} new currencies)\n`);
       skipped++;
       continue;
     }
 
     try {
       await stripe.prices.update(price.id, { currency_options: newOptions });
-      console.log(`      ✅  Added ${Object.keys(newOptions).length} new currency options\n`);
       updated++;
     } catch (err) {
       console.error(`      ❌  Failed: ${err.message}\n`);
@@ -249,13 +235,6 @@ async function main() {
     }
   }
 
-  // 3. Summary
-  console.log('─'.repeat(60));
-  console.log(`  Updated : ${updated}`);
-  console.log(`  Skipped : ${skipped}`);
-  console.log(`  Failed  : ${failed}`);
-  if (DRY_RUN) console.log('\n  (Dry run — no changes were made. Re-run without --dry-run to apply.)');
-  console.log('');
 }
 
 main().catch(err => { console.error(err); process.exit(1); });

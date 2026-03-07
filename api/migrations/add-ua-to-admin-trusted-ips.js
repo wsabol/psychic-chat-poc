@@ -15,7 +15,6 @@
 import { db } from '../shared/db.js';
 
 async function up() {
-  console.log('Running migration: add-ua-to-admin-trusted-ips');
 
   // 1. Add the two new columns (idempotent)
   await db.query(`
@@ -23,7 +22,6 @@ async function up() {
       ADD COLUMN IF NOT EXISTS user_agent_encrypted BYTEA,
       ADD COLUMN IF NOT EXISTS user_agent_hash      VARCHAR(64)
   `);
-  console.log('  ✓ Columns added (user_agent_encrypted, user_agent_hash)');
 
   // 2. Unique partial index on (user_id_hash, user_agent_hash) for UA-keyed rows.
   //    Partial so that old IP-only rows (user_agent_hash IS NULL) are unaffected.
@@ -32,16 +30,12 @@ async function up() {
       ON admin_trusted_ips (user_id_hash, user_agent_hash)
       WHERE user_agent_hash IS NOT NULL
   `);
-  console.log('  ✓ Unique index created (user_id_hash, user_agent_hash) WHERE NOT NULL');
 
   // 3. Plain index for fast lookups
   await db.query(`
     CREATE INDEX IF NOT EXISTS idx_admin_trusted_ips_ua_hash
       ON admin_trusted_ips (user_id_hash, user_agent_hash)
   `);
-  console.log('  ✓ Lookup index created');
-
-  console.log('Migration complete.');
 }
 
 up().catch(err => {

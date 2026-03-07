@@ -228,7 +228,6 @@ async function checkGooglePlaySubscription(user, stats) {
         [userId]
       );
       stats.statusChanged++;
-      console.log(`[SubscriptionJob] Google Play user ${hashUserId(userId)} marked expired (no API creds)`);
     } else {
       await touchTimestamp();
     }
@@ -252,11 +251,6 @@ async function checkGooglePlaySubscription(user, stats) {
            updated_at           = NOW()
        WHERE user_id = $1`,
       [userId, newStatus, newPeriodEnd]
-    );
-    console.log(
-      `[SubscriptionJob] Google Play user ${hashUserId(userId)}: ` +
-      `${currentStatus} → ${newStatus} ` +
-      `expires=${new Date(expiryMs).toISOString()}`
     );
   } else {
     await touchTimestamp();

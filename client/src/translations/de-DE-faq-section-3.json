@@ -77,6 +77,29 @@
         "answer": "Du kannst diese Dokumente jederzeit über den Hilfe-Button aufrufen:\n1. Klicke auf dem beliebigen Bildschirm auf den ? (Hilfe)-Button\n2. In der Kopfzeile des Hilfefensters siehst du Symbol-Buttons:\n   • 📋 (Bedingungen) – Klicke hier, um die Nutzungsbedingungen zu öffnen\n   • 🔒 (Datenschutz) – Klicke hier, um die Datenschutzrichtlinie zu öffnen\n3. Die Dokumente öffnen sich in einem großen, scrollbaren Fenster\n4. Nutze das Mausrad oder die Scrollleiste zum Lesen\n5. Klicke auf den X-Button, um das Fenster zu schließen\n\nDu kannst diese Dokumente jederzeit lesen, um deine Rechte und unsere Richtlinien zu verstehen."
       }
     },
+    "settings": {
+      "category": "Einstellungen",
+      "what-is-settings": {
+        "question": "Was kann ich auf der Einstellungsseite verwalten?",
+        "answer": "Die Einstellungsseite (unter Mein Konto) ermöglicht es dir, deine Datenschutz-, Daten- und Kommunikationspräferenzen zu verwalten:\n• Meine Daten herunterladen — exportiere deine Kontodaten als JSON-Datei\n• Cookies — nicht wesentliche Cookies aktivieren oder deaktivieren\n• Browserdaten löschen — löscht lokalen Speicher, Sitzungsspeicher und Cookies\n• Anonyme Analytik — anonymes Nutzungs-Tracking aktivieren oder deaktivieren\n• E-Mail-Kommunikation — Marketing-E-Mails aktivieren oder deaktivieren\n• Push-Benachrichtigungen — Push-Benachrichtigungen aktivieren oder deaktivieren\n• Konto löschen — dein Konto dauerhaft löschen (E-Mail-Verifizierung erforderlich)"
+      },
+      "how-to-access-settings": {
+        "question": "Wie gelange ich zur Einstellungsseite?",
+        "answer": "So rufst du Einstellungen auf:\n1. Öffne das Navigationsmenü\n2. Gehe zu Mein Konto\n3. Wähle Einstellungen\n\nDort findest du alle Datenschutz- und Datenverwaltungsoptionen."
+      },
+      "download-my-data": {
+        "question": "Wie lade ich meine Daten herunter?",
+        "answer": "So lädst du deine Daten herunter:\n1. Gehe unter Mein Konto zur Einstellungsseite\n2. Finde den Abschnitt \"Meine Daten herunterladen\"\n3. Klicke auf die Schaltfläche \"Herunterladen\"\n4. Eine JSON-Datei mit allen deinen persönlichen Informationen, dem Chat-Verlauf und den Kontodaten wird auf deinem Gerät gespeichert"
+      },
+      "delete-account-settings": {
+        "question": "Wie lösche ich mein Konto?",
+        "answer": "So löschst du dein Konto:\n1. Gehe unter Mein Konto zur Einstellungsseite\n2. Scrolle zum Abschnitt \"Mein Konto löschen\"\n3. Klicke auf \"Mein Konto löschen\"\n4. Folge den E-Mail-Verifizierungsschritten\n5. Bestätige die Löschung\n\nDein Abonnement wird sofort gekündigt und deine Daten werden am Ende des aktuellen Abrechnungszeitraums entfernt."
+      },
+      "manage-cookies": {
+        "question": "Wie verwalte ich Cookies und Analytik?",
+        "answer": "So verwaltest du Cookies und Analytik:\n1. Gehe unter Mein Konto zur Einstellungsseite\n2. Verwende die Schalter, um Folgendes zu aktivieren oder zu deaktivieren:\n   • Cookies — steuert die Speicherung nicht wesentlicher Cookies\n   • Anonyme Analytik — steuert das anonyme Nutzungs-Tracking\n3. Änderungen werden sofort wirksam"
+      }
+    },
     "technical": {
       "category": "Technik & Fehlerbehebung",
       "app-compatibility": {

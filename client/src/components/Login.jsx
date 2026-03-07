@@ -183,14 +183,14 @@ export function Login({ defaultMode = 'login' }) {
       position: 'relative'
     }}>
       {/* Language Switcher */}
-      {/*<div style={{*/}
-      {/*  position: 'absolute',*/}
-      {/*  top: '1rem',*/}
-      {/*  right: '1rem',*/}
-      {/*  zIndex: 100*/}
-      {/*}}>*/}
-      {/*  <LanguageSwitcher compact={true} />*/}
-      {/*</div>*/}
+      <div style={{
+        position: 'absolute',
+        top: '1rem',
+        right: '1rem',
+        zIndex: 100
+      }}>
+        <LanguageSwitcher compact={true} />
+      </div>
 
       <div style={{
         backgroundColor: 'rgba(30, 30, 60, 0.9)',

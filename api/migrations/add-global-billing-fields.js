@@ -22,8 +22,6 @@ import '../env-loader.js';        // loads api/.env before anything else
 import { db } from '../shared/db.js';
 
 async function up() {
-  console.log('[Migration] Running add-global-billing-fields…');
-
   await db.query(`
     ALTER TABLE user_personal_info
       ADD COLUMN IF NOT EXISTS country_code           VARCHAR(2),
@@ -42,12 +40,9 @@ async function up() {
       ON user_personal_info(subscription_currency)
       WHERE subscription_currency IS NOT NULL;
   `);
-
-  console.log('[Migration] add-global-billing-fields complete ✓');
 }
 
 async function down() {
-  console.log('[Migration] Rolling back add-global-billing-fields…');
 
   await db.query(`
     DROP INDEX IF EXISTS idx_user_country_code;
@@ -59,8 +54,6 @@ async function down() {
       DROP COLUMN IF EXISTS country_code,
       DROP COLUMN IF EXISTS subscription_currency;
   `);
-
-  console.log('[Migration] Rollback complete ✓');
 }
 
 const command = process.argv[2];

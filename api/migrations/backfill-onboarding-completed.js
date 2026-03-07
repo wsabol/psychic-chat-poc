@@ -25,7 +25,6 @@ import '../env-loader.js'; // load .env before anything else
 import { db } from '../shared/db.js';
 
 async function runMigration() {
-  console.log('[MIGRATION] backfill-onboarding-completed — starting');
 
   try {
     const result = await db.query(`
@@ -39,15 +38,10 @@ async function runMigration() {
         AND (onboarding_completed IS NULL OR onboarding_completed = FALSE)
       RETURNING user_id, onboarding_step
     `);
-
-    console.log(`[MIGRATION] Updated ${result.rowCount} user(s):`);
     if (result.rowCount > 0) {
       result.rows.forEach(row => {
-        console.log(`  - user_id=${row.user_id}  onboarding_step=${row.onboarding_step}`);
       });
     }
-
-    console.log('[MIGRATION] backfill-onboarding-completed — complete');
   } catch (err) {
     console.error('[MIGRATION] FAILED:', err.message);
     console.error(err.stack);

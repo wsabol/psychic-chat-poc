@@ -42,7 +42,7 @@
       "category": "Información Personal",
       "update-personal-info": {
         "question": "¿Cómo actualizo mi información personal?",
-        "answer": "Para actualizar tu información personal:\n1. Ve a la página de Información Personal\n2. Edita tus datos:\n   • Nombre completo\n   • Fecha de nacimiento\n   • Hora de nacimiento (opcional pero recomendada)\n   • Lugar de nacimiento\n3. Toca Guardar para actualizar tu perfil\nUna información más precisa proporciona lecturas más personalizadas."
+        "answer": "Para actualizar tu información personal:\n1. En Mi Cuenta ve a la página de Información Personal\n2. Edita tus datos:\n   • Nombre completo\n   • Fecha de nacimiento\n   • Hora de nacimiento (opcional pero recomendada)\n   • Lugar de nacimiento\n3. Toca Guardar para actualizar tu perfil\nUna información más precisa proporciona lecturas más personalizadas."
       },
       "birth-location": {
         "question": "¿Por qué importa el lugar de nacimiento?",

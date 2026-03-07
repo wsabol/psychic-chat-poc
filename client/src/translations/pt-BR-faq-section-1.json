@@ -42,7 +42,7 @@
       "category": "Informações Pessoais",
       "update-personal-info": {
         "question": "Como atualizo minhas informações pessoais?",
-        "answer": "Para atualizar suas informações pessoais:\n1. Acesse a página Informações Pessoais\n2. Edite seus dados:\n   • Nome completo\n   • Data de nascimento\n   • Horário de nascimento (opcional, mas recomendado)\n   • Local de nascimento\n3. Clique em Salvar para atualizar seu perfil\nInformações mais precisas proporcionam leituras mais personalizadas."
+        "answer": "Para atualizar suas informações pessoais:\n1. Em Minha Conta, acesse a página Informações Pessoais\n2. Edite seus dados:\n   • Nome completo\n   • Data de nascimento\n   • Horário de nascimento (opcional, mas recomendado)\n   • Local de nascimento\n3. Clique em Salvar para atualizar seu perfil\nInformações mais precisas proporcionam leituras mais personalizadas."
       },
       "birth-location": {
         "question": "Por que o local de nascimento é importante?",
