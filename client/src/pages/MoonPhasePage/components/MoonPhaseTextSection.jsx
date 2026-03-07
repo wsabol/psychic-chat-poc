@@ -30,7 +30,9 @@ export function MoonPhaseTextSection({
 
   return (
     <div className="moon-phase-insight">
-      <div dangerouslySetInnerHTML={{ __html: textToDisplay }} />
+      {(textToDisplay || '').split(/\n\n+/).filter(p => p.trim()).map((para, i) => (
+        <pre key={i} className="markdown-pre">{para.trim()}</pre>
+      ))}
       
       {/* Voice Bar */}
       {isSupported && (
