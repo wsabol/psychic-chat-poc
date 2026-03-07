@@ -35,7 +35,7 @@ function App() {
   if (isPoliciesPage) {
     return (
       <>
-        <InstallPromptBanner />
+        {/*<InstallPromptBanner />*/}
         <StarField />
         <PoliciesPage />
         <Footer />
@@ -47,7 +47,7 @@ function App() {
   if (state.isLoading || state.isThankyou || state.isVerification || state.isRegister || state.isLanding || state.isLogin || state.isTwoFactor) {
     return (
       <>
-        <InstallPromptBanner />
+        {/*<InstallPromptBanner />*/}
         <StarField />
         <AppShells state={state} />
       </>
@@ -57,7 +57,7 @@ function App() {
   // Otherwise show authenticated chat flow
   return (
     <>
-      <InstallPromptBanner />
+      {/*<InstallPromptBanner />*/}
       <StarField />
       <AppChat state={state} />
     </>
