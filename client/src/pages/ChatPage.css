@@ -278,6 +278,49 @@
 }
 
 /* ============================================
+   VOICE PLAY BUTTON
+   ============================================ */
+
+.message-text-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.voice-play-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 0.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  transition: transform 0.2s;
+}
+
+.voice-play-button.playing {
+  color: #7c63d8;
+}
+
+.voice-play-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.voice-play-button:hover:not(:disabled) {
+  transform: scale(1.1);
+}
+
+@media (max-width: 767px) {
+  .voice-play-button {
+    display: none;
+  }
+}
+
+/* ============================================
    SCROLLBAR
    ============================================ */
 
