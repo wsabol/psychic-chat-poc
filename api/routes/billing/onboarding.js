@@ -67,7 +67,14 @@ router.get('/onboarding-status', async (req, res) => {
     
     // isOnboarding = true if onboarding_completed is NULL or FALSE (not finished)
     // Only FALSE if onboarding_completed = true
-    const isOnboarding = onboarding_completed !== true;
+    // SAFETY NET: Also treat personal_info or welcome step as "effectively complete"
+    // even if the onboarding_completed flag wasn't set (e.g. browser closed before
+    // WelcomeModal was dismissed on a previous device).
+    const stepsIndicatingCompletion = ['personal_info', 'welcome'];
+    const isEffectivelyComplete =
+      onboarding_completed === true ||
+      stepsIndicatingCompletion.includes(onboarding_step);
+    const isOnboarding = !isEffectivelyComplete;
     
     successResponse(res, {
       currentStep: onboarding_step,
@@ -110,8 +117,13 @@ router.post('/onboarding-step/:step', async (req, res) => {
     );
     
         const currentCompleted = currentResult.rows[0]?.onboarding_completed;
-    // Force completion to true if step is personal_info, otherwise keep current value
-    const isOnboardingComplete = step === 'welcome' ? true : (currentCompleted === true);
+    // Onboarding is COMPLETE when personal_info OR welcome step is saved.
+    // personal_info is the last required step; welcome is the optional dismiss step.
+    // We mark completion at personal_info so that if the WelcomeModal is never
+    // dismissed (e.g. browser closed early), the user is still considered done and
+    // will NOT be re-routed through onboarding on another device.
+    const isOnboardingComplete =
+      step === 'welcome' || step === 'personal_info' ? true : (currentCompleted === true);
     
         // Use proper parameterized query with CASE statement
     const updateQuery = `

@@ -147,11 +147,25 @@ router.post('/log-login-success', async (req, res) => {
     let subscriptionStatus = null;
     
     // ✅ ONBOARDING EXEMPTION: Check if user is still in onboarding
+    // Consistent with GET /billing/onboarding-status:
+    // A user is NOT onboarding if onboarding_completed = true OR if their
+    // onboarding_step is 'personal_info' or 'welcome' (all required steps done).
+    // This prevents users who closed the browser before the WelcomeModal was
+    // dismissed from being treated as mid-onboarding on a subsequent login.
     const onboardingCheck = await db.query(
-      'SELECT onboarding_completed FROM user_personal_info WHERE user_id = $1',
+      'SELECT onboarding_completed, onboarding_step FROM user_personal_info WHERE user_id = $1',
       [userId]
     );
-    const isOnboarding = onboardingCheck.rows.length > 0 && onboardingCheck.rows[0].onboarding_completed !== true;
+    const onboardingRow = onboardingCheck.rows[0];
+    const stepsIndicatingCompletion = ['personal_info', 'welcome'];
+    // isEffectivelyComplete: true only if the row exists AND shows completion
+    // No row (new user / creation failed) → treat as onboarding (isOnboarding = true)
+    const isEffectivelyComplete =
+      !!onboardingRow && (
+        onboardingRow.onboarding_completed === true ||
+        stepsIndicatingCompletion.includes(onboardingRow.onboarding_step)
+      );
+    const isOnboarding = !isEffectivelyComplete;
     
     // ✅ ADMIN EXEMPTION: Admins bypass subscription check at login
     if (isAdminEmail) {
