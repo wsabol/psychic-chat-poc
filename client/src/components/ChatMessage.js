@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from '../context/TranslationContext';
 import { useSpeech } from '../hooks/useSpeech';
-import VoiceBar from './VoiceBar';
 import { getCardImageByID, getCardImageByName } from '../utils/cardImageMap.js';
 
 function TarotCard({ card }) {
@@ -148,23 +147,20 @@ export default function ChatMessage({ msg, defaultShowBrief = true, voiceEnabled
       <div className="message-content">
         {msg.role === 'assistant' ? (
           <>
-            <div dangerouslySetInnerHTML={{ __html: cleanMarkdownToHTML(displayText) }} />
+            <div className="message-text-container">
+              <div dangerouslySetInnerHTML={{ __html: cleanMarkdownToHTML(displayText) }} style={{ flex: 1 }} />
+              {isSupported && (
+                <button
+                  onClick={isPlaying ? stop : handlePlayVoice}
+                  className={`voice-play-button ${isPlaying ? 'playing' : ''}`}
+                  title={isPlaying ? t('voice.stop') : t('voice.play')}
+                  disabled={isLoading}
+                >
+                  {isLoading ? '⏳' : isPlaying ? '⏹️' : '🔊'}
+                </button>
+              )}
+            </div>
             {cards && <CardsDisplay cards={cards} />}
-            
-            {/* Voice Bar - Always visible for assistant messages if voice is supported */}
-            {isSupported && (
-              <VoiceBar
-                isPlaying={isPlaying}
-                isPaused={isPaused}
-                isLoading={isLoading}
-                error={error}
-                onPlay={handlePlayVoice}
-                onTogglePause={handleTogglePause}
-                onStop={stop}
-                isSupported={isSupported}
-                progress={progress}
-              />
-            )}
             
             {/* Toggle button for brief/full responses */}
             {hasToggle && (
