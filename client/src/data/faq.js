@@ -331,6 +331,38 @@ export const FAQ_DATA = [
     ],
   },
   {
+    id: 'settings',
+    categoryKey: 'faq.settings.category',
+    icon: '⚙️',
+    questions: [
+      {
+        id: 'what-is-settings',
+        questionKey: 'faq.settings.what-is-settings.question',
+        answerKey:   'faq.settings.what-is-settings.answer',
+      },
+      {
+        id: 'how-to-access-settings',
+        questionKey: 'faq.settings.how-to-access-settings.question',
+        answerKey:   'faq.settings.how-to-access-settings.answer',
+      },
+      {
+        id: 'download-my-data',
+        questionKey: 'faq.settings.download-my-data.question',
+        answerKey:   'faq.settings.download-my-data.answer',
+      },
+      {
+        id: 'delete-account-settings',
+        questionKey: 'faq.settings.delete-account-settings.question',
+        answerKey:   'faq.settings.delete-account-settings.answer',
+      },
+      {
+        id: 'manage-cookies',
+        questionKey: 'faq.settings.manage-cookies.question',
+        answerKey:   'faq.settings.manage-cookies.answer',
+      },
+    ],
+  },
+  {
     id: 'technical',
     categoryKey: 'faq.technical.category',
     icon: '⚙️',

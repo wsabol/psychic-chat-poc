@@ -229,6 +229,29 @@
         "answer": "You can access these documents anytime through the Help button:\n1. Click the ? (Help) button on any screen\n2. In the Help window header, you'll see icon buttons:\n   • 📋 (Terms) - Click to open Terms of Service\n   • 🔒 (Privacy) - Click to open Privacy Policy\n3. The documents open in a large, scrollable window\n4. Use your mouse wheel, or scrollbar to read\n5. Click the X button to close when finished\n\nYou can read these documents at any time to understand your rights and our policies."
       }
     },
+    "settings": {
+      "category": "Settings",
+      "what-is-settings": {
+        "question": "What can I manage in the Settings page?",
+        "answer": "The Settings page (found under My Account) lets you manage your privacy, data, and communication preferences:\n• Download My Data — export your account data as a JSON file\n• Cookies — enable or disable non-essential cookies\n• Clear Browsing Data — clears local storage, session storage, and cookies\n• Anonymous Analytics — opt in or out of anonymous usage tracking\n• Email Communication — opt in or out of marketing emails\n• Push Notifications — enable or disable push notifications\n• Delete Account — permanently delete your account (requires email verification)"
+      },
+      "how-to-access-settings": {
+        "question": "How do I get to the Settings page?",
+        "answer": "To access Settings:\n1. Open the navigation menu\n2. Go to My Account\n3. Select Settings\n\nYou'll find all your privacy and data management options here."
+      },
+      "download-my-data": {
+        "question": "How do I download my data?",
+        "answer": "To download your data:\n1. In My Account go to Settings page\n2. Find the \"Download My Data\" section\n3. Click the \"Download\" button\n4. A JSON file containing all your personal information, chat history, and account data will be saved to your device"
+      },
+      "delete-account-settings": {
+        "question": "How do I delete my account?",
+        "answer": "To delete your account:\n1. In My Account go to Settings page\n2. Scroll to the \"Delete My Account\" section\n3. Click \"Delete My Account\"\n4. Follow the email verification steps\n5. Confirm the deletion\n\nYour subscription will be cancelled immediately and your data will be removed at the end of your current billing period."
+      },
+      "manage-cookies": {
+        "question": "How do I manage cookies and analytics?",
+        "answer": "To manage cookies and analytics:\n1. In My Account go to Settings page\n2. Use the toggle switches to enable or disable:\n   • Cookies — controls non-essential cookie storage\n   • Anonymous Analytics — controls anonymous usage tracking\n3. Changes take effect immediately"
+      }
+    },
     "technical": {
       "category": "Technical & Troubleshooting",
       "app-compatibility": {
