@@ -17,13 +17,13 @@ export function Landing({ onTryFree, onCreateAccount, onSignIn }) {
       padding: '2rem',
       position: 'relative'
     }}>
-      <div style={{
-        position: 'absolute',
-        top: '1rem',
-        right: '1rem'
-      }}>
-        <LanguageSwitcher compact={true} />
-      </div>
+      {/*<div style={{*/}
+      {/*  position: 'absolute',*/}
+      {/*  top: '1rem',*/}
+      {/*  right: '1rem'*/}
+      {/*}}>*/}
+      {/*  <LanguageSwitcher compact={true} />*/}
+      {/*</div>*/}
       <div style={{
         maxWidth: '600px',
         animation: 'fadeIn 1s ease-in'
