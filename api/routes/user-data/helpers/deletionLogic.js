@@ -32,18 +32,52 @@ import { stripe } from '../../../services/stripe/stripeClient.js';
 // ─── Subscription Helpers ─────────────────────────────────────────────────────
 
 /**
- * Derive the grace-period end date from the user's active Stripe subscription.
- * Returns an ISO-8601 string, or null if no subscription data is available.
+ * Derive the grace-period end date from the user's active subscription.
  *
- * Stripe stores `current_period_end` as a Unix timestamp (seconds).
- * We only use it when the subscription is in an active/trialing state AND the
- * period end is actually in the future.
+ * Checks BOTH billing platforms:
+ *   • Google Play – reads `billing_platform`, `subscription_status`, and
+ *                   `current_period_end` (Unix seconds) directly from
+ *                   user_personal_info (already kept up-to-date by the RTDN
+ *                   webhook and the daily subscription-check job).
+ *   • Stripe      – uses the existing getStoredSubscriptionData() helper.
+ *
+ * Returns an ISO-8601 string, or null if no active subscription is found.
  *
  * @param {string} userId
  * @returns {Promise<string|null>} ISO date string or null
  */
 export async function getSubscriptionPeriodEnd(userId) {
   try {
+    // ── Step 1: detect billing platform ──────────────────────────────────────
+    const platformResult = await db.query(
+      `SELECT billing_platform, subscription_status, current_period_end
+       FROM user_personal_info
+       WHERE user_id = $1`,
+      [userId]
+    );
+
+    if (platformResult.rows.length === 0) return null;
+    const userRecord = platformResult.rows[0];
+
+    // ── Step 2a: Google Play path ─────────────────────────────────────────────
+    // Google Play subscriptions cannot be cancelled server-side via API
+    // (unlike Stripe).  The user must cancel in the Play Store themselves.
+    // We still set the grace period to the subscription's expiry date so the
+    // account stays active until the end of the paid period (no refunds).
+    if (userRecord.billing_platform === 'google_play') {
+      const activeStatuses = ['active', 'trialing'];
+      if (!activeStatuses.includes(userRecord.subscription_status)) return null;
+      if (!userRecord.current_period_end) return null;
+
+      // current_period_end is stored as a Unix timestamp in seconds.
+      const periodEndMs = userRecord.current_period_end * 1000;
+      const periodEnd = new Date(periodEndMs);
+      if (isNaN(periodEnd.getTime()) || periodEnd <= new Date()) return null;
+
+      return periodEnd.toISOString();
+    }
+
+    // ── Step 2b: Stripe path (original logic) ────────────────────────────────
     const subscriptionData = await getStoredSubscriptionData(userId);
     if (!subscriptionData) return null;
 
