@@ -23,3 +23,37 @@
 .toggle-brief-btn:active {
   transform: scale(0.98);
 }
+
+/* ============================================
+   MOBILE: Toggle button appears ABOVE oracle response
+   Flexbox order moves the button to the top so users
+   don't have to scroll to the bottom to toggle detail.
+   Applies to: chat, free chat, horoscope, free horoscope,
+               moon phase, cosmic weather, weekly horoscope.
+   ============================================ */
+@media (max-width: 767px) {
+  /* Make oracle response containers flex-column so `order` works */
+  .horoscope-text,
+  .moon-phase-insight,
+  .cosmic-weather-text {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Chat message bubble for assistant responses */
+  .chat-message-assistant .message-content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Move BOTH toggle button variants to the top */
+  .horoscope-text .toggle-brief-btn,
+  .horoscope-text .horoscope-toggle-btn,
+  .moon-phase-insight .toggle-brief-btn,
+  .cosmic-weather-text .toggle-brief-btn,
+  .chat-message-assistant .message-content .toggle-brief-btn {
+    order: -1;       /* floats before all default-order siblings */
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+  }
+}

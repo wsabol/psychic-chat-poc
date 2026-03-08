@@ -53,20 +53,7 @@ export function MoonPhaseTextSection({
       <button 
         onClick={onToggleBrief}
         className="toggle-brief-btn"
-        style={{ 
-          marginTop: '1.5rem', 
-          padding: '0.75rem 1.5rem', 
-          backgroundColor: '#7c63d8', 
-          color: 'white', 
-          border: 'none', 
-          borderRadius: '5px', 
-          cursor: 'pointer', 
-          fontSize: '1rem', 
-          fontWeight: '500',
-          transition: 'background-color 0.2s'
-        }} 
-        onMouseEnter={(e) => e.target.style.backgroundColor = '#6b52c1'} 
-        onMouseLeave={(e) => e.target.style.backgroundColor = '#7c63d8'}
+        aria-pressed={!showingBrief}
       >
         {showingBrief ? t('chat.toggleMore') : t('chat.toggleLess')}
       </button>

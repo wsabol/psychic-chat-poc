@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from '../context/TranslationContext';
 import { useSpeech } from '../hooks/useSpeech';
 import { getCardImageByID, getCardImageByName } from '../utils/cardImageMap.js';
+import '../styles/toggleBrief.css';
 
 function TarotCard({ card }) {
   let imageFilename = card.id !== undefined ? getCardImageByID(card.id) : null;
@@ -166,20 +167,8 @@ export default function ChatMessage({ msg, defaultShowBrief = true, voiceEnabled
             {hasToggle && (
               <button
                 onClick={() => setShowingBrief(!showingBrief)}
-                style={{
-                  marginTop: '1rem',
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#7c63d8',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem',
-                  fontWeight: '500',
-                  transition: 'background-color 0.3s'
-                }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = '#6b52c1'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = '#7c63d8'}
+                className="toggle-brief-btn"
+                aria-pressed={!showingBrief}
               >
                 {showingBrief ? t('chat.toggleMore') : t('chat.toggleLess')}
               </button>
