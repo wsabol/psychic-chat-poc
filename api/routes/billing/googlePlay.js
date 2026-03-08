@@ -257,9 +257,29 @@ router.get('/subscription-status/google', authenticateToken, async (req, res) =>
 
     const row = result.rows[0];
 
-    // Only report Google Play subscriptions here
+    // Handle non-Google Play subscriptions (e.g. Stripe web purchases).
+    // Stripe manages its own subscription lifecycle via webhooks which keep
+    // subscription_status accurate.  We trust subscription_status = 'active'
+    // directly rather than re-checking current_period_end, because:
+    //   1. The Stripe webhook updates subscription_status to 'past_due' /
+    //      'canceled' / 'unpaid' when a period ends without renewal.
+    //   2. current_period_end may legitimately be a past timestamp during the
+    //      brief window between an automatic renewal and the webhook arriving,
+    //      which incorrectly flags the subscription as expired.
     if (row.billing_platform !== 'google_play') {
-      return successResponse(res, { hasSubscription: false, billing_platform: row.billing_platform });
+      const isActive = row.subscription_status === 'active';
+      return successResponse(res, {
+        hasSubscription: isActive,
+        plan: row.plan_name ?? null,
+        status: row.subscription_status ?? 'inactive',
+        billing_platform: row.billing_platform || 'stripe',
+        expiresAt: row.current_period_end
+          ? new Date(row.current_period_end * 1000).toISOString()
+          : null,
+        // No purchaseToken for Stripe/non-Google subscriptions
+        purchaseToken: null,
+        productId: null,
+      });
     }
 
     const nowSeconds = Math.floor(Date.now() / 1000);
