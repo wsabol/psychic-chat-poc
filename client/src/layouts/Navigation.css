@@ -102,7 +102,10 @@
 
 .nav-mobile-header {
   position: fixed;
-  top: 0;
+  /* env(safe-area-inset-top) accounts for the iOS status-bar / notch when the
+     page uses viewport-fit=cover. On Android Brave/Chrome it resolves to 0 so
+     the button stays flush with the viewport top as before. */
+  top: env(safe-area-inset-top, 0);
   right: 0;
   z-index: 999;
   padding: 1rem;

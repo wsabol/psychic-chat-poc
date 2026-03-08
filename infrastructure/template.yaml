@@ -203,6 +203,13 @@ Resources:
       CodeUri: ../lambdas/
       Handler: temp-account-cleanup/index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          # Target the psychic_dhat database explicitly for temp-account cleanup.
+          # This overrides the 'database' field in the shared DB secret so that
+          # only this Lambda connects to psychic_dhat; all other Lambdas continue
+          # using whatever database name is stored in their shared secret.
+          DB_DATABASE_NAME: psychic_dhat
       Events:
         ScheduledEvent:
           Type: Schedule

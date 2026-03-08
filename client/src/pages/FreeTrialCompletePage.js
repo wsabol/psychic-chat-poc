@@ -15,6 +15,17 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
  *   - Shows a celebration header and full feature list
  *   - "Create Account" → Firebase registration
  *   - "Exit" → logs out the guest session and returns to landing
+ *
+ * Scroll / layout strategy (cross-browser):
+ *   OUTER div — position:fixed fills the VISIBLE viewport on every mobile browser
+ *     (Brave, Samsung Internet, Firefox).  overflow-y:auto + WebkitOverflowScrolling
+ *     gives momentum scrolling.  Using position:fixed instead of minHeight:100dvh
+ *     avoids the Samsung Internet bug where dvh is unsupported and a minHeight div
+ *     grows with its content, making overflow-y:auto a no-op.
+ *   INNER div — minHeight:100% fills the outer viewport so justify-content:center
+ *     works when the card fits on screen.  When card + padding exceeds the screen
+ *     height the inner div grows past 100%, the outer div scrolls, and all buttons
+ *     stay reachable.
  */
 export default function FreeTrialCompletePage({ userId, onCreateAccount, onExit }) {
   const { t } = useTranslation();
@@ -72,152 +83,178 @@ export default function FreeTrialCompletePage({ userId, onCreateAccount, onExit 
     t('freeTrial.complete.feature5') || '📊 Full Birth Chart – Sun, Moon & Rising signs',
   ];
 
+  /* ─── outer: fixed full-viewport scroll container ─── */
+  const outerStyle = {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    overflowY: 'auto',
+    WebkitOverflowScrolling: 'touch',
+    background: 'rgba(0,0,0,0)',
+  };
+
+  /* ─── inner: min-height centering wrapper ─── */
+  const innerStyle = {
+    minHeight: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    /* Top padding clears the iOS notch / Android status-bar.
+       Bottom padding gives clearance above the browser navigation bar
+       on Brave, Samsung Internet, and the iPhone home indicator. */
+    paddingTop: 'max(2rem, calc(env(safe-area-inset-top, 0px) + 2rem))',
+    paddingLeft: '2rem',
+    paddingRight: '2rem',
+    paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 2rem))',
+  };
+
+  /* ─── card ─── */
+  const cardStyle = {
+    backgroundColor: 'rgba(20, 20, 50, 0.97)',
+    border: '1px solid rgba(157, 78, 221, 0.35)',
+    borderRadius: '16px',
+    padding: '2.5rem 2rem',
+    maxWidth: '500px',
+    width: '100%',
+    color: 'white',
+    textAlign: 'center',
+    boxShadow: '0 8px 40px rgba(0,0,0,0.55)',
+    position: 'relative',
+    zIndex: 10,
+  };
+
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '2rem',
-      background: 'rgba(0,0,0,0)',
-    }}>
-      <div style={{
-        backgroundColor: 'rgba(20, 20, 50, 0.97)',
-        border: '1px solid rgba(157, 78, 221, 0.35)',
-        borderRadius: '16px',
-        padding: '2.5rem 2rem',
-        maxWidth: '500px',
-        width: '100%',
-        color: 'white',
-        textAlign: 'center',
-        boxShadow: '0 8px 40px rgba(0,0,0,0.55)',
-        position: 'relative',
-        zIndex: 10,
-      }}>
+    <div style={outerStyle}>
+      <div style={innerStyle}>
+        <div style={cardStyle}>
 
-        {/* Logo */}
-        <div style={{ marginBottom: '1rem' }}>
-          <LogoWithCopyright size="70px" alt="Starship Psychics" />
-        </div>
+          {/* Logo */}
+          <div style={{ marginBottom: '1rem' }}>
+            <LogoWithCopyright size="70px" alt="Starship Psychics" />
+          </div>
 
-        {/* Stars */}
-        <div style={{ fontSize: '2.2rem', marginBottom: '1rem' }}>✨ 🌟 ✨</div>
+          {/* Stars */}
+          <div style={{ fontSize: '2.2rem', marginBottom: '1rem' }}>✨ 🌟 ✨</div>
 
-        {/* Title */}
-        <h1 style={{
-          fontSize: '1.7rem',
-          fontWeight: 'bold',
-          marginBottom: '0.75rem',
-          color: '#fff',
-          lineHeight: 1.3,
-        }}>
-          {t('freeTrial.complete.title') || 'Your Free Trial is Complete! ✨'}
-        </h1>
-
-        {/* Subtitle */}
-        <p style={{
-          color: '#b0b0ff',
-          fontSize: '0.95rem',
-          lineHeight: 1.6,
-          marginBottom: '1.75rem',
-        }}>
-          {t('freeTrial.complete.subtitle') ||
-            "You've experienced a taste of what Starship Psychics has to offer. Create an account to unlock everything!"}
-        </p>
-
-        {/* Features box */}
-        <div style={{
-          backgroundColor: 'rgba(26, 26, 46, 0.9)',
-          border: '1px solid rgba(157, 78, 221, 0.3)',
-          borderRadius: '12px',
-          padding: '1.25rem 1.5rem',
-          marginBottom: '1.75rem',
-          textAlign: 'left',
-        }}>
-          <p style={{
-            color: '#9d4edd',
+          {/* Title */}
+          <h1 style={{
+            fontSize: '1.7rem',
             fontWeight: 'bold',
-            fontSize: '0.95rem',
             marginBottom: '0.75rem',
-            textAlign: 'center',
+            color: '#fff',
+            lineHeight: 1.3,
           }}>
-            {t('freeTrial.complete.featuresTitle') || '✨ Unlock the Full Experience:'}
-          </p>
-          {features.map((feature, i) => (
-            <p key={i} style={{
-              color: '#d0d0ff',
-              fontSize: '0.9rem',
-              lineHeight: 1.8,
-              margin: 0,
-            }}>
-              {feature}
-            </p>
-          ))}
-        </div>
+            {t('freeTrial.complete.title') || 'Your Free Trial is Complete! ✨'}
+          </h1>
 
-        {/* Loading indicator while completing */}
-        {!completed && (
-          <div style={{
-            color: '#9d4edd',
-            fontSize: '1.4rem',
-            marginBottom: '1rem',
-            animation: 'spin 1s linear infinite',
-          }}>⏳</div>
-        )}
-
-        {/* Create Account button */}
-        <button
-          onClick={handleCreateAccount}
-          disabled={busy}
-          style={{
-            width: '100%',
-            padding: '1rem',
-            backgroundColor: busy ? '#5a5a8a' : '#9d4edd',
-            color: 'white',
-            border: 'none',
-            borderRadius: '12px',
-            fontSize: '1.05rem',
-            fontWeight: 'bold',
-            cursor: busy ? 'not-allowed' : 'pointer',
-            marginBottom: '0.85rem',
-            boxShadow: busy ? 'none' : '0 4px 16px rgba(157, 78, 221, 0.4)',
-            transition: 'all 0.2s ease',
-          }}
-          onMouseOver={(e) => {
-            if (!busy) e.currentTarget.style.backgroundColor = '#8a3cc5';
-          }}
-          onMouseOut={(e) => {
-            if (!busy) e.currentTarget.style.backgroundColor = '#9d4edd';
-          }}
-        >
-          {busy ? '...' : (t('freeTrial.complete.createAccount') || '📝 Create Account to Continue')}
-        </button>
-
-        {/* Exit button */}
-        <button
-          onClick={handleExit}
-          disabled={busy}
-          style={{
-            width: '100%',
-            padding: '0.85rem',
-            backgroundColor: 'transparent',
-            color: busy ? '#555' : '#888',
-            border: '1px solid rgba(90, 90, 100, 0.5)',
-            borderRadius: '12px',
+          {/* Subtitle */}
+          <p style={{
+            color: '#b0b0ff',
             fontSize: '0.95rem',
-            cursor: busy ? 'not-allowed' : 'pointer',
-            transition: 'all 0.2s ease',
-          }}
-          onMouseOver={(e) => {
-            if (!busy) e.currentTarget.style.borderColor = '#666';
-          }}
-          onMouseOut={(e) => {
-            if (!busy) e.currentTarget.style.borderColor = 'rgba(90, 90, 100, 0.5)';
-          }}
-        >
-          {t('freeTrial.complete.exit') || 'Exit'}
-        </button>
+            lineHeight: 1.6,
+            marginBottom: '1.75rem',
+          }}>
+            {t('freeTrial.complete.subtitle') ||
+              "You've experienced a taste of what Starship Psychics has to offer. Create an account to unlock everything!"}
+          </p>
+
+          {/* Features box */}
+          <div style={{
+            backgroundColor: 'rgba(26, 26, 46, 0.9)',
+            border: '1px solid rgba(157, 78, 221, 0.3)',
+            borderRadius: '12px',
+            padding: '1.25rem 1.5rem',
+            marginBottom: '1.75rem',
+            textAlign: 'left',
+          }}>
+            <p style={{
+              color: '#9d4edd',
+              fontWeight: 'bold',
+              fontSize: '0.95rem',
+              marginBottom: '0.75rem',
+              textAlign: 'center',
+            }}>
+              {t('freeTrial.complete.featuresTitle') || '✨ Unlock the Full Experience:'}
+            </p>
+            {features.map((feature, i) => (
+              <p key={i} style={{
+                color: '#d0d0ff',
+                fontSize: '0.9rem',
+                lineHeight: 1.8,
+                margin: 0,
+              }}>
+                {feature}
+              </p>
+            ))}
+          </div>
+
+          {/* Loading indicator while completing */}
+          {!completed && (
+            <div style={{
+              color: '#9d4edd',
+              fontSize: '1.4rem',
+              marginBottom: '1rem',
+              animation: 'spin 1s linear infinite',
+            }}>⏳</div>
+          )}
+
+          {/* Create Account button */}
+          <button
+            onClick={handleCreateAccount}
+            disabled={busy}
+            style={{
+              width: '100%',
+              padding: '1rem',
+              backgroundColor: busy ? '#5a5a8a' : '#9d4edd',
+              color: 'white',
+              border: 'none',
+              borderRadius: '12px',
+              fontSize: '1.05rem',
+              fontWeight: 'bold',
+              cursor: busy ? 'not-allowed' : 'pointer',
+              marginBottom: '0.85rem',
+              boxShadow: busy ? 'none' : '0 4px 16px rgba(157, 78, 221, 0.4)',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseOver={(e) => {
+              if (!busy) e.currentTarget.style.backgroundColor = '#8a3cc5';
+            }}
+            onMouseOut={(e) => {
+              if (!busy) e.currentTarget.style.backgroundColor = '#9d4edd';
+            }}
+          >
+            {busy ? '...' : (t('freeTrial.complete.createAccount') || '📝 Create Account to Continue')}
+          </button>
+
+          {/* Exit button */}
+          <button
+            onClick={handleExit}
+            disabled={busy}
+            style={{
+              width: '100%',
+              padding: '0.85rem',
+              backgroundColor: 'transparent',
+              color: busy ? '#555' : '#888',
+              border: '1px solid rgba(90, 90, 100, 0.5)',
+              borderRadius: '12px',
+              fontSize: '0.95rem',
+              cursor: busy ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseOver={(e) => {
+              if (!busy) e.currentTarget.style.borderColor = '#666';
+            }}
+            onMouseOut={(e) => {
+              if (!busy) e.currentTarget.style.borderColor = 'rgba(90, 90, 100, 0.5)';
+            }}
+          >
+            {t('freeTrial.complete.exit') || 'Exit'}
+          </button>
+
+        </div>
       </div>
     </div>
   );

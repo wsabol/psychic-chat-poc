@@ -6,6 +6,7 @@
     "footer": "Your journey of cosmic discovery awaits...",
     "buttons": {
       "tryFree": "🔮 Try for Free",
+      "tryFreeSubtitle": "Chat and Horoscope.",
       "createAccount": "📝 Create Account/Login"
     }
   },

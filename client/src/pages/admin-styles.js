@@ -4,7 +4,11 @@
 
 export const styles = {
   pageContainer: {
-    padding: '0.75rem',
+    // Use explicit sides instead of shorthand `padding` so the CSS class
+    // .page-safe-area can keep its mobile padding-top: 70px (hamburger clearance).
+    paddingLeft: '0.75rem',
+    paddingRight: '0.75rem',
+    paddingBottom: '0.75rem',
   },
   contentWrapper: {
     maxWidth: '1200px',

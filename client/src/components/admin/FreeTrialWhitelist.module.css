@@ -211,10 +211,24 @@
   cursor: not-allowed;
 }
 
+/* Horizontal scroll wrapper — prevents the table overflowing the screen on
+   mobile.  The parent .pages-container has overflow-x:hidden which would clip
+   the table, so we create a local horizontal scroll container here instead. */
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  /* Small visual cue that the table is horizontally scrollable on mobile */
+  border-radius: 4px;
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
+  /* On narrow screens the table keeps a minimum width so columns don't
+     collapse illegibly — the wrapper scrolls horizontally instead. */
+  min-width: 580px;
 }
 
 .tableHeader {

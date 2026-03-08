@@ -301,7 +301,7 @@ export default function SettingsPage({ userId, token, auth, onboarding }) {
   };
 
   return (
-    <div className="page-safe-area" style={{ padding: '0.75rem' }}>
+    <div className="page-safe-area" style={{ paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingBottom: '0.75rem' }}>
       <div style={{ maxWidth: '900px', margin: '0 auto' }}>
         {/* Header */}
         <div style={{ marginBottom: '1.5rem' }}>

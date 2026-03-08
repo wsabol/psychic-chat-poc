@@ -113,10 +113,17 @@
   padding-right: max(var(--spacing-md), env(safe-area-inset-right));
 }
 
-/* Mobile: Add top padding to account for floating hamburger menu */
+/* Mobile: Add top padding to account for the floating hamburger button.
+   env(safe-area-inset-top) covers the iOS notch / Android status bar via
+   viewport-fit=cover.  However on Brave and some Android browsers the
+   browser's own address bar (which is NOT included in env()) can add
+   another 50-60 px of chrome on top of the status-bar area.  Using a
+   floor of 90px ensures the first piece of page content (e.g. the
+   "Skip this step" button on the free-trial Personal Info page) is never
+   hidden behind either the hamburger button or the browser address bar. */
 @media (max-width: 767px) {
   .page-safe-area {
-    padding-top: 70px; /* Space for hamburger menu (1rem padding + button height + clearance) */
+    padding-top: calc(90px + env(safe-area-inset-top, 0px));
   }
 }
 

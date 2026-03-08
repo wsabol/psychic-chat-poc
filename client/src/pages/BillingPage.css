@@ -1,7 +1,11 @@
 /* BillingPage.css - Main billing container styles */
 
 .billing-page {
-  padding: 1rem;
+  /* Use explicit sides instead of padding shorthand so the CSS class
+     .page-safe-area can keep its mobile padding-top: 70px (hamburger clearance). */
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-bottom: 1rem;
   background: transparent;
   min-height: 100vh;
 }
@@ -327,7 +331,11 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .billing-page {
-    padding: 0.5rem;
+    /* Do NOT use padding shorthand here — it would override the
+       padding-top: 70px set by .page-safe-area for hamburger clearance. */
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    padding-bottom: 0.5rem;
   }
 
   .billing-content {

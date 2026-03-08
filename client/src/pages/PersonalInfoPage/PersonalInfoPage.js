@@ -156,7 +156,12 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
   // ============================================================
   return (
     <div className="page-safe-area personal-info-page">
-      {/* Skip this step — only shown for free trial (temp) accounts */}
+      <PersonalInfoHeader t={t} />
+
+      {/* Skip this step — only shown for free trial (temp) accounts.
+          Placed AFTER the header so the title acts as a visual buffer,
+          ensuring this button is never hidden behind the browser chrome
+          (Brave / Chrome dynamic address bar) on mobile devices. */}
       {isTemporaryAccount && (
         <div style={{
           display: 'flex',
@@ -194,8 +199,6 @@ export default function PersonalInfoPage({ userId, token, auth, onNavigateToPage
         </div>
       )}
 
-      <PersonalInfoHeader t={t} />
-      
       <FormAlerts error={error} success={success} t={t} />
 
       <form onSubmit={handleSubmit} className="info-form">

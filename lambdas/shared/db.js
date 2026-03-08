@@ -68,7 +68,9 @@ export async function getDbPool() {
       dbPool = new Pool({
         host: creds.host,
         port: creds.port || 5432,
-        database: creds.database,
+        // DB_DATABASE_NAME lets a specific Lambda target a named database
+        // (e.g. psychic_dhat) without changing the shared secret.
+        database: process.env.DB_DATABASE_NAME || creds.database,
         user: creds.username,
         password: creds.password,
         max: 2, // Limit connections for Lambda

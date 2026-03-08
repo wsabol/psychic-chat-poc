@@ -291,14 +291,45 @@
     font-weight: 600;
     color: var(--color-text);
   }
-  
+
+  /* Switch planet row to flex-wrap so every piece of data is visible.
+     Previously .planet-sign and .planet-degree were display:none, hiding
+     the planet's zodiac position (sign) and degree angle from mobile users.
+     flex-wrap means items reflow gracefully on narrow screens. */
   .planet-item {
-    grid-template-columns: 1.5rem 1fr auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: var(--spacing-sm);
+    row-gap: 0.1rem;
   }
-  
-  .planet-sign,
+
+  .planet-icon {
+    flex: 0 0 1.5rem;
+  }
+
+  .planet-name {
+    flex: 1 1 auto;
+    min-width: 4.5rem;
+  }
+
+  /* Restored: were display:none — users couldn't see planet position or degree */
+  .planet-sign {
+    display: block;
+    font-size: 0.8rem;
+    color: #9370db;
+    font-weight: 500;
+  }
+
   .planet-degree {
-    display: none;
+    display: block;
+    font-size: 0.8rem;
+    color: var(--color-text-light);
+  }
+
+  .retrograde-badge {
+    flex: 0 0 auto;
+    margin-left: auto;
   }
 }
 

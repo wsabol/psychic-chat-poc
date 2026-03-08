@@ -22,6 +22,8 @@ export default function SecurityPage({ userId, token, auth, onboarding, onNaviga
   const [userEmail, setUserEmail] = useState('');
   const [activeTab, setActiveTab] = useState('verification');
   const [reAuthAttempts, setReAuthAttempts] = useState(0);
+  // true when the viewport is phone-width (≤ 480 px) — tabs stack vertically
+  const [isPhone, setIsPhone] = useState(() => window.innerWidth <= 480);
   const MAX_REAUTH_ATTEMPTS = 3;
 
   // Get user email from Firebase
@@ -31,6 +33,13 @@ export default function SecurityPage({ userId, token, auth, onboarding, onNaviga
     if (currentUser && currentUser.email) {
       setUserEmail(currentUser.email);
     }
+  }, []);
+
+  // Keep isPhone in sync when the user rotates or resizes the window
+  useEffect(() => {
+    const handleResize = () => setIsPhone(window.innerWidth <= 480);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const handleReAuthSuccess = async () => {
@@ -84,7 +93,7 @@ export default function SecurityPage({ userId, token, auth, onboarding, onNaviga
   ];
 
   return (
-    <div className="page-safe-area" style={{ padding: '0.75rem' }}>
+    <div className="page-safe-area" style={{ paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingBottom: '0.75rem' }}>
       <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
         {/* Header */}
               <div style={{ marginBottom: '1rem' }}>
@@ -94,32 +103,71 @@ export default function SecurityPage({ userId, token, auth, onboarding, onNaviga
           </p>
         </div>
 
-        {/* Tab Navigation */}
-        <div style={{
-          display: 'flex',
-          gap: '0.5rem',
-          marginBottom: '1rem',
-          borderBottom: '1px solid #e0e0e0',
-          overflowX: 'auto',
-          paddingBottom: '0.75rem'
-        }}>
+        {/* Tab Navigation
+         *
+         * Phone (≤ 480 px):
+         *   Tabs are stacked vertically so the user never needs to scroll
+         *   horizontally.  Eliminating horizontal scroll also eliminates the
+         *   swipe-to-Settings problem that occurred when a touch gesture on the
+         *   scrollable tab bar was mis-interpreted by the parent swipeable
+         *   page container.
+         *
+         * Tablet / Desktop (> 480 px):
+         *   Tabs remain in the original horizontal row.  touchAction: pan-x and
+         *   onTouchStart stopPropagation are still applied so that a horizontal
+         *   tab-scroll gesture does not propagate to the page swipe handler.
+         */}
+        <div
+          onTouchStart={isPhone ? undefined : (e) => e.stopPropagation()}
+          style={isPhone ? {
+            /* ── Phone: vertical stack ── */
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.4rem',
+            marginBottom: '1rem',
+          } : {
+            /* ── Tablet / Desktop: horizontal row ── */
+            display: 'flex',
+            flexDirection: 'row',
+            gap: '0.5rem',
+            marginBottom: '1rem',
+            borderBottom: '1px solid #e0e0e0',
+            overflowX: 'auto',
+            WebkitOverflowScrolling: 'touch',
+            touchAction: 'pan-x',
+            paddingBottom: '0.75rem',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+          }}
+        >
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               style={{
-                padding: '0.5rem 0.75rem',
+                padding: '0.6rem 0.9rem',
                 backgroundColor: activeTab === tab.id ? '#7c63d8' : 'rgba(255, 255, 255, 0.9)',
                 color: activeTab === tab.id ? 'white' : '#333',
-                border: activeTab === tab.id ? 'none' : '1px solid rgba(200, 200, 200, 0.5)',
-                borderRadius: '4px',
+                border: activeTab === tab.id
+                  ? 'none'
+                  : '1px solid rgba(200, 200, 200, 0.5)',
+                borderRadius: '6px',
                 cursor: 'pointer',
                 fontWeight: activeTab === tab.id ? 'bold' : 'normal',
                 whiteSpace: 'nowrap',
-                fontSize: '12px',
-                transition: 'all 0.2s ease'
+                fontSize: '13px',
+                transition: 'all 0.2s ease',
+                /* On phones the button spans the full width and shows its icon */
+                ...(isPhone && {
+                  width: '100%',
+                  textAlign: 'left',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                }),
               }}
             >
+              {isPhone && <span>{tab.icon}</span>}
               {tab.label}
             </button>
           ))}
@@ -130,8 +178,13 @@ export default function SecurityPage({ userId, token, auth, onboarding, onNaviga
           backgroundColor: 'rgba(255, 255, 255, 0.97)',
           padding: '1rem',
           borderRadius: '8px',
-          maxHeight: 'calc(100vh - 220px)',
-          overflowY: 'auto'
+          /* Use 100dvh (dynamic viewport height) so the bottom browser navigation
+             bar on Brave / Samsung browser is properly subtracted from the height.
+             Falls back to 100vh on browsers that don't support dvh. */
+          maxHeight: 'calc(100dvh - 220px)',
+          overflowY: 'auto',
+          /* Add bottom padding so the last item clears the browser chrome */
+          paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
         }}>
           {activeTab === 'verification' && (
             <VerificationAndTwoFATab userId={userId} token={token} apiUrl={API_URL} userEmail={userEmail} />
