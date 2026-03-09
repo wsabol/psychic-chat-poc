@@ -29,8 +29,16 @@ function App() {
   const state = useAppState();
   const location = useLocation();
 
-  // Check if viewing a policy page
-  const isPoliciesPage = location.pathname === '/policies';
+  // Check if viewing a policy page.
+  // Also catch the case where an old (pre-fix) service worker intercepted a
+  // direct PDF navigation and served index.html instead of the file — in that
+  // scenario location.pathname will look like "/Terms_of_Service-en-US.pdf".
+  // Rendering PoliciesPage here (which uses an iframe) is the correct fallback;
+  // the updated SW (with denylist: [/\.pdf$/i]) will handle the iframe fetch
+  // correctly as soon as it activates.
+  const isPoliciesPage =
+    location.pathname === '/policies' ||
+    /\.pdf$/i.test(location.pathname);
 
   if (isPoliciesPage) {
     return (

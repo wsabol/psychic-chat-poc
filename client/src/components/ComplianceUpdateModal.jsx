@@ -247,6 +247,14 @@ export function ComplianceUpdateModal({ userId, token, compliance, onConsentUpda
             title={viewingDocument === 'terms' ? t('compliance.updateModal.termsTitle') : t('compliance.updateModal.privacyTitle')}
             docType={viewingDocument}
             onBack={() => setViewingDocument(null)}
+            onAccept={() => {
+              // Auto-tick the matching accepted checkbox when accepted from the reader
+              setAccepted(prev => ({
+                ...prev,
+                [viewingDocument]: true,
+              }));
+              setViewingDocument(null);
+            }}
           />
         </div>
       )}

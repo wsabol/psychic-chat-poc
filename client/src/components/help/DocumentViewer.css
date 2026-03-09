@@ -106,19 +106,64 @@
   outline: none;
 }
 
-/* PDF Viewer - No padding for iframe */
+/* PDF mode — expand the whole viewer and fill it with the iframe */
+.help-document-viewer:has(.pdf-viewer) {
+  height: 85vh;
+  max-height: 85vh;
+}
+
 .help-viewer-content:has(.pdf-viewer) {
   padding: 0;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-/* PDF Viewer iframe styling */
 .pdf-viewer {
+  flex: 1;
   width: 100%;
-  height: 100%;
   border: none;
-  min-height: 600px;
   display: block;
+  min-height: 0; /* allow flex shrink */
+}
+
+/* Loading / error states shown while the PDF blob is being fetched */
+.pdf-loading,
+.pdf-error {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  color: #666;
+  font-size: 14px;
+  text-align: center;
+}
+
+.pdf-loading::before {
+  content: '⏳';
+  font-size: 2rem;
+}
+
+.pdf-error::before {
+  content: '⚠️';
+  font-size: 2rem;
+}
+
+.pdf-error p {
+  margin: 0;
+}
+
+.pdf-error a {
+  color: #0066cc;
+  text-decoration: underline;
+  font-size: 13px;
+}
+
+.pdf-error a:hover {
+  color: #0052a3;
 }
 
 /* Ensure content fills available space */
@@ -199,6 +244,123 @@
   margin: 0.75rem 0;
 }
 
+/* ── Policy document sections ──────────────────────────────────────────── */
+
+.policy-meta-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: #f5f5f5;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 12px;
+  color: #666;
+}
+
+.policy-meta-item {
+  white-space: nowrap;
+}
+
+.policy-pdf-link {
+  margin-left: auto;
+  color: #0066cc;
+  text-decoration: none;
+  font-size: 12px;
+  white-space: nowrap;
+  padding: 2px 6px;
+  border: 1px solid #cce0ff;
+  border-radius: 4px;
+  background: #f0f7ff;
+  transition: background 0.2s;
+}
+
+.policy-pdf-link:hover {
+  background: #daeeff;
+  text-decoration: none;
+}
+
+.policy-sections {
+  /* uses the .help-viewer-content padding already */
+}
+
+.policy-section {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.policy-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.policy-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #222;
+  margin: 0 0 0.5rem 0;
+}
+
+.policy-section-content {
+  font-size: 13px;
+  color: #444;
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* ── Accept footer (shown when onAccept prop is provided) ──────────────── */
+
+.policy-viewer-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #e0e0e0;
+  background: #f9f9f9;
+  flex-shrink: 0;
+}
+
+.policy-accept-btn {
+  padding: 0.65rem 1.25rem;
+  background: #0066cc;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  text-align: center;
+}
+
+.policy-accept-btn:hover:not(:disabled) {
+  background: #0052a3;
+}
+
+.policy-accept-btn:disabled {
+  background: #28a745;
+  cursor: default;
+  opacity: 0.9;
+}
+
+.policy-close-btn {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  color: #666;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  text-align: center;
+}
+
+.policy-close-btn:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
   .help-document-viewer,
@@ -207,5 +369,10 @@
     right: 0;
     left: 0;
     max-height: 60vh;
+  }
+
+  .help-document-viewer:has(.pdf-viewer) {
+    height: 90vh;
+    max-height: 90vh;
   }
 }

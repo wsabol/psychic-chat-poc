@@ -65,12 +65,33 @@ registerRoute(
   new NetworkOnly()
 );
 
+// ─── PDF files → NetworkOnly (MUST come before the NavigationRoute) ───────────
+// All legal-document PDFs live in the public folder and are served by
+// S3 / CloudFront.  We must NOT let the NavigationRoute hand these requests the
+// cached index.html — doing so causes the React app to load, fail to match the
+// PDF path, and redirect the user to the login page instead of showing the
+// document.  Registering a NetworkOnly route here, before the NavigationRoute,
+// ensures PDF navigation requests bypass the app-shell handler entirely.
+
+registerRoute(
+  ({ url }) => /\.pdf$/i.test(url.pathname),
+  new NetworkOnly()
+);
+
 // ─── Navigation requests → App Shell ─────────────────────────────────────────
 // Serve the pre-cached index.html for every navigation so the React app boots
 // offline.  React itself then handles any "offline" UI state in the browser.
+//
+// IMPORTANT: the denylist explicitly excludes .pdf paths so the NavigationRoute
+// can never intercept a PDF navigation and return the app-shell HTML.  Belt-
+// and-suspenders alongside the NetworkOnly PDF route above — in practice the
+// denylist alone is sufficient because a denied navigation falls straight
+// through to the network (CloudFront → S3) which correctly returns the PDF.
 
 const appShellHandler = createHandlerBoundToURL('/index.html');
-registerRoute(new NavigationRoute(appShellHandler));
+registerRoute(new NavigationRoute(appShellHandler, {
+  denylist: [/\.pdf$/i],
+}));
 
 // ─── Images → CacheFirst ──────────────────────────────────────────────────────
 // Tarot cards, icons, and logo images change rarely; cache aggressively.

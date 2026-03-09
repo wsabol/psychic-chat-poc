@@ -120,23 +120,20 @@ export function ConsentModal({ userId, token, onConsentAccepted }) {
 
       {/* Document Viewer Overlay */}
       {viewingDocument && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.95)',
-          zIndex: 10001,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '2rem'
-        }}>
+        <div className="compliance-document-viewer-overlay">
           <DocumentViewer
             title={viewingDocument === 'terms' ? t('compliance.consentModal.termsTitle') : t('compliance.consentModal.privacyTitle')}
             docType={viewingDocument}
             onBack={() => setViewingDocument(null)}
+            onAccept={() => {
+              // Auto-tick the matching checkbox when accepted from the reader
+              if (viewingDocument === 'terms') {
+                setTermsRead(true);
+              } else {
+                setPrivacyRead(true);
+              }
+              setViewingDocument(null);
+            }}
           />
         </div>
       )}

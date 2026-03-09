@@ -15,7 +15,9 @@ const AVAILABLE_LEGAL_LANGUAGES = {
   'fr-FR': 'fr',
   'pt-BR': 'pt-BR',
   'de-DE': 'de-DE',
-  'it-IT': 'it-IT'
+  'it-IT': 'it-IT',
+  'ja-JP': 'ja-JP',
+  'zh-CN': 'zh-CN',
 };
 
 /**
