@@ -13,6 +13,7 @@
  * For production: set GOOGLE_PLAY_SERVICE_ACCOUNT_JSON in your secrets
  * so the backend can call the Google Play Developer API to verify tokens.
  */
+import crypto from 'crypto';
 import express from 'express';
 import { authenticateToken } from '../../middleware/auth.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
@@ -235,14 +236,24 @@ router.post('/restore-purchases/google', authenticateToken, async (req, res) => 
 
 // ─── GET /billing/subscription-status/google ─────────────────────────────────
 /**
- * Returns the current Google Play subscription status for the authenticated user.
+ * Returns the current subscription status for the authenticated user.
+ *
+ * Lookup order:
+ *   1. By Firebase UID (user_id)  — fast path for users who registered normally.
+ *   2. By email_hash (SHA-256 of lowercase email) — fallback for users who
+ *      created their account on the web (Stripe) and later signed into the
+ *      mobile app with a different Firebase identity (e.g. email/password on
+ *      web vs Google Sign-In on mobile).  In that case their Stripe subscription
+ *      is stored under the web UID, so the UID lookup returns 0 rows even though
+ *      an active subscription exists in the database.
+ *
  * Used by the app on launch to check if the user's subscription is still active.
  */
 router.get('/subscription-status/google', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
 
-    const result = await db.query(
+    let result = await db.query(
       `SELECT subscription_status, plan_name, current_period_end,
               billing_platform, google_play_product_id,
               google_play_purchase_token, updated_at
@@ -250,6 +261,44 @@ router.get('/subscription-status/google', authenticateToken, async (req, res) =>
        WHERE user_id = $1`,
       [userId]
     );
+
+    // ── Email-hash fallback ───────────────────────────────────────────────────
+    // If the UID lookup returns no row (or a row with no subscription data) and
+    // the Firebase token carries a verified email, try to find the user by their
+    // email_hash.  This handles the "web Stripe + mobile Google Sign-In" mismatch
+    // where the same person has two separate Firebase UIDs.
+    //
+    // email_hash is SHA-256(lower(email)), matching the format written at
+    // registration time (see auth-firebase route / user_personal_info DDL).
+    const noRow = result.rows.length === 0;
+    const rowHasNoSub =
+      result.rows.length > 0 &&
+      (!result.rows[0].subscription_status || result.rows[0].subscription_status === 'inactive');
+
+    if ((noRow || rowHasNoSub) && req.user.email && req.user.emailVerified) {
+      const emailHash = crypto
+        .createHash('sha256')
+        .update(req.user.email.toLowerCase())
+        .digest('hex');
+
+      const emailResult = await db.query(
+        `SELECT subscription_status, plan_name, current_period_end,
+                billing_platform, google_play_product_id,
+                google_play_purchase_token, updated_at
+         FROM user_personal_info
+         WHERE email_hash = $1
+           AND subscription_status = 'active'`,
+        [emailHash]
+      );
+
+      if (emailResult.rows.length > 0) {
+        console.info(
+          `[SubscriptionStatus] Email-hash fallback matched for uid=${userId} — ` +
+          'returning subscription from matched account'
+        );
+        result = emailResult;
+      }
+    }
 
     if (result.rows.length === 0) {
       return successResponse(res, { hasSubscription: false });

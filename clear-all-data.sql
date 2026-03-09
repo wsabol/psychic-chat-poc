@@ -3,18 +3,22 @@
 -- ========================================
 -- This script removes ALL data from ALL tables while preserving table structure
 -- WARNING: This is IRREVERSIBLE - make sure you have a backup!
--- Last Updated: 2026-02-07
+-- Last Updated: 2026-03-08
+--
+-- FIX: Circular-reference error is solved by issuing ONE TRUNCATE statement
+-- for all tables simultaneously.  PostgreSQL can resolve any FK cycle (including
+-- A→B→A) when every participating table is listed in the same TRUNCATE command.
+-- Doing it one-by-one in a loop causes cascades to partially truncate tables
+-- that are encountered again later, triggering the circular-reference error.
 
 -- Disable foreign key checks temporarily
 SET session_replication_role = 'replica';
 
 -- ========================================
--- TRUNCATE ALL TABLES
+-- TRUNCATE ALL TABLES (single statement)
 -- ========================================
--- Using a DO block to handle tables that may not exist
 DO $$
 DECLARE
-    table_name TEXT;
     tables_to_truncate TEXT[] := ARRAY[
         'user_sessions',
         'security_sessions',
@@ -56,16 +60,41 @@ DECLARE
         'price_change_notifications',
         'user_personal_info'
     ];
+    existing_tables TEXT[];
+    tbl             TEXT;
+    sql             TEXT;
 BEGIN
-    FOREACH table_name IN ARRAY tables_to_truncate
+    -- Collect only tables that actually exist in the public schema
+    existing_tables := ARRAY[]::TEXT[];
+
+    FOREACH tbl IN ARRAY tables_to_truncate
     LOOP
-        IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = table_name) THEN
-            EXECUTE 'TRUNCATE TABLE ' || table_name || ' RESTART IDENTITY CASCADE';
-            RAISE NOTICE 'Truncated table: %', table_name;
+        IF EXISTS (
+            SELECT 1 FROM pg_tables
+            WHERE schemaname = 'public' AND tablename = tbl
+        ) THEN
+            existing_tables := existing_tables || tbl;
         ELSE
-            RAISE NOTICE 'Table does not exist (skipping): %', table_name;
+            RAISE NOTICE 'Table does not exist (skipping): %', tbl;
         END IF;
     END LOOP;
+
+    IF array_length(existing_tables, 1) IS NULL THEN
+        RAISE NOTICE 'No tables found – nothing to truncate.';
+        RETURN;
+    END IF;
+
+    -- Build and execute ONE TRUNCATE statement for all existing tables.
+    -- A single statement lets PostgreSQL resolve any circular FK dependencies
+    -- that would otherwise cause "ERROR: circular reference" when done one-by-one.
+    sql := 'TRUNCATE TABLE '
+        || array_to_string(existing_tables, ', ')
+        || ' RESTART IDENTITY CASCADE';
+
+    RAISE NOTICE 'Executing: %', sql;
+    EXECUTE sql;
+
+    RAISE NOTICE 'Successfully truncated % table(s).', array_length(existing_tables, 1);
 END $$;
 
 -- Re-enable foreign key checks
@@ -77,18 +106,18 @@ SET session_replication_role = 'origin';
 DO $$
 DECLARE
     table_record RECORD;
-    row_count INTEGER;
-    total_rows INTEGER := 0;
+    row_count    INTEGER;
+    total_rows   INTEGER := 0;
 BEGIN
     RAISE NOTICE '========================================';
     RAISE NOTICE 'VERIFICATION: Checking table counts';
     RAISE NOTICE '========================================';
-    
-    FOR table_record IN 
-        SELECT tablename 
-        FROM pg_tables 
-        WHERE schemaname = 'public' 
-        AND tablename NOT LIKE 'pg_%'
+
+    FOR table_record IN
+        SELECT tablename
+        FROM pg_tables
+        WHERE schemaname = 'public'
+          AND tablename NOT LIKE 'pg_%'
         ORDER BY tablename
     LOOP
         EXECUTE 'SELECT COUNT(*) FROM ' || table_record.tablename INTO row_count;
@@ -97,7 +126,7 @@ BEGIN
             total_rows := total_rows + row_count;
         END IF;
     END LOOP;
-    
+
     RAISE NOTICE '========================================';
     IF total_rows = 0 THEN
         RAISE NOTICE '✅ All data cleared successfully!';
