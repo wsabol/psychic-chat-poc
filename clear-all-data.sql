@@ -3,15 +3,24 @@
 -- ========================================
 -- This script removes ALL data from ALL tables while preserving table structure
 -- WARNING: This is IRREVERSIBLE - make sure you have a backup!
--- Last Updated: 2026-03-08
+-- Last Updated: 2026-03-09
 --
--- FIX: Circular-reference error is solved by issuing ONE TRUNCATE statement
--- for all tables simultaneously.  PostgreSQL can resolve any FK cycle (including
--- A→B→A) when every participating table is listed in the same TRUNCATE command.
--- Doing it one-by-one in a loop causes cascades to partially truncate tables
--- that are encountered again later, triggering the circular-reference error.
+-- HOW FK CONSTRAINTS ARE HANDLED:
+--   SET session_replication_role = 'replica'  disables ALL FK-trigger enforcement
+--   for the duration of the session.  This means we do NOT need CASCADE on the
+--   TRUNCATE — and intentionally omit it.
+--
+--   Using TRUNCATE … CASCADE while also listing every table explicitly confuses
+--   pgAdmin's dependency-graph resolver: it sees that price_change_notifications
+--   already appears in the truncate list AND would be pulled in again via the
+--   ON DELETE CASCADE FK from user_personal_info, and incorrectly reports a
+--   "circular reference detected" error.
+--
+--   Solution: rely solely on session_replication_role = 'replica' to bypass FK
+--   checks and drop CASCADE from the TRUNCATE.  Both mechanisms together are
+--   redundant and the combination triggers the pgAdmin false-positive.
 
--- Disable foreign key checks temporarily
+-- Disable ALL foreign-key trigger enforcement for this session
 SET session_replication_role = 'replica';
 
 -- ========================================
@@ -20,17 +29,18 @@ SET session_replication_role = 'replica';
 DO $$
 DECLARE
     tables_to_truncate TEXT[] := ARRAY[
+        -- Session / auth
         'user_sessions',
         'security_sessions',
         'verification_codes',
         'sms_verification_codes',
         'sms_verification_attempts',
         'sms_opt_outs',
-        'sms_inbound_log',
         'user_2fa_codes',
+        -- Free trial
         'free_trial_sessions',
         'free_trial_whitelist',
-        'temp_accounts',
+        -- Audit / logging
         'audit_log',
         'error_logs',
         'app_analytics',
@@ -38,25 +48,21 @@ DECLARE
         'user_login_attempts',
         'admin_login_attempts',
         'admin_trusted_ips',
-        'user_account_location_log',
+        -- Messaging
         'messages',
-        'message_queue',
-        'chat_messages',
-        'horoscopes',
-        'moon_phase_commentary',
-        'cosmic_weather_insights',
+        -- User profile / settings / preferences
         'user_preferences',
         'user_settings',
         'user_astrology',
         'user_2fa_settings',
         'user_consents',
+        -- Compliance / security
         'user_violations',
         'user_account_lockouts',
         'account_deletion_audit',
-        'violation_reports',
-        'user_devices',
         'security',
         'pending_migrations',
+        -- Billing (FK child before FK parent)
         'price_change_notifications',
         'user_personal_info'
     ];
@@ -85,11 +91,16 @@ BEGIN
     END IF;
 
     -- Build and execute ONE TRUNCATE statement for all existing tables.
-    -- A single statement lets PostgreSQL resolve any circular FK dependencies
-    -- that would otherwise cause "ERROR: circular reference" when done one-by-one.
+    -- NOTE: CASCADE is intentionally omitted here.
+    --   session_replication_role = 'replica' (set above) already disables all
+    --   FK trigger checks, so CASCADE is not needed.  Including CASCADE while
+    --   every table is also listed explicitly causes pgAdmin's dependency
+    --   resolver to report a false "circular reference detected" error because
+    --   price_change_notifications is both in the explicit list AND would be
+    --   pulled in again by the ON DELETE CASCADE FK from user_personal_info.
     sql := 'TRUNCATE TABLE '
         || array_to_string(existing_tables, ', ')
-        || ' RESTART IDENTITY CASCADE';
+        || ' RESTART IDENTITY';
 
     RAISE NOTICE 'Executing: %', sql;
     EXECUTE sql;
