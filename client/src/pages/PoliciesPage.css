@@ -36,3 +36,45 @@
   display: block;
   min-height: 0;
 }
+
+/* ── No-inline-PDF fallback (DuckDuckGo, Amazon Silk, etc.) ────────────── */
+
+.policies-no-inline {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 2rem;
+  color: #ccc;
+  font-size: 15px;
+  text-align: center;
+}
+
+.policies-no-inline-icon {
+  font-size: 4rem;
+  line-height: 1;
+}
+
+.policies-no-inline p {
+  margin: 0;
+  color: #bbb;
+}
+
+.policies-open-link {
+  display: inline-block;
+  padding: 0.8rem 2rem;
+  background: #667eea;
+  color: #fff !important;
+  text-decoration: none !important;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.policies-open-link:hover {
+  background: #5567d5;
+  color: #fff !important;
+}

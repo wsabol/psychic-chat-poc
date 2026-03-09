@@ -204,6 +204,11 @@
   z-index: 999;
   animation: slideIn 0.3s ease;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+  /* Ensure the last menu items (e.g. logout) are not hidden behind the
+     browser's bottom toolbar in Samsung Internet and similar browsers.
+     viewport-fit=cover is set in index.html so env() reports the real
+     toolbar height; it resolves to 0 on browsers without a bottom bar. */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 @keyframes slideIn {

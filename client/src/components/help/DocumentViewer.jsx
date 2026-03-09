@@ -4,6 +4,33 @@ import { getLegalDocumentPath } from '../../utils/legalDocumentUtils';
 import './DocumentViewer.css';
 
 /**
+ * Whether this browser can display a PDF document inside an <iframe>.
+ *
+ * navigator.pdfViewerEnabled is the modern standard:
+ *   true  – Chrome ≥89, Edge ≥89, Firefox ≥99 with built-in PDF viewer active
+ *   false – DuckDuckGo (Android WebView), certain mobile browsers that
+ *           trigger a background *download* instead of rendering inline
+ *   undefined – older / less-common browsers (we assume capable and try)
+ *
+ * We only skip the iframe when:
+ *   a) The browser has *explicitly* declared it cannot display PDFs
+ *      (navigator.pdfViewerEnabled === false), e.g. DuckDuckGo on Android; OR
+ *   b) The browser is Amazon Silk (Kindle Fire).  Silk is Chromium-based and
+ *      may report pdfViewerEnabled as true, but it downloads PDFs instead of
+ *      rendering them inline, so we force the "open PDF" fallback for it too.
+ *
+ * undefined means "unknown — attempt the iframe".  This preserves inline
+ * rendering on iOS Safari (pdfViewerEnabled is not defined there, but
+ * WKWebView can still display PDFs natively).
+ */
+const _ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+const _isSilk = /\bSilk\b/i.test(_ua);   // Amazon Kindle Fire / Silk browser
+const PDF_INLINE_SUPPORTED =
+  typeof navigator !== 'undefined' &&
+  navigator.pdfViewerEnabled !== false &&
+  !_isSilk;
+
+/**
  * DocumentViewer
  *
  * Displays the official Terms of Service or Privacy Policy PDF
@@ -56,7 +83,21 @@ export function DocumentViewer({ title, docType, onBack, onAccept }) {
   // handles it, the raw bytes come back, and we create a local blob: URL.
   // The iframe then renders the blob: URL, which the browser handles
   // entirely locally without any service-worker involvement.
+  //
+  // SKIP the fetch entirely when the browser cannot display PDFs inline
+  // (PDF_INLINE_SUPPORTED === false, e.g. DuckDuckGo on Android).  Pointing
+  // a blob: URL at an iframe in those browsers silently triggers a background
+  // download with no visible result, so we show a plain "Open PDF" link
+  // instead — a much better UX.
   useEffect(() => {
+    if (!PDF_INLINE_SUPPORTED) {
+      // No inline viewer — skip fetch, show the "open PDF" fallback immediately.
+      setLoading(false);
+      setBlobUrl(null);
+      setError(null);
+      return;
+    }
+
     const controller = new AbortController();
     let currentBlobUrl = null;
 
@@ -127,6 +168,23 @@ export function DocumentViewer({ title, docType, onBack, onAccept }) {
 
         {loading && (
           <div className="pdf-loading">Loading document…</div>
+        )}
+
+        {/* Browser explicitly reported it cannot display PDFs inline
+            (e.g. DuckDuckGo on Android).  Show a direct link instead of
+            triggering a silent background download via a blob: URL. */}
+        {!loading && !error && !PDF_INLINE_SUPPORTED && (
+          <div className="pdf-no-inline">
+            <p>Your browser cannot display PDFs inline.</p>
+            <a
+              href={pdfPath}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="pdf-open-link"
+            >
+              📄 Open {displayTitle} ↗
+            </a>
+          </div>
         )}
 
         {error && (

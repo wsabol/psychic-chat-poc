@@ -18,6 +18,10 @@
   flex-direction: column;
   z-index: 9998;
   animation: slideUp 0.3s ease-out;
+  /* Lift the panel above browser chrome (e.g. Samsung Internet bottom toolbar).
+     viewport-fit=cover is set in index.html; env() resolves to the actual
+     toolbar height on Samsung Internet and to 0 on browsers without one. */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* Headers */
@@ -164,6 +168,47 @@
 
 .pdf-error a:hover {
   color: #0052a3;
+}
+
+/* No-inline-PDF fallback (DuckDuckGo, Amazon Silk, etc.) */
+.pdf-no-inline {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  padding: 2rem;
+  color: #444;
+  font-size: 14px;
+  text-align: center;
+}
+
+.pdf-no-inline::before {
+  content: '📄';
+  font-size: 2.5rem;
+}
+
+.pdf-no-inline p {
+  margin: 0;
+  color: #666;
+}
+
+.pdf-open-link {
+  display: inline-block;
+  padding: 0.65rem 1.5rem;
+  background: #0066cc;
+  color: #fff !important;
+  text-decoration: none !important;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.pdf-open-link:hover {
+  background: #0052a3;
+  color: #fff !important;
 }
 
 /* Ensure content fills available space */
