@@ -3,39 +3,39 @@
  * Maps oracle language variants to their friendly names for LLM instructions
  * 
  * Oracle Language → Friendly Name for LLM
- * en-US → English (US)
- * en-GB → English (British)
- * es-ES → Spanish (Spain)
- * es-MX → Spanish (Mexico)
- * es-DO → Spanish (Dominican Republic)
- * fr-FR → French (France)
- * fr-CA → French (Canadian)
- * de-DE → German (Germany)
- * it-IT → Italian (Italy)
- * ja-JP → Japanese (Japan)
- * pt-BR → Portuguese (Brazilian)
- * zh-CN → Chinese (Simplified)
+ * en-US  → English (US)
+ * en-GB  → English (British)
+ * es-ES  → Spanish (Spain)
+ * es-419 → Spanish (Latin America)
+ * es-US  → Spanish (United States)
+ * fr-FR  → French (France)
+ * fr-CA  → French (Canadian)
+ * de-DE  → German (Germany)
+ * it-IT  → Italian (Italy)
+ * ja-JP  → Japanese (Japan)
+ * pt-BR  → Portuguese (Brazilian)
+ * zh-CN  → Chinese (Simplified)
  */
 
 export const oracleLanguageMap = {
-  'en-US': 'English (US)',
-  'en-GB': 'English (British)',
-  'es-ES': 'Spanish (Spain)',
-  'es-MX': 'Spanish (Mexico)',
-  'es-DO': 'Spanish (Dominican Republic)',
-  'fr-FR': 'French (France)',
-  'fr-CA': 'French (Canadian)',
-  'de-DE': 'German (Germany)',
-  'it-IT': 'Italian (Italy)',
-  'ja-JP': 'Japanese (Japan)',
-  'pt-BR': 'Portuguese (Brazilian)',
-  'zh-CN': 'Chinese (Simplified)',
+  'en-US':  'English (US)',
+  'en-GB':  'English (British)',
+  'es-ES':  'Spanish (Spain)',
+  'es-419': 'Spanish (Latin America)',
+  'es-US':  'Spanish (United States)',
+  'fr-FR':  'French (France)',
+  'fr-CA':  'French (Canadian)',
+  'de-DE':  'German (Germany)',
+  'it-IT':  'Italian (Italy)',
+  'ja-JP':  'Japanese (Japan)',
+  'pt-BR':  'Portuguese (Brazilian)',
+  'zh-CN':  'Chinese (Simplified)',
 };
 
 /**
  * Get the friendly language name for an oracle language code
- * @param {string} oracleLanguage - The oracle language code (e.g., 'es-MX')
- * @returns {string} The friendly name (e.g., 'Spanish (Mexico)')
+ * @param {string} oracleLanguage - The oracle language code (e.g., 'es-419')
+ * @returns {string} The friendly name (e.g., 'Spanish (Latin America)')
  */
 export function getLanguageNameForOracle(oracleLanguage) {
   return oracleLanguageMap[oracleLanguage] || 'English (US)';

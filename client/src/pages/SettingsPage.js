@@ -239,27 +239,6 @@ export default function SettingsPage({ userId, token, auth, onboarding }) {
     }
   };
 
-  // Send deletion verification email (step 1 of 2)
-  const handleSendDeleteCode = async () => {
-    try {
-      const response = await fetch(`${API_URL}/user/send-delete-verification`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || t('settings.verificationCodeError'));
-      }
-      return { success: true, emailMasked: data.email_masked };
-    } catch (error) {
-      logErrorFromCatch(error, 'delete-account', 'Send delete verification error');
-      return { success: false, error: error.message || t('settings.verificationCodeError') };
-    }
-  };
-
   // Confirm account deletion with verification code (step 2 of 2)
   const handleDeleteAccount = async (verificationCode) => {
     setIsLoading(true);

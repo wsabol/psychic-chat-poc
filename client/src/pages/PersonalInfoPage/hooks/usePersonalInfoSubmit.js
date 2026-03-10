@@ -1,4 +1,4 @@
-﻿import { parseDateForStorage } from '../../../utils/dateFormatting';
+import { parseDateForStorage } from '../../../utils/dateFormatting';
 import { preparePersonalInfoData, TIMING } from '../../../utils/personalInfoUtils';
 import { logErrorFromCatch } from '../../../shared/errorLogger.js';
 

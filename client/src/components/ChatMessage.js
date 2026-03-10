@@ -73,7 +73,7 @@ function cleanMarkdownToHTML(text) {
 export default function ChatMessage({ msg, defaultShowBrief = true, voiceEnabled = false, userId, token }) {
   const { t } = useTranslation();
   const [showingBrief, setShowingBrief] = useState(defaultShowBrief);
-  const { speak, stop, pause, resume, isPlaying, isPaused, isLoading, error, isSupported, progress } = useSpeech();
+  const { speak, stop, pause, resume, isPlaying, isPaused, isLoading, isSupported } = useSpeech();
   const [hasAutoPlayed, setHasAutoPlayed] = useState(false);
   
   let fullText = msg.content || '';
@@ -133,14 +133,6 @@ export default function ChatMessage({ msg, defaultShowBrief = true, voiceEnabled
 
   const handlePlayVoice = () => {
     speak(displayText, { rate: 0.95, pitch: 1.2 });
-  };
-
-  const handleTogglePause = () => {
-    if (isPlaying) {
-      pause();
-    } else if (isPaused) {
-      resume();
-    }
   };
 
   return (

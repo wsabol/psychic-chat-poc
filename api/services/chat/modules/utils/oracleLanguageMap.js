@@ -3,9 +3,9 @@
  * Maps oracle language variants to their base page language
  * 
  * Example:
- * User selects oracle_language: 'es-MX'
+ * User selects oracle_language: 'es-419'
  * Maps to page language: 'es-ES'
- * Oracle gets 'es-MX' for responses, UI renders in 'es-ES'
+ * Oracle gets 'es-419' for responses, UI renders in 'es-ES'
  */
 
 export const oracleLanguageMap = {
@@ -14,9 +14,9 @@ export const oracleLanguageMap = {
     'en-GB': 'en-US',   // Oracle English (British) → Page English (US)
     
     // Spanish variants
-    'es-ES': 'es-ES',   // Oracle Spanish (Spain) → Page Spanish (ES)
-    'es-MX': 'es-ES',   // Oracle Spanish (Mexico) → Page Spanish (ES)
-    'es-DO': 'es-ES',   // Oracle Spanish (Dominican Republic) → Page Spanish (ES)
+    'es-ES':  'es-ES',  // Oracle Spanish (Spain) → Page Spanish (ES)
+    'es-419': 'es-ES',  // Oracle Spanish (Latin America) → Page Spanish (ES)
+    'es-US':  'es-ES',  // Oracle Spanish (US) → Page Spanish (ES)
     
     // French variants
     'fr-FR': 'fr-FR',   // Oracle French (France) → Page French (FR)
@@ -32,7 +32,7 @@ export const oracleLanguageMap = {
 
 /**
  * Get base page language from oracle language selection
- * @param {string} oracleLanguage - The oracle language code (e.g., 'es-MX', 'en-GB')
+ * @param {string} oracleLanguage - The oracle language code (e.g., 'es-419', 'en-GB')
  * @returns {string} Base page language code (e.g., 'es-ES', 'en-US')
  */
 export function getBaseLanguageFromOracleLanguage(oracleLanguage) {
@@ -57,9 +57,9 @@ export function getOracleLanguagesByBase() {
             { code: 'en-GB', label: 'English (British)' }
         ],
         'es-ES': [
-            { code: 'es-ES', label: 'Español (España)' },
-            { code: 'es-MX', label: 'Español (México)' },
-            { code: 'es-DO', label: 'Español (República Dominicana)' }
+            { code: 'es-ES',  label: 'Español (España)' },
+            { code: 'es-419', label: 'Español (Latinoamérica)' },
+            { code: 'es-US',  label: 'Español (EE. UU.)' }
         ],
         'fr-FR': [
             { code: 'fr-FR', label: 'Français (France)' },

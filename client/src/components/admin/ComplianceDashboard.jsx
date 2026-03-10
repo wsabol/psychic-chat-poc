@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Compliance Dashboard Component
  * 
  * Admin dashboard for monitoring:

@@ -8,9 +8,9 @@ export default function OracleLanguageSection({ oracleLanguage, onLanguageChange
       { code: 'en-GB', label: 'English - British' }
     ],
     'Spanish': [
-      { code: 'es-ES', label: 'Spanish - Spain' },
-      { code: 'es-MX', label: 'Spanish - Mexico' },
-      { code: 'es-DO', label: 'Spanish - Dominican Republic' }
+      { code: 'es-ES',  label: 'Spanish - Spain' },
+      { code: 'es-419', label: 'Spanish - Latin America' },
+      { code: 'es-US',  label: 'Spanish - US' }
     ],
     'French': [
       { code: 'fr-FR', label: 'French - France' },
@@ -82,7 +82,7 @@ export default function OracleLanguageSection({ oracleLanguage, onLanguageChange
       </select>
       
       <p style={{ fontSize: '12px', color: '#999', marginTop: '0.5rem' }}>
-        Page UI will use the base language (e.g., Spanish for Spanish-Mexico). Oracles respond in your selected variant.
+        Page UI will use the base language (e.g., Spanish for all Spanish variants). Oracles respond in your selected variant.
       </p>
     </div>
   );

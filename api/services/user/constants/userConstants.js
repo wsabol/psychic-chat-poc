@@ -4,12 +4,12 @@
  */
 
 export const VALID_LANGUAGES = [
-  'en-US', 'en-GB', 'es-ES', 'es-MX', 'es-DO', 
+  'en-US', 'en-GB', 'es-ES', 'es-419', 'es-US',
   'fr-FR', 'fr-CA', 'de-DE', 'it-IT', 'pt-BR', 'ja-JP', 'zh-CN'
 ];
 
 export const VALID_ORACLE_LANGUAGES = [
-  'en-US', 'en-GB', 'es-ES', 'es-MX', 'es-DO', 'fr-FR', 'fr-CA',
+  'en-US', 'en-GB', 'es-ES', 'es-419', 'es-US', 'fr-FR', 'fr-CA',
   'de-DE', 'it-IT', 'pt-BR', 'ja-JP', 'zh-CN'
 ];
 

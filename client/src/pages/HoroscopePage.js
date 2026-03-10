@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from '../context/TranslationContext';
 import { useSpeech } from '../hooks/useSpeech';
 import { useHoroscopePreferences } from '../hooks/useHoroscopePreferences';
@@ -13,7 +13,6 @@ import { getTranslatedAstrologyData } from '../utils/translatedAstroUtils';
 import { isBirthInfoMissing } from '../utils/birthInfoErrorHandler';
 import BirthInfoMissingPrompt from '../components/BirthInfoMissingPrompt';
 import { formatDateByLanguage } from '../utils/dateLocaleUtils';
-import { formatTimestampToLocal } from '../utils/timestampFormatter';
 import LogoWithCopyright from '../components/LogoWithCopyright';
 import FreeTrialHoroscopePage from './FreeTrialHoroscopePage';
 import '../styles/responsive.css';

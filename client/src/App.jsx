@@ -7,7 +7,6 @@ import { PoliciesPage } from './pages/PoliciesPage';
 import StarField from './components/StarField';
 import Footer from './components/Footer';
 import { initializeCookieManager } from './utils/cookieManager.js';
-import InstallPromptBanner from './components/InstallPromptBanner';
 
 /**
  * App - Main application component

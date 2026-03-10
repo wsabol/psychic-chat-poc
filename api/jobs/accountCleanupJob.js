@@ -13,10 +13,18 @@ import { logErrorFromCatch, logWarning } from '../shared/errorLogger.js';
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
 
+let jobRunning = false;
+
 /**
  * Main cleanup job - runs daily
  */
 export async function runAccountCleanupJob() {
+  // Prevent concurrent execution if a previous run is still in progress
+  if (jobRunning) {
+    return { status: 'already_running' };
+  }
+
+  jobRunning = true;
   try {
     const results = {
       reengagement_6m_sent: 0,
@@ -35,9 +43,11 @@ export async function runAccountCleanupJob() {
 
     return { success: true, ...results };
 
-    } catch (error) {
+  } catch (error) {
     await logErrorFromCatch(error, 'cleanup', 'Run account cleanup job');
     return { success: false, error: error.message };
+  } finally {
+    jobRunning = false;
   }
 }
 

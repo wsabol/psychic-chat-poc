@@ -6,9 +6,9 @@
 const LANGUAGE_MAP = {
   'en-US': 'English (United States)',
   'en-GB': 'English (British)',
-  'es-ES': 'Spanish (Spain)',
-  'es-MX': 'Spanish (Mexico)',
-  'es-DO': 'Spanish (Dominican Republic)',
+  'es-ES':  'Spanish (Spain)',
+  'es-419': 'Spanish (Latin America)',
+  'es-US':  'Spanish (United States)',
   'fr-FR': 'French (France)',
   'fr-CA': 'French (Canada)',
   'de-DE': 'German',

@@ -4,7 +4,7 @@
  * 
  * Oracle Language → Base Page Language
  * en-GB → en-US (both English)
- * es-MX, es-DO → es-ES (all Spanish)
+ * es-419, es-US → es-ES (all Spanish variants)
  * fr-CA → fr-FR (both French)
  * de-DE → de-DE (German)
  * it-IT → it-IT (Italian)
@@ -16,9 +16,9 @@
 export const oracleLanguageMap = {
   'en-US': 'en-US',
   'en-GB': 'en-US',
-  'es-ES': 'es-ES',
-  'es-MX': 'es-ES',
-  'es-DO': 'es-ES',
+  'es-ES':  'es-ES',
+  'es-419': 'es-ES',
+  'es-US':  'es-ES',
   'fr-FR': 'fr-FR',
   'fr-CA': 'fr-FR',
   'de-DE': 'de-DE',

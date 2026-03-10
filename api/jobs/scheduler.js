@@ -28,13 +28,18 @@ export function initializeScheduler() {
 
     
     // Schedule account cleanup job to run daily at 2:00 AM UTC
-    cleanupJobHandle = cron.schedule('0 2 * * *', 
-      async () => {
-        try {
-          await runAccountCleanupJob();
-        } catch (error) {
-          logErrorFromCatch(error, 'scheduler', 'Account cleanup job failed');
-        }
+    cleanupJobHandle = cron.schedule('0 2 * * *',
+      () => {
+        // Use setImmediate so the cron tick completes synchronously (preventing
+        // node-cron "missed execution" warnings) and the async work runs in the
+        // next event-loop iteration without blocking the scheduler.
+        setImmediate(async () => {
+          try {
+            await runAccountCleanupJob();
+          } catch (error) {
+            logErrorFromCatch(error, 'scheduler', 'Account cleanup job failed');
+          }
+        });
       },
       { 
         scheduled: true,
@@ -46,12 +51,14 @@ export function initializeScheduler() {
     // Real-time Google Play renewals are handled by the RTDN webhook; this job
     // is a daily safety net that also covers Stripe subscriptions.
     subscriptionCheckJobHandle = cron.schedule('0 1 * * *',
-      async () => {
-        try {
-          await runSubscriptionCheckJob();
-        } catch (error) {
-          logErrorFromCatch(error, 'scheduler', 'Subscription check job failed');
-        }
+      () => {
+        setImmediate(async () => {
+          try {
+            await runSubscriptionCheckJob();
+          } catch (error) {
+            logErrorFromCatch(error, 'scheduler', 'Subscription check job failed');
+          }
+        });
       },
       {
         scheduled: true,
@@ -62,12 +69,14 @@ export function initializeScheduler() {
     // Schedule policy reminder notification job to run daily at 3:00 AM UTC
     // Sends reminder emails 21 days after initial notification (9 days before 30-day deadline)
     policyReminderJobHandle = cron.schedule('0 3 * * *',
-      async () => {
-        try {
-          await sendReminderNotifications();
-        } catch (error) {
-          logErrorFromCatch(error, 'scheduler', 'Policy reminder notification job failed');
-        }
+      () => {
+        setImmediate(async () => {
+          try {
+            await sendReminderNotifications();
+          } catch (error) {
+            logErrorFromCatch(error, 'scheduler', 'Policy reminder notification job failed');
+          }
+        });
       },
       {
         scheduled: true,
@@ -78,12 +87,14 @@ export function initializeScheduler() {
     // Schedule grace period enforcement job to run every 6 hours (offset by 20 min to avoid collision with subscription check job)
     // Automatically logs out users whose grace period has expired without accepting new terms
     gracePeriodEnforcementJobHandle = cron.schedule('20 */6 * * *',
-      async () => {
-        try {
-          await enforceGracePeriodExpiration();
-        } catch (error) {
-          logErrorFromCatch(error, 'scheduler', 'Grace period enforcement job failed');
-        }
+      () => {
+        setImmediate(async () => {
+          try {
+            await enforceGracePeriodExpiration();
+          } catch (error) {
+            logErrorFromCatch(error, 'scheduler', 'Grace period enforcement job failed');
+          }
+        });
       },
       {
         scheduled: true,
@@ -94,12 +105,14 @@ export function initializeScheduler() {
     // Schedule price change migration job to run daily at 4:00 AM UTC
     // Automatically migrates subscriptions after 30-day notice period expires
     priceChangeMigrationJobHandle = cron.schedule('0 4 * * *',
-      async () => {
-        try {
-          await processPendingMigrations();
-        } catch (error) {
-          logErrorFromCatch(error, 'scheduler', 'Price change migration job failed');
-        }
+      () => {
+        setImmediate(async () => {
+          try {
+            await processPendingMigrations();
+          } catch (error) {
+            logErrorFromCatch(error, 'scheduler', 'Price change migration job failed');
+          }
+        });
       },
       {
         scheduled: true,
