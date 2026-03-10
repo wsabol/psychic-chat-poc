@@ -4,6 +4,16 @@
 
 /* CSS Variables - Breakpoints & Spacing */
 :root {
+  /* Real visible viewport height.
+     Overridden at runtime by JS in index.jsx using window.visualViewport.height,
+     which correctly excludes Samsung Internet's bottom navigation bar (and any
+     other browser-chrome that sits inside the layout viewport).
+     100dvh is the CSS-only fallback — it maps to the dynamic viewport height on
+     browsers that support it (Samsung Internet 20+, Chrome 108+, Firefox 101+,
+     Safari 15.4+).  On older browsers without dvh support the JS override kicks
+     in immediately, so 100vh is never actually used. */
+  --real-100vh: 100dvh;
+
   --breakpoint-mobile: 320px;
   --breakpoint-tablet: 768px;
   --breakpoint-desktop: 1024px;

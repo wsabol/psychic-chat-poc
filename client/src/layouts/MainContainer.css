@@ -6,7 +6,10 @@
   display: grid;
   grid-template-columns: 250px 1fr;
   grid-template-rows: auto 1fr;
-  height: 100vh;
+  /* Use the real visible-viewport height so the authenticated app shell does
+     not extend behind Samsung Internet's bottom navigation bar (or any other
+     in-viewport browser chrome).  --real-100vh is set by JS in index.jsx. */
+  height: var(--real-100vh, 100dvh);
   width: 100%;
   overflow: hidden;
 }

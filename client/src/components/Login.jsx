@@ -177,6 +177,9 @@ export function Login({ defaultMode = 'login' }) {
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
+      // 100vh keeps the centering stable regardless of keyboard state.
+      // (var(--real-100vh) is NOT used here because it updates when the
+      // virtual keyboard opens, collapsing the card to a tiny height.)
       minHeight: '100vh',
       backgroundColor: 'transparent',
       color: 'white',
@@ -199,6 +202,8 @@ export function Login({ defaultMode = 'login' }) {
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
         maxWidth: '400px',
         width: '90%',
+        // 90vh keeps the card stable — using var(--real-100vh) here would
+        // collapse the card whenever the virtual keyboard opened.
         maxHeight: '90vh',
         overflowY: 'auto'
       }}>

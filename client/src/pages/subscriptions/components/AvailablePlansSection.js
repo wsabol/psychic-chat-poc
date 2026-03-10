@@ -89,11 +89,13 @@ export default function AvailablePlansSection({
                   t('subscriptions.monthlyFeature3'),
                   t('subscriptions.monthlyFeature4'),
                   t('subscriptions.monthlyFeature5'),
+                  t('subscriptions.monthlyFeature6'),
                 ];
                 const yearlyFeatures = [
                   t('subscriptions.yearlyFeature1'),
                   t('subscriptions.yearlyFeature2'),
                   t('subscriptions.yearlyFeature3'),
+                  t('subscriptions.yearlyFeature4'),
                 ];
                 const features = isYearly ? yearlyFeatures : isMonthly ? monthlyFeatures : [];
                 if (features.length === 0) return null;

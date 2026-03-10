@@ -25,7 +25,12 @@ export function Landing({ onTryFree, onCreateAccount, onSignIn }) {
     top: 0,
     left: 0,
     right: 0,
-    bottom: 0,
+    // Use the real visible-viewport height (set by JS in index.jsx) so that
+    // Samsung Internet's bottom navigation bar — which sits *inside* the layout
+    // viewport — does not overlap the landing-page content.
+    // bottom:0 would extend into the toolbar area; height:--real-100vh stops
+    // exactly at the top of the toolbar.
+    height: 'var(--real-100vh, 100dvh)',
     overflowY: 'auto',
     WebkitOverflowScrolling: 'touch',
     backgroundColor: 'transparent',

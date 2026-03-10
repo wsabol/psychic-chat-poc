@@ -5,7 +5,7 @@ import { getLegalDocumentPath } from '../utils/legalDocumentUtils';
 import './PoliciesPage.css';
 
 /**
- * Whether this browser can display a PDF document inside an <iframe>.
+ * Whether this browser can display a PDF document inside an <iframe> natively.
  *
  * navigator.pdfViewerEnabled is the modern standard:
  *   true  – Chrome ≥89, Edge ≥89, Firefox ≥99 with built-in PDF viewer active
@@ -14,8 +14,8 @@ import './PoliciesPage.css';
  *   undefined – older / less-common browsers (we assume capable and try)
  *
  * Amazon Silk (Kindle Fire) is Chromium-based and may report pdfViewerEnabled
- * as true, but it downloads PDFs instead of rendering them inline, so we
- * detect it via user-agent and force the fallback for it too.
+ * as true, but it has no PDF viewer — it downloads PDFs to the file system.
+ * We detect Silk via user-agent and send it to the Google Docs Viewer path.
  */
 const _ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
 const _isSilk = /\bSilk\b/i.test(_ua);   // Amazon Kindle Fire / Silk browser
@@ -41,8 +41,8 @@ const PDF_INLINE_SUPPORTED =
  * PDF file.  Once the updated service worker (denylist: [/\.pdf$/i]) is active
  * the iframe will fetch the real PDF from S3/CloudFront without any intercept.
  *
- * For browsers that cannot display PDFs inline (DuckDuckGo, Amazon Silk) a
- * full-page fallback with a direct "Open PDF" link is shown instead.
+ * For browsers that cannot display PDFs inline (DuckDuckGo, Amazon Silk) the
+ * document is routed through Google Docs Viewer, which renders it as HTML.
  */
 export function PoliciesPage() {
   const { language } = useTranslation();
@@ -64,25 +64,28 @@ export function PoliciesPage() {
   const title = isTerms ? 'Terms of Service' : 'Privacy Policy';
 
   // ── Fallback for browsers that cannot render PDFs inline ───────────────
+  // Amazon Silk and similar browsers have no built-in PDF viewer — a direct
+  // link to the PDF just triggers a background download with no visible
+  // result.  Instead, route through Google Docs Viewer which converts the PDF
+  // to renderable HTML and works in any Chromium-based browser.
+  //
+  // Google Docs Viewer requires a publicly-accessible absolute URL, so we
+  // prepend window.location.origin.  This works correctly in production
+  // (CloudFront domain) where the PDF is publicly reachable.
   if (!PDF_INLINE_SUPPORTED) {
+    const absolutePdfUrl = `${window.location.origin}${pdfPath}`;
+    const docsViewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(absolutePdfUrl)}&embedded=true`;
     return (
       <div className="policies-page-wrapper">
         <div className="policies-pdf-container">
           <div className="policies-pdf-header">
             <h1>{title}</h1>
           </div>
-          <div className="policies-no-inline">
-            <span className="policies-no-inline-icon">📄</span>
-            <p>Your browser cannot display PDFs inline.</p>
-            <a
-              href={pdfPath}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="policies-open-link"
-            >
-              Open {title} ↗
-            </a>
-          </div>
+          <iframe
+            className="policies-pdf-frame"
+            src={docsViewerUrl}
+            title={title}
+          />
         </div>
       </div>
     );

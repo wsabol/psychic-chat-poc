@@ -21,7 +21,7 @@ export default function ChatInputForm({
   };
 
   return (
-    <div>
+    <div className="chat-input-wrapper">
       <form onSubmit={handleSubmit} className="chat-input-form">
         <input
           type="text"

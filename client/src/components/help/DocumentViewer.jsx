@@ -12,15 +12,19 @@ import './DocumentViewer.css';
  *           trigger a background *download* instead of rendering inline
  *   undefined – older / less-common browsers (we assume capable and try)
  *
- * We only skip the iframe when:
+ * We only skip the native blob-URL iframe when:
  *   a) The browser has *explicitly* declared it cannot display PDFs
  *      (navigator.pdfViewerEnabled === false), e.g. DuckDuckGo on Android; OR
  *   b) The browser is Amazon Silk (Kindle Fire).  Silk is Chromium-based and
  *      may report pdfViewerEnabled as true, but it downloads PDFs instead of
- *      rendering them inline, so we force the "open PDF" fallback for it too.
+ *      rendering them inline.
  *
- * undefined means "unknown — attempt the iframe".  This preserves inline
- * rendering on iOS Safari (pdfViewerEnabled is not defined there, but
+ * In both cases we fall back to Google Docs Viewer (an iframe that loads the
+ * PDF as renderable HTML from Google's servers) rather than showing a bare
+ * download link which the user cannot read inline.
+ *
+ * undefined means "unknown — attempt the native iframe".  This preserves
+ * inline rendering on iOS Safari (pdfViewerEnabled is not defined there, but
  * WKWebView can still display PDFs natively).
  */
 const _ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
@@ -85,13 +89,13 @@ export function DocumentViewer({ title, docType, onBack, onAccept }) {
   // entirely locally without any service-worker involvement.
   //
   // SKIP the fetch entirely when the browser cannot display PDFs inline
-  // (PDF_INLINE_SUPPORTED === false, e.g. DuckDuckGo on Android).  Pointing
-  // a blob: URL at an iframe in those browsers silently triggers a background
-  // download with no visible result, so we show a plain "Open PDF" link
-  // instead — a much better UX.
+  // (PDF_INLINE_SUPPORTED === false, e.g. DuckDuckGo / Amazon Silk).
+  // Those browsers would silently download the blob rather than render it.
+  // We display a Google Docs Viewer iframe instead — no blob needed.
   useEffect(() => {
     if (!PDF_INLINE_SUPPORTED) {
-      // No inline viewer — skip fetch, show the "open PDF" fallback immediately.
+      // No native PDF viewer — skip the blob fetch.
+      // The render section below will show a Google Docs Viewer iframe.
       setLoading(false);
       setBlobUrl(null);
       setError(null);
@@ -170,21 +174,16 @@ export function DocumentViewer({ title, docType, onBack, onAccept }) {
           <div className="pdf-loading">Loading document…</div>
         )}
 
-        {/* Browser explicitly reported it cannot display PDFs inline
-            (e.g. DuckDuckGo on Android).  Show a direct link instead of
-            triggering a silent background download via a blob: URL. */}
+        {/* Browser cannot display PDFs inline (DuckDuckGo, Amazon Silk, etc.).
+            Route through Google Docs Viewer which converts the PDF to HTML —
+            readable in any Chromium-based browser including Amazon Silk.
+            A direct PDF link would only trigger a silent background download. */}
         {!loading && !error && !PDF_INLINE_SUPPORTED && (
-          <div className="pdf-no-inline">
-            <p>Your browser cannot display PDFs inline.</p>
-            <a
-              href={pdfPath}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="pdf-open-link"
-            >
-              📄 Open {displayTitle} ↗
-            </a>
-          </div>
+          <iframe
+            className="pdf-viewer"
+            src={`https://docs.google.com/gview?url=${encodeURIComponent(window.location.origin + pdfPath)}&embedded=true`}
+            title={displayTitle}
+          />
         )}
 
         {error && (

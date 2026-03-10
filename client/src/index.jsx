@@ -7,6 +7,26 @@ import { AuthProvider } from './context/AuthContext';
 import { TranslationProvider } from './context/TranslationContext';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 
+// ---- Real viewport height fix (Samsung Internet / Brave / mobile browsers) ----
+// Samsung Internet's bottom navigation bar sits *inside* the layout viewport,
+// so `100vh` includes the area behind that bar.  window.visualViewport.height
+// returns the actual *visible* height (toolbars excluded) on every browser that
+// supports the VisualViewport API (Samsung Internet 11+, Chrome 61+, Safari 13+).
+// We store this as --real-100vh so CSS can use it instead of 100vh.
+// The CSS layer seeds the variable with 100dvh so pages look correct before
+// the first JS paint (100dvh is understood by Samsung Internet 20+).
+function updateRealVh() {
+  const h = window.visualViewport
+    ? window.visualViewport.height
+    : window.innerHeight;
+  document.documentElement.style.setProperty('--real-100vh', h + 'px');
+}
+updateRealVh();
+window.addEventListener('resize', updateRealVh);
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', updateRealVh);
+}
+
 // Suppress ResizeObserver loop errors (browser-level timing, not code error).
 // Two guards are needed:
 //  1. console.error patch  — stops it appearing in the console
