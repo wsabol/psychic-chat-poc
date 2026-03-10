@@ -27,6 +27,8 @@ if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', updateRealVh);
 }
 
+// ─── Third-party / browser-noise suppression ────────────────────────────────
+//
 // Suppress ResizeObserver loop errors (browser-level timing, not code error).
 // Two guards are needed:
 //  1. console.error patch  — stops it appearing in the console
@@ -38,13 +40,39 @@ console.error = function(...args) {
   origError.apply(console, args);
 };
 
+// Suppress the Stripe "HTTP vs HTTPS" informational log that fires in dev when
+// the page is served over http://localhost.  Live production runs over HTTPS so
+// this message is never emitted in production.
+const origLog = console.log;
+console.log = function(...args) {
+  if (typeof args[0] === 'string' &&
+      args[0].includes('You may test your Stripe.js integration over HTTP')) {
+    return;
+  }
+  origLog.apply(console, args);
+};
+
 window.addEventListener('error', (event) => {
-  if (event?.message?.includes('ResizeObserver loop completed')) {
-    // Prevent the event from reaching the CRA error overlay handler
+  if (!event?.message) return;
+
+  // ResizeObserver timing noise — prevent CRA dev-overlay from treating it as fatal
+  if (event.message.includes('ResizeObserver loop completed')) {
+    event.stopImmediatePropagation();
+    event.preventDefault();
+    return;
+  }
+
+  // MutationObserver error thrown by browser-extension content scripts
+  // (e.g. password managers like Bitwarden/LastPass) when they are injected
+  // into a Stripe iframe before the iframe's document body is attached to the
+  // DOM.  The error originates entirely in web-client-content-script.js —
+  // third-party code outside our control — and does not affect Stripe or the app.
+  if (event.message.includes("Failed to execute 'observe' on 'MutationObserver'") &&
+      event.message.includes('parameter 1 is not of type')) {
     event.stopImmediatePropagation();
     event.preventDefault();
   }
-}, true /* capture phase — runs before the overlay's listener */);
+}, true /* capture phase — runs before the CRA overlay's listener */);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

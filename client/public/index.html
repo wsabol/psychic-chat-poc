@@ -30,12 +30,38 @@
             originalWarn.apply(console, args);
         };
 
+        // Suppress the Stripe "HTTP vs HTTPS" informational log.
+        // In development (http://localhost) Stripe.js always logs this; it is purely
+        // informational — live integrations run over HTTPS and never trigger it.
+        const originalLog = console.log;
+        console.log = function(...args) {
+            if (args[0] && typeof args[0] === 'string' &&
+                args[0].indexOf('You may test your Stripe.js integration over HTTP') !== -1) {
+                return; // Suppress Stripe dev-only HTTP notice
+            }
+            originalLog.apply(console, args);
+        };
+
         // Suppress ResizeObserver loop errors.
         // This script runs BEFORE the webpack HMR/CRA dev-overlay bundle, so our
         // capture-phase listener is registered first and wins the stopImmediatePropagation race.
         // The same suppression is also duplicated in index.jsx for belt-and-suspenders.
+        //
+        // Also suppresses the MutationObserver "parameter 1 is not of type 'Node'" error that
+        // originates from browser-extension content scripts (e.g. password managers) injecting
+        // into Stripe's iframe before the iframe document body is attached to the DOM.
+        // The error is thrown inside web-client-content-script.js — entirely third-party code —
+        // and has no effect on Stripe functionality or our application.
         window.addEventListener('error', function(event) {
-            if (event && event.message && event.message.indexOf('ResizeObserver loop completed') !== -1) {
+            if (!event || !event.message) return;
+            if (event.message.indexOf('ResizeObserver loop completed') !== -1) {
+                event.stopImmediatePropagation();
+                event.preventDefault();
+                return;
+            }
+            // MutationObserver error from browser-extension content scripts inside Stripe iframes
+            if (event.message.indexOf("Failed to execute 'observe' on 'MutationObserver'") !== -1 &&
+                event.message.indexOf('parameter 1 is not of type') !== -1) {
                 event.stopImmediatePropagation();
                 event.preventDefault();
             }

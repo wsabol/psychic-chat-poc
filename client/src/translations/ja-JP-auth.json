@@ -6,7 +6,7 @@
     "confirmPassword": "パスワードを確認",
     "rememberMe": "ログイン状態を保持",
     "forgotPassword": "パスワードをお忘れですか？",
-    "noAccount": "アカウントをお持ちではありませんか？",
+    "noAccount": "すでにアカウントをお持ちですか？",
     "createOne": "こちらで作成してください",
     "signIn": "ログイン",
     "signingIn": "ログイン中...",
