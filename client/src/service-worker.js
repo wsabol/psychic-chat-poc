@@ -48,9 +48,16 @@ const PASSTHROUGH_PATTERNS = [
   /firebaseio\.com/,
   /identitytoolkit\.googleapis\.com/,
   /securetoken\.googleapis\.com/,
-  // Stripe
+  // Stripe — core SDK, payment API, and telemetry/reporting endpoints.
+  // r.stripe.com/b is Stripe's internal beacon; intercepting it causes
+  // ERR_NAME_NOT_RESOLVED noise when the domain is unreachable (ad-blockers,
+  // restricted networks, dev environments). All Stripe traffic must bypass SW.
   /js\.stripe\.com/,
   /api\.stripe\.com/,
+  /r\.stripe\.com/,
+  /r2\.stripe\.com/,
+  /m\.stripe\.com/,
+  /m\.stripe\.network/,
   // hCaptcha
   /hcaptcha\.com/,
 ];

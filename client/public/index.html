@@ -66,6 +66,38 @@
                 event.preventDefault();
             }
         }, true /* capture phase */);
+
+        // window.onerror fallback — belt-and-suspenders for the MutationObserver error.
+        // Some browsers (especially older Chrome / Edge versions) do not reliably fire
+        // the capture-phase 'error' event for errors thrown inside extension content
+        // scripts.  Returning true from window.onerror is the last-resort suppression.
+        window.onerror = function(message) {
+            if (!message) return false;
+            if (message.indexOf("Failed to execute 'observe' on 'MutationObserver'") !== -1 &&
+                message.indexOf('parameter 1 is not of type') !== -1) {
+                return true; // returning true tells the browser not to log the error
+            }
+            return false;
+        };
+
+        // Suppress Stripe telemetry unhandled-promise-rejection noise.
+        // Stripe.js posts internal analytics to https://r.stripe.com/b.  In environments
+        // where that host is unreachable (ad-blockers, corporate proxies, local dev) the
+        // fetch rejects with "Failed to fetch" and — because Stripe doesn't add a .catch()
+        // on that particular internal call — it surfaces as an unhandledrejection in the
+        // console.  It has zero effect on payment processing.  We suppress it here so it
+        // doesn't pollute the developer console or confuse monitoring dashboards.
+        window.addEventListener('unhandledrejection', function(event) {
+            if (!event || !event.reason) return;
+            var msg = (event.reason && event.reason.message) ? event.reason.message : String(event.reason);
+            // FetchError from Stripe's telemetry endpoint (r.stripe.com/b, r2.stripe.com, etc.)
+            if (msg.indexOf('r.stripe.com') !== -1 ||
+                msg.indexOf('r2.stripe.com') !== -1 ||
+                msg.indexOf('m.stripe.com') !== -1 ||
+                msg.indexOf('m.stripe.network') !== -1) {
+                event.preventDefault();
+            }
+        }, true /* capture phase */);
     </script>
 </head>
 <body>

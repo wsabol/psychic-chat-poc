@@ -184,8 +184,10 @@ export function useAppState() {
   // - If onboarding_step = "subscription_complete" → Route to Personal Info
   // - If onboarding_step = "personal_info_complete" → Route to Chat with Welcome
   useEffect(() => {
-    // Only for authenticated, non-temp users with loaded onboarding status
-    if (authState.isAuthenticated && !authState.isTemporaryAccount && onboarding.onboardingStatus?.isOnboarding === true) {
+    // Only for authenticated, non-temp, non-admin users with loaded onboarding status.
+    // Admins skip onboarding entirely — they have no payment method or subscription
+    // requirement and should go directly to Chat on first login.
+    if (authState.isAuthenticated && !authState.isTemporaryAccount && !isAdmin && onboarding.onboardingStatus?.isOnboarding === true) {
       const currentStep = onboarding.onboardingStatus?.currentStep;
       
       // Route based on current step
@@ -208,7 +210,7 @@ export function useAppState() {
         setStartingPage(0); // ChatPage with Welcome modal
       }
     }
-  }, [authState.isAuthenticated, authState.isTemporaryAccount, onboarding.onboardingStatus?.isOnboarding, onboarding.onboardingStatus?.currentStep]);
+  }, [authState.isAuthenticated, authState.isTemporaryAccount, isAdmin, onboarding.onboardingStatus?.isOnboarding, onboarding.onboardingStatus?.currentStep]);
 
     // Note: Subscription completion routing is now handled by the step-based routing effect above
   // No longer need to check hasActiveSubscription - we check currentStep instead

@@ -54,6 +54,10 @@
                     "valueFrom": "arn:aws:secretsmanager:us-east-1:586337033065:secret:psychic-chat/stripe-LvGISE:secret_key::"
                 },
                 {
+                    "name": "STRIPE_WEBHOOK_SECRET",
+                    "valueFrom": "arn:aws:secretsmanager:us-east-1:586337033065:secret:psychic-chat/stripe-LvGISE:webhook_secret::"
+                },
+                {
                     "name": "OPENAI_API_KEY",
                     "valueFrom": "arn:aws:secretsmanager:us-east-1:586337033065:secret:psychic-chat/openai-Wf89a0:api_key::"
                 },
