@@ -215,22 +215,27 @@ async function checkGooglePlaySubscription(user, stats) {
   });
 
   if (!googleSubscription) {
-    // No credentials (sandbox) — fall back to checking current_period_end
-    const nowSeconds = Math.floor(Date.now() / 1000);
-    const isExpired  = user.current_period_end && user.current_period_end < nowSeconds;
-    if (isExpired && currentStatus === 'active') {
-      await db.query(
-        `UPDATE user_personal_info
-         SET subscription_status  = 'expired',
-             last_status_check_at = NOW(),
-             updated_at           = NOW()
-         WHERE user_id = $1`,
-        [userId]
-      );
-      stats.statusChanged++;
-    } else {
-      await touchTimestamp();
-    }
+    // ── No Google Play API credentials (sandbox / pre-production mode) ────────
+    //
+    // We CANNOT safely determine subscription status from current_period_end
+    // alone for Google Play subscriptions.  Two important cases:
+    //
+    //   1. License tester (test) subscriptions auto-renew every 5–30 minutes.
+    //      Their current_period_end is outdated within minutes of each renewal.
+    //      If we mark them 'expired' here, the daily job would lock out testers
+    //      a few minutes after they subscribed — even though their subscription
+    //      is still technically active and auto-renewing.
+    //
+    //   2. Production subscriptions without a configured RTDN webhook also rely
+    //      on this job for status updates.  Without ground-truth from Google's
+    //      API we cannot distinguish a lapsed subscription from one that renewed
+    //      successfully (the DB just hasn't been updated yet).
+    //
+    // Action: touch last_status_check_at only — do NOT change subscription_status.
+    // The RTDN webhook (once configured) handles real-time status updates.
+    // Once GOOGLE_PLAY_SERVICE_ACCOUNT_JSON is set, this job provides a reliable
+    // daily safety-net based on authoritative data from Google's API.
+    await touchTimestamp();
     return;
   }
 

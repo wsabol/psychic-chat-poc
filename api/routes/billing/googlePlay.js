@@ -108,10 +108,30 @@ router.post('/validate-receipt/google', authenticateToken, async (req, res) => {
       console.error('[GooglePlay] Play API verification failed:', verifyError.message);
     }
 
-    // Check expiry if Google returned subscription data
+    // Check expiry if Google returned subscription data.
+    //
+    // ⚠️  IMPORTANT — License tester / test subscription timing:
+    //   Google Play license testers purchase subscriptions for $0.00.  The
+    //   INITIAL period of a test subscription is very short:
+    //     • Monthly plan: ~5 minutes
+    //     • Annual plan:  ~30 minutes
+    //   After each period the subscription auto-renews (up to 6 times), each
+    //   renewal also lasting only a few minutes.
+    //
+    //   Network latency between the in-app purchase and this backend validation
+    //   endpoint (DNS lookup, TLS handshake, auth token exchange, etc.) can
+    //   easily exceed the remaining time on a 5-minute test period.  Without a
+    //   grace window the backend would reject a valid test purchase with
+    //   "subscription has already expired" — leaving the tester locked out.
+    //
+    // We apply a 5-minute grace period so a test subscription that expires
+    // mere seconds before validation arrives is still accepted.  Production
+    // subscriptions are unaffected (their periods are months long).
+    const EXPIRY_GRACE_MS = 5 * 60 * 1000; // 5 minutes
+
     if (googleSubscription) {
       const expiryMs = parseInt(googleSubscription.expiryTimeMillis, 10);
-      if (expiryMs < Date.now()) {
+      if (expiryMs < Date.now() - EXPIRY_GRACE_MS) {
         return billingError(res, 'Google Play subscription has already expired');
       }
     }
