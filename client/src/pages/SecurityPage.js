@@ -173,7 +173,16 @@ export default function SecurityPage({ userId, token, auth, onboarding, onNaviga
           ))}
         </div>
 
-        {/* Tab Content */}
+        {/* Tab Content
+         *
+         * All three tab panels are kept MOUNTED at all times (hidden via
+         * display:none when inactive) so their data-fetch effects run once
+         * on initial page load — in parallel — rather than re-running every
+         * time the user clicks a tab.  This eliminates the "blink / loading
+         * spinner" on the Sessions tab and the slow load on the 2FA tab that
+         * occur in production where API round-trips take a meaningful amount
+         * of time.
+         */}
         <div style={{
           backgroundColor: 'rgba(255, 255, 255, 0.97)',
           padding: '1rem',
@@ -186,15 +195,15 @@ export default function SecurityPage({ userId, token, auth, onboarding, onNaviga
           /* Add bottom padding so the last item clears the browser chrome */
           paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
         }}>
-          {activeTab === 'verification' && (
+          <div style={{ display: activeTab === 'verification' ? 'block' : 'none' }}>
             <VerificationAndTwoFATab userId={userId} token={token} apiUrl={API_URL} userEmail={userEmail} />
-          )}
-          {activeTab === 'password' && (
+          </div>
+          <div style={{ display: activeTab === 'password' ? 'block' : 'none' }}>
             <PasswordTab userId={userId} token={token} apiUrl={API_URL} />
-          )}
-          {activeTab === 'session' && (
+          </div>
+          <div style={{ display: activeTab === 'session' ? 'block' : 'none' }}>
             <SessionPrivacyTab userId={userId} token={token} apiUrl={API_URL} />
-          )}
+          </div>
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from '../../context/TranslationContext';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
+import { fetchWithTokenRefresh } from '../../utils/fetchWithTokenRefresh';
 
 /**
  * SessionPrivacyTab - Manage "Stay Logged In" preference
@@ -17,21 +18,50 @@ export default function SessionPrivacyTab({ userId, token, apiUrl }) {
   const loadSessionPreference = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${apiUrl}/security/2fa-settings/${userId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      // Use the dedicated session-preference endpoint — lighter than the full
+      // 2fa-settings response and avoids an unnecessary join with 2FA data.
+      //
+      // fetchWithTokenRefresh is used instead of plain fetch so that an expired
+      // Firebase ID token is transparently refreshed and the request retried.
+      // This prevents the "loading flashes forever" bug in production where:
+      //   1. A plain fetch with a stale token would get a 401/403
+      //   2. The 401 would trigger an auth-state refresh in useAuth
+      //   3. The new token prop would recreate this callback (token was a dep)
+      //   4. The useEffect would re-fire → setLoading(true) → repeat (loop)
+      //
+      // By using fetchWithTokenRefresh the token is refreshed internally on
+      // 401/403 without updating the token prop, so no re-fetch loop occurs.
+      //
+      // NOTE: `token` is intentionally NOT in the dependency array.
+      // fetchWithTokenRefresh fetches a fresh token from Firebase automatically
+      // when the initial one is stale, so the callback only needs to be created
+      // once per (apiUrl, userId) combination.
+      const response = await fetchWithTokenRefresh(
+        `${apiUrl}/security/session-preference/${userId}`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
 
       if (response.ok) {
         const data = await response.json();
-        setPersistentSession(data.settings.persistent_session || false);
+        setPersistentSession(data.persistent_session || false);
+      } else {
+        // Non-ok response (e.g. 500) that wasn't a token issue
+        setError('security.session.errorLoading');
       }
     } catch (err) {
       logErrorFromCatch('[SESSION] Error loading preference:', err);
-      setError(t('security.session.errorLoading'));
+      // Store the translation key; the rendered output resolves it via t()
+      // so that `t` does NOT need to be in this callback's dep array.
+      setError('security.session.errorLoading');
     } finally {
       setLoading(false);
     }
-  }, [apiUrl, userId, token, t]);
+    // NOTE: `token` intentionally omitted — fetchWithTokenRefresh handles
+    // token refresh internally, so changing the token prop must NOT re-trigger
+    // a data fetch (that was the root cause of the production loading loop).
+    // `t` is also omitted — it is a UI lookup helper, not a data dependency.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiUrl, userId]);
 
   useEffect(() => {
     loadSessionPreference();
@@ -44,7 +74,7 @@ export default function SessionPrivacyTab({ userId, token, apiUrl }) {
 
       const newValue = !persistentSession;
 
-      const response = await fetch(`${apiUrl}/security/session-preference/${userId}`, {
+      const response = await fetchWithTokenRefresh(`${apiUrl}/security/session-preference/${userId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -88,7 +118,8 @@ export default function SessionPrivacyTab({ userId, token, apiUrl }) {
           borderRadius: '4px',
           marginBottom: '1rem'
         }}>
-          {error}
+          {/* t(error) translates when error is a key; returns as-is for raw server messages */}
+          {t(error)}
         </div>
       )}
 

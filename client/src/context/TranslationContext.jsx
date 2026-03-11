@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 
 // English modular translations
 import enUSAuth from '../translations/en-US-auth.json';
@@ -242,13 +242,18 @@ export function TranslationProvider({ children, userLanguageFromDB }) {
     return true;
   }, []);
 
-  const value = {
+  // Memoize the context value so that a re-render of TranslationProvider
+  // (e.g. caused by a parent re-render) does NOT produce a new object
+  // reference and therefore does NOT force every useTranslation() consumer
+  // to re-render.  The value only changes when language / translations /
+  // isLoading actually changes.
+  const value = useMemo(() => ({
     language,
     translations,
     changeLanguage,
     isLoading,
-    availableLanguages: LANGUAGES
-  };
+    availableLanguages: LANGUAGES,
+  }), [language, translations, changeLanguage, isLoading]);
 
   return (
     <TranslationContext.Provider value={value}>
@@ -266,7 +271,15 @@ export function useTranslation() {
 
   const { translations, language, changeLanguage, isLoading, availableLanguages } = context;
 
-  const t = (key, variables = {}) => {
+  // Memoize `t` so its reference is stable across renders.
+  // Without this, every render creates a new function reference.
+  // Any useCallback/useEffect that lists `t` as a dependency would then
+  // re-run on every render, triggering loading-state flicker loops in
+  // components like SessionPrivacyTab that call loadSessionPreference
+  // inside a useCallback that depends on `t`.
+  // `t` only gets a new reference when `translations` changes (i.e. when
+  // the user switches language) — which is the correct behaviour.
+  const t = useCallback((key, variables = {}) => {
     const keys = key.split('.');
     let value = translations;
 
@@ -284,7 +297,7 @@ export function useTranslation() {
     }
 
     return value;
-  };
+  }, [translations]);
 
   return {
     t,

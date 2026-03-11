@@ -2,6 +2,7 @@ import express from 'express';
 import { db } from '../../shared/db.js';
 import { validationError, serverError, successResponse } from '../../utils/responses.js';
 import { createUserDatabaseRecords } from '../auth-endpoints/helpers/userCreation.js';
+import { isAdmin as isAdminEmail } from '../../middleware/adminAuth.js';
 
 const router = express.Router();
 
@@ -24,17 +25,42 @@ router.get('/onboarding-status', async (req, res) => {
       `SELECT 
         onboarding_step, 
         onboarding_completed, 
-        subscription_status
+        subscription_status,
+        is_admin
        FROM user_personal_info 
        WHERE user_id = $1`,
       [userId]
     );
     
+    // CRITICAL: Check admin status FIRST — before the no-row check.
+    // If the admin has no user_personal_info row (e.g. after data was cleared) the
+    // row-not-found path used to return isOnboarding:true, sending the admin through
+    // the full onboarding/subscription flow.  We guard against that here by using
+    // the email from the verified Firebase token, which is always present regardless
+    // of whether a DB row exists.
+    const requestingUserEmail = req.user?.email;
+    if (isAdminEmail(requestingUserEmail)) {
+      const onboardingStep = result.rows[0]?.onboarding_step ?? null;
+      return successResponse(res, {
+        currentStep: onboardingStep,
+        isOnboarding: false,
+        isAdmin: true,
+        completedSteps: {
+          create_account: true,
+          payment_method: true,
+          subscription: true,
+          personal_info: true
+        },
+        subscriptionStatus: 'complete'
+      });
+    }
+
     // For new users (temp accounts, not yet in DB), return default onboarding state
     if (!result.rows[0]) {
       return successResponse(res, {
         currentStep: 'create_account',
         isOnboarding: true,
+        isAdmin: false,
         completedSteps: {
           create_account: false,
           payment_method: false,
@@ -45,7 +71,24 @@ router.get('/onboarding-status', async (req, res) => {
       });
     }
     
-    const { onboarding_step, onboarding_completed, subscription_status } = result.rows[0];
+    const { onboarding_step, onboarding_completed, subscription_status, is_admin } = result.rows[0];
+
+    // Legacy DB-flag admin check (kept as secondary safety net for users whose
+    // email isn't in ADMIN_EMAILS env var but whose DB row has is_admin=true)
+    if (is_admin) {
+      return successResponse(res, {
+        currentStep: onboarding_step,
+        isOnboarding: false,
+        isAdmin: true,
+        completedSteps: {
+          create_account: true,
+          payment_method: true,
+          subscription: true,
+          personal_info: true
+        },
+        subscriptionStatus: 'complete'
+      });
+    }
     
     // Determine which steps are complete based on onboarding_step progression
     // A step is complete if we've reached or passed it in the step order

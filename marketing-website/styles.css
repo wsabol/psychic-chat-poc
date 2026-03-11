@@ -628,6 +628,89 @@ a {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
+/* Cosmic display panel (replaces missing about-image.jpg) */
+.about-cosmic-display {
+    width: 100%;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(135deg, #1a0533 0%, #2d1b69 40%, #1a202c 100%);
+    padding: 3rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.about-cosmic-display::before {
+    content: '✦ ✧ ★ ✦ ✧ ★ ✦ ✧ ★ ✦';
+    position: absolute;
+    top: 12px;
+    font-size: 0.7rem;
+    color: rgba(167, 139, 250, 0.35);
+    letter-spacing: 6px;
+    white-space: nowrap;
+}
+
+.about-cosmic-display::after {
+    content: '✦ ✧ ★ ✦ ✧ ★ ✦ ✧ ★ ✦';
+    position: absolute;
+    bottom: 12px;
+    font-size: 0.7rem;
+    color: rgba(167, 139, 250, 0.35);
+    letter-spacing: 6px;
+    white-space: nowrap;
+}
+
+.cosmic-orb {
+    font-size: 3.5rem;
+    filter: drop-shadow(0 0 12px rgba(102, 126, 234, 0.7));
+    animation: float 4s ease-in-out infinite;
+}
+
+.about-logo-display {
+    width: 75%;
+    max-width: 260px;
+    height: auto;
+    filter: drop-shadow(0 4px 16px rgba(102, 126, 234, 0.5));
+}
+
+.cosmic-divider {
+    color: var(--accent-color);
+    font-size: 1.1rem;
+    letter-spacing: 4px;
+    opacity: 0.85;
+}
+
+.cosmic-tagline {
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 1rem;
+    font-style: italic;
+    letter-spacing: 1px;
+    margin: 0;
+}
+
+.cosmic-badges {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 0.5rem;
+}
+
+.cosmic-badge {
+    background: rgba(102, 126, 234, 0.25);
+    border: 1px solid rgba(102, 126, 234, 0.45);
+    color: rgba(255, 255, 255, 0.9);
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
 /* ===== Testimonials Section ===== */
 .testimonials-section {
     padding: 100px 20px;

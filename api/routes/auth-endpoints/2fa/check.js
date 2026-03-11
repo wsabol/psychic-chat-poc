@@ -106,11 +106,39 @@ export async function check2FAHandler(req, res) {
     // getIdToken(true).  This removes ~300 ms of extra round-trip delay, making
     // the race far more likely to materialise.  When getUserEmail() returns null
     // we fall back to the Firebase Admin SDK, which always has the email.
+    //
+    // ORPHANED USER DETECTION: If getUserEmail() returns null AND the Firebase
+    // account was created more than 120 seconds ago, this is not a registration
+    // race — it's a user whose database record was deleted while their Firebase
+    // session persisted (e.g. the database was wiped during testing).  Triggering
+    // 2FA for such users is incorrect because the downstream flow (onboarding,
+    // session creation, etc.) will fail with no database record.  We return a
+    // special flag so the client can sign out the orphaned session and show the
+    // landing page instead.
     let userEmail = await getUserEmail(userId);
     if (!userEmail) {
       try {
         const fbUser = await auth.getUser(userId);
         userEmail = fbUser.email || null;
+
+        // Check whether this is a registration race or an orphaned session.
+        // New accounts created within the last 120 seconds may not have a
+        // user_personal_info row yet — that is a normal race condition.
+        // Accounts older than 120 seconds with no DB record are orphaned.
+        const creationTime = fbUser.metadata?.creationTime
+          ? new Date(fbUser.metadata.creationTime).getTime()
+          : null;
+        const ageSeconds = creationTime ? (Date.now() - creationTime) / 1000 : Infinity;
+
+        if (ageSeconds > 120) {
+          // Orphaned Firebase user — DB record does not exist.
+          // Instruct the client to sign out and return to the landing page.
+          return successResponse(res, {
+            requires2FA: false,
+            orphanedFirebaseUser: true,
+            message: 'Account not found in database - session will be cleared',
+          });
+        }
 
       } catch (fbErr) {
         // Very unusual — user not found in Firebase either.  Continue and let

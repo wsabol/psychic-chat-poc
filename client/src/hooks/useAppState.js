@@ -28,18 +28,32 @@ export function useAppState() {
   const [onboardingClosed, setOnboardingClosed] = useState(false);
   const [verificationFailed, setVerificationFailed] = useState(false);
   const [previousAuthState, setPreviousAuthState] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
   // Subscription required mode: locks navigation to billing page until subscription is active
   const [subscriptionRequiredMode, setSubscriptionRequiredMode] = useState(false);
 
   // Core hooks
   const authState = useAuth();
+
+  // CRITICAL: isAdmin is computed synchronously during render (not via useEffect/useState)
+  // so that all routing effects in the same render see the correct value immediately.
+  // Using useState + useEffect caused a race condition in production where the onboarding
+  // routing effect fired (with isAdmin=false) before the admin-check effect had a chance
+  // to update isAdmin to true, sending the admin to the billing/subscription page.
+  const ADMIN_EMAILS = ['starshiptechnology1@gmail.com', 'wsabol39@gmail.com'];
+  const isAdmin = !!(
+    authState.isAuthenticated &&
+    authState.token &&
+    authState.authUserId &&
+    ADMIN_EMAILS.includes(authState.authEmail?.toLowerCase())
+  );
+
   const modals = useModalState();
   const tempFlow = useTempAccountFlow(authState);
   const handlers = useAuthHandlers(authState, modals, tempFlow);
   const emailVerification = useEmailVerification();
-  // CRITICAL: Pass isTemporaryAccount to skip onboarding for free trial users
-  const onboarding = useOnboarding(authState.token, authState.isTemporaryAccount);
+  // CRITICAL: Pass isTemporaryAccount to skip onboarding for free trial users.
+  // Also pass isAdmin so admins are never routed through onboarding or subscription checks.
+  const onboarding = useOnboarding(authState.token, authState.isTemporaryAccount, isAdmin);
   
   const { isLoading, isThankyou, isRegister, isVerification, isLanding, isLogin, isTwoFactor, isPaymentMethodRequired, isSubscriptionRequired, isChat } = useAppRouting(authState, tempFlow.appExited, modals.showRegisterMode, skipPaymentCheck, skipSubscriptionCheck, isAdmin, onboarding?.onboardingStatus?.isOnboarding ?? false, sessionCheckData);
 
@@ -51,17 +65,6 @@ export function useAppState() {
         setPreviousAuthState(authState.isAuthenticated);
   }, [authState.isAuthenticated, previousAuthState, modals]);
 
-  // Effect: Check admin status after authentication
-  useEffect(() => {
-    if (authState.isAuthenticated && authState.token && authState.authUserId) {
-      // Check if user is admin
-      const ADMIN_EMAILS = ['starshiptechnology1@gmail.com', 'wsabol39@gmail.com'];
-      const isUserAdmin = ADMIN_EMAILS.includes(authState.authEmail?.toLowerCase());
-      setIsAdmin(isUserAdmin);
-    } else {
-      setIsAdmin(false);
-    }
-  }, [authState.isAuthenticated, authState.token, authState.authUserId, authState.authEmail]);
 
   // Effect: Handle orphaned Firebase users (authenticated in Firebase but no database record)
   // This happens when database is cleared but Firebase session persists

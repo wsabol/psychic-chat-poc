@@ -94,6 +94,19 @@ export function useAuthState(checkBillingStatus) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
         if (firebaseUser) {
+          // ── Re-assert loading=true for this auth event ───────────────────
+          // Firebase can fire onAuthStateChanged twice on Chrome/Safari/mobile
+          // browsers: once with null (while loading the persisted session from
+          // IndexedDB) and again with the stored user.  The null callback sets
+          // loading=false.  Without this line, the second callback starts with
+          // loading=false, and the synchronous state updates (setIsFirstTime,
+          // setAuthUserId, …) that happen before the first await are flushed
+          // as a render where loading=false AND isAuthenticated=false AND
+          // isFirstTime=false — which routes to the login screen briefly.
+          // By re-setting loading=true here, we keep the loading screen visible
+          // for the entire async auth-check window.
+          setLoading(true);
+
           // ── Deduplication guard — acquire BEFORE the first await ─────────
           // Must be synchronous so that a second onAuthStateChanged callback
           // triggered by firebaseUser.reload() (emailVerified false→true) sees
@@ -261,6 +274,26 @@ export function useAuthState(checkBillingStatus) {
                 }
 
                 const twoFAData = await twoFAResponse.json();
+
+                // ── Orphaned Firebase user detection ─────────────────────
+                // API returns this flag when the Firebase account exists but
+                // has no matching record in user_personal_info AND the account
+                // is old enough that it cannot be a registration race condition.
+                // This happens when the database is cleared while a browser
+                // still holds a valid Firebase session (e.g. testing).
+                // The correct behaviour is to sign out the orphaned session and
+                // return the user to the landing page.
+                if (twoFAData.orphanedFirebaseUser) {
+                  console.log('[AUTH-LISTENER] Orphaned Firebase user detected - signing out and returning to landing page');
+                  setIsFirstTime(true);   // ensures landing page is shown
+                  setShowTwoFactor(false);
+                  setIsAuthenticated(false);
+                  setLoading(false);
+                  // Fire-and-forget: triggers onAuthStateChanged(null) which
+                  // finalises the state reset via the else-branch below.
+                  auth.signOut().catch(() => {});
+                  return; // inner finally releases the _pendingTwoFAChecks lock
+                }
 
                 if (twoFAData.requires2FA) {
                   setTempToken(twoFAData.tempToken);

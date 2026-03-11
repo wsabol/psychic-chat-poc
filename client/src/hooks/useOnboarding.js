@@ -23,7 +23,7 @@ import { logErrorFromCatch } from '../shared/errorLogger.js';
  * - setIsMinimized: Toggle minimize
  * - handleStartDrag: Start dragging modal
  */
-export function useOnboarding(token, isTemporaryAccount = false) {
+export function useOnboarding(token, isTemporaryAccount = false, isAdmin = false) {
   const [onboardingStatus, setOnboardingStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -124,15 +124,33 @@ export function useOnboarding(token, isTemporaryAccount = false) {
   }, [isDragging, dragStart]);
 
   /**
-   * Fetch status on mount and when token changes
+   * Fetch status on mount and when token changes.
+   * Admins and temporary accounts skip the network fetch entirely.
    */
   useEffect(() => {
-    if (token && !isTemporaryAccount) {
+    if (isAdmin) {
+      // Admins never go through onboarding — set completed status immediately
+      // so routing effects in useAppState see isOnboarding=false right away,
+      // preventing any race-condition redirect to the billing/onboarding pages.
+      setOnboardingStatus({
+        isOnboarding: false,
+        isAdmin: true,
+        currentStep: null,
+        completedSteps: {
+          create_account: true,
+          payment_method: true,
+          subscription: true,
+          personal_info: true
+        },
+        subscriptionStatus: 'complete'
+      });
+      setLoading(false);
+    } else if (token && !isTemporaryAccount) {
       fetchOnboardingStatus();
     } else if (isTemporaryAccount) {
       setLoading(false);
     }
-  }, [token, isTemporaryAccount, fetchOnboardingStatus]);
+  }, [token, isTemporaryAccount, isAdmin, fetchOnboardingStatus]);
 
   return {
     // State
