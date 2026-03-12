@@ -39,9 +39,9 @@
 
 import express from 'express';
 import fetch from 'node-fetch';
-import pool from '../../db.js';
+import { db as pool } from '../../shared/db.js';
 import { authenticateToken } from '../../middleware/auth.js';
-import { logger } from '../../shared/logger.js';
+import logger from '../../shared/logger.js';
 
 const router = express.Router();
 
