@@ -4,10 +4,10 @@
  * Scheduled to run once per day via EventBridge (0 1 * * ? * — 1:00 AM UTC).
  *
  * Database:
- *   Targets the psychic_dhat PostgreSQL database explicitly via the
- *   DB_DATABASE_NAME=psychic_dhat environment variable set in template.yaml.
+ *   Targets the psychic_chat PostgreSQL database explicitly via the
+ *   DB_DATABASE_NAME=psychic_chat environment variable set in template.yaml.
  *   This overrides the default database name stored in the shared DB secret so
- *   that only this Lambda connects to psychic_dhat; all other Lambdas use their
+ *   that only this Lambda connects to psychic_chat; all other Lambdas use their
  *   own configured database.
  *
  * Purpose:
