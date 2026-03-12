@@ -2,6 +2,14 @@ import { db } from '../../shared/db.js';
 import { hashUserId } from '../../shared/hashUtils.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
 import { getPhoneData, savePhoneNumber } from './phoneService.js';
+import { sendCustomSMS } from '../../shared/smsService-aws.js';
+import { formatPhoneNumber } from '../../shared/authUtils.js';
+
+// TCPA-compliant opt-in confirmation message sent when a user enables SMS 2FA
+const SMS_OPT_IN_CONFIRMATION =
+  'Starship Psychics: You have opted in to receive one-time passcodes. ' +
+  'Expect 1 message per log in. Msg&data rates may apply. ' +
+  'Reply STOP to opt out or HELP for info.';
 
 /**
  * Get user's 2FA settings (from user_2fa_settings table + phone from security table)
@@ -170,6 +178,22 @@ export async function configure2FA(userId, { enabled, method, phoneNumber, backu
   // Optionally save a new phone number (will trigger an SMS verification code)
   if (phoneNumber) {
     await savePhoneNumber(userId, phoneNumber, backupPhoneNumber);
+  }
+
+  // Send TCPA-required opt-in confirmation when user enables SMS 2FA
+  if (enabled && method === 'sms') {
+    try {
+      // Use newly-provided phone, or the verified phone already on file
+      const rawPhone = phoneNumber || (await getPhoneData(userId))?.phoneNumber;
+      const targetPhone = rawPhone ? formatPhoneNumber(rawPhone) || rawPhone : null;
+
+      if (targetPhone) {
+        await sendCustomSMS(targetPhone, SMS_OPT_IN_CONFIRMATION);
+      }
+    } catch (smsErr) {
+      // Non-critical — opt-in confirmation failure must not block 2FA setup
+      logErrorFromCatch(smsErr, 'OPT_IN_CONFIRMATION', 'twoFAService.configure2FA');
+    }
   }
 
   // Return a fresh read so the caller always gets up-to-date settings + phone data

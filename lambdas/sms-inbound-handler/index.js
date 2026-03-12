@@ -34,16 +34,17 @@ const snsClient = new SNSClient({
  * TCPA requires a confirmation message after a STOP request.
  */
 const STOP_REPLY =
-  'Starship Psychics: You have been unsubscribed from SMS. No further messages will be sent. ' +
-  'To re-enable, update your MFA settings at starshippsychics.com';
+  'Starship Psychics: You have opted out of receiving text messages. ' +
+  'To opt in go to 2FA setting in the Starship Psychics app.';
 
 /**
  * HELP reply: sent in response to a HELP or INFO keyword.
  * Must identify the program, describe message frequency, and include support contact.
  */
 const HELP_REPLY =
-  'Starship Psychics SMS Help: Codes sent only for login/verification. ' +
-  '1-3 msgs/login session. Msg&data rates may apply. Reply STOP to opt-out.';
+  'Starship Psychics: Text message help: Codes sent only for login/verification. ' +
+  '1-3 msgs/login session. For further assistance contact support@starshippsychics.com ' +
+  'Msg&data rates may apply. Reply STOP to opt-out.';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
