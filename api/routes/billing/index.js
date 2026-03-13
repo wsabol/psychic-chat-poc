@@ -1,5 +1,4 @@
 import express from 'express';
-import webhooksRouter from './webhooks.js';
 import setupIntentsRouter from './setupIntent.js';
 import paymentMethodsRouter from './paymentMethods.js';
 import subscriptionsRouter from './subscriptions.js';
@@ -11,8 +10,8 @@ import appleIapRouter from './appleIap.js';
 
 const router = express.Router();
 
-// Mount webhooks FIRST (before authentication middleware)
-router.use(webhooksRouter);
+// NOTE: Stripe webhook (/billing/stripe-webhook) is registered directly in index.js
+// BEFORE express.json() and authenticateToken, so it is NOT mounted here.
 
 // Mount all other modular routers
 router.use(setupIntentsRouter);

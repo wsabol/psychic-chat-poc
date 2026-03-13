@@ -140,7 +140,9 @@ app.use(cors({
 
 // IMPORTANT: Parse webhooks as raw body BEFORE express.json()
 // Stripe requires raw body for signature verification
+// Mount under BOTH /webhooks and /billing so Stripe can hit either URL
 app.use("/webhooks", webhooksRouter);
+app.use("/billing", webhooksRouter); // Stripe is configured to POST /billing/stripe-webhook
 
 app.use(express.json());
 
