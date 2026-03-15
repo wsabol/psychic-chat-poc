@@ -60,8 +60,8 @@ Track the current lunar cycle and receive guidance on how to harness each phase 
 **♈ Daily, Weekly & Monthly Horoscopes**
 Start every day with a personalized horoscope for your zodiac sign. Dive deeper with weekly forecasts that prepare you for what the cosmos has in store.
 
-**🌌 Cosmic Weather**
-Stay informed about current planetary transits, retrogrades, and celestial events that are influencing the energies around you. Know when to act boldly and when to pause and reflect.
+**🌌 Cosmic Weather & Natal Aspect Analysis**
+Go deeper than generic planetary forecasts. Cosmic Weather analyzes how today's planetary positions form trines, squares, conjunctions, and oppositions with *your unique natal chart*. The Oracle interprets each active aspect — explaining which energies are flowing harmoniously with your birth placements and which are challenging you to grow — so every reading is as individual as your fingerprint.
 
 ---
 
@@ -122,7 +122,7 @@ Starship Psychics goes far beyond your sun sign. Enter your birth date, time, an
 
 ♈ **Daily, Weekly & Monthly Horoscopes** — Get personalized forecasts for your sign every day, week, and month so you're always prepared for what's ahead.
 
-🌌 **Cosmic Weather** — Track live planetary transits, retrograde periods, and celestial influences affecting your daily energy and decisions.
+🌌 **Cosmic Weather & Natal Aspects** — Discover how today's planetary transits form trines, squares, conjunctions, and oppositions with your personal natal chart. AI-powered aspect interpretations reveal which cosmic energies harmonize with your birth placements and which challenge you to grow — unique to you, every single day.
 
 ---
 

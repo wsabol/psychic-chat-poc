@@ -8,6 +8,7 @@ import VoiceBar from '../components/VoiceBar';
 import BirthInfoMissingPrompt from '../components/BirthInfoMissingPrompt';
 import BirthChartDisplay from '../components/BirthChartDisplay';
 import PlanetsList from '../components/PlanetsList';
+import AspectsDisplay from '../components/AspectsDisplay';
 import ToggleBriefButton from '../components/ToggleBriefButton';
 import LogoWithCopyright from '../components/LogoWithCopyright';
 import { isBirthInfoMissing } from '../utils/birthInfoErrorHandler';
@@ -173,6 +174,13 @@ export default function CosmicWeatherPage({ userId, token, auth, onNavigateToPag
               <PlanetsList planets={cosmicData.planets} />
             </div>
           </div>
+
+          {/* Natal Aspects Analysis */}
+          {cosmicData.aspects && (
+            <div className="cosmic-aspects-section">
+              <AspectsDisplay aspects={cosmicData.aspects} />
+            </div>
+          )}
 
           <div className="cosmic-disclaimer">
             <p>{t('common.disclaimer')}</p>

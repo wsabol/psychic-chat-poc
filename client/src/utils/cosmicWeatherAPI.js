@@ -29,7 +29,8 @@ export async function fetchCosmicWeather(userId, token) {
     text: data.weather || data.text || '',
     brief: data.brief || data.weather_brief || '',
     birthChart: data.birthChart,
-    planets: data.currentPlanets || []
+    planets: data.currentPlanets || [],
+    aspects: data.aspects || null
   };
 }
 
@@ -58,7 +59,8 @@ export async function generateCosmicWeather(userId, token) {
     text: data.weather || data.text || '',
     brief: data.brief || data.weather_brief || '',
     birthChart: data.birthChart,
-    planets: data.currentPlanets || []
+    planets: data.currentPlanets || [],
+    aspects: data.aspects || null
   };
 }
 

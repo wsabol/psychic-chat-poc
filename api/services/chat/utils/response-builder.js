@@ -89,6 +89,7 @@ export function mapMoonPhaseResponse(parsed, phase) {
 
 /**
  * Response mapper for cosmic weather
+ * Includes natal aspect data (transitToNatal + natal) for frontend display
  */
 export function mapCosmicWeatherResponse(parsed) {
     const contentFull = parsed.content_full;
@@ -98,7 +99,28 @@ export function mapCosmicWeatherResponse(parsed) {
         weather: extractText(contentFull) || contentFull,
         brief: extractText(contentBrief) || contentBrief,
         birthChart: contentFull?.birth_chart || null,
-        currentPlanets: contentFull?.planets || []
+        currentPlanets: contentFull?.planets || [],
+        aspects: contentFull?.aspects || null
+    };
+}
+
+/**
+ * Response mapper for Venus Love Profile
+ */
+export function mapVenusLoveResponse(parsed) {
+    const contentFull = parsed.content_full;
+    const contentBrief = parsed.content_brief;
+
+    return {
+        profile: extractText(contentFull) || contentFull,
+        brief: extractText(contentBrief) || contentBrief,
+        venusSign:   contentFull?.venus_sign   || null,
+        venusDegree: contentFull?.venus_degree || null,
+        marsSign:    contentFull?.mars_sign    || null,
+        moonSign:    contentFull?.moon_sign    || null,
+        risingSign:  contentFull?.rising_sign  || null,
+        aspects:     contentFull?.aspects      || null,
+        generated_at: contentFull?.generated_at || parsed.created_at
     };
 }
 

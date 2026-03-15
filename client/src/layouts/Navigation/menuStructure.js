@@ -21,6 +21,7 @@ export const menuStructure = [
       { id: 'horoscope', labelKey: 'menu.astrology.horoscope', icon: '🔮', pageId: 'horoscope' },
       { id: 'moonPhase', labelKey: 'menu.astrology.moonPhase', icon: '🌙', pageId: 'moon' },
       { id: 'cosmicWeather', labelKey: 'menu.astrology.cosmicWeather', icon: '🌌', pageId: 'cosmic' },
+      { id: 'venusLove', labelKey: 'menu.astrology.venusLove', icon: '💕', pageId: 'venus' },
     ],
   },
   {

@@ -1,0 +1,193 @@
+/* ═══════════════════════════════════════════════
+   VenusLovePage.css
+   ══════════════════════════════════════════════ */
+
+.vlp-page {
+  padding-bottom: 2rem;
+}
+
+/* ── Header ─────────────────────────────────────────── */
+.vlp-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.vlp-header-text {
+  flex: 1;
+}
+
+.vlp-subtitle {
+  font-size: 0.85rem;
+  color: #ce93d8;
+  margin: 0.2rem 0 0 0;
+  line-height: 1.4;
+}
+
+/* ── Content wrapper ─────────────────────────────────── */
+.vlp-content {
+  padding: 1rem 1.25rem;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.vlp-content.loading,
+.vlp-content.error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  min-height: 180px;
+  text-align: center;
+}
+
+/* ── Loading spinner ─────────────────────────────────── */
+.vlp-spinner {
+  font-size: 2.5rem;
+  animation: vlp-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes vlp-pulse {
+  0%, 100% { transform: scale(1);   opacity: 1; }
+  50%       { transform: scale(1.2); opacity: 0.6; }
+}
+
+/* ── Sign chips row ──────────────────────────────────── */
+.vlp-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.vlp-sign-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: rgba(186, 104, 200, 0.12);
+  border: 1px solid rgba(186, 104, 200, 0.35);
+  font-size: 12px;
+  color: #e1bee7;
+  white-space: nowrap;
+}
+
+.vlp-chip-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.vlp-chip-label {
+  font-weight: 600;
+  color: #ce93d8;
+}
+
+.vlp-chip-sign {
+  color: #f3e5f5;
+}
+
+/* ── Oracle text ─────────────────────────────────────── */
+.vlp-text {
+  margin-bottom: 1.5rem;
+}
+
+.vlp-text .markdown-pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: #f3f4f6;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0 0 1rem 0;
+}
+
+/* ── Action buttons ──────────────────────────────────── */
+.vlp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.vlp-toggle-btn,
+.vlp-refresh-btn {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+.vlp-toggle-btn {
+  background: rgba(206, 147, 216, 0.15);
+  border: 1px solid rgba(206, 147, 216, 0.4);
+  color: #e1bee7;
+}
+
+.vlp-refresh-btn {
+  background: rgba(255, 152, 0, 0.12);
+  border: 1px solid rgba(255, 152, 0, 0.35);
+  color: #ffe0b2;
+}
+
+.vlp-toggle-btn:hover,
+.vlp-refresh-btn:hover {
+  opacity: 0.85;
+  transform: translateY(-1px);
+}
+
+.vlp-refresh-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Aspects section ─────────────────────────────────── */
+.vlp-aspects-section {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ── Disclaimer ──────────────────────────────────────── */
+.vlp-disclaimer {
+  margin-top: 1.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 11px;
+  color: #9ca3af;
+  font-style: italic;
+  text-align: center;
+}
+
+/* ── Responsive ──────────────────────────────────────── */
+@media (max-width: 480px) {
+  .vlp-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+
+  .vlp-chips-row {
+    justify-content: center;
+  }
+
+  .vlp-actions {
+    flex-direction: column;
+  }
+
+  .vlp-toggle-btn,
+  .vlp-refresh-btn {
+    width: 100%;
+    text-align: center;
+  }
+}

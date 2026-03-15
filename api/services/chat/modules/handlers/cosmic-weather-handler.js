@@ -4,6 +4,7 @@ import { getUserTimezone, getLocalDateForTimezone, getLocalTimestampForTimezone,
 import { db } from '../../../../shared/db.js';
 import { hashUserId } from '../../../../shared/hashUtils.js';
 import { getAstronomicalContext, formatPlanetsForPrompt } from '../utils/astronomicalContext.js';
+import { calculateTransitToNatalAspects, calculateNatalAspects, formatAspectsForPrompt } from '../utils/aspectCalculator.js';
 import { logErrorFromCatch } from '../../../../shared/errorLogger.js';
 
 
@@ -59,13 +60,19 @@ export async function generateCosmicWeather(userId) {
         
         // Build detailed planet information with calculated positions and degrees
         const planetsDetailed = formatPlanetsForPrompt(planets);
+
+        // ── Aspect Calculations ──────────────────────────────────────────────
+        // Calculate how today's sky aspects the user's natal chart + natal-to-natal aspects
+        const transitToNatalAspects = calculateTransitToNatalAspects(astro, planets);
+        const natalAspects = calculateNatalAspects(astro);
+        const aspectsPromptSection = formatAspectsForPrompt(transitToNatalAspects, natalAspects);
         
         // Get oracle system prompt with ORACLE LANGUAGE SUPPORT
         // Oracle response uses oracleLanguage (can be regional variant), page UI uses userLanguage
         const systemPrompt = getOracleSystemPrompt(false, oracleLanguage) + `
 
-SPECIAL REQUEST - COSMIC WEATHER:
-Generate today's cosmic weather for ${userGreeting} using their complete birth chart and current planetary alignments.
+SPECIAL REQUEST - COSMIC WEATHER WITH NATAL ASPECT ANALYSIS:
+Generate today's cosmic weather for ${userGreeting} using their complete birth chart, current planetary alignments, and the calculated aspects below.
 Do NOT keep it brief - provide meaningful depth (3-4 paragraphs minimum).
 Reference their Sun sign (identity), Moon sign (emotions), and Rising sign (presentation).
 Incorporate how today's planetary movements interact with their natal chart.
@@ -74,6 +81,16 @@ Provide practical guidance for working with today's cosmic energies.
 Include crystal or ritual recommendations aligned with their chart and today's planetary weather.
 Focus on TODAY's cosmic energies with specific, personal insight.
 Do NOT include tarot cards - this is pure astrological forecasting enriched by their unique birth chart.
+
+NATAL ASPECT INTERPRETATION — CRITICAL REQUIREMENTS:
+You MUST specifically interpret the calculated aspects provided below. For each active transit aspect:
+- Name the planets involved and the exact aspect type (trine, square, conjunction, opposition, sextile, quincunx)
+- Explain what this aspect activates in their life TODAY (relationships, career, creativity, communication, drive, emotions)
+- Distinguish clearly between harmonious aspects (trine, sextile) which bring ease and opportunity, and challenging aspects (square, opposition) which create growth through tension
+- For conjunctions, explain the powerful merging of those planetary energies in their chart
+- Reference natal aspects to explain why certain transits resonate especially deeply for this person
+- Use natural astrological language: "With transiting Jupiter trining your natal Sun...", "As Saturn forms a square to your natal Moon...", "The conjunction between transit Venus and your natal Rising..."
+- Make each aspect interpretation personal and specific — not generic textbook meanings
 
 CRITICAL OUTPUT FORMAT OVERRIDE FOR COSMIC WEATHER:
 For cosmic weather responses ONLY, ignore the HTML formatting rules.
@@ -85,7 +102,7 @@ Write naturally and conversationally as plain text.
 Begin directly with your cosmic weather insight and flow naturally through your guidance.
 `;
         
-        const prompt = buildCosmicWeatherPrompt(userInfo, astrologyInfo, astronomicalContext, planetsDetailed, userGreeting);
+        const prompt = buildCosmicWeatherPrompt(userInfo, astrologyInfo, astronomicalContext, planetsDetailed, aspectsPromptSection, userGreeting);
         
                 // Call Oracle - response is already in user's preferred language
         const oracleResponses = await callOracle(systemPrompt, [], prompt, true);
@@ -110,6 +127,10 @@ Begin directly with your cosmic weather insight and flow naturally through your 
                 mercury_degree: astro.mercury_degree
             },
             planets: planets,
+            aspects: {
+                transitToNatal: transitToNatalAspects,
+                natal: natalAspects
+            },
             generated_at: generatedAt
         };
         
@@ -144,13 +165,18 @@ Begin directly with your cosmic weather insight and flow naturally through your 
 }
 
 /**
- * Build comprehensive cosmic weather prompt - let oracle interpret calculated positions
- * Updated to use unified astronomical context
+ * Build comprehensive cosmic weather prompt - includes natal aspect analysis
+ * @param {Object} userInfo
+ * @param {Object} astrologyInfo
+ * @param {Object} astronomicalContext
+ * @param {string} planetsDetailed    - formatted planet positions string
+ * @param {string} aspectsPromptSection - calculated aspects from aspectCalculator
+ * @param {string} userGreeting
  */
-function buildCosmicWeatherPrompt(userInfo, astrologyInfo, astronomicalContext, planetsDetailed, userGreeting) {
+function buildCosmicWeatherPrompt(userInfo, astrologyInfo, astronomicalContext, planetsDetailed, aspectsPromptSection, userGreeting) {
     const astro = astrologyInfo.astrology_data;
     
-    let prompt = `Generate today's comprehensive cosmic weather for ${userGreeting}:\n\n`;
+    let prompt = `Generate today's comprehensive cosmic weather with natal aspect analysis for ${userGreeting}:\n\n`;
     
     prompt += `COMPLETE BIRTH CHART:\n`;
     prompt += `- Sun Sign: ${astro.sun_sign} (${astro.sun_degree}°) - Core Identity, Life Purpose, Vital Force\n`;
@@ -161,28 +187,36 @@ function buildCosmicWeatherPrompt(userInfo, astrologyInfo, astronomicalContext, 
     if (astro.mercury_sign) prompt += `- Mercury Sign: ${astro.mercury_sign} (${astro.mercury_degree}°) - Communication, Thinking Style, Mental Processing\n`;
     prompt += `- Birth Location: ${userInfo.birth_city}, ${userInfo.birth_province}, ${userInfo.birth_country}\n\n`;
     
-    prompt += `TODAY'S CALCULATED ASTRONOMICAL POSITIONS (use your astrological knowledge to interpret):\n`;
+    prompt += `TODAY'S CALCULATED ASTRONOMICAL POSITIONS:\n`;
     prompt += `Moon Phase: ${astronomicalContext.currentMoonPhase}\n`;
     if (astronomicalContext.moonPosition) {
         prompt += `Current Moon: ${astronomicalContext.moonPosition.degree}° ${astronomicalContext.moonPosition.sign}\n`;
     }
     prompt += `\nPlanetary Positions:\n`;
     prompt += planetsDetailed + '\n\n';
+
+    // ── Inject calculated aspects ─────────────────────────────────────────────
+    if (aspectsPromptSection) {
+        prompt += aspectsPromptSection + '\n';
+    }
     
-    prompt += `ORACLE INSTRUCTIONS:\n`;
-    prompt += `You are a mystical oracle interpreting the unique cosmic weather created by today's specific planetary positions and degrees.\n`;
-    prompt += `Each day is completely unique based on where the planets are positioned - use your deep astrological knowledge to interpret what THESE specific positions mean.\n`;
-    prompt += `- Show how each planet's current position (degree in sign) interacts with their natal Sun, Moon, and Rising signs\n`;
-    prompt += `- Identify which life areas (relationships, career, health, creativity, spirituality) are most activated by today's specific transits\n`;
-    prompt += `- Explain retrograde influences if applicable and what they uniquely mean for this person's chart\n`;
-    prompt += `- Provide 3-4 paragraphs of rich, personalized insight that could NOT be the same as any other day (due to different planetary positions)\n`;
-    prompt += `- Address them directly by name and make this deeply personal and unique to TODAY's cosmic moment\n`;
-    prompt += `- Include practical guidance for working harmoniously with today's energies\n`;
+    prompt += `ORACLE INTERPRETATION INSTRUCTIONS:\n`;
+    prompt += `You are a mystical oracle weaving together today's specific planetary positions AND their calculated aspects to this person's natal chart.\n`;
+    prompt += `Each day is completely unique — use the aspects above as your primary interpretive framework:\n`;
+    prompt += `- Lead with the most significant transit-to-natal aspects (tightest orb = strongest effect)\n`;
+    prompt += `- For each active aspect, explain: which planet energies are interacting, what type of aspect it is, and what this activates in their life TODAY\n`;
+    prompt += `- Trines and sextiles: describe the ease, flow, and opportunity available\n`;
+    prompt += `- Squares and oppositions: describe the tension, challenge, and growth potential — frame constructively\n`;
+    prompt += `- Conjunctions: describe the powerful merging of those two planetary energies in their chart\n`;
+    prompt += `- Reference natal aspects to explain why certain transits resonate more deeply for them personally\n`;
+    prompt += `- Identify which life areas (relationships, career, health, creativity, spirituality) are most activated today\n`;
+    prompt += `- Explain retrograde influences if applicable\n`;
+    prompt += `- Provide 3-4 paragraphs of rich, personalized insight unique to TODAY's cosmic moment\n`;
+    prompt += `- Address them directly by name and make this deeply personal\n`;
+    prompt += `- Include practical guidance for working with today's energies\n`;
     prompt += `- Suggest crystals or practices that align with their chart and today's specific planetary weather\n`;
-    prompt += `- Be poetic, mystical, and reveal your deep astrological knowledge through interpretation, not through pre-written meanings\n`;
-    prompt += `- Show how today's transits either support or challenge their natal chart strengths\n`;
-    prompt += `- Make specific references to their unique astrological signature and what today's planets mean for THEM specifically\n`;
-    prompt += `- Remember: each day's reading must be unique to the specific planetary degrees and positions for that day`;
+    prompt += `- Be poetic, mystical, and reveal deep astrological knowledge through interpretation\n`;
+    prompt += `- Each day's reading must feel completely different because the aspects and positions change daily`;
     
     return prompt;
 }

@@ -10,6 +10,7 @@ import { generateMoonPhaseCommentary } from './modules/handlers/moon-phase-handl
 import { generateCosmicWeather } from './modules/handlers/cosmic-weather-handler.js';
 import { generateLunarNodesInsight } from './modules/handlers/lunar-nodes-handler.js';
 import { generateVoidOfCourseMoonAlert } from './modules/handlers/void-of-course-handler.js';
+import { generateVenusLoveProfile } from './modules/handlers/venus-love-handler.js';
 import { storeMessage } from './modules/messages.js';
 import { logErrorFromCatch } from '../../shared/errorLogger.js';
 
@@ -22,7 +23,8 @@ import {
     mapMoonPhaseResponse,
     mapCosmicWeatherResponse,
     mapLunarNodesResponse,
-    mapVoidOfCourseResponse
+    mapVoidOfCourseResponse,
+    mapVenusLoveResponse
 } from './utils/response-builder.js';
 
 /**
@@ -156,6 +158,24 @@ export async function processVoidOfCourseSync(userId) {
         responseMapper: mapVoidOfCourseResponse,
         errorContext: 'VOID-OF-COURSE-PROCESSOR',
         notFoundError: 'Void of course alert generation failed - no data found'
+    });
+}
+
+/**
+ * Process Venus Love Profile synchronously
+ * @param {string} userId - User ID
+ * @returns {Promise<Object>} Generated Venus Love Profile
+ */
+export async function processVenusLoveProfileSync(userId) {
+    return processGeneric({
+        userId,
+        generator: generateVenusLoveProfile,
+        generatorArgs: [],
+        role: 'venus_love_profile',
+        filters: {},
+        responseMapper: mapVenusLoveResponse,
+        errorContext: 'VENUS-LOVE-PROCESSOR',
+        notFoundError: 'Venus Love Profile generation failed - no data found'
     });
 }
 

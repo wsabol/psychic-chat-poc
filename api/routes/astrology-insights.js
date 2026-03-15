@@ -83,7 +83,8 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
                     weather: result.weather,
                     brief: result.brief,
                     birthChart: result.birthChart,
-                    currentPlanets: result.currentPlanets
+                    currentPlanets: result.currentPlanets,
+                    aspects: result.aspects || null
                 });
             } catch (genErr) {
                 // If generation fails, return error
@@ -120,7 +121,8 @@ router.get("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (r
             weather: todaysWeather.text,
             brief: briefWeather?.text || null,
             birthChart: formattedBirthChart,
-            currentPlanets: formattedPlanets
+            currentPlanets: formattedPlanets,
+            aspects: todaysWeather.aspects || null
         });
     } catch (err) {
         return serverError(res, 'Failed to fetch cosmic weather');
@@ -203,7 +205,8 @@ router.post("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (
                     weather: todaysWeather.text,
                     brief: briefWeather?.text || null,
                     birthChart: formattedBirthChart,
-                    currentPlanets: formattedPlanets
+                    currentPlanets: formattedPlanets,
+                    aspects: todaysWeather.aspects || null
                 });
             }
         }
@@ -217,7 +220,8 @@ router.post("/cosmic-weather/:userId", authenticateToken, authorizeUser, async (
             weather: result.weather,
             brief: result.brief,
             birthChart: result.birthChart,
-            currentPlanets: result.currentPlanets
+            currentPlanets: result.currentPlanets,
+            aspects: result.aspects || null
         });
     } catch (err) {
         console.error('[COSMIC-WEATHER-ROUTE] Error generating cosmic weather:', err);
@@ -405,6 +409,91 @@ router.post("/moon-phase/:userId", authenticateToken, authorizeUser, async (req,
         });
     } catch (err) {
         return serverError(res, 'Failed to generate moon phase commentary');
+    }
+});
+
+// ── Venus Love Profile ───────────────────────────────────────────────────────
+
+// GET — fetch existing profile
+router.get("/venus-love-profile/:userId", authenticateToken, authorizeUser, async (req, res) => {
+    const { userId } = req.params;
+    const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+    const userIdHash = hashUserId(userId);
+
+    try {
+        const { rows } = await db.query(
+            `SELECT
+                pgp_sym_decrypt(content_full_encrypted, $2)::text as content_full,
+                pgp_sym_decrypt(content_brief_encrypted, $2)::text as content_brief,
+                created_at_local_date
+             FROM messages
+             WHERE user_id_hash = $1 AND role = 'venus_love_profile'
+             ORDER BY created_at DESC LIMIT 1`,
+            [userIdHash, ENCRYPTION_KEY]
+        );
+
+        if (rows.length === 0) {
+            // Nothing cached — generate synchronously
+            const { processVenusLoveProfileSync } = await import('../services/chat/processor.js');
+            try {
+                const result = await processVenusLoveProfileSync(userId);
+                return successResponse(res, {
+                    profile:     result.profile,
+                    brief:       result.brief,
+                    venusSign:   result.venusSign,
+                    venusDegree: result.venusDegree,
+                    marsSign:    result.marsSign,
+                    moonSign:    result.moonSign,
+                    risingSign:  result.risingSign,
+                    aspects:     result.aspects || null,
+                    generated_at: result.generated_at
+                });
+            } catch (genErr) {
+                return serverError(res, 'Failed to generate Venus Love Profile');
+            }
+        }
+
+        const fullContent  = rows[0].content_full;
+        const briefContent = rows[0].content_brief;
+        const data  = typeof fullContent  === 'string' ? JSON.parse(fullContent)  : fullContent;
+        const brief = briefContent        ? (typeof briefContent === 'string' ? JSON.parse(briefContent) : briefContent) : null;
+
+        successResponse(res, {
+            profile:     data.text,
+            brief:       brief?.text || null,
+            venusSign:   data.venus_sign   || null,
+            venusDegree: data.venus_degree || null,
+            marsSign:    data.mars_sign    || null,
+            moonSign:    data.moon_sign    || null,
+            risingSign:  data.rising_sign  || null,
+            aspects:     data.aspects      || null,
+            generated_at: data.generated_at
+        });
+    } catch (err) {
+        return serverError(res, 'Failed to fetch Venus Love Profile');
+    }
+});
+
+// POST — trigger / refresh generation
+router.post("/venus-love-profile/:userId", authenticateToken, authorizeUser, async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const { processVenusLoveProfileSync } = await import('../services/chat/processor.js');
+        const result = await processVenusLoveProfileSync(userId);
+        successResponse(res, {
+            profile:     result.profile,
+            brief:       result.brief,
+            venusSign:   result.venusSign,
+            venusDegree: result.venusDegree,
+            marsSign:    result.marsSign,
+            moonSign:    result.moonSign,
+            risingSign:  result.risingSign,
+            aspects:     result.aspects || null,
+            generated_at: result.generated_at
+        });
+    } catch (err) {
+        console.error('[VENUS-LOVE-ROUTE] Error:', err);
+        return serverError(res, `Failed to generate Venus Love Profile: ${err.message}`);
     }
 });
 

@@ -14,6 +14,7 @@ import MySignPage from '../pages/MySignPage';
 import MoonPhasePage from '../pages/MoonPhasePage';
 import HoroscopePage from '../pages/HoroscopePage';
 import CosmicWeatherPage from '../pages/CosmicWeatherPage';
+import VenusLovePage from '../pages/VenusLovePage';
 import SecurityPage from '../pages/SecurityPage';
 import SettingsPage from '../pages/SettingsPage';
 import BillingPage from '../pages/BillingPage';
@@ -32,6 +33,7 @@ const PAGES = [
   { id: 'moon', label: 'Moon Phase', component: MoonPhasePage },
   { id: 'horoscope', label: 'Horoscope', component: HoroscopePage },
   { id: 'cosmic', label: 'Cosmic Weather', component: CosmicWeatherPage },
+  { id: 'venus', label: 'Venus Love Profile', component: VenusLovePage },
   { id: 'security', label: 'Security', component: SecurityPage },
   { id: 'settings', label: 'Settings', component: SettingsPage },
   { id: 'billing', label: 'Billing & Subscriptions', component: BillingPage },
@@ -39,7 +41,8 @@ const PAGES = [
 ];
 
 // Billing page index (constant to avoid magic numbers)
-const BILLING_PAGE_INDEX = 9;
+// NOTE: update this whenever PAGES order changes
+const BILLING_PAGE_INDEX = 10;
 
 export default function MainContainer({ auth, token, userId, onLogout, onCreateAccount, onExit, startingPage = 0, billingTab = 'payment-methods', onNavigateFromBilling, onboarding, freeTrialState, subscriptionRequiredMode = false }) {
   const [currentPageIndex, setCurrentPageIndex] = useState(startingPage);
@@ -140,8 +143,8 @@ export default function MainContainer({ auth, token, userId, onLogout, onCreateA
 
   // Handle navigation away from billing page - separate effect to avoid setState in render
   useEffect(() => {
-    // If leaving billing page (9) and going to another page, notify App to re-check subscription
-    if (currentPageIndex !== 9 && onNavigateFromBilling) {
+    // If leaving billing page and going to another page, notify App to re-check subscription
+    if (currentPageIndex !== BILLING_PAGE_INDEX && onNavigateFromBilling) {
       const prevPageWasBilling = window.history.state?.prevPageWasBilling;
       if (prevPageWasBilling) {
         onNavigateFromBilling();
@@ -153,7 +156,7 @@ export default function MainContainer({ auth, token, userId, onLogout, onCreateA
       }
     }
     // Mark if we're currently on billing page
-    if (currentPageIndex === 9) {
+    if (currentPageIndex === BILLING_PAGE_INDEX) {
       window.history.replaceState({ 
         ...window.history.state, 
         prevPageWasBilling: true 
