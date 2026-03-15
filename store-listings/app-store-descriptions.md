@@ -37,9 +37,15 @@ Unlock the mysteries of the universe with Starship Psychics — the AI-powered s
 
 ---
 
+**💫 TRUSTED BY SPIRITUAL PRACTITIONERS**
+*"I think this is a really good idea, a door opener to metaphysical realities. I like what you have done bringing the planetary system into the readings. This will accomplish your goal to help people."*
+— Dr. Samantha Vanderslice, BFRP, DMsc, CCP — Doctor of Metaphysical Sciences, Reiki Master, 40+ years in spiritual wellness.
+
+---
+
 **✨ WHAT MAKES STARSHIP PSYCHICS DIFFERENT?**
 
-Unlike generic horoscope apps, Starship Psychics delivers a truly personalized experience. Using your exact birth date, time, and location, our oracle calculates your unique sun sign, moon sign, and rising sign to provide readings that are genuinely tailored to *you* — not just your sun sign.
+Unlike generic horoscope apps, Starship Psychics delivers a truly personalized experience. Using your exact birth date, time, and location, our oracle calculates your unique sun sign, moon sign, and rising sign to provide readings genuinely tailored to *you* — not just your sun sign.
 
 ---
 
@@ -49,10 +55,13 @@ Unlike generic horoscope apps, Starship Psychics delivers a truly personalized e
 Have a real conversation with our AI-powered oracle. Ask any question about your relationships, career, health, or spiritual journey and receive thoughtful, intuitive guidance rooted in ancient traditions.
 
 **🃏 Tarot Readings**
-Receive intuitive tarot spreads interpreted through the lens of your current life situation. Each card is explained with depth and nuance to help you uncover hidden truths and hidden opportunities.
+Receive intuitive tarot spreads interpreted through the lens of your current life situation. Each card is explained with depth and nuance to help you uncover hidden truths and opportunities.
 
 **⭐ Birth Chart Analysis**
-Discover your full natal chart — your sun, moon, and rising signs plus detailed planetary placements. Understand the cosmic blueprint you were born with and how it shapes your personality, strengths, and destiny.
+Discover your full natal chart — sun, moon, and rising signs plus detailed planetary placements. Understand the cosmic blueprint you were born with and how it shapes your personality, strengths, and destiny.
+
+**💕 Venus Love Profile**
+Uncover the secrets of your heart. Based on Venus's placement in your natal chart, discover your unique love language, attraction style, and relationship patterns — plus see how current Venus transits are activating your romantic energy right now.
 
 **🌙 Moon Phase Tracker**
 Track the current lunar cycle and receive guidance on how to harness each phase — from setting intentions at the New Moon to releasing and celebrating at the Full Moon.
@@ -60,8 +69,8 @@ Track the current lunar cycle and receive guidance on how to harness each phase 
 **♈ Daily, Weekly & Monthly Horoscopes**
 Start every day with a personalized horoscope for your zodiac sign. Dive deeper with weekly forecasts that prepare you for what the cosmos has in store.
 
-**🌌 Cosmic Weather & Natal Aspect Analysis**
-Go deeper than generic planetary forecasts. Cosmic Weather analyzes how today's planetary positions form trines, squares, conjunctions, and oppositions with *your unique natal chart*. The Oracle interprets each active aspect — explaining which energies are flowing harmoniously with your birth placements and which are challenging you to grow — so every reading is as individual as your fingerprint.
+**🌌 Cosmic Weather**
+See exactly which planetary transits, retrogrades, and celestial events are active right now and influencing the energy around you. Cosmic Weather shows your live transit list and interprets how each active transit interacts with your natal chart — so you know when to act boldly and when to pause and reflect.
 
 ---
 
@@ -71,18 +80,12 @@ Curious but not ready to commit? Try a free oracle reading instantly, no account
 ---
 
 **🌍 AVAILABLE IN 6 LANGUAGES**
-Starship Psychics speaks your language — available in English, Spanish, French, German, Italian and Protuguese.
+Starship Psychics speaks your language — available in English, Spanish, French, German, Italian and Portuguese.
 
 ---
 
 **🔐 YOUR PRIVACY IS SACRED**
 Your personal data and conversations are encrypted and kept private. We will never sell or share your information. Optional two-factor authentication and trusted device management give you full control over your account security.
-
----
-
-**💫 TRUSTED BY SPIRITUAL PRACTITIONERS**
-*"I think this is a really good idea, a door opener to metaphysical realities. I like what you have done bringing the planetary system into the readings. This will accomplish your goal to help people."*
-— Dr. Samantha Vanderslice, BFRP, DMsc, CCP — Doctor of Metaphysical Sciences, Reiki Master, over 40 years of experience in spiritual wellness.
 
 ---
 
@@ -138,12 +141,6 @@ English · Spanish · French · German · Italian · Portuguese
 
 **🔐 SECURITY & PRIVACY**
 Your spiritual journey is personal. All conversations and data are encrypted. Protect your account with optional two-factor authentication (SMS or email) and manage trusted devices with ease.
-
----
-
-**⭐⭐⭐⭐⭐ EXPERT ENDORSED**
-*"A door opener to metaphysical realities… This will accomplish your goal to help people."*
-— Dr. Samantha Vanderslice, Doctor of Metaphysical Sciences, 40+ years in spiritual wellness
 
 ---
 
