@@ -1,60 +1,36 @@
 /**
- * Card Extraction - Match only cards in "The Cards Drawn" section
- * 
- * CRITICAL: Extract cards ONLY from the dedicated "The Cards Drawn" section.
- * Stop extracting when we reach the next section header (Card Reading Summary, Deeper Interpretation, etc).
- * This prevents picking up card names mentioned in later interpretation sections.
- * 
+ * Card Extraction - Match only cards in the first section of the oracle response.
+ *
+ * CRITICAL: Extract cards ONLY from the dedicated cards section (the first <h3> block).
+ * The oracle's first section is always "The Cards Drawn" (or its translated equivalent).
+ * We detect the section boundary purely by HTML structure (<h3> tags) so this works
+ * regardless of the response language.
+ *
  * Uses word boundaries and strict matching to avoid false positives.
  */
 
 export function extractCardsFromResponse(responseText, deck) {
     let searchText = responseText;
-    
-    // Find "The Cards Drawn" section specifically
-    const cardsDrawnStart = responseText.toLowerCase().indexOf('<h3>the cards drawn</h3>');
-    
-    if (cardsDrawnStart !== -1) {
-        // Found the cards section - now find where it ends
-        const searchFromIndex = cardsDrawnStart + 24; // skip past the opening tag
-        
-        // Look for the next section header (this marks the end of cards section)
-        const nextSectionPatterns = [
-            '<h3>card reading summary</h3>',
-            '<h3>deeper interpretation</h3>',
-            '<h3>astrological alignment</h3>',
-            '<h3>crystal guidance</h3>',
-            '<h3>path forward</h3>',
-            '<h3>aromatherapy',
-        ];
-        
-        let sectionEnd = responseText.length; // default to end of text
-        
-        for (const pattern of nextSectionPatterns) {
-            const idx = responseText.toLowerCase().indexOf(pattern, searchFromIndex);
-            if (idx !== -1 && idx < sectionEnd) {
-                sectionEnd = idx;
-            }
-        }
-        
-        // Extract ONLY the "The Cards Drawn" section
+    const lowerText = responseText.toLowerCase();
+
+    // The oracle response always starts with the cards-drawn section as the first <h3>.
+    // Find where the first heading ends, then extract up to the start of the second <h3>.
+    // This is fully language-agnostic — no English heading text is required.
+    const firstH3Start = lowerText.indexOf('<h3>');
+
+    if (firstH3Start !== -1) {
+        // Advance past the closing </h3> of the first heading
+        const firstH3End = lowerText.indexOf('</h3>', firstH3Start);
+        const searchFromIndex = firstH3End !== -1 ? firstH3End + 5 : firstH3Start + 4;
+
+        // The next <h3> marks the end of the cards section
+        const nextH3Index = lowerText.indexOf('<h3>', searchFromIndex);
+        const sectionEnd = nextH3Index !== -1 ? nextH3Index : responseText.length;
+
+        // Extract ONLY the first section (cards drawn)
         searchText = responseText.substring(searchFromIndex, sectionEnd);
-    } else {
-        // Fallback: no dedicated cards section header found
-        // Use conservative approach - cut at first major section header
-        const endMarkers = [
-            '<h3>',
-        ];
-        
-        let firstHeaderIndex = responseText.toLowerCase().indexOf('<h3>');
-        if (firstHeaderIndex !== -1) {
-            // Find the second h3 tag (skip the first one if it's the cards section)
-            let secondHeaderIndex = responseText.toLowerCase().indexOf('<h3>', firstHeaderIndex + 4);
-            if (secondHeaderIndex !== -1) {
-                searchText = responseText.substring(firstHeaderIndex, secondHeaderIndex);
-            }
-        }
     }
+    // If no <h3> tags are found, fall through and search the full response text as a last resort.
     
     const allMatches = [];
     

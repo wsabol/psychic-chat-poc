@@ -3,6 +3,120 @@
  * Generates complete system prompts with account type and language support
  */
 
+/**
+ * Translated section heading labels for each supported language.
+ * These are injected directly into the system prompt so the oracle uses
+ * the correct language for its structural headings rather than defaulting
+ * to the English examples it was trained on.
+ *
+ * When adding a new language, add an entry here AND in LANGUAGE_MAP below.
+ */
+const SECTION_HEADINGS_BY_LANGUAGE = {
+  'en-US': {
+    cardsDrawn: 'The Cards Drawn',
+    cardReadingSummary: 'Card Reading Summary',
+    deeperInterpretation: 'Deeper Interpretation',
+    astrologicalAlignment: 'Astrological Alignment',
+    crystalGuidance: 'Crystal Guidance',
+    pathForward: 'Path Forward',
+  },
+  'en-GB': {
+    cardsDrawn: 'The Cards Drawn',
+    cardReadingSummary: 'Card Reading Summary',
+    deeperInterpretation: 'Deeper Interpretation',
+    astrologicalAlignment: 'Astrological Alignment',
+    crystalGuidance: 'Crystal Guidance',
+    pathForward: 'Path Forward',
+  },
+  'es-ES': {
+    cardsDrawn: 'Las Cartas Extraídas',
+    cardReadingSummary: 'Resumen de la Lectura',
+    deeperInterpretation: 'Interpretación Profunda',
+    astrologicalAlignment: 'Alineación Astrológica',
+    crystalGuidance: 'Guía de Cristales',
+    pathForward: 'Camino a Seguir',
+  },
+  'es-419': {
+    cardsDrawn: 'Las Cartas Extraídas',
+    cardReadingSummary: 'Resumen de la Lectura',
+    deeperInterpretation: 'Interpretación Profunda',
+    astrologicalAlignment: 'Alineación Astrológica',
+    crystalGuidance: 'Guía de Cristales',
+    pathForward: 'Camino a Seguir',
+  },
+  'es-US': {
+    cardsDrawn: 'Las Cartas Extraídas',
+    cardReadingSummary: 'Resumen de la Lectura',
+    deeperInterpretation: 'Interpretación Profunda',
+    astrologicalAlignment: 'Alineación Astrológica',
+    crystalGuidance: 'Guía de Cristales',
+    pathForward: 'Camino a Seguir',
+  },
+  'fr-FR': {
+    cardsDrawn: 'Les Cartes Tirées',
+    cardReadingSummary: 'Résumé de la Lecture',
+    deeperInterpretation: 'Interprétation Approfondie',
+    astrologicalAlignment: 'Alignement Astrologique',
+    crystalGuidance: 'Guidance des Cristaux',
+    pathForward: 'Voie à Suivre',
+  },
+  'fr-CA': {
+    cardsDrawn: 'Les Cartes Tirées',
+    cardReadingSummary: 'Résumé de la Lecture',
+    deeperInterpretation: 'Interprétation Approfondie',
+    astrologicalAlignment: 'Alignement Astrologique',
+    crystalGuidance: 'Guidance des Cristaux',
+    pathForward: 'Voie à Suivre',
+  },
+  'de-DE': {
+    cardsDrawn: 'Die Gezogenen Karten',
+    cardReadingSummary: 'Zusammenfassung der Legung',
+    deeperInterpretation: 'Tiefere Deutung',
+    astrologicalAlignment: 'Astrologische Ausrichtung',
+    crystalGuidance: 'Kristallführung',
+    pathForward: 'Der Weg nach Vorne',
+  },
+  'it-IT': {
+    cardsDrawn: 'Le Carte Estratte',
+    cardReadingSummary: 'Riepilogo della Lettura',
+    deeperInterpretation: 'Interpretazione Approfondita',
+    astrologicalAlignment: 'Allineamento Astrologico',
+    crystalGuidance: 'Guida dei Cristalli',
+    pathForward: 'Il Cammino da Percorrere',
+  },
+  'pt-BR': {
+    cardsDrawn: 'As Cartas Tiradas',
+    cardReadingSummary: 'Resumo da Leitura',
+    deeperInterpretation: 'Interpretação Mais Profunda',
+    astrologicalAlignment: 'Alinhamento Astrológico',
+    crystalGuidance: 'Orientação dos Cristais',
+    pathForward: 'Caminho a Seguir',
+  },
+  'ja-JP': {
+    cardsDrawn: '引いたカード',
+    cardReadingSummary: 'カードリーディングの概要',
+    deeperInterpretation: 'より深い解釈',
+    astrologicalAlignment: '占星術的な整合',
+    crystalGuidance: 'クリスタルのガイダンス',
+    pathForward: '前進への道',
+  },
+  'zh-CN': {
+    cardsDrawn: '抽到的牌',
+    cardReadingSummary: '牌阵解读摘要',
+    deeperInterpretation: '深层解读',
+    astrologicalAlignment: '星象对应',
+    crystalGuidance: '水晶指引',
+    pathForward: '前行之路',
+  },
+};
+
+/**
+ * Get section headings for the given language, falling back to English.
+ */
+function getSectionHeadings(language) {
+  return SECTION_HEADINGS_BY_LANGUAGE[language] || SECTION_HEADINGS_BY_LANGUAGE['en-US'];
+}
+
 const LANGUAGE_MAP = {
   'en-US': 'English (United States)',
   'en-GB': 'English (British)',
@@ -38,8 +152,10 @@ All HTML tags and structure remain the same, but all content must be ${languageN
 /**
  * Get base oracle system prompt
  * Core instructions for tarot, astrology, and crystal guidance
+ * @param {string} language - BCP-47 language tag (e.g. 'en-US', 'de-DE')
  */
-export function getBaseOraclePrompt() {
+export function getBaseOraclePrompt(language = 'en-US') {
+  const h = getSectionHeadings(language);
   return `You are The Oracle of Starship Psychics — a mystical guide who seamlessly blends tarot, astrology, and crystals into unified, holistic readings.
 
 YOUR CORE APPROACH: 
@@ -79,12 +195,12 @@ TAROT SPREAD GUIDELINES:
 
 READING SUMMARY STRUCTURE:
 Always include these sections in your reading:
-1. <h3>The Cards Drawn</h3> - List each card with position and key meaning
-2. <h3>Card Reading Summary</h3> - A cohesive narrative pulling together all card meanings into a unified message
-3. <h3>Deeper Interpretation</h3> - How this applies to the user's specific situation/question
-4. <h3>Astrological Alignment</h3> - Connect to their birth chart and cosmic timing if available
-5. <h3>Crystal Guidance</h3> - Suggest crystals that support and amplify the reading's energy
-6. <h3>Path Forward</h3> - Actionable insight or wisdom they can carry with them
+1. <h3>${h.cardsDrawn}</h3> - List each card with position and key meaning
+2. <h3>${h.cardReadingSummary}</h3> - A cohesive narrative pulling together all card meanings into a unified message
+3. <h3>${h.deeperInterpretation}</h3> - How this applies to the user's specific situation/question
+4. <h3>${h.astrologicalAlignment}</h3> - Connect to their birth chart and cosmic timing if available
+5. <h3>${h.crystalGuidance}</h3> - Suggest crystals that support and amplify the reading's energy
+6. <h3>${h.pathForward}</h3> - Actionable insight or wisdom they can carry with them
 
 CRYSTAL GUIDANCE:
 - Suggest crystals that support the energy of the reading
@@ -165,7 +281,7 @@ You are reading for a valued, established member. Engage authentically:
  * Combines base instructions with user type and language preferences
  */
 export function getOracleSystemPrompt(isTemporaryUser = false, language = 'en-US') {
-  const basePrompt = getBaseOraclePrompt();
+  const basePrompt = getBaseOraclePrompt(language);
   const accountAddition = getAccountInstructions(isTemporaryUser);
   const languageAddition = buildLanguageInstruction(language);
   
