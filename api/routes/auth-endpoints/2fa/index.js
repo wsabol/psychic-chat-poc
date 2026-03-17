@@ -7,6 +7,7 @@
  * ─────────────────────────────────────────────────────────────────────
  *  POST   /auth/verify-2fa                          verify.js
  *  POST   /auth/check-2fa/:userId                   check.js
+ *  POST   /auth/resend-2fa                          resend.js
  *
  *  GET    /auth/check-current-device-trust/:userId  deviceTrust.js
  *  POST   /auth/trust-current-device/:userId        deviceTrust.js
@@ -21,6 +22,7 @@ import { Router } from 'express';
 import { authenticateToken } from '../../../middleware/auth.js';
 import { verify2FAHandler } from './verify.js';
 import { check2FAHandler } from './check.js';
+import { resend2FAHandler } from './resend.js';
 import {
   checkCurrentDeviceTrustHandler,
   trustCurrentDeviceHandler,
@@ -35,6 +37,7 @@ const router = Router();
 // --- 2FA challenge flow (no auth token required – user is mid-login) ---
 router.post('/verify-2fa', verify2FAHandler);
 router.post('/check-2fa/:userId', check2FAHandler);
+router.post('/resend-2fa', resend2FAHandler);
 
 // --- Device trust management (full auth required) ---
 router.get('/check-current-device-trust/:userId', authenticateToken, checkCurrentDeviceTrustHandler);
