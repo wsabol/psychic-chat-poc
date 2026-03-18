@@ -24,6 +24,30 @@ Your AI-Powered Cosmic Oracle
 
 ---
 
+### Apple App Store — Promotional Text
+> **Character limit: 170 characters**
+> *(Can be updated at any time without resubmitting the app — ideal for new features, seasonal pushes, or limited-time offers)*
+
+**✅ Recommended:**
+```
+🔮 New: Venus Love Profile & Cosmic Weather! Personalized tarot, birth charts & AI psychic chat tailored to your stars. Free trial — no account needed. ✨
+```
+*(153 characters)*
+
+**Alternates:**
+
+```
+✨ Get clarity on love, career & life's big questions. AI oracle reads your unique birth chart — tarot, horoscopes, cosmic guidance & more. Free trial! 🔮
+```
+*(153 characters)*
+
+```
+🔮 Your personal AI oracle — tarot, birth charts, horoscopes & live cosmic weather, all tailored to your stars. Try free, no account needed. ✨
+```
+*(142 characters)*
+
+---
+
 ## FULL DESCRIPTIONS
 
 ### Google Play Store Full Description
@@ -147,6 +171,114 @@ Your spiritual journey is personal. All conversations and data are encrypted. Pr
 Your cosmic journey awaits. Download Starship Psychics today.
 
 *For entertainment and informational purposes only.*
+
+---
+
+---
+
+## SUBSCRIPTION PRICING
+
+### Apple App Store (In-App Purchases)
+
+Apple pricing is selected from a fixed dropdown in App Store Connect — you cannot enter arbitrary prices. Use the closest Tier that matches the intended price.
+
+| Plan | Price | Product ID | Description |
+|---|---|---|---|
+| Monthly | **$9.99 / month** | `starship_monthly` | Billed monthly, cancel anytime |
+| Annual | **$99.99 / year** | `starship_annual` | **Save 16%** vs monthly · Billed annually |
+
+> 💡 **How to enter in App Store Connect:**
+> 1. App Store Connect → your app → **Subscriptions**
+> 2. Create a Subscription Group (e.g., "Starship Psychics Premium")
+> 3. Add two products: `starship_monthly` and `starship_annual`
+> 4. For each product, click **"Add Pricing"** → use the **Price Tier dropdown** — select the tier that shows **$9.99** (monthly) or **$99.99** (annual). You **cannot** type in a custom price; you must pick from the dropdown list.
+> 5. Set localizations (display name + description) as shown below.
+
+**Recommended display copy for the annual plan:**
+```
+Name: Annual Plan — Save 16%
+Description: Get full access to Starship Psychics for one year.
+             Save 16% compared to the monthly plan. Billed annually.
+             Cancel anytime before renewal.
+```
+
+**Recommended display copy for the monthly plan:**
+```
+Name: Monthly Plan
+Description: Full access to Starship Psychics, billed monthly.
+             Cancel anytime.
+```
+
+---
+
+### Google Play Store (In-App Purchases)
+
+Google Play pricing is entered as a free-form dollar amount per base plan — not a fixed dropdown.
+
+| Plan | Price | Product ID | Description |
+|---|---|---|---|
+| Monthly | **$29.99 / month** | `starship_psychics_monthly` | Billed monthly, cancel anytime |
+| Annual | **$299.99 / year** | `starship_psychics_annual` | **Save 16%** vs monthly · Billed annually |
+
+> ℹ️ Annual savings calculation: $29.99 × 12 = $359.88/yr. $299.99 / $359.88 = **~16.6% savings**, displayed as "Save 16%".
+
+**Recommended description for the annual subscription (Play Console → Subscriptions → Offer description):**
+```
+Save 16% with an annual plan — full access to Starship Psychics for one year.
+Billed as a single payment of $299.99. Cancel anytime before renewal.
+```
+
+---
+
+## TESTING: APPLE TESTFLIGHT VS GOOGLE PLAY
+
+### ⚠️ Key Difference: Apple Has NO "Open Testing" Equivalent
+
+Google Play has a public **Open Testing (Beta)** track where anyone can find and opt into the beta directly from the Play Store listing — no invite required.
+
+**Apple does NOT have this.** TestFlight is invitation-only. Every tester must receive an explicit invitation before they can install a TestFlight build. There are two tester types:
+
+| | Internal Testers | External Testers |
+|---|---|---|
+| **Who they are** | Members of your App Store Connect team (must have a role assigned in ASC) | Anyone — friends, beta users, stakeholders, the public |
+| **Max testers** | 100 | 10,000 |
+| **Apple review required** | ❌ No (instant install after upload) | ✅ Yes — Beta App Review (~1–2 days for first build; faster for updates) |
+| **How they get access** | Automatic — all team members with TestFlight access see the build | You send them a TestFlight invite link or add their email in ASC |
+| **Can find app publicly** | ❌ No | ❌ No (must receive your invite — there is no public opt-in page like Google Play Beta) |
+| **Sandbox purchases** | ✅ Yes — use a Sandbox Apple ID | ✅ Yes — use a Sandbox Apple ID |
+
+### How to Add External Testers in TestFlight
+
+1. Log in to [App Store Connect](https://appstoreconnect.apple.com)
+2. Select your app → **TestFlight** tab
+3. Under **"External Testing"**, click **"+"** next to **Testers**
+4. Choose:
+   - **Add individual testers** — enter their email address; they receive an invite email from Apple
+   - **Create a public link** — generates a shareable URL (up to 10,000 testers can join via the link); you can enable/disable the link at any time
+5. Before external testers can install, submit the build for **Beta App Review**:
+   - In TestFlight → select the build → click **"Submit for Review"**
+   - First-time review typically takes **1–2 business days**
+   - Subsequent updates to an already-reviewed build are usually approved in **hours**
+
+### Setting Up Sandbox Testers (iPhone In-App Purchase Testing)
+
+iPhone in-app purchases run in the **Sandbox** environment during TestFlight testing — no real charges are made, but testers **must use a Sandbox Apple ID** (not their real Apple ID).
+
+1. App Store Connect → **Users and Access** → **Sandbox** → **Testers**
+2. Click **"+"** → enter a new email address (must be an email not already associated with an Apple ID — use a new/throwaway address)
+3. Fill in the tester profile (first name, last name, country must match your storefront)
+4. Click **Save** — Apple creates the Sandbox Apple ID
+5. On the test device:
+   - Settings → **App Store** → scroll to **SANDBOX ACCOUNT** → sign in with the Sandbox Apple ID
+   - *(Do NOT sign out of your real Apple ID in Settings → Apple ID — only the App Store sandbox section needs the test account)*
+6. Launch the app via TestFlight and attempt a purchase — the payment sheet will say **"[ENVIRONMENT: Sandbox]"** and no real charge is made
+
+> ⚠️ **Sandbox subscriptions renew rapidly** (similar to Google Play license testing):
+> | Real duration | Sandbox duration |
+> |---|---|
+> | 1 month | 5 minutes |
+> | 1 year | 1 hour |
+> | 6 months | 30 minutes |
 
 ---
 
