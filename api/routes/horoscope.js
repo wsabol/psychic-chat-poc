@@ -2,7 +2,6 @@ import { Router } from "express";
 import { hashUserId } from "../shared/hashUtils.js";
 import { authenticateToken, authorizeUser } from "../middleware/auth.js";
 import { db } from "../shared/db.js";
-import { getUserTimezone, getLocalDateForTimezone, needsRegeneration } from "../shared/timezoneHelper.js";
 import { checkUserCompliance } from "../shared/complianceChecker.js";
 import { validationError, serverError, notFoundError, complianceError } from "../utils/responses.js";
 import { successResponse } from '../utils/responses.js';
@@ -31,16 +30,26 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
             `SELECT language, timezone FROM user_preferences WHERE user_id_hash = $1`,
             [userIdHash]
         );
-                const userLanguage = prefRows.length > 0 ? prefRows[0].language : 'en-US';
+        const userLanguage = prefRows.length > 0 ? prefRows[0].language : 'en-US';
         // Browser timezone (from saveUserTimezone on login) is the authoritative source
         // NEVER use birth_timezone - causes day-off issues if user was born elsewhere
         const userTimezone = prefRows.length > 0 && prefRows[0].timezone ? prefRows[0].timezone : 'UTC';
         
-        // Get today's date in user's LOCAL timezone
-        const todayLocalDate = getLocalDateForTimezone(userTimezone);
+        // Get today's date in user's LOCAL timezone.
+        // Use the same inline toLocaleDateString approach as astrology-insights.js
+        // (functionally identical to getLocalDateForTimezone but consistent across routes).
+        const todayLocalDate = new Date().toLocaleDateString('en-CA', {
+            timeZone: userTimezone,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        });
         
-        // Fetch horoscopes - return most recent for this range
-        // NOTE: Only content_full_encrypted and content_brief_encrypted exist in database
+        // Fetch horoscopes for today's local date only (identical approach to moon-phase.js).
+        // Filtering by created_at_local_date IN THE SQL means PostgreSQL will never return a
+        // stale record — if no row matches today's date we get 0 rows → 404 → client POSTs.
+        // Removing "OR horoscope_range IS NULL" prevents unranked legacy records from
+        // cross-contaminating daily vs weekly requests.
         const { rows } = await db.query(
             `SELECT 
                 pgp_sym_decrypt(content_full_encrypted, $2)::text as content_full,
@@ -51,10 +60,11 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
                 FROM messages 
                 WHERE user_id_hash = $1 
                   AND role = 'horoscope' 
-                  AND (horoscope_range = $3 OR horoscope_range IS NULL)
+                  AND horoscope_range = $3
+                  AND created_at_local_date = $4
                 ORDER BY created_at DESC
                 LIMIT 1`,
-            [userIdHash, process.env.ENCRYPTION_KEY, range.toLowerCase()]
+            [userIdHash, process.env.ENCRYPTION_KEY, range.toLowerCase(), todayLocalDate]
         );
         
                 // Check if user is temporary (free trial) - EXEMPT from compliance checks
@@ -78,24 +88,37 @@ router.get("/:userId/:range", authenticateToken, authorizeUser, async (req, res)
             }
         }
         
-        if (rows.length > 0 && rows[0].created_at_local_date) {
-            // Convert created_at_local_date to YYYY-MM-DD string for comparison
-            const createdDate = rows[0].created_at_local_date instanceof Date 
-                ? rows[0].created_at_local_date.toISOString().split('T')[0]
-                : String(rows[0].created_at_local_date).split('T')[0];
-            
-            const isStale = needsRegeneration(createdDate, todayLocalDate);
-            
-            if (isStale) {
-                // NO REDIS - Return 404 to trigger frontend POST request for synchronous generation
-                return notFoundError(res, `${range} horoscope is stale. Please request regeneration.`);
+        if (rows.length === 0) {
+            // No horoscope exists for today's local date yet.
+            // Generate inline — same pattern used by cosmic-weather and venus-love-profile —
+            // so we never return 404 to the client and never risk fetchMessageByRole
+            // picking up a stale/old record when the generator early-exits.
+            try {
+                const { processHoroscopeSync } = await import('../services/chat/processor.js');
+                const result = await processHoroscopeSync(userId, range.toLowerCase());
+
+                if (!result?.horoscope) {
+                    return notFoundError(res, `No ${range} horoscope found and generation returned empty.`);
+                }
+
+                return successResponse(res, {
+                    horoscope: result.horoscope,
+                    brief: result.brief || null,
+                    generated_at: result.generated_at,
+                    zodiac_sign: result.zodiac_sign || null
+                });
+            } catch (genErr) {
+                console.error(`[HOROSCOPE-ROUTE] Inline generation failed for ${range}:`, genErr.message);
+                // Surface profile-incomplete / compliance errors to the client intact
+                const status = genErr?.status || genErr?.statusCode;
+                if (status === 451) return complianceError(res, genErr.message);
+                return serverError(res, `Failed to generate ${range} horoscope: ${genErr.message}`);
             }
         }
-        
-        if (rows.length === 0) {
-            // NO REDIS - Return 404 to trigger frontend POST request for synchronous generation
-            return notFoundError(res, `No ${range} horoscope found. Please request generation.`);
-        }
+
+        // NOTE: Staleness check removed — the SQL WHERE clause now guarantees the returned
+        // record is for today's local date (created_at_local_date = $4).  There is nothing
+        // left to check here; any record that survived the query is fresh.
         
         // Get content from the row
         const row = rows[0];

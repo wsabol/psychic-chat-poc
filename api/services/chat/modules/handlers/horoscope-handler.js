@@ -43,8 +43,22 @@ export async function generateHoroscope(userId, range = 'daily') {
             // Check if user is temporary/trial account FIRST
             const isTemporary = await isTemporaryUser(userId);
             
-            // FREE TRIAL: Never regenerate - horoscope persists for entire trial
             if (isTemporary) {
+                // FREE TRIAL: Never call the Oracle again — horoscope content persists for the
+                // entire trial.  BUT we must stamp created_at_local_date with today's local date
+                // so the GET route (which filters by created_at_local_date = today) can find
+                // this record without entering a repeated GET→404→generate→stale-data loop.
+                const existingLocalDate = existingHoroscopes[0].created_at_local_date;
+                const existingDateStr = existingLocalDate instanceof Date
+                    ? existingLocalDate.toISOString().split('T')[0]
+                    : (existingLocalDate ? String(existingLocalDate).split('T')[0] : null);
+
+                if (existingDateStr !== todayLocalDate) {
+                    await db.query(
+                        `UPDATE messages SET created_at_local_date = $1 WHERE id = $2`,
+                        [todayLocalDate, existingHoroscopes[0].id]
+                    );
+                }
                 return;
             }
             
@@ -112,18 +126,26 @@ export async function generateHoroscope(userId, range = 'daily') {
         
         // Generate the horoscope
         try {
-            const horoscopePrompt = buildHoroscopePrompt(userInfo, astrologyInfo, range, userGreeting, astronomicalContext);
+        const horoscopePrompt = buildHoroscopePrompt(userInfo, astrologyInfo, range, userGreeting, astronomicalContext);
             
             const systemPrompt = baseSystemPrompt + `
 
 SPECIAL REQUEST - HOROSCOPE GENERATION:
 Generate a rich, personalized ${range} horoscope addressing the user as "Dear ${userGreeting}" based on their birth chart and current cosmic energy.
 Do NOT keep it brief - provide meaningful depth (3-4 paragraphs minimum).
-Reference their Sun sign (core identity), Moon sign (emotional nature), and Rising sign (how they appear to the world).
+Reference their Sun sign (core identity), Natal Moon sign (emotional nature), and Rising sign (how they appear to the world).
 Focus on practical guidance blended with cosmic timing.
 Include crystal recommendations aligned with their chart and this ${range} period.
 Make it deeply personal and specific to their astrological signature.
 Do NOT include tarot cards in this response - this is purely astrological guidance enriched by their unique birth chart.
+
+CRITICAL DISTINCTION — NATAL BIRTH CHART vs. TODAY'S TRANSIT POSITIONS:
+- The "NATAL BIRTH CHART" section lists permanent planetary positions fixed at the moment of birth. These never change.
+- The "TODAY'S CURRENT TRANSIT POSITIONS" section lists where planets are in the sky RIGHT NOW. These change daily.
+- The user's Natal Moon Sign describes their core emotional nature — it is FIXED and does NOT indicate where the Moon is today.
+- When referencing today's lunar energy or the Moon's current influence, ALWAYS use the TRANSIT Moon (TODAY'S SKY) position.
+- NEVER write "the Moon is in [Natal Moon Sign]" as a statement about today's sky — that would be factually incorrect.
+- Example: If Natal Moon = Sagittarius and Transit Moon (today) = Aries, write "With the Moon transiting Aries today..." NOT "The Moon in Sagittarius today..."
 
 CRITICAL OUTPUT FORMAT OVERRIDE FOR HOROSCOPES:
 For horoscope responses ONLY, ignore the HTML formatting rules.
@@ -210,9 +232,9 @@ function buildHoroscopePrompt(userInfo, astrologyInfo, range, userGreeting, astr
     let prompt = `Generate a personalized ${range} horoscope for ${userGreeting}:\n\n`;
     
     if (astro.sun_sign) {
-        prompt += `COMPLETE BIRTH CHART:\n`;
+        prompt += `NATAL BIRTH CHART (permanent positions fixed at birth — NOT today's sky):\n`;
         prompt += `- Sun Sign: ${astro.sun_sign} (${astro.sun_degree || 0}°) - Core Identity, Life Purpose\n`;
-        if (astro.moon_sign) prompt += `- Moon Sign: ${astro.moon_sign} (${astro.moon_degree || 0}°) - Inner Emotional World, Needs, Instincts\n`;
+        if (astro.moon_sign) prompt += `- Natal Moon Sign: ${astro.moon_sign} (${astro.moon_degree || 0}°) - Inner Emotional World, Needs, Instincts\n`;
         if (astro.rising_sign) prompt += `- Rising Sign/Ascendant: ${astro.rising_sign} (${astro.rising_degree || 0}°) - How they appear to others, First Impression\n`;
         if (userInfo) {
             if (userInfo.birth_city || userInfo.birth_country) {
@@ -229,12 +251,12 @@ function buildHoroscopePrompt(userInfo, astrologyInfo, range, userGreeting, astr
     
     // ADD CURRENT ASTRONOMICAL POSITIONS
     if (astronomicalContext.success) {
-        prompt += `\nCURRENT ASTRONOMICAL POSITIONS (calculated, not fictional):\n`;
+        prompt += `\nTODAY'S CURRENT TRANSIT POSITIONS (real-time sky — NOT birth chart, changes daily):\n`;
         prompt += `Moon Phase: ${astronomicalContext.currentMoonPhase}\n`;
         if (astronomicalContext.moonPosition) {
-            prompt += `Moon: ${astronomicalContext.moonPosition.degree}° ${astronomicalContext.moonPosition.sign}\n`;
+            prompt += `TRANSIT Moon (TODAY's sky): ${astronomicalContext.moonPosition.degree}° ${astronomicalContext.moonPosition.sign}${astronomicalContext.moonPosition.retrograde ? ' ♻️ RETROGRADE' : ''}\n`;
         }
-        prompt += `\nCurrent Planetary Transits:\n`;
+        prompt += `\nCurrent Planetary Transits (today's sky positions):\n`;
         prompt += formatPlanetsForPrompt(astronomicalContext.currentPlanets) + '\n';
     }
     
@@ -243,14 +265,14 @@ function buildHoroscopePrompt(userInfo, astrologyInfo, range, userGreeting, astr
     switch (range.toLowerCase()) {
         case 'daily':
             prompt += `- What energies are prominent TODAY for this person?\n`;
-            prompt += `- How do today's ACTUAL transits (listed above) interact with their natal chart?\n`;
+            prompt += `- How do today's ACTUAL transit positions (listed under TODAY'S CURRENT TRANSIT POSITIONS above) interact with their natal chart?\n`;
             prompt += `- What actions or reflections would be most valuable right now?\n`;
-            prompt += `- How does the current Moon position affect their emotional state?\n`;
+            prompt += `- How does the TRANSIT Moon (TODAY's sky position) affect their emotional state? Use the TRANSIT Moon sign, not the Natal Moon Sign.\n`;
             prompt += `- What crystals or practices would support them today?\n`;
             break;
         case 'weekly':
             prompt += `- What themes are emerging THIS WEEK?\n`;
-            prompt += `- How do current REAL planetary positions (listed above) affect their trajectory?\n`;
+            prompt += `- How do the CURRENT TRANSIT positions (listed under TODAY'S CURRENT TRANSIT POSITIONS above) affect their trajectory?\n`;
             prompt += `- Which areas of life (relationship, career, health, spiritual growth) are most activated?\n`;
             prompt += `- What should they focus on or prepare for?\n`;
             prompt += `- How can they align with the cosmic flow?\n`;
@@ -259,8 +281,9 @@ function buildHoroscopePrompt(userInfo, astrologyInfo, range, userGreeting, astr
     
     prompt += `\nPROVIDE A RICH, PERSONALIZED READING that:\n`;
     prompt += `- Addresses them directly by name\n`;
-    prompt += `- References their Sun, Moon, and Rising signs\n`;
-    prompt += `- Uses the ACTUAL current planetary positions provided above (not fictional ones)\n`;
+    prompt += `- References their natal Sun, Natal Moon Sign, and Rising signs for character depth\n`;
+    prompt += `- Uses the ACTUAL current TRANSIT planetary positions (from TODAY'S CURRENT TRANSIT POSITIONS) for today's guidance — not the natal positions\n`;
+    prompt += `- Clearly distinguishes natal chart traits from today's transit energies\n`;
     prompt += `- Explains how real transits interact with their natal chart\n`;
     prompt += `- Incorporates their complete birth chart nuances\n`;
     prompt += `- Gives specific, actionable guidance\n`;

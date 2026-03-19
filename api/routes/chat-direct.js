@@ -146,78 +146,108 @@ router.get("/opening", async (req, res) => {
             `SELECT timezone FROM user_preferences WHERE user_id_hash = $1`,
             [userIdHash]
         );
-        const userTimezone = tzRows.length > 0 && tzRows[0].timezone ? tzRows[0].timezone : 'UTC';
+        // The mobile app sends the device's IANA timezone as ?timezone=America/Chicago.
+        // Use the DB value as the authoritative source; fall back to the client-supplied
+        // value when the DB row is absent or blank (e.g. new account that hasn't saved
+        // preferences yet).  This fixes the "good afternoon at 10 AM" bug where the
+        // oracle was defaulting to UTC because no timezone was stored in the DB.
+        const clientTimezone = req.query.timezone;
+        const userTimezone = (tzRows.length > 0 && tzRows[0].timezone)
+            ? tzRows[0].timezone
+            : (clientTimezone || 'UTC');
         const todayLocalDate = getLocalDateForTimezone(userTimezone);
         
-        // Check if opening already exists for today
-        const { rows: existingOpenings } = await db.query(
-            `SELECT id, created_at FROM messages 
-             WHERE user_id_hash = $1 
-             AND role = 'assistant' 
-             AND created_at_local_date = $2
-             ORDER BY created_at ASC 
-             LIMIT 1`,
-            [userIdHash, todayLocalDate]
+        // Acquire a PostgreSQL advisory lock keyed to this user to prevent race conditions.
+        // If two requests arrive within the same second, the second will see the lock is taken
+        // and bail out immediately rather than generating a duplicate greeting.
+        // The lock key is a stable 32-bit integer derived from the first 8 hex chars of the hash.
+        const lockKey = parseInt(userIdHash.substring(0, 8), 16);
+        const { rows: lockResult } = await db.query(
+            'SELECT pg_try_advisory_lock($1) as acquired',
+            [lockKey]
         );
 
-        // If we already have an assistant message from today (opening), don't create a new one
-        if (existingOpenings.length > 0) {
+        if (!lockResult[0].acquired) {
+            // Another concurrent request is already generating the opening for this user.
+            // Treat as "already handled" — the other request will store the greeting.
             return noContentResponse(res);
         }
 
-        // Fetch user's language preference
-        const { rows: prefRows } = await db.query(
-            `SELECT language, oracle_language FROM user_preferences WHERE user_id_hash = $1`,
-            [userIdHash]
-        );
-        const userLanguage = prefRows.length > 0 ? prefRows[0].language : 'en-US';
-        const oracleLanguage = prefRows.length > 0 ? prefRows[0].oracle_language : 'en-US';
-
-        // Get recent messages for context
-        const recentMessages = await getRecentMessages(userId);
-        
-        // Fetch and sanitize user's name for oracle greeting
-        const isTempUser = userId.startsWith('temp_');
-        let rawClientName = null;
-        
         try {
-            const { rows: personalInfoRows } = await db.query(
-                "SELECT pgp_sym_decrypt(familiar_name_encrypted, $1) as familiar_name FROM user_personal_info WHERE user_id = $2",
-                [process.env.ENCRYPTION_KEY, userId]
+            // Re-check AFTER acquiring the lock — a concurrent request that just released
+            // the lock may have already stored today's opening.
+            const { rows: existingOpenings } = await db.query(
+                `SELECT id, created_at FROM messages 
+                 WHERE user_id_hash = $1 
+                 AND role = 'assistant' 
+                 AND created_at_local_date = $2
+                 ORDER BY created_at ASC 
+                 LIMIT 1`,
+                [userIdHash, todayLocalDate]
             );
-            if (personalInfoRows.length > 0 && personalInfoRows[0]) {
-                rawClientName = personalInfoRows[0].familiar_name;
+
+            // If we already have an assistant message from today (opening), don't create a new one
+            if (existingOpenings.length > 0) {
+                return noContentResponse(res);
             }
-        } catch (err) {
-            rawClientName = null;
+
+            // Fetch user's language preference
+            const { rows: prefRows } = await db.query(
+                `SELECT language, oracle_language FROM user_preferences WHERE user_id_hash = $1`,
+                [userIdHash]
+            );
+            const userLanguage = prefRows.length > 0 ? prefRows[0].language : 'en-US';
+            const oracleLanguage = prefRows.length > 0 ? prefRows[0].oracle_language : 'en-US';
+
+            // Get recent messages for context
+            const recentMessages = await getRecentMessages(userId);
+            
+            // Fetch and sanitize user's name for oracle greeting
+            const isTempUser = userId.startsWith('temp_');
+            let rawClientName = null;
+            
+            try {
+                const { rows: personalInfoRows } = await db.query(
+                    "SELECT pgp_sym_decrypt(familiar_name_encrypted, $1) as familiar_name FROM user_personal_info WHERE user_id = $2",
+                    [process.env.ENCRYPTION_KEY, userId]
+                );
+                if (personalInfoRows.length > 0 && personalInfoRows[0]) {
+                    rawClientName = personalInfoRows[0].familiar_name;
+                }
+            } catch (err) {
+                rawClientName = null;
+            }
+            
+            // Apply name protection
+            const clientName = guardName(rawClientName, isTempUser);
+
+            let opening = await generatePsychicOpening({
+                clientName: clientName,
+                recentMessages: recentMessages,
+                oracleLanguage: oracleLanguage,
+                userTimezone: userTimezone
+            });
+
+            // Store opening as proper content object
+            let openingContent = { text: opening };
+
+            // Final safety check on fallback message
+            if (opening === '') {
+                const safeFallbackName = guardName(clientName, isTempUser);
+                opening = `Hi ${safeFallbackName}, thank you for being here today. Before we begin, is there an area of your life you're hoping to get clarity on?`;
+                openingContent.text = opening;
+            }
+
+            await insertMessage(userId, 'assistant', openingContent, null, userTimezone);
+
+            successResponse(res, {
+                role: 'assistant',
+                content: opening
+            });
+        } finally {
+            // Always release the advisory lock so other requests can proceed
+            await db.query('SELECT pg_advisory_unlock($1)', [lockKey]);
         }
-        
-        // Apply name protection
-        const clientName = guardName(rawClientName, isTempUser);
-
-        let opening = await generatePsychicOpening({
-            clientName: clientName,
-            recentMessages: recentMessages,
-            oracleLanguage: oracleLanguage,
-            userTimezone: userTimezone
-        });
-
-        // Store opening as proper content object
-        let openingContent = { text: opening };
-
-        // Final safety check on fallback message
-        if (opening === '') {
-            const safeFallbackName = guardName(clientName, isTempUser);
-            opening = `Hi ${safeFallbackName}, thank you for being here today. Before we begin, is there an area of your life you're hoping to get clarity on?`;
-            openingContent.text = opening;
-        }
-
-        await insertMessage(userId, 'assistant', openingContent, null, userTimezone);
-
-        successResponse(res, {
-            role: 'assistant',
-            content: opening
-        });
     } catch (err) {
         logErrorFromCatch(err, 'app', 'chat-direct-opening');
         return serverError(res, 'Failed to generate opening');

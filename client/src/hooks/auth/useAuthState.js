@@ -284,7 +284,6 @@ export function useAuthState(checkBillingStatus) {
                 // The correct behaviour is to sign out the orphaned session and
                 // return the user to the landing page.
                 if (twoFAData.orphanedFirebaseUser) {
-                  console.log('[AUTH-LISTENER] Orphaned Firebase user detected - signing out and returning to landing page');
                   setIsFirstTime(true);   // ensures landing page is shown
                   setShowTwoFactor(false);
                   setIsAuthenticated(false);

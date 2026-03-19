@@ -453,6 +453,44 @@ router.get("/venus-love-profile/:userId", authenticateToken, authorizeUser, asyn
             }
         }
 
+        // Check staleness — Venus Love Profile regenerates daily for fresh "current love weather".
+        // If created_at_local_date is NULL (pre-dating this column) also treat as stale.
+        const { rows: prefRows } = await db.query(
+            `SELECT timezone FROM user_preferences WHERE user_id_hash = $1`,
+            [userIdHash]
+        );
+        const userTz = prefRows.length > 0 && prefRows[0].timezone ? prefRows[0].timezone : 'UTC';
+        const todayLocalDate = getLocalDateForTimezone(userTz);
+
+        let rowDate = rows[0].created_at_local_date;
+        let isStale = true; // default: stale when no date recorded
+        if (rowDate) {
+            if (rowDate instanceof Date) rowDate = rowDate.toISOString().split('T')[0];
+            else rowDate = String(rowDate).split('T')[0];
+            isStale = needsRegeneration(rowDate, todayLocalDate);
+        }
+
+        if (isStale) {
+            // Regenerate synchronously to refresh the "current love weather" section
+            const { processVenusLoveProfileSync } = await import('../services/chat/processor.js');
+            try {
+                const result = await processVenusLoveProfileSync(userId);
+                return successResponse(res, {
+                    profile:     result.profile,
+                    brief:       result.brief,
+                    venusSign:   result.venusSign,
+                    venusDegree: result.venusDegree,
+                    marsSign:    result.marsSign,
+                    moonSign:    result.moonSign,
+                    risingSign:  result.risingSign,
+                    aspects:     result.aspects || null,
+                    generated_at: result.generated_at
+                });
+            } catch (genErr) {
+                return serverError(res, 'Failed to generate Venus Love Profile');
+            }
+        }
+
         const fullContent  = rows[0].content_full;
         const briefContent = rows[0].content_brief;
         const data  = typeof fullContent  === 'string' ? JSON.parse(fullContent)  : fullContent;

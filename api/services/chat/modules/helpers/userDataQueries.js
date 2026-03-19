@@ -57,12 +57,16 @@ export async function fetchUserAstrology(userId) {
 /**
  * Check if user is on a trial/temporary account.
  *
- * Three indicators are checked (any one is sufficient):
- * 1. Has a free_trial_sessions record  — covers Firebase anonymous UID users
- *    who reached the sign-picker flow without a user_personal_info email.
+ * Two reliable indicators are checked (any one is sufficient):
+ * 1. Has a free_trial_sessions record — covers all trial users who went
+ *    through the sign-picker / free-trial flow.
  * 2. Email starts with 'temp_' AND ends with '@psychic.local' — legacy temp
  *    accounts created via the email-based trial flow.
- * 3. Firebase anonymous UID pattern (20+ alphanumeric chars, no specials).
+ *
+ * NOTE: A Firebase anonymous UID heuristic (regex matching 20+ alphanumeric
+ * chars) was previously used as check #3, but ALL regular Firebase UIDs also
+ * match that pattern (they are 28 alphanumeric characters), so it falsely
+ * flagged every paid user as a trial user. Removed.
  */
 export async function isTemporaryUser(userId) {
   try {
@@ -87,11 +91,6 @@ export async function isTemporaryUser(userId) {
       if (email.startsWith('temp_') && email.endsWith('@psychic.local')) {
         return true;
       }
-    }
-
-    // 3. Firebase anonymous UID heuristic
-    if (/^[a-zA-Z0-9]{20,}$/.test(userId)) {
-      return true;
     }
 
     return false;
