@@ -77,7 +77,6 @@ async function buildCircleBackground(size) {
 
 async function run() {
   const srcPath = path.join(__dirname, 'StarshipPsychics_AppIcon.png');
-  console.log('Loading source:', srcPath);
 
   // Step 1 – raw pixel scan to find logo-content bounding box
   const { data, info } = await sharp(srcPath)
@@ -99,11 +98,8 @@ async function run() {
       }
     }
   }
-
-  console.log(`Logo pixel bounds: x=${minX}–${maxX}, y=${minY}–${maxY}`);
   const logoW = maxX - minX + 1;
   const logoH = maxY - minY + 1;
-  console.log(`Logo content size: ${logoW} × ${logoH}  (${((logoW/W)*100).toFixed(1)}% of source)`);
 
   // Step 2 – build a square crop centred on the logo with padding
   const logoSize  = Math.max(logoW, logoH);
@@ -119,16 +115,12 @@ async function run() {
   top  = Math.max(0, Math.min(H - cropSize, top));
   const actualCrop = Math.min(cropSize, W - left, H - top);
 
-  console.log(`Crop: left=${left} top=${top} size=${actualCrop}`);
-
   // Step 3 – extract the logo crop and scale to 1024x1024
   const logoCropBuf = await sharp(srcPath)
     .extract({ left, top, width: actualCrop, height: actualCrop })
     .resize(1024, 1024, { fit: 'fill', kernel: sharp.kernel.lanczos3 })
     .png()
     .toBuffer();
-
-  console.log('Logo crop extracted and scaled to 1024×1024');
 
   // Step 4 – for every size, composite the scaled logo over a dark-navy circle
   async function writeIcon(destPath, size, { opaqueBg = false } = {}) {
@@ -157,7 +149,6 @@ async function run() {
     const dest = path.join(IOS_DIR, icon.file);
     const opaque = (icon.file === 'icon-1024.png');
     await writeIcon(dest, icon.size, { opaqueBg: opaque });
-    console.log(`  iOS  ${icon.size}×${icon.size}  → ${icon.file}`);
   }
 
   // Step 6 – write Android mipmap icons
@@ -167,10 +158,7 @@ async function run() {
     const launcherRound = path.join(dir, 'ic_launcher_round.png');
     await writeIcon(launcher,      icon.size);
     await writeIcon(launcherRound, icon.size);
-    console.log(`  Android ${icon.size}×${icon.size}  → ${icon.dir}`);
   }
-
-  console.log('\n✅  All icons regenerated successfully!');
 }
 
 run().catch(err => {

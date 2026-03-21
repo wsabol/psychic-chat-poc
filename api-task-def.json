@@ -96,6 +96,18 @@
                 {
                     "name": "SENDGRID_FROM_EMAIL",
                     "valueFrom": "arn:aws:secretsmanager:us-east-1:586337033065:secret:psychic-chat/sendgrid-api:from_email::"
+                },
+                {
+                    "name": "GOOGLE_PLAY_SERVICE_ACCOUNT_JSON",
+                    "valueFrom": "arn:aws:secretsmanager:us-east-1:586337033065:secret:psychic-chat/google-play-fnPdsZ:service_account_json::"
+                },
+                {
+                    "name": "GOOGLE_PLAY_PUBSUB_TOKEN",
+                    "valueFrom": "arn:aws:secretsmanager:us-east-1:586337033065:secret:psychic-chat/google-play-fnPdsZ:pubsub_token::"
+                },
+                {
+                    "name": "APPLE_SHARED_SECRET",
+                    "valueFrom": "arn:aws:secretsmanager:us-east-1:586337033065:secret:psychic-chat/apple-iap-RRkNbR:shared_secret::"
                 }
             ],
             "dnsServers": [],
