@@ -199,10 +199,11 @@ export function useAppState() {
         setSkipSubscriptionCheck(true);
         setBillingTab('payment-methods');
         setStartingPage(9); // Billing page
-            } else if (currentStep === 'subscription') {
+      } else if (currentStep === 'subscription') {
         setSkipPaymentCheck(true);
         setSkipSubscriptionCheck(true);
-        setStartingPage(1); // PersonalInfoPage (Get Acquainted)
+        setBillingTab('subscriptions');
+        setStartingPage(9); // Billing page with subscriptions tab
       } else if (currentStep === 'personal_info') {
         setSkipPaymentCheck(true);
         setSkipSubscriptionCheck(true);
