@@ -16,6 +16,9 @@ import {
   updateFullPreferences
 } from "../services/user/index.js";
 import { markEmailVerified } from "../services/authService.js";
+import { db } from '../shared/db.js';
+import { hashUserId } from '../shared/hashUtils.js';
+import { getLocalDateForTimezone } from '../shared/timezoneHelper.js';
 
 const router = Router();
 
@@ -116,7 +119,7 @@ router.post("/:userId/preferences", async (req, res) => {
   // Use actual userId from token (set by authenticateToken middleware)
   // Web client sends hashed userId in URL, but we use the real one from token
   const userId = req.userId || req.params.userId;
-  const { language, response_type, voice_enabled, voice_selected, timezone, oracle_language } = req.body;
+  const { language, response_type, voice_enabled, voice_selected, timezone, oracle_language, oracle_character } = req.body;
 
   try {
     // Mode 1: Timezone-only update
@@ -132,12 +135,16 @@ router.post("/:userId/preferences", async (req, res) => {
         response_type,
         voice_enabled,
         timezone,
-        oracle_language
+        oracle_language,
+        oracle_character
       });
 
       if (!result.success) {
         return validationError(res, result.error);
       }
+
+      // Clear cached opening + astrology so new character/language takes effect immediately
+      await _clearCharacterDependentCache(userId, timezone);
 
       return successResponse(res, result);
     }
@@ -153,12 +160,16 @@ router.post("/:userId/preferences", async (req, res) => {
       voice_enabled,
       voice_selected,
       timezone,
-      oracle_language
+      oracle_language,
+      oracle_character
     });
 
     if (!result.success) {
       return validationError(res, result.error);
     }
+
+    // Clear cached opening + astrology so new character/language takes effect immediately
+    await _clearCharacterDependentCache(userId, timezone);
 
     return successResponse(res, result);
   } catch (err) {
@@ -201,5 +212,38 @@ router.post("/:userId/sync-email-verified", async (req, res) => {
     return serverError(res, 'Failed to sync email verification status');
   }
 });
+
+/**
+ * Clear today's opening message and all cached astrology content so that
+ * the new oracle character / language takes effect immediately on next visit.
+ *
+ * - Opening: stored as role='assistant' with created_at_local_date = today.
+ *   Deleting it causes chat.js opening endpoint to regenerate a fresh greeting.
+ * - Astrology (horoscope, moon phase, cosmic weather, venus): handled by
+ *   clearUserAstrologyCache which deletes today's astrology-type messages.
+ *
+ * Non-fatal: errors are logged but never propagate to the caller so the
+ * preferences save always succeeds even if cache clearing fails.
+ */
+async function _clearCharacterDependentCache(userId, userTimezone) {
+  try {
+    const userIdHash = hashUserId(userId);
+    const todayDate = getLocalDateForTimezone(userTimezone || 'UTC');
+
+    // 1. Clear today's greeting (opening) message so a fresh one is generated
+    await db.query(
+      `DELETE FROM messages
+       WHERE user_id_hash = $1
+         AND role = 'assistant'
+         AND created_at_local_date = $2`,
+      [userIdHash, todayDate]
+    );
+
+    // 2. Clear cached horoscope / moon phase / cosmic weather / venus readings
+    await clearUserAstrologyCache(userId);
+  } catch (err) {
+    logErrorFromCatch('[USER-PROFILE] Non-fatal: failed to clear character cache after pref save:', err);
+  }
+}
 
 export default router;
