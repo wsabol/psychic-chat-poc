@@ -174,8 +174,13 @@ router.get("/opening", async (req, res) => {
         }
 
         try {
-            // Re-check AFTER acquiring the lock — a concurrent request that just released
-            // the lock may have already stored today's opening.
+        // Re-check AFTER acquiring the lock — a concurrent request that just released
+        // the lock may have already stored today's opening.
+        // When ?force=true is passed (e.g. after an oracle character change), skip
+        // this check so a fresh greeting from the new character is always generated.
+        const isForced = req.query.force === 'true';
+
+        if (!isForced) {
             const { rows: existingOpenings } = await db.query(
                 `SELECT id, created_at FROM messages 
                  WHERE user_id_hash = $1 
@@ -190,14 +195,16 @@ router.get("/opening", async (req, res) => {
             if (existingOpenings.length > 0) {
                 return noContentResponse(res);
             }
+        }
 
-            // Fetch user's language preference
-            const { rows: prefRows } = await db.query(
-                `SELECT language, oracle_language FROM user_preferences WHERE user_id_hash = $1`,
-                [userIdHash]
-            );
-            const userLanguage = prefRows.length > 0 ? prefRows[0].language : 'en-US';
-            const oracleLanguage = prefRows.length > 0 ? prefRows[0].oracle_language : 'en-US';
+        // Fetch user's language and oracle character preferences
+        const { rows: prefRows } = await db.query(
+            `SELECT language, oracle_language, oracle_character FROM user_preferences WHERE user_id_hash = $1`,
+            [userIdHash]
+        );
+        const userLanguage = prefRows.length > 0 ? prefRows[0].language : 'en-US';
+        const oracleLanguage = prefRows.length > 0 ? prefRows[0].oracle_language : 'en-US';
+        const oracleCharacter = prefRows.length > 0 ? (prefRows[0].oracle_character || 'sage') : 'sage';
 
             // Get recent messages for context
             const recentMessages = await getRecentMessages(userId);
@@ -225,7 +232,8 @@ router.get("/opening", async (req, res) => {
                 clientName: clientName,
                 recentMessages: recentMessages,
                 oracleLanguage: oracleLanguage,
-                userTimezone: userTimezone
+                userTimezone: userTimezone,
+                oracleCharacter: oracleCharacter,
             });
 
             // Store opening as proper content object
