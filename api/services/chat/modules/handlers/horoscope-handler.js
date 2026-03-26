@@ -5,6 +5,7 @@ import {
     fetchUserAstrology,
     fetchUserLanguagePreference,
     fetchUserOracleLanguagePreference,
+    fetchUserOracleCharacterPreference,
     isTemporaryUser,
     getOracleSystemPrompt,
     callOracle,
@@ -79,6 +80,7 @@ export async function generateHoroscope(userId, range = 'daily') {
         let astrologyInfo = await fetchUserAstrology(userId);
         const userLanguage = await fetchUserLanguagePreference(userId);
         const oracleLanguage = await fetchUserOracleLanguagePreference(userId);
+        const oracleCharacter = await fetchUserOracleCharacterPreference(userId);
 
         // Check if user is temporary/trial account
         const isTemporary = await isTemporaryUser(userId);
@@ -117,9 +119,8 @@ export async function generateHoroscope(userId, range = 'daily') {
         // Get current astronomical context (planets, moon phase, etc.)
         const astronomicalContext = await getAstronomicalContext();
         
-        // Get oracle system prompt with ORACLE LANGUAGE SUPPORT
-        // Oracle response uses oracleLanguage (can be regional variant), page UI uses userLanguage
-        const baseSystemPrompt = getOracleSystemPrompt(isTemporary, oracleLanguage);
+        // Get oracle system prompt — uses oracleLanguage (response language) and oracleCharacter (persona)
+        const baseSystemPrompt = getOracleSystemPrompt(isTemporary, oracleLanguage, oracleCharacter);
         const userGreeting = getUserGreeting(userInfo, userId, isTemporary);
         // CRITICAL FIX: Use user's local timezone for generated_at timestamp
         const generatedAt = getLocalTimestampForTimezone(userTimezone);
@@ -195,14 +196,15 @@ Begin directly with "Dear ${userGreeting}" and flow naturally through your guida
                 'horoscope', 
                 horoscopeDataFull,
                 horoscopeDataBrief,
-                null,  // no languageCode needed
-                null,  // no contentFullLang needed
-                null,  // no contentBriefLang needed
-                range,  // horoscopeRange
-                null,   // moonPhase
-                null,   // contentType
+                null,           // no languageCode needed
+                null,           // no contentFullLang needed
+                null,           // no contentBriefLang needed
+                range,          // horoscopeRange
+                null,           // moonPhase
+                null,           // contentType
                 todayLocalDate,
-                generatedAt  // createdAtLocalTimestamp - use local timezone timestamp
+                generatedAt,    // createdAtLocalTimestamp - use local timezone timestamp
+                oracleCharacter
             );
             
             // SSE notifications removed - synchronous processing like chat

@@ -18,7 +18,8 @@ export async function findPreferencesByUserIdHash(userIdHash) {
       voice_enabled, 
       COALESCE(voice_selected, 'sophia') as voice_selected, 
       timezone, 
-      COALESCE(oracle_language, 'en-US') as oracle_language 
+      COALESCE(oracle_language, 'en-US') as oracle_language,
+      COALESCE(oracle_character, 'sage') as oracle_character
     FROM user_preferences 
     WHERE user_id_hash = $1`,
     [userIdHash]
@@ -51,21 +52,22 @@ export async function upsertTimezone(userIdHash, timezone) {
  * @returns {Promise<Object>} Saved preferences
  */
 export async function upsertLanguagePreferences(userIdHash, preferences) {
-  const { language, response_type, voice_enabled, timezone, oracle_language } = preferences;
+  const { language, response_type, voice_enabled, timezone, oracle_language, oracle_character } = preferences;
 
   const { rows } = await db.query(
     `INSERT INTO user_preferences 
-     (user_id_hash, language, response_type, voice_enabled, timezone, oracle_language)
-     VALUES ($1, $2, $3, $4, $5, $6)
+     (user_id_hash, language, response_type, voice_enabled, timezone, oracle_language, oracle_character)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
      ON CONFLICT (user_id_hash) DO UPDATE SET
        language = EXCLUDED.language,
        response_type = EXCLUDED.response_type,
        voice_enabled = EXCLUDED.voice_enabled,
        timezone = EXCLUDED.timezone,
        oracle_language = EXCLUDED.oracle_language,
+       oracle_character = EXCLUDED.oracle_character,
        updated_at = CURRENT_TIMESTAMP
-     RETURNING language, response_type, voice_enabled, timezone, oracle_language`,
-    [userIdHash, language, response_type, voice_enabled, timezone, oracle_language]
+     RETURNING language, response_type, voice_enabled, timezone, oracle_language, oracle_character`,
+    [userIdHash, language, response_type, voice_enabled, timezone, oracle_language, oracle_character || 'sage']
   );
 
   return rows[0];
@@ -78,12 +80,12 @@ export async function upsertLanguagePreferences(userIdHash, preferences) {
  * @returns {Promise<Object>} Saved preferences
  */
 export async function upsertFullPreferences(userIdHash, preferences) {
-  const { language, response_type, voice_enabled, voice_selected, timezone, oracle_language } = preferences;
+  const { language, response_type, voice_enabled, voice_selected, timezone, oracle_language, oracle_character } = preferences;
 
   const { rows } = await db.query(
     `INSERT INTO user_preferences 
-     (user_id_hash, language, response_type, voice_enabled, voice_selected, timezone, oracle_language)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
+     (user_id_hash, language, response_type, voice_enabled, voice_selected, timezone, oracle_language, oracle_character)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
      ON CONFLICT (user_id_hash) DO UPDATE SET
        language = EXCLUDED.language,
        response_type = EXCLUDED.response_type,
@@ -91,9 +93,10 @@ export async function upsertFullPreferences(userIdHash, preferences) {
        voice_selected = EXCLUDED.voice_selected,
        timezone = EXCLUDED.timezone,
        oracle_language = EXCLUDED.oracle_language,
+       oracle_character = EXCLUDED.oracle_character,
        updated_at = CURRENT_TIMESTAMP
-     RETURNING language, response_type, voice_enabled, voice_selected, timezone, oracle_language`,
-    [userIdHash, language, response_type, voice_enabled, voice_selected, timezone, oracle_language]
+     RETURNING language, response_type, voice_enabled, voice_selected, timezone, oracle_language, oracle_character`,
+    [userIdHash, language, response_type, voice_enabled, voice_selected, timezone, oracle_language, oracle_character || 'sage']
   );
 
   return rows[0];

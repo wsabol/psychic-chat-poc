@@ -102,13 +102,14 @@ router.get("/opening/:userId", authorizeUser, verify2FA, async (req, res) => {
                 return noContentResponse(res);
             }
 
-            // Fetch user's language preference
+            // Fetch user's language + character preferences
             const { rows: prefRows } = await db.query(
-                `SELECT language, oracle_language FROM user_preferences WHERE user_id_hash = $1`,
+                `SELECT language, oracle_language, COALESCE(oracle_character, 'sage') as oracle_character FROM user_preferences WHERE user_id_hash = $1`,
                 [userIdHash]
             );
             const userLanguage = prefRows.length > 0 ? prefRows[0].language : 'en-US';
             const oracleLanguage = prefRows.length > 0 ? prefRows[0].oracle_language : 'en-US';
+            const oracleCharacter = prefRows.length > 0 ? prefRows[0].oracle_character : 'sage';
 
             // Only generate opening if no messages exist yet OR if last message was from user
             const recentMessages = await getRecentMessages(userId);
@@ -139,7 +140,8 @@ router.get("/opening/:userId", authorizeUser, verify2FA, async (req, res) => {
                 clientName: clientName,
                 recentMessages: recentMessages,
                 oracleLanguage: oracleLanguage,
-                userTimezone: userTimezone
+                userTimezone: userTimezone,
+                oracleCharacter: oracleCharacter
             });
 
             // Store opening as proper content object

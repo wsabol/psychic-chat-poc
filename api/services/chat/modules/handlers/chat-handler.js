@@ -26,6 +26,7 @@ export async function handleChatMessage(userId, message) {
         let astrologyInfo = userData.astrologyInfo;
         const userLanguage = userData.language;
         const oracleLanguage = userData.oracleLanguage;
+        const oracleCharacter = userData.oracleCharacter || 'sage';
         const tempUser = userData.isTemp;
 
         // STEP 2: Check account status (disabled/suspended)
@@ -53,9 +54,9 @@ export async function handleChatMessage(userId, message) {
         // STEP 5: Ensure user has astrology data (calculate if needed)
         astrologyInfo = await ensureUserAstrology(userInfo, astrologyInfo, userId);
 
-                // STEP 6: Process oracle request (API call, translation, storage)
-        // Pass both userLanguage (page UI) and oracleLanguage (oracle responses)
-        await processOracleRequest(userId, userInfo, astrologyInfo, userLanguage, oracleLanguage, message, tempUser);
+        // STEP 6: Process oracle request (API call, translation, storage)
+        // Pass userLanguage (page UI), oracleLanguage (response language), and oracleCharacter (persona)
+        await processOracleRequest(userId, userInfo, astrologyInfo, userLanguage, oracleLanguage, message, tempUser, oracleCharacter);
 
     } catch (err) {
         logErrorFromCatch(err, '[CHAT-HANDLER] Error handling chat message');

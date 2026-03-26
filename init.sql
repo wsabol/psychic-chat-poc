@@ -421,6 +421,7 @@ CREATE TABLE IF NOT EXISTS user_preferences (
     voice_enabled BOOLEAN DEFAULT TRUE,
     voice_selected VARCHAR(50) DEFAULT 'sophia',
     oracle_language VARCHAR(10) DEFAULT 'en-US',
+    oracle_character VARCHAR(30) DEFAULT 'sage',
     timezone VARCHAR(50) DEFAULT 'UTC',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -428,6 +429,7 @@ CREATE TABLE IF NOT EXISTS user_preferences (
 
 CREATE INDEX IF NOT EXISTS idx_user_preferences_user_id_hash ON user_preferences(user_id_hash);
 CREATE INDEX IF NOT EXISTS idx_user_preferences_oracle_language ON user_preferences(oracle_language);
+CREATE INDEX IF NOT EXISTS idx_user_preferences_oracle_character ON user_preferences(oracle_character);
 CREATE INDEX IF NOT EXISTS idx_user_preferences_voice ON user_preferences(voice_selected);
 
 -- TABLE: user_settings
@@ -461,11 +463,13 @@ CREATE TABLE IF NOT EXISTS messages (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_at_local_date DATE,
     horoscope_range VARCHAR(50),
-    moon_phase VARCHAR(50)
+    moon_phase VARCHAR(50),
+    oracle_character VARCHAR(30) DEFAULT 'sage'
 );
 
 CREATE INDEX IF NOT EXISTS idx_messages_user_id_hash ON messages(user_id_hash);
 CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at);
+CREATE INDEX IF NOT EXISTS idx_messages_oracle_character ON messages(oracle_character);
 
 -- TABLE: app_analytics
 CREATE TABLE IF NOT EXISTS app_analytics (

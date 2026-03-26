@@ -7,7 +7,9 @@ import {
   VALID_LANGUAGES,
   VALID_ORACLE_LANGUAGES,
   VALID_RESPONSE_TYPES,
-  VALID_VOICES
+  VALID_VOICES,
+  VALID_ORACLE_CHARACTERS,
+  DEFAULT_ORACLE_CHARACTER
 } from '../constants/userConstants.js';
 
 /**
@@ -71,4 +73,25 @@ export function getDefaultOracleLanguage(language) {
  */
 export function getValidatedVoice(voice) {
   return isValidVoice(voice) ? voice : 'sophia';
+}
+
+/**
+ * Validate oracle character (persona) selection
+ * @param {string} oracleCharacter - Oracle character slug
+ * @returns {Object} Validation result { valid, error }
+ */
+export function validateOracleCharacter(oracleCharacter) {
+  if (!VALID_ORACLE_CHARACTERS.includes(oracleCharacter)) {
+    return { valid: false, error: `Invalid oracle_character: ${oracleCharacter}` };
+  }
+  return { valid: true };
+}
+
+/**
+ * Get default or validated oracle character
+ * @param {string} character - Oracle character slug
+ * @returns {string} Valid oracle character slug
+ */
+export function getValidatedOracleCharacter(character) {
+  return VALID_ORACLE_CHARACTERS.includes(character) ? character : DEFAULT_ORACLE_CHARACTER;
 }

@@ -50,6 +50,7 @@ export async function fetchAllUserData(userId) {
         -- Preferences
         COALESCE(up.language, 'en-US') as language,
         COALESCE(up.oracle_language, 'en-US') as oracle_language,
+        COALESCE(up.oracle_character, 'sage') as oracle_character,
         
         -- Free Trial Session Check
         fts.id as free_trial_session_id
@@ -78,16 +79,19 @@ export async function fetchAllUserData(userId) {
         // defaulting to 'en-US'.
         let fallbackLanguage    = 'en-US';
         let fallbackOracleLang  = 'en-US';
+        let fallbackOracleChar  = 'sage';
         try {
           const { rows: prefRows } = await db.query(
             `SELECT COALESCE(language, 'en-US') as language,
-                    COALESCE(oracle_language, 'en-US') as oracle_language
+                    COALESCE(oracle_language, 'en-US') as oracle_language,
+                    COALESCE(oracle_character, 'sage') as oracle_character
              FROM user_preferences WHERE user_id_hash = $1`,
             [userIdHash]
           );
           if (prefRows.length > 0) {
             fallbackLanguage   = prefRows[0].language;
             fallbackOracleLang = prefRows[0].oracle_language;
+            fallbackOracleChar = prefRows[0].oracle_character;
           }
         } catch (_) { /* non-fatal — stick with defaults */ }
 
@@ -127,6 +131,7 @@ export async function fetchAllUserData(userId) {
           astrologyInfo: fallbackAstrologyInfo,
           language: fallbackLanguage,
           oracleLanguage: fallbackOracleLang,
+          oracleCharacter: fallbackOracleChar,
           isTemp: true
         };
       }
@@ -175,6 +180,7 @@ export async function fetchAllUserData(userId) {
       } : null,
       language: row.language,
       oracleLanguage: row.oracle_language,
+      oracleCharacter: row.oracle_character || 'sage',
       isTemp: isTemp
     };
     
@@ -216,4 +222,9 @@ export async function fetchUserLanguagePreference(userId) {
 export async function fetchUserOracleLanguagePreference(userId) {
   const data = await fetchAllUserData(userId);
   return data ? data.oracleLanguage : 'en-US';
+}
+
+export async function fetchUserOracleCharacterPreference(userId) {
+  const data = await fetchAllUserData(userId);
+  return data ? (data.oracleCharacter || 'sage') : 'sage';
 }

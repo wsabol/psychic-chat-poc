@@ -80,11 +80,12 @@ export async function storeMessage(
     languageCode = null, 
     contentFullLang = null, 
     contentBriefLang = null, 
-        horoscopeRange = null, 
+    horoscopeRange = null, 
     moonPhase = null, 
     contentType = null,
     createdAtLocalDate = null,
-    createdAtLocalTimestamp = null
+    createdAtLocalTimestamp = null,
+    oracleCharacter = null
 ) {
     try {
         const userIdHash = hashUserId(userId);
@@ -110,11 +111,12 @@ export async function storeMessage(
                 moon_phase,
                 content_type,
                 created_at_local_date,
-                created_at
+                created_at,
+                oracle_character
             ) VALUES(
                 $1, $2, pgp_sym_encrypt($3, $6), pgp_sym_encrypt($4, $6), 
                 pgp_sym_encrypt($5, $6), pgp_sym_encrypt($7, $6), 
-                $8, 'both', $9, $10, $11, $12, $13
+                $8, 'both', $9, $10, $11, $12, $13, $14
             )`;
             params = [
                 userIdHash,
@@ -129,7 +131,8 @@ export async function storeMessage(
                 moonPhase,
                 contentType,
                 createdAtLocalDate,
-                createdAtLocalTimestamp || new Date().toISOString()
+                createdAtLocalTimestamp || new Date().toISOString(),
+                oracleCharacter || 'sage'
             ];
         } else {
             // Store only English (baseline) - no language-specific content
@@ -143,10 +146,11 @@ export async function storeMessage(
                 moon_phase,
                 content_type,
                 created_at_local_date,
-                created_at
+                created_at,
+                oracle_character
             ) VALUES(
                 $1, $2, pgp_sym_encrypt($3, $4), pgp_sym_encrypt($5, $4), 
-                'both', $6, $7, $8, $9, $10
+                'both', $6, $7, $8, $9, $10, $11
             )`;
             params = [
                 userIdHash,
@@ -158,7 +162,8 @@ export async function storeMessage(
                 moonPhase,
                 contentType,
                 createdAtLocalDate,
-                createdAtLocalTimestamp || new Date().toISOString()
+                createdAtLocalTimestamp || new Date().toISOString(),
+                oracleCharacter || 'sage'
             ];
         }
         

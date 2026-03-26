@@ -20,7 +20,7 @@ import { translateContentObject } from '../translator.js';
  * @param {boolean} tempUser - Is temporary/trial account
  * @returns {Promise<void>}
  */
-export async function processOracleRequest(userId, userInfo, astrologyInfo, userLanguage, oracleLanguage, message, tempUser) {
+export async function processOracleRequest(userId, userInfo, astrologyInfo, userLanguage, oracleLanguage, message, tempUser, oracleCharacter = 'sage') {
     try {
         // Get message history
         let history = await getMessageHistory(userId);
@@ -42,9 +42,8 @@ IMPORTANT: Use the above personal and astrological information to:
 
 `;
 
-        // Get oracle prompt (accounts for temporary vs established users)
-        // Use oracleLanguage for oracle responses, not userLanguage
-        const systemPrompt = getOracleSystemPrompt(tempUser, oracleLanguage) + "\n\n" + combinedContext;
+        // Get oracle prompt — uses oracleLanguage (response language) and oracleCharacter (persona)
+        const systemPrompt = getOracleSystemPrompt(tempUser, oracleLanguage, oracleCharacter) + "\n\n" + combinedContext;
 
         // Call Oracle (generates both full and brief responses)
         const oracleResponses = await callOracle(systemPrompt, history, message, true);
@@ -77,9 +76,15 @@ IMPORTANT: Use the above personal and astrological information to:
                 'assistant',
                 fullContent,
                 briefContent,
-                null,  // No separate language tracking needed
-                null,  // No translation needed
-                null   // No translation needed
+                null,   // No separate language tracking needed
+                null,   // No translation needed
+                null,   // No translation needed
+                null,   // horoscopeRange
+                null,   // moonPhase
+                null,   // contentType
+                null,   // createdAtLocalDate
+                null,   // createdAtLocalTimestamp
+                oracleCharacter
             );
         } catch (storageErr) {
             throw new Error(`Failed to store oracle message: ${storageErr.message}`);

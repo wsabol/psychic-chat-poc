@@ -16,6 +16,8 @@ export {
   fetchUserOracleLanguagePreference
 } from './helpers/userDataQueries.js';
 
+export { fetchUserOracleCharacterPreference } from './helpers/userDataQueries-optimized.js';
+
 export {
   buildPersonalInfoContext,
   buildAstrologyContext

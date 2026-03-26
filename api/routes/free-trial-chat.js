@@ -252,13 +252,14 @@ router.get('/opening/:tempUserId', async (req, res) => {
     // oracle greets in the correct language even before user_preferences is
     // fully propagated (e.g. race condition on the very first request).
     const { rows: prefRows } = await db.query(
-      `SELECT language, oracle_language FROM user_preferences WHERE user_id_hash = $1`,
+      `SELECT language, oracle_language, COALESCE(oracle_character, 'sage') as oracle_character FROM user_preferences WHERE user_id_hash = $1`,
       [userIdHash]
     );
     const dbLanguage     = prefRows.length > 0 ? prefRows[0].language     : null;
     const dbOracleLang   = prefRows.length > 0 ? prefRows[0].oracle_language : null;
     const userLanguage   = dbLanguage   || langParam || 'en-US';
     const oracleLanguage = dbOracleLang || langParam || 'en-US';
+    const oracleCharacter = prefRows.length > 0 ? prefRows[0].oracle_character : 'sage';
 
     // Get recent messages
     const recentMessages = await getRecentMessages(tempUserId);
@@ -290,7 +291,8 @@ router.get('/opening/:tempUserId', async (req, res) => {
         clientName: clientName,
         recentMessages: recentMessages,
         oracleLanguage: oracleLanguage,
-        userTimezone: userTimezone
+        userTimezone: userTimezone,
+        oracleCharacter: oracleCharacter
       });
     } catch (openingErr) {
       await logErrorFromCatch(openingErr, 'free-trial-chat-opening', 'AI generation failed, using fallback');

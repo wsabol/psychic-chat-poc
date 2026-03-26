@@ -9,8 +9,10 @@ import {
   validateLanguage,
   validateResponseType,
   validateOracleLanguage,
+  validateOracleCharacter,
   getDefaultOracleLanguage,
-  getValidatedVoice
+  getValidatedVoice,
+  getValidatedOracleCharacter
 } from './validators/preferencesValidator.js';
 import {
   findPreferencesByUserIdHash,
@@ -51,7 +53,7 @@ export async function updateTimezone(userId, timezone) {
  * @returns {Promise<Object>} Result
  */
 export async function updateLanguagePreferences(userId, preferences) {
-  const { language, response_type, voice_enabled, timezone, oracle_language } = preferences;
+  const { language, response_type, voice_enabled, timezone, oracle_language, oracle_character } = preferences;
 
   // Validate language
   const langValidation = validateLanguage(language);
@@ -71,13 +73,21 @@ export async function updateLanguagePreferences(userId, preferences) {
     return { success: false, error: oracleValidation.error };
   }
 
+  // Validate oracle character (optional — default to 'sage' if omitted)
+  const characterValue = oracle_character || 'sage';
+  const characterValidation = validateOracleCharacter(characterValue);
+  if (!characterValidation.valid) {
+    return { success: false, error: characterValidation.error };
+  }
+
   const userIdHash = hashUserId(userId);
   const savedPreferences = await saveLanguagePrefs(userIdHash, {
     language,
     response_type,
     voice_enabled: voice_enabled !== false,
     timezone,
-    oracle_language
+    oracle_language,
+    oracle_character: characterValue
   });
 
   return { success: true, preferences: savedPreferences };
@@ -90,7 +100,7 @@ export async function updateLanguagePreferences(userId, preferences) {
  * @returns {Promise<Object>} Result
  */
 export async function updateFullPreferences(userId, preferences) {
-  const { language, response_type, voice_enabled, voice_selected, timezone, oracle_language } = preferences;
+  const { language, response_type, voice_enabled, voice_selected, timezone, oracle_language, oracle_character } = preferences;
 
   // Validate language
   const langValidation = validateLanguage(language);
@@ -107,6 +117,7 @@ export async function updateFullPreferences(userId, preferences) {
   // Get validated/default values
   const selectedOracleLanguage = getDefaultOracleLanguage(oracle_language || language);
   const selectedVoice = getValidatedVoice(voice_selected);
+  const selectedOracleCharacter = getValidatedOracleCharacter(oracle_character);
 
   const userIdHash = hashUserId(userId);
   const savedPreferences = await saveFullPrefs(userIdHash, {
@@ -115,7 +126,8 @@ export async function updateFullPreferences(userId, preferences) {
     voice_enabled: voice_enabled !== false,
     voice_selected: selectedVoice,
     timezone,
-    oracle_language: selectedOracleLanguage
+    oracle_language: selectedOracleLanguage,
+    oracle_character: selectedOracleCharacter
   });
 
   return { success: true, preferences: savedPreferences };
