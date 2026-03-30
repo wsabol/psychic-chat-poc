@@ -74,6 +74,7 @@ function resolveDocumentType(userTermsVersion, userPrivacyVersion, currentTermsV
  *   • Were initially notified 21–22 days ago (the reminder window)
  *   • Have received fewer than MAX_NOTIFICATION_COUNT notifications so far
  *   • Have an active subscription and are not pending deletion
+ *   • Have completed onboarding (onboarding_completed = true or step is 'personal_info'/'welcome')
  *   • Have NOT opted out of email (user_settings.email_marketing_enabled ≠ false)
  *
  * Returns up to BATCH_SIZE rows.
@@ -110,6 +111,7 @@ async function queryUsersForReminder(termsVersion, privacyVersion) {
        AND upi.subscription_status = 'active'
        AND upi.user_id NOT LIKE 'temp_%'
        AND upi.deletion_requested_at IS NULL
+       AND (upi.onboarding_completed = true OR upi.onboarding_step IN ('personal_info', 'welcome'))
        AND COALESCE(us.email_marketing_enabled, true) = true
      ORDER BY uc.last_notified_at ASC
      LIMIT $5`,

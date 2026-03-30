@@ -171,6 +171,12 @@ function truncateHash(userHash) {
  *   $2 — privacyVersion
  *   $3 — ENCRYPTION_KEY  (used by pgp_sym_decrypt)
  *
+ * Excluded users:
+ *   - temp accounts (user_id LIKE 'temp_%')
+ *   - accounts pending deletion
+ *   - accounts that have NOT yet completed onboarding
+ *     (onboarding_completed must be true, or onboarding_step must be 'personal_info'/'welcome')
+ *
  * NOTE: The INTERVAL literals below use CONFIG values embedded at call-time via template
  * literals in each query function. This is intentional — PostgreSQL does not support
  * parameterized INTERVAL expressions — and is safe because CONFIG values are not user-supplied.
@@ -199,6 +205,7 @@ const USER_NOTIFICATION_SELECT = `
   AND upi.email_encrypted IS NOT NULL
   AND upi.user_id NOT LIKE 'temp_%'
   AND upi.deletion_requested_at IS NULL
+  AND (upi.onboarding_completed = true OR upi.onboarding_step IN ('personal_info', 'welcome'))
 `;
 
 /**
