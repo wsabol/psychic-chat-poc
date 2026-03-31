@@ -28,9 +28,15 @@ router.get('/compliance-dashboard/overview', async (req, res) => {
     const termsVersion = getCurrentTermsVersion();
     const privacyVersion = getCurrentPrivacyVersion();
 
-    // Get total user count
+    // Get total user count - only users who have completed onboarding.
+    // A user is considered to have completed onboarding when onboarding_completed = true
+    // OR their onboarding_step is 'personal_info' or 'welcome' (all required steps done).
+    // This matches the same logic used in login.js, billing/onboarding.js, and
+    // policyChangeNotificationJob.js throughout the codebase.
     const totalUsersResult = await db.query(
-      'SELECT COUNT(*) as count FROM user_personal_info'
+      `SELECT COUNT(*) as count FROM user_personal_info
+       WHERE onboarding_completed = true
+          OR onboarding_step IN ('personal_info', 'welcome')`
     );
     const totalUsers = parseInt(totalUsersResult.rows[0].count);
 

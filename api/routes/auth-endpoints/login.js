@@ -107,6 +107,45 @@ router.post('/log-login-success', async (req, res) => {
       // Preferences creation failed silently
     }
 
+    // For ADMIN accounts, auto-create user_consents if none exists yet.
+    // Admins bypass the consent modal so a record is never created via the normal signup
+    // flow.  Without a row in user_consents, flagUsersForUpdate() cannot flag them and
+    // the policy notification job's INNER JOIN will never find them — meaning admins
+    // would never receive policy-change emails.  Creating the record here (at first login)
+    // ensures they are treated like any other registered user for notification purposes.
+    if (isAdminEmail) {
+      try {
+        const adminUserIdHash = hashUserId(userId);
+        const adminConsentExists = await db.query(
+          'SELECT user_id_hash FROM user_consents WHERE user_id_hash = $1',
+          [adminUserIdHash]
+        );
+
+        if (adminConsentExists.rows.length === 0) {
+          const termsVersion = getCurrentTermsVersion();
+          const privacyVersion = getCurrentPrivacyVersion();
+
+          await db.query(
+            `INSERT INTO user_consents (
+              user_id_hash,
+              terms_version,
+              terms_accepted,
+              terms_accepted_at,
+              privacy_version,
+              privacy_accepted,
+              privacy_accepted_at,
+              requires_consent_update,
+              created_at,
+              updated_at
+            ) VALUES ($1, $2, $3, NOW(), $4, $5, NOW(), false, NOW(), NOW())`,
+            [adminUserIdHash, termsVersion, true, privacyVersion, true]
+          );
+        }
+      } catch (adminConsentErr) {
+        // Consent creation failed silently (non-blocking)
+      }
+    }
+
     // For TEMPORARY accounts, automatically set user_consents to avoid blocking consent modal
     // Temp users have email starting with 'temp_' (free trial accounts)
     if (email && email.startsWith('temp_')) {

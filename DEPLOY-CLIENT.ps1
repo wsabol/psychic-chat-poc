@@ -65,8 +65,9 @@ aws s3 sync $BUILD_PATH s3://$S3_BUCKET/ --delete --region $REGION --exclude "*"
 aws s3 sync $BUILD_PATH s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.svg" --content-type "image/svg+xml" --cache-control "public, max-age=31536000, immutable"
 aws s3 sync $BUILD_PATH s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.ico" --content-type "image/x-icon" --cache-control "public, max-age=31536000, immutable"
 
-# Sync PDF files
-aws s3 sync $BUILD_PATH s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.pdf" --content-type "application/pdf" --cache-control "public, max-age=86400"
+# Sync PDF files — no-cache so updated documents are always re-fetched from CloudFront
+# (PDF filenames are stable/unversioned, so browsers must not cache them long-term)
+aws s3 sync $BUILD_PATH s3://$S3_BUCKET/ --delete --region $REGION --exclude "*" --include "*.pdf" --content-type "application/pdf" --cache-control "no-cache, no-store, must-revalidate"
 
 # Sync any remaining files (fonts, etc.)
 aws s3 sync $BUILD_PATH s3://$S3_BUCKET/ --delete --region $REGION --exclude "*.html" --exclude "*.json" --exclude "*.css" --exclude "*.js" --exclude "*.png" --exclude "*.jpg" --exclude "*.jpeg" --exclude "*.gif" --exclude "*.svg" --exclude "*.ico" --exclude "*.pdf"
