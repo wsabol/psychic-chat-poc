@@ -34,6 +34,8 @@ import whitelistRoutes from "./routes/admin/free-trial-whitelist.js";
 import priceManagementRoutes from "./routes/admin/price-management.js";
 import securityMetricsRoutes from "./routes/admin/security-metrics.js";
 import legalDataRequestsRoutes from "./routes/admin/legal-data-requests.js";
+import sessionManagementRoutes from "./routes/admin/session-management.js";
+import announcementsRoutes from "./routes/admin/announcements.js";
 import logsRoutes from "./routes/logs.js";
 import contactRoutes from "./routes/contact.js";
 import { authenticateToken } from "./middleware/auth.js";
@@ -260,6 +262,12 @@ app.use("/admin", authenticateToken, securityMetricsRoutes);
 
 // Legal data requests routes (admin only)
 app.use("/admin", authenticateToken, legalDataRequestsRoutes);
+
+// Session management routes (admin only) — remote sign-out / token revocation
+app.use("/admin", authenticateToken, sessionManagementRoutes);
+
+// Announcements routes (admin only) — broadcast emails to all users
+app.use("/admin", authenticateToken, announcementsRoutes);
 
 // New user data endpoints (authentication only - no validateUserHash)
 // These don't have user IDs in the URL

@@ -15,6 +15,8 @@ import FreeTrialWhitelist from '../components/admin/FreeTrialWhitelist';
 import PriceManagementTab from '../components/admin/PriceManagementTab';
 import SecurityMetrics from '../components/admin/SecurityMetrics';
 import LegalDataRequests from '../components/admin/LegalDataRequests';
+import SessionManagement from '../components/admin/SessionManagement';
+import Announcements from '../components/admin/Announcements';
 import { useAdminCheck } from './hooks/useAdminCheck';
 import { useAnalyticsReport } from './hooks/useAnalyticsReport';
 import { styles } from './admin-styles';
@@ -101,6 +103,16 @@ export default function AdminPage({ token, userId }) {
             isActive={activeTab === 'legal'}
             onClick={() => setActiveTab('legal')}
           />
+          <TabButton
+            label="🔐 Session Mgmt"
+            isActive={activeTab === 'sessions'}
+            onClick={() => setActiveTab('sessions')}
+          />
+          <TabButton
+            label="📣 Announcements"
+            isActive={activeTab === 'announcements'}
+            onClick={() => setActiveTab('announcements')}
+          />
         </div>
 
         {/* Subscription Report Tab */}
@@ -147,6 +159,12 @@ export default function AdminPage({ token, userId }) {
 
         {/* Legal Data Requests Tab */}
         {activeTab === 'legal' && <LegalDataRequests token={token} />}
+
+        {/* Session Management Tab */}
+        {activeTab === 'sessions' && <SessionManagement token={token} />}
+
+        {/* Announcements Tab */}
+        {activeTab === 'announcements' && <Announcements token={token} />}
       </div>
     </div>
   );

@@ -12,8 +12,13 @@ export async function authenticateToken(req, res, next) {
       return authError(res, 'Access token required' );
     }
     
-    // Verify Firebase token
-    const decodedToken = await auth.verifyIdToken(token);
+    // Verify Firebase token.
+    // checkRevoked: true makes Firebase reject tokens whose refresh token has
+    // been revoked via auth.revokeRefreshTokens() (admin session-management
+    // endpoints).  Without this flag, revoked tokens remain valid until their
+    // natural 1-hour expiry.  Firebase caches revocation status server-side
+    // so this does not add a network round-trip on every request.
+    const decodedToken = await auth.verifyIdToken(token, true /* checkRevoked */);
     req.user = {
       uid: decodedToken.uid,
       userId: decodedToken.uid,

@@ -158,6 +158,16 @@ export default {
     note: '您需要完成订阅设置才能访问 Starship Psychics 的高级功能。',
   },
 
+  appUpdate: {
+    subject: 'Starship Psychics 已更新 – 下载最新版本',
+    heading: '🚀 Starship Psychics 已更新！',
+    greeting: '来自 Starship Psychics 的好消息！',
+    body: '我们一直在努力为您提供最佳的灵媒聊天体验。Starship Psychics 应用程序已在 Google Play 商店更新，带来了令人兴奋的新功能和改进，我们很乐意让您尝试！',
+    buttonText: '在 Google Play 上下载',
+    note: '点击上方按钮，从 Google Play 商店下载最新版本，体验 Starship Psychics 的所有新功能。',
+    footerNote: '感谢您成为 Starship Psychics 社区的宝贵成员。',
+  },
+
   subscriptionPastDue: {
     subject: '付款逾期 - 需要采取行动',
     headerTitle: '付款逾期',

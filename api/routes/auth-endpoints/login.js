@@ -255,6 +255,37 @@ router.post('/log-login-success', async (req, res) => {
           subscriptionStatus = { ...subscriptionStatus, stripeUnavailable: true };
         // If subscription is not healthy for a real business reason, block login
         } else if (!health.healthy) {
+          // ── Onboarding reset ───────────────────────────────────────────────
+          // Reset the user's onboarding step to 'create_account' so that on
+          // their NEXT login the onboarding check classifies them as still
+          // onboarding (isEffectivelyComplete = false → isOnboarding = true).
+          // That exempts them from the subscription check and routes them back
+          // through OnboardingStack → SubscriptionScreen to subscribe properly.
+          //
+          // Without this reset the user would be permanently locked out:
+          //   • Every login → 403 (no subscription)
+          //   • onboarding_completed = true → never see OnboardingStack
+          //   • No way to reach the SubscriptionScreen to pay
+          try {
+            await db.query(
+              `UPDATE user_personal_info
+                 SET onboarding_step        = 'create_account',
+                     onboarding_completed   = FALSE,
+                     onboarding_completed_at = NULL,
+                     updated_at             = NOW()
+               WHERE user_id = $1`,
+              [userId],
+            );
+          } catch (resetErr) {
+            // Non-fatal — log but do not prevent the 403 from being returned.
+            await logErrorFromCatch(
+              resetErr,
+              'auth',
+              'onboarding-reset-on-subscription-block',
+              userId,
+            );
+          }
+
           await logAudit(db, {
             userId,
             action: 'USER_LOGIN_BLOCKED_NO_SUBSCRIPTION',

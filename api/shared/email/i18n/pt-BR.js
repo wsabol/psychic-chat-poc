@@ -158,6 +158,16 @@ export default {
     note: 'A configuração da sua assinatura precisa ser concluída para acessar os recursos premium do Starship Psychics.',
   },
 
+  appUpdate: {
+    subject: 'Starship Psychics foi atualizado – Baixe a última versão',
+    heading: '🚀 Starship Psychics foi atualizado!',
+    greeting: 'Novidades empolgantes do Starship Psychics!',
+    body: 'Trabalhamos muito para oferecer a melhor experiência de chat psíquico possível. O aplicativo Starship Psychics foi atualizado com novos recursos e melhorias empolgantes — adoraríamos que você os experimentasse!',
+    buttonText: 'Baixar no Google Play',
+    note: 'Toque no botão acima para baixar a versão mais recente na Google Play Store e experimentar tudo de novo que o Starship Psychics tem a oferecer.',
+    footerNote: 'Obrigado por ser um membro valioso da comunidade Starship Psychics.',
+  },
+
   subscriptionPastDue: {
     subject: 'Pagamento em atraso - Ação necessária',
     headerTitle: 'Pagamento em atraso',

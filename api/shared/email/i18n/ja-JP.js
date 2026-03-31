@@ -158,6 +158,16 @@ export default {
     note: 'Starship Psychicsのプレミアム機能にアクセスするには、サブスクリプションの設定を完了する必要があります。',
   },
 
+  appUpdate: {
+    subject: 'Starship Psychicsがアップデートされました – 最新バージョンをダウンロード',
+    heading: '🚀 Starship Psychicsがアップデートされました！',
+    greeting: 'Starship Psychicsからの嬉しいお知らせです！',
+    body: '最高のサイキックチャット体験をお届けするために懸命に取り組んできました。Starship PsychicsアプリがGoogle Playストアで最新バージョンにアップデートされ、新機能と改善が加わりました。ぜひお試しください！',
+    buttonText: 'Google Playでダウンロード',
+    note: '上のボタンをタップしてGoogle PlayストアからStarship Psychicsの最新バージョンをダウンロードし、すべての新機能をお楽しみください。',
+    footerNote: 'Starship Psychicsコミュニティの大切なメンバーとしてご支援いただきありがとうございます。',
+  },
+
   subscriptionPastDue: {
     subject: '支払い期限超過 - 要対応',
     headerTitle: '支払い期限超過',
