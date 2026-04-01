@@ -6,8 +6,9 @@
  *
  * Endpoints:
  *   POST /billing/validate-receipt/apple       – Validate a StoreKit receipt from the app
- *   POST /billing/restore/apple                – Re-validate all active Apple receipts for a user
- *   POST /billing/apple/server-notifications   – Apple App Store Server Notifications (S2S)
+ *   POST /billing/restore-purchases/apple      – Re-validate all active Apple receipts for a user
+ *   POST /billing/apple-server-notification    – Apple App Store Server Notifications (S2S)
+ *   GET  /billing/subscription-status/apple    – Check subscription status on app launch
  *
  * Apple receipt validation flow:
  *   1. App sends base64-encoded transactionReceipt to this endpoint
@@ -18,12 +19,14 @@
  *   4. We update user_personal_info with subscription status, period dates, etc.
  *
  * Environment variables required:
- *   APPLE_SHARED_SECRET   – App-specific shared secret from App Store Connect →
- *                           Your App → In-App Purchases → App-Specific Shared Secret
+ *   APPLE_SHARED_SECRET        – App-specific shared secret from App Store Connect →
+ *                                Your App → In-App Purchases → App-Specific Shared Secret
+ *   APPLE_SERVER_NOTIF_TOKEN   – Random secret string you choose; append to the notification
+ *                                URL as ?token=<value> to reject spoofed requests.
  *
  * Apple App Store Server Notifications (S2S):
  *   Configure in App Store Connect → Your App → App Information → App Store Server Notifications
- *   Set the URL to: https://api.starshippsychics.com/billing/apple/server-notifications
+ *   Set the URL to: https://api.starshippsychics.com/billing/apple-server-notification?token=<APPLE_SERVER_NOTIF_TOKEN>
  *   Use Version 1 notifications (simpler format, well supported)
  *
  * Apple subscription status codes (status field in verifyReceipt response):
@@ -201,14 +204,14 @@ router.post('/validate-receipt/apple', authenticateToken, async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// POST /billing/restore/apple
+// POST /billing/restore-purchases/apple
 //
 // Called when the user taps "Restore Purchases" and the app sends the current
 // App Store receipt for re-validation.
 // Body: { receipt: <base64 string> }
 // ─────────────────────────────────────────────────────────────────────────────
 
-router.post('/restore/apple', authenticateToken, async (req, res) => {
+router.post('/restore-purchases/apple', authenticateToken, async (req, res) => {
   const userId = req.user?.uid;
   if (!userId) {
     return res.status(401).json({ error: 'Unauthorized' });
@@ -255,20 +258,34 @@ router.post('/restore/apple', authenticateToken, async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// POST /billing/apple/server-notifications
+// POST /billing/apple-server-notification
 //
 // Apple App Store Server Notifications (S2S) webhook.
 // Apple sends these automatically when a subscription renews, expires, is
 // cancelled, goes into a billing retry period, etc.
 //
-// No authentication header — Apple posts to a public URL. We verify the
-// receipt included in the payload as a secondary check.
+// Security: Set APPLE_SERVER_NOTIF_TOKEN to a random secret and append it to
+// the notification URL in App Store Connect as ?token=<value>.  Any request
+// without the correct token is silently acknowledged (200) and discarded so
+// Apple does not retry endlessly.
 //
 // Configure in: App Store Connect → Your App → App Information →
 //               App Store Server Notifications URL
 // ─────────────────────────────────────────────────────────────────────────────
 
-router.post('/apple/server-notifications', async (req, res) => {
+router.post('/apple-server-notification', async (req, res) => {
+  // ── Validate secret token ──────────────────────────────────────────────────
+  // Mirrors the GOOGLE_PLAY_PUBSUB_TOKEN pattern used in googlePlay.js.
+  // Return 200 on rejection so Apple does not retry with exponential back-off.
+  const expectedToken = process.env.APPLE_SERVER_NOTIF_TOKEN;
+  if (expectedToken) {
+    const providedToken = req.query.token;
+    if (providedToken !== expectedToken) {
+      logger.warn('[AppleIAP] S2S notification rejected: invalid token');
+      return res.status(200).json({ received: true, error: 'unauthorized' });
+    }
+  }
+
   const notification = req.body;
 
   // Apple always sends 200 immediately — acknowledge first, process async
@@ -347,6 +364,73 @@ router.post('/apple/server-notifications', async (req, res) => {
   } catch (error) {
     logger.error('[AppleIAP] S2S notification error:', error);
     // Already sent 200 — log and move on
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /billing/subscription-status/apple
+//
+// Called by the iOS app on launch to check whether the user has an active
+// subscription.  Mirrors GET /billing/subscription-status/google; the same
+// user_personal_info row stores both Apple and Google (and Stripe) state, so
+// the query is identical — only the response shape for Apple-specific fields
+// differs slightly.
+// ─────────────────────────────────────────────────────────────────────────────
+
+router.get('/subscription-status/apple', authenticateToken, async (req, res) => {
+  const userId = req.user?.uid;
+  if (!userId) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT subscription_status, plan_name, current_period_end,
+              billing_platform, apple_product_id,
+              apple_original_transaction_id, last_status_check_at
+       FROM user_personal_info
+       WHERE user_id = $1`,
+      [userId],
+    );
+
+    if (result.rows.length === 0) {
+      return res.json({ hasSubscription: false });
+    }
+
+    const row = result.rows[0];
+
+    // For Stripe / Google Play subscriptions the app should call the
+    // platform-specific endpoint, but we still return correct data here.
+    if (row.billing_platform !== 'apple') {
+      const isActive = row.subscription_status === 'active';
+      return res.json({
+        hasSubscription: isActive,
+        plan: row.plan_name ?? null,
+        status: row.subscription_status ?? 'inactive',
+        billing_platform: row.billing_platform || 'stripe',
+        expiresAt: row.current_period_end
+          ? new Date(row.current_period_end * 1000).toISOString()
+          : null,
+      });
+    }
+
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    const isExpired  = row.current_period_end && row.current_period_end < nowSeconds;
+
+    return res.json({
+      hasSubscription: row.subscription_status === 'active' && !isExpired,
+      plan: row.plan_name ?? null,
+      status: isExpired ? 'expired' : (row.subscription_status ?? 'inactive'),
+      billing_platform: 'apple',
+      expiresAt: row.current_period_end
+        ? new Date(row.current_period_end * 1000).toISOString()
+        : null,
+      originalTransactionId: row.apple_original_transaction_id ?? null,
+      productId: row.apple_product_id ?? null,
+    });
+  } catch (error) {
+    logger.error('[AppleIAP] subscription-status error:', error);
+    res.status(500).json({ error: 'Failed to retrieve subscription status' });
   }
 });
 

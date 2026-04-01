@@ -64,11 +64,7 @@ function promptPassword(question) {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 async function main() {
-  console.log('\n🔐 Secure DB Migration Runner');
-  console.log('─────────────────────────────');
-  console.log('Migration: add-google-play-billing');
-  console.log('Target:    localhost:5433 → psychic_chat (via SSH tunnel)\n');
-
+fs
   const host     = await prompt('Host     [localhost]: ') || 'localhost';
   const port     = await prompt('Port     [5433]:      ') || '5433';
   const database = await prompt('Database [psychic_chat]: ') || 'psychic_chat';
