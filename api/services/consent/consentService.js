@@ -97,13 +97,13 @@ export async function checkUserConsent(userId) {
       }
     };
   } catch (error) {
-    return {
-      hasConsent: false,
-      terms_accepted: false,
-      privacy_accepted: false,
-      needsUpdate: true,
-      error: error.message
-    };
+    // Fail-open on DB/infrastructure errors: do NOT block the user because of a
+    // transient server-side problem.  The consent modal incorrectly appears when
+    // this returns hasConsent:false, and the user then can't accept because the
+    // same DB error also causes recordConsent to fail.
+    // Re-throw so the controller returns a proper 500; the mobile client's
+    // checkConsent() already fails-open with { hasConsent: true } on any API error.
+    throw error;
   }
 }
 

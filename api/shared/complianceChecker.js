@@ -129,20 +129,20 @@ export async function flagUsersForUpdate(documentType = 'both') {
     let query = 'UPDATE user_consents SET requires_consent_update = true, updated_at = NOW()';
     let conditions = [];
     
+    // Build params array first so we can reference correct $N placeholders.
+    const params = [];
     if (documentType === 'terms' || documentType === 'both') {
-      conditions.push(`terms_version != $1`);
+      params.push(currentTermsVersion);
+      conditions.push(`terms_version != $${params.length}`);
     }
     if (documentType === 'privacy' || documentType === 'both') {
-      conditions.push(`privacy_version != $2`);
+      params.push(currentPrivacyVersion);
+      conditions.push(`privacy_version != $${params.length}`);
     }
-    
+
     if (conditions.length === 0) return { flagged: 0 };
-    
+
     query += ` WHERE ${conditions.join(' OR ')}`;
-    
-    const params = [];
-    if (documentType === 'terms' || documentType === 'both') params.push(currentTermsVersion);
-    if (documentType === 'privacy' || documentType === 'both') params.push(currentPrivacyVersion);
     
     const result = await db.query(query, params);
     

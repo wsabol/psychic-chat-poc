@@ -47,7 +47,9 @@ export async function recordConsent(req, res) {
         message: result.message 
       });
     } else {
-      return validationError(res, result.message);
+      // Service-level failure (e.g. DB error) — return 500, not 400.
+      // 400 is reserved for client input errors; a failed upsert is a server error.
+      return serverError(res, result.message || 'Failed to record consent');
     }
   } catch (error) {
     return serverError(res, error.message);
