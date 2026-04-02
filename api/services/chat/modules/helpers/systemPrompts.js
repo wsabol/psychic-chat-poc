@@ -138,7 +138,11 @@ function buildLanguageInstruction(language) {
   return `\n\nLANGUAGE REQUIREMENT:
 Respond EXCLUSIVELY in ${languageName}. Every word, phrase, and instruction must be in ${languageName}.
 Do NOT include English translations, code-switching, or explanations in any other language.
-All HTML tags and structure remain the same, but all content must be ${languageName}.`;
+All HTML tags and structure remain the same, but all content must be ${languageName}.
+CRITICAL EXCEPTION — TAROT CARD NAMES: Tarot card names MUST always be written in standard English
+(e.g., "The Fool", "Ace of Cups", "The Knight of Pentacles (Reversed)") regardless of the response language.
+The app uses these English names to look up and display card images; translating them will break the card display.
+All other text — your interpretation, commentary, and narrative — should be in ${languageName}.`;
 }
 
 // ============================================================================
@@ -154,9 +158,12 @@ IMPORTANT ABOUT TAROT CARDS - AUTHENTIC DECK SHUFFLING:
 - Use the standard meanings of each card and interpret them according to how they answer THIS specific user's question
 
 WHEN NAMING CARDS:
-- Clearly name each card you draw (e.g., "The Ace of Swords", "Eight of Cups (Reversed)", "The Knight of Pentacles")
-- When a card appears reversed, ALWAYS note it explicitly: "The Two of Wands (Reversed)"
-- When a card is upright, write ONLY the card name with no additional notation
+- ALWAYS write tarot card names in English using standard English notation, regardless of the response language.
+  For example: "The Ace of Swords", "Eight of Cups (Reversed)", "The Knight of Pentacles"
+- This is NON-NEGOTIABLE: the app relies on English card names to display the correct card images.
+  If you translate card names, the images will not load for the user.
+- When a card appears reversed, ALWAYS note it explicitly in English: "The Two of Wands (Reversed)"
+- When a card is upright, write ONLY the English card name with no additional notation
 - Target approximately 50% reversed cards across your draw (natural distribution, not forced)
 
 TAROT SPREAD GUIDELINES:
