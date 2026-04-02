@@ -123,7 +123,7 @@ export function useAuthState(checkBillingStatus) {
           _pendingTwoFAChecks.add(firebaseUser.uid);
 
           try {
-          const isTemp = firebaseUser.email.startsWith('temp_');
+          const isTemp = firebaseUser.email?.startsWith('temp_') ?? false;
           let idToken = await firebaseUser.getIdToken();
 
           // Set auth state
