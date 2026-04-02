@@ -80,18 +80,20 @@ router.get('/compliance-dashboard/overview', async (req, res) => {
         usersWithConsents: totalWithConsents,
         usersWithoutConsents: totalUsers - totalWithConsents,
         fullyCompliant,
-        compliancePercentage: totalWithConsents > 0 
-          ? ((fullyCompliant / totalWithConsents) * 100).toFixed(1)
+        // Denominator is totalUsers (fully registered/onboarded users), not just those
+        // with consent records, so users who never completed consent count as non-compliant.
+        compliancePercentage: totalUsers > 0 
+          ? ((fullyCompliant / totalUsers) * 100).toFixed(1)
           : 0,
-        termsCompliancePercentage: totalWithConsents > 0
-          ? ((parseInt(compliance.terms_current) / totalWithConsents) * 100).toFixed(1)
+        termsCompliancePercentage: totalUsers > 0
+          ? ((parseInt(compliance.terms_current) / totalUsers) * 100).toFixed(1)
           : 0,
-        privacyCompliancePercentage: totalWithConsents > 0
-          ? ((parseInt(compliance.privacy_current) / totalWithConsents) * 100).toFixed(1)
+        privacyCompliancePercentage: totalUsers > 0
+          ? ((parseInt(compliance.privacy_current) / totalUsers) * 100).toFixed(1)
           : 0,
         requiresAction: parseInt(compliance.requires_action),
-        requiresActionPercentage: totalWithConsents > 0
-          ? ((parseInt(compliance.requires_action) / totalWithConsents) * 100).toFixed(1)
+        requiresActionPercentage: totalUsers > 0
+          ? ((parseInt(compliance.requires_action) / totalUsers) * 100).toFixed(1)
           : 0
       }
     });
