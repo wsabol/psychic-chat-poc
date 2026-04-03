@@ -80,7 +80,18 @@ export function getLocalTimestampForTimezone(timezone = 'UTC') {
     const minute = get('minute');
     const second = get('second');
     
-    const localeDateString = `${year}-${month}-${day}T${hour}:${minute}:${second}`;
+    // Normalize hour 24 → 00 (Intl.DateTimeFormat with hour12:false can return '24'
+    // for midnight instead of '00', which is invalid for PostgreSQL timestamps)
+    let normYear = year, normMonth = month, normDay = day, normHour = hour;
+    if (hour === '24') {
+      normHour = '00';
+      const dayAfter = new Date(Date.UTC(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10) + 1));
+      normYear  = String(dayAfter.getUTCFullYear());
+      normMonth = String(dayAfter.getUTCMonth() + 1).padStart(2, '0');
+      normDay   = String(dayAfter.getUTCDate()).padStart(2, '0');
+    }
+    
+    const localeDateString = `${normYear}-${normMonth}-${normDay}T${normHour}:${minute}:${second}`;
     
     // Calculate timezone offset using a more robust method
     // Create a date in the target timezone and compare with UTC
@@ -90,7 +101,7 @@ export function getLocalTimestampForTimezone(timezone = 'UTC') {
     const utcTimestamp = testDate.getTime();
     
     // Parse the local time components to create a "fake UTC" date
-    const localAsDate = new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}Z`);
+    const localAsDate = new Date(`${normYear}-${normMonth}-${normDay}T${normHour}:${minute}:${second}Z`);
     const localTimestamp = localAsDate.getTime();
     
     // Calculate the difference (this gives us the offset)
