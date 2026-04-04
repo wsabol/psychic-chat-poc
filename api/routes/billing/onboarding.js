@@ -107,16 +107,43 @@ router.get('/onboarding-status', async (req, res) => {
       subscription: currentStepIndex >= stepOrder.indexOf('subscription'),
       personal_info: currentStepIndex >= stepOrder.indexOf('personal_info'),
     };
+
+    // AUTO-HEAL: If the user already has an active subscription but the DB
+    // onboarding_step hasn't reached 'subscription' yet (e.g. the step was
+    // reset by a migration or data fix), treat the subscription step as
+    // complete and advance the DB record in the background.
+    // This prevents the user from being permanently stuck on the Subscription
+    // screen during onboarding when they already have a valid subscription.
+    if (subscription_status === 'active' && !steps.subscription) {
+      steps.payment_method = true;
+      steps.subscription = true;
+      // Fire-and-forget — don't block the response
+      db.query(
+        `UPDATE user_personal_info
+         SET onboarding_step = 'subscription',
+             updated_at      = NOW()
+         WHERE user_id = $1
+           AND (onboarding_step IS NULL
+                OR onboarding_step IN ('create_account', 'payment_method'))`,
+        [userId]
+      ).catch(err =>
+        console.error('[onboarding] auto-heal subscription step failed:', err)
+      );
+    }
     
     // isOnboarding = true if onboarding_completed is NULL or FALSE (not finished)
     // Only FALSE if onboarding_completed = true
     // SAFETY NET: Also treat personal_info or welcome step as "effectively complete"
     // even if the onboarding_completed flag wasn't set (e.g. browser closed before
     // WelcomeModal was dismissed on a previous device).
+    // SAFETY NET 2: If all required steps are now complete (after the auto-heal
+    // above), treat this as effectively complete even if onboarding_step is still
+    // 'subscription' — this avoids an extra round-trip for returning users.
     const stepsIndicatingCompletion = ['personal_info', 'welcome'];
     const isEffectivelyComplete =
       onboarding_completed === true ||
-      stepsIndicatingCompletion.includes(onboarding_step);
+      stepsIndicatingCompletion.includes(onboarding_step) ||
+      (subscription_status === 'active' && steps.subscription && steps.personal_info);
     const isOnboarding = !isEffectivelyComplete;
     
     successResponse(res, {
