@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import express from 'express';
 import { db } from '../../shared/db.js';
 import { validationError, serverError, successResponse } from '../../utils/responses.js';
@@ -53,6 +54,50 @@ router.get('/onboarding-status', async (req, res) => {
         },
         subscriptionStatus: 'complete'
       });
+    }
+
+    // ── Email-hash fallback ───────────────────────────────────────────────────
+    // If no row is found for this Firebase UID, the user may have subscribed via
+    // the web (Stripe) under a different Firebase account (e.g. email/password on
+    // web vs Google Sign-In on mobile).  Their completed onboarding state lives
+    // under the web UID.  We mirror the same fallback used by the Google
+    // subscription-status endpoint to avoid treating these returning users as
+    // brand-new, which forces them back through the full onboarding flow.
+    //
+    // We also use the fallback when the UID row exists but has no active
+    // subscription — this catches the case where a Stripe web subscriber logs in
+    // with a different mobile UID and their mobile row was auto-created empty.
+    const noRow = !result.rows[0];
+    const rowHasNoSub =
+      result.rows.length > 0 &&
+      (!result.rows[0].subscription_status || result.rows[0].subscription_status === 'inactive');
+
+    if ((noRow || rowHasNoSub) && req.user?.email) {
+      const emailHash = crypto
+        .createHash('sha256')
+        .update(req.user.email.toLowerCase())
+        .digest('hex');
+
+      const emailResult = await db.query(
+        `SELECT onboarding_step, onboarding_completed, subscription_status, is_admin
+         FROM user_personal_info
+         WHERE email_hash = $1
+           AND (subscription_status = 'active' OR onboarding_completed = true)
+         ORDER BY
+           CASE WHEN onboarding_completed = true THEN 0 ELSE 1 END,
+           CASE WHEN subscription_status = 'active'  THEN 0 ELSE 1 END
+         LIMIT 1`,
+        [emailHash]
+      );
+
+      if (emailResult.rows.length > 0) {
+        console.info(
+          `[onboarding-status] Email-hash fallback matched for uid=${userId} — ` +
+          'using onboarding state from matched account'
+        );
+        // Replace result so the rest of the handler uses the matched row.
+        result.rows[0] = emailResult.rows[0];
+      }
     }
 
     // For new users (temp accounts, not yet in DB), return default onboarding state
@@ -139,13 +184,36 @@ router.get('/onboarding-status', async (req, res) => {
     // SAFETY NET 2: If all required steps are now complete (after the auto-heal
     // above), treat this as effectively complete even if onboarding_step is still
     // 'subscription' — this avoids an extra round-trip for returning users.
+    // SAFETY NET 3: A subscription may be billed through Stripe, Google Play, OR
+    // Apple.  We use the DB's subscription_status column (which is updated by all
+    // three payment platforms) rather than platform-specific checks.
     const stepsIndicatingCompletion = ['personal_info', 'welcome'];
     const isEffectivelyComplete =
-      onboarding_completed === true ||
+      // Use !! (truthy) instead of === true so any DB truthy value (true, 't', 1)
+      // is correctly recognised — belt-and-suspenders for PostgreSQL BOOLEAN.
+      !!onboarding_completed ||
       stepsIndicatingCompletion.includes(onboarding_step) ||
       (subscription_status === 'active' && steps.subscription && steps.personal_info);
     const isOnboarding = !isEffectivelyComplete;
-    
+
+    // AUTO-HEAL: If this user has an active subscription from any platform
+    // (Stripe, Google Play, or Apple) and their onboarding_completed flag was
+    // never set (e.g. data migration, failed network call during the welcome step),
+    // stamp it now so future loads resolve immediately without the fallback path.
+    if (!onboarding_completed && subscription_status === 'active' && !isOnboarding) {
+      db.query(
+        `UPDATE user_personal_info
+         SET onboarding_completed    = true,
+             onboarding_completed_at = COALESCE(onboarding_completed_at, NOW()),
+             updated_at              = NOW()
+         WHERE user_id = $1
+           AND (onboarding_completed IS NULL OR onboarding_completed = false)`,
+        [userId]
+      ).catch(err =>
+        console.error('[onboarding] auto-heal onboarding_completed flag failed:', err)
+      );
+    }
+
     successResponse(res, {
       currentStep: onboarding_step,
       isOnboarding: isOnboarding,
