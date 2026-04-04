@@ -45,6 +45,12 @@ router.get('/compliance-dashboard/overview', async (req, res) => {
     // consent records from inflating counts when accounts are deleted or never fully created)
     // encode(digest(upi.user_id, 'sha256'), 'hex') computes the SHA-256 hash of the raw
     // Firebase UID stored in user_personal_info.user_id to match user_consents.user_id_hash
+    //
+    // WHERE clause restricts to qualified users only (onboarding completed) — the same
+    // population used for totalUsers above — so percentages use a consistent denominator.
+    // Without this filter, users who created an account but never finished onboarding would
+    // appear in the consent counts (numerator) but not in totalUsers (denominator), producing
+    // percentages above 100%.
     const complianceResult = await db.query(`
       SELECT 
         COUNT(*) as total_with_consents,
@@ -54,6 +60,7 @@ router.get('/compliance-dashboard/overview', async (req, res) => {
         COUNT(*) FILTER (WHERE uc.requires_consent_update = true) as requires_action
       FROM user_consents uc
       INNER JOIN user_personal_info upi ON uc.user_id_hash = encode(digest(upi.user_id, 'sha256'), 'hex')
+      WHERE (upi.onboarding_completed = true OR upi.onboarding_step IN ('personal_info', 'welcome'))
     `, [termsVersion, privacyVersion]);
 
     const compliance = complianceResult.rows[0];
@@ -185,21 +192,25 @@ router.get('/compliance-dashboard/user-status', async (req, res) => {
     let queryParams;
     let countParams;
 
+    // Qualified-user base clause: mirrors the onboarding-completion filter used in
+    // totalUsers (overview) so the table only reflects the same population.
+    const qualifiedClause = `(upi.onboarding_completed = true OR upi.onboarding_step IN ('personal_info', 'welcome'))`;
+
     if (status === 'compliant') {
-      whereClause = `(uc.terms_version = $1 AND uc.privacy_version = $2)`;
+      whereClause = `${qualifiedClause} AND (uc.terms_version = $1 AND uc.privacy_version = $2)`;
       queryParams  = [termsVersion, privacyVersion, limitVal, offsetVal];
       countParams  = [termsVersion, privacyVersion];
     } else if (status === 'non-compliant') {
-      whereClause = `(uc.terms_version != $1 OR uc.privacy_version != $2)`;
+      whereClause = `${qualifiedClause} AND (uc.terms_version != $1 OR uc.privacy_version != $2)`;
       queryParams  = [termsVersion, privacyVersion, limitVal, offsetVal];
       countParams  = [termsVersion, privacyVersion];
     } else if (status === 'requires-action') {
-      whereClause = `uc.requires_consent_update = true`;
+      whereClause = `${qualifiedClause} AND uc.requires_consent_update = true`;
       queryParams  = [limitVal, offsetVal];
       countParams  = [];
     } else {
-      // 'all' — no version filter
-      whereClause = `1=1`;
+      // 'all' — onboarding filter only, no version filter
+      whereClause = qualifiedClause;
       queryParams  = [limitVal, offsetVal];
       countParams  = [];
     }
@@ -209,7 +220,8 @@ router.get('/compliance-dashboard/user-status', async (req, res) => {
     const limitPlaceholder  = queryParams.length === 4 ? '$3' : '$1';
     const offsetPlaceholder = queryParams.length === 4 ? '$4' : '$2';
 
-    // INNER JOIN filters out orphaned consent records that have no matching account
+    // INNER JOIN filters out orphaned consent records that have no matching account.
+    // WHERE clause further restricts to qualified (onboarding-completed) users only.
     const query = `
       SELECT 
         uc.user_id_hash,
