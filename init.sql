@@ -644,6 +644,7 @@ CREATE INDEX IF NOT EXISTS idx_free_trial_sessions_user_id_hash ON free_trial_se
 CREATE INDEX IF NOT EXISTS idx_free_trial_sessions_hash_completed ON free_trial_sessions(ip_address_hash, is_completed);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_free_trial_sessions_unique_ip_user ON free_trial_sessions(ip_address_encrypted, user_id_hash);
 CREATE INDEX IF NOT EXISTS idx_free_trial_sessions_ip_completed ON free_trial_sessions(ip_address_encrypted, is_completed);
+CREATE INDEX IF NOT EXISTS idx_free_trial_sessions_started_at ON free_trial_sessions(started_at);
 
 
 -- TABLE: free_trial_whitelist (Admin IP whitelisting for free trial testing)

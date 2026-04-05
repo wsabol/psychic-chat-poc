@@ -63,7 +63,7 @@ router.delete("/cleanup-old-temp-accounts", async (req, res) => {
         const { rows: staleSessions } = await db.query(
             `SELECT user_id_hash
              FROM free_trial_sessions
-             WHERE created_at < $1
+             WHERE started_at < $1
              LIMIT 500`,
             [oneDayAgo]
         );

@@ -23,7 +23,7 @@ export async function runTempAccountCleanupJob() {
     const { rows: staleSessions } = await db.query(
       `SELECT user_id_hash
        FROM free_trial_sessions
-       WHERE created_at < $1
+       WHERE started_at < $1
        LIMIT 1000`,
       [eightHoursAgo]
     );
@@ -93,9 +93,9 @@ export async function getTempAccountCleanupJobStatus() {
     const { rows } = await db.query(
       `SELECT
         COUNT(*)                                                              AS total_guest_sessions,
-        COUNT(CASE WHEN created_at > NOW() - INTERVAL '1 day'  THEN 1 END)  AS created_last_24h,
-        COUNT(CASE WHEN created_at > NOW() - INTERVAL '2 days' THEN 1 END)  AS created_last_48h,
-        COUNT(CASE WHEN created_at > NOW() - INTERVAL '3 days' THEN 1 END)  AS created_last_72h
+        COUNT(CASE WHEN started_at > NOW() - INTERVAL '1 day'  THEN 1 END)  AS created_last_24h,
+        COUNT(CASE WHEN started_at > NOW() - INTERVAL '2 days' THEN 1 END)  AS created_last_48h,
+        COUNT(CASE WHEN started_at > NOW() - INTERVAL '3 days' THEN 1 END)  AS created_last_72h
        FROM free_trial_sessions`
     );
     return rows[0];
