@@ -87,6 +87,47 @@ export async function getCustomerIdFromDB(userId) {
 }
 
 /**
+ * Get billing platform and subscription status from database.
+ * Used to short-circuit Stripe validation for non-Stripe billing platforms
+ * (Google Play, Apple IAP) where there is no Stripe subscription ID.
+ * @param {string} userId - User ID
+ * @returns {Promise<DatabaseQueryResult>}
+ */
+export async function getBillingPlatformAndStatusFromDB(userId) {
+  try {
+    if (!userId) {
+      return {
+        success: false,
+        error: 'User ID is required',
+        reason: VALIDATION_REASON.INVALID_USER_ID
+      };
+    }
+
+    const result = await db.query(
+      `SELECT ${DB_COLUMNS.SUBSCRIPTION_STATUS}, billing_platform
+       FROM user_personal_info
+       WHERE ${DB_COLUMNS.USER_ID} = $1`,
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return { success: false, data: null, reason: 'NOT_FOUND' };
+    }
+
+    return {
+      success: true,
+      data: {
+        status: result.rows[0].subscription_status,
+        billing_platform: result.rows[0].billing_platform
+      }
+    };
+  } catch (error) {
+    logErrorFromCatch(error, 'app', 'billing-platform-retrieval', userId);
+    return { success: false, error: 'Database query failed' };
+  }
+}
+
+/**
  * Get current subscription status from database
  * @param {string} userId - User ID
  * @returns {Promise<DatabaseQueryResult>}

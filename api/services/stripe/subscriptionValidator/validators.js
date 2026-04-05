@@ -10,7 +10,8 @@ import {
   getCustomerIdFromDB,
   getCurrentStatusFromDB,
   updateSubscriptionStatusInDB,
-  updateLastStatusCheckInDB
+  updateLastStatusCheckInDB,
+  getBillingPlatformAndStatusFromDB
 } from './repository.js';
 import {
   VALID_SUBSCRIPTION_STATUSES,
@@ -91,6 +92,36 @@ export async function validateSubscriptionStatus(userId) {
         error: 'Free trial user - no subscription required',
         reason: VALIDATION_REASON.NO_SUBSCRIPTION
       };
+    }
+
+    // ── Platform-aware short-circuit ─────────────────────────────────────────
+    // Subscriptions may be managed by Stripe (web), Google Play, or Apple IAP.
+    // For non-Stripe platforms there is no stripe_subscription_id in the DB,
+    // so attempting a Stripe API lookup would always fail.  Instead, trust the
+    // DB subscription_status column which is kept up-to-date by:
+    //   • validate-receipt/google + Google RTDN webhook
+    //   • validate-receipt/apple  + Apple S2S server notifications
+    //   • Daily subscription-check Lambda
+    const platformResult = await getBillingPlatformAndStatusFromDB(userId);
+    if (platformResult.success && platformResult.data) {
+      const { billing_platform, status } = platformResult.data;
+      // A null/undefined billing_platform means the account pre-dates the
+      // billing_platform column or is a Stripe subscriber — fall through to
+      // the Stripe validation path below.
+      if (billing_platform && billing_platform !== 'stripe') {
+        const isActive = status === 'active';
+        return {
+          valid: isActive,
+          status: isActive ? 'active' : (status || 'inactive'),
+          subscription: {
+            id: null,
+            status: isActive ? 'active' : (status || 'inactive'),
+            billing_platform,
+          },
+          reason: isActive ? null : VALIDATION_REASON.NO_SUBSCRIPTION,
+          error: isActive ? null : `${billing_platform} subscription is not active (status: ${status})`
+        };
+      }
     }
 
     // Check Stripe configuration
@@ -188,6 +219,30 @@ export async function validatePaymentMethod(userId) {
         error: 'Free trial user - no payment method required',
         reason: VALIDATION_REASON.NO_PAYMENT_METHOD
       };
+    }
+
+    // ── Platform-aware short-circuit ─────────────────────────────────────────
+    // Google Play and Apple IAP manage their own payment methods; there is no
+    // Stripe customer ID to look up.  Payment validity is guaranteed by the
+    // platform — if the subscription is active in our DB, the payment is valid.
+    const pmPlatformResult = await getBillingPlatformAndStatusFromDB(userId);
+    if (pmPlatformResult.success && pmPlatformResult.data) {
+      const { billing_platform, status } = pmPlatformResult.data;
+      if (billing_platform && billing_platform !== 'stripe') {
+        // Payment is managed by the platform, not Stripe.
+        // Return valid only when the subscription is actually active so that
+        // an expired IAP subscription is still correctly blocked.
+        const isActive = status === 'active';
+        return {
+          valid: isActive,
+          paymentMethod: isActive ? {
+            type: billing_platform,
+            managedBy: billing_platform === 'google_play' ? 'Google Play' : 'Apple App Store'
+          } : null,
+          error: isActive ? null : `${billing_platform} subscription is not active`,
+          reason: isActive ? null : VALIDATION_REASON.NO_PAYMENT_METHOD
+        };
+      }
     }
 
     // Check Stripe configuration
