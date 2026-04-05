@@ -15,6 +15,7 @@ import { getLocalDateForTimezone } from '../shared/timezoneHelper.js';
 import { generatePsychicOpening } from '../shared/opening.js';
 import { guardName, getSeekerName } from '../shared/nameGuard.js';
 import { freeTrialLimiter } from '../middleware/rateLimiter.js';
+import { refreshLanguagePreference } from '../services/freeTrial/preferenceService.js';
 
 const router = express.Router();
 
@@ -184,8 +185,12 @@ router.get('/history/:tempUserId', async (req, res) => {
 router.get('/opening/:tempUserId', async (req, res) => {
   try {
     const { tempUserId } = req.params;
-    // language and timezone query params sent by the client
-    const { language: langParam, timezone: timezoneParam } = req.query;
+    // language, timezone, and force query params sent by the client.
+    // force=true is sent when the user changes language on the free trial chat
+    // screen — it deletes the existing greeting and generates a new one in the
+    // selected language so the oracle addresses the user in their language.
+    const { language: langParam, timezone: timezoneParam, force: forceParam } = req.query;
+    const forceNewGreeting = forceParam === 'true';
 
     // Validate input
     if (!tempUserId) {
@@ -241,10 +246,51 @@ router.get('/opening/:tempUserId', async (req, res) => {
       [userIdHash, sessionStartedAt ?? null]
     );
 
-    // If an oracle message already exists for this session, tell the client to
-    // load from history (genuine in-session resume, e.g. app was backgrounded).
-    if (existingOpenings.length > 0) {
+    // force=true: user changed language on the free trial chat screen.
+    // Step 1 — ALWAYS persist the new language to user_preferences so every
+    // subsequent API call (chat, horoscope) uses the correct language.  We do
+    // this BEFORE the existing-opening check so the preference is saved even
+    // when there is no greeting yet (covers the initial-load race condition).
+    if (forceNewGreeting && langParam) {
+      await refreshLanguagePreference(userIdHash, langParam);
+    }
+
+    // Step 2 — If the exchange is already complete (user has sent a message),
+    // we must NOT delete any messages or regenerate the greeting — the one free
+    // question has been used.  The DB was already updated above, so just tell
+    // the client to reload history (204).
+    if (forceNewGreeting) {
+      const { rows: userMsgs } = await db.query(
+        `SELECT id FROM messages
+         WHERE user_id_hash = $1
+           AND role = 'user'
+           AND ($2::timestamptz IS NULL OR created_at >= $2::timestamptz)
+         LIMIT 1`,
+        [userIdHash, sessionStartedAt ?? null],
+      );
+      if (userMsgs.length > 0) {
+        // Exchange complete — DB updated, client should just reload existing history.
+        return res.status(204).send();
+      }
+    }
+
+    // If an oracle message already exists for this session AND the client is NOT
+    // forcing a new greeting, tell the client to load from history.
+    if (existingOpenings.length > 0 && !forceNewGreeting) {
       return res.status(204).send(); // No content — client should load history
+    }
+
+    // force=true and an existing greeting is present (but NO user message yet):
+    // delete the greeting so the duplicate-guard above won't block the fresh
+    // greeting we're about to generate in the new language.
+    if (forceNewGreeting && existingOpenings.length > 0) {
+      await db.query(
+        `DELETE FROM messages
+         WHERE user_id_hash = $1
+           AND role = 'assistant'
+           AND ($2::timestamptz IS NULL OR created_at >= $2::timestamptz)`,
+        [userIdHash, sessionStartedAt ?? null],
+      );
     }
 
     // Fetch user's language preference.
