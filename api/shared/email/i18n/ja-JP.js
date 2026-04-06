@@ -163,6 +163,7 @@ export default {
     heading: '🚀 Starship Psychicsがアップデートされました！',
     greeting: 'Starship Psychicsからの嬉しいお知らせです！',
     body: '最高のサイキックチャット体験をお届けするために懸命に取り組んできました。Starship PsychicsアプリがGoogle Playストアで最新バージョンにアップデートされ、新機能と改善が加わりました。ぜひお試しください！',
+    releaseNotesLabel: '新機能：',
     buttonText: 'Google Playでダウンロード',
     note: '上のボタンをタップしてGoogle PlayストアからStarship Psychicsの最新バージョンをダウンロードし、すべての新機能をお楽しみください。',
     footerNote: 'Starship Psychicsコミュニティの大切なメンバーとしてご支援いただきありがとうございます。',

@@ -266,7 +266,7 @@ router.post('/app/set-version', async (req, res) => {
         const rawLocale = hashToLocale[userHash] ?? 'en-US';
         const locale    = resolveLocale(rawLocale);
 
-        const { subject, html, trackingSettings } = generateAppUpdateEmail({ locale });
+        const { subject, html, trackingSettings } = generateAppUpdateEmail({ locale, releaseNotes });
         const result = await sendEmail({ to: email, subject, html, trackingSettings });
 
         if (result.success) {

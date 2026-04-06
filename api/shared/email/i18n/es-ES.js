@@ -163,6 +163,7 @@ export default {
     heading: '🚀 ¡Starship Psychics se ha actualizado!',
     greeting: '¡Noticias emocionantes de Starship Psychics!',
     body: 'Hemos trabajado arduamente para brindarte la mejor experiencia de chat psíquico posible. La aplicación Starship Psychics se ha actualizado con nuevas e interesantes funciones y mejoras. ¡Nos encantaría que las probaras!',
+    releaseNotesLabel: 'Novedades:',
     buttonText: 'Descargar en Google Play',
     note: 'Toca el botón de arriba para descargar la última versión desde Google Play Store y experimentar todo lo nuevo que Starship Psychics tiene para ofrecer.',
     footerNote: 'Gracias por ser un valioso miembro de la comunidad de Starship Psychics.',

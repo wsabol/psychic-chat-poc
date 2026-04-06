@@ -28,17 +28,31 @@ const PLAY_STORE_URL =
  * Generate an app-update announcement email.
  *
  * @param {Object}  [data={}]
- * @param {string}  [data.locale='en-US']  User's preferred locale
+ * @param {string}  [data.locale='en-US']    User's preferred locale
+ * @param {string}  [data.releaseNotes]       Optional release notes entered by the admin.
+ *                                            Shown as-is (typically English) under a
+ *                                            localized "What's New:" heading.
  * @returns {{ subject: string, html: string, trackingSettings: Object, emailType: string }}
  */
 export function generateAppUpdateEmail(data = {}) {
-  const { locale = 'en-US' } = data;
+  const { locale = 'en-US', releaseNotes } = data;
   const s = getEmailSection(locale, 'appUpdate');
+
+  // Render the release notes block only when the admin provided notes.
+  // The label ("What's New:", "Novidades:", etc.) is localized; the notes
+  // text itself is displayed in whatever language the admin typed.
+  const releaseNotesBlock = releaseNotes?.trim()
+    ? createInfoBox(
+        `<strong>${s.releaseNotesLabel}</strong><br>${releaseNotes.trim()}`,
+        EMAIL_CONFIG.colors.primary,
+      )
+    : '';
 
   const content = `
     ${createHeader(s.heading, EMAIL_CONFIG.colors.primary)}
     ${createParagraph(s.greeting)}
     ${createParagraph(s.body)}
+    ${releaseNotesBlock}
     ${createButton(s.buttonText, PLAY_STORE_URL)}
     ${createInfoBox(s.note, EMAIL_CONFIG.colors.primary)}
     ${createFooter(s.footerNote)}
