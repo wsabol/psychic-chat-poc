@@ -1,5 +1,5 @@
 -- Master SQL file for restoring database schema
--- Last Updated: 2026-02-17
+-- Last Updated: 2026-04-06
 -- This file contains the EXACT schema of the current production database
 -- plus all required tables and columns for subscription billing
 -- 
@@ -11,6 +11,9 @@
 -- 
 -- PHASE 4.0: Violation Redemption System
 -- Includes: violation tracking with redemption columns, SMS inbound logging
+--
+-- PHASE 5.0: App Version Management
+-- Includes: app_version_config (single-row table for force/soft update thresholds)
 
 -- IMPORTANT: All user IDs are hashed using SHA-256
 -- IMPORTANT: All sensitive data (PII, tokens, IPs) are encrypted with pgcrypto
@@ -693,3 +696,49 @@ CREATE INDEX IF NOT EXISTS idx_price_notifications_interval ON price_change_noti
 CREATE INDEX IF NOT EXISTS idx_price_notifications_notified_at ON price_change_notifications(notified_at);
 CREATE INDEX IF NOT EXISTS idx_price_notifications_effective_date ON price_change_notifications(effective_date);
 CREATE INDEX IF NOT EXISTS idx_price_notifications_migration ON price_change_notifications(migration_completed);
+
+-- TABLE: app_version_config (PHASE 5.0: App Version Management)
+-- Single-row config table (id = 1 is the only allowed row).
+-- Stores the "latest" and "minimum supported" version strings for the mobile app.
+--
+-- Used by:
+--   GET  /app/version              — public endpoint the mobile app polls on every cold start
+--   GET  /admin/app/version-config — admin read
+--   POST /admin/app/set-version    — admin write (optionally fires email blast)
+--
+-- Version format: semver-style string "MAJOR.MINOR.PATCH" (e.g. "3.3.26")
+-- Must match:
+--   Android → android/app/build.gradle  versionName
+--   iOS     → ios/.../Info.plist        CFBundleShortVersionString
+--   Mobile  → mobile/src/constants/appVersion.ts  APP_VERSION
+--
+-- Client logic (useAppVersion hook):
+--   installed < minimum_version → force update (blocking modal, no dismiss)
+--   installed < latest_version  → soft prompt  (dismissible modal)
+--   installed ≥ latest_version  → nothing shown
+--
+-- Added: 2026-04-06 (Phase 5.0: Multi-layer app update notification system)
+CREATE TABLE IF NOT EXISTS app_version_config (
+    id                 INTEGER       PRIMARY KEY DEFAULT 1,
+    latest_version     VARCHAR(20)   NOT NULL DEFAULT '3.3.26',
+    minimum_version    VARCHAR(20)   NOT NULL DEFAULT '3.0.0',
+    android_store_url  TEXT          NOT NULL DEFAULT 'https://play.google.com/store/apps/details?id=com.starshippsychicsmobile',
+    ios_store_url      TEXT          NOT NULL DEFAULT '',
+    release_notes      TEXT,
+    updated_at         TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+    updated_by         TEXT,          -- Firebase UID of the admin who last changed this
+    CONSTRAINT app_version_config_single_row CHECK (id = 1)
+);
+
+-- Seed the single required row on fresh installs.
+INSERT INTO app_version_config (id, latest_version, minimum_version)
+VALUES (1, '3.3.26', '3.0.0')
+ON CONFLICT (id) DO NOTHING;
+
+COMMENT ON TABLE app_version_config IS 'Single-row config (id=1) for mobile app version management. Controls force-update and soft-update thresholds.';
+COMMENT ON COLUMN app_version_config.latest_version IS 'Newest published build — triggers soft update prompt on clients below this version.';
+COMMENT ON COLUMN app_version_config.minimum_version IS 'Oldest still-supported build — triggers blocking update modal on clients below this version.';
+COMMENT ON COLUMN app_version_config.android_store_url IS 'Google Play Store deep-link for the "Update Now" button on Android.';
+COMMENT ON COLUMN app_version_config.ios_store_url IS 'Apple App Store deep-link for the "Update Now" button on iOS.';
+COMMENT ON COLUMN app_version_config.release_notes IS 'Optional "what''s new" text shown inside the UpdatePromptModal. Set via POST /admin/app/set-version.';
+COMMENT ON COLUMN app_version_config.updated_by IS 'Firebase UID of the admin who last updated this row (audit trail).';

@@ -36,7 +36,9 @@ import securityMetricsRoutes from "./routes/admin/security-metrics.js";
 import legalDataRequestsRoutes from "./routes/admin/legal-data-requests.js";
 import sessionManagementRoutes from "./routes/admin/session-management.js";
 import announcementsRoutes from "./routes/admin/announcements.js";
+import appVersionAdminRoutes from "./routes/admin/app-version.js";
 import logsRoutes from "./routes/logs.js";
+import appRoutes from "./routes/app.js";
 import contactRoutes from "./routes/contact.js";
 import { authenticateToken } from "./middleware/auth.js";
 import { validateUserHash } from "./middleware/userHashValidation.js";
@@ -239,6 +241,9 @@ app.use("/free-trial-chat", freeTrialChatRoutes);
 // Public contact form route (no authentication required - marketing website)
 app.use("/api/contact", contactRoutes);
 
+// Public app version endpoint (no authentication required — free-trial & anonymous users need this)
+app.use("/app", appRoutes);
+
 // Violation reports (admin only)
 app.use("/violations", authenticateToken, violationReportsRoutes);
 
@@ -268,6 +273,9 @@ app.use("/admin", authenticateToken, sessionManagementRoutes);
 
 // Announcements routes (admin only) — broadcast emails to all users
 app.use("/admin", authenticateToken, announcementsRoutes);
+
+// App version management (admin only) — set minimum/latest version, optional email blast
+app.use("/admin", authenticateToken, appVersionAdminRoutes);
 
 // New user data endpoints (authentication only - no validateUserHash)
 // These don't have user IDs in the URL
