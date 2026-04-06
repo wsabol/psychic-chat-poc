@@ -6,8 +6,10 @@
  *   - Whitelisted IPs may create / reset unlimited sessions (testers / QA).
  *   - A non-whitelisted IP whose most recent session is COMPLETED and belongs to a
  *     different user_id_hash is blocked (the device has exhausted its free trial).
- *   - A non-whitelisted IP whose most recent session is INCOMPLETE is allowed to
- *     create a fresh session (covers returning users who cleared localStorage).
+ *   - A non-whitelisted IP whose most recent session is INCOMPLETE from a different
+ *     user_id_hash resumes that session with ownership transferred to the new hash
+ *     (handles mobile app restarts where Firebase creates a new anonymous UID each
+ *     cold start, so progress is preserved rather than restarting from scratch).
  *   - The same user_id_hash on any IP always resumes their own session.
  */
 
@@ -24,14 +26,16 @@ import { clearAstrologyMessages } from './astrologyService.js';
  * This is the access-control layer for session creation — all policy lives here.
  *
  * Possible actions:
- *   'create'  — no prior session; proceed to insert.
- *   'resume'  — same user (or non-whitelisted different-IP user) already has a session.
- *   'block'   — a DIFFERENT user already started a trial from this IP (exploit case).
- *   'reset'   — whitelisted tester with a completed session; wipe and restart.
+ *   'create'       — no prior session; proceed to insert.
+ *   'resume'       — same user_id_hash on any IP; reset to 'created' (fresh start).
+ *   'resume-by-ip' — IP has incomplete session from a different user_id_hash
+ *                    (mobile restart with new Firebase anon UID); transfer ownership.
+ *   'block'        — IP has a COMPLETED session for a different user (trial used up).
+ *   'reset'        — whitelisted tester with a completed session; wipe and restart.
  *
  * @param {string} ipHash     - Hashed IP address
  * @param {string} userIdHash - Hashed user ID
- * @returns {Promise<{ action: 'create'|'resume'|'block'|'reset', session?: Object }>}
+ * @returns {Promise<{ action: 'create'|'resume'|'resume-by-ip'|'block'|'reset', session?: Object }>}
  */
 async function checkSessionAccess(ipHash, userIdHash) {
   // Only active whitelist entries grant privileges; inactive entries are ignored.
@@ -54,14 +58,14 @@ async function checkSessionAccess(ipHash, userIdHash) {
     const session = ipRows[0];
     if (session.user_id_hash === userIdHash) return { action: 'resume', session };
     // Only block if the device has already COMPLETED a free trial.
-    // An incomplete/abandoned session on the same IP (e.g. the user cleared
-    // localStorage mid-trial, or the browser wiped storage) must NOT prevent
-    // a fresh attempt — that would permanently lock out the device even though
-    // no trial was ever finished.  Only a completed session means the device
-    // has exhausted its free trial.
     if (session.is_completed) return { action: 'block' };
-    // Incomplete session from a different user_id → fall through to 'create'
-    // so a clean new session is inserted for the current user.
+    // Incomplete session from a different user_id_hash on the same IP.
+    // This happens on mobile when the app restarts: Firebase creates a new
+    // anonymous UID each cold start, producing a different user_id_hash.
+    // Rather than creating a new session (which loses the progress), we
+    // transfer ownership to the new user_id_hash so the user resumes exactly
+    // where they left off (e.g. chat done → PersonalInfo screen).
+    return { action: 'resume-by-ip', session };
   }
 
   const { rows: userRows } = await db.query(
@@ -177,6 +181,54 @@ export async function createFreeTrialSession(tempUserId, ipAddress, language = '
         success:        false,
         error:          'This device has already started a free trial',
         alreadyStarted: true,
+      };
+    }
+
+    if (action === 'resume-by-ip') {
+      const oldUserIdHash = session.user_id_hash;
+
+      // ── Transfer session ownership to the new user_id_hash ─────────────────
+      // Update the session row so future checkSession(newUID) lookups find it.
+      try {
+        await db.query(
+          `UPDATE free_trial_sessions
+           SET user_id_hash         = $1,
+               ip_address_hash      = $2,
+               ip_address_encrypted = pgp_sym_encrypt($3, $4),
+               last_activity_at     = NOW()
+           WHERE id = $5`,
+          [userIdHash, ipHash, ipAddress, process.env.ENCRYPTION_KEY, session.id]
+        );
+      } catch (err) {
+        logErrorFromCatch(err, 'free-trial', '[SESSION-SERVICE] Failed to update user_id_hash on resume-by-ip');
+      }
+
+      // ── Migrate astrology data to the new hash ─────────────────────────────
+      // Preserves zodiac sign / birth chart so the horoscope screen still works
+      // when the user restarts after completing personal info.
+      try {
+        await db.query(
+          `UPDATE user_astrology SET user_id_hash = $1 WHERE user_id_hash = $2`,
+          [userIdHash, oldUserIdHash]
+        );
+      } catch (err) {
+        logErrorFromCatch(err, 'free-trial', '[SESSION-SERVICE] Failed to migrate user_astrology on resume-by-ip');
+      }
+
+      // ── Initialize scaffold + preferences for new user_id ──────────────────
+      await upsertLanguagePreferences(userIdHash, language);
+      try {
+        await initializeUserScaffold(tempUserId, userIdHash, language);
+      } catch (err) {
+        logErrorFromCatch(err, 'free-trial', '[SESSION-SERVICE] Failed to init scaffold on resume-by-ip');
+      }
+
+      return {
+        success:     true,
+        sessionId:   session.id,
+        currentStep: session.current_step,
+        resuming:    true,
+        message:     'Session ownership transferred to new device session',
       };
     }
 
