@@ -27,7 +27,8 @@ import { clearAstrologyMessages } from './astrologyService.js';
  *
  * Possible actions:
  *   'create'       — no prior session; proceed to insert.
- *   'resume'       — same user_id_hash on any IP; reset to 'created' (fresh start).
+ *   'resume'       — same user_id_hash; preserves step progress (only resets
+ *                    messages/started_at when step is still 'created').
  *   'resume-by-ip' — IP has incomplete session from a different user_id_hash
  *                    (mobile restart with new Firebase anon UID); transfer ownership.
  *   'block'        — IP has a COMPLETED session for a different user (trial used up).
@@ -195,6 +196,7 @@ export async function createFreeTrialSession(tempUserId, ipAddress, language = '
            SET user_id_hash         = $1,
                ip_address_hash      = $2,
                ip_address_encrypted = pgp_sym_encrypt($3, $4),
+               started_at           = NOW(),
                last_activity_at     = NOW()
            WHERE id = $5`,
           [userIdHash, ipHash, ipAddress, process.env.ENCRYPTION_KEY, session.id]
@@ -233,29 +235,25 @@ export async function createFreeTrialSession(tempUserId, ipAddress, language = '
     }
 
     if (action === 'resume') {
-      // ── Clean-slate guarantee ─────────────────────────────────────────────
-      // Every explicit call to createFreeTrialSession (i.e. the user taps
-      // "Try Free") must start with a completely empty chat, regardless of
-      // whether a previous session exists on this device.
+      // ── Preserve progress beyond 'created' ───────────────────────────────
+      // If the user has already completed the free chat (step = 'chat') or
+      // gone further, preserve that progress so the navigator routes them to
+      // the correct next screen (e.g. PersonalInfo, Horoscope).
       //
-      // WHY: Temp user IDs are device-stable, so the same physical device
-      // always maps to the same user_id_hash.  Without this reset:
-      //   • A user who started a trial yesterday sees yesterday's conversation.
-      //   • A different person picking up the same device sees the previous
-      //     person's private chat.
-      //
-      // NOTE: This path is NOT reached when the app resumes from the background
-      // (that goes through handlePersistedGuestSession → checkSession, which
-      // never calls createFreeTrialSession).  So a genuine in-app continuation
-      // (user backgrounded then foregrounded) is unaffected.
-      if (!session.is_completed) {
-        // Reset the session clock so time-based filters in the chat endpoints
-        // naturally exclude any messages that pre-date this new invocation.
+      // Only reset messages/started_at when step is still 'created', i.e. the
+      // user never actually completed a chat exchange — in that case they get a
+      // fresh oracle greeting.
+      const currentStep = session.current_step || 'created';
+      const hasProgress = !session.is_completed && currentStep !== 'created';
+
+      if (!session.is_completed && !hasProgress) {
+        // Step is 'created' — chat hasn't happened yet.  Reset the session
+        // clock so time-based message filters exclude stale greetings, and
+        // wipe any orphaned messages so the oracle generates a fresh opening.
         try {
           await db.query(
             `UPDATE free_trial_sessions
-             SET current_step     = 'created',
-                 started_at       = NOW(),
+             SET started_at       = NOW(),
                  last_activity_at = NOW()
              WHERE user_id_hash = $1`,
             [userIdHash]
@@ -263,9 +261,6 @@ export async function createFreeTrialSession(tempUserId, ipAddress, language = '
         } catch (err) {
           logErrorFromCatch(err, 'free-trial', '[SESSION-SERVICE] Failed to reset started_at on resume');
         }
-
-        // Remove any chat messages stored under this hash so the new session
-        // always starts with an empty conversation.  Non-fatal.
         try {
           await db.query(
             `DELETE FROM messages
@@ -282,12 +277,14 @@ export async function createFreeTrialSession(tempUserId, ipAddress, language = '
       return {
         success:     true,
         sessionId:   session.id,
-        currentStep: session.is_completed ? session.current_step : 'created',
+        currentStep: session.is_completed ? session.current_step : currentStep,
         isCompleted: session.is_completed,
         resuming:    true,
         message:     session.is_completed
           ? 'Trial already completed'
-          : 'Starting fresh: previous chat cleared',
+          : hasProgress
+            ? `Resuming from step: ${currentStep}`
+            : 'Starting fresh: previous chat cleared',
       };
     }
 
