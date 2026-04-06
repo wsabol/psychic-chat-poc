@@ -14,7 +14,7 @@
 
 CREATE TABLE IF NOT EXISTS app_version_config (
     id                 INTEGER       PRIMARY KEY DEFAULT 1,
-    latest_version     VARCHAR(20)   NOT NULL DEFAULT '3.3.26',
+    latest_version     VARCHAR(20)   NOT NULL DEFAULT '3.4.2',
     minimum_version    VARCHAR(20)   NOT NULL DEFAULT '3.0.0',
     android_store_url  TEXT          NOT NULL DEFAULT 'https://play.google.com/store/apps/details?id=com.starshippsychicsmobile',
     ios_store_url      TEXT          NOT NULL DEFAULT '',
@@ -30,5 +30,5 @@ ALTER TABLE app_version_config
 
 -- Seed with the current release values.
 INSERT INTO app_version_config (id, latest_version, minimum_version)
-VALUES (1, '3.3.26', '3.0.0')
+VALUES (1, '3.4.2', '3.0.0')
 ON CONFLICT (id) DO NOTHING;

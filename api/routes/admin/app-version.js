@@ -159,19 +159,38 @@ router.post('/app/set-version', async (req, res) => {
 
   try {
     // ── 1. Upsert the version config ─────────────────────────────────────────
+    // $3 / $4 are the caller-supplied URLs (null when not provided by the
+    // admin UI, which has no URL fields).  We guard the NOT NULL columns by:
+    //   • COALESCE in VALUES  — so the INSERT path never writes a bare NULL
+    //     into a NOT NULL column (uses the column's shipped defaults as the
+    //     safety-net value).
+    //   • CASE in DO UPDATE SET — so an UPDATE that omits URLs keeps whatever
+    //     value the row already has (rather than overwriting with the default).
+    const ANDROID_URL_DEFAULT =
+      'https://play.google.com/store/apps/details?id=com.starshippsychicsmobile';
+
     await db.query(
       `INSERT INTO app_version_config
          (id, latest_version, minimum_version, android_store_url, ios_store_url,
           release_notes, updated_at, updated_by)
-       VALUES (1, $1, $2, $3, $4, $5, NOW(), $6)
+       VALUES (
+         1, $1, $2,
+         COALESCE($3::text, '${ANDROID_URL_DEFAULT}'),
+         COALESCE($4::text, ''),
+         $5, NOW(), $6
+       )
        ON CONFLICT (id) DO UPDATE SET
-         latest_version   = EXCLUDED.latest_version,
-         minimum_version  = EXCLUDED.minimum_version,
-         android_store_url = COALESCE(EXCLUDED.android_store_url, app_version_config.android_store_url),
-         ios_store_url    = COALESCE(EXCLUDED.ios_store_url,     app_version_config.ios_store_url),
-         release_notes    = EXCLUDED.release_notes,
-         updated_at       = EXCLUDED.updated_at,
-         updated_by       = EXCLUDED.updated_by`,
+         latest_version    = EXCLUDED.latest_version,
+         minimum_version   = EXCLUDED.minimum_version,
+         android_store_url = CASE WHEN $3::text IS NULL
+                               THEN app_version_config.android_store_url
+                               ELSE $3::text END,
+         ios_store_url     = CASE WHEN $4::text IS NULL
+                               THEN app_version_config.ios_store_url
+                               ELSE $4::text END,
+         release_notes     = EXCLUDED.release_notes,
+         updated_at        = EXCLUDED.updated_at,
+         updated_by        = EXCLUDED.updated_by`,
       [
         latestVersion.trim(),
         minimumVersion.trim(),

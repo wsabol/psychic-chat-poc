@@ -49,7 +49,7 @@ const PLAY_STORE_URL =
 router.get('/version', async (req, res) => {
   // Hard-coded defaults — used when the DB table doesn't exist yet.
   const defaults = {
-    latest_version:    process.env.APP_LATEST_VERSION   ?? '3.3.26',
+    latest_version:    process.env.APP_LATEST_VERSION   ?? '3.4.2',
     minimum_version:   process.env.APP_MINIMUM_VERSION  ?? '3.0.0',
     android_store_url: PLAY_STORE_URL,
     ios_store_url:     process.env.IOS_STORE_URL        ?? '',
