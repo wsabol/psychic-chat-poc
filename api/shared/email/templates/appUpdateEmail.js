@@ -48,8 +48,13 @@ export function generateAppUpdateEmail(data = {}) {
     subject: s.subject,
     html: wrapInBaseTemplate(content),
     trackingSettings: {
-      clickTracking: { enable: true, enableText: true },
-      openTracking:  { enable: true },
+      clickTracking:       { enable: true, enableText: true },
+      openTracking:        { enable: true },
+      // Tells SendGrid to append a one-click unsubscribe link to every email.
+      // Users who click it are added to SendGrid's suppression list and will
+      // not receive future blasts.  Required for CAN-SPAM / GDPR compliance
+      // when sending to all users.
+      unsubscribeTracking: { enable: true },
     },
     emailType: 'app_update',
   };

@@ -216,12 +216,13 @@ router.post('/app/set-version', async (req, res) => {
 
     if (sendEmailBlast) {
       // Replicate the same blast logic as /admin/announcements/send-app-update.
+      // Include every registered user (any onboarding state) except admins.
+      // Firebase will return no email for UIDs that never verified, so users
+      // without an email address are automatically skipped below.
       const userRows = await db.query(
         `SELECT user_id
            FROM user_personal_info
-          WHERE (onboarding_completed = TRUE
-                 OR onboarding_step IN ('personal_info', 'welcome'))
-            AND (is_admin IS DISTINCT FROM TRUE)`,
+          WHERE is_admin IS DISTINCT FROM TRUE`,
       );
       const userIds = userRows.rows.map(r => r.user_id);
 
