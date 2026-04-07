@@ -26,7 +26,7 @@
  *     – also: any row older than 24 hours whose zodiac_sign is NULL is deleted.
  *   • user_preferences     – language / voice prefs   (keyed by user_id_hash)
  *   • pending_migrations   – migration placeholders   (keyed by temp_user_id)
- *   • free_trial_sessions  – session records older than 24 hours are deleted.
+ *   • free_trial_sessions  – session records older than 1 month are deleted.
  *
  * Age threshold:
  *   Only temp users whose user_personal_info row was created more than 24 hours
@@ -150,19 +150,20 @@ async function cleanupTempUsers() {
 }
 
 // ─────────────────────────────────────────────────────────────────
-//  CLEANUP — FREE TRIAL SESSIONS (> 24 hours old)
+//  CLEANUP — FREE TRIAL SESSIONS (> 1 month old)
 // ─────────────────────────────────────────────────────────────────
 
 /**
- * Delete free_trial_sessions rows that were started more than 24 hours ago.
- * These records are no longer needed once the session window has closed.
+ * Delete free_trial_sessions rows that were started more than 1 month ago.
+ * These records store IP addresses to prevent repeated free-trial abuse and
+ * are retained for a full month before being removed.
  *
  * @returns {Promise<number>} Number of rows deleted
  */
 async function cleanupFreeTrialSessions() {
   const { rowCount } = await db.query(
     `DELETE FROM free_trial_sessions
-      WHERE started_at < NOW() - INTERVAL '1 day'`
+      WHERE started_at < NOW() - INTERVAL '1 month'`
   );
 
   const deleted = rowCount ?? 0;
