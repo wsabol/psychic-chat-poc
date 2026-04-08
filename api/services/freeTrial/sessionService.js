@@ -4,13 +4,15 @@
  *
  * Access-control tiers:
  *   - Whitelisted IPs may create / reset unlimited sessions (testers / QA).
- *   - A non-whitelisted IP whose most recent session is COMPLETED and belongs to a
- *     different user_id_hash is blocked (the device has exhausted its free trial).
+ *   - A non-whitelisted device whose session is COMPLETED is always BLOCKED —
+ *     regardless of whether the match is by IP or by user_id_hash.  This is the
+ *     one-free-trial-per-device rule.  It fires even when the same user_id_hash
+ *     (stable deviceId-derived guest ID) comes back after an admin login/logout.
  *   - A non-whitelisted IP whose most recent session is INCOMPLETE from a different
  *     user_id_hash resumes that session with ownership transferred to the new hash
  *     (handles mobile app restarts where Firebase creates a new anonymous UID each
  *     cold start, so progress is preserved rather than restarting from scratch).
- *   - The same user_id_hash on any IP always resumes their own session.
+ *   - A non-whitelisted device whose session is INCOMPLETE resumes from its last step.
  */
 
 import crypto from 'crypto';
@@ -31,7 +33,8 @@ import { clearAstrologyMessages } from './astrologyService.js';
  *                    messages/started_at when step is still 'created').
  *   'resume-by-ip' — IP has incomplete session from a different user_id_hash
  *                    (mobile restart with new Firebase anon UID); transfer ownership.
- *   'block'        — IP has a COMPLETED session for a different user (trial used up).
+ *   'block'        — device has a COMPLETED session (trial used up); applies to both
+ *                    same-user and different-user matches, by IP or by user_id_hash.
  *   'reset'        — whitelisted tester with a completed session; wipe and restart.
  *
  * @param {string} ipHash     - Hashed IP address
@@ -57,8 +60,15 @@ async function checkSessionAccess(ipHash, userIdHash) {
 
   if (ipRows.length > 0 && !isWhitelisted) {
     const session = ipRows[0];
-    if (session.user_id_hash === userIdHash) return { action: 'resume', session };
-    // Only block if the device has already COMPLETED a free trial.
+    if (session.user_id_hash === userIdHash) {
+      // Same device, same user — BLOCK if the trial has already been completed.
+      // This is the primary guard against a non-whitelisted device restarting a
+      // completed free trial (e.g. after an admin login/logout cycle on the same
+      // device, where the stable deviceId produces the same user_id_hash).
+      if (session.is_completed) return { action: 'block' };
+      return { action: 'resume', session };
+    }
+    // Different user_id_hash on the same IP: block if already completed.
     if (session.is_completed) return { action: 'block' };
     // Incomplete session from a different user_id_hash on the same IP.
     // This happens on mobile when the app restarts: Firebase creates a new
@@ -80,6 +90,10 @@ async function checkSessionAccess(ipHash, userIdHash) {
   if (userRows.length > 0) {
     const session = userRows[0];
     if (isWhitelisted && session.is_completed) return { action: 'reset', session };
+    // Non-whitelisted device: a completed session found by user_id_hash (IP changed
+    // between sessions, so the IP lookup returned nothing) still means this device
+    // has already used its one free trial — block it.
+    if (session.is_completed) return { action: 'block' };
     return { action: 'resume', session };
   }
 

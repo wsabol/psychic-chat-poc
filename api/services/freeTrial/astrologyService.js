@@ -298,10 +298,18 @@ export async function resolveZodiacSignForTrial(userIdHash, tempUserId, signPara
   }
 
   // 3. Final fallback: client-supplied sign (sign-picker UI).
-  // Persisted so subsequent calls can find the sign in the DB.
+  // The zodiac sign is resolved HERE (before the persist call) so that a DB
+  // error inside persistPickedZodiacSign never prevents the horoscope from
+  // being generated — the sign is already known at this point.
   if (!zodiacSign && signParam) {
     zodiacSign = String(signParam).toLowerCase();
-    await persistPickedZodiacSign(userIdHash, zodiacSign, tempUserId);
+    try {
+      await persistPickedZodiacSign(userIdHash, zodiacSign, tempUserId);
+    } catch (persistErr) {
+      // Non-fatal: the sign is already resolved above; log and continue so the
+      // horoscope can still be generated even if the DB write failed.
+      logErrorFromCatch(persistErr, 'free-trial', '[ASTROLOGY-SERVICE] Failed to persist picked zodiac sign (non-fatal)');
+    }
   }
 
   return { zodiacSign, chartData };
