@@ -101,6 +101,35 @@ export async function clearUserAstrologyCache(userId) {
 }
 
 /**
+ * Normalize a raw Lambda birth-chart response into the canonical shape that is
+ * stored in user_astrology.astrology_data.
+ *
+ * The Lambda returns several housekeeping fields that are only meaningful as
+ * part of the HTTP response contract (success, utc_time, birth_date,
+ * birth_time, warnings).  Storing those verbatim causes the astrology_data
+ * column to look different depending on which code path triggered the
+ * calculation.  This helper strips them out and adds calculated_at so the
+ * stored shape is always identical to what the sync-calculate route produces.
+ *
+ * @param {Object} result - Raw response from the astrology Lambda
+ * @returns {Object}      - Normalized astrology data object
+ */
+function normalizeLambdaResult(result) {
+  return {
+    sun_sign:      result.sun_sign      ?? null,
+    sun_degree:    result.sun_degree    ?? null,
+    moon_sign:     result.moon_sign     ?? null,
+    moon_degree:   result.moon_degree   ?? null,
+    rising_sign:   result.rising_sign   ?? null,
+    rising_degree: result.rising_degree ?? null,
+    latitude:      result.latitude      ?? null,
+    longitude:     result.longitude     ?? null,
+    timezone:      result.timezone      ?? null,
+    calculated_at: new Date().toISOString(),
+  };
+}
+
+/**
  * Call astrology Lambda directly to calculate birth chart
  * @param {string} userId - User ID
  * @returns {Promise<boolean>} Success status
@@ -154,11 +183,11 @@ async function calculateBirthChartDirect(userId) {
       return false;
     }
     
-    // Save results to database
+    // Save results to database (normalize first to strip Lambda housekeeping fields)
     const userIdHash = hashUserId(userId);
     const zodiacSign = result.sun_sign || calculateSunSignFromDate(userData.birth_date);
     
-    await upsertAstrologyData(userIdHash, zodiacSign, result);
+    await upsertAstrologyData(userIdHash, zodiacSign, normalizeLambdaResult(result));
     return true;
   } catch (err) {
     logErrorFromCatch('[ASTROLOGY-SERVICE] Direct Lambda calculation failed:', err);

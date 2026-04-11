@@ -112,6 +112,35 @@ export async function clearAstrologyMessages(userIdHash) {
 // ─── 3. BIRTH CHART VIA LAMBDA ───────────────────────────────────────────────
 
 /**
+ * Normalize a raw Lambda birth-chart response into the canonical shape that is
+ * stored in user_astrology.astrology_data.
+ *
+ * The Lambda returns several housekeeping fields that are only meaningful as
+ * part of the HTTP response contract (success, utc_time, birth_date,
+ * birth_time, warnings).  Storing those verbatim causes the astrology_data
+ * column to look different depending on which code path triggered the
+ * calculation.  This helper strips them out and adds calculated_at so the
+ * stored shape is always identical to what the sync-calculate route produces.
+ *
+ * @param {Object} result - Raw response from the astrology Lambda
+ * @returns {Object}      - Normalized astrology data object
+ */
+function normalizeLambdaResult(result) {
+  return {
+    sun_sign:      result.sun_sign      ?? null,
+    sun_degree:    result.sun_degree    ?? null,
+    moon_sign:     result.moon_sign     ?? null,
+    moon_degree:   result.moon_degree   ?? null,
+    rising_sign:   result.rising_sign   ?? null,
+    rising_degree: result.rising_degree ?? null,
+    latitude:      result.latitude      ?? null,
+    longitude:     result.longitude     ?? null,
+    timezone:      result.timezone      ?? null,
+    calculated_at: new Date().toISOString(),
+  };
+}
+
+/**
  * Call the Lambda to compute a full birth chart and persist the result.
  *
  * Birth time is optional — defaults to noon (12:00:00) when not supplied.
@@ -150,7 +179,7 @@ export async function calculateAndSaveFullBirthChart(tempUserId, personalInfo) {
     if (result.success) {
       const userIdHash = hashUserId(tempUserId);
       const zodiacSign = result.sun_sign || calculateSunSignFromDate(birthDate);
-      await upsertUserAstrology(userIdHash, zodiacSign, result);
+      await upsertUserAstrology(userIdHash, zodiacSign, normalizeLambdaResult(result));
     } else {
       console.error('[ASTROLOGY-SERVICE] Birth chart calculation failed:', result.error);
     }
