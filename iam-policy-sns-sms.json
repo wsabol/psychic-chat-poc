@@ -1,0 +1,23 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowSNSSMSSend",
+      "Effect": "Allow",
+      "Action": [
+        "sns:Publish"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "AllowSNSSMSAttributes",
+      "Effect": "Allow",
+      "Action": [
+        "sns:GetSMSAttributes",
+        "sns:SetSMSAttributes",
+        "sns:CheckIfPhoneNumberIsOptedOut"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
