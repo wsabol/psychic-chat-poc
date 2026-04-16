@@ -55,6 +55,14 @@
                 {
                     "name": "PRIVACY_CHANGED_AT",
                     "value": "2026-03-30"
+                },
+                {
+                    "name": "SMS_ORIGINATION_NUMBER",
+                    "value": "+14255554411"
+                },
+                {
+                    "name": "AWS_REGION",
+                    "value": "us-east-1"
                 }
             ],
             "environmentFiles": [],

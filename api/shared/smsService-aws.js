@@ -1,12 +1,17 @@
 /**
- * SMS Service using AWS SNS
- * Replacement for Twilio Verify API with manual code generation and validation
- * 
+ * SMS Service using AWS SNS + AWS End User Messaging (EUM)
+ * Sends via the registered origination number +14255554411
+ * (Phone Number ID: phone-f5a566c0fa9e4bf3be049f4caf00441c)
+ *
  * Benefits:
- * - Better rate limits (no artificial Verify Service restrictions)
+ * - Dedicated origination number — consistent sender identity for users
+ * - Transactional priority — better deliverability than shared pools
  * - Lower cost (~$0.00645 per SMS vs Twilio's $0.05)
- * - More reliable (AWS infrastructure)
- * - 100 free SMS per month forever
+ * - Credentials sourced from ECS task role — no static key env vars needed
+ *
+ * Origination number is set via SMS_ORIGINATION_NUMBER env var.
+ * AWS credentials are resolved automatically from the ECS task IAM role
+ * (or from AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY for local dev).
  */
 
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
@@ -14,14 +19,20 @@ import { logErrorFromCatch } from './errorLogger.js';
 import { db } from './db.js';
 import crypto from 'crypto';
 
-// Initialize AWS SNS client
+// Initialize AWS SNS client.
+// Do NOT pass explicit credentials — the AWS SDK default credential chain
+// picks them up from the ECS task role metadata endpoint in production,
+// and from AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY for local dev.
 const snsClient = new SNSClient({
   region: process.env.AWS_REGION || 'us-east-1',
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-  }
 });
+
+/**
+ * The origination phone number to send SMS from.
+ * Set SMS_ORIGINATION_NUMBER=+14255554411 in ECS task environment.
+ * Falls back to undefined (will block sends) if not configured.
+ */
+const SMS_ORIGINATION_NUMBER = process.env.SMS_ORIGINATION_NUMBER;
 
 /**
  * Generate a 6-digit verification code
@@ -147,16 +158,17 @@ export async function sendSMS(toPhoneNumber, options = {}) {
   const maxRetries = options.maxRetries || 3;
   
   try {
-    if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
-      logErrorFromCatch('AWS SNS not configured - SMS verification disabled', 'CONFIG', 'smsService-aws.sendSMS');
+    // Guard: origination number must be configured (set SMS_ORIGINATION_NUMBER env var)
+    if (!SMS_ORIGINATION_NUMBER) {
+      logErrorFromCatch('SMS_ORIGINATION_NUMBER not configured — SMS disabled', 'CONFIG', 'smsService-aws.sendSMS');
       return {
         success: false,
-        error: 'SMS verification service not configured',
+        error: 'SMS origination number not configured. Set SMS_ORIGINATION_NUMBER env var.',
         mockMode: true
       };
     }
 
-    // ✅ NEW: Check if user has opted out (TCPA compliance)
+    // Check if user has opted out (TCPA compliance)
     const hasOptedOut = await checkOptOut(toPhoneNumber);
     if (hasOptedOut) {
       logErrorFromCatch(`SMS blocked: ${toPhoneNumber} has opted out`, 'USER_OPTED_OUT', 'smsService-aws.sendSMS');
@@ -195,16 +207,22 @@ export async function sendSMS(toPhoneNumber, options = {}) {
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
         
-        // Send via AWS SNS
+        // Send via AWS SNS using the registered origination number.
+        // 'AWS.SNS.SMS.OriginationNumber' tells SNS which dedicated long-code
+        // to use as the sender (EUM phone: +14255554411).
         const command = new PublishCommand({
           PhoneNumber: toPhoneNumber,
           Message: message,
           MessageAttributes: {
             'AWS.SNS.SMS.SMSType': {
               DataType: 'String',
-              StringValue: 'Transactional' // Higher priority, better deliverability
-            }
-          }
+              StringValue: 'Transactional', // Higher priority, better deliverability
+            },
+            'AWS.SNS.SMS.OriginationNumber': {
+              DataType: 'String',
+              StringValue: SMS_ORIGINATION_NUMBER, // +14255554411
+            },
+          },
         });
 
         const response = await snsClient.send(command);
@@ -286,14 +304,8 @@ export async function sendSMS(toPhoneNumber, options = {}) {
  */
 export async function verifySMSCode(toPhoneNumber, code) {
   try {
-    if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
-      logErrorFromCatch('AWS SNS not configured - using mock verification', 'CONFIG', 'smsService-aws.verifySMSCode');
-      return {
-        success: true,
-        status: 'approved',
-        mockMode: true
-      };
-    }
+    // Note: verification is purely database-driven — no AWS call needed here.
+    // No credential or origination-number guard required.
 
     // Validate code format
     if (!code || typeof code !== 'string' || !/^\d{6}$/.test(code)) {
@@ -370,14 +382,15 @@ export async function sendPasswordResetSMS(toPhoneNumber) {
  */
 export async function sendCustomSMS(toPhoneNumber, messageBody) {
   try {
-    if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+    if (!SMS_ORIGINATION_NUMBER) {
+      logErrorFromCatch('SMS_ORIGINATION_NUMBER not configured — custom SMS disabled', 'CONFIG', 'smsService-aws.sendCustomSMS');
       return {
         success: false,
-        error: 'SMS messaging service not configured'
+        error: 'SMS origination number not configured',
       };
     }
 
-    // ✅ Check opt-out status before sending custom SMS
+    // Check opt-out status before sending custom SMS (TCPA compliance)
     const hasOptedOut = await checkOptOut(toPhoneNumber);
     if (hasOptedOut) {
       logErrorFromCatch(`Custom SMS blocked: ${toPhoneNumber} has opted out`, 'USER_OPTED_OUT', 'smsService-aws.sendCustomSMS');
@@ -395,9 +408,13 @@ export async function sendCustomSMS(toPhoneNumber, messageBody) {
       MessageAttributes: {
         'AWS.SNS.SMS.SMSType': {
           DataType: 'String',
-          StringValue: 'Transactional'
-        }
-      }
+          StringValue: 'Transactional',
+        },
+        'AWS.SNS.SMS.OriginationNumber': {
+          DataType: 'String',
+          StringValue: SMS_ORIGINATION_NUMBER, // +14255554411
+        },
+      },
     });
 
     const response = await snsClient.send(command);
