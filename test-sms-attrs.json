@@ -1,0 +1,10 @@
+{
+  "AWS.SNS.SMS.SMSType": {
+    "DataType": "String",
+    "StringValue": "Transactional"
+  },
+  "AWS.SNS.SMS.OriginationNumber": {
+    "DataType": "String",
+    "StringValue": "+14255554411"
+  }
+}

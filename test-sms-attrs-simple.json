@@ -1,0 +1,6 @@
+{
+  "AWS.SNS.SMS.SMSType": {
+    "DataType": "String",
+    "StringValue": "Transactional"
+  }
+}
