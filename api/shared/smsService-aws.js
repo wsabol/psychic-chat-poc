@@ -207,20 +207,19 @@ export async function sendSMS(toPhoneNumber, options = {}) {
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
         
-        // Send via AWS SNS using the registered origination number.
-        // 'AWS.SNS.SMS.OriginationNumber' tells SNS which dedicated long-code
-        // to use as the sender (EUM phone: +14255554411).
+        // Send via AWS SNS (Transactional = higher priority, better deliverability).
+        // NOTE: SNS Publish does not support specifying origination numbers via
+        // MessageAttributes — AWS.SNS.SMS.OriginationNumber is NOT a valid SNS
+        // attribute (it belongs to the EUM SendTextMessage API).  The dedicated
+        // number +14255554411 will be used once we migrate to EUM; for now SNS
+        // sends from the AWS shared pool.
         const command = new PublishCommand({
           PhoneNumber: toPhoneNumber,
           Message: message,
           MessageAttributes: {
             'AWS.SNS.SMS.SMSType': {
               DataType: 'String',
-              StringValue: 'Transactional', // Higher priority, better deliverability
-            },
-            'AWS.SNS.SMS.OriginationNumber': {
-              DataType: 'String',
-              StringValue: SMS_ORIGINATION_NUMBER, // +14255554411
+              StringValue: 'Transactional',
             },
           },
         });
@@ -409,10 +408,6 @@ export async function sendCustomSMS(toPhoneNumber, messageBody) {
         'AWS.SNS.SMS.SMSType': {
           DataType: 'String',
           StringValue: 'Transactional',
-        },
-        'AWS.SNS.SMS.OriginationNumber': {
-          DataType: 'String',
-          StringValue: SMS_ORIGINATION_NUMBER, // +14255554411
         },
       },
     });
