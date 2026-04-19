@@ -5,5 +5,8 @@
     "stop:backend": "docker compose down",
     "start:worker": "cd worker && npm run start",
     "start:client": "cd client && npm run start"
+  },
+  "dependencies": {
+    "googleapis": "^171.4.0"
   }
 }

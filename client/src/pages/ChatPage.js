@@ -135,6 +135,7 @@ export default function ChatPage({ userId, token, auth, onNavigateToPage, onLogo
           messages={displayMessages}
           messagesEndRef={messagesEndRef}
           defaultShowBrief={defaultShowBrief}
+          voiceEnabled={!!isTemporaryAccount}
         />
 
         {/* Input form - grayed out after first message for temp accounts */}

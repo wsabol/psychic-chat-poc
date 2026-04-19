@@ -9,7 +9,8 @@ export default function ChatMessageList({
   messagesEndRef, 
   timerActive, 
   timeRemaining,
-  defaultShowBrief = true
+  defaultShowBrief = true,
+  voiceEnabled = false
 }) {
   return (
     <div className="chat-messages" style={{ position: 'relative' }}>
@@ -19,7 +20,7 @@ export default function ChatMessageList({
         </div>
       ) : (
         messages.map((msg, idx) => (
-          <ChatMessage key={idx} msg={msg} defaultShowBrief={defaultShowBrief} />
+          <ChatMessage key={idx} msg={msg} defaultShowBrief={defaultShowBrief} voiceEnabled={voiceEnabled} />
         ))
       )}
       <div ref={messagesEndRef} />

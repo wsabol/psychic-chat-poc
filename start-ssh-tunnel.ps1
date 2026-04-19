@@ -29,6 +29,8 @@ Write-Host "Starting tunnel..." -ForegroundColor Green
 ssh -i "C:\Users\stars\.ssh\psychic-chat-bastion-key.pem" `
     -L 5433:psychic-db.cw1a2ak00w4x.us-east-1.rds.amazonaws.com:5432 `
     -N `
+    -o ServerAliveInterval=60 `
+    -o ServerAliveCountMax=10 `
     ec2-user@3.238.36.97
 
 Write-Host ""

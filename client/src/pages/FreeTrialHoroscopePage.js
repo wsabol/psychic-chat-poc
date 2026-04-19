@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from '../context/TranslationContext';
 import { useSpeech } from '../hooks/useSpeech';
 import LogoWithCopyright from '../components/LogoWithCopyright';
@@ -50,6 +50,7 @@ export default function FreeTrialHoroscopePage({ userId, auth, onExit }) {
   const [horoscope, setHoroscope] = useState(null);   // full text
   const [brief, setBrief] = useState(null);            // brief / summary text (may be null)
   const [showingBrief, setShowingBrief] = useState(false); // default: show full reading
+  const hasAutoPlayedRef = useRef(false); // prevent double auto-play
   const [zodiacSign, setZodiacSign] = useState(null);
   const [chartData, setChartData] = useState(null);
   const [sunSignData, setSunSignData] = useState(null);
@@ -152,6 +153,20 @@ export default function FreeTrialHoroscopePage({ userId, auth, onExit }) {
       setLoading(false);
     }
   };
+
+  // ── Auto-play horoscope for free trial users ───────────────────────────────
+  // Automatically read the horoscope aloud once it arrives so the oracle
+  // "speaks" to the user without them needing to press the play button.
+  useEffect(() => {
+    if (horoscope && isSupported && !loading && !hasAutoPlayedRef.current) {
+      hasAutoPlayedRef.current = true;
+      // Small delay so the DOM has time to render before speech starts
+      setTimeout(() => {
+        speak(horoscope, { rate: 0.95, pitch: 1.2 });
+      }, 800);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [horoscope, isSupported, loading]);
 
   const handleSignConfirm = () => {
     if (selectedSign) loadHoroscope(selectedSign);
