@@ -265,11 +265,16 @@ export function useAuthState(checkBillingStatus) {
                 if (!twoFAResponse.ok) {
                   logWarning(
                     `[AUTH-LISTENER] check-2fa returned HTTP ${twoFAResponse.status} — ` +
-                    'not authenticating; user should sign out and retry.'
+                    'not authenticating; signing out Firebase session for clean retry.'
                   );
                   setShowTwoFactor(false);
                   setIsAuthenticated(false);
                   setLoading(false);
+                  // Sign out from Firebase so the login form is clean and the user can
+                  // retry without being silently stuck (onAuthStateChanged won't re-fire
+                  // for the same Firebase session if the user just clicks Sign In again
+                  // on some browsers).
+                  auth.signOut().catch(() => {});
                   return; // inner finally releases the _pendingTwoFAChecks lock
                 }
 

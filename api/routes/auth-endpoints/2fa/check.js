@@ -410,13 +410,9 @@ async function sendTwoFACode(res, req, { userId, userEmail, userIdHash, method }
         });
       }
       if (sendResult?.mockMode) {
-        return res.status(503).json({
-          success: false,
-          error:
-            'SMS verification service is not configured. ' +
-            'Please contact support or use email verification.',
-          errorCode: 'SMS_SERVICE_UNAVAILABLE',
-        });
+        // SMS service not configured (SMS_ORIGINATION_NUMBER env var missing).
+        // Fall back to email 2FA so the user is not permanently locked out.
+        return await sendTwoFACode(res, req, { userId, userEmail, userIdHash, method: 'email' });
       }
       return serverError(
         res,

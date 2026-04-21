@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../firebase';
 import { useTranslation } from '../context/TranslationContext';
 import { LanguageSwitcher } from './LanguageSwitcher';
@@ -75,13 +75,49 @@ export function Login({ defaultMode = 'login' }) {
     try {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (err) {
-      if (err.code === 'auth/invalid-credential') {
-        setSuccessMessage(t('login.needToRegister'));
-        setTimeout(() => {
-          setSuccessMessage('');
-          setMode('register');
-          setError('');
-        }, 1000);
+      // auth/invalid-credential covers both "wrong password" and "no account".
+      // Show a clear error instead of auto-redirecting to register, which was
+      // confusing users with valid accounts who mistyped their password.
+      if (
+        err.code === 'auth/invalid-credential' ||
+        err.code === 'auth/user-not-found' ||
+        err.code === 'auth/wrong-password'
+      ) {
+        setError(
+          t('login.errors.invalidCredentials') ||
+          'Invalid email or password. Please try again.'
+        );
+      } else {
+        setError(err.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ===== FORGOT PASSWORD HANDLER =====
+  const handleSendPasswordReset = async (e) => {
+    e.preventDefault();
+    if (!email) {
+      setError('Please enter your email address.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    setSuccessMessage('');
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setSuccessMessage(
+        t('login.resetEmailSent') ||
+        'Password reset email sent! Check your inbox (and spam folder).'
+      );
+    } catch (err) {
+      if (err.code === 'auth/user-not-found') {
+        // Don't reveal whether the email exists (security best practice)
+        setSuccessMessage(
+          t('login.resetEmailSent') ||
+          'Password reset email sent! Check your inbox (and spam folder).'
+        );
       } else {
         setError(err.message);
       }
@@ -275,10 +311,49 @@ export function Login({ defaultMode = 'login' }) {
           />
         )}
 
-        {/* FORGOT PASSWORD PLACEHOLDER */}
+        {/* FORGOT PASSWORD */}
         {mode === 'forgot' && (
           <div style={{ textAlign: 'center' }}>
-            <p>{t('login.forgotPasswordMessage')}</p>
+            <p style={{ marginBottom: '1rem', color: 'rgba(255,255,255,0.8)', fontSize: '0.9rem' }}>
+              {t('login.forgotPasswordInstructions') ||
+                "Enter your email address and we'll send you a link to reset your password."}
+            </p>
+            <form
+              onSubmit={handleSendPasswordReset}
+              style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1rem' }}
+            >
+              <input
+                type="email"
+                placeholder={t('login.email') || 'Email'}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+                style={{
+                  padding: '0.75rem',
+                  borderRadius: '5px',
+                  border: 'none',
+                  fontSize: '1rem'
+                }}
+              />
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  padding: '0.75rem',
+                  borderRadius: '5px',
+                  border: 'none',
+                  backgroundColor: loading ? '#666' : '#4CAF50',
+                  color: 'white',
+                  fontSize: '1rem',
+                  cursor: loading ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {loading
+                  ? (t('login.sending') || 'Sending…')
+                  : (t('login.sendResetLink') || 'Send Reset Link')}
+              </button>
+            </form>
             <button
               onClick={handleBackToLogin}
               style={{
